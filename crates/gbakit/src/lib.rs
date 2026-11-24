@@ -11,6 +11,8 @@ pub use gba_save as save;
 pub use gba_saves as saves;
 pub use gba_patches as patches;
 pub use gba_sound as sound;
+pub use gba_ereader as ereader;
+pub use mobiclip;
 pub mod joybus;
 pub mod link;
 pub mod multiboot;

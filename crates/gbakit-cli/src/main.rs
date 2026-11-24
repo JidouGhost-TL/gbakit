@@ -39,8 +39,10 @@ use gbakit::sound::{
 };
 use gbakit::sound::sf2::{compile_rom_soundfont, validate_soundfont};
 
+mod ereader;
 mod link;
 mod sensor;
+mod video;
 
 const DEFAULT_MAX_WAV_SAMPLES: usize = 16 * 1024 * 1024;
 const DEFAULT_MIN_POINTER_TABLE_ENTRIES: usize = 8;
@@ -90,7 +92,14 @@ fn usage() {
            gbakit sensor list [--json]\n  \
            gbakit sensor test <rom.gba> [--solar <0-10>] [--tilt <-90..90>] [--gyro <rpm>] [--json]\n  \
            gbakit gfx rip     <rom.gba> [-o <out_dir>] [--palettes] [--tilesets] [--tilemaps] [--sprites] [--json]\n  \
-           gbakit gfx tile4   <file> --offset <hex> --palette <hex> -o <out.ppm>"
+           gbakit gfx tile4   <file> --offset <hex> --palette <hex> -o <out.ppm>\n  \
+           gbakit ereader decode     <strip.raw> -o <out.bin> [--decompress]\n  \
+           gbakit ereader encode     <in.bin> -o <out.raw> [--short|--long]\n  \
+           gbakit ereader render     <strip.raw> -o <out.bmp|pbm|pgm> [--dpi 300|600|1200]\n  \
+           gbakit ereader vpk-decode <in.vpk> -o <out.bin>\n  \
+           gbakit ereader vpk-encode <in.bin> -o <out.vpk> [--method 0|1]\n  \
+           gbakit video scan         <rom.gba> [--json]\n  \
+           gbakit video export       <rom.gba> -o <out_dir> [--max-frames <n>]"
     );
 }
 
@@ -1100,6 +1109,64 @@ fn cmd_audio_scan(rom_path: &Path, as_json: bool) -> Result<(), String> {
             }
             Ok(())
         }
+        DetectedSoundEngine::EadSma(ver) => {
+            let (ver_str, ead_ver_id) = match ver {
+                gbakit::sound::ead_sma::EadSmaVersion::Sma23Shift8 => (
+                    "Nintendo EAD/SRD Mixer (Sma23Shift8)",
+                    "Sma23Shift8",
+                ),
+                gbakit::sound::ead_sma::EadSmaVersion::Sma4Mla => (
+                    "Nintendo EAD/SRD Mixer (Sma4Mla)",
+                    "Sma4Mla",
+                ),
+            };
+            if as_json {
+                let payload = serde_json::json!({
+                    "detected": true,
+                    "engine": "ead_sma",
+                    "family": "nintendo_ead_sma",
+                    "version": ver_str,
+                    "ead_sma_version": ead_ver_id,
+                    "rom_path": rom_path.file_name().map(|n| n.to_string_lossy().to_string()).unwrap_or_default(),
+                });
+                println!("{}", serde_json::to_string_pretty(&payload).map_err(|e| e.to_string())?);
+            } else {
+                println!("Sound Engine Scan: {}", rom_path.display());
+                println!("  Status:                  Detected (Nintendo EAD/SRD DirectSound Engine)");
+                println!("  Family:                  nintendo_ead_sma");
+                println!("  Version:                 {}", ver_str);
+            }
+            Ok(())
+        }
+        DetectedSoundEngine::EngineSw(ver) => {
+            let (ver_str, esw_ver_id) = match ver {
+                gbakit::sound::engine_sw_audio::EngineSwVersion::V20Standard => (
+                    "Engine Software EIRE v2.0 (V20Standard)",
+                    "V20Standard",
+                ),
+                gbakit::sound::engine_sw_audio::EngineSwVersion::V20AltRegisters => (
+                    "Engine Software EIRE v2.0 (V20AltRegisters)",
+                    "V20AltRegisters",
+                ),
+            };
+            if as_json {
+                let payload = serde_json::json!({
+                    "detected": true,
+                    "engine": "engine_sw",
+                    "family": "engine_sw_eire",
+                    "version": ver_str,
+                    "engine_sw_version": esw_ver_id,
+                    "rom_path": rom_path.file_name().map(|n| n.to_string_lossy().to_string()).unwrap_or_default(),
+                });
+                println!("{}", serde_json::to_string_pretty(&payload).map_err(|e| e.to_string())?);
+            } else {
+                println!("Sound Engine Scan: {}", rom_path.display());
+                println!("  Status:                  Detected (Engine Software / Bob Koon EIRE v2.0)");
+                println!("  Family:                  engine_sw_eire");
+                println!("  Version:                 {}", ver_str);
+            }
+            Ok(())
+        }
         DetectedSoundEngine::Custom => {
             // Check soundpool fallbacks so `audio scan` stays consistent with `audio export`/`soundfont`
             let gax_samples = scan_gax_soundpool(&bytes);
@@ -1464,6 +1531,14 @@ fn cmd_audio_export(
             println!("  SoundFont Generated:  soundfont.sf2");
             Ok(())
         }
+        DetectedSoundEngine::EadSma(ver) => Err(format!(
+            "audio export is not yet supported for Nintendo EAD/SRD ({ver:?}) in {}",
+            rom_path.display()
+        )),
+        DetectedSoundEngine::EngineSw(ver) => Err(format!(
+            "audio export is not yet supported for Engine Software EIRE ({ver:?}) in {}",
+            rom_path.display()
+        )),
         DetectedSoundEngine::Custom => {
             if let Ok(wavs) = export_gax_samples_wav16(&bytes) {
                 for (_idx, filename, wav_bytes) in &wavs {
@@ -3243,6 +3318,121 @@ fn main() -> ExitCode {
                 ),
             }
         }
+        "ereader" if args.len() >= 3 && args[1] == "decode" => {
+            let decompress = args[2..].iter().any(|a| a == "--decompress");
+            let out_opt = parse_flag_value(&args[2..], &["-o", "--output"]);
+            let file_arg = parse_positional_arg(&args[2..], &[&["-o", "--output"]]);
+            match (file_arg, out_opt) {
+                (Some(strip), Some(out)) => {
+                    ereader::cmd_ereader_decode(Path::new(strip), Path::new(out), decompress)
+                }
+                (None, _) => Err("missing required <strip.raw> for `ereader decode`".into()),
+                (_, None) => Err("missing required -o <out.bin> for `ereader decode`".into()),
+            }
+        }
+        "ereader" if args.len() >= 3 && args[1] == "encode" => {
+            let short = args[2..].iter().any(|a| a == "--short");
+            let long = args[2..].iter().any(|a| a == "--long");
+            let size = match (short, long) {
+                (true, true) => {
+                    return {
+                        eprintln!("error: cannot specify both --short and --long for `ereader encode`");
+                        ExitCode::FAILURE
+                    };
+                }
+                (true, false) => ereader::StripSize::Short,
+                (false, true) => ereader::StripSize::Long,
+                (false, false) => ereader::StripSize::Auto,
+            };
+            let out_opt = parse_flag_value(&args[2..], &["-o", "--output"]);
+            let file_arg = parse_positional_arg(&args[2..], &[&["-o", "--output"]]);
+            match (file_arg, out_opt) {
+                (Some(inp), Some(out)) => {
+                    ereader::cmd_ereader_encode(Path::new(inp), Path::new(out), size)
+                }
+                (None, _) => Err("missing required <in.bin> for `ereader encode`".into()),
+                (_, None) => Err("missing required -o <out.raw> for `ereader encode`".into()),
+            }
+        }
+        "ereader" if args.len() >= 3 && args[1] == "render" => {
+            let dpi_res: Result<u32, String> = match parse_flag_value(&args[2..], &["--dpi"]) {
+                Some(s) => s.parse::<u32>().map_err(|e| format!("invalid --dpi value: {e}")),
+                None => Ok(300),
+            };
+            let out_opt = parse_flag_value(&args[2..], &["-o", "--output"]);
+            let file_arg = parse_positional_arg(&args[2..], &[&["-o", "--output"], &["--dpi"]]);
+            match (file_arg, out_opt, dpi_res) {
+                (Some(strip), Some(out), Ok(dpi)) => {
+                    ereader::cmd_ereader_render(Path::new(strip), Path::new(out), dpi)
+                }
+                (_, _, Err(e)) => Err(e),
+                (None, _, _) => Err("missing required <strip.raw> for `ereader render`".into()),
+                (_, None, _) => Err("missing required -o <out.bmp|pbm|pgm> for `ereader render`".into()),
+            }
+        }
+        "ereader" if args.len() >= 3 && args[1] == "vpk-decode" => {
+            let out_opt = parse_flag_value(&args[2..], &["-o", "--output"]);
+            let file_arg = parse_positional_arg(&args[2..], &[&["-o", "--output"]]);
+            match (file_arg, out_opt) {
+                (Some(inp), Some(out)) => {
+                    ereader::cmd_ereader_vpk_decode(Path::new(inp), Path::new(out))
+                }
+                (None, _) => Err("missing required <in.vpk> for `ereader vpk-decode`".into()),
+                (_, None) => Err("missing required -o <out.bin> for `ereader vpk-decode`".into()),
+            }
+        }
+        "ereader" if args.len() >= 3 && args[1] == "vpk-encode" => {
+            let method_res: Result<u8, String> = match parse_flag_value(&args[2..], &["--method"]) {
+                Some(s) => s.parse::<u8>().map_err(|e| format!("invalid --method value: {e}")),
+                None => Ok(0),
+            };
+            let out_opt = parse_flag_value(&args[2..], &["-o", "--output"]);
+            let file_arg = parse_positional_arg(&args[2..], &[&["-o", "--output"], &["--method"]]);
+            match (file_arg, out_opt, method_res) {
+                (Some(inp), Some(out), Ok(method)) => {
+                    ereader::cmd_ereader_vpk_encode(Path::new(inp), Path::new(out), method)
+                }
+                (_, _, Err(e)) => Err(e),
+                (None, _, _) => Err("missing required <in.bin> for `ereader vpk-encode`".into()),
+                (_, None, _) => Err("missing required -o <out.vpk> for `ereader vpk-encode`".into()),
+            }
+        }
+        "ereader" => Err(
+            "usage: `gbakit ereader decode|encode|render|vpk-decode|vpk-encode ...`".into(),
+        ),
+        "video" if args.len() >= 3 && args[1] == "scan" => {
+            let as_json = args[2..].iter().any(|a| a == "--json");
+            let file_arg = parse_positional_arg(&args[2..], &[]);
+            match file_arg {
+                Some(path) => video::cmd_video_scan(Path::new(path), as_json),
+                None => Err("missing required <rom.gba> for `video scan`".into()),
+            }
+        }
+        "video" if args.len() >= 3 && args[1] == "export" => {
+            let out_opt = parse_flag_value(&args[2..], &["-o", "--output"]);
+            let max_frames_res: Result<Option<usize>, String> =
+                match parse_flag_value(&args[2..], &["--max-frames"]) {
+                    Some(s) => s
+                        .parse::<usize>()
+                        .map(Some)
+                        .map_err(|e| format!("invalid --max-frames value: {e}")),
+                    None => Ok(None),
+                };
+            let file_arg =
+                parse_positional_arg(&args[2..], &[&["-o", "--output"], &["--max-frames"]]);
+            match (file_arg, out_opt, max_frames_res) {
+                (Some(rom), Some(out), Ok(max_frames)) => {
+                    video::cmd_video_export(Path::new(rom), Path::new(out), max_frames)
+                }
+                (_, _, Err(e)) => Err(e),
+                (None, _, _) => Err("missing required <rom.gba> for `video export`".into()),
+                (_, None, _) => Err("missing required -o <out_dir> for `video export`".into()),
+            }
+        }
+        "video" => Err(
+            "usage: `gbakit video scan <rom.gba> [--json]` or `gbakit video export <rom.gba> -o <out_dir> [--max-frames <n>]`"
+                .into(),
+        ),
         _ => {
             usage();
             Err("invalid arguments".to_string())

@@ -15,6 +15,8 @@ pub mod rd1_pool;
 pub mod sf2;
 pub mod southpaw_pool;
 
+pub use ead_sma;
+pub use engine_sw_audio;
 pub use gax;
 pub use konami_kce;
 pub use krawall;
@@ -69,6 +71,10 @@ pub enum DetectedSoundEngine {
     Rd1(Option<rd1_kaede::KaedeVersion>),
     /// Southpaw GBA DirectSound SFX Engine
     Southpaw(Option<southpaw_audio::SouthpawVersion>),
+    /// Nintendo EAD/SRD Super Mario Advance 2–4 & Zelda ALttP DirectSound Engine
+    EadSma(ead_sma::EadSmaVersion),
+    /// Engine Software / Bob Koon EIRE v2.0 DirectSound Engine
+    EngineSw(engine_sw_audio::EngineSwVersion),
     /// Unrecognized or custom direct sound driver
     Custom,
 }
@@ -81,6 +87,10 @@ pub fn detect_sound_engine(bytes: &[u8]) -> DetectedSoundEngine {
         DetectedSoundEngine::Gax(gax_ver)
     } else if let Some(musyx_ver) = musyx::version::MusyXVersion::detect_from_bytes(bytes) {
         DetectedSoundEngine::Musyx(musyx_ver)
+    } else if let Some(ead_ver) = ead_sma::EadSmaVersion::detect_from_bytes(bytes) {
+        DetectedSoundEngine::EadSma(ead_ver)
+    } else if let Some(esw_ver) = engine_sw_audio::EngineSwVersion::detect_from_bytes(bytes) {
+        DetectedSoundEngine::EngineSw(esw_ver)
     } else if detect_krawall_engine(bytes) {
         DetectedSoundEngine::Krawall(krawall::KrawallVersion::detect_from_bytes(bytes))
     } else if detect_rare_engine(bytes) {
