@@ -26,8 +26,8 @@ impl ButtonComboCheat {
 
     /// Check if this cheat matches the given 4-character game code or alias.
     pub fn matches_code(&self, code: &str) -> bool {
-        let upper = code.to_ascii_uppercase();
-        self.game_code == upper || self.aliases.iter().any(|a| a.eq_ignore_ascii_case(code))
+        self.game_code.eq_ignore_ascii_case(code)
+            || self.aliases.iter().any(|a| a.eq_ignore_ascii_case(code))
     }
 }
 

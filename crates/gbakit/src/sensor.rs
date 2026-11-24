@@ -4,6 +4,7 @@
 
 use std::collections::BTreeMap;
 use std::f64::consts::PI;
+use std::sync::OnceLock;
 
 use gba_rom::AgbHeader;
 use serde::{Deserialize, Serialize};
@@ -111,16 +112,25 @@ pub struct SensorInjectionReport {
     pub verified_clean_room: bool,
 }
 
+static SENSOR_CATALOG_CACHE: OnceLock<Result<SensorCatalog, String>> = OnceLock::new();
+
 /// Parse and retrieve the embedded catalog of all 78 cartridge hardware titles.
 pub fn get_sensor_catalog() -> Result<SensorCatalog, String> {
-    serde_json::from_str(EMBEDDED_CATALOG_JSON)
-        .map_err(|e| format!("Failed to parse embedded sensor catalog: {e}"))
+    SENSOR_CATALOG_CACHE
+        .get_or_init(|| {
+            serde_json::from_str(EMBEDDED_CATALOG_JSON)
+                .map_err(|e| format!("Failed to parse embedded sensor catalog: {e}"))
+        })
+        .clone()
 }
 
 /// Lookup a sensor title by game code (case-insensitive) or SHA-256 hash.
 pub fn find_sensor_title(code_or_sha: &str) -> Option<SensorCatalogEntry> {
-    let catalog = get_sensor_catalog().ok()?;
     let query_lower = code_or_sha.trim().to_lowercase();
+    if query_lower.is_empty() {
+        return None;
+    }
+    let catalog = get_sensor_catalog().ok()?;
     catalog.titles.into_iter().find(|t| {
         t.game_code.to_lowercase() == query_lower
             || t.rom_sha256.to_lowercase().starts_with(&query_lower)
@@ -444,5 +454,11 @@ mod tests {
         let (adc_cw, word_cw, _) = calculate_gyro_registers(30);
         assert!(adc_cw > 0x06C0);
         assert_eq!(word_cw & 0x8000, 0x8000);
+    }
+
+    #[test]
+    fn test_find_sensor_title_rejects_empty_query() {
+        assert!(find_sensor_title("").is_none());
+        assert!(find_sensor_title("   ").is_none());
     }
 }

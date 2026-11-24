@@ -61,7 +61,7 @@ pub fn rom_ptr_to_offset(ptr: u32, rom_len: usize) -> Option<usize> {
 
 /// Convert a file offset into a 32-bit GBA ROM bus address.
 pub fn offset_to_rom_ptr(offset: usize) -> u32 {
-    ROM_BUS_START.saturating_add(offset as u32)
+    u32::try_from(offset).map_or(u32::MAX, |off| ROM_BUS_START.saturating_add(off))
 }
 
 /// Instrument / voice type in a GBA `m4a` voicegroup entry.
@@ -1400,48 +1400,52 @@ pub fn scan_m4a_engine(rom: &[u8]) -> Option<M4aEngineScan> {
         let min_playable = if confirmed_m4a { 1 } else { 5 };
 
         let mut candidates: Vec<(usize, usize, usize)> = Vec::new(); // (offset, total_songs, playable_songs)
-        let mut i = 0;
-        while i < rom_len.saturating_sub(64) {
-            if (i & 3) != 0 {
-                i += 4 - (i & 3);
-                continue;
-            }
+        // Scan each 8-byte-entry alignment parity (0 mod 8 and 4 mod 8) in O(N) time,
+        // advancing past failed long runs so crafted pointer tables cannot trigger O(N²) rescans.
+        for parity in [0usize, 4usize] {
+            let mut i = parity;
+            while i < rom_len.saturating_sub(64) {
+                let mut curr = i;
+                let mut total_songs = 0;
+                let mut playable_songs = 0;
+                let mut valid_groups = true;
 
-            let mut curr = i;
-            let mut total_songs = 0;
-            let mut playable_songs = 0;
-            let mut valid_groups = true;
-
-            while curr + 8 <= rom_len {
-                let hdr_ptr = u32::from_le_bytes([rom[curr], rom[curr + 1], rom[curr + 2], rom[curr + 3]]);
-                if let Some(hdr_off) = rom_ptr_to_offset(hdr_ptr, rom_len) {
-                    if let Some((tracks, _)) = validate_song_header_fast(rom, hdr_off, false) {
-                        if confirmed_m4a && total_songs < 4 {
-                            let g0 = u16::from_le_bytes([rom[curr + 4], rom[curr + 5]]);
-                            let g1 = u16::from_le_bytes([rom[curr + 6], rom[curr + 7]]);
-                            if g0 != g1 || g0 >= 32 {
-                                valid_groups = false;
+                while curr + 8 <= rom_len {
+                    let hdr_ptr =
+                        u32::from_le_bytes([rom[curr], rom[curr + 1], rom[curr + 2], rom[curr + 3]]);
+                    if let Some(hdr_off) = rom_ptr_to_offset(hdr_ptr, rom_len) {
+                        if let Some((tracks, _)) = validate_song_header_fast(rom, hdr_off, false) {
+                            if confirmed_m4a && total_songs < 4 {
+                                let g0 = u16::from_le_bytes([rom[curr + 4], rom[curr + 5]]);
+                                let g1 = u16::from_le_bytes([rom[curr + 6], rom[curr + 7]]);
+                                if g0 != g1 || g0 >= 32 {
+                                    valid_groups = false;
+                                }
                             }
+                            total_songs += 1;
+                            if tracks > 0 {
+                                playable_songs += 1;
+                            }
+                            curr += 8;
+                            continue;
                         }
-                        total_songs += 1;
-                        if tracks > 0 {
-                            playable_songs += 1;
-                        }
-                        curr += 8;
-                        continue;
                     }
+                    break;
                 }
-                break;
-            }
 
-            if total_songs >= min_total
-                && playable_songs >= min_playable
-                && (!confirmed_m4a || total_songs >= 8 || valid_groups)
-            {
-                candidates.push((i, total_songs, playable_songs));
-                i = curr;
-            } else {
-                i += 4;
+                if total_songs >= min_total
+                    && playable_songs >= min_playable
+                    && (!confirmed_m4a || total_songs >= 8 || valid_groups)
+                {
+                    candidates.push((i, total_songs, playable_songs));
+                    i = curr;
+                } else if curr > i && total_songs >= 8 {
+                    // Long run failed only due to playable_songs < min_playable;
+                    // no suffix of [i, curr) can have more playable songs.
+                    i = curr;
+                } else {
+                    i += 8;
+                }
             }
         }
 
@@ -1512,64 +1516,69 @@ fn min(a: usize, b: usize) -> usize {
     if a < b { a } else { b }
 }
 
-/// Recursively collect DirectSound sample ROM bus addresses referenced by a voicegroup.
-fn collect_voicegroup_sample_pointers_recursive(
-    rom: &[u8],
-    vg_ptr: u32,
-    visited: &mut HashSet<u32>,
-    out: &mut Vec<u32>,
-) {
-    if !visited.insert(vg_ptr) {
-        return;
-    }
-    let vg_off = match rom_ptr_to_offset(vg_ptr, rom.len()) {
-        Some(o) => o,
-        None => return,
-    };
-
-    for i in 0..128 {
-        let entry_off = vg_off + i * VOICE_ENTRY_SIZE;
-        if entry_off + VOICE_ENTRY_SIZE > rom.len() {
-            break;
-        }
-        let kind = VoiceKind::from_raw(rom[entry_off]);
-        let data_ptr = u32::from_le_bytes([
-            rom[entry_off + 4],
-            rom[entry_off + 5],
-            rom[entry_off + 6],
-            rom[entry_off + 7],
-        ]);
-
-        let is_directsound_or_dpcm = kind.is_directsound()
-            || matches!(kind, VoiceKind::Unknown(raw) if (raw & 0x20) != 0 && (raw & 0x07) == 0);
-
-        if is_directsound_or_dpcm {
-            if let Some(wav_off) = rom_ptr_to_offset(data_ptr, rom.len()) {
-                if let Ok(view) = M4aSampleView::from_wavdata_bytes(&rom[wav_off..]) {
-                    let h = view.header;
-                    if (h.wave_type == 0 || h.wave_type == 1)
-                        && h.stat == 0
-                        && (h.flags == 0 || h.flags == 0x40 || h.flags == 0xC0)
-                    {
-                        out.push(data_ptr);
-                    }
-                }
-            }
-        } else if matches!(kind, VoiceKind::Keysplit | VoiceKind::Drumkit)
-            && is_rom_bus_ptr(data_ptr)
-        {
-            collect_voicegroup_sample_pointers_recursive(rom, data_ptr, visited, out);
-        }
-    }
-}
-
-/// Collect unique DirectSound sample ROM pointers referenced by `voicegroup_ptr`.
+/// Iteratively collect unique DirectSound sample ROM pointers referenced by `voicegroup_ptr`.
+///
+/// Uses an explicit worklist and visited set so cyclic or deeply nested voicegroups
+/// can never overflow the call stack.
 pub fn collect_voicegroup_sample_pointers(rom: &[u8], voicegroup_ptr: u32) -> Vec<u32> {
     let mut visited = HashSet::new();
+    let mut seen_samples = HashSet::new();
     let mut out = Vec::new();
-    collect_voicegroup_sample_pointers_recursive(rom, voicegroup_ptr, &mut visited, &mut out);
-    let mut seen = HashSet::new();
-    out.into_iter().filter(|p| seen.insert(*p)).collect()
+    let mut worklist = vec![voicegroup_ptr];
+
+    while let Some(vg_ptr) = worklist.pop() {
+        if !visited.insert(vg_ptr) {
+            continue;
+        }
+        let Some(vg_off) = rom_ptr_to_offset(vg_ptr, rom.len()) else {
+            continue;
+        };
+
+        let mut child_vgs = Vec::new();
+        for i in 0..128 {
+            let entry_off = vg_off + i * VOICE_ENTRY_SIZE;
+            if entry_off + VOICE_ENTRY_SIZE > rom.len() {
+                break;
+            }
+            let kind = VoiceKind::from_raw(rom[entry_off]);
+            let data_ptr = u32::from_le_bytes([
+                rom[entry_off + 4],
+                rom[entry_off + 5],
+                rom[entry_off + 6],
+                rom[entry_off + 7],
+            ]);
+
+            let is_directsound_or_dpcm = kind.is_directsound()
+                || matches!(kind, VoiceKind::Unknown(raw) if (raw & 0x20) != 0 && (raw & 0x07) == 0);
+
+            if is_directsound_or_dpcm {
+                if let Some(wav_off) = rom_ptr_to_offset(data_ptr, rom.len()) {
+                    if let Ok(view) = M4aSampleView::from_wavdata_bytes(&rom[wav_off..]) {
+                        let h = view.header;
+                        if (h.wave_type == 0 || h.wave_type == 1)
+                            && h.stat == 0
+                            && (h.flags == 0 || h.flags == 0x40 || h.flags == 0xC0)
+                            && seen_samples.insert(data_ptr)
+                        {
+                            out.push(data_ptr);
+                        }
+                    }
+                }
+            } else if matches!(kind, VoiceKind::Keysplit | VoiceKind::Drumkit)
+                && is_rom_bus_ptr(data_ptr)
+                && !visited.contains(&data_ptr)
+            {
+                child_vgs.push(data_ptr);
+            }
+        }
+
+        // Push children in reverse order to preserve depth-first traversal order
+        for child_ptr in child_vgs.into_iter().rev() {
+            worklist.push(child_ptr);
+        }
+    }
+
+    out
 }
 
 /// Extract all DirectSound samples from a voicegroup as clean 16-bit uncompressed WAV files.
@@ -1814,5 +1823,45 @@ mod m4a_variant_tests {
         let mut rom = vec![0xAAu8; 0x4000];
         rom[0x100..0x110].copy_from_slice(b"GAX Sound Engine");
         assert!(scan_m4a_engine(&rom).is_none());
+    }
+
+    #[test]
+    fn iterative_voicegroup_traversal_handles_deep_chain_and_cycles() {
+        // Build a chain of 512 nested Keysplit voicegroups + a cycle back to root + a valid sample at the end.
+        let chain_len = 512usize;
+        let vg_stride = 16usize; // 12-byte entry + 4-byte padding
+        let sample_off = 0x4000usize;
+        let mut rom = vec![0xFFu8; sample_off + 64];
+
+        // Place a valid 16-sample PCM8 WaveData header at sample_off
+        rom[sample_off..sample_off + 2].copy_from_slice(&0u16.to_le_bytes()); // wave_type = 0
+        rom[sample_off + 2] = 0; // stat
+        rom[sample_off + 3] = 0; // flags
+        rom[sample_off + 4..sample_off + 8].copy_from_slice(&(13_379u32 * 1024).to_le_bytes());
+        rom[sample_off + 8..sample_off + 12].copy_from_slice(&0u32.to_le_bytes()); // loop_start
+        rom[sample_off + 12..sample_off + 16].copy_from_slice(&16u32.to_le_bytes()); // size
+        rom[sample_off + 16..sample_off + 32].fill(0x10);
+
+        let root_off = 0x0100usize;
+        for idx in 0..chain_len {
+            let off = root_off + idx * vg_stride;
+            if idx + 1 < chain_len {
+                let next_ptr = offset_to_rom_ptr(root_off + (idx + 1) * vg_stride);
+                rom[off] = VoiceKind::Keysplit.to_raw();
+                rom[off + 4..off + 8].copy_from_slice(&next_ptr.to_le_bytes());
+            } else {
+                // Terminal voicegroup: entry 0 points to sample, entry 1 cycles back to root
+                let sample_ptr = offset_to_rom_ptr(sample_off);
+                rom[off] = VoiceKind::DirectSound.to_raw();
+                rom[off + 4..off + 8].copy_from_slice(&sample_ptr.to_le_bytes());
+                let root_ptr = offset_to_rom_ptr(root_off);
+                rom[off + VOICE_ENTRY_SIZE] = VoiceKind::Drumkit.to_raw();
+                rom[off + VOICE_ENTRY_SIZE + 4..off + VOICE_ENTRY_SIZE + 8]
+                    .copy_from_slice(&root_ptr.to_le_bytes());
+            }
+        }
+
+        let ptrs = collect_voicegroup_sample_pointers(&rom, offset_to_rom_ptr(root_off));
+        assert_eq!(ptrs, vec![offset_to_rom_ptr(sample_off)]);
     }
 }

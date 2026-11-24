@@ -26,7 +26,9 @@ use gbakit::text::{
     TextReplaceMode, TextReplaceOptions, BUILTIN_CHARMAPS, DEFAULT_MAX_STRING_LEN,
 };
 
-use super::{parse_flag_value, parse_offset, parse_positional_arg};
+use super::{
+    ensure_distinct_paths, has_flag, parse_flag_value, parse_offset, parse_positional_arg, required,
+};
 
 const EXTRACT_VALUE_FLAGS: &[&[&str]] = &[&["--offset"], &["--table"], &["--max-len"]];
 const SCAN_VALUE_FLAGS: &[&[&str]] = &[&["--table"], &["--min-entries"], &["--limit"]];
@@ -93,32 +95,6 @@ pub const TEXT_USAGE: &str = "usage:\n  \
   gbakit text font-dump <rom.gba> --offset <hex|dec> --count <n> --width <px> --height <px> --bpp 1|2 -o <out.png|ppm> [--lsb] [--cols <n>] [--json]\n  \
   gbakit text font-replace <rom.gba> --offset <hex|dec> --image <in.png|ppm> --count <n> --width <px> --height <px> --bpp 1|2 -o <out.gba> [--lsb] [--cols <n>] [--json]\n  \
   gbakit text font-widths <rom.gba> --offset <hex|dec> --count <n> [--from-image <sheet.png|ppm> --width <px> --height <px> [--cols <n>] [--pad <px>] -o <out.gba>] [--json]";
-
-fn has_flag(args: &[String], name: &str) -> bool {
-    args.iter().any(|a| a == name)
-}
-
-fn required<'a>(args: &'a [String], names: &[&str], what: &str) -> Result<&'a str, String> {
-    parse_flag_value(args, names).ok_or_else(|| format!("missing required {what}"))
-}
-
-fn ensure_distinct_paths(input: &Path, output: &Path) -> Result<(), String> {
-    if input == output {
-        return Err(format!(
-            "refusing to overwrite input ROM {} in place; choose a different -o path",
-            input.display()
-        ));
-    }
-    if let (Ok(a), Ok(b)) = (fs::canonicalize(input), fs::canonicalize(output)) {
-        if a == b {
-            return Err(format!(
-                "refusing to overwrite input ROM {} in place; choose a different -o path",
-                input.display()
-            ));
-        }
-    }
-    Ok(())
-}
 
 fn load_charmap(table_opt: Option<&str>) -> Result<Charmap, String> {
     let Some(spec) = table_opt else {

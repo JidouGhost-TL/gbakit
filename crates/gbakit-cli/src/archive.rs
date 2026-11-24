@@ -9,7 +9,9 @@ use gbakit::rom::{
     ArchiveFormat, ArchiveManifest, ArchiveManifestEntry, ArchiveReplaceOptions,
 };
 
-use super::{parse_flag_value, parse_offset, parse_positional_arg};
+use super::{
+    ensure_distinct_paths, has_flag, parse_flag_value, parse_offset, parse_positional_arg, required,
+};
 
 const ARCHIVE_USAGE: &str = "usage:\n  \
   gbakit archive scan    <rom.gba> [--json]\n  \
@@ -17,30 +19,28 @@ const ARCHIVE_USAGE: &str = "usage:\n  \
   gbakit archive repack  <in_dir/> -o <out.bin> [--format pack|wayforward|sfcd] [--json]\n  \
   gbakit archive replace <rom.gba> --offset <hex|dec> --input <dir_or_bin> -o <out.gba> [--format pack|wayforward|sfcd] [--capacity <bytes>] [--allow-relocate] [--pad-byte <n>] [--json]";
 
-fn has_flag(args: &[String], name: &str) -> bool {
-    args.iter().any(|a| a == name)
-}
-
-fn required<'a>(args: &'a [String], names: &[&str], what: &str) -> Result<&'a str, String> {
-    parse_flag_value(args, names).ok_or_else(|| format!("missing required {what}"))
-}
-
-fn ensure_distinct_paths(input: &Path, output: &Path) -> Result<(), String> {
-    if input == output {
-        return Err(format!(
-            "refusing to overwrite input ROM {} in place; choose a different -o path",
-            input.display()
-        ));
+fn validate_manifest_relative_path(file: &str) -> Result<&Path, String> {
+    if file.is_empty() {
+        return Err("manifest.json contains an empty entry file path".into());
     }
-    if let (Ok(a), Ok(b)) = (fs::canonicalize(input), fs::canonicalize(output)) {
-        if a == b {
-            return Err(format!(
-                "refusing to overwrite input ROM {} in place; choose a different -o path",
-                input.display()
-            ));
+    let rel = Path::new(file);
+    let mut has_normal = false;
+    for comp in rel.components() {
+        match comp {
+            std::path::Component::Normal(_) => has_normal = true,
+            _ => {
+                return Err(format!(
+                    "manifest.json entry file path {file:?} must be strictly relative (no '..', root, or prefix components)"
+                ));
+            }
         }
     }
-    Ok(())
+    if !has_normal {
+        return Err(format!(
+            "manifest.json entry file path {file:?} must contain at least one normal path component"
+        ));
+    }
+    Ok(rel)
 }
 
 fn parse_archive_format(s: &str) -> Result<ArchiveFormat, String> {
@@ -248,7 +248,8 @@ fn build_archive_from_dir(
             let fmt = format_override.unwrap_or(manifest.format);
             let mut items = Vec::with_capacity(manifest.entries.len());
             for entry in &manifest.entries {
-                let file_path = in_dir.join(&entry.file);
+                let rel = validate_manifest_relative_path(&entry.file)?;
+                let file_path = in_dir.join(rel);
                 let data = fs::read(&file_path)
                     .map_err(|e| format!("read {}: {e}", file_path.display()))?;
                 items.push((entry.name.clone(), data));
@@ -456,4 +457,50 @@ fn cmd_archive_replace(args: &[String]) -> Result<(), String> {
         }
     }
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn archive_repack_rejects_manifest_path_traversal() {
+        let tmp = std::env::temp_dir().join(format!(
+            "gbakit_archive_traversal_{}",
+            std::process::id()
+        ));
+        let _ = fs::remove_dir_all(&tmp);
+        fs::create_dir_all(&tmp).expect("create temp dir");
+
+        let manifest = ArchiveManifest {
+            format: ArchiveFormat::Pack,
+            source_offset: 0,
+            total_size: 0,
+            entries: vec![ArchiveManifestEntry {
+                index: 0,
+                name: "SECRET".into(),
+                file: "../../etc/passwd".into(),
+                original_offset: 0,
+                size: 0,
+            }],
+        };
+        fs::write(
+            tmp.join("manifest.json"),
+            serde_json::to_string_pretty(&manifest).expect("serialize manifest"),
+        )
+        .expect("write manifest.json");
+
+        let err = build_archive_from_dir(&tmp, None)
+            .expect_err("path traversal in manifest.json must be rejected");
+        assert!(
+            err.contains("strictly relative"),
+            "unexpected error message: {err}"
+        );
+
+        assert!(validate_manifest_relative_path("/etc/passwd").is_err());
+        assert!(validate_manifest_relative_path("").is_err());
+        assert!(validate_manifest_relative_path("subdir/entry.bin").is_ok());
+
+        let _ = fs::remove_dir_all(&tmp);
+    }
 }

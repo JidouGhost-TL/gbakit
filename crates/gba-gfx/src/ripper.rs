@@ -6,6 +6,7 @@
 #![deny(unsafe_code)]
 
 use std::collections::{BTreeMap, HashSet};
+use std::fmt::Write as _;
 use std::fs;
 use std::path::PathBuf;
 
@@ -269,10 +270,19 @@ pub struct SpriteManifestEntry {
 // Palette Scanner: Heuristics & Pointer Xrefs
 // -----------------------------------------------------------------------------
 
+/// Maximum number of palettes emitted by [`scan_palettes`] to prevent file explosion on large ROMs.
+const MAX_SCANNED_PALETTES: usize = 2048;
+
+enum PaletteEval {
+    Valid(Vec<[u8; 4]>, f32),
+    BadBit15(usize),
+    Rejected,
+}
+
 /// Identify candidate 16-color (32B) and 256-color (512B) BGR555 palettes.
 pub fn scan_palettes(rom: &[u8]) -> Vec<ScannedPalette> {
     let mut results = Vec::new();
-    let mut seen_offsets = HashSet::new();
+    let mut accepted_ranges: Vec<(usize, usize)> = Vec::new();
 
     // 1. Gather pointer table cross references
     let mut xref_offsets = HashSet::new();
@@ -280,23 +290,33 @@ pub fn scan_palettes(rom: &[u8]) -> Vec<ScannedPalette> {
     for pt in &ptr_tables {
         for &entry in &pt.entries {
             if let Some(off) = bus_to_rom_offset(entry, rom.len()) {
-                if off % 2 == 0 && off + 32 <= rom.len() {
+                if off.is_multiple_of(2) && off + 32 <= rom.len() {
                     xref_offsets.insert(off);
                 }
             }
         }
     }
 
-    // 2. Scan xref targets first
-    for &off in &xref_offsets {
-        if seen_offsets.contains(&off) {
+    // 2. Scan sorted xref targets first, skipping overlaps
+    let mut xref_list: Vec<usize> = xref_offsets.into_iter().collect();
+    xref_list.sort_unstable();
+    let mut last_xref_end = 0usize;
+
+    for off in xref_list {
+        if results.len() >= MAX_SCANNED_PALETTES {
+            break;
+        }
+        if off < last_xref_end {
             continue;
         }
 
         // Try 256-color palette
         if off + 512 <= rom.len() {
-            if let Some((colors, score)) = evaluate_bgr555_palette(&rom[off..off + 512], 256) {
-                seen_offsets.insert(off);
+            if let PaletteEval::Valid(colors, score) =
+                evaluate_bgr555_palette_fast(&rom[off..off + 512], 256)
+            {
+                accepted_ranges.push((off, off + 512));
+                last_xref_end = off + 512;
                 results.push(ScannedPalette {
                     id: format!("pal_0x{:08X}", off),
                     offset: off,
@@ -312,8 +332,11 @@ pub fn scan_palettes(rom: &[u8]) -> Vec<ScannedPalette> {
 
         // Try 16-color palette
         if off + 32 <= rom.len() {
-            if let Some((colors, score)) = evaluate_bgr555_palette(&rom[off..off + 32], 16) {
-                seen_offsets.insert(off);
+            if let PaletteEval::Valid(colors, score) =
+                evaluate_bgr555_palette_fast(&rom[off..off + 32], 16)
+            {
+                accepted_ranges.push((off, off + 32));
+                last_xref_end = off + 32;
                 results.push(ScannedPalette {
                     id: format!("pal_0x{:08X}", off),
                     offset: off,
@@ -330,17 +353,25 @@ pub fn scan_palettes(rom: &[u8]) -> Vec<ScannedPalette> {
     // 3. Scan aligned offsets for strong contrast palettes (skip 0x000..0x200 ROM header)
     let mut off = 0x200usize;
     let max_off = rom.len().saturating_sub(32);
-    while off < max_off {
-        if seen_offsets.contains(&off) {
-            off += 32;
-            continue;
+    let mut range_idx = 0usize;
+
+    while off < max_off && results.len() < MAX_SCANNED_PALETTES {
+        while range_idx < accepted_ranges.len() && accepted_ranges[range_idx].1 <= off {
+            range_idx += 1;
+        }
+        if let Some(&(s, e)) = accepted_ranges.get(range_idx) {
+            if off >= s && off < e {
+                off = (e + 3) & !3;
+                continue;
+            }
         }
 
         // 256-color check (require higher distinct colors if non-xref)
         if off + 512 <= rom.len() && off.is_multiple_of(64) {
-            if let Some((colors, score)) = evaluate_bgr555_palette(&rom[off..off + 512], 256) {
+            if let PaletteEval::Valid(colors, score) =
+                evaluate_bgr555_palette_fast(&rom[off..off + 512], 256)
+            {
                 if score >= 12.0 {
-                    seen_offsets.insert(off);
                     results.push(ScannedPalette {
                         id: format!("pal_0x{:08X}", off),
                         offset: off,
@@ -358,9 +389,8 @@ pub fn scan_palettes(rom: &[u8]) -> Vec<ScannedPalette> {
 
         // 16-color check
         if off + 32 <= rom.len() {
-            if let Some((colors, score)) = evaluate_bgr555_palette(&rom[off..off + 32], 16) {
-                if score >= 10.0 {
-                    seen_offsets.insert(off);
+            match evaluate_bgr555_palette_fast(&rom[off..off + 32], 16) {
+                PaletteEval::Valid(colors, score) if score >= 10.0 => {
                     results.push(ScannedPalette {
                         id: format!("pal_0x{:08X}", off),
                         offset: off,
@@ -373,6 +403,13 @@ pub fn scan_palettes(rom: &[u8]) -> Vec<ScannedPalette> {
                     off += 32;
                     continue;
                 }
+                PaletteEval::BadBit15(word_idx) => {
+                    // Any 16-color or 256-color palette starting at or before `off + word_idx * 2`
+                    // would include this invalid bit-15 word; jump straight past it.
+                    off = (off + word_idx * 2 + 2 + 3) & !3;
+                    continue;
+                }
+                _ => {}
             }
         }
         off += 4;
@@ -382,12 +419,49 @@ pub fn scan_palettes(rom: &[u8]) -> Vec<ScannedPalette> {
     results
 }
 
-fn evaluate_bgr555_palette(bytes: &[u8], color_count: usize) -> Option<(Vec<[u8; 4]>, f32)> {
+fn evaluate_bgr555_palette_fast(bytes: &[u8], color_count: usize) -> PaletteEval {
     let byte_len = color_count * 2;
-    if bytes.len() < byte_len {
-        return None;
+    if color_count == 0 || color_count > 256 || bytes.len() < byte_len {
+        return PaletteEval::Rejected;
     }
     let slice = &bytes[..byte_len];
+    let chunks = slice.as_chunks::<2>().0;
+
+    // Zero-allocation pass: check bit 15 FIRST, track luminance min/max and arithmetic progression.
+    let mut words = [0u16; 256];
+    let mut min_lum = u32::MAX;
+    let mut max_lum = 0u32;
+    let mut is_progression = true;
+    let mut first_delta = 0u16;
+
+    for (i, chunk) in chunks.iter().enumerate() {
+        let w = u16::from_le_bytes(*chunk);
+        // Bit 15 must be 0 for standard GBA BGR555 colors
+        if (w & 0x8000) != 0 {
+            return PaletteEval::BadBit15(i);
+        }
+        words[i] = w;
+        if i == 1 {
+            first_delta = w.wrapping_sub(words[0]);
+        } else if i >= 2 && is_progression && w.wrapping_sub(words[i - 1]) != first_delta {
+            is_progression = false;
+        }
+        let r = u32::from(w & 0x1F);
+        let g = u32::from((w >> 5) & 0x1F);
+        let b = u32::from((w >> 10) & 0x1F);
+        let lum = (r * 299 + g * 587 + b * 114) / 1000;
+        if lum < min_lum {
+            min_lum = lum;
+        }
+        if lum > max_lum {
+            max_lum = lum;
+        }
+    }
+
+    let contrast = max_lum.saturating_sub(min_lum) as f32;
+    if (color_count == 16 && contrast < 5.0) || (color_count == 256 && contrast < 8.0) {
+        return PaletteEval::Rejected;
+    }
 
     // Reject printable ASCII text blocks (all ASCII bytes 0x00..=0x7F have bit 15 == 0)
     let ascii_count = slice
@@ -395,61 +469,31 @@ fn evaluate_bgr555_palette(bytes: &[u8], color_count: usize) -> Option<(Vec<[u8;
         .filter(|&&b| (0x20..=0x7E).contains(&b) || b == b'\n' || b == b'\r' || b == b'\t')
         .count();
     if ascii_count * 100 / byte_len >= 55 {
-        return None;
+        return PaletteEval::Rejected;
     }
 
-    let mut words = Vec::with_capacity(color_count);
-    let mut lums = Vec::with_capacity(color_count);
-    let mut colors = Vec::with_capacity(color_count);
-
-    for chunk in slice.as_chunks::<2>().0 {
-        let w = u16::from_le_bytes(*chunk);
-        // Bit 15 must be 0 for standard GBA BGR555 colors
-        if (w & 0x8000) != 0 {
-            return None;
+    // Count distinct colors on stack without heap allocation
+    let active_words = &mut words[..color_count];
+    active_words.sort_unstable();
+    let mut unique_count = 1usize;
+    for pair in active_words.windows(2) {
+        if pair[0] != pair[1] {
+            unique_count += 1;
         }
-        words.push(w);
-        let r = (w & 0x1F) as u32;
-        let g = ((w >> 5) & 0x1F) as u32;
-        let b = ((w >> 10) & 0x1F) as u32;
-        let lum = (r * 299 + g * 587 + b * 114) / 1000;
-        lums.push(lum);
-        colors.push(bgr555_to_rgba8(w));
     }
 
-    let unique_words: HashSet<u16> = words.iter().copied().collect();
     let min_unique = if color_count == 16 { 4 } else { 16 };
-    if unique_words.len() < min_unique {
-        return None;
+    if unique_count < min_unique || (is_progression && unique_count > 1) {
+        return PaletteEval::Rejected;
     }
 
-    // Check for constant arithmetic progressions (e.g., opcodes or counters)
-    let mut is_progression = true;
-    if words.len() >= 4 {
-        let delta = words[1].wrapping_sub(words[0]);
-        for i in 1..words.len() - 1 {
-            if words[i + 1].wrapping_sub(words[i]) != delta {
-                is_progression = false;
-                break;
-            }
-        }
-    }
-    if is_progression && unique_words.len() > 1 {
-        return None;
+    // Only allocate the RGBA output buffer once all filters pass
+    let mut colors = Vec::with_capacity(color_count);
+    for chunk in chunks {
+        colors.push(bgr555_to_rgba8(u16::from_le_bytes(*chunk)));
     }
 
-    let min_lum = lums.iter().copied().min().unwrap_or(0);
-    let max_lum = lums.iter().copied().max().unwrap_or(0);
-    let contrast = (max_lum - min_lum) as f32;
-
-    if color_count == 16 && contrast < 5.0 {
-        return None;
-    }
-    if color_count == 256 && contrast < 8.0 {
-        return None;
-    }
-
-    Some((colors, contrast))
+    PaletteEval::Valid(colors, contrast)
 }
 
 // -----------------------------------------------------------------------------
@@ -468,12 +512,9 @@ pub fn scan_graphics_and_maps(
     let mut scanned_ranges: Vec<(usize, usize)> = Vec::new();
 
     // Scan for 4-byte aligned compression headers (LZ77: 0x10, Huffman: 0x24/0x28)
-    for off in (0..rom.len().saturating_sub(8)).step_by(4) {
-        // Skip if inside an already decompressed block
-        if scanned_ranges.iter().any(|(s, e)| off >= *s && off < *e) {
-            continue;
-        }
-
+    let scan_limit = rom.len().saturating_sub(8);
+    let mut off = 0usize;
+    while off < scan_limit {
         let magic = rom[off];
         let maybe_decompressed = if magic == 0x10 {
             // LZ77
@@ -571,15 +612,19 @@ pub fn scan_graphics_and_maps(
                 _ => decomp_len.saturating_sub(1),
             };
             if consumed > max_consumed {
+                off += 4;
                 continue;
             }
-            scanned_ranges.push((off, off + consumed));
+            let block_end = off + consumed;
+            scanned_ranges.push((off, block_end));
+            let next_off = ((block_end + 3) & !3).max(off + 4);
 
             // Check if it matches a standard background tilemap size:
             // 2048 bytes (32x32), 4096 bytes (64x32), or 8192 bytes (64x64)
             if decomp_len == 2048 || decomp_len == 4096 || decomp_len == 8192 {
                 if let Some(map) = try_decode_tilemap(off, comp, consumed, &decompressed) {
                     tilemaps.push(map);
+                    off = next_off;
                     continue;
                 }
             }
@@ -590,8 +635,8 @@ pub fn scan_graphics_and_maps(
                 let first_byte = decompressed[0];
                 let all_same = decompressed.iter().all(|&b| b == first_byte);
                 if !all_same {
-                    let bpp = classify_tileset_bpp(off, off + consumed, comp, &decompressed, palettes);
-                    let pal_off = find_nearest_palette_for_bpp(off, off + consumed, bpp, palettes);
+                    let bpp = classify_tileset_bpp(off, block_end, comp, &decompressed, palettes);
+                    let pal_off = find_nearest_palette_for_bpp(off, block_end, bpp, palettes);
                     let tile_count = if bpp == 8 { decomp_len / 64 } else { decomp_len / 32 };
 
                     tilesets.push(ScannedTileset {
@@ -608,9 +653,14 @@ pub fn scan_graphics_and_maps(
                     });
                 }
             }
+
+            off = next_off;
+        } else {
+            off += 4;
         }
     }
 
+    // `scanned_ranges` is strictly increasing and non-overlapping from the forward pass above.
     // Scan for uncompressed tilesets referenced by ROM pointer tables
     let tables = scan_pointer_tables(rom, 8);
     let mut candidate_raw_offsets: Vec<usize> = Vec::new();
@@ -632,19 +682,18 @@ pub fn scan_graphics_and_maps(
     candidate_raw_offsets.sort_unstable();
 
     for (idx, &raw_off) in candidate_raw_offsets.iter().enumerate() {
-        if scanned_ranges.iter().any(|(s, e)| raw_off >= *s && raw_off < *e) {
-            continue;
-        }
-        // Bound upper limit using next sorted pointer and next scanned range to avoid overlaps
+        // Binary search `scanned_ranges` (O(log R)) for containment and nearest following range.
+        let pos = scanned_ranges.partition_point(|&(_, e)| e <= raw_off);
         let mut upper_bound = (raw_off + 32_768).min(rom.len());
+        if let Some(&(s, _)) = scanned_ranges.get(pos) {
+            if raw_off >= s {
+                continue;
+            }
+            upper_bound = upper_bound.min(s);
+        }
         if let Some(&next_ptr_off) = candidate_raw_offsets.get(idx + 1) {
             if next_ptr_off > raw_off {
                 upper_bound = upper_bound.min(next_ptr_off);
-            }
-        }
-        for &(s, _) in &scanned_ranges {
-            if s > raw_off {
-                upper_bound = upper_bound.min(s);
             }
         }
         let max_scan = (upper_bound.saturating_sub(raw_off)) & !31;
@@ -673,7 +722,6 @@ pub fn scan_graphics_and_maps(
             let pal_off = find_nearest_palette_for_bpp(raw_off, raw_off + valid_len, bpp, palettes);
             let tile_count = if bpp == 8 { valid_len / 64 } else { valid_len / 32 };
 
-            scanned_ranges.push((raw_off, raw_off + valid_len));
             tilesets.push(ScannedTileset {
                 id: format!("tiles_raw_0x{:08X}", raw_off),
                 offset: raw_off,
@@ -1017,6 +1065,21 @@ pub fn render_tilemap_rgba(
 // Tiled TSX & TMX Export
 // -----------------------------------------------------------------------------
 
+fn xml_escape_attr(s: &str) -> String {
+    let mut out = String::with_capacity(s.len());
+    for ch in s.chars() {
+        match ch {
+            '&' => out.push_str("&amp;"),
+            '<' => out.push_str("&lt;"),
+            '>' => out.push_str("&gt;"),
+            '"' => out.push_str("&quot;"),
+            '\'' => out.push_str("&apos;"),
+            _ => out.push(ch),
+        }
+    }
+    out
+}
+
 /// Generate a Tiled Tileset (`.tsx`) XML document.
 pub fn generate_tsx(
     name: &str,
@@ -1026,10 +1089,12 @@ pub fn generate_tsx(
     img_w: u32,
     img_h: u32,
 ) -> String {
+    let name_esc = xml_escape_attr(name);
+    let image_esc = xml_escape_attr(image_rel_path);
     format!(
         "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n\
-         <tileset version=\"1.10\" tiledversion=\"1.10.2\" name=\"{name}\" tilewidth=\"8\" tileheight=\"8\" tilecount=\"{tile_count}\" columns=\"{columns}\">\n \
-         <image source=\"{image_rel_path}\" width=\"{img_w}\" height=\"{img_h}\"/>\n\
+         <tileset version=\"1.10\" tiledversion=\"1.10.2\" name=\"{name_esc}\" tilewidth=\"8\" tileheight=\"8\" tilecount=\"{tile_count}\" columns=\"{columns}\">\n \
+         <image source=\"{image_esc}\" width=\"{img_w}\" height=\"{img_h}\"/>\n\
          </tileset>\n"
     )
 }
@@ -1067,7 +1132,7 @@ pub fn generate_tmx(
                 gid |= 0x4000_0000;
             }
 
-            csv.push_str(&gid.to_string());
+            let _ = write!(&mut csv, "{gid}");
             if tx + 1 < map.width_tiles || ty + 1 < map.height_tiles {
                 csv.push(',');
             }
@@ -1075,10 +1140,11 @@ pub fn generate_tmx(
         csv.push('\n');
     }
 
+    let tsx_esc = xml_escape_attr(tsx_rel_path);
     format!(
         "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n\
          <map version=\"1.10\" tiledversion=\"1.10.2\" orientation=\"orthogonal\" renderorder=\"right-down\" width=\"{w}\" height=\"{h}\" tilewidth=\"8\" tileheight=\"8\" infinite=\"0\" nextlayerid=\"2\" nextobjectid=\"1\">\n \
-         <tileset firstgid=\"1\" source=\"{tsx_rel_path}\"/>\n \
+         <tileset firstgid=\"1\" source=\"{tsx_esc}\"/>\n \
          <layer id=\"1\" name=\"Background Layer\" width=\"{w}\" height=\"{h}\">\n  \
          <data encoding=\"csv\">\n{csv}\
          </data>\n \
@@ -1120,15 +1186,14 @@ pub fn render_sprite_rgba(
                 } else {
                     (attr.tile_index as usize) + (ty * tiles_x + tx)
                 }
+            } else if is_8bpp {
+                ((attr.tile_index as usize) & !1) + ty * 32 + tx * 2
             } else {
                 (attr.tile_index as usize) + ty * 32 + tx
             };
 
-            let tile_bytes_start = if is_8bpp {
-                local_tile * 64
-            } else {
-                local_tile * 32
-            };
+            // GBA OBJ VRAM tile numbers always index 32-byte slots (8bpp tiles span 2 slots = 64B).
+            let tile_bytes_start = local_tile * 32;
 
             let tile_pixels = if is_8bpp {
                 if tile_bytes_start + 64 <= tiles.len() {
@@ -1369,10 +1434,11 @@ pub fn rip_graphics(rom: &[u8], options: &RipOptions) -> Result<RipManifest> {
             fs::write(&png_path, &png_bytes).map_err(|e| Error::Malformed(e.to_string()))?;
 
             // Generate Tiled TMX referencing tileset
-            let tsx_rel = match map.tileset_offset {
-                Some(t_off) => format!("../tiles/tiles_0x{:08X}.tsx", t_off),
-                None => "../tiles/default.tsx".to_string(),
-            };
+            let tsx_rel = map
+                .tileset_offset
+                .and_then(|t_off| tiles_map.get(&t_off))
+                .map(|t| format!("../tiles/{}.tsx", t.id))
+                .unwrap_or_else(|| "../tiles/default.tsx".to_string());
             let tmx_filename = format!("{}.tmx", map.id);
             let tmx_xml = generate_tmx(map, &tsx_rel);
             let tmx_path = maps_dir.join(&tmx_filename);
@@ -1400,6 +1466,21 @@ pub fn rip_graphics(rom: &[u8], options: &RipOptions) -> Result<RipManifest> {
     if options.extract_sprites && !sprites.is_empty() {
         let first_tiles = tilesets.first().map(|t| t.raw_data.as_slice()).unwrap_or(&[]);
         for sp in sprites.iter().take(32) {
+            let (shape, size) = match (sp.width, sp.height) {
+                (8, 8) => (crate::oam::ObjShape::Square, 0),
+                (16, 16) => (crate::oam::ObjShape::Square, 1),
+                (32, 32) => (crate::oam::ObjShape::Square, 2),
+                (64, 64) => (crate::oam::ObjShape::Square, 3),
+                (16, 8) => (crate::oam::ObjShape::Horizontal, 0),
+                (32, 8) => (crate::oam::ObjShape::Horizontal, 1),
+                (32, 16) => (crate::oam::ObjShape::Horizontal, 2),
+                (64, 32) => (crate::oam::ObjShape::Horizontal, 3),
+                (8, 16) => (crate::oam::ObjShape::Vertical, 0),
+                (8, 32) => (crate::oam::ObjShape::Vertical, 1),
+                (16, 32) => (crate::oam::ObjShape::Vertical, 2),
+                (32, 64) => (crate::oam::ObjShape::Vertical, 3),
+                _ => continue,
+            };
             let attr = ObjAttr {
                 y: 0,
                 affine: false,
@@ -1411,16 +1492,12 @@ pub fn rip_graphics(rom: &[u8], options: &RipOptions) -> Result<RipManifest> {
                 } else {
                     crate::oam::ObjColorMode::Bpp4
                 },
-                shape: match (sp.width, sp.height) {
-                    (w, h) if w == h => crate::oam::ObjShape::Square,
-                    (w, h) if w > h => crate::oam::ObjShape::Horizontal,
-                    _ => crate::oam::ObjShape::Vertical,
-                },
+                shape,
                 x: 0,
                 affine_param: 0,
                 h_flip: sp.h_flip,
                 v_flip: sp.v_flip,
-                size: 0,
+                size,
                 tile_index: sp.tile_index,
                 priority: 0,
                 palette_bank: sp.palette_bank,
@@ -1430,7 +1507,7 @@ pub fn rip_graphics(rom: &[u8], options: &RipOptions) -> Result<RipManifest> {
                 if let Ok(png_bytes) = RawPngEncoder::encode_rgba8(w as u32, h as u32, &rgba) {
                     let filename = format!("{}.png", sp.id);
                     let path = sprites_dir.join(&filename);
-                    let _ = fs::write(&path, &png_bytes);
+                    fs::write(&path, &png_bytes).map_err(|e| Error::Malformed(e.to_string()))?;
 
                     sprite_entries.push(SpriteManifestEntry {
                         id: sp.id.clone(),
@@ -1947,6 +2024,71 @@ mod tests {
 
         // Cleanup
         let _ = fs::remove_dir_all(&test_dir);
+    }
+
+    #[test]
+    fn test_sprite_8bpp_1d_and_2d_stride_hardware_accurate() {
+        // 16x16 8bpp sprite (2x2 tiles).
+        // On GBA hardware, OBJ VRAM tile numbers always address 32-byte slots; each 8bpp tile is 64 bytes (2 slots).
+        // 1D mapping from tile_index=2:
+        //   (tx=0, ty=0) -> slot 2 -> byte 64
+        //   (tx=1, ty=0) -> slot 4 -> byte 128
+        //   (tx=0, ty=1) -> slot 6 -> byte 192
+        //   (tx=1, ty=1) -> slot 8 -> byte 256
+        // 2D mapping from tile_index=3 (bit 0 masked -> 2):
+        //   (tx=0, ty=0) -> slot 2  -> byte 64
+        //   (tx=1, ty=0) -> slot 4  -> byte 128
+        //   (tx=0, ty=1) -> slot 34 -> byte 1088
+        //   (tx=1, ty=1) -> slot 36 -> byte 1152
+        let mut tiles = vec![0u8; 40 * 32];
+        tiles[64] = 1; // (0,0) top-left
+        tiles[128 + 7] = 2; // (1,0) top-right
+        tiles[192 + 7 * 8] = 3; // 1D (0,1) bottom-left
+        tiles[256 + 7 * 8 + 7] = 4; // 1D (1,1) bottom-right
+        tiles[1088 + 7 * 8] = 5; // 2D (0,1) bottom-left
+        tiles[1152 + 7 * 8 + 7] = 6; // 2D (1,1) bottom-right
+
+        let mut palette = vec![[0u8; 4]; 256];
+        for (i, slot) in palette.iter_mut().enumerate().take(7).skip(1) {
+            *slot = [(i * 40) as u8, (255 - i * 30) as u8, 128, 255];
+        }
+
+        let attr_1d = ObjAttr {
+            y: 0,
+            affine: false,
+            double_size_or_disable: false,
+            mode: crate::oam::ObjMode::Normal,
+            mosaic: false,
+            color_mode: crate::oam::ObjColorMode::Bpp8,
+            shape: crate::oam::ObjShape::Square,
+            x: 0,
+            affine_param: 0,
+            h_flip: false,
+            v_flip: false,
+            size: 1, // 16x16
+            tile_index: 2,
+            priority: 0,
+            palette_bank: 0,
+        };
+
+        let (w, h, rgba_1d) = render_sprite_rgba(&attr_1d, &tiles, &palette, true).unwrap();
+        assert_eq!((w, h), (16, 16));
+        let px = |buf: &[u8], x: usize, y: usize| -> [u8; 4] {
+            let i = (y * 16 + x) * 4;
+            [buf[i], buf[i + 1], buf[i + 2], buf[i + 3]]
+        };
+        assert_eq!(px(&rgba_1d, 0, 0), palette[1]);
+        assert_eq!(px(&rgba_1d, 15, 0), palette[2]);
+        assert_eq!(px(&rgba_1d, 0, 15), palette[3]);
+        assert_eq!(px(&rgba_1d, 15, 15), palette[4]);
+
+        let mut attr_2d = attr_1d;
+        attr_2d.tile_index = 3; // Odd index masked to 2 in 2D 8bpp mode
+        let (_, _, rgba_2d) = render_sprite_rgba(&attr_2d, &tiles, &palette, false).unwrap();
+        assert_eq!(px(&rgba_2d, 0, 0), palette[1]);
+        assert_eq!(px(&rgba_2d, 15, 0), palette[2]);
+        assert_eq!(px(&rgba_2d, 0, 15), palette[5]);
+        assert_eq!(px(&rgba_2d, 15, 15), palette[6]);
     }
 }
 

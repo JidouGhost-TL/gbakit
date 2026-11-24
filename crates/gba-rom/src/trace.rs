@@ -95,7 +95,7 @@ pub fn analyze_trace(rom: &[u8]) -> Result<TraceAnalysisReport> {
     }
 
     let hdr = AgbHeader::parse(rom)?;
-    let rom_len = rom.len();
+    let rom_len = rom.len().min(crate::MAX_ROM_SIZE);
     let max_rom_addr = ROM_BUS_BASE + rom_len as u32;
 
     // Decode entry point from ARM branch at 0x08000000

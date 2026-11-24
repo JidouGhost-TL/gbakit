@@ -100,30 +100,38 @@ pub fn detect_konami_version(rom: &[u8]) -> Option<KonamiKceVersion> {
     KonamiKceVersion::detect_from_bytes(rom)
 }
 
-/// Detect whether a GBA ROM uses a supported Konami KCE custom DirectSound engine.
-///
-/// Always checks **KCEH before KCEJ** to correctly classify builds that share
-/// the `0xF600_0004` DMA1 control constant while using KCEH soundbank containers.
-pub fn detect_konami_engine(rom: &[u8]) -> Option<KonamiEngineVariant> {
+/// Detect Konami KCE engine variant and optional version in a single `detect_from_bytes` pass.
+pub(crate) fn detect_konami_engine_with_version(
+    rom: &[u8],
+) -> Option<(KonamiEngineVariant, Option<KonamiKceVersion>)> {
     if rom.len() < 0x40 {
         return None;
     }
 
-    let detected_family = KonamiKceVersion::detect_from_bytes(rom).map(KonamiKceVersion::family);
+    let detected_ver = KonamiKceVersion::detect_from_bytes(rom);
+    let detected_family = detected_ver.map(KonamiKceVersion::family);
 
     if (detected_family == Some(KonamiKceFamily::Kceh) || has_kceh_signature(rom))
         && !scan_kceh_banks(rom).is_empty()
     {
-        return Some(KonamiEngineVariant::Kceh);
+        return Some((KonamiEngineVariant::Kceh, detected_ver));
     }
 
     if (detected_family == Some(KonamiKceFamily::Kcej) || has_kcej_signature(rom))
         && !scan_kcej_tables(rom).is_empty()
     {
-        return Some(KonamiEngineVariant::Kcej);
+        return Some((KonamiEngineVariant::Kcej, detected_ver));
     }
 
     None
+}
+
+/// Detect whether a GBA ROM uses a supported Konami KCE custom DirectSound engine.
+///
+/// Always checks **KCEH before KCEJ** to correctly classify builds that share
+/// the `0xF600_0004` DMA1 control constant while using KCEH soundbank containers.
+pub fn detect_konami_engine(rom: &[u8]) -> Option<KonamiEngineVariant> {
+    detect_konami_engine_with_version(rom).map(|(variant, _)| variant)
 }
 
 /// Scan a GBA ROM for Konami KCE (KCEH or KCEJ) signed 8-bit PCM samples.

@@ -13,7 +13,8 @@
 use formatkit_core::{Error, Result};
 use serde::{Deserialize, Serialize};
 
-use crate::{rom_offset_to_bus, HEADER_SIZE};
+use crate::relocate::{find_free_space_prefer_ff, patch_rom_pointers};
+use crate::rom_offset_to_bus;
 
 /// Maximum entry count accepted when parsing or scanning an archive to prevent DoS allocations.
 pub const MAX_ARCHIVE_ENTRIES: usize = 65_536;
@@ -645,15 +646,15 @@ pub fn replace_archive_in_rom(
 
     let written_bytes = new_archive_bytes.len();
     if written_bytes <= original_capacity {
+        let written_bus_address = rom_offset_to_bus(rom_offset).ok_or(Error::InvalidField {
+            what: "written_rom_offset",
+            value: rom_offset as u64,
+        })?;
         rom[rom_offset..rom_offset + written_bytes].copy_from_slice(new_archive_bytes);
         let slack_bytes = original_capacity - written_bytes;
         if slack_bytes > 0 {
             rom[rom_offset + written_bytes..rom_offset + original_capacity].fill(options.pad_byte);
         }
-        let written_bus_address = rom_offset_to_bus(rom_offset).ok_or(Error::InvalidField {
-            what: "written_rom_offset",
-            value: rom_offset as u64,
-        })?;
         return Ok(ArchiveReplaceReport {
             format: parsed_new.format,
             entry_count: parsed_new.entries.len(),
@@ -678,12 +679,11 @@ pub fn replace_archive_in_rom(
     }
 
     let search_start = options.free_space_start.max(ARCHIVE_FREE_SPACE_START);
-    let new_offset = find_archive_free_space(
+    let new_offset = find_free_space_prefer_ff(
         rom,
         written_bytes,
         options.relocate_alignment,
         search_start,
-        &[0xFF, 0x00],
         Some((rom_offset, rom_offset + original_capacity)),
     )
     .ok_or(Error::ResourceLimit {
@@ -692,17 +692,22 @@ pub fn replace_archive_in_rom(
         limit: 0,
     })?;
 
+    let _old_bus_address = rom_offset_to_bus(rom_offset).ok_or(Error::InvalidField {
+        what: "old_rom_offset",
+        value: rom_offset as u64,
+    })?;
+    let written_bus_address = rom_offset_to_bus(new_offset).ok_or(Error::InvalidField {
+        what: "relocated_rom_offset",
+        value: new_offset as u64,
+    })?;
+
     rom[new_offset..new_offset + written_bytes].copy_from_slice(new_archive_bytes);
-    let patched_pointer_offsets = patch_archive_rom_pointers(
+    let patched_pointer_offsets = patch_rom_pointers(
         rom,
         rom_offset,
         new_offset,
         Some((new_offset, new_offset + written_bytes)),
     )?;
-    let written_bus_address = rom_offset_to_bus(new_offset).ok_or(Error::InvalidField {
-        what: "relocated_rom_offset",
-        value: new_offset as u64,
-    })?;
 
     Ok(ArchiveReplaceReport {
         format: parsed_new.format,
@@ -717,79 +722,6 @@ pub fn replace_archive_in_rom(
         patched_pointers: patched_pointer_offsets.len(),
         patched_pointer_offsets,
     })
-}
-
-fn find_archive_free_space(
-    rom: &[u8],
-    needed_len: usize,
-    alignment: usize,
-    search_start: usize,
-    free_bytes: &[u8],
-    exclude_range: Option<(usize, usize)>,
-) -> Option<usize> {
-    if needed_len == 0 || rom.len() < needed_len {
-        return None;
-    }
-    let align = alignment.max(1);
-    let base_start = align_up(search_start.max(ARCHIVE_FREE_SPACE_START), align);
-    if base_start + needed_len > rom.len() {
-        return None;
-    }
-
-    for &fill in free_bytes {
-        let mut pos = base_start;
-        while pos + needed_len <= rom.len() {
-            if let Some((ex_start, ex_end)) = exclude_range {
-                if pos < ex_end && pos + needed_len > ex_start {
-                    pos = align_up(ex_end, align);
-                    continue;
-                }
-            }
-            if let Some(mismatch) = rom[pos..pos + needed_len].iter().position(|&b| b != fill) {
-                pos = align_up(pos + mismatch + 1, align);
-            } else {
-                return Some(pos);
-            }
-        }
-    }
-    None
-}
-
-fn patch_archive_rom_pointers(
-    rom: &mut [u8],
-    old_offset: usize,
-    new_offset: usize,
-    skip_range: Option<(usize, usize)>,
-) -> Result<Vec<usize>> {
-    let old_bus = rom_offset_to_bus(old_offset).ok_or(Error::InvalidField {
-        what: "old_rom_offset",
-        value: old_offset as u64,
-    })?;
-    let new_bus = rom_offset_to_bus(new_offset).ok_or(Error::InvalidField {
-        what: "new_rom_offset",
-        value: new_offset as u64,
-    })?;
-
-    let old_bytes = old_bus.to_le_bytes();
-    let new_bytes = new_bus.to_le_bytes();
-    let mut patched = Vec::new();
-
-    let scan_end = rom.len() & !3;
-    let mut pos = HEADER_SIZE;
-    while pos < scan_end {
-        if let Some((skip_start, skip_end)) = skip_range {
-            if pos >= skip_start && pos < skip_end {
-                pos = align_up(skip_end, 4);
-                continue;
-            }
-        }
-        if rom[pos..pos + 4] == old_bytes {
-            rom[pos..pos + 4].copy_from_slice(&new_bytes);
-            patched.push(pos);
-        }
-        pos += 4;
-    }
-    Ok(patched)
 }
 
 fn read_u32_le(bytes: &[u8], off: usize) -> u32 {

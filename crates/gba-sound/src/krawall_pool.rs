@@ -72,14 +72,10 @@ pub struct KrawallSampleEntry {
     pub pcm_data: Vec<i8>,
 }
 
-/// Detect whether a GBA ROM uses the Krawall engine or embeds valid ProTracker MOD / S3M modules.
-pub fn detect_krawall_engine(rom: &[u8]) -> bool {
+/// Fallback Krawall detection when `KrawallVersion::detect_from_bytes` returned `None`.
+pub(crate) fn detect_krawall_fallback(rom: &[u8]) -> bool {
     if rom.len() < 32 {
         return false;
-    }
-
-    if KrawallVersion::detect_from_bytes(rom).is_some() {
-        return true;
     }
 
     const ENGINE_SIGNATURES: &[&[u8]] = &[
@@ -98,6 +94,15 @@ pub fn detect_krawall_engine(rom: &[u8]) -> bool {
     }
 
     !scan_krawall_soundpool(rom).is_empty()
+}
+
+/// Detect whether a GBA ROM uses the Krawall engine or embeds valid ProTracker MOD / S3M modules.
+pub fn detect_krawall_engine(rom: &[u8]) -> bool {
+    if rom.len() < 32 {
+        return false;
+    }
+
+    KrawallVersion::detect_from_bytes(rom).is_some() || detect_krawall_fallback(rom)
 }
 
 /// Scan a GBA ROM for Krawall native sample tables, embedded ProTracker MOD modules,

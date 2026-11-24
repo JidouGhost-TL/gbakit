@@ -73,6 +73,7 @@ impl HuffmanTree {
         let mut nodes: HashMap<u16, (u16, u16)> = HashMap::new();
         let mut encode_table: HashMap<u16, Vec<u8>> = HashMap::new();
         let mut visiting: HashSet<u16> = HashSet::new();
+        let mut visited: HashSet<u16> = HashSet::new();
         let mut path: Vec<u8> = Vec::new();
 
         parse_and_validate_node(
@@ -81,6 +82,7 @@ impl HuffmanTree {
             root_index,
             &mut nodes,
             &mut visiting,
+            &mut visited,
             &mut path,
             &mut encode_table,
         )?;
@@ -140,6 +142,16 @@ impl HuffmanTree {
                 needed: 1,
                 available: 0,
             });
+        }
+
+        // Guard against a degenerate tree whose root is a non-terminator leaf
+        // (which would otherwise emit symbols in a loop while consuming 0 bits).
+        if let Some(&(root_l, root_r)) = self.nodes.get(&self.root_index) {
+            if root_r == 0xFFFF && root_l != 0x0000 {
+                return Err(Error::Malformed(
+                    "degenerate Huffman tree: root node is a non-terminator leaf".into(),
+                ));
+            }
         }
 
         let mut out = Vec::new();
@@ -251,12 +263,14 @@ impl HuffmanTree {
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 fn parse_and_validate_node(
     rom: &[u8],
     tree_offset: usize,
     node_idx: u16,
     nodes: &mut HashMap<u16, (u16, u16)>,
     visiting: &mut HashSet<u16>,
+    visited: &mut HashSet<u16>,
     path: &mut Vec<u8>,
     encode_table: &mut HashMap<u16, Vec<u8>>,
 ) -> Result<()> {
@@ -267,11 +281,15 @@ fn parse_and_validate_node(
             limit: MAX_TREE_DEPTH as u64,
         });
     }
-    if !visiting.insert(node_idx) {
+    if visiting.contains(&node_idx) {
         return Err(Error::Malformed(format!(
             "cycle detected in Huffman tree at node {node_idx}"
         )));
     }
+    if visited.contains(&node_idx) {
+        return Ok(());
+    }
+    visiting.insert(node_idx);
 
     let (left, right) = if let Some(&pair) = nodes.get(&node_idx) {
         pair
@@ -289,7 +307,7 @@ fn parse_and_validate_node(
                 what: "huffman_node_offset",
                 value: u64::from(node_idx),
             })?;
-        if byte_off + 4 > rom.len() {
+        if byte_off.checked_add(4).is_none_or(|end| end > rom.len()) {
             return Err(Error::Truncated {
                 offset: byte_off,
                 needed: 4,
@@ -314,15 +332,34 @@ fn parse_and_validate_node(
             .or_insert_with(|| path.clone());
     } else {
         path.push(0);
-        parse_and_validate_node(rom, tree_offset, left, nodes, visiting, path, encode_table)?;
+        parse_and_validate_node(
+            rom,
+            tree_offset,
+            left,
+            nodes,
+            visiting,
+            visited,
+            path,
+            encode_table,
+        )?;
         path.pop();
 
         path.push(1);
-        parse_and_validate_node(rom, tree_offset, right, nodes, visiting, path, encode_table)?;
+        parse_and_validate_node(
+            rom,
+            tree_offset,
+            right,
+            nodes,
+            visiting,
+            visited,
+            path,
+            encode_table,
+        )?;
         path.pop();
     }
 
     visiting.remove(&node_idx);
+    visited.insert(node_idx);
     Ok(())
 }
 
@@ -427,6 +464,11 @@ pub fn replace_huffman_text_in_rom(
 ) -> Result<TextReplaceReport> {
     let tree = HuffmanTree::from_rom(rom, tree_offset, root_offset)?;
     let orig = tree.decode_at(rom, entry_offset, 16_384)?;
+    if options.capacity.is_none() && !orig.terminated {
+        return Err(Error::Malformed(format!(
+            "Huffman string at offset 0x{entry_offset:X} is not terminated within 16384 bytes; specify explicit capacity"
+        )));
+    }
     let encoded = tree.encode(new_bytes)?;
     let pad_byte = options.pad_byte.unwrap_or(0x00);
 
@@ -593,5 +635,50 @@ mod tests {
         assert_eq!(formatted, "Weapon Level increased.<$1F>");
         let parsed = parse_huffman_text(&formatted).unwrap();
         assert_eq!(parsed, raw);
+    }
+
+    #[test]
+    fn huffman_dag_validates_in_linear_time() {
+        // 64-level diamond DAG: node i points to (i-1, i-1), node 0 is leaf END (0x0000).
+        // Without visited memoization, DFS would visit node 0 2^64 times.
+        let mut rom = vec![0u8; 66 * 4];
+        rom[0..2].copy_from_slice(&0x0000u16.to_le_bytes());
+        rom[2..4].copy_from_slice(&0xFFFFu16.to_le_bytes());
+        for i in 1u16..=64 {
+            let off = usize::from(i) * 4;
+            let child = i - 1;
+            rom[off..off + 2].copy_from_slice(&child.to_le_bytes());
+            rom[off + 2..off + 4].copy_from_slice(&child.to_le_bytes());
+        }
+        let tree = HuffmanTree::from_rom(&rom, 0, 64 * 4).unwrap();
+        assert_eq!(tree.node_count(), 65);
+        assert_eq!(tree.symbol_count(), 1);
+    }
+
+    #[test]
+    fn huffman_rejects_degenerate_root_and_unterminated_replace() {
+        // 1) Degenerate tree: root is a non-terminator leaf 'A' (0x0041, 0xFFFF)
+        let mut deg_rom = vec![0u8; 32];
+        deg_rom[0..2].copy_from_slice(&0x0041u16.to_le_bytes());
+        deg_rom[2..4].copy_from_slice(&0xFFFFu16.to_le_bytes());
+        let deg_tree = HuffmanTree::from_rom(&deg_rom, 0, 0).unwrap();
+        assert!(matches!(
+            deg_tree.decode_at(&deg_rom, 8, 64),
+            Err(Error::Malformed(_))
+        ));
+
+        // 2) Unterminated Huffman bitstream rejected by replace_huffman_text_in_rom when capacity is None
+        let (mut rom, tree_off, root_off, entry_off, _) = build_synthetic_huffman_rom();
+        // Fill entry_off..end with 0x00 (all '0' bits -> endless 'A's, never reaching END=110)
+        rom[entry_off..].fill(0x00);
+        let err = replace_huffman_text_in_rom(
+            &mut rom,
+            tree_off,
+            root_off,
+            entry_off,
+            b"A",
+            &TextReplaceOptions::default(),
+        );
+        assert!(matches!(err, Err(Error::Malformed(_))));
     }
 }

@@ -19,6 +19,10 @@ use crate::{
 /// Target Sound Engine string embedded into SF2 INFO chunk.
 pub const SF2_SOUND_ENGINE: &str = "GBAKit DirectSound";
 
+/// Maximum aggregate decoded PCM samples permitted across a single compiled M4A SoundFont
+/// (32M samples = 64 MiB PCM16) to prevent unbounded memory allocation.
+pub const MAX_SF2_BANK_SAMPLES: usize = 32 * 1024 * 1024;
+
 pub use formatkit_codec::sf2::{
     GEN_ATTACK_VOL_ENV, GEN_COARSE_TUNE, GEN_DECAY_VOL_ENV, GEN_FINE_TUNE, GEN_HOLD_VOL_ENV,
     GEN_INITIAL_ATTENUATION, GEN_INSTRUMENT, GEN_KEY_RANGE, GEN_OVERRIDING_ROOT_KEY, GEN_PAN,
@@ -447,11 +451,26 @@ pub fn compile_custom_samples_soundfont(
     let mut current_sample_idx = 0usize;
 
     for (i, s) in samples_in.iter().enumerate() {
-        let dw_start = current_sample_idx as u32;
-        let dw_end = (current_sample_idx + s.pcm16.len()) as u32;
+        let dw_start = u32::try_from(current_sample_idx).map_err(|_| Error::ResourceLimit {
+            resource: "sf2_sample_offset",
+            requested: current_sample_idx as u64,
+            limit: u32::MAX as u64,
+        })?;
+        let end_idx = current_sample_idx
+            .checked_add(s.pcm16.len())
+            .ok_or(Error::ResourceLimit {
+                resource: "sf2_sample_offset",
+                requested: u64::MAX,
+                limit: u32::MAX as u64,
+            })?;
+        let dw_end = u32::try_from(end_idx).map_err(|_| Error::ResourceLimit {
+            resource: "sf2_sample_offset",
+            requested: end_idx as u64,
+            limit: u32::MAX as u64,
+        })?;
         let (dw_startloop, dw_endloop) = if let Some((start_l, end_l)) = s.loop_range {
-            let loop_s = (dw_start + start_l).min(dw_end.saturating_sub(1));
-            let loop_e = (dw_start + end_l).min(dw_end);
+            let loop_s = dw_start.saturating_add(start_l).min(dw_end.saturating_sub(1));
+            let loop_e = dw_start.saturating_add(end_l).min(dw_end);
             if loop_s < loop_e {
                 (loop_s, loop_e)
             } else {
@@ -467,7 +486,13 @@ pub fn compile_custom_samples_soundfont(
         for _ in 0..SAMPLE_TERMINAL_PADDING {
             smpl_pcm_bytes.extend_from_slice(&0i16.to_le_bytes());
         }
-        current_sample_idx += s.pcm16.len() + SAMPLE_TERMINAL_PADDING;
+        current_sample_idx = end_idx
+            .checked_add(SAMPLE_TERMINAL_PADDING)
+            .ok_or(Error::ResourceLimit {
+                resource: "sf2_sample_offset",
+                requested: u64::MAX,
+                limit: u32::MAX as u64,
+            })?;
 
         let sample_rate = if s.sample_rate == 0 { 18_158 } else { s.sample_rate };
         let sample_rec = SampleRecord {
@@ -485,7 +510,11 @@ pub fn compile_custom_samples_soundfont(
         samples.push(sample_rec);
 
         let is_loop = s.loop_range.is_some();
-        let inst_id = instruments.len() as u16;
+        let inst_id = u16::try_from(instruments.len()).map_err(|_| Error::ResourceLimit {
+            resource: "sf2_instrument_count",
+            requested: instruments.len() as u64,
+            limit: u16::MAX as u64,
+        })?;
         instruments.push(InstrumentBuilder {
             name: format!("Inst_{:03}", i),
             zones: vec![InstrumentZoneBuilder {
@@ -505,7 +534,11 @@ pub fn compile_custom_samples_soundfont(
             }],
         });
 
-        let bank = (i / 128) as u16;
+        let bank = u16::try_from(i / 128).map_err(|_| Error::ResourceLimit {
+            resource: "sf2_preset_bank",
+            requested: (i / 128) as u64,
+            limit: u16::MAX as u64,
+        })?;
         let preset = (i % 128) as u16;
         presets.push(PresetBuilder {
             bank,
@@ -607,16 +640,40 @@ pub fn compile_m4a_soundfont(rom: &[u8], title_override: Option<&str>) -> Result
     // 1. Collect all unique DirectSound sample pointers across all voicegroups
     let mut unique_samples = Vec::new();
     let mut sample_index_map = HashMap::new();
+    let mut total_bank_samples: usize = 0;
 
     for &vg_ptr in &scan.voicegroups {
         let ptrs = collect_voicegroup_sample_pointers(rom, vg_ptr);
         for ptr in ptrs {
             if let std::collections::hash_map::Entry::Vacant(e) = sample_index_map.entry(ptr) {
                 if let Some(off) = rom_ptr_to_offset(ptr, rom.len()) {
-                    if let Ok((hdr, pcm)) = extract_pcm_i8(&rom[off..], 10_000_000) {
-                        let idx = unique_samples.len();
-                        e.insert(idx);
-                        unique_samples.push((ptr, hdr, pcm));
+                    let remaining = MAX_SF2_BANK_SAMPLES.saturating_sub(total_bank_samples);
+                    match extract_pcm_i8(&rom[off..], remaining.min(10_000_000)) {
+                        Ok((hdr, pcm)) => {
+                            let next_total = total_bank_samples.saturating_add(pcm.len());
+                            if next_total > MAX_SF2_BANK_SAMPLES {
+                                return Err(Error::ResourceLimit {
+                                    resource: "sf2_bank_samples",
+                                    requested: next_total as u64,
+                                    limit: MAX_SF2_BANK_SAMPLES as u64,
+                                });
+                            }
+                            total_bank_samples = next_total;
+                            let idx = unique_samples.len();
+                            e.insert(idx);
+                            unique_samples.push((ptr, hdr, pcm));
+                        }
+                        Err(Error::ResourceLimit { requested, .. }) => {
+                            let req_total = (total_bank_samples as u64).saturating_add(requested);
+                            if req_total > MAX_SF2_BANK_SAMPLES as u64 {
+                                return Err(Error::ResourceLimit {
+                                    resource: "sf2_bank_samples",
+                                    requested: req_total,
+                                    limit: MAX_SF2_BANK_SAMPLES as u64,
+                                });
+                            }
+                        }
+                        Err(_) => {}
                     }
                 }
             }
@@ -636,10 +693,27 @@ pub fn compile_m4a_soundfont(rom: &[u8], title_override: Option<&str>) -> Result
     let mut current_sample_idx = 0usize;
 
     for (ptr, hdr, pcm) in &unique_samples {
-        let dw_start = current_sample_idx as u32;
-        let dw_end = (current_sample_idx + pcm.len()) as u32;
+        let dw_start = u32::try_from(current_sample_idx).map_err(|_| Error::ResourceLimit {
+            resource: "sf2_sample_offset",
+            requested: current_sample_idx as u64,
+            limit: u32::MAX as u64,
+        })?;
+        let end_idx = current_sample_idx
+            .checked_add(pcm.len())
+            .ok_or(Error::ResourceLimit {
+                resource: "sf2_sample_offset",
+                requested: u64::MAX,
+                limit: u32::MAX as u64,
+            })?;
+        let dw_end = u32::try_from(end_idx).map_err(|_| Error::ResourceLimit {
+            resource: "sf2_sample_offset",
+            requested: end_idx as u64,
+            limit: u32::MAX as u64,
+        })?;
         let (dw_startloop, dw_endloop) = if hdr.is_looped() {
-            let loop_s = (dw_start + hdr.loop_start).min(dw_end.saturating_sub(1));
+            let loop_s = dw_start
+                .saturating_add(hdr.loop_start)
+                .min(dw_end.saturating_sub(1));
             let loop_e = dw_end;
             if loop_s < loop_e {
                 (loop_s, loop_e)
@@ -657,7 +731,13 @@ pub fn compile_m4a_soundfont(rom: &[u8], title_override: Option<&str>) -> Result
         for _ in 0..SAMPLE_TERMINAL_PADDING {
             smpl_pcm_bytes.extend_from_slice(&0i16.to_le_bytes());
         }
-        current_sample_idx += pcm.len() + SAMPLE_TERMINAL_PADDING;
+        current_sample_idx = end_idx
+            .checked_add(SAMPLE_TERMINAL_PADDING)
+            .ok_or(Error::ResourceLimit {
+                resource: "sf2_sample_offset",
+                requested: u64::MAX,
+                limit: u32::MAX as u64,
+            })?;
 
         let rate = hdr.base_sample_rate_hz().max(1000);
         let sample_name = format!("SMP_{:06X}", (ptr - ROM_BUS_START) & 0xFFFFFF);
@@ -746,7 +826,18 @@ pub fn compile_m4a_soundfont(rom: &[u8], title_override: Option<&str>) -> Result
                             };
                             let scale_tuning = if is_fixed { Some(0) } else { None };
 
-                            let new_id = instruments.len() as u16;
+                            let new_id = u16::try_from(instruments.len()).map_err(|_| {
+                                Error::ResourceLimit {
+                                    resource: "sf2_instrument_count",
+                                    requested: instruments.len() as u64,
+                                    limit: u16::MAX as u64,
+                                }
+                            })?;
+                            let sample_id = u16::try_from(s_id).map_err(|_| Error::ResourceLimit {
+                                resource: "sf2_sample_count",
+                                requested: s_id as u64,
+                                limit: u16::MAX as u64,
+                            })?;
                             instruments.push(InstrumentBuilder {
                                 name: format!("Inst_{:03}", new_id),
                                 zones: vec![InstrumentZoneBuilder {
@@ -762,7 +853,7 @@ pub fn compile_m4a_soundfont(rom: &[u8], title_override: Option<&str>) -> Result
                                     sustain_cb: m4a_sustain_to_centibels(voice.sustain),
                                     release_tc: m4a_release_to_timecents(voice.release),
                                     scale_tuning,
-                                    sample_id: s_id as u16,
+                                    sample_id,
                                 }],
                             });
                             instrument_cache.insert(inst_key, new_id);
@@ -771,8 +862,8 @@ pub fn compile_m4a_soundfont(rom: &[u8], title_override: Option<&str>) -> Result
                     };
 
                     // Assign preset slot (Bank = vg_idx min 127, Preset = p)
-                    let bank = (vg_idx as u16).min(127);
-                    let pr = (p as u16).min(127);
+                    let bank = vg_idx.min(127) as u16;
+                    let pr = p.min(127) as u16;
                     if seen_preset_slots.insert((bank, pr)) {
                         presets.push(PresetBuilder {
                             bank,
@@ -839,6 +930,13 @@ pub fn compile_m4a_soundfont(rom: &[u8], title_override: Option<&str>) -> Result
                                             None
                                         };
 
+                                        let sample_id = u16::try_from(s_id).map_err(|_| {
+                                            Error::ResourceLimit {
+                                                resource: "sf2_sample_count",
+                                                requested: s_id as u64,
+                                                limit: u16::MAX as u64,
+                                            }
+                                        })?;
                                         inst_zones.push(InstrumentZoneBuilder {
                                             key_range: (kmin, kmax),
                                             vel_range: (0, 127),
@@ -852,14 +950,20 @@ pub fn compile_m4a_soundfont(rom: &[u8], title_override: Option<&str>) -> Result
                                             sustain_cb: m4a_sustain_to_centibels(cv.sustain),
                                             release_tc: m4a_release_to_timecents(cv.release),
                                             scale_tuning,
-                                            sample_id: s_id as u16,
+                                            sample_id,
                                         });
                                     }
                                 }
                             }
 
                             if !inst_zones.is_empty() {
-                                let new_id = instruments.len() as u16;
+                                let new_id = u16::try_from(instruments.len()).map_err(|_| {
+                                    Error::ResourceLimit {
+                                        resource: "sf2_instrument_count",
+                                        requested: instruments.len() as u64,
+                                        limit: u16::MAX as u64,
+                                    }
+                                })?;
                                 instruments.push(InstrumentBuilder {
                                     name: format!("Split_{:03}", new_id),
                                     zones: inst_zones,
@@ -876,8 +980,8 @@ pub fn compile_m4a_soundfont(rom: &[u8], title_override: Option<&str>) -> Result
                 };
 
                 if let Some(inst_id) = inst_id_opt {
-                    let bank = (vg_idx as u16).min(127);
-                    let pr = (p as u16).min(127);
+                    let bank = vg_idx.min(127) as u16;
+                    let pr = p.min(127) as u16;
                     if seen_preset_slots.insert((bank, pr)) {
                         presets.push(PresetBuilder {
                             bank,
@@ -913,6 +1017,13 @@ pub fn compile_m4a_soundfont(rom: &[u8], title_override: Option<&str>) -> Result
                                     None
                                 };
 
+                                let sample_id = u16::try_from(s_id).map_err(|_| {
+                                    Error::ResourceLimit {
+                                        resource: "sf2_sample_count",
+                                        requested: s_id as u64,
+                                        limit: u16::MAX as u64,
+                                    }
+                                })?;
                                 drum_zones.push(InstrumentZoneBuilder {
                                     key_range: (note as u8, note as u8),
                                     vel_range: (0, 127),
@@ -926,13 +1037,19 @@ pub fn compile_m4a_soundfont(rom: &[u8], title_override: Option<&str>) -> Result
                                     sustain_cb: m4a_sustain_to_centibels(dv.sustain),
                                     release_tc: m4a_release_to_timecents(dv.release),
                                     scale_tuning: Some(0),
-                                    sample_id: s_id as u16,
+                                    sample_id,
                                 });
                             }
                         }
 
                         if !drum_zones.is_empty() {
-                            let new_id = instruments.len() as u16;
+                            let new_id = u16::try_from(instruments.len()).map_err(|_| {
+                                Error::ResourceLimit {
+                                    resource: "sf2_instrument_count",
+                                    requested: instruments.len() as u64,
+                                    limit: u16::MAX as u64,
+                                }
+                            })?;
                             instruments.push(InstrumentBuilder {
                                 name: format!("Drums_{:03}", new_id),
                                 zones: drum_zones,
@@ -948,7 +1065,7 @@ pub fn compile_m4a_soundfont(rom: &[u8], title_override: Option<&str>) -> Result
                 if let Some(inst_id) = inst_id_opt {
                     // Drum presets live in MIDI Bank 128
                     let bank = 128u16;
-                    let mut pr = (vg_idx as u16).min(127);
+                    let mut pr = vg_idx.min(127) as u16;
                     while seen_preset_slots.contains(&(bank, pr)) && pr < 127 {
                         pr += 1;
                     }

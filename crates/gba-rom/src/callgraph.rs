@@ -146,6 +146,40 @@ const DEV_KEYWORDS: &[&str] = &[
     "SYSTEM",
 ];
 
+fn escape_dot(s: &str) -> String {
+    let mut out = String::with_capacity(s.len());
+    for c in s.chars() {
+        match c {
+            '\\' => out.push_str("\\\\"),
+            '"' => out.push_str("\\\""),
+            '\n' => out.push_str("\\n"),
+            '\r' => out.push_str("\\r"),
+            '\t' => out.push_str("\\t"),
+            c if c.is_control() => out.push_str(&format!("\\x{:02X}", c as u32)),
+            c => out.push(c),
+        }
+    }
+    out
+}
+
+fn escape_json(s: &str) -> String {
+    let mut out = String::with_capacity(s.len());
+    for c in s.chars() {
+        match c {
+            '\\' => out.push_str("\\\\"),
+            '"' => out.push_str("\\\""),
+            '\n' => out.push_str("\\n"),
+            '\r' => out.push_str("\\r"),
+            '\t' => out.push_str("\\t"),
+            '\x08' => out.push_str("\\b"),
+            '\x0C' => out.push_str("\\f"),
+            c if (c as u32) < 0x20 => out.push_str(&format!("\\u{:04x}", c as u32)),
+            c => out.push(c),
+        }
+    }
+    out
+}
+
 impl CallgraphReport {
     /// Render the callgraph as a Graphviz DOT script.
     pub fn to_dot(&self) -> String {
@@ -157,8 +191,8 @@ impl CallgraphReport {
         dot.push_str("    fontcolor=\"#cdd6f4\",\n");
         dot.push_str(&format!(
             "    label=\"GBA Callgraph: {} ({})\\nReachability: {:.1}% ({}/{} functions)\"\n",
-            self.title,
-            self.game_code,
+            escape_dot(&self.title),
+            escape_dot(&self.game_code),
             self.summary.reachability_ratio * 100.0,
             self.summary.reachable_nodes,
             self.summary.total_nodes
@@ -191,7 +225,12 @@ impl CallgraphReport {
                 let kw_str = if jt.developer_keywords.is_empty() {
                     String::new()
                 } else {
-                    format!("\\n[{}]", jt.developer_keywords.join(","))
+                    let escaped: Vec<String> = jt
+                        .developer_keywords
+                        .iter()
+                        .map(|k| escape_dot(k))
+                        .collect();
+                    format!("\\n[{}]", escaped.join(","))
                 };
                 dot.push_str(&format!(
                     "    \"{}\" [label=\"JumpTable @ 0x{:08X}\\n({} targets){}\", fillcolor=\"#45475a\", fontcolor=\"#cdd6f4\", shape=hexagon];\n",
@@ -220,7 +259,7 @@ impl CallgraphReport {
 
             let label = format!(
                 "{}\\n0x{:08X} ({})\\n[in:{}, out:{}]",
-                node.label,
+                escape_dot(&node.label),
                 node.address,
                 node.mode.as_str(),
                 node.in_degree,
@@ -229,7 +268,12 @@ impl CallgraphReport {
 
             dot.push_str(&format!(
                 "  \"{}\" [label=\"{}\", fillcolor=\"{}\", fontcolor=\"{}\", shape={}, style=\"{}\"];\n",
-                node.id, label, fillcolor, fontcolor, shape, style
+                escape_dot(&node.id),
+                label,
+                fillcolor,
+                fontcolor,
+                shape,
+                style
             ));
         }
 
@@ -277,7 +321,7 @@ impl CallgraphReport {
             .map(|n| {
                 format!(
                     "{{\"id\":\"{}\",\"address\":\"0x{:08X}\",\"rom_offset\":\"0x{:08X}\",\"mode\":\"{}\",\"status\":\"{}\",\"kind\":\"{}\",\"in_degree\":{},\"out_degree\":{},\"label\":\"{}\"}}",
-                    n.id,
+                    escape_json(&n.id),
                     n.address,
                     n.rom_offset,
                     n.mode.as_str(),
@@ -285,7 +329,7 @@ impl CallgraphReport {
                     n.kind.as_str(),
                     n.in_degree,
                     n.out_degree,
-                    n.label
+                    escape_json(&n.label)
                 )
             })
             .collect();
@@ -308,7 +352,11 @@ impl CallgraphReport {
             .iter()
             .map(|j| {
                 let targets: Vec<String> = j.targets.iter().map(|t| format!("\"0x{:08X}\"", t)).collect();
-                let kws: Vec<String> = j.developer_keywords.iter().map(|k| format!("\"{}\"", k)).collect();
+                let kws: Vec<String> = j
+                    .developer_keywords
+                    .iter()
+                    .map(|k| format!("\"{}\"", escape_json(k)))
+                    .collect();
                 format!(
                     "{{\"offset\":\"0x{:08X}\",\"bus_address\":\"0x{:08X}\",\"entries_count\":{},\"targets\":[{}],\"developer_keywords\":[{}]}}",
                     j.offset, j.bus_address, j.entries_count, targets.join(","), kws.join(",")
@@ -321,8 +369,8 @@ impl CallgraphReport {
              \"summary\":{{\"total_nodes\":{},\"reachable_nodes\":{},\"uncalled_leaf_nodes\":{},\"unreached_nodes\":{},\
              \"jump_tables_count\":{},\"total_edges\":{},\"reachability_ratio\":{:.4},\"dead_code_ratio\":{:.4}}},\
              \"nodes\":[{}],\"edges\":[{}],\"jump_tables\":[{}]}}",
-            self.game_code,
-            self.title,
+            escape_json(&self.game_code),
+            escape_json(&self.title),
             self.entry_point,
             self.entry_mode.as_str(),
             self.summary.total_nodes,
@@ -351,7 +399,7 @@ pub fn analyze_callgraph(rom: &[u8]) -> Result<CallgraphReport> {
     }
 
     let hdr = AgbHeader::parse(rom)?;
-    let rom_len = rom.len();
+    let rom_len = rom.len().min(crate::MAX_ROM_SIZE);
     let max_rom_addr = ROM_BUS_BASE + rom_len as u32;
 
     // Decode entry point from ARM branch at 0x08000000
@@ -661,7 +709,9 @@ pub fn analyze_callgraph(rom: &[u8]) -> Result<CallgraphReport> {
     sorted_addrs.sort_unstable();
 
     for addr in sorted_addrs {
-        let &(mode, kind, ref label) = candidate_functions.get(&addr).unwrap();
+        let Some(&(mode, kind, ref label)) = candidate_functions.get(&addr) else {
+            continue;
+        };
         let in_deg = in_degrees.get(&addr).copied().unwrap_or(0);
         let out_deg = out_degrees.get(&addr).copied().unwrap_or(0);
 
@@ -738,12 +788,12 @@ fn describe_arm_push_lr(rlist: u16) -> String {
     for i in 0..16 {
         if (rlist & (1 << i)) != 0 {
             let name = match i {
-                13 => "sp",
-                14 => "lr",
-                15 => "pc",
-                n => return format!("r{}", n),
+                13 => "sp".to_string(),
+                14 => "lr".to_string(),
+                15 => "pc".to_string(),
+                n => format!("r{n}"),
             };
-            regs.push(name.to_string());
+            regs.push(name);
         }
     }
     regs.join(", ")
@@ -840,5 +890,55 @@ mod tests {
         assert!(json_str.contains("\"reachable_nodes\":2"));
         assert!(json_str.contains("\"uncalled_leaf_nodes\":1"));
         assert!(json_str.contains("\"jump_tables_count\":1"));
+    }
+
+    #[test]
+    fn describe_arm_push_lr_collects_multiple_registers() {
+        // r4, r5, r6, lr -> bits 4, 5, 6, 14
+        let mask = (1u16 << 4) | (1u16 << 5) | (1u16 << 6) | (1u16 << 14);
+        assert_eq!(describe_arm_push_lr(mask), "r4, r5, r6, lr");
+        // r0, sp, lr, pc
+        let mask2 = (1u16 << 0) | (1u16 << 13) | (1u16 << 14) | (1u16 << 15);
+        assert_eq!(describe_arm_push_lr(mask2), "r0, sp, lr, pc");
+    }
+
+    #[test]
+    fn dot_and_json_escape_special_characters() {
+        let report = CallgraphReport {
+            game_code: "A\"\\B".to_string(),
+            title: "TEST\"TITLE\\\n\t".to_string(),
+            entry_point: ROM_BUS_BASE + 0xC0,
+            entry_mode: RuntimeMode::Arm,
+            summary: CallgraphSummary {
+                total_nodes: 1,
+                reachable_nodes: 1,
+                uncalled_leaf_nodes: 0,
+                unreached_nodes: 0,
+                jump_tables_count: 0,
+                total_edges: 0,
+                reachability_ratio: 1.0,
+                dead_code_ratio: 0.0,
+            },
+            nodes: vec![CallgraphNode {
+                id: "fn_080000C0".to_string(),
+                address: ROM_BUS_BASE + 0xC0,
+                rom_offset: 0xC0,
+                mode: RuntimeMode::Arm,
+                status: CallgraphNodeStatus::Reachable,
+                kind: CallgraphNodeKind::Entry,
+                in_degree: 0,
+                out_degree: 0,
+                label: "entry\"\\label".to_string(),
+            }],
+            edges: Vec::new(),
+            jump_tables: Vec::new(),
+        };
+        let dot = report.to_dot();
+        assert!(dot.contains("TEST\\\"TITLE\\\\\\n\\t"));
+        assert!(dot.contains("entry\\\"\\\\label"));
+        let json = report.to_json();
+        assert!(json.contains("\"title\":\"TEST\\\"TITLE\\\\\\n\\t\""));
+        assert!(json.contains("\"game_code\":\"A\\\"\\\\B\""));
+        assert!(json.contains("\"label\":\"entry\\\"\\\\label\""));
     }
 }

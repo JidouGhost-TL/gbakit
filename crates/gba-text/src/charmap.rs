@@ -68,7 +68,10 @@ pub struct Charmap {
     name: String,
     description: String,
     byte_to_text: HashMap<Vec<u8>, String>,
+    single_byte_to_text: [Option<Box<str>>; 256],
+    has_multibyte_prefix: [bool; 256],
     text_to_bytes: HashMap<String, Vec<u8>>,
+    text_first_byte_max_len: [usize; 256],
     max_byte_len: usize,
     max_text_len: usize,
     default_terminator: Option<Vec<u8>>,
@@ -84,7 +87,10 @@ impl Charmap {
             name: name.into(),
             description: description.into(),
             byte_to_text: HashMap::new(),
+            single_byte_to_text: std::array::from_fn(|_| None),
+            has_multibyte_prefix: [false; 256],
             text_to_bytes: HashMap::new(),
+            text_first_byte_max_len: [0; 256],
             max_byte_len: 0,
             max_text_len: 0,
             default_terminator: None,
@@ -143,6 +149,14 @@ impl Charmap {
         }
         self.max_byte_len = self.max_byte_len.max(bytes.len());
         self.max_text_len = self.max_text_len.max(text.len());
+        if bytes.len() == 1 {
+            self.single_byte_to_text[bytes[0] as usize] = Some(text.clone().into_boxed_str());
+        } else {
+            self.has_multibyte_prefix[bytes[0] as usize] = true;
+        }
+        let first_text_byte = text.as_bytes()[0] as usize;
+        self.text_first_byte_max_len[first_text_byte] =
+            self.text_first_byte_max_len[first_text_byte].max(text.len());
         self.text_to_bytes
             .entry(text.clone())
             .or_insert_with(|| bytes.clone());
@@ -520,6 +534,7 @@ impl Charmap {
     pub fn parse_tbl(name: impl Into<String>, input: &str) -> Result<Self> {
         let name = name.into();
         let mut cm = Self::new(name.clone(), format!("Custom .tbl charmap ({name})"));
+        let input = input.strip_prefix('\u{FEFF}').unwrap_or(input);
 
         for (line_idx, raw_line) in input.lines().enumerate() {
             let line = raw_line.strip_suffix('\r').unwrap_or(raw_line);
@@ -577,11 +592,17 @@ impl Charmap {
         if bytes.is_empty() {
             return None;
         }
-        let max_try = self.max_byte_len.min(bytes.len());
-        for len in (1..=max_try).rev() {
-            if let Some(text) = self.byte_to_text.get(&bytes[..len]) {
-                return Some((text.clone(), len, true));
+        let b0 = bytes[0] as usize;
+        if self.max_byte_len > 1 && self.has_multibyte_prefix[b0] {
+            let max_try = self.max_byte_len.min(bytes.len());
+            for len in (2..=max_try).rev() {
+                if let Some(text) = self.byte_to_text.get(&bytes[..len]) {
+                    return Some((text.clone(), len, true));
+                }
             }
+        }
+        if let Some(ref text) = self.single_byte_to_text[b0] {
+            return Some((text.to_string(), 1, true));
         }
         if self.utf16_le {
             if bytes.len() >= 2 {
@@ -665,8 +686,9 @@ impl Charmap {
                 }
             }
 
-            // Longest-match greedy lookup in text_to_bytes.
-            let max_end = rest.len().min(self.max_text_len);
+            // Longest-match greedy lookup in text_to_bytes, bounded by first-byte max length.
+            let first_byte_max = self.text_first_byte_max_len[rest.as_bytes()[0] as usize];
+            let max_end = rest.len().min(first_byte_max);
             let mut matched = None;
             for end in (1..=max_end).rev() {
                 if !rest.is_char_boundary(end) {
@@ -897,5 +919,13 @@ FC02={COLOR:02}
         // {END} = 0x0000
         assert_eq!(&enc[enc.len() - 2..], &[0x00, 0x00]);
         assert_eq!(cm.decode(&enc), text);
+    }
+
+    #[test]
+    fn parse_tbl_strips_utf8_bom() {
+        let tbl = "\u{FEFF}41=A\n42=B\n00={END}\n";
+        let cm = Charmap::parse_tbl("bom-test", tbl).unwrap();
+        assert_eq!(cm.decode(&[0x41, 0x42, 0x00]), "AB{END}");
+        assert_eq!(cm.encode("AB{END}").unwrap(), vec![0x41, 0x42, 0x00]);
     }
 }

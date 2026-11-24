@@ -7,8 +7,10 @@ use std::collections::HashSet;
 
 use formatkit_core::{Error, Result};
 use gba_compress::{decode_lz77, encode_lz77, DEFAULT_MAX_OUTPUT};
-use gba_gfx::{find_free_space, patch_rom_pointers};
-use gba_rom::{bus_to_rom_offset, rom_offset_to_bus, scan_pointer_tables, HEADER_SIZE};
+use gba_rom::{
+    bus_to_rom_offset, find_free_space_prefer_ff, patch_rom_pointers, rom_offset_to_bus,
+    scan_pointer_tables, HEADER_SIZE,
+};
 use serde::{Deserialize, Serialize};
 
 use crate::charmap::Charmap;
@@ -360,6 +362,11 @@ pub fn replace_string_in_rom(
     }
 
     let orig = extract_string(rom, offset, charmap, 4096)?;
+    if options.capacity.is_none() && !orig.terminated {
+        return Err(Error::Malformed(format!(
+            "string at offset 0x{offset:X} is not terminated within 4096 bytes; specify explicit capacity"
+        )));
+    }
     let original_capacity = options.capacity.unwrap_or(orig.raw_bytes_len);
     if original_capacity == 0 {
         return Err(Error::InvalidField {
@@ -435,6 +442,11 @@ pub(crate) fn write_or_relocate_bytes(
         });
     }
 
+    let orig_bus_address = rom_offset_to_bus(offset).ok_or(Error::InvalidField {
+        what: "written_rom_offset",
+        value: offset as u64,
+    })?;
+
     let new_bytes_len = encoded.len();
     if new_bytes_len <= original_capacity {
         rom[offset..offset + new_bytes_len].copy_from_slice(encoded);
@@ -442,15 +454,11 @@ pub(crate) fn write_or_relocate_bytes(
         if slack_bytes > 0 {
             rom[offset + new_bytes_len..offset + original_capacity].fill(pad_byte);
         }
-        let written_bus_address = rom_offset_to_bus(offset).ok_or(Error::InvalidField {
-            what: "written_rom_offset",
-            value: offset as u64,
-        })?;
         return Ok(TextReplaceReport {
             mode: TextReplaceMode::InPlace,
             original_offset: offset,
             written_offset: offset,
-            written_bus_address,
+            written_bus_address: orig_bus_address,
             original_bytes_len,
             original_capacity,
             new_bytes_len,
@@ -468,28 +476,22 @@ pub(crate) fn write_or_relocate_bytes(
         });
     }
 
-    let new_offset = find_free_space(
+    let new_offset = find_free_space_prefer_ff(
         rom,
         new_bytes_len,
         options.relocate_alignment.max(1),
         options.free_space_start,
-        &[0xFF],
         Some((offset, offset + original_capacity)),
     )
-    .or_else(|| {
-        find_free_space(
-            rom,
-            new_bytes_len,
-            options.relocate_alignment.max(1),
-            options.free_space_start.max(0x200),
-            &[0x00],
-            Some((offset, offset + original_capacity)),
-        )
-    })
     .ok_or(Error::ResourceLimit {
         resource: "rom_free_space",
         requested: new_bytes_len as u64,
         limit: 0,
+    })?;
+
+    let written_bus_address = rom_offset_to_bus(new_offset).ok_or(Error::InvalidField {
+        what: "relocated_rom_offset",
+        value: new_offset as u64,
     })?;
 
     rom[new_offset..new_offset + new_bytes_len].copy_from_slice(encoded);
@@ -499,10 +501,6 @@ pub(crate) fn write_or_relocate_bytes(
         new_offset,
         Some((new_offset, new_offset + new_bytes_len)),
     )?;
-    let written_bus_address = rom_offset_to_bus(new_offset).ok_or(Error::InvalidField {
-        what: "relocated_rom_offset",
-        value: new_offset as u64,
-    })?;
 
     Ok(TextReplaceReport {
         mode: TextReplaceMode::Relocated,
@@ -813,5 +811,31 @@ mod tests {
         let ext3 = extract_lz77_string(&rom, reloc.written_offset, &cm, 1024).unwrap();
         assert_eq!(ext3.text, long_text);
         assert!(ext3.terminated);
+    }
+
+    #[test]
+    fn replace_string_rejects_unterminated_without_explicit_capacity() {
+        let cm = Charmap::ascii();
+        // Fill ROM with 'A' (no 0x00 terminator anywhere)
+        let mut rom = vec![b'A'; 0x2000];
+        let snapshot = rom.clone();
+        let err = replace_string_in_rom(
+            &mut rom,
+            0x400,
+            "HELLO",
+            &cm,
+            &TextReplaceOptions::default(),
+        );
+        assert!(matches!(err, Err(Error::Malformed(_))));
+        assert_eq!(rom, snapshot);
+
+        // With explicit capacity, replacement succeeds.
+        let opts = TextReplaceOptions {
+            capacity: Some(8),
+            ..TextReplaceOptions::default()
+        };
+        let rep = replace_string_in_rom(&mut rom, 0x400, "HELLO", &cm, &opts).unwrap();
+        assert_eq!(rep.mode, TextReplaceMode::InPlace);
+        assert_eq!(&rom[0x400..0x406], b"HELLO\0");
     }
 }

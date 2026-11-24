@@ -6,7 +6,9 @@
 
 #![deny(unsafe_code)]
 
+#[cfg(unix)]
 use std::io::Write;
+#[cfg(unix)]
 use std::os::unix::net::UnixStream;
 use std::path::PathBuf;
 
@@ -451,9 +453,17 @@ pub fn run_multiboot_server(
     // If socket path is provided and not in mock mode, attempt socket exchange
     if let Some(sock_path) = &config.socket_path {
         if !config.mock_mode {
-            if let Ok(mut stream) = UnixStream::connect(sock_path) {
-                let report_json = serde_json::to_string(&transfers).unwrap_or_default();
-                let _ = stream.write_all(report_json.as_bytes());
+            #[cfg(unix)]
+            {
+                if let Ok(mut stream) = UnixStream::connect(sock_path) {
+                    let report_json = serde_json::to_string(&transfers).unwrap_or_default();
+                    let _ = stream.write_all(report_json.as_bytes());
+                }
+            }
+            #[cfg(not(unix))]
+            {
+                let _ = sock_path;
+                return Err("Unix domain sockets are only supported on Unix platforms".into());
             }
         }
     }

@@ -123,7 +123,16 @@ pub fn cmd_link_dissect(path: &Path, as_json: bool, rfu_mode: bool, joybus_mode:
             report.statistics.checksums_valid,
             report.statistics.checksums_verified
         );
-        println!(" Joybus Integrity Status:     VERIFIED (Cycle-accurate framing, 0 checksum errors)");
+        let joybus_status = if report.statistics.checksums_valid == report.statistics.checksums_verified {
+            "VERIFIED (Cycle-accurate framing, 0 checksum errors)".to_string()
+        } else {
+            let errs = report
+                .statistics
+                .checksums_verified
+                .saturating_sub(report.statistics.checksums_valid);
+            format!("FAILED ({errs} checksum error(s))")
+        };
+        println!(" Joybus Integrity Status:     {joybus_status}");
         println!("================================================================================");
         return Ok(());
     }
@@ -208,7 +217,16 @@ pub fn cmd_link_dissect(path: &Path, as_json: bool, rfu_mode: bool, joybus_mode:
             report.statistics.checksums_valid,
             report.statistics.checksums_verified
         );
-        println!(" RF Link Integrity Status:    OPTIMAL (0 dropped packets, 0 CRC errors)");
+        let rfu_status = if report.statistics.checksums_valid == report.statistics.checksums_verified {
+            "OPTIMAL (0 dropped packets, 0 CRC errors)".to_string()
+        } else {
+            let errs = report
+                .statistics
+                .checksums_verified
+                .saturating_sub(report.statistics.checksums_valid);
+            format!("DEGRADED ({errs} CRC error(s))")
+        };
+        println!(" RF Link Integrity Status:    {rfu_status}");
         println!("================================================================================");
         return Ok(());
     }
@@ -293,7 +311,16 @@ pub fn cmd_link_dissect(path: &Path, as_json: bool, rfu_mode: bool, joybus_mode:
             report.statistics.checksums_valid,
             report.statistics.checksums_verified
         );
-        println!(" MultiBoot Integrity Status:  VERIFIED (16-bit CRC authenticated, 0 framing errors)");
+        let mb_status = if report.statistics.checksums_valid == report.statistics.checksums_verified {
+            "VERIFIED (16-bit CRC authenticated, 0 framing errors)".to_string()
+        } else {
+            let errs = report
+                .statistics
+                .checksums_verified
+                .saturating_sub(report.statistics.checksums_valid);
+            format!("FAILED ({errs} CRC error(s))")
+        };
+        println!(" MultiBoot Integrity Status:  {mb_status}");
         println!("================================================================================");
         return Ok(());
     }
@@ -387,7 +414,16 @@ pub fn cmd_link_dissect(path: &Path, as_json: bool, rfu_mode: bool, joybus_mode:
         report.statistics.checksums_valid,
         report.statistics.checksums_verified
     );
-    println!(" SIO Bus Integrity Status:    HEALTHY (0 framing / parity errors)");
+    let sio_status = if report.statistics.checksums_valid == report.statistics.checksums_verified {
+        "HEALTHY (0 checksum errors)".to_string()
+    } else {
+        let errs = report
+            .statistics
+            .checksums_verified
+            .saturating_sub(report.statistics.checksums_valid);
+        format!("DEGRADED ({errs} checksum error(s))")
+    };
+    println!(" SIO Bus Integrity Status:    {sio_status}");
     println!("================================================================================");
 
     Ok(())

@@ -17,7 +17,9 @@ use gbakit::sound::{
     ImaAdpcmVariant, M4aWaveBuildOptions, M4aWaveCodec, WaveDataHeader,
 };
 
-use super::{parse_flag_value, parse_offset, parse_positional_arg};
+use super::{
+    ensure_distinct_paths, has_flag, parse_flag_value, parse_offset, parse_positional_arg, required,
+};
 
 /// Flags taking a value for `gfx replace` (used to skip values when finding the positional ROM).
 const GFX_VALUE_FLAGS: &[&[&str]] = &[
@@ -51,36 +53,9 @@ pub const AUDIO_REPLACE_USAGE: &str = "usage: gbakit audio replace <rom.gba> --o
 [--codec pcm8|dpcm|pcm8-unsigned|ima-adpcm|ima-adpcm-arm] [--rate <hz>] [--loop-start <samples>] \
 [--raw-capacity <bytes>] [--allow-relocate] [--json]";
 
-fn has_flag(args: &[String], name: &str) -> bool {
-    args.iter().any(|a| a == name)
-}
-
-fn required<'a>(args: &'a [String], names: &[&str], what: &str) -> Result<&'a str, String> {
-    parse_flag_value(args, names).ok_or_else(|| format!("missing required {what}"))
-}
-
 fn parse_u32_arg(s: &str, what: &str) -> Result<u32, String> {
     let v = parse_offset(s).map_err(|e| format!("invalid {what} {s:?}: {e}"))?;
     u32::try_from(v).map_err(|_| format!("{what} {v} exceeds u32 range"))
-}
-
-/// Refuse to write the output over the input ROM (never modify the input in place).
-fn ensure_distinct_paths(input: &Path, output: &Path) -> Result<(), String> {
-    if input == output {
-        return Err(format!(
-            "refusing to overwrite input ROM {} in place; choose a different -o path",
-            input.display()
-        ));
-    }
-    if let (Ok(a), Ok(b)) = (fs::canonicalize(input), fs::canonicalize(output)) {
-        if a == b {
-            return Err(format!(
-                "refusing to overwrite input ROM {} in place; choose a different -o path",
-                input.display()
-            ));
-        }
-    }
-    Ok(())
 }
 
 fn parse_gfx_compression(s: &str) -> Result<Option<GfxCompression>, String> {

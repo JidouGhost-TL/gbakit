@@ -58,9 +58,13 @@ pub struct Paragon5SampleEntry {
 
 /// Detect whether a GBA ROM uses the Paragon 5 / GBASS Tracker Engine via either
 /// a contiguous sample descriptor table (`>= 3` entries) or its ARM7TDMI mixer fingerprint.
-pub fn detect_paragon5_engine(rom: &[u8]) -> bool {
+/// Fallback Paragon 5 descriptor check when `Paragon5Version::detect_from_bytes` returned `None`.
+pub(crate) fn has_paragon5_descriptors(rom: &[u8]) -> bool {
     !find_clustered_descriptor_offsets(rom).is_empty()
-        || Paragon5Version::detect_from_bytes(rom).is_some()
+}
+
+pub fn detect_paragon5_engine(rom: &[u8]) -> bool {
+    has_paragon5_descriptors(rom) || Paragon5Version::detect_from_bytes(rom).is_some()
 }
 
 /// Scan a GBA ROM for contiguous 24-byte (`0x18`) Paragon 5 `Paragon5SampleDesc`

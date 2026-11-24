@@ -126,6 +126,9 @@ impl FontSheetConfig {
     }
 }
 
+/// Maximum number of pixels allowed in a rendered font sheet (4096 × 4096 = 16 MP).
+pub const MAX_FONT_SHEET_PIXELS: usize = 4096 * 4096;
+
 /// 1bpp RGBA palette: background black, foreground white.
 const PALETTE_1BPP: [[u8; 4]; 2] = [[0, 0, 0, 255], [255, 255, 255, 255]];
 
@@ -157,7 +160,11 @@ pub fn encode_glyph_1bpp(
         });
     }
     let row_bytes = width.div_ceil(8);
-    let mut out = vec![0u8; row_bytes * height];
+    let out_len = row_bytes.checked_mul(height).ok_or(Error::InvalidField {
+        what: "glyph_1bpp_byte_len",
+        value: row_bytes as u64,
+    })?;
+    let mut out = vec![0u8; out_len];
 
     for y in 0..height {
         let row_out = &mut out[y * row_bytes..(y + 1) * row_bytes];
@@ -200,7 +207,11 @@ pub fn encode_glyph_2bpp(
         });
     }
     let row_bytes = width.div_ceil(4);
-    let mut out = vec![0u8; row_bytes * height];
+    let out_len = row_bytes.checked_mul(height).ok_or(Error::InvalidField {
+        what: "glyph_2bpp_byte_len",
+        value: row_bytes as u64,
+    })?;
+    let mut out = vec![0u8; out_len];
 
     for y in 0..height {
         let row_out = &mut out[y * row_bytes..(y + 1) * row_bytes];
@@ -245,8 +256,27 @@ pub fn dump_font_sheet_rgba(
     }
 
     let (sheet_w, sheet_h) = config.sheet_dimensions()?;
+    let sheet_pixels = (sheet_w as usize)
+        .checked_mul(sheet_h as usize)
+        .ok_or(Error::ResourceLimit {
+            resource: "font_sheet_pixels",
+            requested: u64::MAX,
+            limit: MAX_FONT_SHEET_PIXELS as u64,
+        })?;
+    if sheet_pixels > MAX_FONT_SHEET_PIXELS {
+        return Err(Error::ResourceLimit {
+            resource: "font_sheet_pixels",
+            requested: sheet_pixels as u64,
+            limit: MAX_FONT_SHEET_PIXELS as u64,
+        });
+    }
+    let rgba_len = sheet_pixels.checked_mul(4).ok_or(Error::ResourceLimit {
+        resource: "font_sheet_rgba_bytes",
+        requested: u64::MAX,
+        limit: (MAX_FONT_SHEET_PIXELS as u64) * 4,
+    })?;
     let cols = config.cols.min(config.glyph_count).max(1);
-    let mut rgba = vec![0u8; (sheet_w as usize) * (sheet_h as usize) * 4];
+    let mut rgba = vec![0u8; rgba_len];
     // Fill background with opaque black so unused trailing grid cells are clean.
     for px in rgba.as_chunks_mut::<4>().0 {
         px[3] = 255;
@@ -375,9 +405,16 @@ pub fn replace_font_sheet_in_rom(
         )));
     }
 
+    let glyph_pixels = config
+        .glyph_width
+        .checked_mul(config.glyph_height)
+        .ok_or(Error::InvalidField {
+            what: "font_glyph_pixels",
+            value: config.glyph_width as u64,
+        })?;
     let cols = config.cols.min(config.glyph_count).max(1);
     let mut encoded_all = Vec::with_capacity(total_bytes);
-    let mut glyph_px = vec![0u8; config.glyph_width * config.glyph_height];
+    let mut glyph_px = vec![0u8; glyph_pixels];
 
     for glyph_idx in 0..config.glyph_count {
         let col = glyph_idx % cols;

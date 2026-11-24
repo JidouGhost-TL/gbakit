@@ -1262,7 +1262,10 @@ fn cmd_audio_scan(rom_path: &Path, as_json: bool) -> Result<(), String> {
                 }
                 return Ok(());
             }
-            Err(format!("no known sound engine (M4A, GAX, MusyX) detected in {}", rom_path.display()))
+            Err(format!(
+                "no known sound engine (M4A, GAX, MusyX, Krawall, Rareware, Konami KCE, Logik State, Paragon 5, R&D1 Kaede, Southpaw, EAD-SMA, Engine Software EIRE, Cosmigo Sonix) detected in {}",
+                rom_path.display()
+            ))
         }
     }
 }
@@ -1630,7 +1633,10 @@ fn cmd_audio_export(
                 println!("  SoundFont Generated:  soundfont.sf2");
                 return Ok(());
             }
-            Err(format!("no supported sound engine (M4A, GAX, MusyX) detected in {}", rom_path.display()))
+            Err(format!(
+                "no supported sound engine (M4A, GAX, MusyX, Krawall, Rareware, Konami KCE, Logik State, Paragon 5, R&D1 Kaede, Southpaw, EAD-SMA, Engine Software EIRE, Cosmigo Sonix) detected in {}",
+                rom_path.display()
+            ))
         }
     }
 }
@@ -2836,13 +2842,13 @@ fn cmd_gfx_tile4(
     let bytes = fs::read(file_path).map_err(|e| format!("read {}: {e}", file_path.display()))?;
     let tile_off = parse_offset(offset_str)?;
     let pal_off = parse_offset(palette_str)?;
-    if tile_off + 32 > bytes.len() {
+    if tile_off.checked_add(32).is_none_or(|end| end > bytes.len()) {
         return Err(format!(
             "tile range 0x{tile_off:X}+32 exceeds file length {}",
             bytes.len()
         ));
     }
-    if pal_off + 32 > bytes.len() {
+    if pal_off.checked_add(32).is_none_or(|end| end > bytes.len()) {
         return Err(format!(
             "palette range 0x{pal_off:X}+32 exceeds file length {}",
             bytes.len()
@@ -2907,6 +2913,32 @@ fn cmd_gfx_rip(
         println!("Manifest:         {}", target_dir.join("manifest.json").display());
     }
 
+    Ok(())
+}
+
+fn has_flag(args: &[String], name: &str) -> bool {
+    args.iter().any(|a| a == name)
+}
+
+fn required<'a>(args: &'a [String], names: &[&str], what: &str) -> Result<&'a str, String> {
+    parse_flag_value(args, names).ok_or_else(|| format!("missing required {what}"))
+}
+
+fn ensure_distinct_paths(input: &Path, output: &Path) -> Result<(), String> {
+    if input == output {
+        return Err(format!(
+            "refusing to overwrite input ROM {} in place; choose a different -o path",
+            input.display()
+        ));
+    }
+    if let (Ok(a), Ok(b)) = (fs::canonicalize(input), fs::canonicalize(output)) {
+        if a == b {
+            return Err(format!(
+                "refusing to overwrite input ROM {} in place; choose a different -o path",
+                input.display()
+            ));
+        }
+    }
     Ok(())
 }
 
@@ -3321,11 +3353,29 @@ fn main() -> ExitCode {
             let as_json = args[2..].iter().any(|a| a == "--json");
             sensor::cmd_sensor_list(as_json)
         }
-        "sensor" if args.len() >= 3 && args[1] == "test" => {
+        "sensor" if args.len() >= 3 && args[1] == "test" => (|| -> Result<(), String> {
             let as_json = args[2..].iter().any(|a| a == "--json");
-            let solar_opt = parse_flag_value(&args[2..], &["--solar"]).and_then(|s| s.parse::<u8>().ok());
-            let tilt_opt = parse_flag_value(&args[2..], &["--tilt"]).and_then(|s| s.parse::<i16>().ok());
-            let gyro_opt = parse_flag_value(&args[2..], &["--gyro"]).and_then(|s| s.parse::<i16>().ok());
+            let solar_opt = match parse_flag_value(&args[2..], &["--solar"]) {
+                Some(s) => Some(
+                    s.parse::<u8>()
+                        .map_err(|e| format!("invalid --solar value {s:?}: {e}"))?,
+                ),
+                None => None,
+            };
+            let tilt_opt = match parse_flag_value(&args[2..], &["--tilt"]) {
+                Some(s) => Some(
+                    s.parse::<i16>()
+                        .map_err(|e| format!("invalid --tilt value {s:?}: {e}"))?,
+                ),
+                None => None,
+            };
+            let gyro_opt = match parse_flag_value(&args[2..], &["--gyro"]) {
+                Some(s) => Some(
+                    s.parse::<i16>()
+                        .map_err(|e| format!("invalid --gyro value {s:?}: {e}"))?,
+                ),
+                None => None,
+            };
             let file_arg = parse_positional_arg(
                 &args[2..],
                 &[
@@ -3338,7 +3388,7 @@ fn main() -> ExitCode {
                 Some(path) => sensor::cmd_sensor_test(Path::new(path), solar_opt, tilt_opt, gyro_opt, as_json),
                 None => Err("missing required <rom.gba> for `sensor test`".into()),
             }
-        }
+        })(),
         "sensor" => {
             Err("usage: `gbakit sensor list [--json]` or `gbakit sensor test <rom.gba> [--solar <0-10>] [--tilt <-90..90>] [--gyro <rpm>] [--json]`".into())
         }

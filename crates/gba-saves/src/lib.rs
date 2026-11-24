@@ -2,6 +2,8 @@
 
 #![deny(unsafe_code)]
 
+use std::sync::OnceLock;
+
 use formatkit_core::Result;
 use gba_save::SaveDefinition;
 
@@ -4259,12 +4261,21 @@ pub fn list_game_codes() -> Vec<&'static str> {
     REGISTRY.iter().map(|e| e.game_code).collect()
 }
 
-/// Parse and return every embedded [`SaveDefinition`].
-pub fn all() -> Result<Vec<SaveDefinition>> {
-    REGISTRY
+fn cached_definitions() -> Result<&'static [SaveDefinition]> {
+    static CACHE: OnceLock<Vec<SaveDefinition>> = OnceLock::new();
+    if let Some(defs) = CACHE.get() {
+        return Ok(defs.as_slice());
+    }
+    let parsed: Vec<SaveDefinition> = REGISTRY
         .iter()
         .map(|e| SaveDefinition::from_json(e.json))
-        .collect()
+        .collect::<Result<Vec<_>>>()?;
+    Ok(CACHE.get_or_init(|| parsed).as_slice())
+}
+
+/// Parse and return every embedded [`SaveDefinition`].
+pub fn all() -> Result<Vec<SaveDefinition>> {
+    Ok(cached_definitions()?.to_vec())
 }
 
 /// Look up an embedded [`SaveDefinition`] by `id` or 4-character `game_code`
@@ -4272,16 +4283,21 @@ pub fn all() -> Result<Vec<SaveDefinition>> {
 /// family prefix match.
 pub fn find(id_or_game_code: &str) -> Result<Option<SaveDefinition>> {
     let needle = id_or_game_code.trim();
-    for entry in REGISTRY {
+    let defs = cached_definitions()?;
+    for (i, entry) in REGISTRY.iter().enumerate() {
         if entry.id.eq_ignore_ascii_case(needle) || entry.game_code.eq_ignore_ascii_case(needle) {
-            return SaveDefinition::from_json(entry.json).map(Some);
+            return Ok(defs.get(i).cloned());
         }
     }
-    if needle.len() >= 3 {
+    if needle.is_ascii() && needle.len() >= 3 {
         let prefix = &needle[..3];
-        for entry in REGISTRY {
-            if entry.game_code.len() >= 3 && entry.game_code[..3].eq_ignore_ascii_case(prefix) {
-                return SaveDefinition::from_json(entry.json).map(Some);
+        for (i, entry) in REGISTRY.iter().enumerate() {
+            if entry
+                .game_code
+                .get(..3)
+                .is_some_and(|p| p.eq_ignore_ascii_case(prefix))
+            {
+                return Ok(defs.get(i).cloned());
             }
         }
     }
@@ -4308,6 +4324,9 @@ mod tests {
         let by_family = find("AHR").unwrap().expect("found by family prefix AHR");
         assert_eq!(by_upper, by_family);
         assert!(find("ZZZZ").unwrap().is_none());
+        // Non-ASCII UTF-8 input must never panic on byte-index slicing
+        assert!(find("日本語").unwrap().is_none());
+        assert!(find("éé").unwrap().is_none());
     }
 
     #[test]

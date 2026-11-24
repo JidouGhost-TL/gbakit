@@ -9,6 +9,16 @@ use gbakit::sensor::{
     get_sensor_catalog, plan_sensor_injection, SensorInjectionConfig,
 };
 
+/// Truncate a string to at most `max_chars` Unicode scalar values, appending `"..."` if truncated.
+fn truncate_chars(s: &str, max_chars: usize) -> String {
+    if s.chars().count() > max_chars {
+        let keep = max_chars.saturating_sub(3);
+        format!("{}...", s.chars().take(keep).collect::<String>())
+    } else {
+        s.to_string()
+    }
+}
+
 /// Display all 78 cartridge hardware sensor titles across 19 families.
 #[allow(dead_code)]
 pub fn cmd_sensor_list(as_json: bool) -> Result<(), String> {
@@ -30,16 +40,8 @@ pub fn cmd_sensor_list(as_json: bool) -> Result<(), String> {
     for t in &catalog.titles {
         let code = if t.game_code.is_empty() { "UNK" } else { &t.game_code };
         let hw_types = t.hardware_types.join(", ");
-        let title_trunc = if t.title.len() > 40 {
-            format!("{}...", &t.title[..37])
-        } else {
-            t.title.clone()
-        };
-        let iface_trunc = if t.interface_bus.len() > 47 {
-            format!("{}...", &t.interface_bus[..44])
-        } else {
-            t.interface_bus.clone()
-        };
+        let title_trunc = truncate_chars(&t.title, 40);
+        let iface_trunc = truncate_chars(&t.interface_bus, 47);
 
         println!(
             " {:4} | {:20} | {:40} | {}",

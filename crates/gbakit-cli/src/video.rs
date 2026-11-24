@@ -218,9 +218,16 @@ pub fn cmd_video_export(
                 if frame.len() < 4 {
                     continue;
                 }
+                const MAX_MOBICLIP_FRAME_SAMPLES: usize = 256 * 1024;
                 let num_pcm16_bytes =
                     u32::from_le_bytes([frame[0], frame[1], frame[2], frame[3]]) as usize;
-                let max_out = num_pcm16_bytes / 2 + 64;
+                let frame_samples = num_pcm16_bytes / 2;
+                if frame_samples > MAX_MOBICLIP_FRAME_SAMPLES {
+                    return Err(format!(
+                        "v1 stream {idx} audio frame {f_idx} declares {frame_samples} samples, exceeding per-frame limit {MAX_MOBICLIP_FRAME_SAMPLES}"
+                    ));
+                }
+                let max_out = frame_samples + 64;
                 if scratch.len() < max_out {
                     scratch.resize(max_out, 0);
                 }

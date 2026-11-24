@@ -25,6 +25,9 @@ use crate::{
 /// Minimum ROM offset for tilemap free-space relocation (`0x200`).
 pub const TILEMAP_FREE_SPACE_START: usize = 0x200;
 
+/// Maximum number of tilemap entries accepted by [`parse_tmx_csv`] (guards against OOM zip-bombs).
+pub const MAX_TILEMAP_ENTRIES: usize = 65_536;
+
 /// Tiled 32-bit GID horizontal flip bit (bit 31).
 pub const TILED_FLIP_H: u32 = 0x8000_0000;
 /// Tiled 32-bit GID vertical flip bit (bit 30).
@@ -134,6 +137,13 @@ pub fn parse_tmx_csv(tmx_xml: &str, palette_bank: u8) -> Result<ParsedTmx> {
             what: "tmx_tile_count",
             value: width_tiles as u64,
         })?;
+    if expected_entries > MAX_TILEMAP_ENTRIES {
+        return Err(Error::ResourceLimit {
+            resource: "tmx_tile_count",
+            requested: expected_entries as u64,
+            limit: MAX_TILEMAP_ENTRIES as u64,
+        });
+    }
 
     // 2) Extract optional <tileset firstgid="N" ...> (default 1).
     let firstgid = match find_opening_tag(xml, "tileset") {
@@ -167,11 +177,16 @@ pub fn parse_tmx_csv(tmx_xml: &str, palette_bank: u8) -> Result<ParsedTmx> {
     }
 
     // 4) Parse comma/whitespace-separated 32-bit GIDs.
-    let mut entries = Vec::with_capacity(expected_entries);
+    let mut entries = Vec::with_capacity(expected_entries.min(data_body.len() / 2 + 1));
     for raw_token in data_body.split(',') {
         let token = raw_token.trim();
         if token.is_empty() {
             continue;
+        }
+        if entries.len() >= expected_entries {
+            return Err(Error::Malformed(format!(
+                "TMX CSV entry count exceeds expected {expected_entries} ({width_tiles}x{height_tiles})"
+            )));
         }
         let gid = token
             .parse::<u32>()
@@ -259,7 +274,11 @@ pub fn encode_tilemap_scr(
         )));
     }
 
-    let mut out = vec![0u8; total * 2];
+    let byte_len = total.checked_mul(2).ok_or(Error::InvalidField {
+        what: "tilemap_byte_len",
+        value: total as u64,
+    })?;
+    let mut out = vec![0u8; byte_len];
     for ty in 0..height_tiles {
         for tx in 0..width_tiles {
             let src_idx = ty * width_tiles + tx;
@@ -358,12 +377,26 @@ fn detect_tilemap_input_format(bytes: &[u8]) -> TilemapInputFormat {
 // Minimal Zero-Dependency XML Helpers for TMX
 // -----------------------------------------------------------------------------
 
+/// Find the next occurrence of `needle` in `xml` at or after `from`, skipping `<!-- ... -->` comments.
+fn find_outside_comments(xml: &str, needle: &str, mut from: usize) -> Option<usize> {
+    while from < xml.len() {
+        let next_needle = xml[from..].find(needle).map(|r| from + r)?;
+        if let Some(comment_rel) = xml[from..next_needle].find("<!--") {
+            let after_open = from + comment_rel + 4;
+            let close_rel = xml[after_open..].find("-->")?;
+            from = after_open + close_rel + 3;
+            continue;
+        }
+        return Some(next_needle);
+    }
+    None
+}
+
 /// Find the first opening tag `<tag_name ...>` in `xml` and return the slice inside `<...>`.
 fn find_opening_tag<'a>(xml: &'a str, tag_name: &str) -> Option<&'a str> {
     let needle = format!("<{tag_name}");
     let mut search_from = 0usize;
-    while let Some(rel) = xml[search_from..].find(&needle) {
-        let start = search_from + rel;
+    while let Some(start) = find_outside_comments(xml, &needle, search_from) {
         let after = start + needle.len();
         let next_byte = xml.as_bytes().get(after).copied();
         if matches!(
@@ -383,8 +416,7 @@ fn find_tag_with_body<'a>(xml: &'a str, tag_name: &str) -> Option<(&'a str, &'a 
     let needle = format!("<{tag_name}");
     let close_needle = format!("</{tag_name}>");
     let mut search_from = 0usize;
-    while let Some(rel) = xml[search_from..].find(&needle) {
-        let start = search_from + rel;
+    while let Some(start) = find_outside_comments(xml, &needle, search_from) {
         let after = start + needle.len();
         let next_byte = xml.as_bytes().get(after).copied();
         if matches!(next_byte, Some(b' ' | b'\t' | b'\r' | b'\n' | b'>')) {
@@ -396,8 +428,8 @@ fn find_tag_with_body<'a>(xml: &'a str, tag_name: &str) -> Option<(&'a str, &'a 
                 continue;
             }
             let body_start = open_end + 1;
-            let close_rel = xml[body_start..].find(&close_needle)?;
-            return Some((open_inner, &xml[body_start..body_start + close_rel]));
+            let close_pos = find_outside_comments(xml, &close_needle, body_start)?;
+            return Some((open_inner, &xml[body_start..close_pos]));
         }
         search_from = after;
     }
@@ -685,5 +717,35 @@ mod tests {
         }
         let dec_reloc = decode_lz77(&rom[0x1000..], DEFAULT_MAX_OUTPUT).unwrap();
         assert_eq!(dec_reloc.bytes, noisy_scr);
+    }
+
+    #[test]
+    fn rejects_tmx_oom_zip_bomb_and_skips_xml_comments() {
+        // Zip-bomb: huge width * height must be rejected with ResourceLimit without OOM.
+        let zip_bomb = r#"<map width="100000" height="100000"><data encoding="csv">1</data></map>"#;
+        let err = parse_tmx_csv(zip_bomb, 0).unwrap_err();
+        assert!(matches!(
+            err,
+            Error::ResourceLimit {
+                resource: "tmx_tile_count",
+                ..
+            }
+        ));
+
+        // XML comments containing fake tags must be skipped cleanly.
+        let commented = r#"<?xml version="1.0" encoding="UTF-8"?>
+<!-- <map width="99999" height="99999"><data encoding="base64">AAAA</data></map> -->
+<map width="2" height="1">
+ <!-- <tileset firstgid="99"/> -->
+ <tileset firstgid="1" source="tiles.tsx"/>
+ <layer><data encoding="csv">1,2</data></layer>
+</map>"#;
+        let parsed = parse_tmx_csv(commented, 0).unwrap();
+        assert_eq!(parsed.width_tiles, 2);
+        assert_eq!(parsed.height_tiles, 1);
+        assert_eq!(parsed.firstgid, 1);
+        assert_eq!(parsed.entries.len(), 2);
+        assert_eq!(parsed.entries[0].tile_index, 0);
+        assert_eq!(parsed.entries[1].tile_index, 1);
     }
 }

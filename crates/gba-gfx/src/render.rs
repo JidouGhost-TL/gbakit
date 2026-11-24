@@ -108,7 +108,7 @@ pub fn render_bg_text_4bpp_rgba(
 
     for ty in 0..height_tiles {
         for tx in 0..width_tiles {
-            let entry_offset = (ty * width_tiles + tx) * 2;
+            let entry_offset = screen_block_entry_index(tx, ty, width_tiles, height_tiles) * 2;
             let raw = u16::from_le_bytes([scr_map[entry_offset], scr_map[entry_offset + 1]]);
             let entry = ScrEntry::from_u16(raw);
 

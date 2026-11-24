@@ -49,85 +49,101 @@ pub fn scan_gax_soundpool(rom: &[u8]) -> Vec<GaxSampleEntry> {
     let mut detected_samples = Vec::new();
     let mut seen_bus_addrs = HashSet::new();
     let detected_version = GaxVersion::detect_from_bytes(rom);
+    let rom_bus_end = u32::try_from(rom.len())
+        .ok()
+        .and_then(|len| ROM_BUS_START.checked_add(len))
+        .unwrap_or(0x0A00_0000)
+        .min(0x0A00_0000);
 
-    let mut i = 0usize;
-    while i < rom.len().saturating_sub(16) {
-        let mut entries = Vec::new();
-        let mut off = i;
-
-        while off + 8 <= rom.len() {
-            let ptr = u32::from_le_bytes([rom[off], rom[off + 1], rom[off + 2], rom[off + 3]]);
-            let sz = u32::from_le_bytes([rom[off + 4], rom[off + 5], rom[off + 6], rom[off + 7]]) as usize;
-
-            if ptr < ROM_BUS_START || ptr >= ROM_BUS_START + (rom.len() as u32) {
-                break;
-            }
-            if sz > 2_000_000 {
-                break;
-            }
-            entries.push((ptr, sz));
-            off += 8;
+    let mut emit_chain = |valid_chain: &[(u32, usize)]| {
+        if valid_chain.len() < 4 {
+            return;
         }
-
-        // Validate if this table contains a contiguous chain of audio samples
-        let mut valid_chain: Vec<(u32, usize)> = Vec::new();
-        for (p, s) in entries {
-            if s == 0 {
-                continue;
-            }
-            if valid_chain.is_empty() {
-                valid_chain.push((p, s));
+        // Use the detected GAX engine version when an engine header is present
+        // (GAX 3.x uses unsigned 0x80-centered PCM; GAX 1.x/2.x use signed PCM).
+        // Fall back to the waveform continuity MAD heuristic only when no engine header is found.
+        let pool_version = detected_version.unwrap_or_else(|| {
+            if detect_unsigned_pcm_pool(rom, valid_chain) {
+                GaxVersion::V3
             } else {
-                let (last_p, last_s) = *valid_chain.last().unwrap();
-                let expected = last_p.saturating_add(last_s as u32);
-                let aligned_expected = (expected + 3) & !3;
-                if p == expected || p == aligned_expected {
-                    valid_chain.push((p, s));
-                } else {
+                GaxVersion::V1
+            }
+        });
+
+        for &(ptr, sz) in valid_chain {
+            if seen_bus_addrs.insert(ptr) {
+                let rom_offset = (ptr - ROM_BUS_START) as usize;
+                if rom_offset
+                    .checked_add(sz)
+                    .is_some_and(|end| end <= rom.len())
+                {
+                    let idx = detected_samples.len();
+                    let sample = GaxSample::from_rom_bytes(
+                        idx as u32,
+                        GAX_DEFAULT_SAMPLE_RATE,
+                        pool_version,
+                        &rom[rom_offset..rom_offset + sz],
+                    );
+
+                    detected_samples.push(GaxSampleEntry {
+                        index: idx,
+                        rom_offset,
+                        bus_address: ptr,
+                        size: sz,
+                        sample_rate: sample.sample_rate,
+                        pcm_data: sample.pcm_data,
+                    });
+                }
+            }
+        }
+    };
+
+    // Scan each 8-byte-entry alignment parity (0 mod 8 and 4 mod 8) in O(N) time,
+    // always advancing past failed contiguous pointer runs instead of re-scanning O(N²).
+    for parity in [0usize, 4usize] {
+        let mut i = parity;
+        while i < rom.len().saturating_sub(16) {
+            let mut entries = Vec::new();
+            let mut off = i;
+
+            while off + 8 <= rom.len() {
+                let ptr = u32::from_le_bytes([rom[off], rom[off + 1], rom[off + 2], rom[off + 3]]);
+                let sz = u32::from_le_bytes([rom[off + 4], rom[off + 5], rom[off + 6], rom[off + 7]])
+                    as usize;
+
+                if ptr < ROM_BUS_START || ptr >= rom_bus_end {
                     break;
                 }
-            }
-        }
-
-        // Require at least 4 contiguous sample entries to reject false positives
-        if valid_chain.len() >= 4 {
-            // Use the detected GAX engine version when an engine header is present
-            // (GAX 3.x uses unsigned 0x80-centered PCM; GAX 1.x/2.x use signed PCM).
-            // Fall back to the waveform continuity MAD heuristic only when no engine header is found.
-            let pool_version = detected_version.unwrap_or_else(|| {
-                if detect_unsigned_pcm_pool(rom, &valid_chain) {
-                    GaxVersion::V3
-                } else {
-                    GaxVersion::V1
+                if sz > 2_000_000 {
+                    break;
                 }
-            });
+                entries.push((ptr, sz));
+                off += 8;
+            }
 
-            for (ptr, sz) in valid_chain {
-                if seen_bus_addrs.insert(ptr) {
-                    let rom_offset = (ptr - ROM_BUS_START) as usize;
-                    if rom_offset + sz <= rom.len() {
-                        let idx = detected_samples.len();
-                        let sample = GaxSample::from_rom_bytes(
-                            idx as u32,
-                            GAX_DEFAULT_SAMPLE_RATE,
-                            pool_version,
-                            &rom[rom_offset..rom_offset + sz],
-                        );
-
-                        detected_samples.push(GaxSampleEntry {
-                            index: idx,
-                            rom_offset,
-                            bus_address: ptr,
-                            size: sz,
-                            sample_rate: sample.sample_rate,
-                            pcm_data: sample.pcm_data,
-                        });
+            // Validate contiguous chains of audio samples within this run in a single linear pass
+            let mut valid_chain: Vec<(u32, usize)> = Vec::new();
+            for (p, s) in entries {
+                if s == 0 {
+                    continue;
+                }
+                if let Some(&(last_p, last_s)) = valid_chain.last() {
+                    let expected = last_p.saturating_add(last_s as u32);
+                    let aligned_expected = expected.saturating_add(3) & !3;
+                    if p == expected || p == aligned_expected {
+                        valid_chain.push((p, s));
+                    } else {
+                        emit_chain(&valid_chain);
+                        valid_chain.clear();
+                        valid_chain.push((p, s));
                     }
+                } else {
+                    valid_chain.push((p, s));
                 }
             }
-            i = off;
-        } else {
-            i += 4;
+            emit_chain(&valid_chain);
+
+            i = if off > i { off } else { i + 8 };
         }
     }
 

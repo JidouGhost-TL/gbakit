@@ -20,10 +20,11 @@
 
 #![deny(unsafe_code)]
 
+use std::sync::OnceLock;
+
 use formatkit_codec::bit_unpack::BitUnpackConfig;
 use formatkit_codec::delta::{
-    decode_tagged_delta, delta_decode_u8_into, delta_encode_u8_into, encode_tagged_delta,
-    TaggedDeltaWidth,
+    decode_tagged_delta, delta_encode_u8_into, encode_tagged_delta, TaggedDeltaWidth,
 };
 use formatkit_codec::okumura::BitOrder;
 use formatkit_codec::rle::{
@@ -227,10 +228,14 @@ pub fn encode_hudson_lz(data: &[u8]) -> Result<Vec<u8>> {
             value: 0,
         });
     }
+    let len_u32 = u32::try_from(data.len()).map_err(|_| Error::InvalidField {
+        what: "hudson_lz_input_size",
+        value: data.len() as u64,
+    })?;
     let body = formatkit_codec::okumura_lzss_compress(data, BitOrder::LsbFirst, 0x20);
     let mut out = Vec::with_capacity(8 + body.len());
     out.extend_from_slice(b"HLZ\x01");
-    out.extend_from_slice(&(data.len() as u32).to_le_bytes());
+    out.extend_from_slice(&len_u32.to_le_bytes());
     out.extend_from_slice(&body);
     Ok(out)
 }
@@ -348,6 +353,20 @@ pub fn decode_konami_dict(input: &[u8], max_output: usize) -> Result<DecodeOutco
     })
 }
 
+fn konami_dict_lookup() -> &'static [u16] {
+    static LOOKUP: OnceLock<Vec<u16>> = OnceLock::new();
+    LOOKUP.get_or_init(|| {
+        let mut table = vec![u16::MAX; 65_536];
+        for (idx, &[b0, b1]) in KONAMI_DICT.iter().enumerate() {
+            let key = ((b0 as usize) << 8) | (b1 as usize);
+            if table[key] == u16::MAX {
+                table[key] = idx as u16;
+            }
+        }
+        table
+    })
+}
+
 /// Encode bytes into a Konami Dictionary / Huffman (`0x4B`) stream.
 pub fn encode_konami_dict(data: &[u8]) -> Result<Vec<u8>> {
     if data.is_empty() || data.len() > 0x00FF_FFFF {
@@ -356,6 +375,7 @@ pub fn encode_konami_dict(data: &[u8]) -> Result<Vec<u8>> {
             value: data.len() as u64,
         });
     }
+    let dict_lookup = konami_dict_lookup();
     let mut out = Vec::with_capacity(data.len() + 4);
     out.push(0x4B);
     out.push((data.len() & 0xFF) as u8);
@@ -389,10 +409,11 @@ pub fn encode_konami_dict(data: &[u8]) -> Result<Vec<u8>> {
                 }
             }
 
-            // Check dictionary match for 2 bytes
+            // Check dictionary match for 2 bytes in O(1)
             if idx + 1 < data.len() {
-                let pair = [data[idx], data[idx + 1]];
-                if let Some(pos) = KONAMI_DICT.iter().position(|&p| p == pair) {
+                let key = ((data[idx] as usize) << 8) | (data[idx + 1] as usize);
+                let pos = dict_lookup[key];
+                if pos != u16::MAX {
                     flags |= 0x80 >> bit;
                     out.push(0x00);
                     out.push(pos as u8);
@@ -444,7 +465,7 @@ pub fn decode_shinen_mode7(input: &[u8], max_output: usize) -> Result<DecodeOutc
         });
     }
 
-    let outcome = decode_high_bit_rle(&input[4..], expected, SHINEN_RLE_CONFIG).map_err(
+    let mut outcome = decode_high_bit_rle(&input[4..], expected, SHINEN_RLE_CONFIG).map_err(
         |err| match err {
             Error::Truncated {
                 offset,
@@ -459,11 +480,14 @@ pub fn decode_shinen_mode7(input: &[u8], max_output: usize) -> Result<DecodeOutc
         },
     )?;
 
-    let mut out = Vec::with_capacity(expected);
-    delta_decode_u8_into(&outcome.bytes, &mut out);
+    let mut acc = 0u8;
+    for b in &mut outcome.bytes {
+        acc = acc.wrapping_add(*b);
+        *b = acc;
+    }
 
     Ok(DecodeOutcome {
-        bytes: out,
+        bytes: outcome.bytes,
         consumed: 4 + outcome.consumed,
     })
 }

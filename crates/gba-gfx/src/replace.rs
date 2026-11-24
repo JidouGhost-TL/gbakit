@@ -15,7 +15,8 @@ use gba_compress::{
     decode_huffman, decode_lz77, decode_rle, encode_huffman_4bit, encode_huffman_8bit, encode_lz77,
     encode_lz77_vram, encode_rle, DEFAULT_MAX_OUTPUT,
 };
-use gba_rom::{rom_offset_to_bus, HEADER_SIZE};
+use gba_rom::{find_free_space_prefer_ff, rom_offset_to_bus, HEADER_SIZE};
+pub use gba_rom::{find_free_space, patch_rom_pointers};
 use serde::{Deserialize, Serialize};
 
 use crate::{bgr555_to_rgba8, decode_palette, encode_tile_4bpp, rgb8_to_bgr555};
@@ -529,107 +530,6 @@ pub fn detect_stream_at(
 }
 
 // -----------------------------------------------------------------------------
-// Free-Space Scanning & ROM Pointer Patching
-// -----------------------------------------------------------------------------
-
-/// Scan `rom` for a contiguous, `alignment`-aligned free-space region of at least `needed_len`
-/// bytes consisting of a single uniform fill byte from `free_bytes` (checked in preference order).
-///
-/// Never returns an offset inside the 192-byte GBA cartridge header (`0x00..0xC0`) or overlapping
-/// `exclude_range` (typically the original asset's range).
-pub fn find_free_space(
-    rom: &[u8],
-    needed_len: usize,
-    alignment: usize,
-    search_start: usize,
-    free_bytes: &[u8],
-    exclude_range: Option<(usize, usize)>,
-) -> Option<usize> {
-    if needed_len == 0 || rom.len() < needed_len {
-        return None;
-    }
-    let align = alignment.max(1);
-    let base_start = align_up(search_start.max(HEADER_SIZE), align);
-    if base_start + needed_len > rom.len() {
-        return None;
-    }
-
-    for &fill in free_bytes {
-        let mut pos = base_start;
-        while pos + needed_len <= rom.len() {
-            if let Some((ex_start, ex_end)) = exclude_range {
-                if pos < ex_end && pos + needed_len > ex_start {
-                    pos = align_up(ex_end, align);
-                    continue;
-                }
-            }
-
-            if let Some(mismatch) = rom[pos..pos + needed_len].iter().position(|&b| b != fill) {
-                pos = align_up(pos + mismatch + 1, align);
-            } else {
-                return Some(pos);
-            }
-        }
-    }
-
-    None
-}
-
-fn align_up(value: usize, align: usize) -> usize {
-    if align <= 1 {
-        return value;
-    }
-    let rem = value % align;
-    if rem == 0 {
-        value
-    } else {
-        value.saturating_add(align - rem)
-    }
-}
-
-/// Rewrite all 4-byte-aligned GBA Wait State 0 ROM bus pointers (`0x0800_0000 + old_offset`)
-/// outside the cartridge header (and outside `skip_range`, if given) to `0x0800_0000 + new_offset`.
-///
-/// Returns the ROM offsets of all patched 32-bit pointer words.
-pub fn patch_rom_pointers(
-    rom: &mut [u8],
-    old_offset: usize,
-    new_offset: usize,
-    skip_range: Option<(usize, usize)>,
-) -> Result<Vec<usize>> {
-    let old_bus = rom_offset_to_bus(old_offset).ok_or(Error::InvalidField {
-        what: "old_rom_offset",
-        value: old_offset as u64,
-    })?;
-    let new_bus = rom_offset_to_bus(new_offset).ok_or(Error::InvalidField {
-        what: "new_rom_offset",
-        value: new_offset as u64,
-    })?;
-
-    let old_bytes = old_bus.to_le_bytes();
-    let new_bytes = new_bus.to_le_bytes();
-    let mut patched = Vec::new();
-
-    let scan_end = rom.len() & !3;
-    let mut pos = HEADER_SIZE;
-    while pos < scan_end {
-        if let Some((skip_start, skip_end)) = skip_range {
-            if pos >= skip_start && pos < skip_end {
-                pos = align_up(skip_end, 4);
-                continue;
-            }
-        }
-        if rom[pos..pos + 4] == old_bytes {
-            rom[pos..pos + 4].copy_from_slice(&new_bytes);
-            patched.push(pos);
-        }
-        pos += 4;
-    }
-
-    Ok(patched)
-}
-
-// -----------------------------------------------------------------------------
 // Safe ROM Write-Back API
 // -----------------------------------------------------------------------------
 
@@ -725,6 +625,11 @@ pub fn write_asset_in_rom(
         });
     }
 
+    let orig_bus_address = rom_offset_to_bus(rom_offset).ok_or(Error::InvalidField {
+        what: "written_rom_offset",
+        value: rom_offset as u64,
+    })?;
+
     let encoded = compress_gfx(raw_payload, target_compression)?;
     let written_bytes = encoded.len();
 
@@ -734,14 +639,10 @@ pub fn write_asset_in_rom(
         if slack_bytes > 0 {
             rom[rom_offset + written_bytes..rom_offset + original_capacity].fill(options.pad_byte);
         }
-        let written_bus_address = rom_offset_to_bus(rom_offset).ok_or(Error::InvalidField {
-            what: "written_rom_offset",
-            value: rom_offset as u64,
-        })?;
         return Ok(ReplaceReport {
             original_offset: rom_offset,
             written_offset: rom_offset,
-            written_bus_address,
+            written_bus_address: orig_bus_address,
             compression: target_compression,
             original_capacity,
             uncompressed_bytes: raw_payload.len(),
@@ -761,18 +662,22 @@ pub fn write_asset_in_rom(
         });
     }
 
-    let new_offset = find_free_space(
+    let new_offset = find_free_space_prefer_ff(
         rom,
         written_bytes,
         options.relocate_alignment,
         options.free_space_start,
-        &[0xFF, 0x00],
         Some((rom_offset, rom_offset + original_capacity)),
     )
     .ok_or(Error::ResourceLimit {
         resource: "rom_free_space",
         requested: written_bytes as u64,
         limit: 0,
+    })?;
+
+    let written_bus_address = rom_offset_to_bus(new_offset).ok_or(Error::InvalidField {
+        what: "relocated_rom_offset",
+        value: new_offset as u64,
     })?;
 
     rom[new_offset..new_offset + written_bytes].copy_from_slice(&encoded);
@@ -782,10 +687,6 @@ pub fn write_asset_in_rom(
         new_offset,
         Some((new_offset, new_offset + written_bytes)),
     )?;
-    let written_bus_address = rom_offset_to_bus(new_offset).ok_or(Error::InvalidField {
-        what: "relocated_rom_offset",
-        value: new_offset as u64,
-    })?;
 
     Ok(ReplaceReport {
         original_offset: rom_offset,

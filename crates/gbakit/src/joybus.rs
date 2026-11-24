@@ -339,11 +339,14 @@ impl JoybusDevice {
                 // Write into EWRAM
                 if target_addr >= EWRAM_BASE_ADDR {
                     let offset = (target_addr - EWRAM_BASE_ADDR) as usize;
-                    if offset + data_slice.len() <= self.ewram.len() {
+                    if offset
+                        .checked_add(data_slice.len())
+                        .is_some_and(|end| end <= self.ewram.len())
+                    {
                         self.ewram[offset..offset + data_slice.len()].copy_from_slice(data_slice);
                     }
                 }
-                self.current_address = target_addr + data_slice.len() as u32;
+                self.current_address = target_addr.wrapping_add(data_slice.len() as u32);
                 self.blocks_received += 1;
                 self.status |= JOYSTAT_RECV_COMPLETE;
 

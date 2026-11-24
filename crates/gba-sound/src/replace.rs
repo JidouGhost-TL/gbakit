@@ -20,13 +20,14 @@ use logik_state::{IMA_INDEX_TABLE, IMA_STEP_TABLE};
 use serde::{Deserialize, Serialize};
 
 use crate::m4a::{
-    dpcm_encoded_len, offset_to_rom_ptr, M4aSampleView, DPCM_BLOCK_BYTES, DPCM_BLOCK_SAMPLES,
-    DPCM_DELTA_TABLE, WAVE_DATA_HEADER_SIZE,
+    dpcm_encoded_len, M4aSampleView, DPCM_BLOCK_BYTES, DPCM_BLOCK_SAMPLES, DPCM_DELTA_TABLE,
+    WAVE_DATA_HEADER_SIZE,
 };
 use crate::WaveDataHeader;
 
-/// Maximum GBA Wait State 0 ROM size (32 MiB).
-const MAX_GBA_ROM_BYTES: usize = 0x0200_0000;
+/// Maximum number of PCM16 output samples permitted by [`resample_pcm_i16_linear`]
+/// (16M samples = 32 MiB PCM16) to prevent unbounded memory allocation on crafted WAV headers.
+pub const MAX_RESAMPLED_SAMPLES: usize = 16 * 1024 * 1024;
 
 /// Default minimum ROM offset when searching for free space (past the 192-byte GBA header
 /// and initial interrupt/CRT0 vectors).
@@ -321,9 +322,27 @@ pub fn resample_pcm_i16_linear(
         return Ok(samples.to_vec());
     }
 
-    let out_len = (((samples.len() as f64) * (dst_rate_hz as f64)) / (src_rate_hz as f64))
-        .round()
-        .max(1.0) as usize;
+    let out_len_f64 = ((samples.len() as f64) * (dst_rate_hz as f64)) / (src_rate_hz as f64);
+    if !out_len_f64.is_finite() || out_len_f64 > MAX_RESAMPLED_SAMPLES as f64 {
+        let requested = if out_len_f64.is_finite() && out_len_f64 >= 0.0 {
+            out_len_f64.round() as u64
+        } else {
+            u64::MAX
+        };
+        return Err(Error::ResourceLimit {
+            resource: "resampled_pcm_samples",
+            requested,
+            limit: MAX_RESAMPLED_SAMPLES as u64,
+        });
+    }
+    let out_len = out_len_f64.round().max(1.0) as usize;
+    if out_len > MAX_RESAMPLED_SAMPLES {
+        return Err(Error::ResourceLimit {
+            resource: "resampled_pcm_samples",
+            requested: out_len as u64,
+            limit: MAX_RESAMPLED_SAMPLES as u64,
+        });
+    }
     let ratio = (src_rate_hz as f64) / (dst_rate_hz as f64);
     let last_idx = samples.len() - 1;
 
@@ -558,7 +577,7 @@ fn encode_ima_arm_nibble(
     let mut best_nib = 0u8;
     let mut best_pred = *pred;
     let mut best_in_range = false;
-    let mut best_err = i32::MAX;
+    let mut best_err = u32::MAX;
 
     for nib in 0u8..16 {
         let diff = ((((nib & 7) as i32).wrapping_mul(cur_step)) as u32 >> 2) as i32;
@@ -568,7 +587,7 @@ fn encode_ima_arm_nibble(
             pred.wrapping_add(diff)
         };
         let in_range = (-32_768..=32_767).contains(&cand);
-        let err = (cand - target_i32).abs();
+        let err = cand.abs_diff(target_i32);
         let better = match (in_range, best_in_range) {
             (true, false) => true,
             (false, true) => false,
@@ -675,67 +694,16 @@ pub fn find_rom_free_space(
     search_start: usize,
     alignment: usize,
 ) -> Option<usize> {
-    if needed_len == 0 {
-        return None;
-    }
-    let align = alignment.max(4).next_power_of_two();
-    let max_end = rom.len().min(MAX_GBA_ROM_BYTES);
-    if search_start >= max_end || needed_len > max_end {
-        return None;
-    }
-
-    for fill in [0xFFu8, 0x00u8] {
-        if let Some(off) = find_aligned_fill_run(&rom[..max_end], fill, needed_len, search_start, align)
-        {
-            return Some(off);
-        }
-    }
-    None
+    gba_rom::find_free_space_prefer_ff(rom, needed_len, alignment.max(4), search_start, None)
 }
 
-fn find_aligned_fill_run(
-    rom: &[u8],
-    fill: u8,
-    needed_len: usize,
-    search_start: usize,
-    align: usize,
-) -> Option<usize> {
-    let mut off = align_up(search_start, align)?;
-    while off.checked_add(needed_len).is_some_and(|end| end <= rom.len()) {
-        if let Some(mismatch) = rom[off..off + needed_len].iter().position(|&b| b != fill) {
-            off = align_up(off + mismatch + 1, align)?;
-        } else {
-            return Some(off);
-        }
-    }
-    None
-}
-
-#[inline]
-fn align_up(value: usize, align: usize) -> Option<usize> {
-    let mask = align.checked_sub(1)?;
-    value.checked_add(mask).map(|v| v & !mask)
-}
-
-/// Scan `rom` at every 4-byte-aligned offset and rewrite all GBA ROM bus pointers
-/// (`0x0800_0000 + old_offset`) to (`0x0800_0000 + new_offset`).
+/// Scan `rom` at every 4-byte-aligned offset past the 192-byte AGB header and rewrite all
+/// GBA ROM bus pointers (`0x0800_0000 + old_offset`) to (`0x0800_0000 + new_offset`).
 ///
-/// Returns the sorted list of ROM file offsets where pointers were patched.
+/// Returns the sorted list of ROM file offsets where pointers were patched, or an empty
+/// vector if either offset falls outside the 32 MiB GBA ROM bus window.
 pub fn patch_rom_pointers(rom: &mut [u8], old_offset: usize, new_offset: usize) -> Vec<usize> {
-    let old_ptr_bytes = offset_to_rom_ptr(old_offset).to_le_bytes();
-    let new_ptr_bytes = offset_to_rom_ptr(new_offset).to_le_bytes();
-    let mut patched = Vec::new();
-
-    let mut off = 0usize;
-    while off + 4 <= rom.len() {
-        if rom[off..off + 4] == old_ptr_bytes {
-            rom[off..off + 4].copy_from_slice(&new_ptr_bytes);
-            patched.push(off);
-        }
-        off += 4;
-    }
-
-    patched
+    gba_rom::patch_rom_pointers(rom, old_offset, new_offset, None).unwrap_or_default()
 }
 
 /// Safely replace an M4A `WaveData` sample in `rom` at `offset`.
@@ -891,8 +859,8 @@ fn write_or_relocate_in_rom(
     })?;
 
     // Patch ROM pointers before writing payload so we never mutate sample bytes that
-    // coincidentally match the old pointer pattern.
-    let patched_pointer_offsets = patch_rom_pointers(rom, offset, new_offset);
+    // coincidentally match the old pointer pattern, and validate bus addresses first.
+    let patched_pointer_offsets = gba_rom::patch_rom_pointers(rom, offset, new_offset, None)?;
     rom[new_offset..new_offset + new_bytes.len()].copy_from_slice(new_bytes);
 
     Ok(AudioReplaceReport {
@@ -1222,5 +1190,30 @@ mod tests {
         assert_eq!(r2.patched_pointer_offsets, vec![0x0100]);
         assert_eq!(&rom[0x0100..0x0104], &(ROM_BUS_START + 0x0800).to_le_bytes());
         assert_eq!(&rom[0x0800..0x0840], &larger[..]);
+    }
+
+    #[test]
+    fn wav_resampler_rejects_oom_upsampling() {
+        // 1,000 samples at 1 Hz resampled to 44,100 Hz would request 44,100,000 samples (> 16M limit).
+        let samples = vec![0i16; 1_000];
+        let err = resample_pcm_i16_linear(&samples, 1, 44_100)
+            .expect_err("extreme upsampling must fail with ResourceLimit");
+        assert!(
+            matches!(
+                err,
+                Error::ResourceLimit {
+                    resource: "resampled_pcm_samples",
+                    limit,
+                    ..
+                } if limit == MAX_RESAMPLED_SAMPLES as u64
+            ),
+            "expected ResourceLimit, got {err:?}"
+        );
+
+        // Also verify through the WAV file entry point.
+        let wav = build_mono_wav8(1, &vec![0x80u8; 1_000]);
+        let err_wav = read_wav_pcm_mono_i16_resampled(&wav, Some(44_100))
+            .expect_err("crafted 1 Hz WAV resampled to 44.1 kHz must fail");
+        assert!(matches!(err_wav, Error::ResourceLimit { .. }));
     }
 }

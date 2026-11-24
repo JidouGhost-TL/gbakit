@@ -98,20 +98,31 @@ pub fn detect_sound_engine(bytes: &[u8]) -> DetectedSoundEngine {
         DetectedSoundEngine::EngineSw(esw_ver)
     } else if let Some(sonix_ver) = cosmigo_sonix::SonixVersion::detect_from_bytes(bytes) {
         DetectedSoundEngine::CosmigoSonix(sonix_ver)
-    } else if detect_krawall_engine(bytes) {
-        DetectedSoundEngine::Krawall(krawall::KrawallVersion::detect_from_bytes(bytes))
-    } else if detect_rare_engine(bytes) {
-        DetectedSoundEngine::Rare(rare_audio::RareAudioVersion::detect_from_bytes(bytes))
-    } else if let Some(variant) = detect_konami_engine(bytes) {
-        DetectedSoundEngine::Konami(variant, konami_kce::KonamiKceVersion::detect_from_bytes(bytes))
-    } else if detect_logik_state(bytes) {
-        DetectedSoundEngine::LogikState(logik_state::LogikVersion::detect_from_bytes(bytes))
-    } else if detect_paragon5_engine(bytes) {
-        DetectedSoundEngine::Paragon5(paragon5::Paragon5Version::detect_from_bytes(bytes))
+    } else if let Some(krawall_ver) = krawall::KrawallVersion::detect_from_bytes(bytes) {
+        DetectedSoundEngine::Krawall(Some(krawall_ver))
+    } else if krawall_pool::detect_krawall_fallback(bytes) {
+        DetectedSoundEngine::Krawall(None)
+    } else if let Some(rare_ver) = rare_audio::RareAudioVersion::detect_from_bytes(bytes) {
+        DetectedSoundEngine::Rare(Some(rare_ver))
+    } else if rare_audio::RareAudioVersion::has_rare_signature(bytes) {
+        DetectedSoundEngine::Rare(None)
+    } else if let Some((variant, konami_ver)) = konami_pool::detect_konami_engine_with_version(bytes)
+    {
+        DetectedSoundEngine::Konami(variant, konami_ver)
+    } else if let Some(logik_ver) = logik_state::LogikVersion::detect_from_bytes(bytes) {
+        DetectedSoundEngine::LogikState(Some(logik_ver))
+    } else if logik_pool::has_logik_signature(bytes) {
+        DetectedSoundEngine::LogikState(None)
+    } else if let Some(p5_ver) = paragon5::Paragon5Version::detect_from_bytes(bytes) {
+        DetectedSoundEngine::Paragon5(Some(p5_ver))
+    } else if paragon5_pool::has_paragon5_descriptors(bytes) {
+        DetectedSoundEngine::Paragon5(None)
     } else if detect_rd1_engine(bytes) {
         DetectedSoundEngine::Rd1(rd1_kaede::KaedeVersion::detect_from_bytes(bytes))
-    } else if detect_southpaw_engine(bytes) {
-        DetectedSoundEngine::Southpaw(southpaw_audio::SouthpawVersion::detect_from_bytes(bytes))
+    } else if let Some(sp_ver) = southpaw_audio::SouthpawVersion::detect_from_bytes(bytes) {
+        DetectedSoundEngine::Southpaw(Some(sp_ver))
+    } else if southpaw_pool::has_southpaw_sample_table(bytes) {
+        DetectedSoundEngine::Southpaw(None)
     } else {
         DetectedSoundEngine::Custom
     }

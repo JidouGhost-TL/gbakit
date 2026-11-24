@@ -969,19 +969,24 @@ pub const REGISTRY: &[DebugMenuPatch] = &[
 /// - `"A4FE"` -> `"BZ4E"` (Final Fantasy IV Advance)
 /// - `"AFEE"` -> `"AE7E"` (Fire Emblem)
 pub fn find_by_code(code: &str) -> Option<&'static DebugMenuPatch> {
-    let code_upper = code.to_ascii_uppercase();
-    if let Some(exact) = REGISTRY.iter().find(|p| p.game_code == code_upper) {
+    if let Some(exact) = REGISTRY
+        .iter()
+        .find(|p| p.game_code.eq_ignore_ascii_case(code))
+    {
         return Some(exact);
     }
-    let alias = match code_upper.as_str() {
-        "AICE" => "ASYE",
-        "BLFE" => "BZME",
-        "AGBE" => "A7KE",
-        "B88E" => "BR5E",
-        "A4FE" => "BZ4E",
-        "AFEE" => "AE7E",
-        _ => return None,
-    };
+    const ALIASES: &[(&str, &str)] = &[
+        ("AICE", "ASYE"),
+        ("BLFE", "BZME"),
+        ("AGBE", "A7KE"),
+        ("B88E", "BR5E"),
+        ("A4FE", "BZ4E"),
+        ("AFEE", "AE7E"),
+    ];
+    let alias = ALIASES
+        .iter()
+        .find(|&&(from, _)| from.eq_ignore_ascii_case(code))
+        .map(|&(_, to)| to)?;
     REGISTRY.iter().find(|p| p.game_code == alias)
 }
 

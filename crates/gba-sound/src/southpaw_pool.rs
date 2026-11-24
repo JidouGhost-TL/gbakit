@@ -49,8 +49,13 @@ pub struct SouthpawSampleEntry {
 
 /// Detect whether a GBA ROM uses the Southpaw GBA Sound Engine via either its
 /// 16-byte Timer0 SFX sample table or its ARM7TDMI/Thumb driver fingerprint.
+/// Fallback Southpaw sample-table check when `SouthpawVersion::detect_from_bytes` returned `None`.
+pub(crate) fn has_southpaw_sample_table(rom: &[u8]) -> bool {
+    find_sample_table(rom).is_some()
+}
+
 pub fn detect_southpaw_engine(rom: &[u8]) -> bool {
-    find_sample_table(rom).is_some() || SouthpawVersion::detect_from_bytes(rom).is_some()
+    has_southpaw_sample_table(rom) || SouthpawVersion::detect_from_bytes(rom).is_some()
 }
 
 /// Scan a GBA ROM for the primary contiguous table of 16-byte `SouthpawSampleDesc`

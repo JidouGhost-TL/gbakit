@@ -453,6 +453,46 @@ mod tests {
     }
 
     #[test]
+    fn bg_text_4bpp_render_64x32_screenblock_quadrants() {
+        // Tile 0: solid color 1, Tile 1: solid color 2
+        let tile0 = encode_tile_4bpp(&[1u8; 64]).unwrap();
+        let tile1 = encode_tile_4bpp(&[2u8; 64]).unwrap();
+        let mut tiles = Vec::new();
+        tiles.extend_from_slice(&tile0);
+        tiles.extend_from_slice(&tile1);
+
+        let mut palette = vec![[0u8; 4]; 16];
+        palette[1] = [10, 20, 30, 255];
+        palette[2] = [200, 100, 50, 255];
+
+        // 64x32 BG = 2 horizontal 32x32 screen blocks (2048 entries = 4096 bytes).
+        // Put tile 1 at screen block 1 entry 0 (index 1024 -> (tx=32, ty=0)).
+        let mut scr_map = vec![0u8; 64 * 32 * 2];
+        let entry1 = ScrEntry {
+            tile_index: 1,
+            h_flip: false,
+            v_flip: false,
+            palette_bank: 0,
+        }
+        .to_u16()
+        .to_le_bytes();
+        scr_map[1024 * 2..1024 * 2 + 2].copy_from_slice(&entry1);
+
+        let rgba = render_bg_text_4bpp_rgba(&tiles, &scr_map, &palette, 64, 32, false).unwrap();
+        let width_px = 64 * 8;
+        let px_at = |x: usize, y: usize| -> [u8; 4] {
+            let i = (y * width_px + x) * 4;
+            [rgba[i], rgba[i + 1], rgba[i + 2], rgba[i + 3]]
+        };
+        // (tx=0, ty=0) -> tile 0 -> palette[1]
+        assert_eq!(px_at(0, 0), palette[1]);
+        // (tx=32, ty=0) -> pixel x=256, y=0 -> SCR index 1024 -> tile 1 -> palette[2]
+        assert_eq!(px_at(32 * 8, 0), palette[2]);
+        // (tx=0, ty=1) -> SCR index 32 -> tile 0 -> palette[1]
+        assert_eq!(px_at(0, 8), palette[1]);
+    }
+
+    #[test]
     fn mode3_and_mode4_framebuffers() {
         let pixel_count = GBA_SCREEN_WIDTH * GBA_SCREEN_HEIGHT;
 

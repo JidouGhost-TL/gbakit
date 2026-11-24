@@ -125,7 +125,8 @@ pub fn decode_ima_adpcm4_arm_to_pcm8(raw: &[u8]) -> Vec<i8> {
 /// Matches the `"GBAModPlay"` ASCII driver credit, the 8-byte `"GBAMOD30"` /
 /// `"GBAMOD2."` / `"GBAMOD1."` song module magic headers, or any verified
 /// Logik State ARM7TDMI mixer revision via [`logik_state::LogikVersion`].
-pub fn detect_logik_state(rom: &[u8]) -> bool {
+/// Fallback Logik State signature check when `LogikVersion::detect_from_bytes` returned `None`.
+pub(crate) fn has_logik_signature(rom: &[u8]) -> bool {
     if rom.len() < GBAMOD30_MAGIC.len() {
         return false;
     }
@@ -134,7 +135,14 @@ pub fn detect_logik_state(rom: &[u8]) -> bool {
         || find_subslice(rom, GBAMOD30_MAGIC, 0).is_some()
         || find_subslice(rom, GBAMOD2_MAGIC, 0).is_some()
         || find_subslice(rom, GBAMOD1_MAGIC, 0).is_some()
-        || LogikVersion::detect_from_bytes(rom).is_some()
+}
+
+pub fn detect_logik_state(rom: &[u8]) -> bool {
+    if rom.len() < GBAMOD30_MAGIC.len() {
+        return false;
+    }
+
+    has_logik_signature(rom) || LogikVersion::detect_from_bytes(rom).is_some()
 }
 
 /// Scan a GBA ROM for a Logik State GBAModPlay sample bank and extract all

@@ -7,6 +7,7 @@
 
 #![deny(unsafe_code)]
 
+use std::borrow::Cow;
 use std::collections::HashSet;
 use std::fmt;
 
@@ -15,6 +16,9 @@ pub use formatkit_core::padding::{classify_padding, PaddingKind, PaddingSummary}
 pub use formatkit_layout::edit::{patch_bytes, patched_bytes};
 use formatkit_core::{Error, Result};
 use serde::{Deserialize, Serialize};
+
+/// Maximum accepted save image size (1 MiB) to prevent OOM allocations from crafted definitions.
+pub const MAX_SAVE_SIZE: usize = 1024 * 1024;
 
 /// Returns `true` if `bytes` consists entirely of uniform unwritten/blank memory
 /// (either all `0x00` as in cleared SRAM, or all `0xFF` as in erased Flash/EEPROM),
@@ -716,10 +720,10 @@ impl SaveDefinition {
                 self.game_code
             )));
         }
-        if self.size_bytes == 0 {
+        if self.size_bytes == 0 || self.size_bytes > MAX_SAVE_SIZE {
             return Err(Error::InvalidField {
                 what: "size_bytes",
-                value: 0,
+                value: self.size_bytes as u64,
             });
         }
 
@@ -812,10 +816,10 @@ impl SaveDefinition {
                 }
                 FieldType::BitfieldArray => {
                     if let Some(ba) = &field.bitfield_array {
-                        if ba.bit_width == 0 {
+                        if ba.bit_width == 0 || ba.bit_width > 32 {
                             return Err(Error::InvalidField {
                                 what: "bitfield_array_bit_width",
-                                value: 0,
+                                value: ba.bit_width as u64,
                             });
                         }
                         let total_bits = ba.bit_width.checked_mul(ba.count).ok_or(Error::InvalidField {
@@ -1015,7 +1019,13 @@ pub fn verify_save(def: &SaveDefinition, data: &[u8]) -> Result<VerificationRepo
 }
 
 fn read_field(spec: &FieldSpec, data: &[u8]) -> Result<FieldValue> {
-    let end = spec.offset + spec.size;
+    let end = spec
+        .offset
+        .checked_add(spec.size)
+        .ok_or(Error::InvalidField {
+            what: "field_offset",
+            value: spec.offset as u64,
+        })?;
     if end > data.len() {
         return Err(Error::Truncated {
             offset: spec.offset,
@@ -1025,13 +1035,49 @@ fn read_field(spec: &FieldSpec, data: &[u8]) -> Result<FieldValue> {
     }
     let slice = &data[spec.offset..end];
     Ok(match spec.field_type {
-        FieldType::U8 => FieldValue::U8(slice[0]),
-        FieldType::U16Le => FieldValue::U16(u16::from_le_bytes([slice[0], slice[1]])),
+        FieldType::U8 => {
+            if slice.len() != 1 {
+                return Err(Error::InvalidField {
+                    what: "field_size",
+                    value: slice.len() as u64,
+                });
+            }
+            FieldValue::U8(slice[0])
+        }
+        FieldType::U16Le => {
+            if slice.len() != 2 {
+                return Err(Error::InvalidField {
+                    what: "field_size",
+                    value: slice.len() as u64,
+                });
+            }
+            FieldValue::U16(u16::from_le_bytes([slice[0], slice[1]]))
+        }
         FieldType::U32Le => {
+            if slice.len() != 4 {
+                return Err(Error::InvalidField {
+                    what: "field_size",
+                    value: slice.len() as u64,
+                });
+            }
             FieldValue::U32(u32::from_le_bytes([slice[0], slice[1], slice[2], slice[3]]))
         }
-        FieldType::I16Le => FieldValue::I16(i16::from_le_bytes([slice[0], slice[1]])),
+        FieldType::I16Le => {
+            if slice.len() != 2 {
+                return Err(Error::InvalidField {
+                    what: "field_size",
+                    value: slice.len() as u64,
+                });
+            }
+            FieldValue::I16(i16::from_le_bytes([slice[0], slice[1]]))
+        }
         FieldType::Bitflags => {
+            if !matches!(slice.len(), 1 | 2 | 4 | 8) {
+                return Err(Error::InvalidField {
+                    what: "bitflags_size",
+                    value: slice.len() as u64,
+                });
+            }
             let mut buf = [0u8; 8];
             buf[..slice.len()].copy_from_slice(slice);
             FieldValue::Bitflags(u64::from_le_bytes(buf))
@@ -1050,19 +1096,43 @@ fn read_field(spec: &FieldSpec, data: &[u8]) -> Result<FieldValue> {
                 .bitfield_array
                 .as_ref()
                 .map(|ba| ba.bit_width)
-                .unwrap_or(1)
-                .max(1);
-            let count = spec
-                .bitfield_array
-                .as_ref()
-                .map(|ba| ba.count)
-                .unwrap_or_else(|| (spec.size * 8) / bit_width);
+                .unwrap_or(1);
+            if bit_width == 0 || bit_width > 32 {
+                return Err(Error::InvalidField {
+                    what: "bitfield_array_bit_width",
+                    value: bit_width as u64,
+                });
+            }
+            let slice_bits = slice.len().checked_mul(8).ok_or(Error::InvalidField {
+                what: "bitfield_array_size",
+                value: slice.len() as u64,
+            })?;
+            let count = match &spec.bitfield_array {
+                Some(ba) => {
+                    let total_bits = ba.count.checked_mul(bit_width).ok_or(Error::InvalidField {
+                        what: "bitfield_array_total_bits",
+                        value: ba.count as u64,
+                    })?;
+                    if total_bits > slice_bits {
+                        return Err(Error::InvalidField {
+                            what: "bitfield_array_size",
+                            value: slice.len() as u64,
+                        });
+                    }
+                    ba.count
+                }
+                None => slice_bits / bit_width,
+            };
             let mut values = Vec::with_capacity(count);
             for i in 0..count {
-                let bit_start = i * bit_width;
+                let Some(bit_start) = i.checked_mul(bit_width) else {
+                    break;
+                };
                 let mut val = 0u32;
                 for b in 0..bit_width {
-                    let cur_bit = bit_start + b;
+                    let Some(cur_bit) = bit_start.checked_add(b) else {
+                        break;
+                    };
                     let byte_idx = cur_bit / 8;
                     let bit_idx = cur_bit % 8;
                     if byte_idx < slice.len() {
@@ -1203,12 +1273,21 @@ fn set_field_logical(
                 .bitfield_array
                 .as_ref()
                 .map(|ba| ba.bit_width)
-                .unwrap_or(1)
-                .max(1);
+                .unwrap_or(1);
+            if bit_width == 0 || bit_width > 32 {
+                return Err(Error::InvalidField {
+                    what: "bitfield_array_bit_width",
+                    value: bit_width as u64,
+                });
+            }
             for (i, &val) in values.iter().enumerate() {
-                let bit_start = i * bit_width;
+                let Some(bit_start) = i.checked_mul(bit_width) else {
+                    break;
+                };
                 for b in 0..bit_width {
-                    let cur_bit = bit_start + b;
+                    let Some(cur_bit) = bit_start.checked_add(b) else {
+                        break;
+                    };
                     let byte_idx = cur_bit / 8;
                     let bit_idx = cur_bit % 8;
                     if byte_idx < slice.len() {
@@ -1305,17 +1384,19 @@ pub fn probe_loose_save<'a>(
     }
 
     let mut matches = Vec::new();
+    let mut rev8_full: Option<Vec<u8>> = None;
 
     for def in definitions {
-        let geometry = SaveGeometry::for_definition(bytes, def);
-
         let probe_len = def.size_bytes.min(bytes.len());
-        let canonical_raw = &bytes[..probe_len];
-
-        let probe_data = if def.eeprom_rev8 {
-            to_rev8(canonical_raw)
+        let probe_data: Cow<'_, [u8]> = if def.eeprom_rev8 {
+            if probe_len.is_multiple_of(8) || probe_len == bytes.len() {
+                let cached = rev8_full.get_or_insert_with(|| to_rev8(bytes));
+                Cow::Borrowed(&cached[..probe_len])
+            } else {
+                Cow::Owned(to_rev8(&bytes[..probe_len]))
+            }
         } else {
-            canonical_raw.to_vec()
+            Cow::Borrowed(&bytes[..probe_len])
         };
 
         let magic_matched = !def.magic_signatures.is_empty()
@@ -1353,6 +1434,7 @@ pub fn probe_loose_save<'a>(
             } else {
                 MatchConfidence::MagicOnly
             };
+            let geometry = SaveGeometry::for_definition(bytes, def);
 
             matches.push(ProbeMatch {
                 def,
@@ -1557,7 +1639,8 @@ fn parse_bytes_literal(s: &str, expected_size: usize) -> Result<Vec<u8>> {
     }
 
     Err(Error::Malformed(format!(
-        "cannot parse {s:?} as {expected_size}-byte sequence (expected {expected_size} hex digits or comma-separated bytes)"
+        "cannot parse {s:?} as {expected_size}-byte sequence (expected {} hex digits or comma-separated bytes)",
+        expected_size * 2
     )))
 }
 
@@ -1614,13 +1697,22 @@ pub fn parse_field_value(spec: &FieldSpec, s: &str) -> Result<FieldValue> {
                 .bitfield_array
                 .as_ref()
                 .map(|ba| ba.bit_width)
-                .unwrap_or(1)
-                .max(1);
-            let count = spec
-                .bitfield_array
-                .as_ref()
-                .map(|ba| ba.count)
-                .unwrap_or_else(|| (spec.size * 8) / bit_width);
+                .unwrap_or(1);
+            if bit_width == 0 || bit_width > 32 {
+                return Err(Error::InvalidField {
+                    what: "bitfield_array_bit_width",
+                    value: bit_width as u64,
+                });
+            }
+            let count = match &spec.bitfield_array {
+                Some(ba) => ba.count,
+                None => {
+                    spec.size.checked_mul(8).ok_or(Error::InvalidField {
+                        what: "bitfield_array_size",
+                        value: spec.size as u64,
+                    })? / bit_width
+                }
+            };
             let mut values = Vec::with_capacity(count);
             if !clean.is_empty() {
                 for part in clean.split(',') {
@@ -1652,16 +1744,41 @@ pub fn json_val_to_field_value(spec: &FieldSpec, val: &serde_json::Value) -> Res
         serde_json::Value::Number(num) => {
             if let Some(u) = num.as_u64() {
                 match spec.field_type {
-                    FieldType::U8 => Ok(FieldValue::U8(u as u8)),
-                    FieldType::U16Le => Ok(FieldValue::U16(u as u16)),
-                    FieldType::U32Le => Ok(FieldValue::U32(u as u32)),
-                    FieldType::I16Le => Ok(FieldValue::I16(u as i16)),
+                    FieldType::U8 => Ok(FieldValue::U8(u8::try_from(u).map_err(|_| {
+                        Error::InvalidField {
+                            what: "u8_field_value",
+                            value: u,
+                        }
+                    })?)),
+                    FieldType::U16Le => Ok(FieldValue::U16(u16::try_from(u).map_err(|_| {
+                        Error::InvalidField {
+                            what: "u16_field_value",
+                            value: u,
+                        }
+                    })?)),
+                    FieldType::U32Le => Ok(FieldValue::U32(u32::try_from(u).map_err(|_| {
+                        Error::InvalidField {
+                            what: "u32_field_value",
+                            value: u,
+                        }
+                    })?)),
+                    FieldType::I16Le => Ok(FieldValue::I16(i16::try_from(u).map_err(|_| {
+                        Error::InvalidField {
+                            what: "i16_field_value",
+                            value: u,
+                        }
+                    })?)),
                     FieldType::Bitflags => Ok(FieldValue::Bitflags(u)),
                     _ => parse_field_value(spec, &u.to_string()),
                 }
             } else if let Some(i) = num.as_i64() {
                 match spec.field_type {
-                    FieldType::I16Le => Ok(FieldValue::I16(i as i16)),
+                    FieldType::I16Le => Ok(FieldValue::I16(i16::try_from(i).map_err(|_| {
+                        Error::InvalidField {
+                            what: "i16_field_value",
+                            value: i as u64,
+                        }
+                    })?)),
                     _ => parse_field_value(spec, &i.to_string()),
                 }
             } else {
@@ -1676,17 +1793,29 @@ pub fn json_val_to_field_value(spec: &FieldSpec, val: &serde_json::Value) -> Res
                     .bitfield_array
                     .as_ref()
                     .map(|ba| ba.bit_width)
-                    .unwrap_or(1)
-                    .max(1);
-                let count = spec
-                    .bitfield_array
-                    .as_ref()
-                    .map(|ba| ba.count)
-                    .unwrap_or_else(|| (spec.size * 8) / bit_width);
+                    .unwrap_or(1);
+                if bit_width == 0 || bit_width > 32 {
+                    return Err(Error::InvalidField {
+                        what: "bitfield_array_bit_width",
+                        value: bit_width as u64,
+                    });
+                }
+                let count = match &spec.bitfield_array {
+                    Some(ba) => ba.count,
+                    None => {
+                        spec.size.checked_mul(8).ok_or(Error::InvalidField {
+                            what: "bitfield_array_size",
+                            value: spec.size as u64,
+                        })? / bit_width
+                    }
+                };
                 let mut values = Vec::with_capacity(count);
                 for item in arr.iter().take(count) {
                     if let Some(u) = item.as_u64() {
-                        values.push(u as u32);
+                        values.push(u32::try_from(u).map_err(|_| Error::InvalidField {
+                            what: "bitfield_array_value",
+                            value: u,
+                        })?);
                     } else if let Some(b) = item.as_bool() {
                         values.push(if b { 1 } else { 0 });
                     } else if let Some(s) = item.as_str() {
@@ -1707,7 +1836,10 @@ pub fn json_val_to_field_value(spec: &FieldSpec, val: &serde_json::Value) -> Res
             let mut bytes = Vec::with_capacity(arr.len());
             for item in arr {
                 if let Some(byte) = item.as_u64() {
-                    bytes.push(byte as u8);
+                    bytes.push(u8::try_from(byte).map_err(|_| Error::InvalidField {
+                        what: "bytes_field_value",
+                        value: byte,
+                    })?);
                 } else if let Some(s) = item.as_str() {
                     let b = parse_int_or_hex_or_bool::<u8>(s)?;
                     bytes.push(b);
@@ -2163,6 +2295,9 @@ impl SaveBuffer {
             if end <= buf.len() {
                 buf[sig.offset..end].copy_from_slice(&sig.bytes);
             }
+        }
+        if def.eeprom_rev8 {
+            reverse_eeprom_blocks_8(&mut buf);
         }
         let mut save_buf = SaveBuffer::new(buf);
         save_buf.import_json(def, json)?;
@@ -3059,5 +3194,177 @@ mod tests {
         assert_eq!(re_badges[15], 1);
         assert_eq!(re_badges[1], 0);
         assert_eq!(re_badges[3], 0); // was mutated back to 0
+    }
+
+    #[test]
+    fn validate_rejects_oversized_save_and_invalid_bit_width() {
+        let mut huge = sample_definition();
+        huge.size_bytes = usize::MAX;
+        assert!(huge.validate().is_err());
+
+        let mut just_over = sample_definition();
+        just_over.size_bytes = MAX_SAVE_SIZE + 1;
+        assert!(just_over.validate().is_err());
+
+        let mut bad_bw = sample_definition();
+        bad_bw.fields.push(FieldSpec {
+            name: "bad_bits".to_string(),
+            offset: 32,
+            size: 8,
+            field_type: FieldType::BitfieldArray,
+            description: None,
+            bitfield_array: Some(BitfieldArraySpec {
+                bit_width: 33,
+                count: 1,
+                labels: vec![],
+            }),
+            condition: None,
+        });
+        assert!(bad_bw.validate().is_err());
+    }
+
+    #[test]
+    fn evaluate_condition_never_panics_on_unvalidated_definition() {
+        let def = SaveDefinition {
+            id: "unvalidated".to_string(),
+            game_code: "TEST".to_string(),
+            title: "Unvalidated".to_string(),
+            media: SaveMediaKind::Sram,
+            size_bytes: 16,
+            eeprom_rev8: false,
+            magic_signatures: vec![],
+            checksums: vec![],
+            fields: vec![
+                FieldSpec {
+                    name: "overflow_off".to_string(),
+                    offset: usize::MAX,
+                    size: 4,
+                    field_type: FieldType::U32Le,
+                    description: None,
+                    bitfield_array: None,
+                    condition: None,
+                },
+                FieldSpec {
+                    name: "short_u32".to_string(),
+                    offset: 0,
+                    size: 2,
+                    field_type: FieldType::U32Le,
+                    description: None,
+                    bitfield_array: None,
+                    condition: None,
+                },
+                FieldSpec {
+                    name: "wide_bitflags".to_string(),
+                    offset: 0,
+                    size: 16,
+                    field_type: FieldType::Bitflags,
+                    description: None,
+                    bitfield_array: None,
+                    condition: None,
+                },
+                FieldSpec {
+                    name: "bad_bw".to_string(),
+                    offset: 0,
+                    size: 8,
+                    field_type: FieldType::BitfieldArray,
+                    description: None,
+                    bitfield_array: Some(BitfieldArraySpec {
+                        bit_width: 33,
+                        count: 1,
+                        labels: vec![],
+                    }),
+                    condition: None,
+                },
+            ],
+        };
+        let data = vec![0u8; 16];
+        for name in ["overflow_off", "short_u32", "wide_bitflags", "bad_bw"] {
+            let cond = FieldCondition {
+                field: name.to_string(),
+                op: ConditionOp::Eq,
+                value: serde_json::json!(0),
+            };
+            assert!(!evaluate_condition(&cond, &def, &data));
+        }
+    }
+
+    #[test]
+    fn create_from_json_with_eeprom_rev8_verifies_and_round_trips() {
+        let def = SaveDefinition {
+            id: "rev8_eeprom_test".to_string(),
+            game_code: "REV8".to_string(),
+            title: "Rev8 EEPROM Test".to_string(),
+            media: SaveMediaKind::Eeprom512,
+            size_bytes: 512,
+            eeprom_rev8: true,
+            magic_signatures: vec![MagicSignature {
+                offset: 0,
+                bytes: b"EEP8".to_vec(),
+                description: None,
+            }],
+            checksums: vec![ChecksumSpec {
+                name: "chk".to_string(),
+                algorithm: ChecksumAlgorithm::Sum16Le,
+                covered_start: 0,
+                covered_end: 510,
+                stored_offset: 510,
+                seed: None,
+                xor_out: None,
+            }],
+            fields: vec![
+                FieldSpec {
+                    name: "magic".to_string(),
+                    offset: 0,
+                    size: 4,
+                    field_type: FieldType::Ascii,
+                    description: None,
+                    bitfield_array: None,
+                    condition: None,
+                },
+                FieldSpec {
+                    name: "score".to_string(),
+                    offset: 8,
+                    size: 4,
+                    field_type: FieldType::U32Le,
+                    description: None,
+                    bitfield_array: None,
+                    condition: None,
+                },
+            ],
+        };
+
+        let json = serde_json::json!({
+            "fields": {
+                "score": 123456
+            }
+        });
+        let created = SaveBuffer::create_from_json(&def, &json).unwrap();
+        let report = created.validate_checksums(&def).unwrap();
+        assert!(report.valid, "rev8 save must verify valid: {report:?}");
+        assert!(report.magics[0].valid);
+        assert_eq!(
+            created.get_field(&def, "magic").unwrap(),
+            FieldValue::Ascii("EEP8".to_string())
+        );
+        assert_eq!(
+            created.get_field(&def, "score").unwrap(),
+            FieldValue::U32(123_456)
+        );
+    }
+
+    #[test]
+    fn json_val_to_field_value_rejects_truncating_integers() {
+        let def = sample_definition();
+        let u8_spec = def.fields.iter().find(|f| f.name == "slot_flags").unwrap();
+        assert!(json_val_to_field_value(u8_spec, &serde_json::json!(256)).is_err());
+        let u16_spec = def.fields.iter().find(|f| f.name == "level").unwrap();
+        assert!(json_val_to_field_value(u16_spec, &serde_json::json!(70_000)).is_err());
+        let u32_spec = def.fields.iter().find(|f| f.name == "score").unwrap();
+        assert!(json_val_to_field_value(u32_spec, &serde_json::json!(5_000_000_000u64)).is_err());
+        let i16_spec = def.fields.iter().find(|f| f.name == "temp_delta").unwrap();
+        assert!(json_val_to_field_value(i16_spec, &serde_json::json!(40_000)).is_err());
+        assert!(json_val_to_field_value(i16_spec, &serde_json::json!(-40_000)).is_err());
+        let bytes_spec = def.fields.iter().find(|f| f.name == "badge_bytes").unwrap();
+        assert!(json_val_to_field_value(bytes_spec, &serde_json::json!([1, 256, 3, 4])).is_err());
     }
 }

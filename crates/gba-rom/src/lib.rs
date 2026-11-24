@@ -80,11 +80,7 @@ impl AgbHeader {
 
     /// 3-character header family code (e.g., `"BPE"` for `"BPEE"`).
     pub fn header_family(&self) -> &str {
-        if self.game_code.len() >= 3 {
-            &self.game_code[..3]
-        } else {
-            &self.game_code
-        }
+        self.game_code.get(..3).unwrap_or(&self.game_code)
     }
 }
 
@@ -169,6 +165,10 @@ pub mod trace;
 pub use trace::{
     analyze_trace, DeveloperJumpTable, RuntimeMode, TraceAnalysisReport, TraceAnalysisSummary,
     UnreachedEntryPoint,
+};
+pub mod relocate;
+pub use relocate::{
+    find_free_space, find_free_space_prefer_ff, patch_rom_pointers, SAFE_ZERO_FREE_SPACE_START,
 };
 pub mod archive;
 pub use archive::{
@@ -322,6 +322,7 @@ impl EmbeddedMultiBootPayload {
 /// cartridge header) for valid GBA headers (fixed `0x96` byte at `+0xB2`, valid complement
 /// checksum at `+0xBD`, and unconditional ARM `B` at `+0xC0`).
 pub fn scan_embedded_multiboot(rom: &[u8]) -> Vec<EmbeddedMultiBootPayload> {
+    let rom = &rom[..rom.len().min(MAX_ROM_SIZE)];
     if rom.len() < 0x200 + MULTIBOOT_ENTRY_OFFSET + 4 {
         return Vec::new();
     }
@@ -367,41 +368,45 @@ pub fn scan_embedded_multiboot(rom: &[u8]) -> Vec<EmbeddedMultiBootPayload> {
     }
 
     // Attempt to refine lengths via MultiBootParam boot_endp search or next payload offset
+    let word_scan_end = rom.len() & !3;
     for i in 0..payloads.len() {
         let cur_off = payloads[i].offset;
-        let bus_addr = ROM_BUS_BASE.wrapping_add(cur_off as u32);
+        let Some(bus_addr) = rom_offset_to_bus(cur_off) else {
+            continue;
+        };
+        let Some(max_end_addr) = bus_addr.checked_add(MAX_MULTIBOOT_SIZE as u32) else {
+            continue;
+        };
         let bus_bytes = bus_addr.to_le_bytes();
 
         let mut found_exact_end = None;
-        let mut search_pos = 0;
-        while let Some(pos) = find_subslice(&rom[search_pos..], &bus_bytes) {
-            let abs_pos = search_pos + pos;
-            let check_start = abs_pos.saturating_sub(32);
-            let check_end = (abs_pos + 36).min(rom.len().saturating_sub(4));
-            let mut ptr_pos = check_start;
-            while ptr_pos <= check_end {
-                let val = u32::from_le_bytes([
-                    rom[ptr_pos],
-                    rom[ptr_pos + 1],
-                    rom[ptr_pos + 2],
-                    rom[ptr_pos + 3],
-                ]);
-                if val > bus_addr && val <= bus_addr + MAX_MULTIBOOT_SIZE as u32 {
-                    let end_dist = (val - bus_addr) as usize;
-                    if end_dist >= HEADER_SIZE && end_dist.is_multiple_of(4) {
-                        found_exact_end = Some(end_dist);
-                        break;
+        let mut abs_pos = 0usize;
+        while abs_pos < word_scan_end {
+            if rom[abs_pos..abs_pos + 4] == bus_bytes {
+                let check_start = abs_pos.saturating_sub(32);
+                let check_end = (abs_pos + 36).min(word_scan_end.saturating_sub(4));
+                let mut ptr_pos = check_start;
+                while ptr_pos <= check_end {
+                    let val = u32::from_le_bytes([
+                        rom[ptr_pos],
+                        rom[ptr_pos + 1],
+                        rom[ptr_pos + 2],
+                        rom[ptr_pos + 3],
+                    ]);
+                    if val > bus_addr && val <= max_end_addr {
+                        let end_dist = (val - bus_addr) as usize;
+                        if end_dist >= HEADER_SIZE && end_dist.is_multiple_of(4) {
+                            found_exact_end = Some(end_dist);
+                            break;
+                        }
                     }
+                    ptr_pos += 4;
                 }
-                ptr_pos += 4;
+                if found_exact_end.is_some() {
+                    break;
+                }
             }
-            if found_exact_end.is_some() {
-                break;
-            }
-            search_pos = abs_pos + 1;
-            if search_pos >= rom.len() {
-                break;
-            }
+            abs_pos += 4;
         }
 
         if let Some(exact_len) = found_exact_end {
