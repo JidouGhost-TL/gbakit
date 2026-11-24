@@ -8,6 +8,7 @@ mod oam;
 mod render;
 pub mod replace;
 pub mod ripper;
+pub mod tilemap_replace;
 
 pub use font::{decode_glyph_1bpp, decode_glyph_2bpp};
 pub use formatkit_core::Image;
@@ -30,6 +31,11 @@ pub use ripper::{
     scan_palettes, scan_sprites, CompressionKind, PaletteManifestEntry, RawPngEncoder,
     RipManifest, RipOptions, RipSummary, ScannedPalette, ScannedSprite, ScannedTilemap,
     ScannedTileset, SpriteManifestEntry, TilemapManifestEntry, TilesetManifestEntry,
+};
+pub use tilemap_replace::{
+    encode_tilemap_scr, parse_tmx_csv, parse_tmx_to_scr, prepare_tilemap_scr,
+    replace_tilemap_in_rom, EncodedTilemap, ParsedTmx, TilemapInputFormat, TilemapReplaceOptions,
+    TILED_FLIP_D, TILED_FLIP_H, TILED_FLIP_V, TILEMAP_FREE_SPACE_START,
 };
 
 use formatkit_core::{Error, Result};

@@ -39,6 +39,7 @@ use gbakit::sound::{
 };
 use gbakit::sound::sf2::{compile_rom_soundfont, validate_soundfont};
 
+mod archive;
 mod ereader;
 mod link;
 mod modding;
@@ -97,6 +98,11 @@ fn usage() {
            gbakit gfx rip     <rom.gba> [-o <out_dir>] [--palettes] [--tilesets] [--tilemaps] [--sprites] [--json]\n  \
            gbakit gfx tile4   <file> --offset <hex> --palette <hex> -o <out.ppm>\n  \
            gbakit gfx replace <rom.gba> --offset <hex|dec> --image <in.png|ppm> -o <out.gba> [--bpp 4|8] [--palette-offset <n>] [--write-palette] [--compression auto|raw|lz77-vram|lz77-wram|rle|huff4|huff8] [--capacity <bytes>] [--allow-relocate] [--pad-byte <n>] [--json]\n  \
+           gbakit gfx replace-map <rom.gba> --offset <hex|dec> --map <in.tmx|scr> -o <out.gba> [--palette-bank <0..15>] [--compression auto|raw|lz77-vram|lz77-wram|rle|huff4|huff8] [--capacity <bytes>] [--allow-relocate] [--pad-byte <n>] [--json]\n  \
+           gbakit archive scan    <rom.gba> [--json]\n  \
+           gbakit archive extract <rom_or_archive> [--offset <hex|dec>] -o <out_dir/> [--json]\n  \
+           gbakit archive repack  <in_dir/> -o <out.bin> [--format pack|wayforward|sfcd] [--json]\n  \
+           gbakit archive replace <rom.gba> --offset <hex|dec> --input <dir_or_bin> -o <out.gba> [--format pack|wayforward|sfcd] [--capacity <bytes>] [--allow-relocate] [--pad-byte <n>] [--json]\n  \
            gbakit ereader decode     <strip.raw> -o <out.bin> [--decompress]\n  \
            gbakit ereader encode     <in.bin> -o <out.raw> [--short|--long]\n  \
            gbakit ereader render     <strip.raw> -o <out.bmp|pbm|pgm> [--dpi 300|600|1200]\n  \
@@ -3337,6 +3343,9 @@ fn main() -> ExitCode {
             Err("usage: `gbakit sensor list [--json]` or `gbakit sensor test <rom.gba> [--solar <0-10>] [--tilt <-90..90>] [--gyro <rpm>] [--json]`".into())
         }
         "gfx" if args.len() >= 3 && args[1] == "replace" => modding::cmd_gfx_replace(&args[2..]),
+        "gfx" if args.len() >= 3 && args[1] == "replace-map" => {
+            modding::cmd_gfx_replace_map(&args[2..])
+        }
         "gfx" if args.len() >= 3 && args[1] == "rip" => {
             let as_json = args[2..].iter().any(|a| a == "--json");
             let palettes = args[2..].iter().any(|a| a == "--palettes");
@@ -3488,6 +3497,7 @@ fn main() -> ExitCode {
                 .into(),
         ),
         "text" => text::dispatch_text(&args[1..]),
+        "archive" => archive::dispatch_archive(&args[1..]),
         _ => {
             usage();
             Err("invalid arguments".to_string())

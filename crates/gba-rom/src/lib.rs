@@ -170,6 +170,13 @@ pub use trace::{
     analyze_trace, DeveloperJumpTable, RuntimeMode, TraceAnalysisReport, TraceAnalysisSummary,
     UnreachedEntryPoint,
 };
+pub mod archive;
+pub use archive::{
+    extract_archive_entries, pack_archive, parse_archive, parse_archive_at,
+    replace_archive_in_rom, scan_archives, ArchiveEntry, ArchiveFormat, ArchiveManifest,
+    ArchiveManifestEntry, ArchiveReplaceOptions, ArchiveReplaceReport, ParsedArchive,
+    ARCHIVE_FREE_SPACE_START, DEFAULT_ARCHIVE_ALIGN, MAX_ARCHIVE_ENTRIES,
+};
 pub mod callgraph;
 pub use callgraph::{
     analyze_callgraph, CallgraphEdge, CallgraphEdgeKind, CallgraphJumpTable, CallgraphNode,
