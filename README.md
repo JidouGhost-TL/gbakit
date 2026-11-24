@@ -12,10 +12,11 @@ A clean-room Game Boy Advance (GBA) format toolkit in Rust built on **[Formatkit
 | `gba-compress` | Complete GBA BIOS codecs: LZ77 (`0x10` WRAM/VRAM), LZ11, RLE (`0x30`), Huffman 4/8-bit decode & encode (`0x24`/`0x28`), `BitUnPack` (`SWI 0x10`), `Diff8`/`Diff16` (`0x81`/`0x82`), plus studio codecs (Hudson LZ, Konami Dict, Shin'en Mode 7) |
 | `gba-gfx` | `BGR555` palettes, allocation-free 4bpp/8bpp tiles, **4bpp/8bpp graphics ripper & write-back** (PNG/PPM → 4bpp/8bpp tiles + BGR555 palette + BIOS recompression + in-place/relocated ROM patching), OAM sprites & affine matrices (`ObjAttr`/`ObjAffine`), text BG compositor, Mode 3/4 framebuffers, 1bpp/2bpp font glyphs |
 | `gba-sound` | Multi-engine GBA audio scanner, exporter (MIDI / MOD / S3M / WAV16), SoundFont 2 (`.sf2`) compiler across **13 GBA sound engines**, and **WAV16 → GBA ROM sample write-back** (PCM8, Pokémon Gen 3 DPCM, IMA ADPCM4 + in-place/relocated ROM patching), delegating byte-exact ARM7TDMI DSP/mixing to standalone zero-dep `#![no_std]` crates |
+| `gba-text` | GBA `.tbl` charmap parser/encoder (`ascii`, `pokemon-gen3-en`, `shift-jis`, custom `.tbl`), pointer-table string scanner/extractor, capacity-checked in-place/relocated ROM string write-back, and 1bpp/2bpp VWF font sheet dump & replace |
 | `gba-save` | Declarative GBA battery-save schema engine, `SaveGeometry` detection & padding trimming, loose save probing, 25+ checksum algorithms (`sum8`/`16`/`32`, word-sums, `xor8`/`16`/`32`, `sum_xor16`, `rol32_add`, `Crc16` incl. XMODEM), EEPROM `rev8` block reversal, verification, repair, and field decode/edit |
 | `gba-saves` | Embedded registry covering **814 / 814** saving families (**1,543** saving ROMs = 100% corpus coverage) |
 | `gba-patches` | Embedded registry of **82** clean-room verified `.ips` debug-menu micro-patches, **193** 4-way counterfactually verified retail button-combo cheats, and unified IPS / UPS / BPS patcher |
-| `gbakit` / `gbakit-cli` | Facade crate and CLI (`info`/`inspect`, `analyze`, `rom`, `multiboot`, `compress`, `patch`, `cheat`, `save`, `sound`, `audio`, `gfx`, `ereader`, `video`, `link`, `sensor`) |
+| `gbakit` / `gbakit-cli` | Facade crate and CLI (`info`/`inspect`, `analyze`, `rom`, `multiboot`, `compress`, `patch`, `cheat`, `save`, `sound`, `audio`, `gfx`, `text`, `ereader`, `video`, `link`, `sensor`) |
 
 ## Standalone Published Format & Synth Crates (15 Crates)
 
@@ -103,6 +104,27 @@ gbakit gfx replace mygame.gba --offset 0x12340 --image sprite.png -o modded.gba 
   [--bpp 4|8] [--palette-offset 0x10000] [--write-palette] [--allow-relocate] [--json]
 ```
 
+### Text, Charmaps (`.tbl`) & VWF Font Sheets (`gbakit text`)
+
+```sh
+# List built-in charmaps (ascii, pokemon-gen3-en, shift-jis)
+gbakit text tables [--json]
+
+# Scan ROM pointer tables for strings under a built-in or custom .tbl charmap
+gbakit text scan mygame.gba --table pokemon-gen3-en [--min-entries 10] [--json]
+
+# Extract a decoded string at a ROM offset
+gbakit text extract mygame.gba --offset 0x1C582D --table pokemon-gen3-en [--json]
+
+# Replace a string in-place or relocate into 0xFF free space with automatic pointer patching
+gbakit text replace mygame.gba --offset 0x1C582D --table pokemon-gen3-en \
+  --text "Custom dialogue!" --allow-relocate -o modded.gba [--json]
+
+# Dump or re-inject a 1bpp/2bpp bitmap/VWF font sheet as PNG/PPM
+gbakit text font-dump    mygame.gba --offset 0x200000 --count 128 --width 8 --height 16 --bpp 2 -o font.png
+gbakit text font-replace mygame.gba --offset 0x200000 --image font.png --count 128 --width 8 --height 16 --bpp 2 -o modded.gba
+```
+
 ### Battery Save Identification, Trimming & Repair (`gbakit save`)
 
 Covers **814 / 814** saving families (**1,543** saving ROMs = 100%):
@@ -152,6 +174,19 @@ gbakit cheat verify A2CE [--json]
 ```
 
 All patches, cheat galleries, and standalone `.ips` downloads are available on the **[GBA Reference Wiki](https://jidoughost-tl.github.io/gbakit/)** and **[GitHub Wiki](https://github.com/JidouGhost-TL/gbakit/wiki)**.
+
+## Live `libmgba` Modding Write-Back Proof
+
+Every write-back pipeline (`gbakit gfx replace`, `gbakit audio replace`, `gbakit text replace`) is verified end-to-end by modifying retail ROMs and booting them in headless `libmgba.so.0.10`:
+
+| Pipeline & Title | Operation | Before | After |
+| --- | --- | :---: | :---: |
+| **`gbakit gfx replace`** — *Pokémon FireRed* (`BPRE`) | In-place `lz77-vram` 8bpp BG0 logo (`0xEAB8C4`, `5,590/6,857 B`) | ![FireRed Before](docs/images/modding/bpre_before.png) | ![FireRed After](docs/images/modding/bpre_after.png) |
+| **`gbakit gfx replace`** — *Advance Wars* (`AWRE`) | **Relocated** `lz77-vram` 4bpp OBJ logo (`0x1374A8 → 0x3F7B80`, 1 ptr patched) | ![Advance Wars Before](docs/images/modding/awre_before.png) | ![Advance Wars After](docs/images/modding/awre_after.png) |
+| **`gbakit gfx replace`** — *Metroid: Zero Mission* (`BMXE`) | **Relocated** `lz77-vram` 4bpp OBJ icons (`0x45C0F4 → 0x760D38`, 2 ptrs patched) | ![Metroid ZM Before](docs/images/modding/bmxe_before.png) | ![Metroid ZM After](docs/images/modding/bmxe_after.png) |
+| **`gbakit text replace`** — *Pokémon FireRed* (`BPRE`) | **Relocated** `pokemon-gen3-en` VWF string (`0x1C582D → 0x456734`, 1 ptr patched) | ![FireRed Text Before](docs/images/modding/bpre_text_before.png) | ![FireRed Text After](docs/images/modding/bpre_text_after.png) |
+
+`gbakit audio replace` is likewise live-verified in `libmgba.so.0.10` on *Pokémon FireRed* (`BPRE`, M4A `WaveData` `0x4A741C`, both `in_place` and `relocated` with **23** voicegroup pointers patched, producing `56.28%` / `48.39%` live DirectSound stereo PCM diff over 600 frames).
 
 ## Verification
 

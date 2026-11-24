@@ -43,6 +43,7 @@ mod ereader;
 mod link;
 mod modding;
 mod sensor;
+mod text;
 mod video;
 
 const DEFAULT_MAX_WAV_SAMPLES: usize = 16 * 1024 * 1024;
@@ -102,7 +103,13 @@ fn usage() {
            gbakit ereader vpk-decode <in.vpk> -o <out.bin>\n  \
            gbakit ereader vpk-encode <in.bin> -o <out.vpk> [--method 0|1]\n  \
            gbakit video scan         <rom.gba> [--json]\n  \
-           gbakit video export       <rom.gba> -o <out_dir> [--max-frames <n>]"
+           gbakit video export       <rom.gba> -o <out_dir> [--max-frames <n>]\n  \
+           gbakit text tables        [--json]\n  \
+           gbakit text extract       <rom.gba> --offset <hex|dec> [--table <builtin|file.tbl>] [--max-len <n>] [--json]\n  \
+           gbakit text scan          <rom.gba> [--table <builtin|file.tbl>] [--min-entries <n>] [--limit <n>] [--json]\n  \
+           gbakit text replace       <rom.gba> --offset <hex|dec> --text <str> -o <out.gba> [--table <builtin|file.tbl>] [--capacity <n>] [--allow-relocate] [--pad-byte <n>] [--json]\n  \
+           gbakit text font-dump     <rom.gba> --offset <hex|dec> --count <n> --width <px> --height <px> --bpp 1|2 -o <out.png|ppm> [--lsb] [--cols <n>]\n  \
+           gbakit text font-replace  <rom.gba> --offset <hex|dec> --image <in.png|ppm> --count <n> --width <px> --height <px> --bpp 1|2 -o <out.gba> [--lsb] [--cols <n>] [--json]"
     );
 }
 
@@ -3477,6 +3484,7 @@ fn main() -> ExitCode {
             "usage: `gbakit video scan <rom.gba> [--json]` or `gbakit video export <rom.gba> -o <out_dir> [--max-frames <n>]`"
                 .into(),
         ),
+        "text" => text::dispatch_text(&args[1..]),
         _ => {
             usage();
             Err("invalid arguments".to_string())
