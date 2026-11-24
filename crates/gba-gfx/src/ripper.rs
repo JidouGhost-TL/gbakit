@@ -954,9 +954,21 @@ pub fn render_tilemap_rgba(
     palette: &[[u8; 4]],
     transparent_zero: bool,
 ) -> Result<(u32, u32, Vec<u8>)> {
+    use formatkit_pixel::tilemap::{blit_indexed_tile_8x8, IndexedTileBlit};
+
     let width_px = map.width_tiles * 8;
     let height_px = map.height_tiles * 8;
     let mut out = vec![0u8; width_px * height_px * 4];
+
+    // Fill any missing palette banks with the deterministic 4bpp grayscale fallback
+    // so out-of-range bank references render cleanly instead of failing.
+    let mut effective_palette = [[0u8; 4]; 256];
+    for (i, slot) in effective_palette.iter_mut().enumerate() {
+        *slot = palette.get(i).copied().unwrap_or_else(|| {
+            let g = ((i % 16) * 17).min(255) as u8;
+            [g, g, g, 255]
+        });
+    }
 
     for ty in 0..map.height_tiles {
         for tx in 0..map.width_tiles {
@@ -979,31 +991,22 @@ pub fn render_tilemap_rgba(
                 [0u8; 64]
             };
 
-            let bank_base = (entry.palette_bank as usize) * 16;
-
-            for y in 0..8 {
-                let src_y = if entry.v_flip { 7 - y } else { y };
-                for x in 0..8 {
-                    let src_x = if entry.h_flip { 7 - x } else { x };
-                    let color_idx = tile_pixels[src_y * 8 + src_x] as usize;
-
-                    let px = tx * 8 + x;
-                    let py = ty * 8 + y;
-                    let out_offset = (py * width_px + px) * 4;
-
-                    let color = if color_idx == 0 && transparent_zero {
-                        [0, 0, 0, 0]
-                    } else {
-                        let pal_idx = bank_base + color_idx;
-                        palette.get(pal_idx).copied().unwrap_or_else(|| {
-                            let g = (color_idx * 17).min(255) as u8;
-                            [g, g, g, 255]
-                        })
-                    };
-
-                    out[out_offset..out_offset + 4].copy_from_slice(&color);
-                }
-            }
+            blit_indexed_tile_8x8(
+                &mut out,
+                width_px as u32,
+                height_px as u32,
+                (tx * 8) as i64,
+                (ty * 8) as i64,
+                &tile_pixels,
+                &effective_palette,
+                &IndexedTileBlit {
+                    h_flip: entry.h_flip,
+                    v_flip: entry.v_flip,
+                    palette_base: (entry.palette_bank as usize) * 16,
+                    transparent_zero,
+                },
+            )
+            .map_err(|e| Error::Malformed(e.to_string()))?;
         }
     }
 

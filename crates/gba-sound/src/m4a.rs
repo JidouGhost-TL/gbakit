@@ -993,24 +993,12 @@ pub fn decompile_track_to_midi_events(
 }
 
 /// Encode an unsigned 32-bit integer as a Standard MIDI variable-length quantity (VLQ).
-pub fn write_vlq(out: &mut Vec<u8>, mut val: u32) {
-    let mut buf = [0u8; 4];
-    let mut count = 0;
-    loop {
-        buf[count] = (val & 0x7F) as u8;
-        count += 1;
-        val >>= 7;
-        if val == 0 {
-            break;
-        }
-    }
-    for i in (0..count).rev() {
-        let mut b = buf[i];
-        if i > 0 {
-            b |= 0x80;
-        }
-        out.push(b);
-    }
+pub fn write_vlq(out: &mut Vec<u8>, val: u32) {
+    let _ = formatkit_codec::smf::write_smf_vlq(out, val & formatkit_codec::smf::SMF_MAX_VLQ);
+}
+
+fn bpm_to_micros_per_quarter(bpm: u32) -> u32 {
+    (60_000_000u64 / u64::from(bpm).max(1)).clamp(1, 0x00FF_FFFF) as u32
 }
 
 /// Convert a parsed GBA `m4a` `SongHeader` and its track bytecode into Standard MIDI File Format 1 (`.mid`).
@@ -1019,140 +1007,103 @@ pub fn export_song_to_midi(
     song_header: &SongHeader,
     song_name: Option<&str>,
 ) -> Result<Vec<u8>> {
+    use formatkit_codec::smf::{
+        write_smf, SmfDivision, SmfEvent, SmfFormat, SmfTrack, SmfWriteOptions,
+    };
+
     let track_count = song_header.track_count as usize;
-    let total_tracks = (track_count + 1) as u16; // 1 conductor track + N channel tracks
-
-    let mut midi = Vec::new();
-    // MThd Header Chunk
-    midi.extend_from_slice(b"MThd");
-    midi.extend_from_slice(&6u32.to_be_bytes()); // Chunk size = 6
-    midi.extend_from_slice(&1u16.to_be_bytes()); // Format 1: Multi-track synchronous
-    midi.extend_from_slice(&total_tracks.to_be_bytes());
-    midi.extend_from_slice(&PPQN.to_be_bytes());
-
-    // Track 0: Conductor Track (Sequence name, Time Signature 4/4, Initial Tempo, End of Track)
-    let mut conductor = Vec::new();
-    let name_text = song_name.unwrap_or("M4A Sound");
-    // Delta 0: Sequence Name (0xFF 0x03)
-    write_vlq(&mut conductor, 0);
-    conductor.push(0xFF);
-    conductor.push(0x03);
-    write_vlq(&mut conductor, name_text.len() as u32);
-    conductor.extend_from_slice(name_text.as_bytes());
-
-    // Delta 0: Time Signature 4/4 (0xFF 0x58 0x04 0x04 0x02 0x18 0x08)
-    write_vlq(&mut conductor, 0);
-    conductor.extend_from_slice(&[0xFF, 0x58, 0x04, 0x04, 0x02, 0x18, 0x08]);
-
-    // Decompile all tracks to gather tempo events
     let mut decompiled_tracks: Vec<Vec<TimedMidiEvent>> = Vec::with_capacity(track_count);
     let mut initial_bpm: Option<u32> = None;
 
     for (t, &tr_ptr) in song_header.track_ptrs.iter().enumerate() {
         let channel = (t % 16) as u8;
-        let events = decompile_track_to_midi_events(rom, tr_ptr, channel, 100_000).unwrap_or_default();
+        let events =
+            decompile_track_to_midi_events(rom, tr_ptr, channel, 100_000).unwrap_or_default();
         if initial_bpm.is_none() {
-            for ev in &events {
-                if let MidiEventKind::SetTempo { bpm } = ev.event {
-                    initial_bpm = Some(bpm);
-                    break;
-                }
-            }
+            initial_bpm = events.iter().find_map(|ev| match ev.event {
+                MidiEventKind::SetTempo { bpm } => Some(bpm),
+                _ => None,
+            });
         }
         decompiled_tracks.push(events);
     }
 
-    let default_bpm = initial_bpm.unwrap_or(120);
-    let usec = (60_000_000u64 / (default_bpm as u64).max(1)) as u32;
-    // Delta 0: Set Tempo (0xFF 0x51 0x03)
-    write_vlq(&mut conductor, 0);
-    conductor.extend_from_slice(&[
-        0xFF,
-        0x51,
-        0x03,
-        ((usec >> 16) & 0xFF) as u8,
-        ((usec >> 8) & 0xFF) as u8,
-        (usec & 0xFF) as u8,
-    ]);
+    // Track 0: Conductor Track (Sequence name, Time Signature 4/4, Initial Tempo)
+    let mut conductor = SmfTrack::new();
+    conductor.push(0, SmfEvent::track_name(song_name.unwrap_or("M4A Sound")));
+    conductor.push(
+        0,
+        SmfEvent::TimeSignature {
+            numerator: 4,
+            denominator_log2: 2,
+            clocks_per_click: 24,
+            thirty_seconds_per_quarter: 8,
+        },
+    );
+    conductor.push(
+        0,
+        SmfEvent::Tempo {
+            micros_per_quarter: bpm_to_micros_per_quarter(initial_bpm.unwrap_or(120)),
+        },
+    );
 
-    // Delta 0: End of Track (0xFF 0x2F 0x00)
-    write_vlq(&mut conductor, 0);
-    conductor.extend_from_slice(&[0xFF, 0x2F, 0x00]);
+    let mut tracks = Vec::with_capacity(decompiled_tracks.len() + 1);
+    tracks.push(conductor);
 
-    // Append Conductor MTrk Chunk
-    midi.extend_from_slice(b"MTrk");
-    midi.extend_from_slice(&(conductor.len() as u32).to_be_bytes());
-    midi.extend_from_slice(&conductor);
-
-    // Channels 1..N: Musical Tracks
+    // Tracks 1..N: Musical Tracks
     for (t, events) in decompiled_tracks.into_iter().enumerate() {
-        let mut trk_data = Vec::new();
-        let _channel = (t % 16) as u8;
+        let mut track = SmfTrack::new();
+        track.push_ranked(0, 0, SmfEvent::track_name(format!("Track {t}")));
 
-        // Delta 0: Track Name
-        let trk_name = format!("Track {t}");
-        write_vlq(&mut trk_data, 0);
-        trk_data.push(0xFF);
-        trk_data.push(0x03);
-        write_vlq(&mut trk_data, trk_name.len() as u32);
-        trk_data.extend_from_slice(trk_name.as_bytes());
-
-        let mut last_tick: u64 = 0;
         for ev in events {
-            let delta = (ev.tick.saturating_sub(last_tick)) as u32;
-            write_vlq(&mut trk_data, delta);
-            last_tick = ev.tick;
-
-            match ev.event {
-                MidiEventKind::NoteOn { channel: ch, key, velocity } => {
-                    trk_data.push(0x90 | (ch & 0x0F));
-                    trk_data.push(key & 0x7F);
-                    trk_data.push(velocity & 0x7F);
-                }
-                MidiEventKind::NoteOff { channel: ch, key } => {
-                    trk_data.push(0x80 | (ch & 0x0F));
-                    trk_data.push(key & 0x7F);
-                    trk_data.push(0x40);
-                }
-                MidiEventKind::ProgramChange { channel: ch, program } => {
-                    trk_data.push(0xC0 | (ch & 0x0F));
-                    trk_data.push(program & 0x7F);
-                }
-                MidiEventKind::ControlChange { channel: ch, controller, value } => {
-                    trk_data.push(0xB0 | (ch & 0x0F));
-                    trk_data.push(controller & 0x7F);
-                    trk_data.push(value & 0x7F);
-                }
-                MidiEventKind::PitchBend { channel: ch, value } => {
-                    trk_data.push(0xE0 | (ch & 0x0F));
-                    trk_data.push((value & 0x7F) as u8);
-                    trk_data.push(((value >> 7) & 0x7F) as u8);
-                }
-                MidiEventKind::SetTempo { bpm } => {
-                    let us = (60_000_000u64 / (bpm as u64).max(1)) as u32;
-                    trk_data.extend_from_slice(&[
-                        0xFF,
-                        0x51,
-                        0x03,
-                        ((us >> 16) & 0xFF) as u8,
-                        ((us >> 8) & 0xFF) as u8,
-                        (us & 0xFF) as u8,
-                    ]);
-                }
-            }
+            let smf_ev = match ev.event {
+                MidiEventKind::NoteOn {
+                    channel,
+                    key,
+                    velocity,
+                } => SmfEvent::NoteOn {
+                    channel: channel & 0x0F,
+                    key: key & 0x7F,
+                    velocity: velocity & 0x7F,
+                },
+                MidiEventKind::NoteOff { channel, key } => SmfEvent::NoteOff {
+                    channel: channel & 0x0F,
+                    key: key & 0x7F,
+                    velocity: 0x40,
+                },
+                MidiEventKind::ProgramChange { channel, program } => SmfEvent::ProgramChange {
+                    channel: channel & 0x0F,
+                    program: program & 0x7F,
+                },
+                MidiEventKind::ControlChange {
+                    channel,
+                    controller,
+                    value,
+                } => SmfEvent::ControlChange {
+                    channel: channel & 0x0F,
+                    controller: controller & 0x7F,
+                    value: value & 0x7F,
+                },
+                MidiEventKind::PitchBend { channel, value } => SmfEvent::PitchBend {
+                    channel: channel & 0x0F,
+                    value: value & 0x3FFF,
+                },
+                MidiEventKind::SetTempo { bpm } => SmfEvent::Tempo {
+                    micros_per_quarter: bpm_to_micros_per_quarter(bpm),
+                },
+            };
+            track.push_ranked(ev.tick, 1, smf_ev);
         }
 
-        // Delta 0: End of Track
-        write_vlq(&mut trk_data, 0);
-        trk_data.extend_from_slice(&[0xFF, 0x2F, 0x00]);
-
-        // Append Channel MTrk Chunk
-        midi.extend_from_slice(b"MTrk");
-        midi.extend_from_slice(&(trk_data.len() as u32).to_be_bytes());
-        midi.extend_from_slice(&trk_data);
+        tracks.push(track);
     }
 
-    Ok(midi)
+    write_smf(
+        SmfFormat::MultiTrack,
+        SmfDivision::TicksPerQuarter(PPQN),
+        &tracks,
+        &SmfWriteOptions::default(),
+    )
 }
 
 /// Comprehensive scan result for GBA Nintendo `m4a` sound engine.

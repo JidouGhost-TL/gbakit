@@ -26,8 +26,8 @@ pub use ripper::{
 
 use formatkit_core::{Error, Result};
 use formatkit_pixel::{
-    apply_palette, bgr555_to_rgba, pack_4bpp_into, unpack_4bpp_into, Alpha555Policy, IndexPolicy,
-    NibbleOrder, PackError,
+    apply_palette, bgr555_to_rgba, pack_4bpp_into, tilemap::TextTilemapEntry, unpack_4bpp_into,
+    Alpha555Policy, IndexPolicy, NibbleOrder, PackError,
 };
 
 /// Convert a 15-bit GBA `BGR555` color (`0bbbbbgggggrrrrr`) to opaque `[R, G, B, A]`.
@@ -131,19 +131,23 @@ pub struct ScrEntry {
 
 impl ScrEntry {
     pub fn from_u16(raw: u16) -> Self {
+        let e = TextTilemapEntry::from_raw(raw);
         Self {
-            tile_index: raw & 0x03FF,
-            h_flip: (raw & 0x0400) != 0,
-            v_flip: (raw & 0x0800) != 0,
-            palette_bank: ((raw >> 12) & 0x0F) as u8,
+            tile_index: e.tile,
+            h_flip: e.h_flip,
+            v_flip: e.v_flip,
+            palette_bank: e.palette,
         }
     }
 
     pub fn to_u16(self) -> u16 {
-        (self.tile_index & 0x03FF)
-            | if self.h_flip { 0x0400 } else { 0 }
-            | if self.v_flip { 0x0800 } else { 0 }
-            | (((self.palette_bank & 0x0F) as u16) << 12)
+        TextTilemapEntry {
+            tile: self.tile_index,
+            h_flip: self.h_flip,
+            v_flip: self.v_flip,
+            palette: self.palette_bank,
+        }
+        .to_raw()
     }
 }
 

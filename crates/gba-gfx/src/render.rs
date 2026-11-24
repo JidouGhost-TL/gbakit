@@ -1,7 +1,11 @@
 //! GBA background and bitmap mode framebuffers (text-mode 4bpp BG, Mode 3, Mode 4).
 
 use formatkit_core::{Error, Image, Result};
-use formatkit_pixel::{apply_palette, blit_rgba};
+use formatkit_pixel::{
+    apply_palette,
+    tilemap::{blit_indexed_tile_8x8, IndexedTileBlit, ScreenBlockLayout},
+    PackError,
+};
 
 use crate::{bgr555_to_rgba8, decode_tile_4bpp, ScrEntry};
 
@@ -32,26 +36,14 @@ pub fn screen_block_entry_index(
     width_tiles: usize,
     height_tiles: usize,
 ) -> usize {
-    if width_tiles == 32 && height_tiles == 32 {
-        ty * 32 + tx
-    } else if width_tiles == 64 && height_tiles == 32 {
-        let block = tx / 32;
-        let lx = tx % 32;
-        let ly = ty;
-        block * 1024 + ly * 32 + lx
-    } else if width_tiles == 32 && height_tiles == 64 {
-        let block = ty / 32;
-        let lx = tx;
-        let ly = ty % 32;
-        block * 1024 + ly * 32 + lx
-    } else if width_tiles == 64 && height_tiles == 64 {
-        let block = (ty / 32) * 2 + (tx / 32);
-        let lx = tx % 32;
-        let ly = ty % 32;
-        block * 1024 + ly * 32 + lx
-    } else {
-        ty * width_tiles + tx
+    if matches!((width_tiles, height_tiles), (32 | 64, 32 | 64)) {
+        if let Ok(layout) = ScreenBlockLayout::new(width_tiles, height_tiles) {
+            if let Some(idx) = layout.index(tx, ty) {
+                return idx;
+            }
+        }
     }
+    ty * width_tiles + tx
 }
 
 /// Composite a GBA text-mode 4bpp background layer into an RGBA8 buffer.
@@ -113,7 +105,6 @@ pub fn render_bg_text_4bpp_rgba(
     })?;
 
     let mut out = vec![0u8; out_len];
-    let mut tile_rgba = Vec::with_capacity(64 * 4);
 
     for ty in 0..height_tiles {
         for tx in 0..width_tiles {
@@ -133,40 +124,30 @@ pub fn render_bg_text_4bpp_rgba(
             let pixels = decode_tile_4bpp(&tiles[tile_offset..tile_offset + 32])?;
             let bank_base = usize::from(entry.palette_bank) * 16;
 
-            tile_rgba.clear();
-            apply_palette(
-                pixels.iter().copied().map(usize::from),
-                &mut tile_rgba,
-                |color_idx| {
-                    if color_idx == 0 && transparent_zero {
-                        Ok([0, 0, 0, 0])
-                    } else {
-                        let pal_idx = bank_base + color_idx;
-                        palette.get(pal_idx).copied().ok_or(Error::InvalidField {
-                            what: "palette_index_4bpp",
-                            value: pal_idx as u64,
-                        })
-                    }
-                },
-            )?;
-
-            blit_rgba(
+            blit_indexed_tile_8x8(
                 &mut out,
                 width_px_u32,
                 height_px_u32,
-                (tx * 8) as u32,
-                (ty * 8) as u32,
-                &tile_rgba,
-                8,
-                8,
-                entry.h_flip,
-                entry.v_flip,
-                1,
-                false,
+                (tx * 8) as i64,
+                (ty * 8) as i64,
+                &pixels,
+                palette,
+                &IndexedTileBlit {
+                    h_flip: entry.h_flip,
+                    v_flip: entry.v_flip,
+                    palette_base: bank_base,
+                    transparent_zero,
+                },
             )
-            .map_err(|_| Error::InvalidField {
-                what: "bg_tile_blit",
-                value: (ty * width_tiles + tx) as u64,
+            .map_err(|err| match err {
+                PackError::IndexOutOfRange { value, .. } => Error::InvalidField {
+                    what: "palette_index_4bpp",
+                    value: (bank_base + usize::from(value)) as u64,
+                },
+                _ => Error::InvalidField {
+                    what: "bg_tile_blit",
+                    value: (ty * width_tiles + tx) as u64,
+                },
             })?;
         }
     }
