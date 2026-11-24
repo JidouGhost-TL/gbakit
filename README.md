@@ -1,60 +1,149 @@
 # gbakit
 
-A clean-room Game Boy Advance (GBA) format toolkit in Rust built on **[Formatkit](https://github.com/JidouGhost-TL/formatkit)** (`=0.1.2`).
+A clean-room Game Boy Advance (GBA) format toolkit in Rust built on **[Formatkit](https://github.com/JidouGhost-TL/formatkit)** (`=0.1.10`).
 
-- **Documentation & GBA Research Wiki:** **https://jidoughost-tl.github.io/gbakit/** (`Using gbakit`, 3,377-ROM corpus index, 175 reverse-engineered save-format maps (172 built into gbakit) with downloadable `.sav` / `save-format.json`, 35 verified interactive debug menu patches, 91 Engine/SDK communities, live VRAM/PRAM probes, and DirectSound PCM scans).
+- **Documentation & GBA Research Wiki:** **https://jidoughost-tl.github.io/gbakit/** & **[GitHub Wiki](https://github.com/JidouGhost-TL/gbakit/wiki)** — **3,409 / 3,409** unique GBA ROMs accounted for (3,052 retail + 357 non-retail incl. 32 GBA Video carts), **814 / 814** saving families (1,543 saving ROMs = 100%), **82** verified interactive debug-menu `.ips` micro-patches, **193** verified button-combo cheats (with per-game before/after screenshots), **13** byte-exact standalone GBA synth crates, **2** standalone non-synth format crates (`gba-ereader`, `mobiclip`), 91 Engine/SDK communities, live VRAM/PRAM probes, and DirectSound PCM scans.
 
-## Crates
+## Workspace Crates
 
 | Crate | Responsibility |
 | --- | --- |
 | `gba-rom` | Checked 192-byte AGB headers, complement checksum, `0x08000000` bus mapping, SDK backup tags, ROM pointer-table scanner, Multiboot (`0x02000000`) helpers |
-| `gba-compress` | Complete GBA BIOS codecs: LZ77 (`0x10` WRAM/VRAM), RLE (`0x30`), Huffman 4/8-bit decode & encode (`0x24`/`0x28`), `BitUnPack` (`SWI 0x10`), `Diff8`/`Diff16` (`0x81`/`0x82`) |
-| `gba-gfx` | `BGR555` palettes, allocation-free 4bpp/8bpp tiles, OAM sprites & affine matrices (`ObjAttr`/`ObjAffine`), text BG compositor, Mode 3/4 framebuffers, 1bpp/2bpp font glyphs |
-| `gba-sound` | DirectSound 16-byte `WaveData` PCM + `m4a` / MusicPlayer2000 voicegroups, song headers, song tables, and track sequence bytecode parser |
-| `gba-save` | Declarative GBA battery-save schema engine, geometry detection, title probe, padding trimming, 25 checksum algorithms (`sum8`/`16`/`32`, word-sums, `xor8`/`16`/`32`, `sum_xor16`, `rol32_add`, `Crc16` incl. XMODEM), EEPROM `rev8` block reversal, verification, repair, and field decode/edit |
-| `gba-saves` | Embedded registry of 172 clean-room verified GBA save definitions |
-| `gba-patches` | Embedded registry of 35 clean-room verified GBA debug-menu re-enablement patches |
-| `gbakit` / `gbakit-cli` | Facade crate and CLI (`info`/`inspect`, `rom tables`, `compress`, `save probe/trim/info/verify/decode/fix`, `sound wav/m4a`, `gfx tile4`, `patch apply/create/debug-menu/list-debug-menus`) |
+| `gba-compress` | Complete GBA BIOS codecs: LZ77 (`0x10` WRAM/VRAM), LZ11, RLE (`0x30`), Huffman 4/8-bit decode & encode (`0x24`/`0x28`), `BitUnPack` (`SWI 0x10`), `Diff8`/`Diff16` (`0x81`/`0x82`), plus studio codecs (Hudson LZ, Konami Dict, Shin'en Mode 7) |
+| `gba-gfx` | `BGR555` palettes, allocation-free 4bpp/8bpp tiles, **4bpp/8bpp graphics ripper** (palettes, tilesets, tilemaps, sprites), OAM sprites & affine matrices (`ObjAttr`/`ObjAffine`), text BG compositor, Mode 3/4 framebuffers, 1bpp/2bpp font glyphs |
+| `gba-sound` | Multi-engine GBA audio scanner, exporter (MIDI / MOD / S3M / WAV16), and SoundFont 2 (`.sf2`) compiler across **13 GBA sound engines**, delegating byte-exact ARM7TDMI DSP/mixing to standalone zero-dep `#![no_std]` crates |
+| `gba-save` | Declarative GBA battery-save schema engine, `SaveGeometry` detection & padding trimming, loose save probing, 25+ checksum algorithms (`sum8`/`16`/`32`, word-sums, `xor8`/`16`/`32`, `sum_xor16`, `rol32_add`, `Crc16` incl. XMODEM), EEPROM `rev8` block reversal, verification, repair, and field decode/edit |
+| `gba-saves` | Embedded registry covering **814 / 814** saving families (**1,543** saving ROMs = 100% corpus coverage) |
+| `gba-patches` | Embedded registry of **82** clean-room verified `.ips` debug-menu micro-patches, **193** 4-way counterfactually verified retail button-combo cheats, and unified IPS / UPS / BPS patcher |
+| `gbakit` / `gbakit-cli` | Facade crate and CLI (`info`/`inspect`, `analyze`, `rom`, `multiboot`, `compress`, `patch`, `cheat`, `save`, `sound`, `audio`, `gfx`, `ereader`, `video`, `link`, `sensor`) |
 
-## Save Identification, Trimming, and Geometry Detection
+## Standalone Published Format & Synth Crates (15 Crates)
 
-Identify loose `.sav` files, verify geometry, and strip trailing emulator padding:
+### 13 Byte-Exact GBA Synth Crates
+
+All 13 synth crates are **zero-dependency**, **`#![no_std]`**, **`#![deny(unsafe_code)]`**, hardened, published on crates.io & GitHub, and verified byte-for-byte against `libmgba` ARM7TDMI goldens:
+
+| # | Crate | Version | Repository | Scope & ARM7TDMI Goldens |
+| ---: | --- | --- | --- | --- |
+| 1 | `m4a` | `0.1.1` | [`JidouGhost-TL/m4a-rs`](https://github.com/JidouGhost-TL/m4a-rs) | Nintendo M4A/Sappy — 6 ARM variants, 7,424 B goldens |
+| 2 | `gax` | `0.1.2` | [`JidouGhost-TL/gax-rs`](https://github.com/JidouGhost-TL/gax-rs) | Shin'en GAX — 3 versions, 1,792 B goldens |
+| 3 | `musyx` | `0.1.2` | [`JidouGhost-TL/musyx-rs`](https://github.com/JidouGhost-TL/musyx-rs) | Factor 5 MusyX — 100% byte-exact ARM goldens |
+| 4 | `krawall` | `0.1.1` | [`JidouGhost-TL/krawall-rs`](https://github.com/JidouGhost-TL/krawall-rs) | Krawall — 3 revisions, 129 ROMs, 3,072 B goldens |
+| 5 | `konami-kce` | `0.1.1` | [`JidouGhost-TL/konami-kce-rs`](https://github.com/JidouGhost-TL/konami-kce-rs) | Konami KCE / RelocBank32 — 6 revisions, 216 ROMs, 1,920 B goldens |
+| 6 | `rare-audio` | `0.1.1` | [`JidouGhost-TL/rare-audio-rs`](https://github.com/JidouGhost-TL/rare-audio-rs) | Rareware GBA — 4 revisions, 26 ROMs, 2,688 B goldens |
+| 7 | `logik-state` | `0.1.1` | [`JidouGhost-TL/logik-state-rs`](https://github.com/JidouGhost-TL/logik-state-rs) | Logik State GBAModPlay — 6 revisions, 60 ROMs, 1,856 B goldens |
+| 8 | `southpaw-audio` | `0.1.1` | [`JidouGhost-TL/southpaw-audio-rs`](https://github.com/JidouGhost-TL/southpaw-audio-rs) | Southpaw GBA — 5 revisions, 20 ROMs, 2,976 B goldens |
+| 9 | `rd1-kaede` | `0.1.1` | [`JidouGhost-TL/rd1-kaede-rs`](https://github.com/JidouGhost-TL/rd1-kaede-rs) | Nintendo R&D1 "Kaede" — 2 revisions, 12 ROMs, 2,368 B goldens |
+| 10 | `paragon5` | `0.1.1` | [`JidouGhost-TL/paragon5-rs`](https://github.com/JidouGhost-TL/paragon5-rs) | Paragon 5 GBASS — 2 revisions, 17 ROMs, 1,024 B goldens |
+| 11 | `ead-sma` | `0.1.0` | [`JidouGhost-TL/ead-sma-rs`](https://github.com/JidouGhost-TL/ead-sma-rs) | Nintendo EAD SMA — 2 revisions (*SMA 2–4* + *Zelda: ALttP*), 35 ROMs, 1,352 B goldens |
+| 12 | `engine-sw-audio` | `0.1.0` | [`JidouGhost-TL/engine-sw-audio-rs`](https://github.com/JidouGhost-TL/engine-sw-audio-rs) | Engine Software (Bob Koon EIRE v2.0) — 2 revisions, 65 ROMs, 1,728 B goldens |
+| 13 | `cosmigo-sonix` | `0.1.0` | [`JidouGhost-TL/sonix-rs`](https://github.com/JidouGhost-TL/sonix-rs) | Cosmigo Sonix — 3 revisions, 14 ROMs, 2,688 B goldens |
+
+### 2 Standalone Non-Synth Format Crates (Wired into `gbakit`)
+
+| # | Crate | Version | Repository | Scope & Verification |
+| ---: | --- | --- | --- | --- |
+| 14 | `gba-ereader` | `0.1.0` | [`JidouGhost-TL/gba-ereader-rs`](https://github.com/JidouGhost-TL/gba-ereader-rs) | ROM-verified Olympus/Nintendo DotCode + `vpk0` + GF(256) `0x187` RS(64,48) + printable renderer, 17,546 B ARM goldens + live retail `PSAE` optical scan boot proof (`gbakit ereader`) |
+| 15 | `mobiclip` | `0.1.0` | [`JidouGhost-TL/mobiclip-rs`](https://github.com/JidouGhost-TL/mobiclip-rs) | ActImagine Mobiclip GBA v1 (35 retail games / 188 streams, audio + BGR555 video) + GBA v2 (64 MiB GBA Matrix mapper + `VXGB`/`SFCD` + byte-exact FastAudio, 32/32 GBA Video carts), 52 ARM golden files (`gbakit video`) |
+
+## CLI Quick Reference
+
+### Multi-Engine Audio (`gbakit audio`)
 
 ```sh
-# Probe loose .sav against embedded registry of 172 verified save formats
-gbakit save probe loose.sav
+# Auto-detect sound engine and inspect songs, soundbanks, and samples
+gbakit audio scan mygame.gba [--json]
+
+# Export sequences (MIDI / MOD / S3M) and 16-bit WAV samples
+gbakit audio export mygame.gba -o out_audio/ [--song <id>]
+
+# Compile a SoundFont 2 (.sf2) bank directly from a GBA ROM
+gbakit audio soundfont mygame.gba -o mygame.sf2 [--json]
+```
+
+### Nintendo e-Reader DotCode & `vpk0` (`gbakit ereader`)
+
+```sh
+# Decode a raw e-Reader DotCode strip (optionally decompressing embedded vpk0 payload)
+gbakit ereader decode strip.raw -o payload.bin [--decompress]
+
+# Encode a payload into a short or long e-Reader DotCode strip
+gbakit ereader encode payload.bin -o strip.raw [--short|--long]
+
+# Render a DotCode strip to a printable BMP/PBM/PGM image at 300/600/1200 DPI
+gbakit ereader render strip.raw -o card.bmp --dpi 600
+
+# Decode or encode standalone vpk0 streams
+gbakit ereader vpk-decode data.vpk -o data.bin
+gbakit ereader vpk-encode data.bin -o data.vpk [--method 0|1]
+```
+
+### Mobiclip & GBA Video (`gbakit video`)
+
+```sh
+# Scan a GBA ROM or GBA Video cartridge for Mobiclip v1/v2 or SFCD video streams
+gbakit video scan myvideo.gba [--json]
+
+# Export decoded video frames and audio tracks
+gbakit video export myvideo.gba -o out_video/ [--max-frames <n>]
+```
+
+### PPU Graphics Ripper (`gbakit gfx`)
+
+```sh
+# Rip palettes, 4bpp/8bpp tilesets, tilemaps, and sprites from a GBA ROM
+gbakit gfx rip mygame.gba -o out_gfx/ [--palettes] [--tilesets] [--tilemaps] [--sprites] [--json]
+```
+
+### Battery Save Identification, Trimming & Repair (`gbakit save`)
+
+Covers **814 / 814** saving families (**1,543** saving ROMs = 100%):
+
+```sh
+# Probe loose .sav against embedded save definitions
+gbakit save probe loose.sav [--json]
 
 # Display detailed geometry, padding byte, and slot layout
-gbakit save info loose.sav
+gbakit save info loose.sav [--json]
 
 # Trim trailing 0xFF/0x00 padding down to native hardware geometry
-gbakit save trim loose.sav -o clean.sav
+gbakit save trim loose.sav -o clean.sav [--force] [--size <bytes>] [--game <code>]
+
+# Verify, decode, or repair checksums
+gbakit save verify AHRE save.sav
+gbakit save decode AHRE save.sav
+gbakit save fix    AHRE damaged.sav -o repaired.sav
 ```
 
-## Unlock an Embedded Debug Menu
+### Debug Menu Micro-Patches & Unified IPS / UPS / BPS (`gbakit patch`)
 
-`gbakit` includes clean-room verified micro-patches (15–30 bytes) for 35 commercial GBA titles to re-enable dormant developer debug menus:
+`gbakit` embeds **82** clean-room verified `.ips` micro-patches (15–45 bytes) to re-enable dormant developer debug menus:
 
 ```sh
-# List all 35 supported games and target addresses
-gbakit patch list-debug-menus
+# List all 82 supported games and target addresses
+gbakit patch list-debug-menus [--json]
 
 # Unlock debug menu automatically by game code (outputs game.debug.gba)
-gbakit patch debug-menu mygame.gba
+gbakit patch debug-menu mygame.gba [-o mygame.debug.gba]
+
+# Apply or create standalone IPS, UPS, or BPS patches
+gbakit patch apply  patch.ips original.gba patched.gba
+gbakit patch create original.gba modified.gba -o patch.bps --format bps
 ```
 
-All patches, verification galleries, and standalone `.ips` downloads remain available on the [GBA Reference Wiki Patches Gallery](https://jidoughost-tl.github.io/gbakit/patches/index.html).
+### Verified Retail Button-Combo Cheats (`gbakit cheat`)
 
-## Apply or Create an IPS patch
+`gbakit` embeds **193** 4-way counterfactually verified retail button-combo cheats (zero ROM patching required):
 
 ```sh
-# Apply external IPS patch
-gbakit patch apply patch.ips original.gba patched.gba
+# List all 193 verified retail button-combo cheats
+gbakit cheat list [--json]
 
-# Create IPS patch from original and modified files
-gbakit patch create original.gba modified.gba -o patch.ips
+# Inspect frame-accurate timing, button sequence, and target RAM address
+gbakit cheat verify A2CE [--json]
 ```
+
+All patches, cheat galleries, and standalone `.ips` downloads are available on the **[GBA Reference Wiki](https://jidoughost-tl.github.io/gbakit/)** and **[GitHub Wiki](https://github.com/JidouGhost-TL/gbakit/wiki)**.
 
 ## Verification
 
