@@ -438,6 +438,173 @@ pub fn replace_font_sheet_in_rom(
     })
 }
 
+/// Structured report returned by [`replace_vwf_widths_in_rom`].
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct VwfWidthsReplaceReport {
+    /// ROM file offset where the width table was written.
+    pub offset: usize,
+    /// Number of glyph width entries written.
+    pub count: usize,
+    /// Number of bytes that changed compared to the original ROM.
+    pub bytes_changed: usize,
+    /// The written per-glyph pixel widths.
+    pub widths: Vec<u8>,
+}
+
+/// Read a `u8` variable-width font (VWF) width table of `count` glyphs from `rom` at `offset`.
+pub fn read_vwf_widths(rom: &[u8], offset: usize, count: usize) -> Result<Vec<u8>> {
+    if count == 0 {
+        return Err(Error::InvalidField {
+            what: "vwf_widths_count",
+            value: 0,
+        });
+    }
+    if offset
+        .checked_add(count)
+        .is_none_or(|end| end > rom.len())
+    {
+        return Err(Error::Truncated {
+            offset,
+            needed: count,
+            available: rom.len().saturating_sub(offset),
+        });
+    }
+    Ok(rom[offset..offset + count].to_vec())
+}
+
+/// Auto-compute tight proportional VWF pixel widths for `glyph_count` glyphs from a PNG or
+/// PPM (`P6`) font sheet image.
+///
+/// For each glyph cell (`glyph_w` x `glyph_h`) laid out in `cols` columns, finds the rightmost
+/// non-background ink column (`x`) and returns `(x + 1 + padding)` clamped to `u8::MAX`.
+/// Completely blank glyphs (such as spaces) return `0`.
+pub fn compute_vwf_widths_from_sheet(
+    image_bytes: &[u8],
+    glyph_count: usize,
+    glyph_w: usize,
+    glyph_h: usize,
+    cols: usize,
+    padding: u8,
+) -> Result<Vec<u8>> {
+    if glyph_count == 0 {
+        return Err(Error::InvalidField {
+            what: "vwf_glyph_count",
+            value: 0,
+        });
+    }
+    if glyph_w == 0 || glyph_h == 0 {
+        return Err(Error::InvalidField {
+            what: "vwf_glyph_dimensions",
+            value: 0,
+        });
+    }
+    if cols == 0 {
+        return Err(Error::InvalidField {
+            what: "vwf_sheet_cols",
+            value: 0,
+        });
+    }
+
+    let eff_cols = cols.min(glyph_count).max(1);
+    let rows = glyph_count.div_ceil(eff_cols);
+    let expected_w = eff_cols
+        .checked_mul(glyph_w)
+        .and_then(|v| u32::try_from(v).ok())
+        .ok_or(Error::InvalidField {
+            what: "vwf_sheet_width",
+            value: eff_cols as u64,
+        })?;
+    let expected_h = rows
+        .checked_mul(glyph_h)
+        .and_then(|v| u32::try_from(v).ok())
+        .ok_or(Error::InvalidField {
+            what: "vwf_sheet_height",
+            value: rows as u64,
+        })?;
+
+    let img = decode_image_rgba(image_bytes)?;
+    if img.width != expected_w || img.height != expected_h {
+        return Err(Error::Malformed(format!(
+            "font sheet image dimensions {}x{} do not match expected {}x{} ({} glyphs of {}x{}, {} cols)",
+            img.width, img.height, expected_w, expected_h, glyph_count, glyph_w, glyph_h, eff_cols
+        )));
+    }
+
+    let mut widths = Vec::with_capacity(glyph_count);
+    for glyph_idx in 0..glyph_count {
+        let col = glyph_idx % eff_cols;
+        let row = glyph_idx / eff_cols;
+        let base_x = col * glyph_w;
+        let base_y = row * glyph_h;
+
+        let mut max_ink_x: Option<usize> = None;
+        for py in 0..glyph_h {
+            for px in 0..glyph_w {
+                let src = ((base_y + py) * (img.width as usize) + (base_x + px)) * 4;
+                let r = img.rgba[src];
+                let g = img.rgba[src + 1];
+                let b = img.rgba[src + 2];
+                let a = img.rgba[src + 3];
+                if rgba_to_glyph_index(r, g, b, a, FontBpp::Bpp2) != 0 {
+                    max_ink_x = Some(max_ink_x.map_or(px, |cur| cur.max(px)));
+                }
+            }
+        }
+
+        let width = match max_ink_x {
+            Some(mx) => (mx + 1)
+                .saturating_add(usize::from(padding))
+                .min(usize::from(u8::MAX)) as u8,
+            None => 0,
+        };
+        widths.push(width);
+    }
+
+    Ok(widths)
+}
+
+/// Write an updated `u8` VWF width table in-place into `rom` at `offset`.
+pub fn replace_vwf_widths_in_rom(
+    rom: &mut [u8],
+    offset: usize,
+    widths: &[u8],
+) -> Result<VwfWidthsReplaceReport> {
+    if widths.is_empty() {
+        return Err(Error::InvalidField {
+            what: "vwf_widths_len",
+            value: 0,
+        });
+    }
+    if offset
+        .checked_add(widths.len())
+        .is_none_or(|end| end > rom.len())
+    {
+        return Err(Error::Truncated {
+            offset,
+            needed: widths.len(),
+            available: rom.len().saturating_sub(offset),
+        });
+    }
+
+    let mut bytes_changed = 0usize;
+    for (dst, &src) in rom[offset..offset + widths.len()]
+        .iter_mut()
+        .zip(widths.iter())
+    {
+        if *dst != src {
+            *dst = src;
+            bytes_changed += 1;
+        }
+    }
+
+    Ok(VwfWidthsReplaceReport {
+        offset,
+        count: widths.len(),
+        bytes_changed,
+        widths: widths.to_vec(),
+    })
+}
+
 #[inline]
 fn rgba_to_glyph_index(r: u8, g: u8, b: u8, a: u8, bpp: FontBpp) -> u8 {
     if a < 128 {
@@ -540,5 +707,46 @@ mod tests {
         assert_eq!(decoded[1], 2);
         // Glyph 1 untouched
         assert_eq!(&rom[font_off + 16..font_off + 32], &original_glyphs[16..32]);
+    }
+
+    #[test]
+    fn vwf_widths_read_compute_and_replace() {
+        let mut rom = vec![0u8; 0x400];
+        let font_off = 0x100usize;
+        let widths_off = 0x200usize;
+
+        // 4 glyphs of 8x8 1bpp:
+        // Glyph 0: blank space (width 0)
+        // Glyph 1: thin 'I' in columns 0..=1 (0xC0 -> MSB bits 7,6 -> x=0,1 -> tight width 2)
+        // Glyph 2: medium 'c' in columns 0..=4 (0xF8 -> x=0..=4 -> tight width 5)
+        // Glyph 3: wide 'M' in columns 0..=7 (0xFF -> x=0..=7 -> tight width 8)
+        let mut glyphs = [0u8; 32];
+        glyphs[8..16].fill(0xC0);
+        glyphs[16..24].fill(0xF8);
+        glyphs[24..32].fill(0xFF);
+        rom[font_off..font_off + 32].copy_from_slice(&glyphs);
+        rom[widths_off..widths_off + 4].copy_from_slice(&[4, 4, 4, 4]);
+
+        let orig_widths = read_vwf_widths(&rom, widths_off, 4).unwrap();
+        assert_eq!(orig_widths, vec![4, 4, 4, 4]);
+
+        let cfg = FontSheetConfig {
+            glyph_count: 4,
+            glyph_width: 8,
+            glyph_height: 8,
+            bpp: FontBpp::Bpp1,
+            msb_first: true,
+            cols: 4,
+        };
+        let png = dump_font_sheet(&rom, font_off, &cfg, FontImageFormat::Png).unwrap();
+
+        let computed = compute_vwf_widths_from_sheet(&png, 4, 8, 8, 4, 1).unwrap();
+        assert_eq!(computed, vec![0, 3, 6, 9]);
+
+        let rep = replace_vwf_widths_in_rom(&mut rom, widths_off, &computed).unwrap();
+        assert_eq!(rep.offset, widths_off);
+        assert_eq!(rep.count, 4);
+        assert_eq!(rep.bytes_changed, 4);
+        assert_eq!(read_vwf_widths(&rom, widths_off, 4).unwrap(), vec![0, 3, 6, 9]);
     }
 }

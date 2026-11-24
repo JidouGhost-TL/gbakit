@@ -12,7 +12,7 @@ A clean-room Game Boy Advance (GBA) format toolkit in Rust built on **[Formatkit
 | `gba-compress` | Complete GBA BIOS codecs: LZ77 (`0x10` WRAM/VRAM), LZ11, RLE (`0x30`), Huffman 4/8-bit decode & encode (`0x24`/`0x28`), `BitUnPack` (`SWI 0x10`), `Diff8`/`Diff16` (`0x81`/`0x82`), plus studio codecs (Hudson LZ, Konami Dict, Shin'en Mode 7) |
 | `gba-gfx` | `BGR555` palettes, allocation-free 4bpp/8bpp tiles, **4bpp/8bpp graphics ripper & write-back** (PNG/PPM → 4bpp/8bpp tiles + BGR555 palette + BIOS recompression + in-place/relocated ROM patching), OAM sprites & affine matrices (`ObjAttr`/`ObjAffine`), text BG compositor, Mode 3/4 framebuffers, 1bpp/2bpp font glyphs |
 | `gba-sound` | Multi-engine GBA audio scanner, exporter (MIDI / MOD / S3M / WAV16), SoundFont 2 (`.sf2`) compiler across **13 GBA sound engines**, and **WAV16 → GBA ROM sample write-back** (PCM8, Pokémon Gen 3 DPCM, IMA ADPCM4 + in-place/relocated ROM patching), delegating byte-exact ARM7TDMI DSP/mixing to standalone zero-dep `#![no_std]` crates |
-| `gba-text` | GBA `.tbl` charmap parser/encoder (`ascii`, `pokemon-gen3-en`, `shift-jis`, custom `.tbl`), pointer-table string scanner/extractor, capacity-checked in-place/relocated ROM string write-back, and 1bpp/2bpp VWF font sheet dump & replace |
+| `gba-text` | GBA `.tbl` charmap parser/encoder (8 built-ins: `ascii`, `pokemon-gen3-en`, `shift-jis`, `capcom-megaman-en`, `breath-of-fire-en`, `tactics-ogre-en`, `metroid-fusion-en`, `utf16-le`, plus custom `.tbl`), pointer-table string scanner, raw & BIOS LZ77 text read/write, Intelligent Systems 16-bit Huffman text decode/encode/replace, and 1bpp/2bpp VWF font sheet + width-table dump/replace |
 | `gba-save` | Declarative GBA battery-save schema engine, `SaveGeometry` detection & padding trimming, loose save probing, 25+ checksum algorithms (`sum8`/`16`/`32`, word-sums, `xor8`/`16`/`32`, `sum_xor16`, `rol32_add`, `Crc16` incl. XMODEM), EEPROM `rev8` block reversal, verification, repair, and field decode/edit |
 | `gba-saves` | Embedded registry covering **814 / 814** saving families (**1,543** saving ROMs = 100% corpus coverage) |
 | `gba-patches` | Embedded registry of **82** clean-room verified `.ips` debug-menu micro-patches, **193** 4-way counterfactually verified retail button-combo cheats, and unified IPS / UPS / BPS patcher |
@@ -107,22 +107,26 @@ gbakit gfx replace mygame.gba --offset 0x12340 --image sprite.png -o modded.gba 
 ### Text, Charmaps (`.tbl`) & VWF Font Sheets (`gbakit text`)
 
 ```sh
-# List built-in charmaps (ascii, pokemon-gen3-en, shift-jis)
+# List built-in charmaps (ascii, pokemon-gen3-en, shift-jis, capcom-megaman-en, breath-of-fire-en, tactics-ogre-en, metroid-fusion-en, utf16-le)
 gbakit text tables [--json]
 
 # Scan ROM pointer tables for strings under a built-in or custom .tbl charmap
 gbakit text scan mygame.gba --table pokemon-gen3-en [--min-entries 10] [--json]
 
-# Extract a decoded string at a ROM offset
-gbakit text extract mygame.gba --offset 0x1C582D --table pokemon-gen3-en [--json]
-
-# Replace a string in-place or relocate into 0xFF free space with automatic pointer patching
+# Extract or replace raw or BIOS LZ77-compressed strings (in-place or relocated into 0xFF free space)
+gbakit text extract mygame.gba --offset 0x1C582D --table pokemon-gen3-en [--lz77] [--json]
 gbakit text replace mygame.gba --offset 0x1C582D --table pokemon-gen3-en \
-  --text "Custom dialogue!" --allow-relocate -o modded.gba [--json]
+  --text "Custom dialogue!" [--lz77] --allow-relocate -o modded.gba [--json]
 
-# Dump or re-inject a 1bpp/2bpp bitmap/VWF font sheet as PNG/PPM
+# Decode or re-encode & replace custom 16-bit Huffman text (e.g., Fire Emblem GBA)
+gbakit text huffman-extract mygame.gba --tree 0x15A72C --root 0x15D484 --offset 0xE8418 [--json]
+gbakit text huffman-replace mygame.gba --tree 0x15A72C --root 0x15D484 --offset 0xE8418 \
+  --text "Weapon Level maxed!" --allow-relocate -o modded.gba [--json]
+
+# Dump/re-inject 1bpp/2bpp VWF font sheets and inspect/auto-compute VWF width tables
 gbakit text font-dump    mygame.gba --offset 0x200000 --count 128 --width 8 --height 16 --bpp 2 -o font.png
 gbakit text font-replace mygame.gba --offset 0x200000 --image font.png --count 128 --width 8 --height 16 --bpp 2 -o modded.gba
+gbakit text font-widths  mygame.gba --offset 0x633B03 --count 256 [--from-image font.png --width 8 --height 16 -o modded.gba] [--json]
 ```
 
 ### Battery Save Identification, Trimming & Repair (`gbakit save`)

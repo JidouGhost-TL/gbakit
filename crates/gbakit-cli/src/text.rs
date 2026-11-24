@@ -1,14 +1,17 @@
 //! CLI subcommands for GBA text localization:
 //! - `gbakit text tables`
-//! - `gbakit text extract`
+//! - `gbakit text extract` (raw and `--lz77`)
 //! - `gbakit text scan`
-//! - `gbakit text replace`
+//! - `gbakit text replace` (raw and `--lz77`)
+//! - `gbakit text huffman-extract`
+//! - `gbakit text huffman-replace`
 //! - `gbakit text font-dump`
 //! - `gbakit text font-replace`
+//! - `gbakit text font-widths`
 //!
-//! Write commands (`replace`, `font-replace`) are strictly non-destructive: the input ROM
-//! is read into memory, modified there, and written to a separate `-o <out.gba>` path.
-//! Overwriting the input ROM in place is refused.
+//! Write commands (`replace`, `huffman-replace`, `font-replace`, `font-widths --from-image`)
+//! are strictly non-destructive: the input ROM is read into memory, modified there, and
+//! written to a separate `-o <out.gba>` path. Overwriting the input ROM in place is refused.
 
 #![deny(unsafe_code)]
 
@@ -16,9 +19,11 @@ use std::fs;
 use std::path::Path;
 
 use gbakit::text::{
-    dump_font_sheet, extract_string, replace_font_sheet_in_rom, replace_string_in_rom,
-    scan_string_tables, Charmap, FontBpp, FontImageFormat, FontSheetConfig, TextReplaceMode,
-    TextReplaceOptions, BUILTIN_CHARMAPS, DEFAULT_MAX_STRING_LEN,
+    compute_vwf_widths_from_sheet, dump_font_sheet, extract_lz77_string, extract_string,
+    parse_huffman_text, read_vwf_widths, replace_font_sheet_in_rom, replace_huffman_text_in_rom,
+    replace_lz77_string_in_rom, replace_string_in_rom, replace_vwf_widths_in_rom,
+    scan_string_tables, Charmap, FontBpp, FontImageFormat, FontSheetConfig, HuffmanTree,
+    TextReplaceMode, TextReplaceOptions, BUILTIN_CHARMAPS, DEFAULT_MAX_STRING_LEN,
 };
 
 use super::{parse_flag_value, parse_offset, parse_positional_arg};
@@ -30,6 +35,21 @@ const REPLACE_VALUE_FLAGS: &[&[&str]] = &[
     &["--text"],
     &["-o", "--output"],
     &["--table"],
+    &["--capacity"],
+    &["--pad-byte"],
+];
+const HUFFMAN_EXTRACT_VALUE_FLAGS: &[&[&str]] = &[
+    &["--tree"],
+    &["--root"],
+    &["--offset"],
+    &["--max-len"],
+];
+const HUFFMAN_REPLACE_VALUE_FLAGS: &[&[&str]] = &[
+    &["--tree"],
+    &["--root"],
+    &["--offset"],
+    &["--text"],
+    &["-o", "--output"],
     &["--capacity"],
     &["--pad-byte"],
 ];
@@ -52,14 +72,27 @@ const FONT_REPLACE_VALUE_FLAGS: &[&[&str]] = &[
     &["-o", "--output"],
     &["--cols"],
 ];
+const FONT_WIDTHS_VALUE_FLAGS: &[&[&str]] = &[
+    &["--offset"],
+    &["--count"],
+    &["--from-image"],
+    &["--width"],
+    &["--height"],
+    &["--cols"],
+    &["--pad"],
+    &["-o", "--output"],
+];
 
 pub const TEXT_USAGE: &str = "usage:\n  \
   gbakit text tables [--json]\n  \
-  gbakit text extract <rom.gba> --offset <hex|dec> [--table <builtin|file.tbl>] [--max-len <n>] [--json]\n  \
+  gbakit text extract <rom.gba> --offset <hex|dec> [--table <builtin|file.tbl>] [--lz77] [--max-len <n>] [--json]\n  \
   gbakit text scan <rom.gba> [--table <builtin|file.tbl>] [--min-entries <n>] [--limit <n>] [--json]\n  \
-  gbakit text replace <rom.gba> --offset <hex|dec> --text <str> -o <out.gba> [--table <builtin|file.tbl>] [--capacity <n>] [--allow-relocate] [--pad-byte <n>] [--json]\n  \
+  gbakit text replace <rom.gba> --offset <hex|dec> --text <str> -o <out.gba> [--table <builtin|file.tbl>] [--lz77] [--capacity <n>] [--allow-relocate] [--pad-byte <n>] [--json]\n  \
+  gbakit text huffman-extract <rom.gba> --tree <hex|dec> --root <hex|dec> --offset <hex|dec> [--max-len <n>] [--json]\n  \
+  gbakit text huffman-replace <rom.gba> --tree <hex|dec> --root <hex|dec> --offset <hex|dec> --text <str> -o <out.gba> [--capacity <n>] [--allow-relocate] [--pad-byte <n>] [--json]\n  \
   gbakit text font-dump <rom.gba> --offset <hex|dec> --count <n> --width <px> --height <px> --bpp 1|2 -o <out.png|ppm> [--lsb] [--cols <n>] [--json]\n  \
-  gbakit text font-replace <rom.gba> --offset <hex|dec> --image <in.png|ppm> --count <n> --width <px> --height <px> --bpp 1|2 -o <out.gba> [--lsb] [--cols <n>] [--json]";
+  gbakit text font-replace <rom.gba> --offset <hex|dec> --image <in.png|ppm> --count <n> --width <px> --height <px> --bpp 1|2 -o <out.gba> [--lsb] [--cols <n>] [--json]\n  \
+  gbakit text font-widths <rom.gba> --offset <hex|dec> --count <n> [--from-image <sheet.png|ppm> --width <px> --height <px> [--cols <n>] [--pad <px>] -o <out.gba>] [--json]";
 
 fn has_flag(args: &[String], name: &str) -> bool {
     args.iter().any(|a| a == name)
@@ -127,8 +160,11 @@ pub fn dispatch_text(args: &[String]) -> Result<(), String> {
         "extract" => cmd_text_extract(&args[1..]),
         "scan" => cmd_text_scan(&args[1..]),
         "replace" => cmd_text_replace(&args[1..]),
+        "huffman-extract" => cmd_text_huffman_extract(&args[1..]),
+        "huffman-replace" => cmd_text_huffman_replace(&args[1..]),
         "font-dump" => cmd_text_font_dump(&args[1..]),
         "font-replace" => cmd_text_font_replace(&args[1..]),
+        "font-widths" => cmd_text_font_widths(&args[1..]),
         other => Err(format!("unknown `text` subcommand {other:?}\n{TEXT_USAGE}")),
     }
 }
@@ -157,27 +193,77 @@ pub fn cmd_text_tables(args: &[String]) -> Result<(), String> {
     Ok(())
 }
 
-/// `gbakit text extract <rom.gba> --offset <hex|dec> [--table <builtin|file.tbl>] [--max-len <n>] [--json]`
+/// `gbakit text extract <rom.gba> --offset <hex|dec> [--table <builtin|file.tbl>] [--lz77] [--max-len <n>] [--json]`
 pub fn cmd_text_extract(args: &[String]) -> Result<(), String> {
     let rom_path = parse_positional_arg(args, EXTRACT_VALUE_FLAGS)
         .ok_or_else(|| format!("missing required <rom.gba>\n{TEXT_USAGE}"))?;
     let rom_path = Path::new(rom_path);
     let offset = parse_offset(required(args, &["--offset"], "--offset <hex|dec>")?)
         .map_err(|e| format!("invalid --offset: {e}"))?;
+    let lz77 = has_flag(args, "--lz77");
     let max_len = match parse_flag_value(args, &["--max-len"]) {
         Some(s) => parse_offset(s).map_err(|e| format!("invalid --max-len: {e}"))?,
-        None => DEFAULT_MAX_STRING_LEN,
+        None => {
+            if lz77 {
+                65_536
+            } else {
+                DEFAULT_MAX_STRING_LEN
+            }
+        }
     };
     let charmap = load_charmap(parse_flag_value(args, &["--table"]))?;
     let as_json = has_flag(args, "--json");
 
     let rom = fs::read(rom_path).map_err(|e| format!("read {}: {e}", rom_path.display()))?;
+
+    if lz77 {
+        let extracted = extract_lz77_string(&rom, offset, &charmap, max_len)
+            .map_err(|e| format!("extract LZ77 string at 0x{offset:X}: {e}"))?;
+        if as_json {
+            let payload = serde_json::json!({
+                "table": charmap.name(),
+                "lz77": true,
+                "offset": format!("0x{:X}", extracted.offset),
+                "bus_address": extracted.bus_address.map(|a| format!("0x{a:08X}")),
+                "text": extracted.text,
+                "compressed_bytes_len": extracted.compressed_bytes_len,
+                "decompressed_bytes_len": extracted.decompressed_bytes_len,
+                "payload_bytes_len": extracted.payload_bytes_len,
+                "raw_bytes_len": extracted.raw_bytes_len,
+                "terminated": extracted.terminated,
+                "terminator_hex": extracted.terminator.as_deref().map(format_hex_bytes),
+                "mapped_tokens": extracted.mapped_tokens,
+                "unmapped_tokens": extracted.unmapped_tokens,
+            });
+            println!(
+                "{}",
+                serde_json::to_string_pretty(&payload).map_err(|e| e.to_string())?
+            );
+        } else {
+            println!(
+                "Extracted LZ77 String @ 0x{:X} (table: {}, {} compressed -> {} decompressed bytes, {}):",
+                extracted.offset,
+                charmap.name(),
+                extracted.compressed_bytes_len,
+                extracted.decompressed_bytes_len,
+                if extracted.terminated {
+                    "terminated"
+                } else {
+                    "unterminated"
+                }
+            );
+            println!("{}", extracted.text);
+        }
+        return Ok(());
+    }
+
     let extracted = extract_string(&rom, offset, &charmap, max_len)
         .map_err(|e| format!("extract string at 0x{offset:X}: {e}"))?;
 
     if as_json {
         let payload = serde_json::json!({
             "table": charmap.name(),
+            "lz77": false,
             "offset": format!("0x{:X}", extracted.offset),
             "bus_address": extracted.bus_address.map(|a| format!("0x{a:08X}")),
             "text": extracted.text,
@@ -297,7 +383,7 @@ pub fn cmd_text_scan(args: &[String]) -> Result<(), String> {
     Ok(())
 }
 
-/// `gbakit text replace <rom.gba> --offset <hex|dec> --text <str> -o <out.gba> [...]`
+/// `gbakit text replace <rom.gba> --offset <hex|dec> --text <str> -o <out.gba> [--table <builtin|file.tbl>] [--lz77] [...]`
 pub fn cmd_text_replace(args: &[String]) -> Result<(), String> {
     let rom_path = parse_positional_arg(args, REPLACE_VALUE_FLAGS)
         .ok_or_else(|| format!("missing required <rom.gba>\n{TEXT_USAGE}"))?;
@@ -307,6 +393,7 @@ pub fn cmd_text_replace(args: &[String]) -> Result<(), String> {
     let new_text = required(args, &["--text"], "--text <str>")?;
     let out_path = Path::new(required(args, &["-o", "--output"], "-o <out.gba>")?);
     let charmap = load_charmap(parse_flag_value(args, &["--table"]))?;
+    let lz77 = has_flag(args, "--lz77");
     let allow_relocate = has_flag(args, "--allow-relocate");
     let as_json = has_flag(args, "--json");
 
@@ -332,8 +419,13 @@ pub fn cmd_text_replace(args: &[String]) -> Result<(), String> {
         ..TextReplaceOptions::default()
     };
 
-    let report = replace_string_in_rom(&mut rom, offset, new_text, &charmap, &options)
-        .map_err(|e| format!("replace string at 0x{offset:X}: {e}"))?;
+    let report = if lz77 {
+        replace_lz77_string_in_rom(&mut rom, offset, new_text, &charmap, &options)
+            .map_err(|e| format!("replace LZ77 string at 0x{offset:X}: {e}"))?
+    } else {
+        replace_string_in_rom(&mut rom, offset, new_text, &charmap, &options)
+            .map_err(|e| format!("replace string at 0x{offset:X}: {e}"))?
+    };
 
     fs::write(out_path, &rom).map_err(|e| format!("write {}: {e}", out_path.display()))?;
 
@@ -347,6 +439,7 @@ pub fn cmd_text_replace(args: &[String]) -> Result<(), String> {
             "input": rom_path.display().to_string(),
             "output": out_path.display().to_string(),
             "table": charmap.name(),
+            "lz77": lz77,
             "mode": mode_id,
             "original_offset": format!("0x{:X}", report.original_offset),
             "written_offset": format!("0x{:X}", report.written_offset),
@@ -367,8 +460,178 @@ pub fn cmd_text_replace(args: &[String]) -> Result<(), String> {
             serde_json::to_string_pretty(&payload).map_err(|e| e.to_string())?
         );
     } else {
-        println!("Text Replace: {} -> {}", rom_path.display(), out_path.display());
+        println!(
+            "{}Text Replace: {} -> {}",
+            if lz77 { "LZ77 " } else { "" },
+            rom_path.display(),
+            out_path.display()
+        );
         println!("  Charmap:          {}", charmap.name());
+        println!("  Original Offset:  0x{:X}", report.original_offset);
+        println!(
+            "  Written Offset:   0x{:X} (bus 0x{:08X})",
+            report.written_offset, report.written_bus_address
+        );
+        println!(
+            "  Size:             {} bytes written / {} capacity (original {} bytes)",
+            report.new_bytes_len, report.original_capacity, report.original_bytes_len
+        );
+        println!("  Mode:             {mode_id}");
+        if report.mode == TextReplaceMode::Relocated {
+            println!("  Patched Pointers: {}", report.patched_pointer_count);
+        }
+    }
+    Ok(())
+}
+
+/// `gbakit text huffman-extract <rom.gba> --tree <off> --root <off> --offset <off> [--max-len <n>] [--json]`
+pub fn cmd_text_huffman_extract(args: &[String]) -> Result<(), String> {
+    let rom_path = parse_positional_arg(args, HUFFMAN_EXTRACT_VALUE_FLAGS)
+        .ok_or_else(|| format!("missing required <rom.gba>\n{TEXT_USAGE}"))?;
+    let rom_path = Path::new(rom_path);
+    let tree_offset = parse_offset(required(args, &["--tree"], "--tree <hex|dec>")?)
+        .map_err(|e| format!("invalid --tree: {e}"))?;
+    let root_offset = parse_offset(required(args, &["--root"], "--root <hex|dec>")?)
+        .map_err(|e| format!("invalid --root: {e}"))?;
+    let offset = parse_offset(required(args, &["--offset"], "--offset <hex|dec>")?)
+        .map_err(|e| format!("invalid --offset: {e}"))?;
+    let max_len = match parse_flag_value(args, &["--max-len"]) {
+        Some(s) => parse_offset(s).map_err(|e| format!("invalid --max-len: {e}"))?,
+        None => 4096,
+    };
+    let as_json = has_flag(args, "--json");
+
+    let rom = fs::read(rom_path).map_err(|e| format!("read {}: {e}", rom_path.display()))?;
+    let tree = HuffmanTree::from_rom(&rom, tree_offset, root_offset)
+        .map_err(|e| format!("parse Huffman tree (tree=0x{tree_offset:X}, root=0x{root_offset:X}): {e}"))?;
+    let decoded = tree
+        .decode_at(&rom, offset, max_len)
+        .map_err(|e| format!("decode Huffman text at 0x{offset:X}: {e}"))?;
+
+    if as_json {
+        let payload = serde_json::json!({
+            "tree_offset": format!("0x{tree_offset:X}"),
+            "root_offset": format!("0x{root_offset:X}"),
+            "tree_nodes": tree.node_count(),
+            "tree_symbols": tree.symbol_count(),
+            "offset": format!("0x{:X}", decoded.offset),
+            "bus_address": decoded.bus_address.map(|a| format!("0x{a:08X}")),
+            "text": decoded.text,
+            "decoded_bytes_len": decoded.bytes.len(),
+            "compressed_bytes_len": decoded.compressed_bytes_len,
+            "bit_len": decoded.bit_len,
+            "terminated": decoded.terminated,
+        });
+        println!(
+            "{}",
+            serde_json::to_string_pretty(&payload).map_err(|e| e.to_string())?
+        );
+    } else {
+        println!(
+            "Extracted Huffman Text @ 0x{:X} ({} compressed bytes / {} bits -> {} bytes, {}):",
+            decoded.offset,
+            decoded.compressed_bytes_len,
+            decoded.bit_len,
+            decoded.bytes.len(),
+            if decoded.terminated {
+                "terminated"
+            } else {
+                "unterminated"
+            }
+        );
+        println!("{}", decoded.text);
+    }
+    Ok(())
+}
+
+/// `gbakit text huffman-replace <rom.gba> --tree <off> --root <off> --offset <off> --text <str> -o <out.gba> [--allow-relocate] [--json]`
+pub fn cmd_text_huffman_replace(args: &[String]) -> Result<(), String> {
+    let rom_path = parse_positional_arg(args, HUFFMAN_REPLACE_VALUE_FLAGS)
+        .ok_or_else(|| format!("missing required <rom.gba>\n{TEXT_USAGE}"))?;
+    let rom_path = Path::new(rom_path);
+    let tree_offset = parse_offset(required(args, &["--tree"], "--tree <hex|dec>")?)
+        .map_err(|e| format!("invalid --tree: {e}"))?;
+    let root_offset = parse_offset(required(args, &["--root"], "--root <hex|dec>")?)
+        .map_err(|e| format!("invalid --root: {e}"))?;
+    let offset = parse_offset(required(args, &["--offset"], "--offset <hex|dec>")?)
+        .map_err(|e| format!("invalid --offset: {e}"))?;
+    let new_text = required(args, &["--text"], "--text <str>")?;
+    let out_path = Path::new(required(args, &["-o", "--output"], "-o <out.gba>")?);
+    let allow_relocate = has_flag(args, "--allow-relocate");
+    let as_json = has_flag(args, "--json");
+
+    let capacity = match parse_flag_value(args, &["--capacity"]) {
+        Some(s) => Some(parse_offset(s).map_err(|e| format!("invalid --capacity: {e}"))?),
+        None => None,
+    };
+    let pad_byte = match parse_flag_value(args, &["--pad-byte"]) {
+        Some(s) => {
+            let v = parse_offset(s).map_err(|e| format!("invalid --pad-byte: {e}"))?;
+            Some(u8::try_from(v).map_err(|_| format!("--pad-byte {v} exceeds 0xFF"))?)
+        }
+        None => None,
+    };
+
+    ensure_distinct_paths(rom_path, out_path)?;
+
+    let new_bytes =
+        parse_huffman_text(new_text).map_err(|e| format!("parse Huffman --text: {e}"))?;
+    let mut rom = fs::read(rom_path).map_err(|e| format!("read {}: {e}", rom_path.display()))?;
+    let options = TextReplaceOptions {
+        capacity,
+        pad_byte,
+        allow_relocate,
+        ..TextReplaceOptions::default()
+    };
+
+    let report = replace_huffman_text_in_rom(
+        &mut rom,
+        tree_offset,
+        root_offset,
+        offset,
+        &new_bytes,
+        &options,
+    )
+    .map_err(|e| format!("replace Huffman text at 0x{offset:X}: {e}"))?;
+
+    fs::write(out_path, &rom).map_err(|e| format!("write {}: {e}", out_path.display()))?;
+
+    let mode_id = match report.mode {
+        TextReplaceMode::InPlace => "in_place",
+        TextReplaceMode::Relocated => "relocated",
+    };
+
+    if as_json {
+        let payload = serde_json::json!({
+            "input": rom_path.display().to_string(),
+            "output": out_path.display().to_string(),
+            "tree_offset": format!("0x{tree_offset:X}"),
+            "root_offset": format!("0x{root_offset:X}"),
+            "mode": mode_id,
+            "original_offset": format!("0x{:X}", report.original_offset),
+            "written_offset": format!("0x{:X}", report.written_offset),
+            "written_bus_address": format!("0x{:08X}", report.written_bus_address),
+            "original_bytes_len": report.original_bytes_len,
+            "original_capacity": report.original_capacity,
+            "new_bytes_len": report.new_bytes_len,
+            "slack_bytes": report.slack_bytes,
+            "patched_pointers": report.patched_pointer_count,
+            "patched_pointer_offsets": report
+                .patched_pointer_offsets
+                .iter()
+                .map(|o| format!("0x{o:X}"))
+                .collect::<Vec<_>>(),
+        });
+        println!(
+            "{}",
+            serde_json::to_string_pretty(&payload).map_err(|e| e.to_string())?
+        );
+    } else {
+        println!(
+            "Huffman Text Replace: {} -> {}",
+            rom_path.display(),
+            out_path.display()
+        );
         println!("  Original Offset:  0x{:X}", report.original_offset);
         println!(
             "  Written Offset:   0x{:X} (bus 0x{:08X})",
@@ -562,6 +825,103 @@ pub fn cmd_text_font_replace(args: &[String]) -> Result<(), String> {
         println!(
             "  Bytes Written:  {} ({} changed)",
             report.bytes_written, report.bytes_changed
+        );
+    }
+    Ok(())
+}
+
+/// `gbakit text font-widths <rom.gba> --offset <off> --count <n> [--from-image <sheet.png> --width <px> --height <px> [--cols <n>] [--pad <px>] -o <out.gba>] [--json]`
+pub fn cmd_text_font_widths(args: &[String]) -> Result<(), String> {
+    let rom_path = parse_positional_arg(args, FONT_WIDTHS_VALUE_FLAGS)
+        .ok_or_else(|| format!("missing required <rom.gba>\n{TEXT_USAGE}"))?;
+    let rom_path = Path::new(rom_path);
+    let offset = parse_offset(required(args, &["--offset"], "--offset <hex|dec>")?)
+        .map_err(|e| format!("invalid --offset: {e}"))?;
+    let count = parse_offset(required(args, &["--count"], "--count <n>")?)
+        .map_err(|e| format!("invalid --count: {e}"))?;
+    let as_json = has_flag(args, "--json");
+
+    if let Some(image_spec) = parse_flag_value(args, &["--from-image"]) {
+        let image_path = Path::new(image_spec);
+        let glyph_w = parse_offset(required(args, &["--width"], "--width <px>")?)
+            .map_err(|e| format!("invalid --width: {e}"))?;
+        let glyph_h = parse_offset(required(args, &["--height"], "--height <px>")?)
+            .map_err(|e| format!("invalid --height: {e}"))?;
+        let cols = match parse_flag_value(args, &["--cols"]) {
+            Some(s) => parse_offset(s).map_err(|e| format!("invalid --cols: {e}"))?,
+            None => 16,
+        };
+        let pad = match parse_flag_value(args, &["--pad"]) {
+            Some(s) => {
+                let v = parse_offset(s).map_err(|e| format!("invalid --pad: {e}"))?;
+                u8::try_from(v).map_err(|_| format!("--pad {v} exceeds 255"))?
+            }
+            None => 1,
+        };
+        let out_path = Path::new(required(args, &["-o", "--output"], "-o <out.gba>")?);
+        ensure_distinct_paths(rom_path, out_path)?;
+
+        let mut rom = fs::read(rom_path).map_err(|e| format!("read {}: {e}", rom_path.display()))?;
+        let image_bytes =
+            fs::read(image_path).map_err(|e| format!("read {}: {e}", image_path.display()))?;
+        let widths =
+            compute_vwf_widths_from_sheet(&image_bytes, count, glyph_w, glyph_h, cols, pad)
+                .map_err(|e| format!("compute VWF widths from {}: {e}", image_path.display()))?;
+        let report = replace_vwf_widths_in_rom(&mut rom, offset, &widths)
+            .map_err(|e| format!("replace VWF widths at 0x{offset:X}: {e}"))?;
+        fs::write(out_path, &rom).map_err(|e| format!("write {}: {e}", out_path.display()))?;
+
+        if as_json {
+            let payload = serde_json::json!({
+                "input": rom_path.display().to_string(),
+                "output": out_path.display().to_string(),
+                "image": image_path.display().to_string(),
+                "offset": format!("0x{:X}", report.offset),
+                "count": report.count,
+                "padding": pad,
+                "bytes_changed": report.bytes_changed,
+                "widths": report.widths,
+            });
+            println!(
+                "{}",
+                serde_json::to_string_pretty(&payload).map_err(|e| e.to_string())?
+            );
+        } else {
+            println!(
+                "VWF Widths Updated: {} -> {} (@ 0x{:X}, {} glyphs, {} changed, pad={}px)",
+                rom_path.display(),
+                out_path.display(),
+                report.offset,
+                report.count,
+                report.bytes_changed,
+                pad
+            );
+            println!("  Widths: {:?}", report.widths);
+        }
+        return Ok(());
+    }
+
+    let rom = fs::read(rom_path).map_err(|e| format!("read {}: {e}", rom_path.display()))?;
+    let widths = read_vwf_widths(&rom, offset, count)
+        .map_err(|e| format!("read VWF widths at 0x{offset:X}: {e}"))?;
+
+    if as_json {
+        let payload = serde_json::json!({
+            "input": rom_path.display().to_string(),
+            "offset": format!("0x{offset:X}"),
+            "count": widths.len(),
+            "widths": widths,
+        });
+        println!(
+            "{}",
+            serde_json::to_string_pretty(&payload).map_err(|e| e.to_string())?
+        );
+    } else {
+        println!(
+            "VWF Widths @ 0x{:X} ({} glyphs): {:?}",
+            offset,
+            widths.len(),
+            widths
         );
     }
     Ok(())

@@ -6,6 +6,7 @@
 use std::collections::HashSet;
 
 use formatkit_core::{Error, Result};
+use gba_compress::{decode_lz77, encode_lz77, DEFAULT_MAX_OUTPUT};
 use gba_gfx::{find_free_space, patch_rom_pointers};
 use gba_rom::{bus_to_rom_offset, rom_offset_to_bus, scan_pointer_tables, HEADER_SIZE};
 use serde::{Deserialize, Serialize};
@@ -386,7 +387,6 @@ pub fn replace_string_in_rom(
         }
     }
 
-    let new_bytes_len = encoded.len();
     let pad_byte = options.pad_byte.unwrap_or_else(|| {
         charmap
             .default_terminator()
@@ -394,8 +394,50 @@ pub fn replace_string_in_rom(
             .unwrap_or(0x00)
     });
 
+    write_or_relocate_bytes(rom, offset, orig.raw_bytes_len, &encoded, pad_byte, options)
+}
+
+/// Shared capacity-checked in-place or free-space-relocated byte writer with automatic
+/// `0x08xxxxxx` ROM pointer patching.
+///
+/// Prefers `0xFF` free-space runs before falling back to `0x00` runs at `>= 0x200`.
+pub(crate) fn write_or_relocate_bytes(
+    rom: &mut [u8],
+    offset: usize,
+    original_bytes_len: usize,
+    encoded: &[u8],
+    pad_byte: u8,
+    options: &TextReplaceOptions,
+) -> Result<TextReplaceReport> {
+    if offset >= rom.len() {
+        return Err(Error::Truncated {
+            offset,
+            needed: 1,
+            available: 0,
+        });
+    }
+
+    let original_capacity = options.capacity.unwrap_or(original_bytes_len);
+    if original_capacity == 0 {
+        return Err(Error::InvalidField {
+            what: "string_capacity",
+            value: 0,
+        });
+    }
+    if offset
+        .checked_add(original_capacity)
+        .is_none_or(|end| end > rom.len())
+    {
+        return Err(Error::Truncated {
+            offset,
+            needed: original_capacity,
+            available: rom.len().saturating_sub(offset),
+        });
+    }
+
+    let new_bytes_len = encoded.len();
     if new_bytes_len <= original_capacity {
-        rom[offset..offset + new_bytes_len].copy_from_slice(&encoded);
+        rom[offset..offset + new_bytes_len].copy_from_slice(encoded);
         let slack_bytes = original_capacity - new_bytes_len;
         if slack_bytes > 0 {
             rom[offset + new_bytes_len..offset + original_capacity].fill(pad_byte);
@@ -409,7 +451,7 @@ pub fn replace_string_in_rom(
             original_offset: offset,
             written_offset: offset,
             written_bus_address,
-            original_bytes_len: orig.raw_bytes_len,
+            original_bytes_len,
             original_capacity,
             new_bytes_len,
             slack_bytes,
@@ -450,7 +492,7 @@ pub fn replace_string_in_rom(
         limit: 0,
     })?;
 
-    rom[new_offset..new_offset + new_bytes_len].copy_from_slice(&encoded);
+    rom[new_offset..new_offset + new_bytes_len].copy_from_slice(encoded);
     let patched_pointer_offsets = patch_rom_pointers(
         rom,
         offset,
@@ -467,13 +509,117 @@ pub fn replace_string_in_rom(
         original_offset: offset,
         written_offset: new_offset,
         written_bus_address,
-        original_bytes_len: orig.raw_bytes_len,
+        original_bytes_len,
         original_capacity,
         new_bytes_len,
         slack_bytes: 0,
         patched_pointer_count: patched_pointer_offsets.len(),
         patched_pointer_offsets,
     })
+}
+
+/// A single extracted BIOS LZ77 (`0x10`) compressed string decoded from a GBA ROM.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct ExtractedLz77String {
+    /// ROM file offset where the BIOS LZ77 (`0x10`) stream starts.
+    pub offset: usize,
+    /// GBA Wait State 0 bus address (`0x0800_0000 + offset`), if within 32 MiB.
+    pub bus_address: Option<u32>,
+    /// Decoded UTF-8 text (excluding the trailing terminator).
+    pub text: String,
+    /// Exact compressed byte length of the BIOS LZ77 (`0x10`) stream in ROM.
+    pub compressed_bytes_len: usize,
+    /// Decompressed byte length produced by BIOS LZ77 (`0x10`).
+    pub decompressed_bytes_len: usize,
+    /// Byte length of the decoded string payload before the terminator.
+    pub payload_bytes_len: usize,
+    /// Total decoded string byte length including terminator (if terminated).
+    pub raw_bytes_len: usize,
+    /// Whether a charmap terminator was encountered.
+    pub terminated: bool,
+    /// Terminator byte sequence encountered, if any.
+    pub terminator: Option<Vec<u8>>,
+    /// Number of mapped charmap tokens decoded.
+    pub mapped_tokens: usize,
+    /// Number of unmapped fallback tokens (`<$XX>`) decoded.
+    pub unmapped_tokens: usize,
+}
+
+/// Decompress a GBA BIOS LZ77 (`0x10`) stream at `offset` in `rom` and decode it with `charmap`.
+pub fn extract_lz77_string(
+    rom: &[u8],
+    offset: usize,
+    charmap: &Charmap,
+    max_output: usize,
+) -> Result<ExtractedLz77String> {
+    if offset >= rom.len() {
+        return Err(Error::Truncated {
+            offset,
+            needed: 1,
+            available: 0,
+        });
+    }
+
+    let decoded_stream = decode_lz77(&rom[offset..], max_output)?;
+    let decompressed_bytes_len = decoded_stream.bytes.len();
+    let extracted = extract_string(&decoded_stream.bytes, 0, charmap, decompressed_bytes_len)?;
+
+    Ok(ExtractedLz77String {
+        offset,
+        bus_address: rom_offset_to_bus(offset),
+        text: extracted.text,
+        compressed_bytes_len: decoded_stream.consumed,
+        decompressed_bytes_len,
+        payload_bytes_len: extracted.payload_bytes_len,
+        raw_bytes_len: extracted.raw_bytes_len,
+        terminated: extracted.terminated,
+        terminator: extracted.terminator,
+        mapped_tokens: extracted.mapped_tokens,
+        unmapped_tokens: extracted.unmapped_tokens,
+    })
+}
+
+/// Replace a BIOS LZ77 (`0x10`) compressed string in `rom` at `offset`.
+///
+/// - Decompresses the existing LZ77 stream at `offset` to measure its original compressed slot.
+/// - Encodes `new_text` with `charmap` (appending terminator if `options.append_terminator`),
+///   recompresses with BIOS LZ77 (`0x10`), and writes in-place if it fits or relocates to
+///   `0xFF` free space (`0x00` fallback at `>= 0x200`) + patches `0x08xxxxxx` pointers.
+pub fn replace_lz77_string_in_rom(
+    rom: &mut [u8],
+    offset: usize,
+    new_text: &str,
+    charmap: &Charmap,
+    options: &TextReplaceOptions,
+) -> Result<TextReplaceReport> {
+    if offset >= rom.len() {
+        return Err(Error::Truncated {
+            offset,
+            needed: 1,
+            available: 0,
+        });
+    }
+
+    let orig_stream = decode_lz77(&rom[offset..], DEFAULT_MAX_OUTPUT)?;
+    let mut encoded = charmap.encode(new_text)?;
+    if options.append_terminator {
+        if let Some(term) = charmap.default_terminator() {
+            if !encoded.ends_with(term) {
+                encoded.extend_from_slice(term);
+            }
+        }
+    }
+    let compressed = encode_lz77(&encoded)?;
+    let pad_byte = options.pad_byte.unwrap_or(0x00);
+
+    write_or_relocate_bytes(
+        rom,
+        offset,
+        orig_stream.consumed,
+        &compressed,
+        pad_byte,
+        options,
+    )
 }
 
 #[cfg(test)]
@@ -605,5 +751,67 @@ mod tests {
         let extracted = extract_string(&rom, report.written_offset, &cm, 128).unwrap();
         assert_eq!(extracted.text, "SUPER HYPER LEGENDARY ITEM");
         assert!(extracted.terminated);
+    }
+
+    #[test]
+    fn lz77_string_extract_replace_and_relocate() {
+        let cm = Charmap::ascii();
+        let mut rom = vec![0u8; 0x8000];
+        rom[0x4000..].fill(0xFF); // free space
+
+        let orig_text = "HELLO HELLO HELLO WORLD\0";
+        let compressed = encode_lz77(orig_text.as_bytes()).unwrap();
+        let entry_off = 0x1000usize;
+        rom[entry_off..entry_off + compressed.len()].copy_from_slice(&compressed);
+
+        let ptr_off = 0x200usize;
+        let bus = rom_offset_to_bus(entry_off).unwrap();
+        rom[ptr_off..ptr_off + 4].copy_from_slice(&bus.to_le_bytes());
+
+        let ext = extract_lz77_string(&rom, entry_off, &cm, 1024).unwrap();
+        assert_eq!(ext.text, "HELLO HELLO HELLO WORLD");
+        assert_eq!(ext.compressed_bytes_len, compressed.len());
+        assert_eq!(ext.decompressed_bytes_len, orig_text.len());
+        assert!(ext.terminated);
+
+        // Shorter replacement fits in-place
+        let rep = replace_lz77_string_in_rom(
+            &mut rom,
+            entry_off,
+            "SHORT",
+            &cm,
+            &TextReplaceOptions::default(),
+        )
+        .unwrap();
+        assert_eq!(rep.mode, TextReplaceMode::InPlace);
+        assert_eq!(rep.written_offset, entry_off);
+
+        let ext2 = extract_lz77_string(&rom, entry_off, &cm, 1024).unwrap();
+        assert_eq!(ext2.text, "SHORT");
+
+        // Larger incompressible replacement requires relocation
+        let long_text = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz!@#$%^&*()";
+        let err = replace_lz77_string_in_rom(
+            &mut rom,
+            entry_off,
+            long_text,
+            &cm,
+            &TextReplaceOptions::default(),
+        );
+        assert!(matches!(err, Err(Error::ResourceLimit { .. })));
+
+        let opts = TextReplaceOptions {
+            allow_relocate: true,
+            ..TextReplaceOptions::default()
+        };
+        let reloc = replace_lz77_string_in_rom(&mut rom, entry_off, long_text, &cm, &opts).unwrap();
+        assert_eq!(reloc.mode, TextReplaceMode::Relocated);
+        assert!(reloc.written_offset >= 0x4000);
+        assert_eq!(reloc.patched_pointer_count, 1);
+        assert_eq!(reloc.patched_pointer_offsets, vec![ptr_off]);
+
+        let ext3 = extract_lz77_string(&rom, reloc.written_offset, &cm, 1024).unwrap();
+        assert_eq!(ext3.text, long_text);
+        assert!(ext3.terminated);
     }
 }

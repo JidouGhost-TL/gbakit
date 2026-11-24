@@ -35,6 +35,31 @@ pub const BUILTIN_CHARMAPS: &[BuiltinCharmapInfo] = &[
         description: "Shift-JIS (ASCII, half-width Katakana, JIS X 0208 Hiragana/Katakana/full-width, 0x00={END})",
         default_terminator_hex: "00",
     },
+    BuiltinCharmapInfo {
+        name: "capcom-megaman-en",
+        description: "Capcom Mega Man Zero / Battle Network English table (0x00=' ', 0x01='0', 0x0B='A', 0x25='a', 0xFF={END})",
+        default_terminator_hex: "FF",
+    },
+    BuiltinCharmapInfo {
+        name: "breath-of-fire-en",
+        description: "Capcom Breath of Fire 1/2 English table (0x02=' ', 0x2A='A', 0x48='a', 0x00={END})",
+        default_terminator_hex: "00",
+    },
+    BuiltinCharmapInfo {
+        name: "tactics-ogre-en",
+        description: "Tactics Ogre: The Knight of Lodis English table (0x00='A', 0x1A='a', 0x89=' ', 0xFF={END})",
+        default_terminator_hex: "FF",
+    },
+    BuiltinCharmapInfo {
+        name: "metroid-fusion-en",
+        description: "Metroid Fusion 16-bit LE English table (0x0040=' ', 0x0081='A', 0x00C1='a', 0xFF00={END})",
+        default_terminator_hex: "00FF",
+    },
+    BuiltinCharmapInfo {
+        name: "utf16-le",
+        description: "Standard UTF-16LE null-terminated Unicode (full BMP decode/encode, 0x0000={END})",
+        default_terminator_hex: "0000",
+    },
 ];
 
 /// A bidirectional byte-sequence <-> UTF-8 text mapping table (`.tbl`).
@@ -48,6 +73,7 @@ pub struct Charmap {
     max_text_len: usize,
     default_terminator: Option<Vec<u8>>,
     shift_jis_fallback: bool,
+    utf16_le: bool,
 }
 
 impl Charmap {
@@ -63,6 +89,7 @@ impl Charmap {
             max_text_len: 0,
             default_terminator: None,
             shift_jis_fallback: false,
+            utf16_le: false,
         }
     }
 
@@ -122,21 +149,27 @@ impl Charmap {
         self.byte_to_text.insert(bytes, text);
     }
 
-    /// Load a built-in charmap by name (`ascii`, `pokemon-gen3-en`, `shift-jis`, or
-    /// `ascii-offset:<delta>` such as `ascii-offset:-0x20` or `ascii-offset:0x80`).
+    /// Load a built-in charmap by name (`ascii`, `pokemon-gen3-en`, `shift-jis`,
+    /// `capcom-megaman-en`, `breath-of-fire-en`, `tactics-ogre-en`, `metroid-fusion-en`,
+    /// `utf16-le`, or `ascii-offset:<delta>` such as `ascii-offset:-0x20` or `ascii-offset:0x80`).
     pub fn builtin(name: &str) -> Result<Self> {
         let lower = name.trim().to_ascii_lowercase();
         match lower.as_str() {
             "ascii" => Ok(Self::ascii()),
             "pokemon-gen3-en" | "poke-gen3-en" | "gen3-en" => Ok(Self::pokemon_gen3_en()),
             "shift-jis" | "shift_jis" | "sjis" => Ok(Self::shift_jis()),
+            "capcom-megaman-en" | "megaman-en" | "mmz-en" => Ok(Self::capcom_megaman_en()),
+            "breath-of-fire-en" | "bof-en" => Ok(Self::breath_of_fire_en()),
+            "tactics-ogre-en" | "to-en" => Ok(Self::tactics_ogre_en()),
+            "metroid-fusion-en" | "metroid-en" => Ok(Self::metroid_fusion_en()),
+            "utf16-le" | "utf-16le" | "utf16le" => Ok(Self::utf16_le()),
             _ => {
                 if let Some(rest) = lower.strip_prefix("ascii-offset:") {
                     let delta = parse_signed_offset(rest)?;
                     return Ok(Self::ascii_offset(delta, 0x00));
                 }
                 Err(Error::Unsupported(format!(
-                    "unknown built-in charmap {name:?}; expected one of: ascii, pokemon-gen3-en, shift-jis, or ascii-offset:<delta>"
+                    "unknown built-in charmap {name:?}; expected one of: ascii, pokemon-gen3-en, shift-jis, capcom-megaman-en, breath-of-fire-en, tactics-ogre-en, metroid-fusion-en, utf16-le, or ascii-offset:<delta>"
                 )))
             }
         }
@@ -346,6 +379,142 @@ impl Charmap {
         cm
     }
 
+    /// Built-in Capcom Mega Man Zero / Battle Network English charmap.
+    ///
+    /// Verified on retail *Mega Man Zero* (`AZCE`) and *Mega Man Zero 2* (`A62E`):
+    /// `' '=0x00`, `'0'..='9'=0x01..=0x0A`, `'A'..='Z'=0x0B..=0x24`,
+    /// `'a'..='z'=0x25..=0x3E`, `'!'=0xE5`, `'.'=0xE9`, `'\''=0xEB`, `','=0xEC`,
+    /// `'\n'=0xFC`, `{END}=0xFF`.
+    #[must_use]
+    pub fn capcom_megaman_en() -> Self {
+        let mut cm = Self::new(
+            "capcom-megaman-en",
+            "Capcom Mega Man Zero / Battle Network English table (0x00=' ', 0x01='0', 0x0B='A', 0x25='a', 0xFF={END})",
+        );
+        cm.insert(vec![0x00], " ".to_string());
+        for (i, ch) in ('0'..='9').enumerate() {
+            cm.insert(vec![0x01 + i as u8], ch.to_string());
+        }
+        for (i, ch) in ('A'..='Z').enumerate() {
+            cm.insert(vec![0x0B + i as u8], ch.to_string());
+        }
+        for (i, ch) in ('a'..='z').enumerate() {
+            cm.insert(vec![0x25 + i as u8], ch.to_string());
+        }
+        cm.insert(vec![0xE5], "!".to_string());
+        cm.insert(vec![0xE6], "?".to_string());
+        cm.insert(vec![0xE9], ".".to_string());
+        cm.insert(vec![0xEB], "'".to_string());
+        cm.insert(vec![0xEC], ",".to_string());
+        cm.insert(vec![0xFC], "\n".to_string());
+        cm.insert(vec![0xFF], "{END}".to_string());
+        cm
+    }
+
+    /// Built-in Capcom *Breath of Fire* 1/2 English charmap.
+    ///
+    /// Verified on retail *Breath of Fire* (`ABFE`) and *Breath of Fire II* (`AB2E`):
+    /// `{END}=0x00`, `' '=0x02`, `'\n'=0x03`, `'0'..='9'=0x20..=0x29`,
+    /// `'A'..='Z'=0x2A..=0x43`, `'.'=0x45`, `'a'..='z'=0x48..=0x61`, `','=0x63`.
+    #[must_use]
+    pub fn breath_of_fire_en() -> Self {
+        let mut cm = Self::new(
+            "breath-of-fire-en",
+            "Capcom Breath of Fire 1/2 English table (0x02=' ', 0x2A='A', 0x48='a', 0x00={END})",
+        );
+        cm.insert(vec![0x00], "{END}".to_string());
+        cm.insert(vec![0x02], " ".to_string());
+        cm.insert(vec![0x03], "\n".to_string());
+        for (i, ch) in ('0'..='9').enumerate() {
+            cm.insert(vec![0x20 + i as u8], ch.to_string());
+        }
+        for (i, ch) in ('A'..='Z').enumerate() {
+            cm.insert(vec![0x2A + i as u8], ch.to_string());
+        }
+        cm.insert(vec![0x45], ".".to_string());
+        for (i, ch) in ('a'..='z').enumerate() {
+            cm.insert(vec![0x48 + i as u8], ch.to_string());
+        }
+        cm.insert(vec![0x63], ",".to_string());
+        cm
+    }
+
+    /// Built-in *Tactics Ogre: The Knight of Lodis* English charmap.
+    ///
+    /// Verified on retail *Tactics Ogre: The Knight of Lodis* (`ATOE`):
+    /// `'A'..='Z'=0x00..=0x19`, `'a'..='z'=0x1A..=0x33`, `'0'..='9'=0x34..=0x3D`,
+    /// `' '=0x89`, `{END}=0xFF`.
+    #[must_use]
+    pub fn tactics_ogre_en() -> Self {
+        let mut cm = Self::new(
+            "tactics-ogre-en",
+            "Tactics Ogre: The Knight of Lodis English table (0x00='A', 0x1A='a', 0x89=' ', 0xFF={END})",
+        );
+        for (i, ch) in ('A'..='Z').enumerate() {
+            cm.insert(vec![i as u8], ch.to_string());
+        }
+        for (i, ch) in ('a'..='z').enumerate() {
+            cm.insert(vec![0x1A + i as u8], ch.to_string());
+        }
+        for (i, ch) in ('0'..='9').enumerate() {
+            cm.insert(vec![0x34 + i as u8], ch.to_string());
+        }
+        cm.insert(vec![0x89], " ".to_string());
+        cm.insert(vec![0xFF], "{END}".to_string());
+        cm
+    }
+
+    /// Built-in *Metroid Fusion* 16-bit little-endian English charmap.
+    ///
+    /// Verified on retail *Metroid Fusion* (`AMTE`):
+    /// `' '=0x0040`, `'!'=0x0041`, `'\''=0x0047`, `','=0x004C`, `'-'=0x004D`, `'.'=0x004E`,
+    /// `'0'..='9'=0x0050..=0x0059`, `':'=0x005A`, `'?'=0x005F`,
+    /// `'A'..='Z'=0x0081..=0x009A`, `'a'..='z'=0x00C1..=0x00DA`,
+    /// `{PAGE}=0xFD00`, `'\n'=0xFE00`, `{END}=0xFF00`.
+    #[must_use]
+    pub fn metroid_fusion_en() -> Self {
+        let mut cm = Self::new(
+            "metroid-fusion-en",
+            "Metroid Fusion 16-bit LE English table (0x0040=' ', 0x0081='A', 0x00C1='a', 0xFF00={END})",
+        );
+        cm.insert(0x0040u16.to_le_bytes().to_vec(), " ".to_string());
+        cm.insert(0x0041u16.to_le_bytes().to_vec(), "!".to_string());
+        cm.insert(0x0047u16.to_le_bytes().to_vec(), "'".to_string());
+        cm.insert(0x004Cu16.to_le_bytes().to_vec(), ",".to_string());
+        cm.insert(0x004Du16.to_le_bytes().to_vec(), "-".to_string());
+        cm.insert(0x004Eu16.to_le_bytes().to_vec(), ".".to_string());
+        for (i, ch) in ('0'..='9').enumerate() {
+            cm.insert((0x0050u16 + i as u16).to_le_bytes().to_vec(), ch.to_string());
+        }
+        cm.insert(0x005Au16.to_le_bytes().to_vec(), ":".to_string());
+        cm.insert(0x005Fu16.to_le_bytes().to_vec(), "?".to_string());
+        for (i, ch) in ('A'..='Z').enumerate() {
+            cm.insert((0x0081u16 + i as u16).to_le_bytes().to_vec(), ch.to_string());
+        }
+        for (i, ch) in ('a'..='z').enumerate() {
+            cm.insert((0x00C1u16 + i as u16).to_le_bytes().to_vec(), ch.to_string());
+        }
+        cm.insert(0xFD00u16.to_le_bytes().to_vec(), "{PAGE}".to_string());
+        cm.insert(0xFE00u16.to_le_bytes().to_vec(), "\n".to_string());
+        cm.insert(0xFF00u16.to_le_bytes().to_vec(), "{END}".to_string());
+        cm
+    }
+
+    /// Built-in standard UTF-16LE null-terminated Unicode charmap (`0x0000` = `{END}`).
+    ///
+    /// Supports full BMP (and surrogate-pair) UTF-16LE decoding and encoding, as used by
+    /// *Gunstar Super Heroes* (`BHGE`) and other 16-bit localized GBA titles.
+    #[must_use]
+    pub fn utf16_le() -> Self {
+        let mut cm = Self::new(
+            "utf16-le",
+            "Standard UTF-16LE null-terminated Unicode (full BMP decode/encode, 0x0000={END})",
+        );
+        cm.utf16_le = true;
+        cm.insert(vec![0x00, 0x00], "{END}".to_string());
+        cm
+    }
+
     /// Parse a standard fan-translation `.tbl` file (`HEX=TEXT`, multi-byte sequences,
     /// `#` and `//` comments, blank lines, `\n`/`\r`/`\t`/`\\` escapes).
     pub fn parse_tbl(name: impl Into<String>, input: &str) -> Result<Self> {
@@ -414,6 +583,30 @@ impl Charmap {
                 return Some((text.clone(), len, true));
             }
         }
+        if self.utf16_le {
+            if bytes.len() >= 2 {
+                let code = u16::from_le_bytes([bytes[0], bytes[1]]);
+                if code == 0x0000 {
+                    return Some(("{END}".to_string(), 2, true));
+                }
+                if (0xD800..=0xDBFF).contains(&code) && bytes.len() >= 4 {
+                    let low = u16::from_le_bytes([bytes[2], bytes[3]]);
+                    if (0xDC00..=0xDFFF).contains(&low) {
+                        let cp = 0x1_0000
+                            + ((u32::from(code) - 0xD800) << 10)
+                            + (u32::from(low) - 0xDC00);
+                        if let Some(ch) = char::from_u32(cp) {
+                            return Some((ch.to_string(), 4, true));
+                        }
+                    }
+                }
+                if let Some(ch) = char::from_u32(u32::from(code)) {
+                    return Some((ch.to_string(), 2, true));
+                }
+                return Some((format!("<${:02X}{:02X}>", bytes[0], bytes[1]), 2, false));
+            }
+            return Some((format!("<${:02X}>", bytes[0]), 1, false));
+        }
         if self.shift_jis_fallback
             && bytes.len() >= 2
             && is_sjis_lead(bytes[0])
@@ -446,7 +639,11 @@ impl Charmap {
     ///
     /// Supports raw hex escapes of the form `<$XX>` or `<$XXXX>` (any even number of hex digits).
     pub fn encode(&self, text: &str) -> Result<Vec<u8>> {
-        let mut out = Vec::with_capacity(text.len());
+        let mut out = Vec::with_capacity(if self.utf16_le {
+            text.len() * 2
+        } else {
+            text.len()
+        });
         let mut pos = 0usize;
 
         while pos < text.len() {
@@ -484,6 +681,13 @@ impl Charmap {
             if let Some((bytes, consumed)) = matched {
                 out.extend_from_slice(bytes);
                 pos += consumed;
+            } else if self.utf16_le {
+                let ch = rest.chars().next().unwrap_or('\0');
+                let mut units = [0u16; 2];
+                for &u in ch.encode_utf16(&mut units).iter() {
+                    out.extend_from_slice(&u.to_le_bytes());
+                }
+                pos += ch.len_utf8();
             } else {
                 let ch = rest.chars().next().unwrap_or('\0');
                 return Err(Error::Malformed(format!(
@@ -634,5 +838,64 @@ FC02={COLOR:02}
     fn unmapped_char_returns_error() {
         let ascii = Charmap::ascii();
         assert!(ascii.encode("Hello 🌟").is_err());
+    }
+
+    #[test]
+    fn capcom_megaman_en_roundtrip() {
+        let cm = Charmap::builtin("capcom-megaman-en").unwrap();
+        assert_eq!(cm.default_terminator(), Some(&[0xFF][..]));
+        let text = "Thank you,\nZero! 09{END}";
+        let enc = cm.encode(text).unwrap();
+        assert_eq!(enc[0], 0x0B + (b'T' - b'A'));
+        assert_eq!(*enc.last().unwrap(), 0xFF);
+        assert_eq!(cm.decode(&enc), text);
+    }
+
+    #[test]
+    fn breath_of_fire_en_roundtrip() {
+        let cm = Charmap::builtin("breath-of-fire-en").unwrap();
+        assert_eq!(cm.default_terminator(), Some(&[0x00][..]));
+        let text = "Dark Dragon King,\nvowed 123.{END}";
+        let enc = cm.encode(text).unwrap();
+        assert_eq!(enc[0], 0x2A + (b'D' - b'A'));
+        assert_eq!(enc[1], 0x48); // 'a'
+        assert_eq!(*enc.last().unwrap(), 0x00);
+        assert_eq!(cm.decode(&enc), text);
+    }
+
+    #[test]
+    fn tactics_ogre_en_roundtrip() {
+        let cm = Charmap::builtin("tactics-ogre-en").unwrap();
+        assert_eq!(cm.default_terminator(), Some(&[0xFF][..]));
+        let text = "Alphonse Knight 42{END}";
+        let enc = cm.encode(text).unwrap();
+        assert_eq!(enc[0], 0x00); // 'A'
+        assert_eq!(enc[8], 0x89); // ' '
+        assert_eq!(*enc.last().unwrap(), 0xFF);
+        assert_eq!(cm.decode(&enc), text);
+    }
+
+    #[test]
+    fn metroid_fusion_en_roundtrip() {
+        let cm = Charmap::builtin("metroid-fusion-en").unwrap();
+        assert_eq!(cm.default_terminator(), Some(&[0x00, 0xFF][..]));
+        let text = "Samus, Sector 1!\nStop.{PAGE}{END}";
+        let enc = cm.encode(text).unwrap();
+        assert_eq!(&enc[0..2], &0x0093u16.to_le_bytes()); // 'S'
+        assert_eq!(&enc[enc.len() - 2..], &0xFF00u16.to_le_bytes());
+        assert_eq!(cm.decode(&enc), text);
+    }
+
+    #[test]
+    fn utf16_le_full_bmp_roundtrip() {
+        let cm = Charmap::builtin("utf16-le").unwrap();
+        assert_eq!(cm.default_terminator(), Some(&[0x00, 0x00][..]));
+        let text = "Gunstar Super Heroes! 日本語 Café ★{END}";
+        let enc = cm.encode(text).unwrap();
+        // 'G' = 0x0047 LE
+        assert_eq!(&enc[0..2], &[0x47, 0x00]);
+        // {END} = 0x0000
+        assert_eq!(&enc[enc.len() - 2..], &[0x00, 0x00]);
+        assert_eq!(cm.decode(&enc), text);
     }
 }

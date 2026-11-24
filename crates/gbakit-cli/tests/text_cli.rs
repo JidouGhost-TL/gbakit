@@ -103,6 +103,11 @@ fn cli_text_tables_lists_builtins() {
     assert!(names.contains(&"ascii"));
     assert!(names.contains(&"pokemon-gen3-en"));
     assert!(names.contains(&"shift-jis"));
+    assert!(names.contains(&"capcom-megaman-en"));
+    assert!(names.contains(&"breath-of-fire-en"));
+    assert!(names.contains(&"tactics-ogre-en"));
+    assert!(names.contains(&"metroid-fusion-en"));
+    assert!(names.contains(&"utf16-le"));
 
     let human = run(&["text", "tables"]);
     assert!(human.status.success());
@@ -433,4 +438,252 @@ fn cli_text_font_dump_and_replace_roundtrip() {
     assert_eq!(rep1["bytes_written"], 32);
     let replaced1 = fs::read(&out1_path).unwrap();
     assert_eq!(&replaced1[font_off..font_off + 32], &font_bytes[..32]);
+}
+
+#[test]
+fn cli_text_lz77_extract_replace_and_relocate() {
+    let dir = TempDir::new("lz77_text");
+    let mut rom = vec![0u8; ROM_SIZE];
+    rom[FREE_START..].fill(0xFF);
+
+    let orig = b"WELCOME TO GBAKIT LZ77 TEXT!\0";
+    let comp = gbakit::compress::encode_lz77(orig).unwrap();
+    let entry_off = 0x1000usize;
+    rom[entry_off..entry_off + comp.len()].copy_from_slice(&comp);
+
+    let ptr_off = 0x200usize;
+    let bus = 0x0800_0000u32 + entry_off as u32;
+    rom[ptr_off..ptr_off + 4].copy_from_slice(&bus.to_le_bytes());
+
+    let rom_path = dir.path.join("lz77.gba");
+    fs::write(&rom_path, &rom).unwrap();
+
+    let ext = run_ok_json(&[
+        "text",
+        "extract",
+        p(&rom_path),
+        "--offset",
+        "0x1000",
+        "--lz77",
+        "--json",
+    ]);
+    assert_eq!(ext["lz77"], true);
+    assert_eq!(ext["text"], "WELCOME TO GBAKIT LZ77 TEXT!");
+    assert_eq!(ext["compressed_bytes_len"], comp.len());
+
+    let reloc_path = dir.path.join("lz77_reloc.gba");
+    let long_str = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz!@#$%^&*()-_=+";
+    let rep = run_ok_json(&[
+        "text",
+        "replace",
+        p(&rom_path),
+        "--offset",
+        "0x1000",
+        "--text",
+        long_str,
+        "-o",
+        p(&reloc_path),
+        "--lz77",
+        "--allow-relocate",
+        "--json",
+    ]);
+    assert_eq!(rep["lz77"], true);
+    assert_eq!(rep["mode"], "relocated");
+    assert_eq!(rep["patched_pointers"], 1);
+    let new_off = parse_hex(&rep["written_offset"]);
+    assert!(new_off >= FREE_START);
+
+    let new_off_str = format!("0x{new_off:X}");
+    let verify = run_ok_json(&[
+        "text",
+        "extract",
+        p(&reloc_path),
+        "--offset",
+        &new_off_str,
+        "--lz77",
+        "--json",
+    ]);
+    assert_eq!(verify["text"], long_str);
+}
+
+#[test]
+fn cli_text_huffman_extract_and_replace() {
+    let dir = TempDir::new("huffman_cli");
+    let mut rom = vec![0u8; ROM_SIZE];
+    rom[FREE_START..].fill(0xFF);
+
+    let tree_off = 0x200usize;
+    let nodes: [(u16, u16); 9] = [
+        (0x0041, 0xFFFF), // 'A'
+        (0x0042, 0xFFFF), // 'B'
+        (0x0043, 0xFFFF), // 'C'
+        (0x0000, 0xFFFF), // END
+        (0x0020, 0xFFFF), // ' '
+        (0, 1),
+        (3, 4),
+        (2, 6),
+        (5, 7),
+    ];
+    for (i, &(l, r)) in nodes.iter().enumerate() {
+        let off = tree_off + i * 4;
+        rom[off..off + 2].copy_from_slice(&l.to_le_bytes());
+        rom[off + 2..off + 4].copy_from_slice(&r.to_le_bytes());
+    }
+    let root_off = tree_off + 8 * 4;
+    let tree = gbakit::text::HuffmanTree::from_rom(&rom, tree_off, root_off).unwrap();
+    let encoded = tree.encode(b"AB C").unwrap();
+
+    let entry_off = 0x1000usize;
+    rom[entry_off..entry_off + encoded.len()].copy_from_slice(&encoded);
+    let ptr_off = 0x300usize;
+    let bus = 0x0800_0000u32 + entry_off as u32;
+    rom[ptr_off..ptr_off + 4].copy_from_slice(&bus.to_le_bytes());
+
+    let rom_path = dir.path.join("fe.gba");
+    fs::write(&rom_path, &rom).unwrap();
+    let root_str = format!("0x{root_off:X}");
+
+    let ext = run_ok_json(&[
+        "text",
+        "huffman-extract",
+        p(&rom_path),
+        "--tree",
+        "0x200",
+        "--root",
+        &root_str,
+        "--offset",
+        "0x1000",
+        "--json",
+    ]);
+    assert_eq!(ext["text"], "AB C");
+    assert_eq!(ext["terminated"], true);
+
+    let reloc_path = dir.path.join("fe_reloc.gba");
+    let rep = run_ok_json(&[
+        "text",
+        "huffman-replace",
+        p(&rom_path),
+        "--tree",
+        "0x200",
+        "--root",
+        &root_str,
+        "--offset",
+        "0x1000",
+        "--text",
+        "CBA CBA CBA CBA",
+        "-o",
+        p(&reloc_path),
+        "--allow-relocate",
+        "--json",
+    ]);
+    assert_eq!(rep["mode"], "relocated");
+    assert_eq!(rep["patched_pointers"], 1);
+    let new_off = parse_hex(&rep["written_offset"]);
+    let new_off_str = format!("0x{new_off:X}");
+
+    let verify = run_ok_json(&[
+        "text",
+        "huffman-extract",
+        p(&reloc_path),
+        "--tree",
+        "0x200",
+        "--root",
+        &root_str,
+        "--offset",
+        &new_off_str,
+        "--json",
+    ]);
+    assert_eq!(verify["text"], "CBA CBA CBA CBA");
+}
+
+#[test]
+fn cli_text_font_widths_read_and_update_from_image() {
+    let dir = TempDir::new("font_widths_cli");
+    let mut rom = vec![0u8; 0x1000];
+    let font_off = 0x100usize;
+    let widths_off = 0x200usize;
+    let mut glyphs = [0u8; 32];
+    glyphs[8..16].fill(0xC0); // 2px wide
+    glyphs[16..24].fill(0xF8); // 5px wide
+    glyphs[24..32].fill(0xFF); // 8px wide
+    rom[font_off..font_off + 32].copy_from_slice(&glyphs);
+    rom[widths_off..widths_off + 4].copy_from_slice(&[1, 2, 3, 4]);
+
+    let rom_path = dir.path.join("vwf.gba");
+    fs::write(&rom_path, &rom).unwrap();
+
+    // Read existing widths
+    let read_json = run_ok_json(&[
+        "text",
+        "font-widths",
+        p(&rom_path),
+        "--offset",
+        "0x200",
+        "--count",
+        "4",
+        "--json",
+    ]);
+    assert_eq!(read_json["widths"], serde_json::json!([1, 2, 3, 4]));
+
+    // Dump font sheet to PNG
+    let png_path = dir.path.join("vwf.png");
+    let dump = run(&[
+        "text",
+        "font-dump",
+        p(&rom_path),
+        "--offset",
+        "0x100",
+        "--count",
+        "4",
+        "--width",
+        "8",
+        "--height",
+        "8",
+        "--bpp",
+        "1",
+        "--cols",
+        "4",
+        "-o",
+        p(&png_path),
+    ]);
+    assert!(dump.status.success());
+
+    // Compute and write updated widths from sheet
+    let out_path = dir.path.join("vwf_out.gba");
+    let upd_json = run_ok_json(&[
+        "text",
+        "font-widths",
+        p(&rom_path),
+        "--offset",
+        "0x200",
+        "--count",
+        "4",
+        "--from-image",
+        p(&png_path),
+        "--width",
+        "8",
+        "--height",
+        "8",
+        "--cols",
+        "4",
+        "--pad",
+        "1",
+        "-o",
+        p(&out_path),
+        "--json",
+    ]);
+    assert_eq!(upd_json["widths"], serde_json::json!([0, 3, 6, 9]));
+    assert_eq!(upd_json["bytes_changed"], 4);
+
+    let verify_json = run_ok_json(&[
+        "text",
+        "font-widths",
+        p(&out_path),
+        "--offset",
+        "0x200",
+        "--count",
+        "4",
+        "--json",
+    ]);
+    assert_eq!(verify_json["widths"], serde_json::json!([0, 3, 6, 9]));
 }
