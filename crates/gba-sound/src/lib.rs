@@ -12,9 +12,11 @@ pub mod musyx_pool;
 pub mod paragon5_pool;
 pub mod rare_pool;
 pub mod rd1_pool;
+pub mod replace;
 pub mod sf2;
 pub mod southpaw_pool;
 
+pub use cosmigo_sonix;
 pub use ead_sma;
 pub use engine_sw_audio;
 pub use gax;
@@ -46,6 +48,7 @@ use formatkit_core::{Error, Result};
 
 pub use ::m4a::WaveDataHeader;
 pub use m4a::*;
+pub use replace::*;
 pub use sf2::*;
 
 /// Detected sound engine across standard GBA drivers.
@@ -75,6 +78,8 @@ pub enum DetectedSoundEngine {
     EadSma(ead_sma::EadSmaVersion),
     /// Engine Software / Bob Koon EIRE v2.0 DirectSound Engine
     EngineSw(engine_sw_audio::EngineSwVersion),
+    /// Cosmigo Sonix Sound System (v1.09c / v1.096 + GSM / v1.16 + GSM)
+    CosmigoSonix(cosmigo_sonix::SonixVersion),
     /// Unrecognized or custom direct sound driver
     Custom,
 }
@@ -91,6 +96,8 @@ pub fn detect_sound_engine(bytes: &[u8]) -> DetectedSoundEngine {
         DetectedSoundEngine::EadSma(ead_ver)
     } else if let Some(esw_ver) = engine_sw_audio::EngineSwVersion::detect_from_bytes(bytes) {
         DetectedSoundEngine::EngineSw(esw_ver)
+    } else if let Some(sonix_ver) = cosmigo_sonix::SonixVersion::detect_from_bytes(bytes) {
+        DetectedSoundEngine::CosmigoSonix(sonix_ver)
     } else if detect_krawall_engine(bytes) {
         DetectedSoundEngine::Krawall(krawall::KrawallVersion::detect_from_bytes(bytes))
     } else if detect_rare_engine(bytes) {

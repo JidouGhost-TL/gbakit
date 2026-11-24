@@ -41,6 +41,7 @@ use gbakit::sound::sf2::{compile_rom_soundfont, validate_soundfont};
 
 mod ereader;
 mod link;
+mod modding;
 mod sensor;
 mod video;
 
@@ -88,11 +89,13 @@ fn usage() {
            gbakit audio scan   <rom.gba> [--json]\n  \
            gbakit audio export <rom.gba> [-o <out_dir>] [--song <id>]\n  \
            gbakit audio soundfont <rom.gba> [-o <out.sf2>] [--json]\n  \
+           gbakit audio replace <rom.gba> --offset <hex|dec> --wav <in.wav> -o <out.gba> [--codec pcm8|dpcm|pcm8-unsigned|ima-adpcm|ima-adpcm-arm] [--rate <hz>] [--loop-start <n>] [--raw-capacity <bytes>] [--allow-relocate] [--json]\n  \
            gbakit link dissect <capture.json> [--json] [--rfu] [--joybus]\n  \
            gbakit sensor list [--json]\n  \
            gbakit sensor test <rom.gba> [--solar <0-10>] [--tilt <-90..90>] [--gyro <rpm>] [--json]\n  \
            gbakit gfx rip     <rom.gba> [-o <out_dir>] [--palettes] [--tilesets] [--tilemaps] [--sprites] [--json]\n  \
            gbakit gfx tile4   <file> --offset <hex> --palette <hex> -o <out.ppm>\n  \
+           gbakit gfx replace <rom.gba> --offset <hex|dec> --image <in.png|ppm> -o <out.gba> [--bpp 4|8] [--palette-offset <n>] [--write-palette] [--compression auto|raw|lz77-vram|lz77-wram|rle|huff4|huff8] [--capacity <bytes>] [--allow-relocate] [--pad-byte <n>] [--json]\n  \
            gbakit ereader decode     <strip.raw> -o <out.bin> [--decompress]\n  \
            gbakit ereader encode     <in.bin> -o <out.raw> [--short|--long]\n  \
            gbakit ereader render     <strip.raw> -o <out.bmp|pbm|pgm> [--dpi 300|600|1200]\n  \
@@ -712,6 +715,16 @@ fn cmd_sound_m4a(rom_path: &Path, offset_str: &str) -> Result<(), String> {
     Ok(())
 }
 
+/// Human-readable label and stable identifier for each Cosmigo Sonix release.
+fn sonix_version_labels(ver: gbakit::sound::cosmigo_sonix::SonixVersion) -> (&'static str, &'static str) {
+    use gbakit::sound::cosmigo_sonix::SonixVersion;
+    match ver {
+        SonixVersion::V109c => ("Cosmigo Sonix Sound System v1.09c (V109c)", "V109c"),
+        SonixVersion::V1096Gsm => ("Cosmigo Sonix Sound System v1.096 + GSM (V1096Gsm)", "V1096Gsm"),
+        SonixVersion::V116Gsm => ("Cosmigo Sonix Sound System v1.16 + GSM (V116Gsm)", "V116Gsm"),
+    }
+}
+
 fn cmd_audio_scan(rom_path: &Path, as_json: bool) -> Result<(), String> {
     let bytes = fs::read(rom_path).map_err(|e| format!("read {}: {e}", rom_path.display()))?;
     let detected = detect_sound_engine(&bytes);
@@ -1167,6 +1180,30 @@ fn cmd_audio_scan(rom_path: &Path, as_json: bool) -> Result<(), String> {
             }
             Ok(())
         }
+        DetectedSoundEngine::CosmigoSonix(ver) => {
+            let (ver_str, sonix_ver_id) = sonix_version_labels(ver);
+            if as_json {
+                let payload = serde_json::json!({
+                    "detected": true,
+                    "engine": "cosmigo_sonix",
+                    "family": "cosmigo_sonix",
+                    "version": ver_str,
+                    "sonix_version": sonix_ver_id,
+                    "has_gsm": ver.has_gsm(),
+                    "sample_format": "Unsigned 8-bit PCM (DirectSound DMA)",
+                    "rom_path": rom_path.file_name().map(|n| n.to_string_lossy().to_string()).unwrap_or_default(),
+                });
+                println!("{}", serde_json::to_string_pretty(&payload).map_err(|e| e.to_string())?);
+            } else {
+                println!("Sound Engine Scan: {}", rom_path.display());
+                println!("  Status:                  Detected (Cosmigo Sonix Sound System)");
+                println!("  Family:                  cosmigo_sonix");
+                println!("  Version:                 {}", ver_str);
+                println!("  GSM Voice Codec:         {}", if ver.has_gsm() { "yes" } else { "no" });
+                println!("  Sample Format:           Unsigned 8-bit PCM (DirectSound DMA)");
+            }
+            Ok(())
+        }
         DetectedSoundEngine::Custom => {
             // Check soundpool fallbacks so `audio scan` stays consistent with `audio export`/`soundfont`
             let gax_samples = scan_gax_soundpool(&bytes);
@@ -1537,6 +1574,11 @@ fn cmd_audio_export(
         )),
         DetectedSoundEngine::EngineSw(ver) => Err(format!(
             "audio export is not yet supported for Engine Software EIRE ({ver:?}) in {}",
+            rom_path.display()
+        )),
+        DetectedSoundEngine::CosmigoSonix(ver) => Err(format!(
+            "audio export is not yet supported for {} in {}",
+            sonix_version_labels(ver).0,
             rom_path.display()
         )),
         DetectedSoundEngine::Custom => {
@@ -3236,6 +3278,7 @@ fn main() -> ExitCode {
                 (None, _) => Err("missing required <rom.gba> for `audio export`".into()),
             }
         }
+        "audio" if args.len() >= 3 && args[1] == "replace" => modding::cmd_audio_replace(&args[2..]),
         "audio" if args.len() >= 3 && args[1] == "soundfont" => {
             let as_json = args[2..].iter().any(|a| a == "--json");
             let file_arg = parse_positional_arg(&args[2..], &[&["-o", "--output"]]);
@@ -3246,7 +3289,7 @@ fn main() -> ExitCode {
             }
         }
         "audio" => {
-            Err("usage: `gbakit audio scan <rom.gba> [--json]`, `gbakit audio export <rom.gba> [-o <out_dir>] [--song <id>]`, or `gbakit audio soundfont <rom.gba> [-o <out.sf2>] [--json]`".into())
+            Err("usage: `gbakit audio scan <rom.gba> [--json]`, `gbakit audio export <rom.gba> [-o <out_dir>] [--song <id>]`, `gbakit audio soundfont <rom.gba> [-o <out.sf2>] [--json]`, or `gbakit audio replace <rom.gba> --offset <n> --wav <in.wav> -o <out.gba> [...]`".into())
         }
         "link" if args.len() >= 3 && args[1] == "dissect" => {
             let as_json = args[2..].iter().any(|a| a == "--json");
@@ -3283,6 +3326,7 @@ fn main() -> ExitCode {
         "sensor" => {
             Err("usage: `gbakit sensor list [--json]` or `gbakit sensor test <rom.gba> [--solar <0-10>] [--tilt <-90..90>] [--gyro <rpm>] [--json]`".into())
         }
+        "gfx" if args.len() >= 3 && args[1] == "replace" => modding::cmd_gfx_replace(&args[2..]),
         "gfx" if args.len() >= 3 && args[1] == "rip" => {
             let as_json = args[2..].iter().any(|a| a == "--json");
             let palettes = args[2..].iter().any(|a| a == "--palettes");

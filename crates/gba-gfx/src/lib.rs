@@ -6,6 +6,7 @@
 mod font;
 mod oam;
 mod render;
+pub mod replace;
 pub mod ripper;
 
 pub use font::{decode_glyph_1bpp, decode_glyph_2bpp};
@@ -15,6 +16,13 @@ pub use render::{
     decode_mode3_image, decode_mode3_rgba, decode_mode4_image, decode_mode4_rgba,
     decode_mode5_image, decode_mode5_rgba, render_bg_text_4bpp_rgba, screen_block_entry_index,
     GBA_MODE5_HEIGHT, GBA_MODE5_WIDTH, GBA_SCREEN_HEIGHT, GBA_SCREEN_WIDTH,
+};
+pub use replace::{
+    compress_gfx, decode_image_rgba, decode_ppm_p6_rgba, detect_stream_at, encode_image_to_tiles,
+    encode_palette_bgr555, find_free_space, patch_rom_pointers, replace_palette_in_rom,
+    replace_tileset_bytes_in_rom, replace_tileset_in_rom, write_asset_in_rom, DetectedStream,
+    EncodedTileset, GfxCompression, PaletteMode, ReplaceOptions, ReplaceReport, TileBpp,
+    DEFAULT_FREE_SPACE_ALIGN, DEFAULT_MAX_IMAGE_PIXELS,
 };
 pub use ripper::{
     generate_tmx, generate_tsx, render_palette_swatch_rgba, render_sprite_rgba,

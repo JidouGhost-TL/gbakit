@@ -10,8 +10,8 @@ A clean-room Game Boy Advance (GBA) format toolkit in Rust built on **[Formatkit
 | --- | --- |
 | `gba-rom` | Checked 192-byte AGB headers, complement checksum, `0x08000000` bus mapping, SDK backup tags, ROM pointer-table scanner, Multiboot (`0x02000000`) helpers |
 | `gba-compress` | Complete GBA BIOS codecs: LZ77 (`0x10` WRAM/VRAM), LZ11, RLE (`0x30`), Huffman 4/8-bit decode & encode (`0x24`/`0x28`), `BitUnPack` (`SWI 0x10`), `Diff8`/`Diff16` (`0x81`/`0x82`), plus studio codecs (Hudson LZ, Konami Dict, Shin'en Mode 7) |
-| `gba-gfx` | `BGR555` palettes, allocation-free 4bpp/8bpp tiles, **4bpp/8bpp graphics ripper** (palettes, tilesets, tilemaps, sprites), OAM sprites & affine matrices (`ObjAttr`/`ObjAffine`), text BG compositor, Mode 3/4 framebuffers, 1bpp/2bpp font glyphs |
-| `gba-sound` | Multi-engine GBA audio scanner, exporter (MIDI / MOD / S3M / WAV16), and SoundFont 2 (`.sf2`) compiler across **13 GBA sound engines**, delegating byte-exact ARM7TDMI DSP/mixing to standalone zero-dep `#![no_std]` crates |
+| `gba-gfx` | `BGR555` palettes, allocation-free 4bpp/8bpp tiles, **4bpp/8bpp graphics ripper & write-back** (PNG/PPM → 4bpp/8bpp tiles + BGR555 palette + BIOS recompression + in-place/relocated ROM patching), OAM sprites & affine matrices (`ObjAttr`/`ObjAffine`), text BG compositor, Mode 3/4 framebuffers, 1bpp/2bpp font glyphs |
+| `gba-sound` | Multi-engine GBA audio scanner, exporter (MIDI / MOD / S3M / WAV16), SoundFont 2 (`.sf2`) compiler across **13 GBA sound engines**, and **WAV16 → GBA ROM sample write-back** (PCM8, Pokémon Gen 3 DPCM, IMA ADPCM4 + in-place/relocated ROM patching), delegating byte-exact ARM7TDMI DSP/mixing to standalone zero-dep `#![no_std]` crates |
 | `gba-save` | Declarative GBA battery-save schema engine, `SaveGeometry` detection & padding trimming, loose save probing, 25+ checksum algorithms (`sum8`/`16`/`32`, word-sums, `xor8`/`16`/`32`, `sum_xor16`, `rol32_add`, `Crc16` incl. XMODEM), EEPROM `rev8` block reversal, verification, repair, and field decode/edit |
 | `gba-saves` | Embedded registry covering **814 / 814** saving families (**1,543** saving ROMs = 100% corpus coverage) |
 | `gba-patches` | Embedded registry of **82** clean-room verified `.ips` debug-menu micro-patches, **193** 4-way counterfactually verified retail button-combo cheats, and unified IPS / UPS / BPS patcher |
@@ -59,6 +59,10 @@ gbakit audio export mygame.gba -o out_audio/ [--song <id>]
 
 # Compile a SoundFont 2 (.sf2) bank directly from a GBA ROM
 gbakit audio soundfont mygame.gba -o mygame.sf2 [--json]
+
+# Replace a GBA audio sample from a 16-bit WAV (PCM8, Gen 3 DPCM, or IMA ADPCM4)
+gbakit audio replace mygame.gba --offset 0x45678 --wav new.wav -o modded.gba \
+  [--codec pcm8|dpcm|pcm8-unsigned|ima-adpcm|ima-adpcm-arm] [--allow-relocate] [--json]
 ```
 
 ### Nintendo e-Reader DotCode & `vpk0` (`gbakit ereader`)
@@ -88,11 +92,15 @@ gbakit video scan myvideo.gba [--json]
 gbakit video export myvideo.gba -o out_video/ [--max-frames <n>]
 ```
 
-### PPU Graphics Ripper (`gbakit gfx`)
+### PPU Graphics Ripper & Modding Write-Back (`gbakit gfx`)
 
 ```sh
 # Rip palettes, 4bpp/8bpp tilesets, tilemaps, and sprites from a GBA ROM
 gbakit gfx rip mygame.gba -o out_gfx/ [--palettes] [--tilesets] [--tilemaps] [--sprites] [--json]
+
+# Replace a 4bpp/8bpp tileset (and optional palette) from PNG/PPM with BIOS recompression & pointer patching
+gbakit gfx replace mygame.gba --offset 0x12340 --image sprite.png -o modded.gba \
+  [--bpp 4|8] [--palette-offset 0x10000] [--write-palette] [--allow-relocate] [--json]
 ```
 
 ### Battery Save Identification, Trimming & Repair (`gbakit save`)

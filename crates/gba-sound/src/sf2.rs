@@ -567,7 +567,9 @@ pub fn compile_rom_soundfont(rom: &[u8], title_override: Option<&str>) -> Result
         DetectedSoundEngine::Paragon5(_) => crate::paragon5_pool::compile_paragon5_soundfont(rom, title_override),
         DetectedSoundEngine::Rd1(_) => crate::rd1_pool::compile_rd1_soundfont(rom, title_override),
         DetectedSoundEngine::Southpaw(_) => crate::southpaw_pool::compile_southpaw_soundfont(rom, title_override),
-        DetectedSoundEngine::EadSma(_) | DetectedSoundEngine::EngineSw(_) => {
+        DetectedSoundEngine::EadSma(_)
+        | DetectedSoundEngine::EngineSw(_)
+        | DetectedSoundEngine::CosmigoSonix(_) => {
             Err(Error::InvalidField {
                 what: "soundfont_not_yet_supported_for_engine",
                 value: 0,
