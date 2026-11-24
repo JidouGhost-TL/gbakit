@@ -1,0 +1,350 @@
+{
+  "id": "bmve",
+  "game_code": "BMVE",
+  "title": "Mario Pinball Land (USA, Australia)",
+  "media": "eeprom512",
+  "size_bytes": 512,
+  "eeprom_rev8": false,
+  "magic_signatures": [
+    {
+      "offset": 0,
+      "bytes_hex": "5fe64d6f4d50f605",
+      "ascii": "_.MoMP..",
+      "verified_in_code": true,
+      "verified_in_sav": true,
+      "function_addrs": [
+        "0x08029654",
+        "0x080296c0"
+      ],
+      "bytes": [
+        95,
+        230,
+        77,
+        111,
+        77,
+        80,
+        246,
+        5
+      ]
+    }
+  ],
+  "checksums": [
+    {
+      "name": "region_b_checksum",
+      "algorithm": "sum32_le",
+      "formula_detail": "sum of 35 little-endian u32 words at offsets 0x08-0x93, plus two externally-sourced u32 words read from *_DAT_08029748 and _DAT_08029748[1] (not present in this static capture), stored as the 36th word at offset 0x94. Computed and written in-place immediately before the 144-byte flush.",
+      "stored_offset": 148,
+      "stored_size": 4,
+      "covered_start": 8,
+      "covered_end": 147,
+      "function_addrs": [
+        "0x080296fc"
+      ],
+      "verified_on_samples": [
+        {
+          "file": "saves/cap-00-future-0.sav",
+          "stored_hex": "00000000",
+          "computed_hex": "84b85644",
+          "match": false
+        }
+      ],
+      "confidence": "CONFIRMED_STATIC"
+    },
+    {
+      "name": "region_c_checksum",
+      "algorithm": "sum32_le",
+      "formula_detail": "sum of 87 little-endian u32 words at offsets 0x98-0x1F3, plus two externally-sourced u32 words read from *_DAT_0802979c and _DAT_0802979c[1] (not present in this static capture), stored as the 88th word at offset 0x1F4. Computed and written in-place immediately before the 352-byte flush.",
+      "stored_offset": 500,
+      "stored_size": 4,
+      "covered_start": 152,
+      "covered_end": 499,
+      "function_addrs": [
+        "0x0802974c"
+      ],
+      "verified_on_samples": [
+        {
+          "file": "saves/cap-00-future-0.sav",
+          "stored_hex": "a9d969c7",
+          "computed_hex": "8bd457e2",
+          "match": false
+        }
+      ],
+      "confidence": "CONFIRMED_STATIC"
+    }
+  ],
+  "fields": [
+    {
+      "name": "magic_word0",
+      "offset": 0,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": [
+        "0x080296c0"
+      ],
+      "readers": [
+        "0x08029654"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": "0x6f4de65f"
+      },
+      "update_mechanism": "Written once from a ROM constant during header format/init (FUN_080296c0); never otherwise mutated in-trace.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "decompiled.c:2604-2624 (write), decompiled.c:2555-2581 (read/compare)"
+    },
+    {
+      "name": "magic_word1",
+      "offset": 4,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": [
+        "0x080296c0"
+      ],
+      "readers": [
+        "0x08029654"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": "0x05f6504d"
+      },
+      "update_mechanism": "Written once from a ROM constant during header format/init; contains ASCII \"MoMP\" straddling its low 2 bytes and magic_word0's high 2 bytes.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "decompiled.c:2604-2624 (write), decompiled.c:2555-2581 (read/compare)"
+    },
+    {
+      "name": "region_b_header_counter",
+      "offset": 8,
+      "size": 4,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [
+        "0x080296fc"
+      ],
+      "readers": [],
+      "observed_values": {
+        "cap-00-future-0.sav": "0x19000000 (bytes 00 00 00 19)"
+      },
+      "update_mechanism": "Part of the 35-word summed block; no traced code reads/writes this specific sub-offset in isolation.",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Byte-pattern inspection of saves/hexdump_and_diffs.txt only"
+    },
+    {
+      "name": "region_b_sentinel_value",
+      "offset": 12,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": [
+        "0x080296fc"
+      ],
+      "readers": [],
+      "observed_values": {
+        "cap-00-future-0.sav": "0x00989680"
+      },
+      "update_mechanism": "Part of the 35-word summed block; round decimal value (10,000,000) suggests a score ceiling or sentinel, not code-confirmed.",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Byte-pattern inspection only; 0x00989680 == 10000000 decimal"
+    },
+    {
+      "name": "score_record_EDA",
+      "offset": 16,
+      "size": 16,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [
+        "0x080296fc"
+      ],
+      "readers": [],
+      "observed_values": {
+        "tag": "EDA",
+        "counter": "0x14",
+        "value_u24_le": "0x00127a"
+      },
+      "update_mechanism": "16-byte repeating record stride identified structurally; no traced code manipulates sub-fields.",
+      "confidence": "HYPOTHESIS",
+      "evidence": "saves/hexdump_and_diffs.txt offsets 0x10-0x1F"
+    },
+    {
+      "name": "score_record_PMC",
+      "offset": 32,
+      "size": 16,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [
+        "0x080296fc"
+      ],
+      "readers": [],
+      "observed_values": {
+        "tag": "PMC",
+        "counter": "0x0f",
+        "value_u24_le": "0x808d5b"
+      },
+      "update_mechanism": "16-byte repeating record stride identified structurally; no traced code manipulates sub-fields.",
+      "confidence": "HYPOTHESIS",
+      "evidence": "saves/hexdump_and_diffs.txt offsets 0x20-0x2F"
+    },
+    {
+      "name": "score_record_VEK",
+      "offset": 48,
+      "size": 16,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [
+        "0x080296fc"
+      ],
+      "readers": [],
+      "observed_values": {
+        "tag": "VEK",
+        "counter": "0x0a",
+        "value_u24_le": "0x00093d"
+      },
+      "update_mechanism": "16-byte repeating record stride identified structurally; no traced code manipulates sub-fields.",
+      "confidence": "HYPOTHESIS",
+      "evidence": "saves/hexdump_and_diffs.txt offsets 0x30-0x3F"
+    },
+    {
+      "name": "score_record_IAC",
+      "offset": 64,
+      "size": 16,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [
+        "0x080296fc"
+      ],
+      "readers": [],
+      "observed_values": {
+        "tag": "IAC",
+        "counter": "0x05",
+        "value_u24_le": "0x80841e"
+      },
+      "update_mechanism": "16-byte repeating record stride identified structurally; no traced code manipulates sub-fields.",
+      "confidence": "HYPOTHESIS",
+      "evidence": "saves/hexdump_and_diffs.txt offsets 0x40-0x4F"
+    },
+    {
+      "name": "secondary_tag_value_table",
+      "offset": 80,
+      "size": 64,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [
+        "0x080296fc"
+      ],
+      "readers": [],
+      "observed_values": {
+        "tags": [
+          "AAK",
+          "AAK",
+          "IAC",
+          "EDA",
+          "PMC",
+          "VEK"
+        ],
+        "duplicated_value": "0x00034bbf"
+      },
+      "update_mechanism": "Structural only; possible cached most-recent-score-per-slot table, all entries sharing one value in this single-sample capture.",
+      "confidence": "HYPOTHESIS",
+      "evidence": "saves/hexdump_and_diffs.txt offsets 0x50-0x8F"
+    },
+    {
+      "name": "region_b_unknown_tail_word",
+      "offset": 144,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": [
+        "0x080296fc"
+      ],
+      "readers": [],
+      "observed_values": {
+        "cap-00-future-0.sav": "0xf77f49fd"
+      },
+      "update_mechanism": "Last data word before the region B checksum word; no structural or code evidence of meaning.",
+      "confidence": "UNKNOWN",
+      "evidence": "saves/hexdump_and_diffs.txt offset 0x90"
+    },
+    {
+      "name": "region_b_checksum_word",
+      "offset": 148,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": [
+        "0x080296fc"
+      ],
+      "readers": [],
+      "observed_values": {
+        "cap-00-future-0.sav": "0x00000000"
+      },
+      "update_mechanism": "sum32 of 35 preceding words + 2 external RAM words, computed and stored by FUN_080296fc immediately before the 144-byte flush. No in-trace reader/verifier.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "decompiled.c:2631-2662; stored value anomalously 0 in this sample, see SAVE-FORMAT-REPORT.md Section 4.2"
+    },
+    {
+      "name": "region_c_payload_bulk",
+      "offset": 152,
+      "size": 344,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [
+        "0x0802974c"
+      ],
+      "readers": [],
+      "observed_values": {
+        "cap-00-future-0.sav": "almost entirely 0xDB fill (default/unwritten) except offset 0x1F0-0x1F3"
+      },
+      "update_mechanism": "Part of the 87-word summed block; internal field layout unresolved, mostly default fill in this sample.",
+      "confidence": "UNKNOWN",
+      "evidence": "saves/hexdump_and_diffs.txt offsets 0x98-0x1EF"
+    },
+    {
+      "name": "region_c_unknown_tail_word",
+      "offset": 496,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": [
+        "0x0802974c"
+      ],
+      "readers": [],
+      "observed_values": {
+        "cap-00-future-0.sav": "0xaff87c50"
+      },
+      "update_mechanism": "Last data word before the region C checksum word; no structural or code evidence of meaning.",
+      "confidence": "UNKNOWN",
+      "evidence": "saves/hexdump_and_diffs.txt offset 0x1F0"
+    },
+    {
+      "name": "region_c_checksum_word",
+      "offset": 500,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": [
+        "0x0802974c"
+      ],
+      "readers": [],
+      "observed_values": {
+        "cap-00-future-0.sav": "0xa9d969c7"
+      },
+      "update_mechanism": "sum32 of 87 preceding words + 2 external RAM words, computed and stored by FUN_0802974c immediately before the 352-byte flush. No in-trace reader/verifier.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "decompiled.c:2669-2700; offset and non-default stored value both confirmed against saves/cap-00-future-0.sav"
+    },
+    {
+      "name": "unused_tail",
+      "offset": 504,
+      "size": 8,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {
+        "cap-00-future-0.sav": "0xffffffffffffffff"
+      },
+      "update_mechanism": "Never referenced by any traced writer; reflects genuine hardware-erased EEPROM state.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "No offset/length pair covering this range in any of the 3 writer call sites; observed fill matches 0xFF erased state, distinct from the 0xDB in-region default fill"
+    }
+  ]
+}

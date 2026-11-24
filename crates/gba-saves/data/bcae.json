@@ -1,0 +1,152 @@
+{
+  "id": "bcae",
+  "game_code": "BCAE",
+  "title": "Cars (USA, Europe)",
+  "media": "eeprom512",
+  "size_bytes": 512,
+  "eeprom_rev8": false,
+  "magic_signatures": [
+    {
+      "offset": 196,
+      "bytes_hex": "43415253",
+      "ascii": "CARS",
+      "verified_in_code": false,
+      "verified_in_sav": true,
+      "function_addrs": [],
+      "bytes": [
+        67,
+        65,
+        82,
+        83
+      ]
+    }
+  ],
+  "checksums": [
+    {
+      "name": "slot_payload_byte_sum16",
+      "algorithm": "sum16_le",
+      "formula_detail": "Unsigned byte-wise sum (no rollover masking beyond 16 bits) of the 200-byte slot payload (offsets 0x00-0xC7 inclusive, which itself ends with the 4-byte 'CARS' magic trailer at 0xC4-0xC7). Proven in FUN_08016198 (RAM-cached validation branch): `do { iStack_20 += buf[uVar8]; uVar8++; } while (uVar8 < 200);` followed by a comparison against a cached RAM checksum variable (`*piRam080162ac`). The EEPROM-resident write path in the same function (via FUN_0802ad98, a confirmed EEPROM-write helper) targets sector `slot*0x1b + 0x1a` (byte offset 0xD0-0xD1 for slot 0), which does NOT match the offset of the numeric match found in the sample (0xD6-0xD7). The algorithm itself is CONFIRMED_STATIC; the exact persisted storage offset is only a verified numeric coincidence pending more samples.",
+      "stored_offset": 214,
+      "stored_size": 2,
+      "covered_start": 0,
+      "covered_end": 199,
+      "function_addrs": [
+        "0x08016198"
+      ],
+      "verified_on_samples": [
+        {
+          "file": "saves/cap-00-future-0.sav",
+          "stored_hex": "0150",
+          "computed_hex": "0150",
+          "match": true
+        }
+      ],
+      "confidence": "HYPOTHESIS"
+    }
+  ],
+  "fields": [
+    {
+      "name": "unlock_flag_block",
+      "offset": 0,
+      "size": 148,
+      "type": "bytes",
+      "ram_addr": "0x02000000-ish (cache buffer, exact EWRAM address not resolved from this trace subset)",
+      "writers": [
+        "0x08016198"
+      ],
+      "readers": [
+        "0x080160b4",
+        "0x08016198"
+      ],
+      "observed_values": {
+        "as_u32_le_array": "37 little-endian u32 values, each exactly 0 or 1"
+      },
+      "update_mechanism": "Populated in RAM before the 200-byte EepromWrite call inside FUN_08016198; exact per-flag writer logic lies outside the 321 traced functions.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "Every 4-byte little-endian dword from offset 0x00 to 0x93 in saves/cap-00-future-0.sav is exactly 0 or 1 (verified by direct Python struct-unpack over all 37 dwords); layout matches the 200-byte region covered by the checksum in FUN_08016198."
+    },
+    {
+      "name": "structured_record_block",
+      "offset": 148,
+      "size": 48,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [
+        "0x08016198"
+      ],
+      "readers": [
+        "0x080160b4",
+        "0x08016198"
+      ],
+      "observed_values": {
+        "0x94": "00030100",
+        "0x98": "00040100",
+        "0xa4": "01000000",
+        "0xa8": "01000000",
+        "0xac": "05020100",
+        "0xb0": "05020100",
+        "0xbc": "01000000",
+        "0xc0": "00010000"
+      },
+      "update_mechanism": "Unknown; no writer logic for individual sub-fields observed inside the 321 traced functions \u2014 only the whole-buffer EEPROM write/read is traced.",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Byte pattern (small values in bytes 0-2, zero/near-zero in byte 3, with paired duplicate dwords at 0x94/0x98 vs 0xa4/0xa8 vs 0xac/0xb0) is suggestive of small counters, times, or per-category best-record pairs, but no code, checksum boundary, or second sample confirms semantics. No third-party labels were consulted per clean-room rules."
+    },
+    {
+      "name": "slot_magic",
+      "offset": 196,
+      "size": 4,
+      "type": "ascii",
+      "ram_addr": null,
+      "writers": [
+        "0x08016198"
+      ],
+      "readers": [
+        "0x080160b4",
+        "0x08016198"
+      ],
+      "observed_values": {
+        "ascii": "CARS"
+      },
+      "update_mechanism": "Falls inside the 200-byte checksummed payload; written as part of the same FUN_0802ad98(sector,buf,200) call. The specific instruction that stores the literal 0x43415253/'CARS' bytes into the RAM buffer was not found among the 321 traced functions (no immediate-load of that constant appears in ghidra/decompiled.c).",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "Bytes 0xC4-0xC7 of saves/cap-00-future-0.sav are exactly '43 41 52 53' = ASCII 'CARS'; this falls within the 200-byte range (0x00-0xC7) proven to be the checksum coverage window in FUN_08016198."
+    },
+    {
+      "name": "payload_checksum",
+      "offset": 214,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": "piRam080162ac (cached RAM expected-checksum variable)",
+      "writers": [
+        "0x08016198 (algorithm); exact storage-offset writer unresolved, see checksums[] entry"
+      ],
+      "readers": [
+        "0x08016198"
+      ],
+      "observed_values": {
+        "bytes_hex": "0150",
+        "as_u16_be": "0x0150",
+        "matches_computed_sum16_of_0x00_0xc7": true
+      },
+      "update_mechanism": "Computed as the unsigned byte-sum of offsets 0x00-0xC7 (200 bytes); recomputed and compared on every validate-from-RAM-cache pass in FUN_08016198.",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Python verification: sum(data[0x00:0xc8]) & 0xffff == 0x150, and int.from_bytes(data[0xd6:0xd8],'big') == 0x150 \u2014 an exact match, but the EEPROM-write call site for this checksum in the traced code (FUN_0802ad98 at sector slot*0x1b+0x1a) addresses byte offset 0xD0-0xD1, not 0xD6-0xD7, so the storage-offset mapping is not fully reconciled against the algorithm's own call-site arithmetic from a single sample."
+    },
+    {
+      "name": "unused_tail_padding",
+      "offset": 200,
+      "size": 14,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {
+        "bytes": "all 0xFF"
+      },
+      "update_mechanism": "Unwritten/blank fill; part of the trailing EEPROM sectors 25-26 not touched by the 200-byte primary write.",
+      "confidence": "UNKNOWN",
+      "evidence": "Offsets 0xC8-0xD5 are uniformly 0xFF in the sole available sample (background fill byte per packet metadata)."
+    }
+  ]
+}

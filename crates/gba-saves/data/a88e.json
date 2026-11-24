@@ -1,0 +1,116 @@
+{
+  "id": "a88e",
+  "game_code": "A88E",
+  "title": "Mario & Luigi - Superstar Saga (USA)",
+  "media": "eeprom8k",
+  "size_bytes": 8192,
+  "eeprom_rev8": true,
+  "magic_signatures": [
+    {
+      "offset": 2,
+      "bytes_hex": "4750524c414d",
+      "ascii": "GPRLAM",
+      "verified_in_code": false,
+      "verified_in_sav": true,
+      "function_addrs": [],
+      "bytes": [
+        71,
+        80,
+        82,
+        76,
+        65,
+        77
+      ]
+    }
+  ],
+  "checksums": [],
+  "fields": [
+    {
+      "name": "header_padding_lo",
+      "offset": 0,
+      "size": 2,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {
+        "cap-00-future-0.sav": "0000"
+      },
+      "update_mechanism": "unknown - no writer function traced",
+      "confidence": "HYPOTHESIS",
+      "evidence": "saves/cap-00-future-0.sav bytes 0x0000-0x0001; no corresponding code reference found in ghidra/decompiled.c"
+    },
+    {
+      "name": "magic_ascii_GPRLAM",
+      "offset": 2,
+      "size": 6,
+      "type": "ascii",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {
+        "cap-00-future-0.sav": "GPRLAM"
+      },
+      "update_mechanism": "unknown - no writer function traced; presence confirmed in .sav only",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "saves/cap-00-future-0.sav bytes 0x0002-0x0007 decode as ASCII 'GPRLAM'; no string-compare or literal-store of this byte pattern found anywhere in ghidra/decompiled.c, so only sample-presence is confirmed, not a validating code path"
+    },
+    {
+      "name": "header_padding_hi",
+      "offset": 8,
+      "size": 8,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {
+        "cap-00-future-0.sav": "0000000000000000"
+      },
+      "update_mechanism": "unknown - no writer function traced",
+      "confidence": "HYPOTHESIS",
+      "evidence": "saves/cap-00-future-0.sav bytes 0x0008-0x000F; no corresponding code reference found in ghidra/decompiled.c"
+    },
+    {
+      "name": "unused_eeprom_region",
+      "offset": 16,
+      "size": 8176,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {
+        "cap-00-future-0.sav": "all 0xFF (erase fill)"
+      },
+      "update_mechanism": "never written in this sample",
+      "confidence": "UNKNOWN",
+      "evidence": "Python scan of saves/cap-00-future-0.sav confirms every byte from 0x0010 to 0x1FFF equals 0xFF; this is presumed to be where real save-record data lands once gameplay/save events occur, but no such data exists in the current sample"
+    },
+    {
+      "name": "bean_badge_inventory",
+      "offset": 16,
+      "size": 8,
+      "type": "bitfield_array",
+      "bitfield_array": {
+        "bit_width": 2,
+        "count": 32,
+        "labels": [
+          "castle_badge",
+          "pea_badge",
+          "bean_badge",
+          "spire_badge"
+        ]
+      }
+    },
+    {
+      "name": "bowsers_keep_teleport_unlocked",
+      "offset": 24,
+      "size": 1,
+      "type": "u8",
+      "condition": {
+        "field": "bean_badge_inventory",
+        "op": ">=",
+        "value": 10
+      }
+    }
+  ]
+}

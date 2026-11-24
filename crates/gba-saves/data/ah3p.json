@@ -1,0 +1,257 @@
+{
+  "id": "ah3p",
+  "game_code": "AH3P",
+  "title": "Hamtaro - Ham-Ham Heartbreak (Europe) (En,Fr,De,Es,It)",
+  "media": "sram",
+  "size_bytes": 32768,
+  "eeprom_rev8": false,
+  "magic_signatures": [
+    {
+      "offset": 0,
+      "bytes_hex": "48414d55544152 4f330000004148 3350",
+      "ascii": "HAMUTARO3\u0000\u0000\u0000AH3P",
+      "verified_in_code": false,
+      "verified_in_sav": true,
+      "function_addrs": [],
+      "bytes": [
+        72,
+        65,
+        77,
+        85,
+        84,
+        65,
+        82,
+        79,
+        51,
+        0,
+        0,
+        0,
+        65,
+        72,
+        51,
+        80
+      ]
+    },
+    {
+      "offset": 16,
+      "bytes_hex": "41707220313620323030333139 3a32303a3038",
+      "ascii": "Apr 16 200319:20:08",
+      "verified_in_code": false,
+      "verified_in_sav": true,
+      "function_addrs": [],
+      "bytes": [
+        65,
+        112,
+        114,
+        32,
+        49,
+        54,
+        32,
+        50,
+        48,
+        48,
+        51,
+        49,
+        57,
+        58,
+        50,
+        48,
+        58,
+        48,
+        56
+      ]
+    }
+  ],
+  "checksums": [],
+  "fields": [
+    {
+      "name": "title_tag",
+      "offset": 0,
+      "size": 9,
+      "type": "ascii",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {
+        "cap-00-future-0.sav": "HAMUTARO3",
+        "cap-01-future-1.sav": "HAMUTARO3"
+      },
+      "update_mechanism": "Inferred memcpy of a ROM-resident default/blank save template; no byte-level writer isolated among the 126 decompiled functions.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Identical bytes 0x00-0x08 in both real .sav files."
+    },
+    {
+      "name": "clr_recovery_tag",
+      "offset": 9,
+      "size": 3,
+      "type": "ascii",
+      "ram_addr": null,
+      "writers": [
+        "0x0800078c"
+      ],
+      "readers": [],
+      "observed_values": {
+        "cap-00-future-0.sav": "\u0000\u0000\u0000",
+        "cap-01-future-1.sav": "\u0000\u0000\u0000"
+      },
+      "update_mechanism": "Stamped as ASCII 'Clr' only on the blank-format fallback branch of FUN_0800078c; both real samples took the normal (non-fallback) path, so these bytes remain the default null padding after title_tag.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "ghidra/decompiled.c:264-269 shows the literal byte stores 0x43/0x6c/0x72 at this offset; real .sav bytes are 00 00 00 in both samples, confirming the branch was not taken."
+    },
+    {
+      "name": "header_game_code",
+      "offset": 12,
+      "size": 4,
+      "type": "ascii",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {
+        "cap-00-future-0.sav": "AH3P",
+        "cap-01-future-1.sav": "AH3P"
+      },
+      "update_mechanism": "Same inferred template copy as title_tag.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Identical bytes 0x0C-0x0F in both real .sav files; matches ROM header game code AH3P."
+    },
+    {
+      "name": "build_timestamp",
+      "offset": 16,
+      "size": 20,
+      "type": "ascii",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {
+        "cap-00-future-0.sav": "Apr 16 200319:20:08",
+        "cap-01-future-1.sav": "Apr 16 200319:20:08"
+      },
+      "update_mechanism": "Same inferred template copy as title_tag.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Identical bytes 0x10-0x23 in both real .sav files."
+    },
+    {
+      "name": "unmapped_counter_0x6be",
+      "offset": 1726,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {
+        "cap-00-future-0.sav": "0xf7",
+        "cap-01-future-1.sav": "0xf6"
+      },
+      "update_mechanism": "Unknown; one of only 4 raw bytes (2 unique offsets, mirrored) that differ between the two sample captures, delta -1.",
+      "confidence": "HYPOTHESIS",
+      "evidence": "saves/hexdump_and_diffs.txt diff section; packet's own cold-reload mutation probe at this exact offset recorded reverted_to_blank_on_mutation=false, consistent with this not being checksum-protected."
+    },
+    {
+      "name": "unmapped_counter_0xb84",
+      "offset": 2948,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {
+        "cap-00-future-0.sav": "0x00",
+        "cap-01-future-1.sav": "0x01"
+      },
+      "update_mechanism": "Unknown; the other of the only 4 raw bytes that differ between captures, delta +1.",
+      "confidence": "HYPOTHESIS",
+      "evidence": "saves/hexdump_and_diffs.txt diff section."
+    },
+    {
+      "name": "roster_record_length",
+      "offset": 5164,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": [
+        "0x08000ff4"
+      ],
+      "readers": [],
+      "observed_values": {
+        "all_51_records_both_files": 128
+      },
+      "update_mechanism": "Set to the return value of the payload-copy call (func_0x080ec2b4) inside FUN_08000ff4; constant 128 because every roster record copies a fixed-size struct.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "ghidra/decompiled.c:697-704; verified equal to 128 at record offset +0x00 for all 51 records in both real .sav files."
+    },
+    {
+      "name": "roster_record_table_id",
+      "offset": 5168,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": [
+        "0x08000ff4"
+      ],
+      "readers": [],
+      "observed_values": {
+        "all_51_records_both_files": 4
+      },
+      "update_mechanism": "Set to FUN_08000ff4's param_1, which is fixed at 4 for the 51-entry roster loop.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "ghidra/decompiled.c:705; verified equal to 4 at record offset +0x04 for all 51 records in both real .sav files."
+    },
+    {
+      "name": "roster_record_index",
+      "offset": 5169,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": [
+        "0x08000ff4"
+      ],
+      "readers": [],
+      "observed_values": {
+        "record_0": 0,
+        "record_1": 1,
+        "record_50": 50
+      },
+      "update_mechanism": "Set to FUN_08000ff4's param_2, the loop index 0..50.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "ghidra/decompiled.c:706; verified equal to (offset - 0x142C) / 0xDC for every one of the 51 records in both real .sav files."
+    },
+    {
+      "name": "roster_record_checksum_field",
+      "offset": 5170,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": [
+        "0x0800044c",
+        "0x08000ff4"
+      ],
+      "readers": [],
+      "observed_values": {
+        "record_0": "0x6dca",
+        "record_1": "0xf575",
+        "record_49": "0xc275",
+        "record_50": "0xcd7a"
+      },
+      "update_mechanism": "Zeroed, then set to FUN_0800044c's checksum of the full 136-byte record.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "See checksums[0].verified_on_samples; 102/102 records matched across both files."
+    },
+    {
+      "name": "roster_record_payload",
+      "offset": 5172,
+      "size": 128,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [
+        "0x08000ff4"
+      ],
+      "readers": [],
+      "observed_values": {
+        "byte_0_all_records": "0x80 constant"
+      },
+      "update_mechanism": "Copied via func_0x080ec2b4 from a per-character source structure (table indexed by table id/record index); internal sub-field layout not decoded in this pass.",
+      "confidence": "HYPOTHESIS",
+      "evidence": "ghidra/decompiled.c:697-701; byte-level content observed but not semantically mapped."
+    }
+  ]
+}

@@ -1,0 +1,356 @@
+{
+  "id": "aw2e",
+  "game_code": "AW2E",
+  "title": "Advance Wars 2 - Black Hole Rising (USA)",
+  "media": "flash512",
+  "size_bytes": 65536,
+  "eeprom_rev8": false,
+  "magic_signatures": [
+    {
+      "offset": 61440,
+      "bytes_hex": "32617273",
+      "ascii": "2ars",
+      "verified_in_code": false,
+      "verified_in_sav": true,
+      "function_addrs": [],
+      "bytes": [
+        50,
+        97,
+        114,
+        115
+      ]
+    }
+  ],
+  "checksums": [],
+  "fields": [
+    {
+      "name": "magic_tag",
+      "offset": 61440,
+      "size": 4,
+      "type": "ascii",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {
+        "cap-00-future-0.sav": "2ars"
+      },
+      "update_mechanism": "unknown - no writer located in ghidra/decompiled.c",
+      "confidence": "HYPOTHESIS",
+      "evidence": "4-byte printable ASCII at offset 0 of the only non-blank 4KB sector in the sample; positional evidence only, no decompiled writer/reader found"
+    },
+    {
+      "name": "header_word_0xF004",
+      "offset": 61444,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {
+        "cap-00-future-0.sav": 4010
+      },
+      "update_mechanism": "unknown",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Positional only; tested and ruled out against 4 checksum-range/algorithm combinations (see checksums[])"
+    },
+    {
+      "name": "header_word_0xF006",
+      "offset": 61446,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {
+        "cap-00-future-0.sav": 24735
+      },
+      "update_mechanism": "unknown",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Positional only; tested and ruled out against 4 checksum-range/algorithm combinations (see checksums[])"
+    },
+    {
+      "name": "reserved_zero_span_0xF008",
+      "offset": 61448,
+      "size": 68,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {
+        "cap-00-future-0.sav": "all 0x00"
+      },
+      "update_mechanism": "unknown",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Contiguous all-zero byte run between the header words and the counter-like fields at 0xF04C/0xF050"
+    },
+    {
+      "name": "counter_candidate_0xF04C",
+      "offset": 61516,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {
+        "cap-00-future-0.sav": 1
+      },
+      "update_mechanism": "unknown",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Positional small-integer value; no corroborating code reference found"
+    },
+    {
+      "name": "counter_candidate_0xF050",
+      "offset": 61520,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {
+        "cap-00-future-0.sav": 1484
+      },
+      "update_mechanism": "unknown",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Positional value; candidate turn/frame/step counter, no corroborating code reference found"
+    },
+    {
+      "name": "reserved_zero_span_0xF054",
+      "offset": 61524,
+      "size": 15,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {
+        "cap-00-future-0.sav": "all 0x00"
+      },
+      "update_mechanism": "unknown",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Contiguous all-zero byte run"
+    },
+    {
+      "name": "bitflag_candidate_0xF063",
+      "offset": 61539,
+      "size": 1,
+      "type": "bitflags",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {
+        "cap-00-future-0.sav": "0x01"
+      },
+      "update_mechanism": "unknown",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Single non-0xFF byte isolated amid otherwise fill-byte-only span"
+    },
+    {
+      "name": "bitflag_candidate_0xF068",
+      "offset": 61544,
+      "size": 1,
+      "type": "bitflags",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {
+        "cap-00-future-0.sav": "0xBF"
+      },
+      "update_mechanism": "unknown",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Isolated non-fill byte; bit pattern (one cleared bit) suggestive of a progressive-unlock bitmask, unconfirmed"
+    },
+    {
+      "name": "bitflag_candidate_0xF06B",
+      "offset": 61547,
+      "size": 1,
+      "type": "bitflags",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {
+        "cap-00-future-0.sav": "0xF8"
+      },
+      "update_mechanism": "unknown",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Isolated non-fill byte, 3 low bits cleared"
+    },
+    {
+      "name": "bitflag_candidate_0xF06D_0xF06E",
+      "offset": 61549,
+      "size": 2,
+      "type": "bitflags",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {
+        "cap-00-future-0.sav": "0x7F 0xF8"
+      },
+      "update_mechanism": "unknown",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Isolated non-fill byte pair"
+    },
+    {
+      "name": "bitflag_candidate_0xF071",
+      "offset": 61553,
+      "size": 1,
+      "type": "bitflags",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {
+        "cap-00-future-0.sav": "0xF0"
+      },
+      "update_mechanism": "unknown",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Isolated non-fill byte, 4 low bits cleared"
+    },
+    {
+      "name": "field_candidate_0xF074_0xF075",
+      "offset": 61556,
+      "size": 2,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {
+        "cap-00-future-0.sav": "0x00 0xFC"
+      },
+      "update_mechanism": "unknown",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Isolated non-fill byte pair"
+    },
+    {
+      "name": "array_header_candidate_0xF07C",
+      "offset": 61564,
+      "size": 4,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {
+        "cap-00-future-0.sav": "16 08 00 02"
+      },
+      "update_mechanism": "unknown",
+      "confidence": "HYPOTHESIS",
+      "evidence": "First 4 bytes of the large 0xF07C-0xF55D span; positioned like a small header/count preceding a zero-filled array body"
+    },
+    {
+      "name": "array_body_candidate_0xF080",
+      "offset": 61568,
+      "size": 976,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {
+        "cap-00-future-0.sav": "all 0x00"
+      },
+      "update_mechanism": "unknown",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Large zero-filled span; candidate array/bitmap body, nothing set in this sample except the single byte at 0xF450"
+    },
+    {
+      "name": "array_element_candidate_0xF450",
+      "offset": 62544,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {
+        "cap-00-future-0.sav": "0x01"
+      },
+      "update_mechanism": "unknown",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Single set byte deep inside the otherwise-zero 0xF07C-0xF55D span"
+    },
+    {
+      "name": "reserved_zero_span_0xF560",
+      "offset": 62816,
+      "size": 190,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {
+        "cap-00-future-0.sav": "all 0x00"
+      },
+      "update_mechanism": "unknown",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Second contiguous non-0xFF span per packet active-range metadata; entirely zero in this sample"
+    },
+    {
+      "name": "tail_marker_candidate_0xFFFE",
+      "offset": 65534,
+      "size": 2,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {
+        "cap-00-future-0.sav": "0x00 0x55"
+      },
+      "update_mechanism": "unknown",
+      "confidence": "UNKNOWN",
+      "evidence": "Last 2 bytes of the active sector and of the file; non-fill but no interpretation possible"
+    },
+    {
+      "name": "blank_sectors_0_14",
+      "offset": 0,
+      "size": 61440,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [
+        "0x0808b0e8"
+      ],
+      "readers": [],
+      "observed_values": {
+        "cap-00-future-0.sav": "all 0xFF"
+      },
+      "update_mechanism": "Would be erased/programmed by FUN_0808b0e8 (sector<16 guard) and the byte/buffer writers if targeted; untouched in this sample",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Direct byte scan confirms uniform 0xFF fill across sectors 0-14; sector geometry corroborated independently by code (16-sector guard) and file size (16*4096=65536)"
+    },
+    {
+      "name": "commanding_officer_unlocks",
+      "offset": 100,
+      "size": 3,
+      "type": "bitfield_array",
+      "bitfield_array": {
+        "bit_width": 1,
+        "count": 19,
+        "labels": [
+          "andy",
+          "sami",
+          "max",
+          "colin",
+          "grit",
+          "eagle",
+          "drake",
+          "kanbei",
+          "sonja",
+          "sensei",
+          "jess",
+          "javier",
+          "flak",
+          "lash",
+          "adder",
+          "hawke",
+          "sturm",
+          "hachi",
+          "nell"
+        ]
+      }
+    },
+    {
+      "name": "hard_campaign_unlocked",
+      "offset": 104,
+      "size": 1,
+      "type": "u8",
+      "condition": {
+        "field": "commanding_officer_unlocks",
+        "op": ">=",
+        "value": 15
+      }
+    }
+  ]
+}

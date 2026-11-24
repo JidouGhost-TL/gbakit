@@ -1,0 +1,80 @@
+{
+  "id": "afxe",
+  "game_code": "AFXE",
+  "title": "Final Fantasy Tactics Advance (USA)",
+  "media": "flash512",
+  "size_bytes": 65536,
+  "magic_signatures": [
+    {
+      "offset": 0,
+      "bytes": [
+        70,
+        70,
+        84,
+        69,
+        88,
+        48,
+        48,
+        48
+      ]
+    }
+  ],
+  "checksums": [],
+  "fields": [
+    {
+      "name": "magic_header",
+      "offset": 0,
+      "size": 8,
+      "type": "ascii"
+    },
+    {
+      "name": "clan_and_quest_data",
+      "offset": 8,
+      "size": 65528,
+      "type": "bytes"
+    },
+    {
+      "name": "mission_dispatch_flags",
+      "offset": 16,
+      "size": 38,
+      "type": "bitfield_array",
+      "bitfield_array": {
+        "bit_width": 1,
+        "count": 300,
+        "labels": [
+          "mission_001",
+          "mission_002",
+          "mission_003",
+          "mission_004"
+        ]
+      }
+    },
+    {
+      "name": "judges_law_cards",
+      "offset": 54,
+      "size": 4,
+      "type": "bitfield_array",
+      "bitfield_array": {
+        "bit_width": 1,
+        "count": 32,
+        "labels": [
+          "law_anti_law",
+          "law_color_magic",
+          "law_daggers",
+          "law_blades"
+        ]
+      }
+    },
+    {
+      "name": "corpse_brigade_quest_active",
+      "offset": 58,
+      "size": 1,
+      "type": "u8",
+      "condition": {
+        "field": "mission_dispatch_flags",
+        "op": ">=",
+        "value": 100
+      }
+    }
+  ]
+}

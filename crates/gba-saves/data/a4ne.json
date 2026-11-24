@@ -1,0 +1,139 @@
+{
+  "id": "a4ne",
+  "game_code": "A4NE",
+  "title": "Harvest Moon - Friends of Mineral Town (USA)",
+  "media": "sram",
+  "size_bytes": 32768,
+  "eeprom_rev8": false,
+  "magic_signatures": [
+    {
+      "offset": 0,
+      "bytes_hex": "47424196718fea95a88cea82cc5352414d83438381815b835720303030303000",
+      "ascii": "GBA\u7267\u5834\u7269\u8a9e\u306eSRAM\u30a4\u30e1\u30fc\u30b8 0000\u0000",
+      "verified_in_code": true,
+      "verified_in_sav": true,
+      "function_addrs": [
+        "0x08000358",
+        "0x080002e0",
+        "0x080d3948"
+      ],
+      "bytes": [
+        71,
+        66,
+        65,
+        150,
+        113,
+        143,
+        234,
+        149,
+        168,
+        140,
+        234,
+        130,
+        204,
+        83,
+        82,
+        65,
+        77,
+        131,
+        67,
+        131,
+        129,
+        129,
+        91,
+        131,
+        87,
+        32,
+        48,
+        48,
+        48,
+        48,
+        48,
+        0
+      ]
+    }
+  ],
+  "checksums": [],
+  "fields": [
+    {
+      "name": "magic_header_stamp",
+      "offset": 0,
+      "size": 32,
+      "type": "ascii",
+      "ram_addr": null,
+      "writers": [
+        "0x08000358",
+        "0x080006a4"
+      ],
+      "readers": [
+        "0x080002e0",
+        "0x080006e4",
+        "0x080d3948"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": "GBA\u7267\u5834\u7269\u8a9e\u306eSRAM\u30a4\u30e1\u30fc\u30b8 0000"
+      },
+      "update_mechanism": "Flushed verbatim from a RAM buffer (_DAT_08000398) to SRAM offset 0x00 by FUN_08000358 via the FUN_080006a4 write-verify driver; never constructed or mutated byte-by-byte by any traced function, only copied as a fixed block.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Identical 0x20-byte span used by writer call (func_0x080006a4(param_1,0,_DAT_08000398,0x20)), reader call (func_0x080006e4(param_1,auStack_34,0,0x20)) and memcmp call (func_0x080d3948(auStack_34,_DAT_08000354,0x20)); bytes present verbatim in saves/cap-00-future-0.sav offsets 0x00-0x1F."
+    },
+    {
+      "name": "stamp_a",
+      "offset": 32,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": [
+        "0x08000358",
+        "0x080006a4"
+      ],
+      "readers": [
+        "0x080002e0",
+        "0x080003a0",
+        "0x080006e4"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": 0
+      },
+      "update_mechanism": "Writer re-reads the just-completed header write's status code (0 = success) and writes that same value as 4 bytes at offset 0x20. Reader requires (value & 3) == value, i.e. value in {0,1,2,3}. Only one all-zero sample is available, so it is unconfirmed whether this field ever takes on a real counter/slot-index role versus always being a plain 0/success echo.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "ghidra/decompiled.c FUN_08000358 (write) and FUN_080002e0 (range-check read); saves/cap-00-future-0.sav bytes 0x20-0x23 = 00000000, which satisfies the predicate (verified via Python: (0 & 3) == 0 -> True)."
+    },
+    {
+      "name": "stamp_b",
+      "offset": 36,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": [
+        "0x08000358",
+        "0x080006a4"
+      ],
+      "readers": [
+        "0x080002e0",
+        "0x080006e4"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": 0
+      },
+      "update_mechanism": "Written with the identical value as stamp_a, at offset 0x24, only if the stamp_a write also reported success. Reader requires value < 2, i.e. value in {0,1}.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "ghidra/decompiled.c FUN_08000358 (write) and FUN_080002e0 (range-check read); saves/cap-00-future-0.sav bytes 0x24-0x27 = 00000000, which satisfies the predicate (verified via Python: 0 < 2 -> True)."
+    },
+    {
+      "name": "unmapped_data_region",
+      "offset": 40,
+      "size": 32728,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {
+        "cap-00-future-0.sav": "all 0xFF (SRAM fill/erase value)"
+      },
+      "update_mechanism": "Unknown; no function in the available 214-function decompilation reads or writes this range. Hypothesized to hold actual gameplay save data (farm/character/calendar/inventory state) given the total 32KB SRAM size versus the tiny 40-byte header region, but this is unverified.",
+      "confidence": "UNKNOWN",
+      "evidence": "saves/hexdump_and_diffs.txt shows only one active range (0x0000-0x0028); saves/cap-00-future-0.sav bytes 0x28 onward are all 0xFF, consistent with an untouched/cold save."
+    }
+  ]
+}

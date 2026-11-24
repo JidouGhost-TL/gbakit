@@ -1,0 +1,80 @@
+{
+  "id": "b8me",
+  "game_code": "B8ME",
+  "title": "Mario Party Advance (USA)",
+  "media": "eeprom8k",
+  "size_bytes": 8192,
+  "magic_signatures": [
+    {
+      "offset": 0,
+      "bytes": [
+        77,
+        80,
+        65,
+        68
+      ]
+    }
+  ],
+  "checksums": [
+    {
+      "name": "slot_sum16",
+      "algorithm": "sum16_le",
+      "covered_start": 0,
+      "covered_end": 4094,
+      "stored_offset": 4094
+    }
+  ],
+  "fields": [
+    {
+      "name": "magic_mpad",
+      "offset": 0,
+      "size": 4,
+      "type": "ascii"
+    },
+    {
+      "name": "mushrooms_remaining",
+      "offset": 4,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "name": "coins",
+      "offset": 6,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "name": "gaddgets_unlocked_flags",
+      "offset": 8,
+      "size": 13,
+      "type": "bitfield_array",
+      "bitfield_array": {
+        "bit_width": 1,
+        "count": 100,
+        "labels": [
+          "gaddget_1",
+          "gaddget_2",
+          "gaddget_3",
+          "gaddget_4"
+        ]
+      }
+    },
+    {
+      "name": "bowsers_toy_box_unlocked",
+      "offset": 24,
+      "size": 1,
+      "type": "u8",
+      "condition": {
+        "field": "gaddgets_unlocked_flags",
+        "op": "gte",
+        "value": 50
+      }
+    },
+    {
+      "name": "slot_checksum",
+      "offset": 4094,
+      "size": 2,
+      "type": "u16_le"
+    }
+  ]
+}

@@ -1,0 +1,96 @@
+{
+  "id": "bppe",
+  "game_code": "BPPE",
+  "title": "Pokemon Pinball: Ruby & Sapphire (USA)",
+  "media": "sram",
+  "size_bytes": 32768,
+  "magic_signatures": [
+    {
+      "offset": 0,
+      "bytes": [
+        80,
+        73,
+        78,
+        66
+      ]
+    }
+  ],
+  "checksums": [
+    {
+      "name": "records_sum32",
+      "algorithm": "sum32_le",
+      "covered_start": 4,
+      "covered_end": 8188,
+      "stored_offset": 8188
+    }
+  ],
+  "fields": [
+    {
+      "name": "magic_pinb",
+      "offset": 0,
+      "size": 4,
+      "type": "ascii"
+    },
+    {
+      "name": "pokedex_seen_flags",
+      "offset": 4,
+      "size": 26,
+      "type": "bitfield_array",
+      "bitfield_array": {
+        "bit_width": 1,
+        "count": 202,
+        "labels": [
+          "treecko_seen",
+          "grovyle_seen",
+          "sceptile_seen",
+          "torchic_seen"
+        ]
+      }
+    },
+    {
+      "name": "pokedex_caught_flags",
+      "offset": 30,
+      "size": 26,
+      "type": "bitfield_array",
+      "bitfield_array": {
+        "bit_width": 1,
+        "count": 202,
+        "labels": [
+          "treecko_caught",
+          "grovyle_caught",
+          "sceptile_caught",
+          "torchic_caught"
+        ]
+      }
+    },
+    {
+      "name": "rayquaza_bonus_stage_unlocked",
+      "offset": 56,
+      "size": 1,
+      "type": "u8",
+      "condition": {
+        "field": "pokedex_caught_flags",
+        "op": "gte",
+        "value": 150
+      }
+    },
+    {
+      "name": "ruby_high_score",
+      "offset": 60,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "name": "sapphire_high_score",
+      "offset": 64,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "name": "records_checksum",
+      "offset": 8188,
+      "size": 4,
+      "type": "u32_le"
+    }
+  ]
+}

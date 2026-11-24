@@ -1,0 +1,181 @@
+{
+  "id": "b3ae",
+  "game_code": "B3AE",
+  "title": "Lord of the Rings, The - The Third Age (USA, Europe) (En,Fr,De,Es,It)",
+  "media": "eeprom512",
+  "size_bytes": 512,
+  "eeprom_rev8": false,
+  "magic_signatures": [
+    {
+      "offset": 0,
+      "bytes_hex": "3331303045413342",
+      "ascii": "3100EA3B",
+      "verified_in_code": false,
+      "verified_in_sav": true,
+      "function_addrs": [],
+      "bytes": [
+        51,
+        49,
+        48,
+        48,
+        69,
+        65,
+        51,
+        66
+      ]
+    }
+  ],
+  "checksums": [],
+  "fields": [
+    {
+      "name": "identity_tag_reversed",
+      "offset": 0,
+      "size": 8,
+      "type": "ascii",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {
+        "saves/cap-00-future-0.sav": "3100EA3B (raw) / B3AE0013 (byte-reversed)"
+      },
+      "update_mechanism": "unknown - no writer function traced",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Raw bytes 33 31 30 30 45 41 33 42 byte-reverse to ASCII 'B3AE0013', which is this release's game code (B3AE) plus literal digits '0013'. Interpretation as a deliberate identity/version stamp vs. a byte-order artifact of the capture tool's EEPROM-line serialization cannot be adjudicated without decompiled writer code or a second sample."
+    },
+    {
+      "name": "candidate_counter_or_flags_u32",
+      "offset": 8,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {
+        "saves/cap-00-future-0.sav": "0x00000400"
+      },
+      "update_mechanism": "unknown - no writer function traced",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Only non-zero, non-magic 32-bit value in the populated block; no corroborating code or second sample to confirm role."
+    },
+    {
+      "name": "candidate_u16_field_a",
+      "offset": 12,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {
+        "saves/cap-00-future-0.sav": "0x0001"
+      },
+      "update_mechanism": "unknown - no writer function traced",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Isolated small integer value adjacent to the counter candidate at offset 0x08; no structure proof available."
+    },
+    {
+      "name": "candidate_packed_flag_u16_a",
+      "offset": 14,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {
+        "saves/cap-00-future-0.sav": "0x8099"
+      },
+      "update_mechanism": "unknown - no writer function traced",
+      "confidence": "HYPOTHESIS",
+      "evidence": "High bit (0x8000) set, consistent with a common GBA packed valid/enabled-flag-plus-value convention, but unconfirmed by code."
+    },
+    {
+      "name": "candidate_packed_flag_u16_b",
+      "offset": 16,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {
+        "saves/cap-00-future-0.sav": "0x9889"
+      },
+      "update_mechanism": "unknown - no writer function traced",
+      "confidence": "HYPOTHESIS",
+      "evidence": "High bit (0x8000) set, same pattern as offset 0x0E; relationship between the two u16 values not resolved (byte-swap/arithmetic checks did not cleanly match)."
+    },
+    {
+      "name": "zero_padding_block",
+      "offset": 18,
+      "size": 6,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {
+        "saves/cap-00-future-0.sav": "00 00 00 00 00 00"
+      },
+      "update_mechanism": "unknown",
+      "confidence": "UNKNOWN",
+      "evidence": "All-zero region with no visible structure; could be reserved/padding."
+    },
+    {
+      "name": "sentinel_pattern_primary",
+      "offset": 24,
+      "size": 8,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {
+        "saves/cap-00-future-0.sav": "FF 00 00 00 00 00 00 00"
+      },
+      "update_mechanism": "unknown - no writer function traced",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Identical to the pattern at offset 0xE0 (line 28); candidate terminator/sentinel or secondary-record header."
+    },
+    {
+      "name": "erased_region_main",
+      "offset": 32,
+      "size": 192,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {
+        "saves/cap-00-future-0.sav": "all 0xFF"
+      },
+      "update_mechanism": "n/a - never written (EEPROM erased default)",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Direct byte-level observation of the .sav file; standard EEPROM erased-cell fill value."
+    },
+    {
+      "name": "sentinel_pattern_isolated",
+      "offset": 224,
+      "size": 8,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {
+        "saves/cap-00-future-0.sav": "FF 00 00 00 00 00 00 00"
+      },
+      "update_mechanism": "unknown - no writer function traced",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Byte-for-byte identical to sentinel_pattern_primary (offset 0x18); isolated inside an otherwise fully-erased span, suggesting deliberate placement rather than noise."
+    },
+    {
+      "name": "erased_region_tail",
+      "offset": 232,
+      "size": 280,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {
+        "saves/cap-00-future-0.sav": "all 0xFF"
+      },
+      "update_mechanism": "n/a - never written (EEPROM erased default)",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Direct byte-level observation of the .sav file; standard EEPROM erased-cell fill value."
+    }
+  ]
+}

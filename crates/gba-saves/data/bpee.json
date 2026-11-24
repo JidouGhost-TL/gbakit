@@ -1,0 +1,63 @@
+{
+  "id": "bpee",
+  "game_code": "BPEE",
+  "title": "Pokemon - Emerald Version (USA, Europe)",
+  "media": "flash1m",
+  "size_bytes": 131072,
+  "magic_signatures": [
+    {
+      "offset": 4088,
+      "bytes": [
+        37,
+        32,
+        1,
+        8
+      ]
+    }
+  ],
+  "checksums": [],
+  "fields": [
+    {
+      "name": "player_name",
+      "offset": 0,
+      "size": 7,
+      "type": "bytes"
+    },
+    {
+      "name": "sector_magic",
+      "offset": 4088,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "name": "frontier_symbols",
+      "offset": 16,
+      "size": 2,
+      "type": "bitfield_array",
+      "bitfield_array": {
+        "bit_width": 2,
+        "count": 7,
+        "labels": [
+          "ability_symbol",
+          "brave_symbol",
+          "guts_symbol",
+          "knowledge_symbol",
+          "luck_symbol",
+          "spirits_symbol",
+          "tactics_symbol"
+        ]
+      }
+    },
+    {
+      "name": "scott_gold_trophy_awarded",
+      "offset": 18,
+      "size": 1,
+      "type": "u8",
+      "condition": {
+        "field": "frontier_symbols",
+        "op": ">=",
+        "value": 14
+      }
+    }
+  ]
+}

@@ -1,0 +1,208 @@
+{
+  "id": "bk4j",
+  "game_code": "BK4J",
+  "title": "Croket! 4 - Bank no Mori no Mamorigami (Japan)",
+  "media": "sram",
+  "size_bytes": 32768,
+  "eeprom_rev8": false,
+  "magic_signatures": [
+    {
+      "offset": 112,
+      "bytes_hex": "badbafb934",
+      "ascii": "",
+      "verified_in_code": false,
+      "verified_in_sav": true,
+      "function_addrs": [],
+      "bytes": [
+        186,
+        219,
+        175,
+        185,
+        52
+      ]
+    },
+    {
+      "offset": 117,
+      "bytes_hex": "76657230303030303036",
+      "ascii": "ver0000006",
+      "verified_in_code": false,
+      "verified_in_sav": true,
+      "function_addrs": [],
+      "bytes": [
+        118,
+        101,
+        114,
+        48,
+        48,
+        48,
+        48,
+        48,
+        48,
+        54
+      ]
+    }
+  ],
+  "checksums": [],
+  "fields": [
+    {
+      "name": "slot0_offset0_unknown",
+      "offset": 0,
+      "size": 1,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {
+        "cap-00-future-0.sav": "0xc0"
+      },
+      "update_mechanism": "unknown",
+      "confidence": "UNKNOWN",
+      "evidence": "Byte observed directly in saves/cap-00-future-0.sav. No function in ghidra/decompiled.c dereferences slot-0 offset 0 (FUN_0806d824's record reader starts at offset 1)."
+    },
+    {
+      "name": "slot0_record_00_flag",
+      "offset": 1,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": "stack temp -> caller param_1+6",
+      "writers": [],
+      "readers": [
+        "0x0806d824",
+        "0x0806d71c"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": "0x01"
+      },
+      "update_mechanism": "Read-only in this capture; no writer function present. Consumed by FUN_0806d71c's mismatch comparison against global uRam0806d760.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "FUN_0806d824 computes this exact offset (slot0 base + 0*3 + 1); Python byte read of saves/cap-00-future-0.sav confirms value 0x01 at this offset."
+    },
+    {
+      "name": "slot0_record_00_value",
+      "offset": 2,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": "stack temp -> caller param_1+4",
+      "writers": [],
+      "readers": [
+        "0x0806d824",
+        "0x0806d71c"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": "0x0006"
+      },
+      "update_mechanism": "Read-only in this capture; gates FUN_0806d71c's comparison (only runs the flag comparison if this value is non-zero).",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "FUN_0806d824's CONCAT11(pbVar3[2],pbVar3[1]) construction matches bytes at offset 2-3 of saves/cap-00-future-0.sav exactly (06 00 LE = 6). Semantic meaning of the value is unknown."
+    },
+    {
+      "name": "slot0_record_table_01_36",
+      "offset": 4,
+      "size": 108,
+      "type": "bytes",
+      "ram_addr": "stack temp -> caller param_1+4/+6, per record index",
+      "writers": [],
+      "readers": [
+        "0x0806d824",
+        "0x0806d71c",
+        "0x08072a20"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": "36 records, each 00 FF FF (flag=0, value=0xFFFF)"
+      },
+      "update_mechanism": "Read-only in this capture. FUN_08072a20 specifically consumes record indices 1 and 2 from this table.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Same reader function (FUN_0806d824) parameterized by record index; all 36 records independently confirmed identical and matching the empty-sentinel pattern via direct Python read of the file. The 'empty slot' interpretation of 00/0xFFFF is a HYPOTHESIS layered on top of the CONFIRMED_VERIFIED byte structure."
+    },
+    {
+      "name": "slot0_magic_candidate",
+      "offset": 112,
+      "size": 5,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {
+        "cap-00-future-0.sav": "ba db af b9 34"
+      },
+      "update_mechanism": "unknown",
+      "confidence": "UNKNOWN",
+      "evidence": "Byte-only observation; no function in this capture reads or writes offset 0x70 of slot 0."
+    },
+    {
+      "name": "slot0_version_string",
+      "offset": 117,
+      "size": 10,
+      "type": "ascii",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {
+        "cap-00-future-0.sav": "ver0000006"
+      },
+      "update_mechanism": "unknown",
+      "confidence": "HYPOTHESIS",
+      "evidence": "ASCII content plausibly correlates with the ROM's own SDK save tag SRAM_F_V103@14961228, but no traced function dereferences this offset, so the correlation is unproven."
+    },
+    {
+      "name": "slot0_trailer",
+      "offset": 127,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {
+        "cap-00-future-0.sav": "0x9e"
+      },
+      "update_mechanism": "unknown -- candidate checksum/status byte; see checksums[0]",
+      "confidence": "UNKNOWN",
+      "evidence": "Trailer byte recurs at every 0x80-byte boundary across the whole file; the 0x80 stride itself is CONFIRMED by FUN_0806db08's arithmetic, but no algorithm reproduced this specific value from the single available sample."
+    },
+    {
+      "name": "slot1_header_bytes",
+      "offset": 128,
+      "size": 6,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {
+        "cap-00-future-0.sav": "a0 00 00 00 00 1f"
+      },
+      "update_mechanism": "unknown",
+      "confidence": "UNKNOWN",
+      "evidence": "No traced function ever calls FUN_0806db08 with index 1, so nothing in this capture corroborates any interpretation of slot 1's content."
+    },
+    {
+      "name": "slot1_trailer",
+      "offset": 255,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {
+        "cap-00-future-0.sav": "0xf6"
+      },
+      "update_mechanism": "unknown -- candidate checksum/status byte; see checksums[0]",
+      "confidence": "UNKNOWN",
+      "evidence": "Differs from both slot 0's trailer and the 254-slot blank constant (0x41), proving it is content-dependent, but the formula is unproven."
+    },
+    {
+      "name": "slots_2_255_blank_body",
+      "offset": 256,
+      "size": 32512,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {
+        "cap-00-future-0.sav": "all 0x00, except trailer byte 0x41 at the end of each 128-byte slot"
+      },
+      "update_mechanism": "none observed",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Direct Python byte read of saves/cap-00-future-0.sav confirms all 254 remaining slots are uniformly blank with the identical 0x41 trailer; the 0x80-byte slot stride that makes this observation meaningful is CONFIRMED by FUN_0806db08's address arithmetic."
+    }
+  ]
+}

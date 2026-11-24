@@ -1,0 +1,96 @@
+{
+  "id": "bz4e",
+  "game_code": "BZ4E",
+  "title": "Final Fantasy IV Advance (USA)",
+  "media": "sram",
+  "size_bytes": 32768,
+  "magic_signatures": [
+    {
+      "offset": 0,
+      "bytes": [
+        70,
+        70,
+        52,
+        65
+      ]
+    }
+  ],
+  "checksums": [
+    {
+      "name": "slot_sum16",
+      "algorithm": "sum16_le",
+      "covered_start": 4,
+      "covered_end": 6142,
+      "stored_offset": 6142
+    }
+  ],
+  "fields": [
+    {
+      "name": "magic_ff4a",
+      "offset": 0,
+      "size": 4,
+      "type": "ascii"
+    },
+    {
+      "name": "save_counter",
+      "offset": 4,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "name": "gil",
+      "offset": 8,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "name": "play_time_seconds",
+      "offset": 12,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "name": "cecil_class",
+      "offset": 16,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "name": "paladin_shield_tier",
+      "offset": 17,
+      "size": 1,
+      "type": "u8",
+      "condition": {
+        "field": "cecil_class",
+        "op": "eq",
+        "value": 1
+      }
+    },
+    {
+      "name": "bestiary_defeat_flags",
+      "offset": 20,
+      "size": 32,
+      "type": "bitfield_array",
+      "bitfield_array": {
+        "bit_width": 1,
+        "count": 256,
+        "labels": [
+          "goblin",
+          "swordrat",
+          "floating_eye",
+          "red_bat",
+          "skeleton",
+          "cockatrice",
+          "gargoyle",
+          "zombie"
+        ]
+      }
+    },
+    {
+      "name": "slot_checksum",
+      "offset": 6142,
+      "size": 2,
+      "type": "u16_le"
+    }
+  ]
+}

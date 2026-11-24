@@ -1,0 +1,146 @@
+{
+  "id": "amhp",
+  "game_code": "AMHP",
+  "title": "Bomberman Max 2 - Blue Advance (Europe) (En,Fr,De)",
+  "media": "eeprom8k",
+  "size_bytes": 8192,
+  "eeprom_rev8": true,
+  "magic_signatures": [
+    {
+      "offset": 0,
+      "bytes_hex": "414d5245424d4f42d2003258414d2d4e",
+      "ascii": "AMREBMOB\\xd2\\x002XAM-N (raw); reversing each 8-byte half yields 'BOMBERMA' + 'N-MAX2\\x00\\xd2' -> 'BOMBERMAN-MAX2' + 2 trailing bytes",
+      "verified_in_code": false,
+      "verified_in_sav": true,
+      "function_addrs": [],
+      "bytes": [
+        65,
+        77,
+        82,
+        69,
+        66,
+        77,
+        79,
+        66,
+        210,
+        0,
+        50,
+        88,
+        65,
+        77,
+        45,
+        78
+      ]
+    }
+  ],
+  "checksums": [],
+  "fields": [
+    {
+      "name": "slot_magic_header",
+      "offset": 0,
+      "size": 16,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {
+        "cap-00-future-0.sav": "414d5245424d4f42d2003258414d2d4e",
+        "cap-01-future-1.sav": "414d5245424d4f42d2003258414d2d4e"
+      },
+      "update_mechanism": "unknown - no writer present in the 87-function corpus; value is identical across all 3 slots and both samples",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "Direct byte read of saves/*.sav at offsets 0x000, 0x300, 0x600; reversing each 8-byte half yields legible ASCII 'BOMBERMA'+'N-MAX2\\x00\\xd2' matching the release title text from this packet's own metadata."
+    },
+    {
+      "name": "slot_reserved_padding",
+      "offset": 16,
+      "size": 32,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {
+        "cap-00-future-0.sav": "all 0x00",
+        "cap-01-future-1.sav": "all 0x00"
+      },
+      "update_mechanism": "unknown",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "Direct byte read; zero-filled run identical in all 3 slots and both samples."
+    },
+    {
+      "name": "slot_flag_array",
+      "offset": 48,
+      "size": 240,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {
+        "distinct_values": [
+          "0x0000",
+          "0x0001"
+        ],
+        "count_0x0001": 80,
+        "count_0x0000": 40
+      },
+      "update_mechanism": "unknown",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Python Counter over in-slot bytes 0x30-0x11F (120 u16 entries) shows only two distinct values (0 and 1) in both samples, consistent with a boolean/flag array; no writer/reader traced and no semantic labels assigned per clean-room rule."
+    },
+    {
+      "name": "slot_record_table_main",
+      "offset": 288,
+      "size": 416,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {
+        "row_count": 26,
+        "row_size": 16,
+        "nonzero_word_indices_per_row": [
+          0,
+          2,
+          6,
+          7
+        ]
+      },
+      "update_mechanism": "unknown",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Hex inspection of in-slot bytes 0x120-0x2BF shows a 16-byte-period repeating row shape across 26 rows, with only 4 of each row's 8 u16 words ever non-zero; identical across all 3 slots and both samples. No semantic meaning assigned."
+    },
+    {
+      "name": "slot_record_table_summary",
+      "offset": 704,
+      "size": 64,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {
+        "row_count": 4,
+        "row_size": 16,
+        "example_row_0x2e0": "012c 0000 0055 0000 0000 0000 0118 010e"
+      },
+      "update_mechanism": "unknown",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Same 16-byte row shape as slot_record_table_main but larger-magnitude values and only 4 rows; distinguished purely by position/magnitude, not by any traced code. Possible aggregate/summary rows -- unverified."
+    },
+    {
+      "name": "trailer_flag_block",
+      "offset": 2304,
+      "size": 8,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {
+        "cap-00-future-0.sav": "ffffffffffffffff",
+        "cap-01-future-1.sav": "0000000000000000"
+      },
+      "update_mechanism": "unknown - sole byte difference between the two sample .sav files; the entire 2304-byte redundant-slot region is otherwise byte-identical between samples",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Byte diff of saves/hexdump_and_diffs.txt and independent Python re-diff; absolute offset 0x900 equals EEPROM block index 288, immediately after the 3x768-byte slot region (96 blocks each)."
+    }
+  ]
+}

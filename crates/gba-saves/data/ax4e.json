@@ -1,0 +1,100 @@
+{
+  "id": "ax4e",
+  "game_code": "AX4E",
+  "title": "Super Mario Advance 4: Super Mario Bros. 3 (USA)",
+  "media": "flash1m",
+  "size_bytes": 131072,
+  "magic_signatures": [
+    {
+      "offset": 0,
+      "bytes": [
+        83,
+        77,
+        65,
+        52,
+        77,
+        87,
+        69,
+        48
+      ]
+    },
+    {
+      "offset": 4096,
+      "bytes": [
+        77,
+        51,
+        69,
+        48
+      ]
+    }
+  ],
+  "checksums": [
+    {
+      "name": "sma4_block_sum16",
+      "algorithm": "sum16_le",
+      "covered_start": 0,
+      "covered_end": 4096,
+      "stored_offset": 8
+    }
+  ],
+  "fields": [
+    {
+      "name": "sma4_magic",
+      "offset": 0,
+      "size": 8,
+      "type": "ascii"
+    },
+    {
+      "name": "sma4_checksum",
+      "offset": 8,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "name": "active_world",
+      "offset": 12,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "name": "lives_mario",
+      "offset": 13,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "name": "lives_luigi",
+      "offset": 14,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "name": "ereader_levels_unlocked",
+      "offset": 16,
+      "size": 8,
+      "type": "bitfield_array",
+      "bitfield_array": {
+        "bit_width": 1,
+        "count": 64,
+        "labels": [
+          "classic_1_1",
+          "wild_plains",
+          "veggie_delight",
+          "mad_dash",
+          "power_up_peril"
+        ]
+      }
+    },
+    {
+      "name": "dark_land_airship_cleared",
+      "offset": 24,
+      "size": 1,
+      "type": "u8",
+      "condition": {
+        "field": "active_world",
+        "op": "eq",
+        "value": 8
+      }
+    }
+  ]
+}

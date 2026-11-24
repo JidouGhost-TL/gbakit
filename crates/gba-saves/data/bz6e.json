@@ -1,0 +1,104 @@
+{
+  "id": "bz6e",
+  "game_code": "BZ6E",
+  "title": "Final Fantasy VI Advance (USA)",
+  "media": "sram",
+  "size_bytes": 32768,
+  "magic_signatures": [
+    {
+      "offset": 0,
+      "bytes": [
+        70,
+        70,
+        54,
+        65
+      ]
+    }
+  ],
+  "checksums": [
+    {
+      "name": "slot_sum16",
+      "algorithm": "sum16_le",
+      "covered_start": 4,
+      "covered_end": 6142,
+      "stored_offset": 6142
+    }
+  ],
+  "fields": [
+    {
+      "name": "magic_ff6a",
+      "offset": 0,
+      "size": 4,
+      "type": "ascii"
+    },
+    {
+      "name": "save_counter",
+      "offset": 4,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "name": "world_phase",
+      "offset": 8,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "name": "gil",
+      "offset": 12,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "name": "esper_acquisition_flags",
+      "offset": 16,
+      "size": 4,
+      "type": "bitfield_array",
+      "bitfield_array": {
+        "bit_width": 1,
+        "count": 32,
+        "labels": [
+          "ramuh",
+          "kirin",
+          "siren",
+          "cait_sith",
+          "ifrit",
+          "shiva",
+          "unicorn",
+          "maduin"
+        ]
+      }
+    },
+    {
+      "name": "dragon_den_keys",
+      "offset": 20,
+      "size": 1,
+      "type": "bitfield_array",
+      "bitfield_array": {
+        "bit_width": 1,
+        "count": 8,
+        "labels": [
+          "red_dragon",
+          "blue_dragon",
+          "gold_dragon",
+          "skull_dragon",
+          "ice_dragon",
+          "storm_dragon",
+          "dirt_dragon",
+          "white_dragon"
+        ]
+      },
+      "condition": {
+        "field": "world_phase",
+        "op": "eq",
+        "value": 1
+      }
+    },
+    {
+      "name": "slot_checksum",
+      "offset": 6142,
+      "size": 2,
+      "type": "u16_le"
+    }
+  ]
+}

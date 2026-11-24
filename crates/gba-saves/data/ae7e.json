@@ -1,0 +1,102 @@
+{
+  "id": "ae7e",
+  "game_code": "AE7E",
+  "title": "Fire Emblem (USA, Australia)",
+  "media": "sram",
+  "size_bytes": 32768,
+  "magic_signatures": [
+    {
+      "offset": 0,
+      "bytes": [
+        65,
+        71,
+        66,
+        45
+      ]
+    }
+  ],
+  "checksums": [
+    {
+      "name": "slot_sum16",
+      "algorithm": "sum16_le",
+      "covered_start": 0,
+      "covered_end": 8190,
+      "stored_offset": 8190
+    }
+  ],
+  "fields": [
+    {
+      "name": "magic_header",
+      "offset": 0,
+      "size": 4,
+      "type": "bytes"
+    },
+    {
+      "name": "save_counter",
+      "offset": 4,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "name": "story_mode",
+      "offset": 8,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "name": "chapter_index",
+      "offset": 10,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "name": "tactician_name",
+      "offset": 12,
+      "size": 12,
+      "type": "ascii"
+    },
+    {
+      "name": "party_gold",
+      "offset": 24,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "name": "unit_casualty_flags",
+      "offset": 32,
+      "size": 8,
+      "type": "bitfield_array",
+      "bitfield_array": {
+        "bit_width": 1,
+        "count": 64,
+        "labels": [
+          "kent",
+          "sain",
+          "florian",
+          "wil",
+          "dorcas",
+          "serra",
+          "erk",
+          "rath"
+        ]
+      }
+    },
+    {
+      "name": "hector_hard_rank",
+      "offset": 40,
+      "size": 1,
+      "type": "u8",
+      "condition": {
+        "field": "story_mode",
+        "op": "eq",
+        "value": 2
+      }
+    },
+    {
+      "name": "slot_checksum",
+      "offset": 8190,
+      "size": 2,
+      "type": "u16_le"
+    }
+  ]
+}

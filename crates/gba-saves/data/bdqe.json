@@ -1,0 +1,80 @@
+{
+  "id": "bdqe",
+  "game_code": "BDQE",
+  "title": "Donkey Kong Country 3 (USA)",
+  "media": "eeprom512",
+  "size_bytes": 512,
+  "magic_signatures": [
+    {
+      "offset": 0,
+      "bytes": [
+        53,
+        49,
+        51,
+        71
+      ]
+    }
+  ],
+  "checksums": [
+    {
+      "name": "file_sum16",
+      "algorithm": "sum16_le",
+      "covered_start": 0,
+      "covered_end": 158,
+      "stored_offset": 158
+    }
+  ],
+  "fields": [
+    {
+      "name": "slot_magic",
+      "offset": 0,
+      "size": 4,
+      "type": "ascii"
+    },
+    {
+      "name": "completion_percent",
+      "offset": 4,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "name": "banana_birds_freed",
+      "offset": 6,
+      "size": 2,
+      "type": "bitfield_array",
+      "bitfield_array": {
+        "bit_width": 1,
+        "count": 15,
+        "labels": [
+          "bird_bazaar",
+          "bird_crevice",
+          "bird_barn",
+          "bird_cove"
+        ]
+      }
+    },
+    {
+      "name": "banana_queen_cloud_accessible",
+      "offset": 8,
+      "size": 1,
+      "type": "u8",
+      "condition": {
+        "field": "banana_birds_freed",
+        "op": "gte",
+        "value": 15
+      }
+    },
+    {
+      "name": "bear_coins",
+      "offset": 10,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "name": "file_checksum",
+      "offset": 158,
+      "size": 2,
+      "type": "u16_le"
+    }
+  ]
+}

@@ -1,0 +1,80 @@
+{
+  "id": "bpge",
+  "game_code": "BPGE",
+  "title": "Pokemon - LeafGreen Version (USA, Europe)",
+  "media": "flash1m",
+  "size_bytes": 131072,
+  "magic_signatures": [
+    {
+      "offset": 4088,
+      "bytes": [
+        37,
+        32,
+        1,
+        8
+      ]
+    }
+  ],
+  "checksums": [],
+  "fields": [
+    {
+      "name": "player_name",
+      "offset": 0,
+      "size": 7,
+      "type": "bytes"
+    },
+    {
+      "name": "sector_magic",
+      "offset": 4088,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "name": "trainer_badges",
+      "offset": 16,
+      "size": 1,
+      "type": "bitfield_array",
+      "bitfield_array": {
+        "bit_width": 1,
+        "count": 8,
+        "labels": [
+          "boulder_badge",
+          "cascade_badge",
+          "thunder_badge",
+          "rainbow_badge",
+          "soul_badge",
+          "marsh_badge",
+          "volcano_badge",
+          "earth_badge"
+        ]
+      }
+    },
+    {
+      "name": "sevii_tickets",
+      "offset": 17,
+      "size": 1,
+      "type": "bitfield_array",
+      "bitfield_array": {
+        "bit_width": 1,
+        "count": 4,
+        "labels": [
+          "tri_pass",
+          "rainbow_pass",
+          "mysticticket",
+          "auroraticket"
+        ]
+      }
+    },
+    {
+      "name": "cerulean_cave_unlocked",
+      "offset": 18,
+      "size": 1,
+      "type": "u8",
+      "condition": {
+        "field": "trainer_badges",
+        "op": "==",
+        "value": 255
+      }
+    }
+  ]
+}

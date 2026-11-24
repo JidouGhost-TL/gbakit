@@ -1,0 +1,126 @@
+{
+  "id": "bz5e",
+  "game_code": "BZ5E",
+  "title": "Final Fantasy V Advance (USA)",
+  "media": "sram",
+  "size_bytes": 32768,
+  "magic_signatures": [
+    {
+      "offset": 0,
+      "bytes": [
+        70,
+        73,
+        78,
+        65,
+        76,
+        32,
+        70,
+        65,
+        78,
+        84,
+        65,
+        83,
+        89,
+        32,
+        86,
+        32,
+        32,
+        32,
+        32,
+        32,
+        32,
+        65,
+        68,
+        86,
+        65,
+        78,
+        67,
+        69
+      ]
+    }
+  ],
+  "checksums": [
+    {
+      "name": "slot_sum16",
+      "algorithm": "sum16_le",
+      "covered_start": 32,
+      "covered_end": 6142,
+      "stored_offset": 6142
+    }
+  ],
+  "fields": [
+    {
+      "name": "title_banner",
+      "offset": 0,
+      "size": 32,
+      "type": "ascii"
+    },
+    {
+      "name": "save_counter",
+      "offset": 32,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "name": "gil",
+      "offset": 36,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "name": "job_mastery_flags",
+      "offset": 40,
+      "size": 8,
+      "type": "bitfield_array",
+      "bitfield_array": {
+        "bit_width": 1,
+        "count": 64,
+        "labels": [
+          "knight",
+          "monk",
+          "thief",
+          "dragoon",
+          "ninja",
+          "samurai",
+          "berserker",
+          "ranger"
+        ]
+      }
+    },
+    {
+      "name": "sealed_weapons_unlocked",
+      "offset": 48,
+      "size": 2,
+      "type": "bitfield_array",
+      "bitfield_array": {
+        "bit_width": 1,
+        "count": 12,
+        "labels": [
+          "excalibur",
+          "assassin_dagger",
+          "sasuke_katana",
+          "holy_lance",
+          "rune_axe",
+          "masamune"
+        ]
+      }
+    },
+    {
+      "name": "sealed_temple_progress",
+      "offset": 50,
+      "size": 1,
+      "type": "u8",
+      "condition": {
+        "field": "sealed_weapons_unlocked",
+        "op": "gte",
+        "value": 12
+      }
+    },
+    {
+      "name": "slot_checksum",
+      "offset": 6142,
+      "size": 2,
+      "type": "u16_le"
+    }
+  ]
+}

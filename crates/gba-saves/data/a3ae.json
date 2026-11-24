@@ -1,0 +1,88 @@
+{
+  "id": "a3ae",
+  "game_code": "A3AE",
+  "title": "Super Mario Advance 3: Yoshi's Island (USA)",
+  "media": "eeprom8k",
+  "size_bytes": 8192,
+  "magic_signatures": [
+    {
+      "offset": 0,
+      "bytes": [
+        83,
+        77,
+        65,
+        51,
+        77,
+        87,
+        69,
+        48
+      ]
+    }
+  ],
+  "checksums": [
+    {
+      "name": "slot_sum16",
+      "algorithm": "sum16_le",
+      "covered_start": 0,
+      "covered_end": 2048,
+      "stored_offset": 8
+    }
+  ],
+  "fields": [
+    {
+      "name": "sma3_magic",
+      "offset": 0,
+      "size": 8,
+      "type": "ascii"
+    },
+    {
+      "name": "sma3_checksum",
+      "offset": 8,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "name": "yoshi_lives",
+      "offset": 10,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "name": "total_score",
+      "offset": 12,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "name": "stage_perfect_scores",
+      "offset": 16,
+      "size": 8,
+      "type": "bitfield_array",
+      "bitfield_array": {
+        "bit_width": 1,
+        "count": 64,
+        "labels": [
+          "world1_1",
+          "world1_2",
+          "world1_3",
+          "world1_4",
+          "world1_5",
+          "world1_6",
+          "world1_7",
+          "world1_8"
+        ]
+      }
+    },
+    {
+      "name": "secret_stages_unlocked",
+      "offset": 24,
+      "size": 1,
+      "type": "u8",
+      "condition": {
+        "field": "total_score",
+        "op": "gte",
+        "value": 4800
+      }
+    }
+  ]
+}

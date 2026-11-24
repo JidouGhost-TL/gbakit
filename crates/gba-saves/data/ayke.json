@@ -1,0 +1,73 @@
+{
+  "id": "ayke",
+  "game_code": "AYKE",
+  "title": "Karnaaj Rally (USA, Europe)",
+  "media": "flash512",
+  "size_bytes": 65536,
+  "eeprom_rev8": false,
+  "magic_signatures": [
+    {
+      "offset": 28832,
+      "bytes_hex": "4b41524e41414a0000000041594b45",
+      "ascii": "KARNAAJ\u0000\u0000\u0000\u0000\u0000AYKE",
+      "verified_in_code": false,
+      "verified_in_sav": true,
+      "function_addrs": [],
+      "bytes": [
+        75,
+        65,
+        82,
+        78,
+        65,
+        65,
+        74,
+        0,
+        0,
+        0,
+        0,
+        65,
+        89,
+        75,
+        69
+      ]
+    }
+  ],
+  "checksums": [],
+  "fields": [
+    {
+      "name": "unidentified_fragment_0x5000",
+      "offset": 20480,
+      "size": 19,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {
+        "cap-00-future-0.sav": "6554a1cb0403010101008813000100000000 01"
+      },
+      "update_mechanism": "unknown; no traced writer/reader in ghidra/decompiled.c or ghidra/callgraph.json references any save-hardware address at all",
+      "confidence": "UNKNOWN",
+      "evidence": "saves/cap-00-future-0.sav offset 0x5000-0x5012; remainder of the 0x5000-0x5FFF window is zero padding, distinct from the file's 0xFF background fill."
+    },
+    {
+      "name": "rom_header_mirror_block",
+      "offset": 28672,
+      "size": 4096,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {
+        "title_ascii_0x70a0": "KARNAAJ",
+        "game_code_ascii_0x70ac": "AYKE",
+        "maker_code_ascii_0x70b0": "0A",
+        "fixed_byte_0x70b2": "0x96",
+        "version_0x70bc": "0x00",
+        "header_complement_checksum_0x70bd": "0xbe"
+      },
+      "update_mechanism": "Not written by any traced game function. Byte-exact match to this cartridge's own GBA ROM header (entry branch + header fields), independently verified against the public GBA header-checksum formula. Interpreted as an open-bus/ROM-mirroring capture artifact rather than genuine save content.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "saves/cap-00-future-0.sav offset 0x7000-0x7FFF; Python verification: sum=-(bytes[0xA0:0xBD]) then (sum-0x19)&0xFF == 0xbe == stored byte at relative offset 0xbd (absolute 0x70bd)."
+    }
+  ]
+}

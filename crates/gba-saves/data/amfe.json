@@ -1,0 +1,76 @@
+{
+  "id": "amfe",
+  "game_code": "AMFE",
+  "title": "Metroid Fusion (USA)",
+  "media": "sram",
+  "size_bytes": 32768,
+  "magic_signatures": [],
+  "checksums": [
+    {
+      "name": "samus_sum32",
+      "algorithm": "sum32_le",
+      "covered_start": 24,
+      "covered_end": 4608,
+      "stored_offset": 16
+    }
+  ],
+  "fields": [
+    {
+      "name": "slot_checksum",
+      "offset": 16,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "name": "energy_tanks",
+      "offset": 32,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "name": "missile_capacity",
+      "offset": 36,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "name": "suit_type",
+      "offset": 40,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "name": "game_time_frames",
+      "offset": 48,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "name": "security_level_locks",
+      "offset": 44,
+      "size": 1,
+      "type": "bitfield_array",
+      "bitfield_array": {
+        "bit_width": 1,
+        "count": 4,
+        "labels": [
+          "security_lock_1",
+          "security_lock_2",
+          "security_lock_3",
+          "security_lock_4"
+        ]
+      }
+    },
+    {
+      "name": "omega_metroid_cleared",
+      "offset": 45,
+      "size": 1,
+      "type": "u8",
+      "condition": {
+        "field": "security_level_locks",
+        "op": ">=",
+        "value": 4
+      }
+    }
+  ]
+}

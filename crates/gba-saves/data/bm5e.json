@@ -1,0 +1,86 @@
+{
+  "id": "bm5e",
+  "game_code": "BM5E",
+  "title": "Mario vs. Donkey Kong (USA, Australia)",
+  "media": "eeprom8k",
+  "size_bytes": 8192,
+  "magic_signatures": [
+    {
+      "offset": 0,
+      "bytes": [
+        77,
+        86,
+        68,
+        75
+      ]
+    }
+  ],
+  "checksums": [
+    {
+      "name": "slot_sum16",
+      "algorithm": "sum16_le",
+      "covered_start": 0,
+      "covered_end": 4094,
+      "stored_offset": 4094
+    }
+  ],
+  "fields": [
+    {
+      "name": "magic_mvdk",
+      "offset": 0,
+      "size": 4,
+      "type": "ascii"
+    },
+    {
+      "name": "stars_collected",
+      "offset": 4,
+      "size": 8,
+      "type": "bitfield_array",
+      "bitfield_array": {
+        "bit_width": 1,
+        "count": 64,
+        "labels": [
+          "world1_1_star",
+          "world1_2_star",
+          "world1_3_star",
+          "world1_4_star"
+        ]
+      }
+    },
+    {
+      "name": "expert_levels_unlocked",
+      "offset": 12,
+      "size": 1,
+      "type": "u8",
+      "condition": {
+        "field": "stars_collected",
+        "op": "gte",
+        "value": 40
+      }
+    },
+    {
+      "name": "mini_mario_rescued_flags",
+      "offset": 16,
+      "size": 6,
+      "type": "bitfield_array",
+      "bitfield_array": {
+        "bit_width": 1,
+        "count": 48,
+        "labels": [
+          "mm_1",
+          "mm_2",
+          "mm_3",
+          "mm_4",
+          "mm_5",
+          "mm_6"
+        ]
+      }
+    },
+    {
+      "name": "slot_checksum",
+      "offset": 4094,
+      "size": 2,
+      "type": "u16_le"
+    }
+  ]
+}

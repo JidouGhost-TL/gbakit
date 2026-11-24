@@ -1,0 +1,116 @@
+{
+  "id": "bpre",
+  "game_code": "BPRE",
+  "title": "Pokemon - FireRed Version (USA, Europe) (Rev 1)",
+  "media": "flash1m",
+  "size_bytes": 131072,
+  "magic_signatures": [
+    {
+      "offset": 4088,
+      "bytes": [
+        37,
+        32,
+        1,
+        8
+      ]
+    }
+  ],
+  "checksums": [],
+  "fields": [
+    {
+      "name": "player_name",
+      "offset": 0,
+      "size": 7,
+      "type": "bytes"
+    },
+    {
+      "name": "player_gender",
+      "offset": 8,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "name": "trainer_id",
+      "offset": 10,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "name": "play_time_hours",
+      "offset": 14,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "name": "sector_id",
+      "offset": 4084,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "name": "sector_checksum",
+      "offset": 4086,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "name": "sector_magic",
+      "offset": 4088,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "name": "save_counter",
+      "offset": 4092,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "name": "trainer_badges",
+      "offset": 16,
+      "size": 1,
+      "type": "bitfield_array",
+      "bitfield_array": {
+        "bit_width": 1,
+        "count": 8,
+        "labels": [
+          "boulder_badge",
+          "cascade_badge",
+          "thunder_badge",
+          "rainbow_badge",
+          "soul_badge",
+          "marsh_badge",
+          "volcano_badge",
+          "earth_badge"
+        ]
+      }
+    },
+    {
+      "name": "sevii_tickets",
+      "offset": 17,
+      "size": 1,
+      "type": "bitfield_array",
+      "bitfield_array": {
+        "bit_width": 1,
+        "count": 4,
+        "labels": [
+          "tri_pass",
+          "rainbow_pass",
+          "mysticticket",
+          "auroraticket"
+        ]
+      }
+    },
+    {
+      "name": "cerulean_cave_unlocked",
+      "offset": 18,
+      "size": 1,
+      "type": "u8",
+      "condition": {
+        "field": "trainer_badges",
+        "op": "==",
+        "value": 255
+      }
+    }
+  ]
+}

@@ -1,0 +1,331 @@
+{
+  "id": "anvj",
+  "game_code": "ANVJ",
+  "title": "Shiren Monsters - Netsal (Japan)",
+  "media": "sram",
+  "size_bytes": 32768,
+  "eeprom_rev8": false,
+  "magic_signatures": [
+    {
+      "offset": 8,
+      "bytes_hex": "4147425f4e45545341 4c5f534156455f44 4154415f5645525f30 2e3034395f3000000000000000000000",
+      "ascii": "AGB_NETSAL_SAVE_DATA_VER_0.049_0",
+      "verified_in_code": true,
+      "verified_in_sav": true,
+      "function_addrs": [
+        "0x08069194",
+        "0x08069124",
+        "0x080241fc"
+      ],
+      "bytes": [
+        65,
+        71,
+        66,
+        95,
+        78,
+        69,
+        84,
+        83,
+        65,
+        76,
+        95,
+        83,
+        65,
+        86,
+        69,
+        95,
+        68,
+        65,
+        84,
+        65,
+        95,
+        86,
+        69,
+        82,
+        95,
+        48,
+        46,
+        48,
+        52,
+        57,
+        95,
+        48,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "offset": 32736,
+      "bytes_hex": "4147425f4e45545341 4c5f5352414d5f494e49545f56455253494f4e5f312e30",
+      "ascii": "AGB_NETSAL_SRAM_INIT_VERSION_1.0",
+      "verified_in_code": false,
+      "verified_in_sav": true,
+      "function_addrs": [],
+      "bytes": [
+        65,
+        71,
+        66,
+        95,
+        78,
+        69,
+        84,
+        83,
+        65,
+        76,
+        95,
+        83,
+        82,
+        65,
+        77,
+        95,
+        73,
+        78,
+        73,
+        84,
+        95,
+        86,
+        69,
+        82,
+        83,
+        73,
+        79,
+        78,
+        95,
+        49,
+        46,
+        48
+      ]
+    }
+  ],
+  "checksums": [],
+  "fields": [
+    {
+      "name": "profile_checksum",
+      "offset": 0,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": [
+        "0x08069194"
+      ],
+      "readers": [
+        "0x080693b8",
+        "0x0806957c"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": "0x2f64",
+        "cap-01-future-1.sav": "0x6877"
+      },
+      "update_mechanism": "Recomputed on every profile write from the whole-sector word sum; see checksums[0].",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Algebraic derivation from FUN_08069194 matches both samples exactly via verify_checksum.py (see SAVE-FORMAT-REPORT.md section 4.3)."
+    },
+    {
+      "name": "generation_counter",
+      "offset": 2,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": [
+        "0x08069194"
+      ],
+      "readers": [],
+      "observed_values": {
+        "cap-00-future-0.sav": "0x0000",
+        "cap-01-future-1.sav": "0x0001"
+      },
+      "update_mechanism": "psVar5[1] = (short)*piVar1, where piVar1 is incremented/clamped against a ROM ceiling constant each write.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "ghidra/decompiled.c:7107-7119; byte delta between the two samples is exactly +1."
+    },
+    {
+      "name": "save_time_or_seed_u32",
+      "offset": 4,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": [
+        "0x08069194"
+      ],
+      "readers": [],
+      "observed_values": {
+        "cap-00-future-0.sav": "0x00000000",
+        "cap-01-future-1.sav": "0x0226c4c6"
+      },
+      "update_mechanism": "Copied verbatim from an unresolved RAM global (_DAT_08069238) at save time.",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Magnitude too large for a frame counter over the ~3.5s capture gap; plausibly a hardware timer/cycle count or RNG seed. Semantic meaning unproven."
+    },
+    {
+      "name": "save_data_version_magic",
+      "offset": 8,
+      "size": 32,
+      "type": "ascii",
+      "ram_addr": null,
+      "writers": [
+        "0x08069194"
+      ],
+      "readers": [
+        "0x08069124"
+      ],
+      "observed_values": {
+        "both samples": "AGB_NETSAL_SAVE_DATA_VER_0.049_0"
+      },
+      "update_mechanism": "Fixed ROM-constant string copied via FUN_080241fc on every write.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "FUN_080241fc copy length (0x20) and buffer offset (+8) match the exact byte range and content in both samples."
+    },
+    {
+      "name": "opaque_block_1_unk_fields",
+      "offset": 40,
+      "size": 7040,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [
+        "0x08051d64"
+      ],
+      "readers": [
+        "0x08051dcc"
+      ],
+      "observed_values": {
+        "both samples": "all-zero"
+      },
+      "update_mechanism": "6 sub-fields (sizes 0x2c8,0x310,0x2c8,0xe80,0x3a0,0xc0) serialized in order via func_0x08069904.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "ghidra/save_related_functions.c lines 219-261; field sizes confirmed, contents never observed non-zero."
+    },
+    {
+      "name": "flag_array_a",
+      "offset": 7114,
+      "size": 116,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [
+        "0x080674e8"
+      ],
+      "readers": [
+        "0x08067624"
+      ],
+      "observed_values": {
+        "both samples": "repeating 00 00 00 00 / 01 00 00 00 dword pattern, 81 active bytes from offset 0x1bca"
+      },
+      "update_mechanism": "Sequential field within FUN_080674e8's 22 sub-field list.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Reconstructed cursor offset (0x1bca) is an EXACT match to the observed active-range start in saves/hexdump_and_diffs.txt; field semantics (likely a u32 flag/unlock table) are unproven."
+    },
+    {
+      "name": "flag_array_b",
+      "offset": 8187,
+      "size": 12,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [
+        "0x080674e8"
+      ],
+      "readers": [
+        "0x08067624"
+      ],
+      "observed_values": {
+        "both samples": "00 00 00 00 00 00 00 01 01 01 01 01 / 01 01 01 01 01 01 01 00 (progressive run of 0x01 bytes)"
+      },
+      "update_mechanism": "Sequential field within FUN_080674e8's 22 sub-field list.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Reconstructed cursor offset (0x1ffb) is an EXACT match to the observed active-range start; likely a progress/completion bitfield."
+    },
+    {
+      "name": "sentinel_array",
+      "offset": 8319,
+      "size": 660,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [
+        "0x0805e6d0"
+      ],
+      "readers": [
+        "0x0805e6e8"
+      ],
+      "observed_values": {
+        "both samples": "mostly 0xff with a trailing 0x0c byte around offset 0x212b"
+      },
+      "update_mechanism": "Single large field, size 0x294, serialized via FUN_0805e6d0.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "Field boundaries match code; 0xff-sentinel pattern is a classic empty-slot marker for an item/monster list, but unproven. Observed active sub-range 0x20b2-0x212f falls entirely inside this field."
+    },
+    {
+      "name": "u32_field_at_0x2313",
+      "offset": 8979,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": [
+        "0x08013240"
+      ],
+      "readers": [
+        "0x08013300"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": "non-zero (1 bit set per hexdump)"
+      },
+      "update_mechanism": "First of 13 sequential sub-fields serialized by FUN_08013240.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Reconstructed cursor offset (0x2313) is an EXACT match to the observed active-range start."
+    },
+    {
+      "name": "u32_field_at_0x2720",
+      "offset": 10016,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": [
+        "0x08013240"
+      ],
+      "readers": [
+        "0x08013300"
+      ],
+      "observed_values": {
+        "both samples": "2 active bytes within this field per hexdump"
+      },
+      "update_mechanism": "Penultimate sub-field in FUN_08013240's 13-field list.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Reconstructed cursor offset (0x2720) is an EXACT match to the observed active-range start."
+    },
+    {
+      "name": "unidentified_tail_region",
+      "offset": 10188,
+      "size": 92,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {
+        "both samples": "active/non-zero per saves/hexdump_and_diffs.txt, not individually examined"
+      },
+      "update_mechanism": "Not identified; lies beyond the reconstructed end of the 9 traced sub-serializer calls (cursor ends at offset 10137 / 0x2799).",
+      "confidence": "UNKNOWN",
+      "evidence": "Open question; likely a sub-function outside the extracted 32-function seed set in ghidra/save_related_functions.c."
+    },
+    {
+      "name": "sram_format_stamp_magic",
+      "offset": 32736,
+      "size": 32,
+      "type": "ascii",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {
+        "both samples": "AGB_NETSAL_SRAM_INIT_VERSION_1.0"
+      },
+      "update_mechanism": "Not traced to a specific writer instruction in this extraction; inferred to be written once at chip-format time.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Exact byte match at absolute offset 0x7fe0-0x8000 in both samples; preceded by 0xff-filled unwritten space."
+    }
+  ]
+}

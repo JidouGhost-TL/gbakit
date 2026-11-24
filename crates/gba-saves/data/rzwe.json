@@ -1,0 +1,89 @@
+{
+  "id": "rzwe",
+  "game_code": "RZWE",
+  "title": "WarioWare: Twisted! (USA, Australia)",
+  "media": "flash512",
+  "size_bytes": 65536,
+  "magic_signatures": [
+    {
+      "offset": 0,
+      "bytes": [
+        82,
+        90,
+        87,
+        48
+      ]
+    }
+  ],
+  "checksums": [
+    {
+      "name": "sector_sum16",
+      "algorithm": "sum16_le",
+      "covered_start": 0,
+      "covered_end": 4094,
+      "stored_offset": 4094
+    }
+  ],
+  "fields": [
+    {
+      "name": "magic_rzw0",
+      "offset": 0,
+      "size": 4,
+      "type": "ascii"
+    },
+    {
+      "name": "microgames_unlocked_flags",
+      "offset": 4,
+      "size": 28,
+      "type": "bitfield_array",
+      "bitfield_array": {
+        "bit_width": 1,
+        "count": 220,
+        "labels": [
+          "mg_spin_1",
+          "mg_spin_2",
+          "mg_spin_3",
+          "mg_spin_4"
+        ]
+      }
+    },
+    {
+      "name": "souvenir_unlocked_flags",
+      "offset": 32,
+      "size": 17,
+      "type": "bitfield_array",
+      "bitfield_array": {
+        "bit_width": 1,
+        "count": 130,
+        "labels": [
+          "souvenir_spindex",
+          "souvenir_turntable",
+          "souvenir_metronome"
+        ]
+      }
+    },
+    {
+      "name": "warioman_boss_unlocked",
+      "offset": 50,
+      "size": 1,
+      "type": "u8",
+      "condition": {
+        "field": "microgames_unlocked_flags",
+        "op": "gte",
+        "value": 150
+      }
+    },
+    {
+      "name": "gyro_bias_offset",
+      "offset": 52,
+      "size": 2,
+      "type": "i16_le"
+    },
+    {
+      "name": "sector_checksum",
+      "offset": 4094,
+      "size": 2,
+      "type": "u16_le"
+    }
+  ]
+}

@@ -1,0 +1,145 @@
+{
+  "id": "aame",
+  "game_code": "AAME",
+  "title": "Castlevania - Circle of the Moon (USA)",
+  "media": "sram",
+  "size_bytes": 32768,
+  "eeprom_rev8": false,
+  "magic_signatures": [
+    {
+      "offset": 0,
+      "bytes_hex": "44524143554c4120414742",
+      "ascii": "DRACULA AGB",
+      "verified_in_code": true,
+      "verified_in_sav": true,
+      "function_addrs": [
+        "0x08010158"
+      ],
+      "bytes": [
+        68,
+        82,
+        65,
+        67,
+        85,
+        76,
+        65,
+        32,
+        65,
+        71,
+        66
+      ]
+    }
+  ],
+  "checksums": [
+    {
+      "name": "slot_checksum",
+      "algorithm": "sum8",
+      "formula_detail": "stored_byte = (sum of all bytes in the slot's covered range [0..N], where N = ROM constant _DAT_080104bc not captured in this decompilation dump, computed while including the stale byte at local offset +9 and then subtracting that same stale byte back out) mod 256. Net effect: an 8-bit additive checksum of every byte in the covered range except the checksum byte itself, stored back at local offset +9 of each 976-byte slot.",
+      "stored_offset": 25,
+      "stored_size": 1,
+      "covered_start": 16,
+      "covered_end": 991,
+      "function_addrs": [
+        "0x08010490",
+        "0x08010320"
+      ],
+      "verified_on_samples": [
+        {
+          "file": "saves/cap-00-future-0.sav",
+          "stored_hex": "0x00",
+          "computed_hex": "0x00",
+          "match": true
+        }
+      ],
+      "confidence": "CONFIRMED_STATIC"
+    }
+  ],
+  "fields": [
+    {
+      "name": "magic_signature",
+      "offset": 0,
+      "size": 11,
+      "type": "ascii",
+      "ram_addr": "0x0e000000",
+      "writers": [
+        "0x08010158"
+      ],
+      "readers": [
+        "0x08010250"
+      ],
+      "observed_values": {
+        "saves/cap-00-future-0.sav": "DRACULA AGB"
+      },
+      "update_mechanism": "Literal byte-by-byte store in FUN_08010158, triggered only when the existing header fails its mismatch check against uncaptured expected constants.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "ghidra/decompiled.c FUN_08010158 byte stores reproduce the exact ASCII sequence found at saves/cap-00-future-0.sav offset 0x0000."
+    },
+    {
+      "name": "header_padding",
+      "offset": 11,
+      "size": 5,
+      "type": "bytes",
+      "ram_addr": "0x0e00000b",
+      "writers": [],
+      "readers": [
+        "0x08010250"
+      ],
+      "observed_values": {
+        "saves/cap-00-future-0.sav": "0000000000"
+      },
+      "update_mechanism": "Unknown; no explicit store instruction for these 5 bytes was located in the decompiled header-write path (0x08010158/0x0801026c). Value is only confirmed empirically from the sample.",
+      "confidence": "UNKNOWN",
+      "evidence": "saves/hexdump_and_diffs.txt shows zero bytes at offset 0x000b-0x000f; no corresponding write instruction found in ghidra/decompiled.c."
+    },
+    {
+      "name": "slot_checksum_byte",
+      "offset": 25,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": "0x0e000019",
+      "writers": [
+        "0x08010320",
+        "0x08010490"
+      ],
+      "readers": [],
+      "observed_values": {
+        "saves/cap-00-future-0.sav": "0x00 (slot 0, and all 7 other slots at their respective +9 offsets)"
+      },
+      "update_mechanism": "Computed by FUN_08010490 as sum8-excluding-self over the slot's covered byte range, stored by FUN_08010320 at local slot offset +9 every time the slot is (re)written.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "Formula in ghidra/decompiled.c FUN_08010490; position/resting-value verified numerically against all 8 slots in saves/cap-00-future-0.sav, but the all-zero sample cannot disambiguate the exact coverage length N."
+    },
+    {
+      "name": "slot_body_unmapped",
+      "offset": 16,
+      "size": 7808,
+      "type": "bytes",
+      "ram_addr": "0x0e000010",
+      "writers": [
+        "0x08010320"
+      ],
+      "readers": [],
+      "observed_values": {
+        "saves/cap-00-future-0.sav": "all zero across all 8 slots"
+      },
+      "update_mechanism": "Bulk byte-copy in FUN_08010320 treats the whole 976-byte slot opaquely except for the explicitly-addressed checksum byte at +9; no individual gameplay field boundaries could be derived from this workspace.",
+      "confidence": "UNKNOWN",
+      "evidence": "Only a blank/never-played save sample is available; a post-gameplay non-blank .sav is required to map any field inside the slot body."
+    },
+    {
+      "name": "unused_sram_tail",
+      "offset": 7824,
+      "size": 24944,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {
+        "saves/cap-00-future-0.sav": "all 0xff"
+      },
+      "update_mechanism": "No code in the decompiled corpus addresses any location in this range.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Directly observed byte range in saves/cap-00-future-0.sav; corroborated by absence of any matching address arithmetic in ghidra/decompiled.c."
+    }
+  ]
+}

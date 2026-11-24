@@ -1,0 +1,111 @@
+{
+  "id": "azle",
+  "game_code": "AZLE",
+  "title": "The Legend of Zelda: A Link to the Past & Four Swords (USA)",
+  "media": "eeprom8k",
+  "size_bytes": 8192,
+  "magic_signatures": [
+    {
+      "offset": 0,
+      "bytes": [
+        84,
+        32,
+        75,
+        78,
+        73,
+        76,
+        32,
+        65,
+        65,
+        80,
+        32,
+        69,
+        72,
+        84,
+        32,
+        79
+      ]
+    },
+    {
+      "offset": 64,
+      "bytes": [
+        84,
+        73,
+        78,
+        73
+      ]
+    }
+  ],
+  "checksums": [],
+  "fields": [
+    {
+      "name": "header_magic",
+      "offset": 0,
+      "size": 16,
+      "type": "ascii"
+    },
+    {
+      "name": "slot_0_magic",
+      "offset": 64,
+      "size": 4,
+      "type": "ascii"
+    },
+    {
+      "name": "player_name",
+      "offset": 72,
+      "size": 6,
+      "type": "ascii"
+    },
+    {
+      "name": "max_hearts",
+      "offset": 78,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "name": "rupees",
+      "offset": 84,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "name": "pendant_and_crystal_flags",
+      "offset": 88,
+      "size": 2,
+      "type": "bitfield_array",
+      "bitfield_array": {
+        "bit_width": 1,
+        "count": 16,
+        "labels": [
+          "pendant_courage",
+          "pendant_power",
+          "pendant_wisdom",
+          "crystal_1",
+          "crystal_2",
+          "crystal_3",
+          "crystal_4",
+          "crystal_5",
+          "crystal_6",
+          "crystal_7"
+        ]
+      }
+    },
+    {
+      "name": "master_sword_pedestal_cleared",
+      "offset": 90,
+      "size": 1,
+      "type": "u8",
+      "condition": {
+        "field": "pendant_and_crystal_flags",
+        "op": "gte",
+        "value": 7
+      }
+    },
+    {
+      "name": "backup_half_mirror",
+      "offset": 4096,
+      "size": 4096,
+      "type": "bytes"
+    }
+  ]
+}
