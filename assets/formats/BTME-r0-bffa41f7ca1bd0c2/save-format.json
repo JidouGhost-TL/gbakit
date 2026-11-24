@@ -1,0 +1,194 @@
+{
+  "schema": "gbakit-save-research/1",
+  "release_key": "BTME-r0-bffa41f7ca1bd0c2",
+  "display_name": "Mario Tennis - Power Tour (USA, Australia) (En,Fr,De,Es,It)",
+  "rom_sha256": "bffa41f7ca1bd0c26920c752fc08b01f754a89f6411b16e17fe375bacc595082",
+  "game_code": "BTME",
+  "header_family": "BTM",
+  "community_id": "comm-009",
+  "overall_confidence": "HIGH",
+  "media": {
+    "kind": "sram",
+    "size_bytes": 32768,
+    "sdk_tags": [
+      "SRAM_V113"
+    ],
+    "fill_byte": "0xff"
+  },
+  "slots_and_copies": [
+    {
+      "name": "system_record_0",
+      "offset": 0,
+      "size": 1012,
+      "redundancy_role": "global_config",
+      "selection_rule": "Validated by 'MarioTennisABUD' at offset 0x04 and sum16_le checksum at 0x02."
+    },
+    {
+      "name": "academy_and_tour_records",
+      "offset": 4096,
+      "size": 28672,
+      "redundancy_role": "primary",
+      "selection_rule": "Partition table partitions across remaining 7 x 4KB SRAM sectors."
+    }
+  ],
+  "magic_signatures": [
+    {
+      "offset": 4,
+      "bytes_hex": "4d6172696f54656e6e697341425544",
+      "ascii": "MarioTennisABUD",
+      "verified_in_code": true,
+      "verified_in_sav": true,
+      "function_addrs": [
+        "0x08015f98"
+      ]
+    }
+  ],
+  "checksums": [
+    {
+      "name": "record_0_checksum",
+      "algorithm": "sum16_le",
+      "formula_detail": "16-bit little-endian sum of halfwords across payload (bytes 4..1012), verified against stored u16le at offset 2.",
+      "stored_offset": 2,
+      "stored_size": 2,
+      "covered_start": 4,
+      "covered_end": 1012,
+      "function_addrs": [
+        "0x08015f98"
+      ],
+      "verified_on_samples": [
+        {
+          "file": "saves/cap-00-future-0.sav",
+          "stored_hex": "0x8dfb",
+          "computed_hex": "0x8dfb",
+          "match": true
+        }
+      ],
+      "confidence": "CONFIRMED_VERIFIED"
+    }
+  ],
+  "io_driver_functions": [
+    {
+      "addr": "0x08015f74",
+      "role": "deserialize",
+      "callers": [
+        "0x08015f98"
+      ],
+      "notes": "Partition table lookup resolver."
+    },
+    {
+      "addr": "0x08015f98",
+      "role": "deserialize",
+      "callers": [],
+      "notes": "Record reader and checksum verifier."
+    },
+    {
+      "addr": "0x0801c3fc",
+      "role": "write",
+      "callers": [],
+      "notes": "Low-level SRAM sector transfer routine."
+    }
+  ],
+  "caller_chains": [
+    {
+      "entry_caller": "0x08015f98",
+      "chain": [
+        "0x08015f98",
+        "0x08015f74",
+        "0x0801c3fc"
+      ],
+      "trigger_context": "Boot sequence and tennis academy save load.",
+      "ram_fields_updated": [
+        "Player level, power shots unlocked, court rankings"
+      ],
+      "how_mapped": "Traced disassembly and decompilation of FUN_08015f98."
+    }
+  ],
+  "fields": [
+    {
+      "name": "record_0_payload_length",
+      "offset": 0,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": [
+        "0x08015f98"
+      ],
+      "readers": [
+        "0x08015f98"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": 1008
+      },
+      "update_mechanism": "Length of payload in bytes.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "saves/cap-00-future-0.sav bytes 0x00-0x01 = f0 03 (1008)."
+    },
+    {
+      "name": "record_0_checksum",
+      "offset": 2,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": [
+        "0x08015f98"
+      ],
+      "readers": [
+        "0x08015f98"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": "0x8dfb"
+      },
+      "update_mechanism": "16-bit sum of all halfwords in payload.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Computed sum over bytes 4..1012 matches stored value 0x8dfb exactly."
+    },
+    {
+      "name": "magic_identifier",
+      "offset": 4,
+      "size": 15,
+      "type": "ascii",
+      "ram_addr": null,
+      "writers": [
+        "0x08015f98"
+      ],
+      "readers": [
+        "0x08015f98"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": "MarioTennisABUD"
+      },
+      "update_mechanism": "Static constant string identifying title and build.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "saves/cap-00-future-0.sav bytes 0x04-0x12."
+    },
+    {
+      "name": "academy_and_player_stats",
+      "offset": 19,
+      "size": 993,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [
+        "0x08015f98"
+      ],
+      "readers": [
+        "0x08015f98"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": "active player profile bytes"
+      },
+      "update_mechanism": "Holds varsity rank, power shot training stats, and tournament records.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Active payload in record 0."
+    }
+  ],
+  "fuzzing_targets": [
+    {
+      "offset": 2,
+      "size": 2,
+      "mutation": "Invert checksum bytes (0x8dfb -> 0x7204).",
+      "requires_checksum_repair": false,
+      "predicted_effect": "0x08015f98 comparison fails; save data rejected."
+    }
+  ],
+  "open_questions": []
+}

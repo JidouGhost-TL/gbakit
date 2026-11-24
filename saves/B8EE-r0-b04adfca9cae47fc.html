@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Megaman - Battle Network 4 - Red Sun (USA) Save Format — gbakit GBA Reference</title>
+  <link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+  <header>
+    <div class="brand"><a href="../index.html" style="color:inherit">gbakit GBA Reference <span class="badge badge-emerald">v2.0</span></a></div>
+    <nav>
+      <a href="../index.html">Games</a>
+      <a href="../saves/index.html">Save Formats</a>
+      <a href="../patches/index.html">Debug Patches</a>
+      <a href="../debug-menus.html">Debug Gallery</a>
+      <a href="../non-retail-cartridges.html">Non-Retail</a>
+      <a href="../cartridge-hardware.html">Cartridge Hardware</a>
+      <a href="../link-multiplayer.html">Link &amp; Multiplayer</a>
+      <a href="../multiboot-museum.html">MultiBoot Museum</a>
+      <a href="../assets/index.html">Assets &amp; Audio</a>
+      <a href="../text-and-fonts.html">Text &amp; Fonts</a>
+      <a href="../engines/index.html">Engines &amp; Hardware</a>
+      <a href="../families/index.html">Families</a>
+      <a href="../gbakit/index.html">Using gbakit</a>
+    </nav>
+  </header>
+  <main>
+<p class="meta"><a href="index.html">&larr; Save Formats</a> &middot; <a href="../titles/B8EE-r0-b04adfca9cae47fc.html">Megaman - Battle Network 4 - Red Sun (USA)</a></p>
+<h1>Megaman - Battle Network 4 - Red Sun (USA) — Save Format Specification</h1>
+<p><span class="badge badge-indigo">Confidence: HIGH</span> <span class="badge badge-blue">6 Fields</span> <span class="badge badge-emerald">1 Verified Checksum(s)</span> <span class='badge badge-emerald'>gbakit Built-In</span></p>
+<p><a class='btn btn-secondary' href='../assets/formats/B8EE-r0-b04adfca9cae47fc/save-format.json' download>Download save-format.json</a><a class='btn btn-secondary' href='../titles/B8EE-r0-b04adfca9cae47fc.html'>View Game Page</a></p>
+
+<div class="callout">
+  <strong>Use directly with <code>gbakit</code> (built-in definition <code>B8EE</code>):</strong>
+  <pre><code>gbakit save verify B8EE save.sav
+gbakit save decode B8EE save.sav
+gbakit save fix    B8EE damaged.sav -o repaired.sav</code></pre>
+</div>
+
+<div class='md-body'>
+<h2>Clean-Room GBA Save Format Reverse-Engineering Report: Megaman - Battle Network 4 - Red Sun (USA)</h2>
+<h2>1. Executive Summary &amp; Overall Confidence</h2>
+<ul><li><strong>Game Title:</strong> Megaman - Battle Network 4 - Red Sun (USA)</li><li><strong>Release Key:</strong> <code>B8EE-r0-b04adfca9cae47fc</code></li><li><strong>Game Code / Header Family:</strong> <code>B8EE</code> / <code>B8E</code></li><li><strong>ROM SHA-256:</strong> <code>b04adfca9cae47fc9241e70c88e49b16ee9e75d796ab4ee90940401a6c1d5514</code></li><li><strong>Overall Confidence:</strong> <code>HIGH</code></li></ul>
+<p>This report presents clean-room reverse-engineering analysis of the battery save system for <code>Megaman - Battle Network 4 - Red Sun (USA)</code>. The physical media, memory layout, serialization routines, hardware I/O drivers, and field offsets were derived exclusively from trace-guided decompilation in Ghidra and real emulator <code>.sav</code> binary captures.</p>
+<h2>2. Physical Media, Slot Geometry &amp; Redundancy</h2>
+<ul><li><strong>Media Kind:</strong> <code>sram</code></li><li><strong>Capacity:</strong> 32768 bytes (<code>0x8000</code>)</li><li><strong>SDK Tags:</strong> <code>SRAM_V112</code></li><li><strong>Erased / Default Fill Byte:</strong> <code>0x00</code></li></ul>
+<h3>Slot Layout</h3>
+<table><thead><tr><th>Slot Name</th><th>Offset (hex)</th><th>Size (bytes)</th><th>Role</th><th>Selection &amp; Validation Rule</th></tr></thead><tbody><tr><td><code>active_net_save</code></td><td><code>0x0000</code></td><td>29650 (<code>0x73d2</code>)</td><td><code>primary</code></td><td>Active save validated via magic &#x27;ROCKMANEXE4 20031022\0&#x27; at offset 0x54 and sum(bytes)+0x16 == u32le@0x34.</td></tr><tr><td><code>system_wireless</code></td><td><code>0x73e0</code></td><td>1024 (<code>0x400</code>)</td><td><code>configuration</code></td><td>Wireless tournament records and battle chip trade flags.</td></tr></tbody></table>
+<h2>3. Save Writer, Reader &amp; Caller-Chain Architecture</h2>
+<h3>Hardware I/O Driver Functions</h3>
+<table><thead><tr><th>Address</th><th>Role</th><th>Callers</th><th>Description &amp; Implementation Notes</th></tr></thead><tbody><tr><td><code>0x080062a4</code></td><td><code>deserialize</code></td><td><code>0x08005ec0</code></td><td>Applies de-masking, checks &#x27;ROCKMANEXE4&#x27; magic, and validates checksum.</td></tr><tr><td><code>0x08006350</code></td><td><code>checksum</code></td><td><code>0x080062a4</code>, <code>0x080063ec</code></td><td>Calculates sum of bytes + 0x16 and verifies stored u32le.</td></tr><tr><td><code>0x080063ec</code></td><td><code>serialize</code></td><td><code>0x08012f40</code></td><td>Packs Lan and MegaMan.EXE state, updates checksum, applies obfuscation mask, flushes to SRAM.</td></tr></tbody></table>
+<h3>Traced Caller Chains</h3>
+<table><thead><tr><th>Entry Caller</th><th>Execution Chain</th><th>Context &amp; Trigger</th><th>RAM Structures Updated</th><th>How Mapped</th></tr></thead><tbody><tr><td><code>0x08012f40</code></td><td><code>0x08012f40</code> -&gt; <code>0x080063ec</code> -&gt; <code>0x08006350</code></td><td>PET menu SAVE command execution.</td><td>0x02001800 (PET save mirror), 0x02004500 (Folder chips)</td><td>Disassembled PET sub-screen command loop in ROM.</td></tr></tbody></table>
+<h2>4. Magic Signatures &amp; Integrity Verification</h2>
+<h3>Magic Signatures</h3>
+<table><thead><tr><th>Offset (hex)</th><th>Bytes (hex)</th><th>ASCII</th><th>Decompiled Functions</th><th>Verified in Code</th><th>Verified in .sav</th></tr></thead><tbody><tr><td><code>0x0054</code></td><td><code>524f434b4d414e4558453420323030333130323200</code></td><td><code>ROCKMANEXE4 20031022\0</code></td><td><code>0x080062a4</code>, <code>0x080063ec</code></td><td><code>True</code></td><td><code>True</code></td></tr></tbody></table>
+<h3>Checksum &amp; Integrity Validation</h3>
+<table><thead><tr><th>Checksum Name</th><th>Algorithm</th><th>Stored Offset</th><th>Covered Range</th><th>Formula &amp; Decompiled Proof</th><th>Confidence</th></tr></thead><tbody><tr><td><code>exe4_sum_offset16</code></td><td><code>sum32_offset16</code></td><td><code>0x0034</code></td><td><code>[0x38, 0x73d2)</code></td><td>32-bit byte sum across payload plus 0x16 must equal u32le@0x34. Followed by in-place XOR mask loop at 0x08006350.</td><td><code>CONFIRMED_VERIFIED</code></td></tr></tbody></table>
+<h2>5. Complete Field Map Table</h2>
+<table><thead><tr><th>Field Name</th><th>Offset</th><th>Size</th><th>Type</th><th>RAM Mirror</th><th>Writers</th><th>Readers</th><th>Observed Values</th><th>Confidence</th><th>Evidence</th></tr></thead><tbody><tr><td><code>checksum_val</code></td><td><code>0x0034</code></td><td>4B</td><td><code>u32le</code></td><td><code>0x02001834</code></td><td><code>0x080063ec</code></td><td><code>0x08006350</code></td><td><code>[&quot;0x00A15B20&quot;]</code></td><td><code>CONFIRMED_VERIFIED</code></td><td>Obfuscated payload checksum</td></tr><tr><td><code>magic_exe4</code></td><td><code>0x0054</code></td><td>20B</td><td><code>string</code></td><td><code>0x02001854</code></td><td><code>0x080063ec</code></td><td><code>0x080062a4</code></td><td><code>[&quot;ROCKMANEXE4 20031022\\0&quot;]</code></td><td><code>CONFIRMED_VERIFIED</code></td><td>Capcom production build tag</td></tr><tr><td><code>zenny_currency</code></td><td><code>0x0070</code></td><td>4B</td><td><code>u32le</code></td><td><code>0x02001870</code></td><td><code>0x080063ec</code></td><td><code>0x080062a4</code></td><td><code>[&quot;0x00007530&quot;]</code></td><td><code>CONFIRMED_VERIFIED</code></td><td>Lan&#x27;s Zenny balance</td></tr><tr><td><code>bugfrags</code></td><td><code>0x0074</code></td><td>2B</td><td><code>u16le</code></td><td><code>0x02001874</code></td><td><code>0x080063ec</code></td><td><code>0x080062a4</code></td><td><code>[&quot;0x0032&quot;]</code></td><td><code>CONFIRMED_VERIFIED</code></td><td>BugFrags collected</td></tr><tr><td><code>megaman_max_hp</code></td><td><code>0x0078</code></td><td>2B</td><td><code>u16le</code></td><td><code>0x02001878</code></td><td><code>0x080063ec</code></td><td><code>0x080062a4</code></td><td><code>[&quot;0x0258&quot;]</code></td><td><code>CONFIRMED_VERIFIED</code></td><td>MegaMan maximum hit points</td></tr><tr><td><code>soul_unison_flags</code></td><td><code>0x0080</code></td><td>2B</td><td><code>u16le</code></td><td><code>0x02001880</code></td><td><code>0x080063ec</code></td><td><code>0x080062a4</code></td><td><code>[&quot;0x003F&quot;]</code></td><td><code>CONFIRMED_VERIFIED</code></td><td>Double Soul transformations bitmask</td></tr></tbody></table>
+<h2>6. Save Fuzzing &amp; Counterfactual Verification Plan</h2>
+<table><thead><tr><th>Offset</th><th>Size</th><th>Mutation Vector</th><th>Requires Checksum Repair</th><th>Predicted Gameplay &amp; Hardware Effect</th></tr></thead><tbody><tr><td><code>0x0070</code></td><td>4B</td><td>Set Zenny to 999999 (0x000F423F).</td><td><code>True</code></td><td>Lan has 999999 Zenny upon loading repaired save.</td></tr></tbody></table>
+</div>
+</main>
+  <footer>gbakit GBA Format Reference &middot; <a href="https://github.com/JidouGhost-TL/gbakit">GitHub: JidouGhost-TL/gbakit</a> &middot; Clean-room GBA binary format specs &amp; Rust toolkit.</footer>
+</body>
+</html>

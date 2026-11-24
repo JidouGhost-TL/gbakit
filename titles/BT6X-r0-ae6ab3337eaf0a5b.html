@@ -13,7 +13,13 @@
       <a href="../index.html">Games</a>
       <a href="../saves/index.html">Save Formats</a>
       <a href="../patches/index.html">Debug Patches</a>
+      <a href="../debug-menus.html">Debug Gallery</a>
+      <a href="../non-retail-cartridges.html">Non-Retail</a>
+      <a href="../cartridge-hardware.html">Cartridge Hardware</a>
+      <a href="../link-multiplayer.html">Link &amp; Multiplayer</a>
+      <a href="../multiboot-museum.html">MultiBoot Museum</a>
       <a href="../assets/index.html">Assets &amp; Audio</a>
+      <a href="../text-and-fonts.html">Text &amp; Fonts</a>
       <a href="../engines/index.html">Engines &amp; Hardware</a>
       <a href="../families/index.html">Families</a>
       <a href="../gbakit/index.html">Using gbakit</a>
@@ -22,7 +28,7 @@
   <main>
 <p class="meta"><a href="../index.html">&larr; Games</a> &middot; Family <code>BT6</code></p>
 <h1>Trollz - Hair Affair! (Europe) (En,Fr,Es)</h1>
-<p><span class='badge badge-slate'>EEPROM 4K</span></p>
+<p><span class='badge badge-slate'>EEPROM 4K</span> <span class='badge badge-emerald'>Save Format Mapped (Family Spec)</span> <a href='../link-multiplayer.html#multiboot'><span class='badge badge-amber'>💾 MultiBoot</span></a></p>
 
 <h2>Cartridge Identity</h2>
 <dl class="kv">
@@ -38,6 +44,31 @@
 
 
 
+
+<h2>Link Cable &amp; Multiplayer Communications</h2>
+<div class="callout">
+  This title contains detected communication capabilities: <a href='../link-multiplayer.html#multiboot'><span class='badge badge-amber'>💾 MultiBoot</span></a>.
+  Detailed protocol specifications, SIO registers, Joybus commands, and MultiBoot sequences are documented in the <a href="../link-multiplayer.html"><strong>Link &amp; Multiplayer Reference</strong></a>.
+</div>
+<dl class="kv">
+  <dt>Single-Cart MultiBoot</dt><dd>Single-Cartridge MultiBoot (Download Play) client/server handler &middot; Thumb SWI 0x25 (<code>0xDF25</code>): <code>0x0d8390</code>, <code>0x1e921c</code>, <code>0x240db0</code>, <code>0x288868</code></dd>
+</dl>
+
+
+<h2>Battery Save Format Specification (Family Shared)</h2>
+<div class="callout">
+  This release shares its save architecture with canonical family reference <a href="../titles/BT6P-r0-189f3d216eccf984.html"><strong>Trollz - Hair Affair! (Europe)</strong></a> (Family <code>BT6</code>).
+</div>
+<p><a class='btn' href='../saves/BT6P-r0-189f3d216eccf984.html'>Open Family Save Format Spec (BT6P)</a><a class='btn btn-secondary' href='../assets/formats/BT6P-r0-189f3d216eccf984/save-format.json' download>Download save-format.json</a></p>
+<dl class="kv">
+  <dt>Canonical Specification</dt><dd><code>BT6P</code> &middot; <strong>3</strong> mapped fields &middot; <strong>0</strong> verified checksum(s) &middot; Confidence: <span class="badge badge-indigo">HIGH</span></dd>
+  <dt>gbakit Built-In Support</dt><dd><span class="badge badge-emerald">Built-in (BT6P)</span></dd>
+</dl>
+<pre><code>gbakit save verify BT6P save.sav
+gbakit save decode BT6P save.sav
+gbakit save fix    BT6P damaged.sav -o repaired.sav</code></pre>
+
+
 <h2>Observed Battery Save Layout</h2>
 <dl class="kv">
   <dt>Fill Byte &amp; Active Size</dt><dd><code>0x00</code> fill &middot; 134–134 / 512 B active (entropy 0.83 bits/B)</dd>
@@ -47,6 +78,11 @@
   <dt>Candidate Checksum/Counter Spans</dt><dd>None</dd>
   
 </dl>
+
+
+
+<h2>Text, Fonts &amp; Scene Data</h2>
+<dl class="kv"><dt>Primary Text Encoding</dt><dd><strong>Plain ASCII (uncompressed)</strong> (<code>961</code> ASCII strings)</dd><dt>Font &amp; VWF Indicators</dt><dd><span class='badge badge-emerald'>VWF Width Table</span> <span class='badge badge-blue'>1bpp Font</span> &middot; BIOS SWIs: BitUnPack <code>0x10</code>: <code>8</code> &middot; LZ77 <code>0x11/12</code>: <code>20</code> &middot; Huffman <code>0x13</code>: <code>7</code> &middot; RLE <code>0x14/15</code>: <code>7</code></dd><dt>Scene &amp; Packaging</dt><dd><code>15</code> ROM pointer tables (&ge;32 entries, <code>5</code> &ge;200) &middot; <code>144</code> relative <code>u32</code> TOCs &middot; <code>275</code> OAM metasprite hits</dd></dl>
 
 
 <h2>Hardware MMIO Subsystems</h2><dl class='kv'><dt><code>ppu_display</code></dt><dd><code>0x8028d98</code>, <code>0x802a02c</code>, <code>0x80330ec</code>, <code>0x8033b6c</code></dd></dl>

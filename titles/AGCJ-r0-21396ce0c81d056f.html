@@ -13,7 +13,13 @@
       <a href="../index.html">Games</a>
       <a href="../saves/index.html">Save Formats</a>
       <a href="../patches/index.html">Debug Patches</a>
+      <a href="../debug-menus.html">Debug Gallery</a>
+      <a href="../non-retail-cartridges.html">Non-Retail</a>
+      <a href="../cartridge-hardware.html">Cartridge Hardware</a>
+      <a href="../link-multiplayer.html">Link &amp; Multiplayer</a>
+      <a href="../multiboot-museum.html">MultiBoot Museum</a>
       <a href="../assets/index.html">Assets &amp; Audio</a>
+      <a href="../text-and-fonts.html">Text &amp; Fonts</a>
       <a href="../engines/index.html">Engines &amp; Hardware</a>
       <a href="../families/index.html">Families</a>
       <a href="../gbakit/index.html">Using gbakit</a>
@@ -22,7 +28,7 @@
   <main>
 <p class="meta"><a href="../index.html">&larr; Games</a> &middot; Family <code>AGC</code></p>
 <h1>Guru Logic Champ (Japan)</h1>
-<p><span class='badge badge-slate'>Flash 512K</span></p>
+<p><span class='badge badge-slate'>Flash 512K</span> <span class='badge badge-emerald'>Save Format Mapped (Family Spec)</span> <a href='../link-multiplayer.html#multiboot'><span class='badge badge-amber'>💾 MultiBoot</span></a> <a href='../link-multiplayer.html#sio-multi'><span class='badge badge-blue'>🎮 4P Link</span></a></p>
 
 <h2>Cartridge Identity</h2>
 <dl class="kv">
@@ -37,6 +43,36 @@
 <h2>Screenshots</h2><div class='gallery'><figure><img src='../assets/thumbs/AGCJ-r0-21396ce0c81d056f-boot.png' alt='Boot Screen' loading='lazy'><figcaption>Boot Screen</figcaption></figure><figure><img src='../assets/thumbs/AGCJ-r0-21396ce0c81d056f-after.png' alt='In-Game' loading='lazy'><figcaption>In-Game</figcaption></figure></div>
 
 
+
+
+<h2>Link Cable &amp; Multiplayer Communications</h2>
+<div class="callout">
+  This title contains detected communication capabilities: <a href='../link-multiplayer.html#multiboot'><span class='badge badge-amber'>💾 MultiBoot</span></a> <a href='../link-multiplayer.html#sio-multi'><span class='badge badge-blue'>🎮 4P Link</span></a>.
+  Detailed protocol specifications, SIO registers, Joybus commands, and MultiBoot sequences are documented in the <a href="../link-multiplayer.html"><strong>Link &amp; Multiplayer Reference</strong></a>.
+</div>
+<dl class="kv">
+  <dt>Multi-Player SIO (4P)</dt><dd>16-bit ring network &middot; SIOCNT (<code>0x04000128</code>) literals: <code>0x005240</code>, <code>0x00529c</code>, <code>0x005668</code> &middot; SIODATA32/SIOMULTI0 (<code>0x04000120</code>) literals: <code>0x00535c</code>, <code>0x0053c0</code>, <code>0x00542c</code></dd><dt>Single-Cart MultiBoot</dt><dd>Single-Cartridge MultiBoot (Download Play) client/server handler &middot; Thumb SWI 0x25 (<code>0xDF25</code>): <code>0x066762</code>, <code>0x0747d2</code>, <code>0x075594</code>, <code>0x0bf7c2</code></dd>
+</dl>
+
+
+<h2>Battery Save Format Specification (Family Shared)</h2>
+<div class="callout">
+  This release shares its save architecture with canonical family reference <a href="../titles/AGCE-r0-392eff9282764f7e.html"><strong>Gunstar Super Heroes (USA)</strong></a> (Family <code>AGC</code>).
+</div>
+<p><a class='btn' href='../saves/AGCE-r0-392eff9282764f7e.html'>Open Family Save Format Spec (AGCE)</a><a class='btn btn-secondary' href='../assets/formats/AGCE-r0-392eff9282764f7e/save-format.json' download>Download save-format.json</a></p>
+<dl class="kv">
+  <dt>Canonical Specification</dt><dd><code>AGCE</code> &middot; <strong>5</strong> mapped fields &middot; <strong>1</strong> verified checksum(s) &middot; Confidence: <span class="badge badge-indigo">HIGH</span></dd>
+  <dt>gbakit Built-In Support</dt><dd><span class="badge badge-emerald">Built-in (AGCE)</span></dd>
+</dl>
+<pre><code>gbakit save verify AGCE save.sav
+gbakit save decode AGCE save.sav
+gbakit save fix    AGCE damaged.sav -o repaired.sav</code></pre>
+
+
+
+
+<h2>Text, Fonts &amp; Scene Data</h2>
+<dl class="kv"><dt>Primary Text Encoding</dt><dd><strong>Shift-JIS (uncompressed)</strong> (<code>6</code> ASCII strings &middot; <code>200</code> Shift-JIS runs)</dd><dt>Font &amp; VWF Indicators</dt><dd><span class='badge badge-emerald'>VWF Width Table</span> <span class='badge badge-blue'>1bpp Font</span> &middot; BIOS SWIs: BitUnPack <code>0x10</code>: <code>7</code> &middot; LZ77 <code>0x11/12</code>: <code>35</code> &middot; Huffman <code>0x13</code>: <code>10</code> &middot; RLE <code>0x14/15</code>: <code>22</code></dd><dt>Scene &amp; Packaging</dt><dd><code>22</code> ROM pointer tables (&ge;32 entries, <code>5</code> &ge;200) &middot; <code>2</code> relative <code>u32</code> TOCs &middot; <code>293</code> OAM metasprite hits</dd></dl>
 
 
 <h2>Hardware MMIO Subsystems</h2><dl class='kv'><dt><code>save_bus_sram_flash</code></dt><dd><code>0x806677c</code></dd></dl>

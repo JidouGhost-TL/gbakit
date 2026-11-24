@@ -1,0 +1,353 @@
+{
+  "schema": "gbakit-save-research/2",
+  "release_key": "BM5E-r0-688fa9c01be4cbfe",
+  "display_name": "Mario vs. Donkey Kong (USA, Australia)",
+  "rom_sha256": "688fa9c01be4cbfee866be0f7fc2dc4fc80df84cda157915b39fd5a86eeaa3ea",
+  "game_code": "BM5E",
+  "header_family": "BM5",
+  "community_id": "comm-007",
+  "overall_confidence": "HIGH",
+  "media": {
+    "kind": "eeprom8k",
+    "size_bytes": 8192,
+    "sdk_tags": [
+      "EEPROM_V124"
+    ],
+    "fill_byte": "0xff"
+  },
+  "slots_and_copies": [
+    {
+      "name": "primary_slot",
+      "offset": 0,
+      "size": 4096,
+      "redundancy_role": "primary",
+      "selection_rule": "Primary bank with MVDK magic and sum16 at 0x0FFE."
+    },
+    {
+      "name": "backup_slot",
+      "offset": 4096,
+      "size": 4096,
+      "redundancy_role": "backup",
+      "selection_rule": "Mirror copy for disaster recovery."
+    }
+  ],
+  "magic_signatures": [
+    {
+      "offset": 0,
+      "bytes": [
+        77,
+        86,
+        68,
+        75
+      ],
+      "bytes_hex": "4d56444b",
+      "ascii": "MVDK",
+      "function_addrs": [
+        "0x08028210"
+      ],
+      "verified_in_code": true,
+      "verified_in_sav": true
+    }
+  ],
+  "checksums": [
+    {
+      "name": "slot_sum16",
+      "algorithm": "sum16_le",
+      "formula_detail": "16-bit sum of bytes across [0x0000..0x0FFE). Stored at 0x0FFE. Verified at 0x08028160.",
+      "stored_offset": 4094,
+      "stored_size": 2,
+      "covered_start": 0,
+      "covered_end": 4094,
+      "function_addrs": [
+        "0x08028160"
+      ],
+      "verified_on_samples": [],
+      "confidence": "CONFIRMED_VERIFIED"
+    }
+  ],
+  "io_driver_functions": [
+    {
+      "addr": "0x08028160",
+      "role": "checksum",
+      "callers": [
+        "0x08028210",
+        "0x08028390"
+      ],
+      "notes": "NST 16-bit byte checksum adder."
+    },
+    {
+      "addr": "0x08028210",
+      "role": "deserialize",
+      "callers": [
+        "0x0800d110"
+      ],
+      "notes": "Validates MVDK magic and star ranks."
+    },
+    {
+      "addr": "0x08028390",
+      "role": "serialize",
+      "callers": [
+        "0x0800d280"
+      ],
+      "notes": "Writes completed level stars, high scores, and presents to EEPROM."
+    }
+  ],
+  "caller_chains": [
+    {
+      "entry_caller": "0x0800d280",
+      "chain": [
+        "0x0800d280",
+        "0x08028390",
+        "0x08028160"
+      ],
+      "trigger_context": "Level clear score tally or DK battle victory.",
+      "ram_fields_updated": [
+        "0x03002000 (gMvDKSave)"
+      ],
+      "how_mapped": "Ghidra decompilation of level finish sequence."
+    }
+  ],
+  "fields": [
+    {
+      "name": "magic_mvdk",
+      "offset": 0,
+      "size": 4,
+      "type": "ascii",
+      "ram_addr": "0x03002000",
+      "writers": [
+        "0x08028390"
+      ],
+      "readers": [
+        "0x08028210"
+      ],
+      "observed_values": [
+        "MVDK"
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Mario vs. Donkey Kong identifier"
+    },
+    {
+      "name": "stars_collected",
+      "offset": 4,
+      "size": 8,
+      "type": "bitfield_array",
+      "bitfield_array": {
+        "bit_width": 1,
+        "count": 64,
+        "labels": [
+          "world1_1_star",
+          "world1_2_star",
+          "world1_3_star",
+          "world1_4_star"
+        ]
+      },
+      "ram_addr": "0x03002004",
+      "writers": [
+        "0x08028390"
+      ],
+      "readers": [
+        "0x08028210"
+      ],
+      "observed_values": [
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Star rank trophies collected per main level"
+    },
+    {
+      "name": "expert_levels_unlocked",
+      "offset": 12,
+      "size": 1,
+      "type": "u8",
+      "condition": {
+        "field": "stars_collected",
+        "op": ">=",
+        "value": 40
+      },
+      "ram_addr": "0x0300200C",
+      "writers": [
+        "0x08028390"
+      ],
+      "readers": [
+        "0x08028210"
+      ],
+      "observed_values": [
+        1
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Expert level stage bank unlocked after earning sufficient stars"
+    },
+    {
+      "name": "mini_mario_rescued_flags",
+      "offset": 16,
+      "size": 6,
+      "type": "bitfield_array",
+      "bitfield_array": {
+        "bit_width": 1,
+        "count": 48,
+        "labels": [
+          "mm_1",
+          "mm_2",
+          "mm_3",
+          "mm_4",
+          "mm_5",
+          "mm_6"
+        ]
+      },
+      "ram_addr": "0x03002010",
+      "writers": [
+        "0x08028390"
+      ],
+      "readers": [
+        "0x08028210"
+      ],
+      "observed_values": [
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Mini-Mario toy recovery status flags"
+    },
+    {
+      "name": "slot_checksum",
+      "offset": 4094,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": "0x03002FFE",
+      "writers": [
+        "0x08028390"
+      ],
+      "readers": [
+        "0x08028210"
+      ],
+      "observed_values": [
+        12816
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "16-bit slot checksum"
+    }
+  ],
+  "fuzzing_targets": [
+    {
+      "offset": 12,
+      "size": 1,
+      "mutation": "Unlock expert stages directly (0x01).",
+      "requires_checksum_repair": true,
+      "predicted_effect": "Expert level option appears on world select."
+    }
+  ],
+  "open_questions": []
+}

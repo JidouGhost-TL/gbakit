@@ -13,7 +13,13 @@
       <a href="../index.html">Games</a>
       <a href="../saves/index.html">Save Formats</a>
       <a href="../patches/index.html">Debug Patches</a>
+      <a href="../debug-menus.html">Debug Gallery</a>
+      <a href="../non-retail-cartridges.html">Non-Retail</a>
+      <a href="../cartridge-hardware.html">Cartridge Hardware</a>
+      <a href="../link-multiplayer.html">Link &amp; Multiplayer</a>
+      <a href="../multiboot-museum.html">MultiBoot Museum</a>
       <a href="../assets/index.html">Assets &amp; Audio</a>
+      <a href="../text-and-fonts.html">Text &amp; Fonts</a>
       <a href="../engines/index.html">Engines &amp; Hardware</a>
       <a href="../families/index.html">Families</a>
       <a href="../gbakit/index.html">Using gbakit</a>
@@ -22,7 +28,7 @@
   <main>
 <p class="meta"><a href="../index.html">&larr; Games</a> &middot; Family <code>A3A</code></p>
 <h1>Super Mario Advance 3 - Yoshi&#x27;s Island (USA) (Virtual Console)</h1>
-<p><span class='badge badge-slate'>EEPROM 64K</span> <span class='badge badge-emerald'>Save Format Mapped (Family Spec)</span></p>
+<p><span class='badge badge-slate'>EEPROM 64K</span> <span class='badge badge-emerald'>Save Format Mapped (Family Spec)</span> <span class='badge badge-emerald'>gbakit Built-In</span> <a href='../link-multiplayer.html#multiboot'><span class='badge badge-amber'>💾 MultiBoot</span></a> <a href='../link-multiplayer.html#sio-multi'><span class='badge badge-blue'>🎮 4P Link</span></a></p>
 
 <h2>Cartridge Identity</h2>
 <dl class="kv">
@@ -37,6 +43,18 @@
 <h2>Screenshots</h2><div class='gallery'><figure><img src='../assets/thumbs/A3AE-r0-425628648061fd9f-boot.png' alt='Boot Screen' loading='lazy'><figcaption>Boot Screen</figcaption></figure><figure><img src='../assets/thumbs/A3AE-r0-425628648061fd9f-loaded.png' alt='Loaded Save' loading='lazy'><figcaption>Loaded Save</figcaption></figure></div>
 
 
+
+
+<h2>Link Cable &amp; Multiplayer Communications</h2>
+<div class="callout">
+  This title contains detected communication capabilities: <a href='../link-multiplayer.html#multiboot'><span class='badge badge-amber'>💾 MultiBoot</span></a> <a href='../link-multiplayer.html#sio-multi'><span class='badge badge-blue'>🎮 4P Link</span></a>.
+  Detailed protocol specifications, SIO registers, Joybus commands, and MultiBoot sequences are documented in the <a href="../link-multiplayer.html"><strong>Link &amp; Multiplayer Reference</strong></a>.
+</div>
+<dl class="kv">
+  <dt>Multi-Player SIO (4P)</dt><dd>16-bit ring network &middot; SIOCNT (<code>0x04000128</code>) literals: <code>0x10f518</code>, <code>0x10f718</code>, <code>0x10f734</code> &middot; SIODATA32/SIOMULTI0 (<code>0x04000120</code>) literals: <code>0x10f654</code>, <code>0x10f8cc</code>, <code>0x10fb78</code></dd><dt>Single-Cart MultiBoot</dt><dd>Single-Cartridge MultiBoot (Download Play) client/server handler &middot; Thumb SWI 0x25 (<code>0xDF25</code>): <code>0x12f6d6</code>, <code>0x21260c</code>, <code>0x247366</code>, <code>0x2684ec</code></dd>
+</dl>
+
+
 <h2>Battery Save Format Specification (Family Shared)</h2>
 <div class="callout">
   This release shares its save architecture with canonical family reference <a href="../titles/A3AP-r0-c80b956254d01759.html"><strong>Super Mario Advance 3 - Yoshi&#x27;s Island (Europe) (En,Fr,De,Es,It)</strong></a> (Family <code>A3A</code>).
@@ -44,9 +62,11 @@
 <p><a class='btn' href='../saves/A3AP-r0-c80b956254d01759.html'>Open Family Save Format Spec (A3AP)</a><a class='btn btn-secondary' href='../assets/formats/A3AP-r0-c80b956254d01759/save-format.json' download>Download save-format.json</a></p>
 <dl class="kv">
   <dt>Canonical Specification</dt><dd><code>A3AP</code> &middot; <strong>19</strong> mapped fields &middot; <strong>4</strong> verified checksum(s) &middot; Confidence: <span class="badge badge-indigo">MEDIUM</span></dd>
-  <dt>gbakit Built-In Support</dt><dd>JSON schema download available</dd>
+  <dt>gbakit Built-In Support</dt><dd><span class="badge badge-emerald">Built-in (A3AE)</span></dd>
 </dl>
-
+<pre><code>gbakit save verify A3AE save.sav
+gbakit save decode A3AE save.sav
+gbakit save fix    A3AE damaged.sav -o repaired.sav</code></pre>
 
 
 <h2>Observed Battery Save Layout</h2>
@@ -60,6 +80,11 @@
 </dl>
 
 <h2>ROM Assets, Compression &amp; Audio</h2><dl class='kv'><dt>BIOS Compression</dt><dd>LZ77 (<code>0x10</code>): <strong>451</strong> streams &middot; RLE (<code>0x30</code>): <strong>0</strong> streams</dd><dt>ROM Pointer Tables</dt><dd>90 tables (29 pointing to validated compressed streams)</dd><dt>SDK Backup Tags</dt><dd><code>EEPROM_V122</code></dd></dl>
+
+<h2>Text, Fonts &amp; Scene Data</h2>
+<dl class="kv"><dt>Primary Text Encoding</dt><dd><strong>16-bit / UTF-16LE text · custom 1-byte charmap (base &#x27;A&#x27; = 0xd8)</strong> (<code>4</code> ASCII strings &middot; <code>2</code> Shift-JIS runs)</dd><dt>Font &amp; VWF Indicators</dt><dd><span class='badge badge-emerald'>VWF Width Table</span> <span class='badge badge-blue'>1bpp Font</span> &middot; BIOS SWIs: BitUnPack <code>0x10</code>: <code>2</code> &middot; LZ77 <code>0x11/12</code>: <code>10</code> &middot; Huffman <code>0x13</code>: <code>4</code> &middot; RLE <code>0x14/15</code>: <code>7</code></dd><dt>Scene &amp; Packaging</dt><dd><code>52</code> ROM pointer tables (&ge;32 entries, <code>7</code> &ge;200) &middot; <code>6</code> relative <code>u32</code> TOCs &middot; <code>222</code> OAM metasprite hits</dd></dl>
+
+
 <h2>Hardware MMIO Subsystems</h2><dl class='kv'><dt><code>ppu_display</code></dt><dd><code>0x80028e4</code>, <code>0x812c894</code></dd></dl>
 <h2>Regional Variants &amp; Revisions (Family <code>A3A</code>)</h2><ul><li><a href='A3AP-r0-c80b956254d01759.html'>Super Mario Advance 3 - Yoshi&#x27;s Island (Europe) (En,Fr,De,Es,It)</a> (<code>A3AP</code>, 8 MiB)</li><li><a href='A3AP-r0-59f61e7e8c752e69.html'>Super Mario Advance 3 - Yoshi&#x27;s Island (Europe) (En,Fr,De,Es,It) (Virtual Console)</a> (<code>A3AP</code>, 8 MiB)</li><li><a href='A3AE-r0-a8bb331a6f0ff7af.html'>Super Mario Advance 3 - Yoshi&#x27;s Island (USA)</a> (<code>A3AE</code>, 4 MiB)</li><li><a href='A3AJ-r0-9f29c9df2df70a21.html'>Super Mario Advance 3 - Yoshi&#x27;s Island + Mario Brothers (Japan)</a> (<code>A3AJ</code>, 4 MiB)</li><li><a href='A3AJ-r0-8cb76b1a20bc3768.html'>Super Mario Advance 3 - Yoshi&#x27;s Island + Mario Brothers (Japan) (Virtual Console)</a> (<code>A3AJ</code>, 4 MiB)</li><li><a href='A3AC-r0-789a75cd1936acbf.html'>Yaoxi Dao (China)</a> (<code>A3AC</code>, 4 MiB)</li></ul>
 </main>

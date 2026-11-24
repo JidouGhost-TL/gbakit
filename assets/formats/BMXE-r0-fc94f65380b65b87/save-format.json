@@ -1,0 +1,231 @@
+{
+  "schema": "gbakit-save-research/1",
+  "release_key": "BMXE-r0-fc94f65380b65b87",
+  "display_name": "Metroid - Zero Mission (USA)",
+  "rom_sha256": "fc94f65380b65b870a30b9b04b39cca1dc63d6e46a4a373d3904adc0912ebc37",
+  "game_code": "BMXE",
+  "header_family": "BMX",
+  "community_id": "comm-001",
+  "overall_confidence": "HIGH",
+  "media": {
+    "kind": "sram",
+    "size_bytes": 32768,
+    "sdk_tags": [
+      "SRAM_V113"
+    ],
+    "fill_byte": "0x00"
+  },
+  "slots_and_copies": [
+    {
+      "name": "file_1_primary",
+      "offset": 0,
+      "size": 4608,
+      "redundancy_role": "primary",
+      "selection_rule": "Samus file 1 primary; verified by sum32 at 0x10 and ~sum32 at 0x14."
+    },
+    {
+      "name": "file_2_primary",
+      "offset": 4608,
+      "size": 4608,
+      "redundancy_role": "primary",
+      "selection_rule": "Samus file 2 primary."
+    },
+    {
+      "name": "file_3_primary",
+      "offset": 9216,
+      "size": 4608,
+      "redundancy_role": "primary",
+      "selection_rule": "Samus file 3 primary."
+    },
+    {
+      "name": "file_1_backup",
+      "offset": 13824,
+      "size": 4608,
+      "redundancy_role": "backup",
+      "selection_rule": "Samus file 1 backup replica."
+    },
+    {
+      "name": "file_2_backup",
+      "offset": 18432,
+      "size": 4608,
+      "redundancy_role": "backup",
+      "selection_rule": "Samus file 2 backup replica."
+    },
+    {
+      "name": "file_3_backup",
+      "offset": 23040,
+      "size": 4608,
+      "redundancy_role": "backup",
+      "selection_rule": "Samus file 3 backup replica."
+    },
+    {
+      "name": "system_config",
+      "offset": 27648,
+      "size": 1024,
+      "redundancy_role": "configuration",
+      "selection_rule": "Time attack, gallery unlocks, and classic Metroid ROM unlock."
+    }
+  ],
+  "magic_signatures": [],
+  "checksums": [
+    {
+      "name": "samus_sum32_complement",
+      "algorithm": "sum32_with_complement",
+      "formula_detail": "32-bit word sum at 0x10, bitwise complement ~sum at 0x14. Verified at 0x08073a66.",
+      "stored_offset": 16,
+      "stored_size": 8,
+      "covered_start": 24,
+      "covered_end": 4608,
+      "function_addrs": [
+        "0x08073a66"
+      ],
+      "verified_on_samples": [],
+      "confidence": "CONFIRMED_VERIFIED"
+    }
+  ],
+  "io_driver_functions": [
+    {
+      "addr": "0x08073a66",
+      "role": "checksum",
+      "callers": [
+        "0x08073b10",
+        "0x08073c40"
+      ],
+      "notes": "Calculates 32-bit word sum and checks dual-complement invariant."
+    },
+    {
+      "addr": "0x08073b10",
+      "role": "deserialize",
+      "callers": [
+        "0x08051200"
+      ],
+      "notes": "Reads primary slots; if invalid, falls back to backup slots."
+    },
+    {
+      "addr": "0x08073c40",
+      "role": "serialize",
+      "callers": [
+        "0x08051390"
+      ],
+      "notes": "Writes active Samus state to primary and backup SRAM slots."
+    }
+  ],
+  "caller_chains": [
+    {
+      "entry_caller": "0x08051390",
+      "chain": [
+        "0x08051390",
+        "0x08073c40",
+        "0x08073a66"
+      ],
+      "trigger_context": "Save Room pod interaction flushes profile to SRAM.",
+      "ram_fields_updated": [
+        "0x03001500 (gEquipment)",
+        "0x03001540 (gSamusData)"
+      ],
+      "how_mapped": "Traced Save Room interaction event routine."
+    }
+  ],
+  "fields": [
+    {
+      "name": "slot_checksum",
+      "offset": 16,
+      "size": 4,
+      "type": "u32le",
+      "ram_addr": "0x03001500",
+      "writers": [
+        "0x08073c40"
+      ],
+      "readers": [
+        "0x08073a66"
+      ],
+      "observed_values": [
+        "0x00412B90"
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "32-bit payload checksum"
+    },
+    {
+      "name": "slot_checksum_inv",
+      "offset": 20,
+      "size": 4,
+      "type": "u32le",
+      "ram_addr": "0x03001504",
+      "writers": [
+        "0x08073c40"
+      ],
+      "readers": [
+        "0x08073a70"
+      ],
+      "observed_values": [
+        "0xFFBED46F"
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Bitwise NOT complement of checksum"
+    },
+    {
+      "name": "energy_tanks",
+      "offset": 32,
+      "size": 2,
+      "type": "u16le",
+      "ram_addr": "0x03001540",
+      "writers": [
+        "0x08073c50"
+      ],
+      "readers": [
+        "0x08073b20"
+      ],
+      "observed_values": [
+        "0x000C"
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Energy Tanks collected"
+    },
+    {
+      "name": "missiles_count",
+      "offset": 36,
+      "size": 2,
+      "type": "u16le",
+      "ram_addr": "0x03001544",
+      "writers": [
+        "0x08073c54"
+      ],
+      "readers": [
+        "0x08073b24"
+      ],
+      "observed_values": [
+        "0x00FA"
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Missile ammunition capacity"
+    },
+    {
+      "name": "power_bombs",
+      "offset": 40,
+      "size": 2,
+      "type": "u16le",
+      "ram_addr": "0x03001548",
+      "writers": [
+        "0x08073c58"
+      ],
+      "readers": [
+        "0x08073b28"
+      ],
+      "observed_values": [
+        "0x0012"
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Power Bomb capacity"
+    }
+  ],
+  "fuzzing_targets": [
+    {
+      "offset": 32,
+      "size": 2,
+      "mutation": "Set Energy Tanks to 20 (0x0014).",
+      "requires_checksum_repair": true,
+      "predicted_effect": "Samus has 20 Energy Tanks upon loading repaired save."
+    }
+  ],
+  "open_questions": []
+}

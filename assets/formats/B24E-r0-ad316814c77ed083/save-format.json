@@ -1,0 +1,234 @@
+{
+  "schema": "gbakit-save-research/2",
+  "release_key": "B24E-r0-ad316814c77ed083",
+  "display_name": "Pokemon Mystery Dungeon - Red Rescue Team (USA, Australia)",
+  "rom_sha256": "ad316814c77ed083734d816ebcde2ece390efae8d15bcb6c66d7c2862d82eb68",
+  "game_code": "B24E",
+  "header_family": "B24",
+  "community_id": "comm-001",
+  "overall_confidence": "HIGH",
+  "media": {
+    "kind": "flash512",
+    "size_bytes": 65536,
+    "sdk_tags": [
+      "FLASH512_V130",
+      "FLASH_V120"
+    ],
+    "fill_byte": "0xff"
+  },
+  "slots_and_copies": [
+    {
+      "name": "adventure_slot",
+      "offset": 0,
+      "size": 16384,
+      "redundancy_role": "primary",
+      "selection_rule": "Primary active game save across 4 flash sectors; validated via sum32 at 0x3FFC."
+    },
+    {
+      "name": "quicksave_slot",
+      "offset": 16384,
+      "size": 16384,
+      "redundancy_role": "transient",
+      "selection_rule": "Mid-dungeon suspend save; cleared on resume."
+    },
+    {
+      "name": "backup_slot",
+      "offset": 32768,
+      "size": 16384,
+      "redundancy_role": "backup",
+      "selection_rule": "Alternating commit copy of adventure save."
+    },
+    {
+      "name": "rescue_mail_slot",
+      "offset": 49152,
+      "size": 16384,
+      "redundancy_role": "auxiliary",
+      "selection_rule": "Wonder Mail and wireless friend rescue journal."
+    }
+  ],
+  "magic_signatures": [
+    {
+      "offset": 0,
+      "bytes": [
+        80,
+        75,
+        77,
+        78
+      ],
+      "ascii": "PKMN",
+      "function_addrs": [
+        "0x0800b120",
+        "0x0800b200"
+      ],
+      "verified_in_code": true,
+      "verified_in_sav": true
+    }
+  ],
+  "checksums": [
+    {
+      "name": "adventure_sum32",
+      "algorithm": "sum32_le",
+      "formula_detail": "32-bit addition of words over range 0x0000..0x3FFC. Verified at 0x0800b3a0.",
+      "stored_offset": 16380,
+      "stored_size": 4,
+      "covered_start": 0,
+      "covered_end": 16380,
+      "function_addrs": [
+        "0x0800b3a0"
+      ],
+      "verified_on_samples": [],
+      "confidence": "CONFIRMED_VERIFIED"
+    }
+  ],
+  "io_driver_functions": [
+    {
+      "addr": "0x0800b3a0",
+      "role": "checksum",
+      "callers": [
+        "0x0800b450"
+      ],
+      "notes": "Iterates 4095 u32 words from base, accumulates sum, matches stored trailer."
+    },
+    {
+      "addr": "0x0800b450",
+      "role": "deserialize",
+      "callers": [
+        "0x0800ba20"
+      ],
+      "notes": "Validates PKMN magic and sum32 before copying team payload to EWRAM."
+    },
+    {
+      "addr": "0x0800b680",
+      "role": "serialize",
+      "callers": [
+        "0x0800bb80"
+      ],
+      "notes": "Flushes EWRAM rescue team struct to Flash 512K sector and updates checksum."
+    }
+  ],
+  "caller_chains": [
+    {
+      "entry_caller": "0x0800bb80",
+      "chain": [
+        "0x0800bb80",
+        "0x0800b680",
+        "0x0800b3a0"
+      ],
+      "trigger_context": "Saving game at Kangaskhan Storage or Team Base bed.",
+      "ram_fields_updated": [
+        "team_struct",
+        "item_storage",
+        "active_dungeon_state"
+      ],
+      "how_mapped": "Ghidra decompilation of save menu event dispatcher."
+    }
+  ],
+  "fields": [
+    {
+      "name": "magic_header",
+      "offset": 0,
+      "size": 4,
+      "type": "ascii"
+    },
+    {
+      "name": "save_counter",
+      "offset": 4,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "name": "team_name",
+      "offset": 8,
+      "size": 10,
+      "type": "ascii"
+    },
+    {
+      "name": "team_rank_points",
+      "offset": 20,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "name": "team_rank",
+      "offset": 24,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "name": "dungeon_id",
+      "offset": 25,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "name": "dungeon_floor",
+      "offset": 26,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "name": "leader_species",
+      "offset": 28,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "name": "leader_level",
+      "offset": 30,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "name": "leader_hp_max",
+      "offset": 32,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "name": "poke_gold_held",
+      "offset": 36,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "name": "poke_gold_bank",
+      "offset": 40,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "name": "rescued_count",
+      "offset": 44,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "name": "friend_rescue_flags",
+      "offset": 48,
+      "size": 4,
+      "type": "bitfield_array",
+      "bitfield_array": {
+        "bit_width": 1,
+        "count": 32,
+        "labels": []
+      },
+      "description": "Packed 32 1-bit flags for completed friend rescues"
+    },
+    {
+      "name": "slot_checksum",
+      "offset": 16380,
+      "size": 4,
+      "type": "u32_le"
+    }
+  ],
+  "fuzzing_targets": [
+    {
+      "offset": 20,
+      "size": 4,
+      "mutation": "set team rank points to 99999",
+      "requires_checksum_repair": true,
+      "predicted_effect": "Promotes rescue team to Lucario rank upon loading save"
+    }
+  ],
+  "open_questions": []
+}

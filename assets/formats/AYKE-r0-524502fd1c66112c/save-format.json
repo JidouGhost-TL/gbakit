@@ -1,0 +1,113 @@
+{
+  "schema": "gbakit-save-research/1",
+  "release_key": "AYKE-r0-524502fd1c66112c",
+  "display_name": "Karnaaj Rally (USA, Europe)",
+  "rom_sha256": "524502fd1c66112c2369b1619f214d07f151967e0276a1f0a8a214072de02daf",
+  "game_code": "AYKE",
+  "header_family": "AYK",
+  "community_id": "",
+  "overall_confidence": "LOW",
+  "media": {
+    "kind": "unknown",
+    "size_bytes": 65536,
+    "sdk_tags": [],
+    "fill_byte": "0xff"
+  },
+  "slots_and_copies": [
+    {
+      "name": "active_window_0x5000",
+      "offset": 20480,
+      "size": 4096,
+      "redundancy_role": "unknown",
+      "selection_rule": ""
+    },
+    {
+      "name": "active_window_0x7000",
+      "offset": 28672,
+      "size": 4096,
+      "redundancy_role": "unknown",
+      "selection_rule": "Demonstrated to be a byte-exact mirror of this cartridge's own ROM header (verified via the public GBA header checksum formula); not a save slot/copy in the game-save sense."
+    }
+  ],
+  "magic_signatures": [
+    {
+      "offset": 28832,
+      "bytes_hex": "4b41524e41414a0000000041594b45",
+      "ascii": "KARNAAJ\u0000\u0000\u0000\u0000\u0000AYKE",
+      "verified_in_code": false,
+      "verified_in_sav": true,
+      "function_addrs": []
+    }
+  ],
+  "checksums": [],
+  "io_driver_functions": [],
+  "caller_chains": [],
+  "fields": [
+    {
+      "name": "unidentified_fragment_0x5000",
+      "offset": 20480,
+      "size": 19,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {
+        "cap-00-future-0.sav": "6554a1cb0403010101008813000100000000 01"
+      },
+      "update_mechanism": "unknown; no traced writer/reader in ghidra/decompiled.c or ghidra/callgraph.json references any save-hardware address at all",
+      "confidence": "UNKNOWN",
+      "evidence": "saves/cap-00-future-0.sav offset 0x5000-0x5012; remainder of the 0x5000-0x5FFF window is zero padding, distinct from the file's 0xFF background fill."
+    },
+    {
+      "name": "rom_header_mirror_block",
+      "offset": 28672,
+      "size": 4096,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {
+        "title_ascii_0x70a0": "KARNAAJ",
+        "game_code_ascii_0x70ac": "AYKE",
+        "maker_code_ascii_0x70b0": "0A",
+        "fixed_byte_0x70b2": "0x96",
+        "version_0x70bc": "0x00",
+        "header_complement_checksum_0x70bd": "0xbe"
+      },
+      "update_mechanism": "Not written by any traced game function. Byte-exact match to this cartridge's own GBA ROM header (entry branch + header fields), independently verified against the public GBA header-checksum formula. Interpreted as an open-bus/ROM-mirroring capture artifact rather than genuine save content.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "saves/cap-00-future-0.sav offset 0x7000-0x7FFF; Python verification: sum=-(bytes[0xA0:0xBD]) then (sum-0x19)&0xFF == 0xbe == stored byte at relative offset 0xbd (absolute 0x70bd)."
+    }
+  ],
+  "fuzzing_targets": [
+    {
+      "offset": 28832,
+      "size": 7,
+      "mutation": "Alter one ASCII byte of the mirrored title string at 0x70a0-0x70ac (e.g. 'KARNAAJ' -> 'KARNAAX').",
+      "requires_checksum_repair": false,
+      "predicted_effect": "No observable gameplay/UI change expected if this window is a pure ROM-mirror capture artifact with no traced reader; any observed change would falsify that hypothesis."
+    },
+    {
+      "offset": 20480,
+      "size": 19,
+      "mutation": "Zero all 19 non-zero bytes at 0x5000-0x5012, and separately flip the little-endian u16 at relative offset 0x0a-0x0b (bytes '88 13' = 5000 decimal) to 0x0000.",
+      "requires_checksum_repair": false,
+      "predicted_effect": "If this fragment is live save data, expect an observable difference (e.g. reset high score/unlock/settings default) after a fresh load versus an unmodified control load with matched frame-count duration. If it is also capture noise, expect no observable difference."
+    },
+    {
+      "offset": 0,
+      "size": 65536,
+      "mutation": "Force the entire backup-media backing store to a constant 0xff (simulating an erased/absent save chip) and compare observable state against loading cap-00-future-0.sav unmodified.",
+      "requires_checksum_repair": false,
+      "predicted_effect": "If this title has no functioning/exercised battery-backed save path in the traced build, no observable difference should appear between the two conditions."
+    }
+  ],
+  "open_questions": [
+    "True backup-media type and capacity are unconfirmed; no SRAM/Flash/EEPROM driver code was found anywhere in the 47-function trace-guided decompilation (ghidra/decompiled.c) or the 0-seed ghidra/save_related_functions.c extraction.",
+    "Whether this title exercises any battery-backed save path at all during normal play is unresolved; packet metadata already notes 'SDK Save Tags in ROM: none detected' and 'Observed Save Media: unknown', and this task found no contradicting code evidence.",
+    "The origin mechanism of the 0x7000-0x7FFF ROM-header mirror inside the .sav capture (open-bus read, emulator mapping quirk, or capture-tool artifact) was not determined; only its byte-identity to the ROM header was proven.",
+    "The meaning (if any) of the 19-byte fragment at 0x5000-0x5012 is unresolved; no decompiled function or callgraph node could be attributed as a writer or reader for it.",
+    "No paired .ss save states were available for this release (states/ is empty), which blocks any reload-based counterfactual verification of the fuzzing plan in Section 6 of SAVE-FORMAT-REPORT.md until a fresh capture with mandatory paired pre/post save states is run.",
+    "Only one .sav sample was available; redundancy/mirroring/selection-rule claims cannot be tested without a second sample or state-paired before/after captures."
+  ]
+}

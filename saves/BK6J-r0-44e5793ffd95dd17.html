@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Kouchuu Ouja Mushiking - Greatest Champion e no Michi (Japan) Save Format — gbakit GBA Reference</title>
+  <link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+  <header>
+    <div class="brand"><a href="../index.html" style="color:inherit">gbakit GBA Reference <span class="badge badge-emerald">v2.0</span></a></div>
+    <nav>
+      <a href="../index.html">Games</a>
+      <a href="../saves/index.html">Save Formats</a>
+      <a href="../patches/index.html">Debug Patches</a>
+      <a href="../debug-menus.html">Debug Gallery</a>
+      <a href="../non-retail-cartridges.html">Non-Retail</a>
+      <a href="../cartridge-hardware.html">Cartridge Hardware</a>
+      <a href="../link-multiplayer.html">Link &amp; Multiplayer</a>
+      <a href="../multiboot-museum.html">MultiBoot Museum</a>
+      <a href="../assets/index.html">Assets &amp; Audio</a>
+      <a href="../text-and-fonts.html">Text &amp; Fonts</a>
+      <a href="../engines/index.html">Engines &amp; Hardware</a>
+      <a href="../families/index.html">Families</a>
+      <a href="../gbakit/index.html">Using gbakit</a>
+    </nav>
+  </header>
+  <main>
+<p class="meta"><a href="index.html">&larr; Save Formats</a> &middot; <a href="../titles/BK6J-r0-44e5793ffd95dd17.html">Kouchuu Ouja Mushiking - Greatest Champion e no Michi (Japan)</a></p>
+<h1>Kouchuu Ouja Mushiking - Greatest Champion e no Michi (Japan) — Save Format Specification</h1>
+<p><span class="badge badge-indigo">Confidence: LOW</span> <span class="badge badge-blue">7 Fields</span> <span class="badge badge-emerald">0 Verified Checksum(s)</span> <span class='badge badge-emerald'>gbakit Built-In</span></p>
+<p><a class='btn' href='../assets/saves/BK6J-r0-44e5793ffd95dd17/BK6J-r0-44e5793ffd95dd17.sav' download>Download Sample .sav (32,768 B)</a><a class='btn btn-secondary' href='../assets/formats/BK6J-r0-44e5793ffd95dd17/save-format.json' download>Download save-format.json</a><a class='btn btn-secondary' href='../titles/BK6J-r0-44e5793ffd95dd17.html'>View Game Page</a></p>
+
+<div class="callout">
+  <strong>Use directly with <code>gbakit</code> (built-in definition <code>BK6J</code>):</strong>
+  <pre><code>gbakit save verify BK6J save.sav
+gbakit save decode BK6J save.sav
+gbakit save fix    BK6J damaged.sav -o repaired.sav</code></pre>
+</div>
+
+<div class='md-body'>
+<h2>Clean-Room Save Format Report — Kouchuu Ouja Mushiking: Greatest Champion e no Michi (Japan) [BK6J]</h2>
+<h2>1. Executive Summary &amp; Overall Confidence</h2>
+<p><strong>Overall Confidence: LOW</strong></p>
+<p>This workspace&#x27;s trace-guided Ghidra corpus (<code>ghidra/decompiled.c</code>, 99 functions; <code>ghidra/callgraph.json</code>; <code>ghidra/save_related_functions.c</code>) does <strong>not</strong> contain any function that touches a GBA save-media hardware region (SRAM/Flash at <code>0x0E000000</code>, EEPROM access via DMA3 <code>0x040000D4</code>, or the EEPROM bus window <code>0x0D000000</code>). A full-text search of <code>ghidra/decompiled.c</code> for <code>SRAM</code>, <code>EEPROM</code>, <code>FLASH</code>, <code>0x0E00</code>, <code>0x0D00</code>, and <code>0x040000D4</code> returns <strong>zero matches</strong>. The single function flagged <code>[MMIO-SEED]</code> in <code>ghidra/save_related_functions.c</code> (<code>FUN_08377664</code>, with its callee <code>FUN_08377660</code>) is, on inspection, a <strong>generic software long-division/modulo runtime routine</strong> (classic restoring binary-division algorithm with a divide-by-zero trap callee) — it performs no memory-mapped I/O whatsoever and has <strong>no callers</strong> in <code>ghidra/callgraph.json</code> (<code>&quot;callers&quot;: []</code>). A near-identical sibling, <code>FUN_083775cc</code>, is the signed-division variant of the same compiler runtime cluster (<code>0x083755e2</code>–<code>0x08377664</code>). This strongly indicates the trace-seeding heuristic that produced <code>save_related_functions.c</code> mis-tagged a compiler runtime helper as save-I/O-related; it is <strong>not</strong> evidence of a save driver.</p>
+<p><strong>What was proven (from the real <code>.sav</code> bytes directly, independent of the Ghidra corpus):</strong></p>
+<ul><li>The capture <code>saves/cap-00-future-0.sav</code> is exactly 32,768 bytes (0x8000), consistent with a 32 KB battery-backed SRAM/FRAM part, and matches the declared SDK tag <code>SRAM_V113@8901780</code> in the packet metadata (CONFIRMED_STATIC via size + SDK tag correlation — not proven by decompiled code).</li><li>Bytes 0x0000–0x0009 hold the ASCII literal <code>MUSHI_VER9</code> — almost certainly a save-format/version signature written by the game&#x27;s own save code.</li><li>Six other 4-byte little-endian fields exist, at a constant stride of 0x328 (808) bytes, starting at offset 0x330: <code>0x330, 0x658, 0x980, 0xca8, 0xfd0, 0x12f8</code>. Every other byte in the 32 KB image is <code>0x00</code>.</li><li>These six 4-byte values, read as IEEE-754 float32, form a <strong>monotonically increasing arithmetic progression with an exactly constant raw-bit delta of 643168</strong> between consecutive entries (verified below in Python). This is a strong, reproducible structural signal, but its <em>semantic</em> meaning (per-slot timestamp, tick counter, generation/sequence stamp, or test-harness artifact) is <strong>unknown</strong> — no decompiled code was available to confirm which field this is or what writes it.</li></ul>
+<p><strong>What remains open:</strong> No save writer, reader, serializer, or checksum routine was identified anywhere in the provided decompiled corpus. No checksum/CRC field was found in the <code>.sav</code> file (every byte outside the 7 ranges above is zero, so there is nothing to validate a checksum formula against). No RAM mirror address (<code>0x02xxxxxx</code>/<code>0x03xxxxxx</code>) could be tied to any field because no save-write call site exists in the corpus. All layout conclusions below come <strong>exclusively from direct analysis of the <code>.sav</code> bytes</strong>, not from code.</p>
+<hr>
+<h2>2. Physical Media, Slot Geometry &amp; Redundancy</h2>
+<table><thead><tr><th>Property</th><th>Value</th><th>Confidence</th></tr></thead><tbody><tr><td>Total save size</td><td>32,768 bytes (0x8000)</td><td>CONFIRMED_STATIC (measured from <code>saves/cap-00-future-0.sav</code>)</td></tr><tr><td>SDK save tag (from packet metadata)</td><td><code>SRAM_V113@8901780</code></td><td>CONFIRMED_STATIC (declared, not independently re-derived from code in this corpus)</td></tr><tr><td>Inferred media kind</td><td>SRAM (battery-backed static RAM, flat byte-addressable at <code>0x0E000000</code>)</td><td>HYPOTHESIS — 32 KB matches standard GBA SRAM size and the <code>SRAM_*</code> SDK tag; <strong>no SRAM-bus access code was found in the decompiled corpus to directly confirm this</strong>, so it is inferred from size + tag only, not proven by instructions.</td></tr><tr><td>Fill/background byte</td><td><code>0x00</code></td><td>CONFIRMED_VERIFIED (every byte outside the 7 active ranges is <code>0x00</code>)</td></tr><tr><td>Active byte ranges</td><td>0x0000-0x0009 (10B), 0x0330-0x0333, 0x0658-0x065b, 0x0980-0x0983, 0x0ca8-0x0cab, 0x0fd0-0x0fd3, 0x12f8-0x12fb (4B each)</td><td>CONFIRMED_VERIFIED (byte-exact, re-derived independently from the raw file; see verification script in §4)</td></tr><tr><td>Apparent record stride</td><td>0x328 (808) bytes, constant across all 5 inter-record gaps</td><td>CONFIRMED_VERIFIED (arithmetic on the 6 observed offsets)</td></tr><tr><td>Number of save slots/records</td><td><strong>At least 6</strong> records observed with a populated 4-byte field each (at the record&#x27;s offset +0). Whether the format defines exactly 6 logical slots, or more unpopulated slots exist later in the 32 KB image (all-zero, indistinguishable from &quot;unused&quot;), is <strong>UNKNOWN</strong>.</td><td>HYPOTHESIS/UNKNOWN</td></tr><tr><td>Mirroring/redundancy</td><td>No second copy of the header or of any record was found; no pair of records is byte-identical. No evidence of a primary/backup mirrored-slot scheme in this single capture.</td><td>HYPOTHESIS (absence of evidence, not evidence of absence — a second capture at a different play state would be needed to test this)</td></tr><tr><td>Generation/sequence counter</td><td>The 6 per-record 4-byte values are <em>themselves</em> the only candidate &quot;sequence-like&quot; field (see §4 for the exact constant-delta progression). No separate dedicated slot-selection/generation byte was found.</td><td>HYPOTHESIS</td></tr><tr><td>Selection rule</td><td>UNKNOWN — no code identified that reads these records back and chooses among them.</td><td>UNKNOWN</td></tr></tbody></table>
+<p>Only one <code>.sav</code> capture (<code>cap-00-future-0.sav</code>) and zero paired <code>.ss</code> emulator save states are present in this workspace (<code>states/</code> is empty), so no before/after or cross-slot differential comparison beyond this single file was possible.</p>
+<hr>
+<h2>3. Save Writer, Reader &amp; Caller-Chain Architecture</h2>
+<p><strong>No save-specific writer, reader, serializer, or checksum function was identified in <code>ghidra/decompiled.c</code> or <code>ghidra/callgraph.json</code>.</strong></p>
+<p>Methodology used to search (all negative):</p>
+<ol><li>Text search of <code>ghidra/decompiled.c</code> for <code>SRAM</code>, <code>EEPROM</code>, <code>FLASH</code>, <code>flash</code>, <code>sram</code>, <code>eeprom</code>, the literal MMIO addresses <code>0x0E000000</code>/<code>0x0D000000</code>/<code>0x040000D4</code>, and the DMA3 control address — <strong>zero hits</strong>.</li><li>Inspection of the single seed function flagged in <code>ghidra/save_related_functions.c</code>:</li></ol>
+<ul><li><code>FUN_08377664</code> (<code>[MMIO-SEED]</code>, &quot;callers: none&quot;) — body is a 32-bit unsigned software division/remainder routine (shift-and-subtract restoring division, classic compiler-runtime <code>__udivsi3</code>-style implementation). It calls <code>FUN_08377660</code> only when <code>param_2 == 0</code> (divide-by-zero trap: <code>FUN_08377660</code> is a one-instruction <code>return;</code> stub). <strong>No MMIO, no SRAM/Flash bus access, no struct field writes.</strong></li><li><code>ghidra/callgraph.json[&quot;0x08377664&quot;]</code> confirms <code>&quot;callers&quot;: []</code> — this function is <strong>unreferenced</strong> by anything else in the traced corpus, i.e. the trace that produced this packet never actually observed a call into it from game code. It should not be treated as a real &quot;save bus&quot; entry point.</li><li>The adjacent <code>FUN_083775cc</code> (signed division/modulo, same code-shape, also 0 callers/0 callees per the callgraph) and the whole <code>0x083755e2</code>–<code>0x08377664</code> address cluster is consistent with a <strong>compiler math-runtime block</strong> (likely AGBSDK math library), not game-specific save logic.</li></ul>
+<ol><li>Full scan of all 99 decompiled functions&#x27; addresses/signatures in <code>ghidra/decompiled.c</code> for anything resembling a serialization loop (bulk byte copy against a save-sized buffer, <code>0x5555</code>/<code>0x2AAA</code> Flash command-sequence constants, or a DMA3 EEPROM bit-serial loop) — none found. The 99 functions in this corpus are dominated by sound-engine/graphics/VBlank-handler style code (e.g. <code>FUN_08000470</code>, <code>FUN_08000640</code> manipulate joypad/IRQ flag words; the <code>0x0807xxxx</code>–<code>0x0808xxxx</code> block looks like audio-mixer/DMA-channel control; <code>0x08375xxx</code>-<code>0x08377xxx</code> is the math/runtime cluster described above).</li></ol>
+<p><strong>Conclusion:</strong> the trace that seeded this packet did not capture the actual save-write code path (whatever triggered the capture of <code>cap-00-future-0.sav</code> did not pass through any function present in this 99-function corpus). No caller chain, no RAM-mirror struct, and no field-level writer/reader mapping can be produced from code evidence for this release. This must not be conflated with &quot;no save writer exists&quot; — it only means <strong>this specific trace-guided corpus does not include it</strong>. A fresh, broader Ghidra pass (whole-ROM, not trace-seeded) or a trace that specifically brackets the save/write menu action would be required to locate the real I/O driver.</p>
+<hr>
+<h2>4. Magic Signatures &amp; Checksum / Integrity Algorithm</h2>
+<h3>4.1 Magic signature — CONFIRMED_VERIFIED (bytes only; not tied to code)</h3>
+<ul><li>Offset <code>0x0000</code>, size 10 bytes, ASCII <code>&quot;MUSHI_VER9&quot;</code> (<code>4d 55 53 48 49 5f 56 45 52 39</code>), followed by zero padding to at least offset <code>0x0010</code>.</li><li><code>verified_in_sav: true</code> (read directly from <code>saves/cap-00-future-0.sav</code>).</li><li><code>verified_in_code: false</code> — no function in <code>ghidra/decompiled.c</code> constructs or compares this literal (it is pure data; the decompiled corpus contains no <code>.rodata</code>/string-literal cross-references and no function in the available trace touches these bytes).</li></ul>
+<h3>4.2 Checksum / integrity field — UNKNOWN (none found)</h3>
+<p>No byte range in the 32 KB image is populated besides the 7 ranges listed in §2. Since every candidate &quot;record&quot; consists of exactly one non-zero 4-byte value and otherwise all-zero padding, there is <strong>no second field anywhere that could serve as a stored checksum/CRC over that record</strong> to test a formula against. No checksum algorithm, therefore, could be derived or verified from this capture.</p>
+<h3>4.3 Verification performed against the real <code>.sav</code> bytes</h3>
+<p>The following Python was run directly against <code>saves/cap-00-future-0.sav</code> to independently re-derive the active byte ranges (not trusting the pre-computed <code>saves/hexdump_and_diffs.txt</code>, which — note for the record — omits the hexdump line for the 7th range at <code>0x12f8</code> even though it lists &quot;Active ranges (7)&quot;; the script below recovers all 7 directly from the binary):</p>
+<pre><code>import struct, hashlib
+
+data = open(&quot;saves/cap-00-future-0.sav&quot;, &quot;rb&quot;).read()
+assert len(data) == 32768
+assert hashlib.sha256(data).hexdigest() == (
+    &quot;f0ca7b45b8663b198fdbfbfe20d956a88771e60cb245191fe543d7517941a819&quot;
+)
+
+nonzero = [i for i, b in enumerate(data) if b != 0]
+ranges, start, prev = [], nonzero[0], nonzero[0]
+for i in nonzero[1:]:
+    if i != prev + 1:
+        ranges.append((start, prev))
+        start = i
+    prev = i
+ranges.append((start, prev))
+
+for s, e in ranges:
+    print(hex(s), hex(e), data[s:e+1])</code></pre>
+<p>Output (actual run):</p>
+<pre><code>0x0 0x9 b&#x27;MUSHI_VER9&#x27;
+0x330 0x333 b&#x27;J\xd9\xc7&lt;&#x27;
+0x658 0x65b b&#x27;\xaa\xa9\xd1&lt;&#x27;
+0x980 0x983 b&#x27;\nz\xdb&lt;&#x27;
+0xca8 0xcab b&#x27;jJ\xe5&lt;&#x27;
+0xfd0 0xfd3 b&#x27;\xca\x1a\xef&lt;&#x27;
+0x12f8 0x12fb b&#x27;*\xeb\xf8&lt;&#x27;</code></pre>
+<p>Interpreting the six 4-byte fields as little-endian IEEE-754 float32 and as raw little-endian uint32, and checking the deltas between consecutive records:</p>
+<pre><code>vals = [
+    (0x330, b&#x27;J\xd9\xc7&lt;&#x27;), (0x658, b&#x27;\xaa\xa9\xd1&lt;&#x27;), (0x980, b&#x27;\nz\xdb&lt;&#x27;),
+    (0xca8, b&#x27;jJ\xe5&lt;&#x27;),    (0xfd0, b&#x27;\xca\x1a\xef&lt;&#x27;), (0x12f8, b&#x27;*\xeb\xf8&lt;&#x27;),
+]
+u32s = [struct.unpack(&#x27;&lt;I&#x27;, b)[0] for _, b in vals]
+f32s = [struct.unpack(&#x27;&lt;f&#x27;, b)[0] for _, b in vals]
+print(&quot;float32:&quot;, f32s)
+print(&quot;uint32 :&quot;, u32s)
+print(&quot;deltas :&quot;, [u32s[i+1] - u32s[i] for i in range(len(u32s)-1)])</code></pre>
+<p>Actual output:</p>
+<pre><code>float32: [0.02439560368657112, 0.025593597441911697, 0.026791591197252274,
+          0.02798958495259285, 0.029187578707933426, 0.030385572463274002]
+uint32 : [1019730250, 1020373418, 1021016586, 1021659754, 1022302922, 1022946090]
+deltas : [643168, 643168, 643168, 643168, 643168]</code></pre>
+<p><strong>Finding (CONFIRMED_VERIFIED, bytes-only):</strong> the raw-uint32 delta between every consecutive record&#x27;s 4-byte field is <strong>exactly 643168</strong>, with zero deviation across all 5 gaps. This is too precise to be coincidental zero/garbage data; it is a genuine structural property of this save image. As float32 it reads as a smoothly, monotonically increasing value in the ~0.024–0.030 range per record. No code evidence ties this to a semantic meaning (elapsed time, frame/tick counter, per-slot generation stamp, or an artifact of however <code>cap-00-future-0.sav</code> was produced by the capture harness) — flagged as a HYPOTHESIS field in §5, not a confirmed semantic field.</p>
+<hr>
+<h2>5. Complete Field Map Table</h2>
+<table><thead><tr><th>Offset (hex)</th><th>Size</th><th>Type / Endianness</th><th>RAM Mirror Addr</th><th>Writers / Callers</th><th>Readers</th><th>Observed Values in <code>.sav</code></th><th>Confidence</th><th>How Mapped &amp; Updated</th></tr></thead><tbody><tr><td><code>0x0000</code></td><td>10 B</td><td>ASCII string</td><td>unknown</td><td>none identified</td><td>none identified</td><td><code>&quot;MUSHI_VER9&quot;</code></td><td>CONFIRMED_STATIC</td><td>Read directly from <code>saves/cap-00-future-0.sav</code> bytes 0-9; appears to be a save-format/version signature. No writer function found in <code>ghidra/decompiled.c</code>.</td></tr><tr><td><code>0x000A</code>-<code>0x032F</code></td><td>806 B</td><td>padding/unused</td><td>unknown</td><td>none identified</td><td>none identified</td><td>all <code>0x00</code></td><td>CONFIRMED_VERIFIED (bytes)</td><td>Zero-filled gap between header and first record, confirmed by direct byte read. Purpose (reserved header space vs. simply unwritten) unknown.</td></tr><tr><td><code>0x0330</code></td><td>4 B</td><td><code>f32_le</code> (hypothesized) / raw <code>u32_le</code></td><td>unknown</td><td>none identified</td><td>none identified</td><td><code>4a d9 c7 3c</code> (float≈0.024396, u32=1019730250)</td><td>HYPOTHESIS</td><td>First of 6 periodic 4-byte fields at stride 0x328; value participates in the constant-643168-delta progression described in §4.3.</td></tr><tr><td><code>0x0658</code></td><td>4 B</td><td><code>f32_le</code> / <code>u32_le</code></td><td>unknown</td><td>none identified</td><td>none identified</td><td><code>aa a9 d1 3c</code> (float≈0.025594, u32=1020373418)</td><td>HYPOTHESIS</td><td>Same field, record index 1 (offset = 0x330 + 1×0x328).</td></tr><tr><td><code>0x0980</code></td><td>4 B</td><td><code>f32_le</code> / <code>u32_le</code></td><td>unknown</td><td>none identified</td><td>none identified</td><td><code>0a 7a db 3c</code> (float≈0.026792, u32=1021016586)</td><td>HYPOTHESIS</td><td>Record index 2.</td></tr><tr><td><code>0x0CA8</code></td><td>4 B</td><td><code>f32_le</code> / <code>u32_le</code></td><td>unknown</td><td>none identified</td><td>none identified</td><td><code>6a 4a e5 3c</code> (float≈0.027990, u32=1021659754)</td><td>HYPOTHESIS</td><td>Record index 3.</td></tr><tr><td><code>0x0FD0</code></td><td>4 B</td><td><code>f32_le</code> / <code>u32_le</code></td><td>unknown</td><td>none identified</td><td>none identified</td><td><code>ca 1a ef 3c</code> (float≈0.029188, u32=1022302922)</td><td>HYPOTHESIS</td><td>Record index 4.</td></tr><tr><td><code>0x12F8</code></td><td>4 B</td><td><code>f32_le</code> / <code>u32_le</code></td><td>unknown</td><td>none identified</td><td>none identified</td><td><code>2a eb f8 3c</code> (float≈0.030386, u32=1022946090)</td><td>HYPOTHESIS</td><td>Record index 5 (last observed). Not present in the pre-computed <code>saves/hexdump_and_diffs.txt</code> hexdump listing despite being counted in its &quot;Active ranges (7)&quot; total — recovered independently via direct byte scan (§4.3).</td></tr><tr><td><code>0x12FC</code>-<code>0x7FFF</code></td><td>32,516 B</td><td>unknown (unpopulated in this capture)</td><td>unknown</td><td>none identified</td><td>none identified</td><td>all <code>0x00</code></td><td>UNKNOWN</td><td>Could hold additional unwritten slots, reserved space, or simply be beyond the format&#x27;s used extent for this particular save state. No evidence either way.</td></tr><tr><td>record body (per-record bytes other than offset+0, i.e. bytes 1-807 of each 808-byte record)</td><td>804 B ×6</td><td>unknown</td><td>unknown</td><td>none identified</td><td>none identified</td><td>all <code>0x00</code></td><td>UNKNOWN</td><td>Either genuinely-zero game-state fields for a fresh/near-empty save, or fields this capture never exercised.</td></tr></tbody></table>
+<p>No field in this table reaches <code>CONFIRMED_VERIFIED</code> for <em>semantic</em> meaning — only the raw byte values and the arithmetic delta relationship are <code>CONFIRMED_VERIFIED</code>; everything about what the game considers these bytes to <em>mean</em> is <code>HYPOTHESIS</code> or <code>UNKNOWN</code>, consistent with the complete absence of a traced writer/reader in this corpus.</p>
+<hr>
+<h2>6. Save Fuzzing &amp; Counterfactual Verification Plan</h2>
+<p>No paired <code>.ss</code> emulator save states are present in this workspace (<code>states/</code> is empty) — the mutations below are proposed for the <strong>next</strong> capture round, once <code>gameplay.ss</code> / <code>final.ss</code> / paired pre/post <code>.ss</code> states exist for this release, per the paired-state capture requirement.</p>
+<ol><li><strong>Header-signature mutation.</strong> Flip one byte of <code>&quot;MUSHI_VER9&quot;</code> at offset <code>0x0000</code> (e.g. <code>0x39</code>→<code>0x38</code>, &quot;VER9&quot;→&quot;VER8&quot;). Reload from the corresponding pre-save <code>.ss</code>. <em>Prediction:</em> if this is a true format/version gate, the game will treat the save as invalid/corrupt (reset to new-game, show a corrupt-save prompt, or silently reinitialize); if it&#x27;s cosmetic/unchecked, no observable difference. Either outcome narrows confidence on whether the header string is actually validated by a reader.</li></ol>
+<ol><li><strong>Record-field zeroing.</strong> Zero out the <code>0x0330</code> 4-byte field only (leave the other five records untouched) and reload. <em>Prediction:</em> if this field drives slot selection/ordering (e.g. &quot;most recent&quot; by progression value), the game should now treat another record as newest/primary, or show record 0 as blank/default. If nothing changes, the field is either purely cosmetic, unread at this point in the game, or the selection logic depends on a different field not yet identified.</li></ol>
+<ol><li><strong>Constant-delta continuation probe.</strong> Compute the next value in the arithmetic progression (<code>u32 = 1022946090 + 643168 = 1023589258</code>, little-endian bytes <code>8a4bfd3c</code>) and write it at a <em>new</em> record position at <code>0x12F8 + 0x328 = 0x1620</code>, leaving all 32,516 trailing zero bytes otherwise untouched. Reload. <em>Prediction:</em> if the format supports more than 6 records and simply reads &quot;the furthest non-zero/highest-value record,&quot; a 7th slot should now appear active in-game; if the format hard-caps at 6 records, this write should be ignored or treated as out-of-bounds/corrupt.</li></ol>
+<ol><li><strong>Full-record zero vs. full-record fill (<code>0xFF</code>) at one slot.</strong> Separately test zeroing an entire 808-byte record (including its float field) and filling an entire record with <code>0xFF</code>. <em>Prediction:</em> distinguishes &quot;zero = empty/unused slot&quot; (expected, matches the observed fill byte) from &quot;0xFF = empty/unused slot&quot; (common alternate convention for Flash-backed saves) — this directly tests the <code>fill_byte</code> assumption in <code>save-format.json</code>.</li></ol>
+<ol><li><strong>Checksum-repair rehearsal (blocked).</strong> Not currently runnable: no checksum/CRC field was identified anywhere in the capture (§4.2), so there is no repair step to script yet. This item should be revisited once a broader (non-trace-seeded) Ghidra pass locates the actual save writer, or once a second <code>.sav</code> capture at a different play state reveals a field whose value changes in a way consistent with a checksum over the rest of the record.</li></ol>
+<ol><li><strong>Primary follow-up before further fuzzing:</strong> re-run Ghidra decompilation on the full ROM (or re-seed the trace specifically around the in-game save/write-to-cartridge menu action) to recover the actual SRAM/Flash/EEPROM I/O driver and its callers — all of §3 is currently empty because this corpus&#x27;s trace never captured that code path. Fuzzing byte offsets without first confirming <em>which function reads them back</em> risks drawing conclusions from in-game UI side effects that could have multiple explanations.</li></ol>
+<p><strong>Aggregate screenshot/state budget for any follow-up capture round:</strong> ≤8 screenshots, ≤4 save states per job, per standing operational guardrails.</p>
+</div>
+</main>
+  <footer>gbakit GBA Format Reference &middot; <a href="https://github.com/JidouGhost-TL/gbakit">GitHub: JidouGhost-TL/gbakit</a> &middot; Clean-room GBA binary format specs &amp; Rust toolkit.</footer>
+</body>
+</html>

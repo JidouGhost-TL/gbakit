@@ -13,7 +13,13 @@
       <a href="../index.html">Games</a>
       <a href="../saves/index.html">Save Formats</a>
       <a href="../patches/index.html">Debug Patches</a>
+      <a href="../debug-menus.html">Debug Gallery</a>
+      <a href="../non-retail-cartridges.html">Non-Retail</a>
+      <a href="../cartridge-hardware.html">Cartridge Hardware</a>
+      <a href="../link-multiplayer.html">Link &amp; Multiplayer</a>
+      <a href="../multiboot-museum.html">MultiBoot Museum</a>
       <a href="../assets/index.html">Assets &amp; Audio</a>
+      <a href="../text-and-fonts.html">Text &amp; Fonts</a>
       <a href="../engines/index.html">Engines &amp; Hardware</a>
       <a href="../families/index.html">Families</a>
       <a href="../gbakit/index.html">Using gbakit</a>
@@ -22,7 +28,7 @@
   <main>
 <p class="meta"><a href="../index.html">&larr; Games</a> &middot; Family <code>BBK</code></p>
 <h1>Yaobai Senxigang (China) (Proto)</h1>
-<p><span class='badge badge-slate'>SRAM 256K</span> <span class='badge badge-emerald'>Save Format Mapped (Family Spec)</span></p>
+<p><span class='badge badge-slate'>SRAM 256K</span> <span class='badge badge-emerald'>Save Format Mapped (Family Spec)</span> <a href='../link-multiplayer.html#multiboot'><span class='badge badge-amber'>💾 MultiBoot</span></a> <a href='../link-multiplayer.html#sio-multi'><span class='badge badge-blue'>🎮 4P Link</span></a></p>
 
 <h2>Cartridge Identity</h2>
 <dl class="kv">
@@ -35,6 +41,18 @@
   <dt>Engine / SDK Group</dt><dd><a href='../engines/index.html#comm-001'><code>comm-001</code></a> (196 families)</dd>
 </dl>
 
+
+
+
+
+<h2>Link Cable &amp; Multiplayer Communications</h2>
+<div class="callout">
+  This title contains detected communication capabilities: <a href='../link-multiplayer.html#multiboot'><span class='badge badge-amber'>💾 MultiBoot</span></a> <a href='../link-multiplayer.html#sio-multi'><span class='badge badge-blue'>🎮 4P Link</span></a>.
+  Detailed protocol specifications, SIO registers, Joybus commands, and MultiBoot sequences are documented in the <a href="../link-multiplayer.html"><strong>Link &amp; Multiplayer Reference</strong></a>.
+</div>
+<dl class="kv">
+  <dt>Multi-Player SIO (4P)</dt><dd>16-bit ring network &middot; SIOCNT (<code>0x04000128</code>) literals: <code>0x50c5c0</code>, <code>0x65d26c</code>, <code>0x65d31c</code> &middot; SIODATA32/SIOMULTI0 (<code>0x04000120</code>) literals: <code>0x65c0e4</code>, <code>0x65d320</code>, <code>0x65d43c</code></dd><dt>Single-Cart MultiBoot</dt><dd>Single-Cartridge MultiBoot (Download Play) client/server handler &middot; Thumb SWI 0x25 (<code>0xDF25</code>): <code>0x6d7666</code>, <code>0x6f793c</code>, <code>0x727f86</code>, <code>0x758980</code></dd>
+</dl>
 
 
 <h2>Battery Save Format Specification (Family Shared)</h2>
@@ -60,6 +78,11 @@ gbakit save fix    BBKP damaged.sav -o repaired.sav</code></pre>
   <dt>Candidate Checksum/Counter Spans</dt><dd>None</dd>
   
 </dl>
+
+
+
+<h2>Text, Fonts &amp; Scene Data</h2>
+<dl class="kv"><dt>Primary Text Encoding</dt><dd><strong>Custom 16-bit Huffman</strong> (<code>319</code> ASCII strings &middot; <code>1</code> Shift-JIS runs)</dd><dt>Font &amp; VWF Indicators</dt><dd><span class='badge badge-slate'>No VWF Table</span> <span class='badge badge-blue'>1bpp Font</span> &middot; BIOS SWIs: BitUnPack <code>0x10</code>: <code>0</code> &middot; LZ77 <code>0x11/12</code>: <code>0</code> &middot; Huffman <code>0x13</code>: <code>0</code> &middot; RLE <code>0x14/15</code>: <code>0</code></dd><dt>Scene &amp; Packaging</dt><dd><code>56</code> ROM pointer tables (&ge;32 entries, <code>11</code> &ge;200) &middot; <code>31</code> relative <code>u32</code> TOCs &middot; <code>427</code> OAM metasprite hits</dd></dl>
 
 
 <h2>Hardware MMIO Subsystems</h2><dl class='kv'><dt><code>dma_transfer</code></dt><dd><code>0x830e948</code>, <code>0x84db380</code>, <code>0x84f33c8</code></dd><dt><code>irq_control</code></dt><dd><code>0x8000508</code>, <code>0x8000930</code></dd><dt><code>keyinput</code></dt><dd><code>0x8000508</code>, <code>0x84beccc</code></dd><dt><code>ppu_display</code></dt><dd><code>0x8000930</code></dd><dt><code>save_bus_sram_flash</code></dt><dd><code>0x84db380</code>, <code>0x84de854</code></dd></dl>

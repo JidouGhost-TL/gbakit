@@ -13,7 +13,13 @@
       <a href="../index.html">Games</a>
       <a href="../saves/index.html">Save Formats</a>
       <a href="../patches/index.html">Debug Patches</a>
+      <a href="../debug-menus.html">Debug Gallery</a>
+      <a href="../non-retail-cartridges.html">Non-Retail</a>
+      <a href="../cartridge-hardware.html">Cartridge Hardware</a>
+      <a href="../link-multiplayer.html">Link &amp; Multiplayer</a>
+      <a href="../multiboot-museum.html">MultiBoot Museum</a>
       <a href="../assets/index.html">Assets &amp; Audio</a>
+      <a href="../text-and-fonts.html">Text &amp; Fonts</a>
       <a href="../engines/index.html">Engines &amp; Hardware</a>
       <a href="../families/index.html">Families</a>
       <a href="../gbakit/index.html">Using gbakit</a>
@@ -22,7 +28,7 @@
   <main>
 <p class="meta"><a href="../index.html">&larr; Games</a> &middot; Family <code>AP6</code></p>
 <h1>Pinobee &amp; Phoebee (Japan)</h1>
-<p><span class='badge badge-slate'>EEPROM 4K</span> <span class='badge badge-blue'>VRAM Tile Sheet</span></p>
+<p><span class='badge badge-slate'>EEPROM 4K</span> <span class='badge badge-emerald'>gbakit Built-In</span> <span class='badge badge-amber'>Debug Menu Patch</span> <a href='../patches/index.html#zero-patch-cheats'><span class='badge badge-purple'>🎮 Button Cheat</span></a> <span class='badge badge-blue'>VRAM Tile Sheet</span> <a href='../link-multiplayer.html#multiboot'><span class='badge badge-amber'>💾 MultiBoot</span></a></p>
 
 <h2>Cartridge Identity</h2>
 <dl class="kv">
@@ -36,9 +42,57 @@
 </dl>
 <h2>Screenshots</h2><div class='gallery'><figure><img src='../assets/thumbs/AP6J-r0-5e89bcd1d9a3d58c-boot.png' alt='Boot Screen' loading='lazy'><figcaption>Boot Screen</figcaption></figure><figure><img src='../assets/thumbs/AP6J-r0-5e89bcd1d9a3d58c-after.png' alt='In-Game' loading='lazy'><figcaption>In-Game</figcaption></figure></div>
 
+<h2>Debug Menu Re-Enablement Patch (<code>.ips</code>)</h2>
+<p><a class="btn" href="../assets/patches/AP6J-r0-5e89bcd1d9a3d58c/AP6J-debug.ips" download>Download AP6J-debug.ips (17 B IPS / 4 B delta)</a></p>
+<dl class="kv">
+  <dt>Hook Mechanism</dt><dd><code>thumb_branch_override</code> &middot; Redirect boot scene creator call at 0x080044b2 (bl 0x08004780 -&gt; bl 0x0804b5a8) to launch PINOBEE2 DEBUG MENU</dd>
+  <dt>IPS SHA-256</dt><dd><code>b4c065eed4849aa979e878e9d8159cb23cf6bcc94edc082be3107216ab39d8c8</code></dd>
+</dl>
+<pre><code>gbakit patch apply AP6J-debug.ips original.gba patched-debug.gba</code></pre>
+
+
+
+<h2>Verified Button-Combo Cheat</h2>
+<div class="callout">
+  <strong>Zero-patch retail controller cheat (Wave 3):</strong> 4-way counterfactually verified in headless <code>libmgba</code>. See all verified titles in the <a href="../patches/index.html#zero-patch-cheats"><strong>Button-Combo Cheats Catalog</strong></a>.
+</div>
+<dl class="kv">
+  <dt>Effect</dt><dd>Hidden Controller Sequence Unlock (ROM table 0x0805079a)</dd>
+  <dt>Button Sequence</dt><dd><code>L, R, L, R, LEFT, RIGHT, UP, DOWN, L, R, A</code></dd>
+  <dt>Verification Verdict</dt><dd><span class='badge badge-emerald'>Visual + RAM Unique Reaction</span></dd>
+  <dt>Target RAM Address</dt><dd><code>0x03000090</code></dd>
+  <dt>ROM Table Address</dt><dd><code>0x0805079a</code></dd>
+  <dt>Timing Protocol</dt><dd><code>boot=360f</code>, <code>hold=6f</code>, <code>release=6f</code>, <code>settle=60f</code></dd>
+  <dt>Activation Indicator</dt><dd>Headless libmgba 4-way counterfactual verified: unique 240x160 framebuffer and RAM/VRAM state transition distinct from control, wrong, and reversed inputs</dd>
+</dl>
+<pre><code>gbakit cheat verify AP6J</code></pre>
+<div class='gallery'><figure><img src='../assets/cheats/AP6J/control.png' alt='Before (Control)' loading='lazy'><figcaption>Before (Control)</figcaption></figure><figure><img src='../assets/cheats/AP6J/reaction.png' alt='After (Cheat Reaction)' loading='lazy'><figcaption>After (Cheat Reaction)</figcaption></figure></div>
+
+
+
+<h2>Link Cable &amp; Multiplayer Communications</h2>
+<div class="callout">
+  This title contains detected communication capabilities: <a href='../link-multiplayer.html#multiboot'><span class='badge badge-amber'>💾 MultiBoot</span></a>.
+  Detailed protocol specifications, SIO registers, Joybus commands, and MultiBoot sequences are documented in the <a href="../link-multiplayer.html"><strong>Link &amp; Multiplayer Reference</strong></a>.
+</div>
+<dl class="kv">
+  <dt>Single-Cart MultiBoot</dt><dd>Single-Cartridge MultiBoot (Download Play) client/server handler &middot; Thumb SWI 0x25 (<code>0xDF25</code>): <code>0x0575d0</code>, <code>0x50d906</code>, <code>0x50fcba</code>, <code>0x51d1a2</code></dd>
+</dl>
+
+
+<h2>Battery Save Support in <code>gbakit</code></h2>
+<p><span class="badge badge-emerald">Built-in definition (AP6J)</span></p>
+<pre><code>gbakit save verify AP6J save.sav
+gbakit save decode AP6J save.sav
+gbakit save fix    AP6J damaged.sav -o repaired.sav</code></pre>
 
 
 <h2>ROM Assets, Compression &amp; Audio</h2><dl class='kv'><dt>BIOS Compression</dt><dd>LZ77 (<code>0x10</code>): <strong>0</strong> streams &middot; RLE (<code>0x30</code>): <strong>0</strong> streams</dd><dt>ROM Pointer Tables</dt><dd>104 tables (0 pointing to validated compressed streams)</dd><dt>SDK Backup Tags</dt><dd><code>EEPROM_V122</code></dd><dt>VRAM / Palette Snapshot</dt><dd>960 non-zero 8&times;8 tiles &middot; 16 palettes &middot; Direct ROM matches: <strong>0</strong> VRAM blocks, <strong>2</strong> palette blocks</dd></dl><div class='gallery'><figure><img src='../assets/vram-sheets/AP6J-r0-5e89bcd1d9a3d58c-vram.png' alt='VRAM 4bpp tile sheet' style='width:256px;height:256px;image-rendering:pixelated' loading='lazy'><figcaption>VRAM 4bpp Tile Sheet</figcaption></figure></div>
+
+<h2>Text, Fonts &amp; Scene Data</h2>
+<dl class="kv"><dt>Primary Text Encoding</dt><dd><strong>Compressed / custom-encoded text</strong></dd><dt>Font &amp; VWF Indicators</dt><dd><span class='badge badge-emerald'>VWF Width Table</span> <span class='badge badge-blue'>1bpp Font</span> &middot; BIOS SWIs: BitUnPack <code>0x10</code>: <code>0</code> &middot; LZ77 <code>0x11/12</code>: <code>10</code> &middot; Huffman <code>0x13</code>: <code>7</code> &middot; RLE <code>0x14/15</code>: <code>14</code></dd><dt>Scene &amp; Packaging</dt><dd><code>32</code> ROM pointer tables (&ge;32 entries, <code>11</code> &ge;200) &middot; <code>3</code> relative <code>u32</code> TOCs &middot; <code>165</code> OAM metasprite hits</dd></dl>
+
+
 <h2>Hardware MMIO Subsystems</h2><dl class='kv'><dt><code>dma_transfer</code></dt><dd><code>0x8002f5c</code></dd><dt><code>irq_control</code></dt><dd><code>0x8003300</code></dd><dt><code>ppu_display</code></dt><dd><code>0x8003300</code>, <code>0x8004920</code>, <code>0x8004eb0</code></dd></dl>
 
 </main>

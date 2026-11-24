@@ -1,0 +1,82 @@
+{
+  "schema": "gbakit-save-research/1",
+  "release_key": "B8CE-r0-6f6e7b61bb7b6ef7",
+  "display_name": "Kingdom Hearts - Chain of Memories (USA)",
+  "rom_sha256": "6f6e7b61bb7b6ef7e2bea6e9dd01e70570a715835cc3713abe86186fd2c4e28d",
+  "game_code": "B8CE",
+  "header_family": "B8C",
+  "community_id": "comm-001",
+  "overall_confidence": "LOW",
+  "media": {
+    "kind": "unknown",
+    "size_bytes": 32768,
+    "sdk_tags": ["SRAM_F_V103@0x1D6D134"],
+    "fill_byte": "0xff"
+  },
+  "slots_and_copies": [
+    {
+      "name": "whole_capture",
+      "offset": 0,
+      "size": 32768,
+      "redundancy_role": "unknown",
+      "selection_rule": "Not determined. The single .sav sample has 0 active (non-fill) byte ranges, so no slot boundary, copy, or generation/sequence counter can be observed."
+    }
+  ],
+  "magic_signatures": [],
+  "checksums": [],
+  "io_driver_functions": [],
+  "caller_chains": [
+    {
+      "entry_caller": "0x08117fe4",
+      "chain": [
+        "0x08117fe4",
+        "0x0811904c",
+        "0x081192e8",
+        "0x08118f7c",
+        "0x08119224",
+        "0x08119480",
+        "0x0811950c",
+        "0x081185cc",
+        "0x08118630",
+        "0x08118564",
+        "0x081185b0",
+        "0x0811d348",
+        "0x0811d408",
+        "0x0811d550",
+        "0x0811d5b0",
+        "0x0811d5b4",
+        "0x0811d5c0",
+        "0x081192b0"
+      ],
+      "trigger_context": "BIOS software_interrupt(0xC) (CpuFastSet) driven audio/stream-buffer mixing engine; cursor/offset fields at param_1+0x14..0x8d of a per-channel struct.",
+      "ram_fields_updated": [],
+      "how_mapped": "Traced every caller/callee edge for this address in ghidra/callgraph.json, confirmed 0 edges leave this 18-function set, and read each function body in ghidra/decompiled.c to classify all memory references: all are EWRAM/IWRAM audio-channel state, none address 0x0D000000-0x0E00FFFF (EEPROM/SRAM/Flash) or 0x040000D4 (DMA3). Ruled out as save-related; no ram_fields_updated map to a save struct."
+    },
+    {
+      "entry_caller": "0x0811d944",
+      "chain": [
+        "0x0811d944",
+        "0x0811d88c",
+        "0x0811d9c0",
+        "0x0811db3c",
+        "0x0811db9c",
+        "0x0811ddec",
+        "0x0811dfd0",
+        "0x0811e0a8",
+        "0x0811e1d8"
+      ],
+      "trigger_context": "Software floating-point arithmetic library (unpack/pack, add/sub, multiply, divide, compare, int-to-float, 64-bit multiply helper), called from the audio cluster above for tick/time-ratio math.",
+      "ram_fields_updated": [],
+      "how_mapped": "Same method as the audio cluster: 0 cross-cluster edges in ghidra/callgraph.json, and every memory/register reference in ghidra/decompiled.c is local stack/float-record state, never a save address. Ruled out as save-related."
+    }
+  ],
+  "fields": [],
+  "fuzzing_targets": [],
+  "open_questions": [
+    "Which GBA save protocol does this title actually use (plain 32KB SRAM, Flash with 0x5555/0x2AAA command sequence, or EEPROM via DMA3)? The SRAM_F_V103 SDK tag string is a hint only, not confirmed by any traced I/O code.",
+    "No save-write or save-read function was captured by the trace behind ghidra/decompiled.c (0 MMIO seeds in ghidra/save_related_functions.c). A new trace that spans an actual in-game save/load is required to surface the real driver, serialization, and checksum routines.",
+    "The one .sav sample (saves/cap-00-future-0.sav) is entirely 0xFF with 0 active byte ranges, so no magic signature, checksum, slot boundary, or field offset can be derived from content alone. A non-blank capture (ideally several, from different save slots/characters/progress points) is required.",
+    "states/ is empty; no paired pre-save/post-save .ss states exist yet to diff EWRAM/IWRAM and locate the in-RAM save staging struct independent of static code analysis.",
+    "Is the 32768-byte file size a property of the real cartridge save chip, or a fixed-size backing file allocated by the capture tooling regardless of actual save-chip type? Needs cross-checking against the ROM's actual declared save type once driver code is found."
+  ]
+}

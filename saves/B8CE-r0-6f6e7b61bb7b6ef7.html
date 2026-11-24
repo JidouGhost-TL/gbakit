@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Kingdom Hearts - Chain of Memories (USA) Save Format — gbakit GBA Reference</title>
+  <link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+  <header>
+    <div class="brand"><a href="../index.html" style="color:inherit">gbakit GBA Reference <span class="badge badge-emerald">v2.0</span></a></div>
+    <nav>
+      <a href="../index.html">Games</a>
+      <a href="../saves/index.html">Save Formats</a>
+      <a href="../patches/index.html">Debug Patches</a>
+      <a href="../debug-menus.html">Debug Gallery</a>
+      <a href="../non-retail-cartridges.html">Non-Retail</a>
+      <a href="../cartridge-hardware.html">Cartridge Hardware</a>
+      <a href="../link-multiplayer.html">Link &amp; Multiplayer</a>
+      <a href="../multiboot-museum.html">MultiBoot Museum</a>
+      <a href="../assets/index.html">Assets &amp; Audio</a>
+      <a href="../text-and-fonts.html">Text &amp; Fonts</a>
+      <a href="../engines/index.html">Engines &amp; Hardware</a>
+      <a href="../families/index.html">Families</a>
+      <a href="../gbakit/index.html">Using gbakit</a>
+    </nav>
+  </header>
+  <main>
+<p class="meta"><a href="index.html">&larr; Save Formats</a> &middot; <a href="../titles/B8CE-r0-6f6e7b61bb7b6ef7.html">Kingdom Hearts - Chain of Memories (USA)</a></p>
+<h1>Kingdom Hearts - Chain of Memories (USA) — Save Format Specification</h1>
+<p><span class="badge badge-indigo">Confidence: LOW</span> <span class="badge badge-blue">0 Fields</span> <span class="badge badge-emerald">0 Verified Checksum(s)</span> <span class='badge badge-emerald'>gbakit Built-In</span></p>
+<p><a class='btn' href='../assets/saves/B8CE-r0-6f6e7b61bb7b6ef7/B8CE-r0-6f6e7b61bb7b6ef7.sav' download>Download Sample .sav (32,768 B)</a><a class='btn btn-secondary' href='../assets/formats/B8CE-r0-6f6e7b61bb7b6ef7/save-format.json' download>Download save-format.json</a><a class='btn btn-secondary' href='../titles/B8CE-r0-6f6e7b61bb7b6ef7.html'>View Game Page</a></p>
+
+<div class="callout">
+  <strong>Use directly with <code>gbakit</code> (built-in definition <code>B8CE</code>):</strong>
+  <pre><code>gbakit save verify B8CE save.sav
+gbakit save decode B8CE save.sav
+gbakit save fix    B8CE damaged.sav -o repaired.sav</code></pre>
+</div>
+
+<div class='md-body'>
+<h2>Save Format Report — Kingdom Hearts: Chain of Memories (USA) [B8CE]</h2>
+<p>Release key: <code>B8CE-r0-6f6e7b61bb7b6ef7</code> · ROM SHA-256: <code>6f6e7b61bb7b6ef7e2bea6e9dd01e70570a715835cc3713abe86186fd2c4e28d</code></p>
+<h2>1. Executive Summary &amp; Overall Confidence</h2>
+<p><strong>Overall confidence: LOW.</strong></p>
+<p>This clean-room pass had two inputs — a trace-guided Ghidra decompilation of 27 functions (<code>ghidra/decompiled.c</code>) and a single <code>.sav</code> capture (<code>saves/cap-00-future-0.sav</code>) — and <strong>neither contains any evidence of save I/O</strong>:</p>
+<ul><li><code>ghidra/save_related_functions.c</code> reports <strong>0 MMIO seed functions</strong> found (no</li></ul>
+<p>hits anchored on SRAM/Flash/EEPROM/DMA3 access patterns), and 0 functions after expanding 2-hop callers / 1-hop callees from those seeds. The trace that fed the decompiler simply never touched save hardware.</p>
+<ul><li>All 27 functions present in <code>ghidra/decompiled.c</code> were individually read and</li></ul>
+<p>cross-checked against <code>ghidra/callgraph.json</code>. They decompose into exactly two disjoint clusters with <strong>zero cross-cluster call edges</strong> and zero edges reaching any address in the GBA save-hardware ranges (<code>0x0E000000</code> SRAM/Flash, <code>0x0D000000</code> EEPROM, <code>0x040000D4</code> DMA3, <code>0x5555</code>/<code>0x2AAA</code> Flash command bytes):</p>
+<ul><li>An <strong>18-function audio/streaming cluster</strong> built around the BIOS</li></ul>
+<p><code>software_interrupt(0xC)</code> call (<code>CpuFastSet</code>), consistent with a sound-buffer mixing/streaming engine operating purely on EWRAM/IWRAM buffers.</p>
+<ul><li>A <strong>9-function software floating-point library</strong> (pack/unpack, add/sub,</li></ul>
+<p>multiply, divide, compare, int→float, 64-bit multiply helper) — again, no pointers into cartridge save space.</p>
+<ul><li>The one <code>.sav</code> sample available, <code>saves/cap-00-future-0.sav</code> (32,768 bytes),</li></ul>
+<p>is <strong>byte-for-byte <code>0xFF</code></strong> — confirmed independently in this session with a Python pass (see §4) and consistent with <code>saves/hexdump_and_diffs.txt</code>, which reports <strong>0 active (non-fill) byte ranges</strong>. There is no written save data to reverse-engineer structurally; at best this sample proves the blank/erased state of the backing store.</p>
+<ul><li><code>states/</code> is empty — no paired <code>.ss</code> save states exist yet to run dynamic</li></ul>
+<p>(RAM-write-triggered) verification.</p>
+<p><strong>What is proven:</strong> the blank-fill convention (<code>0xFF</code>) and size (32,768 bytes) of the one capture on disk; that the 27 functions reachable from the supplied trace are unrelated to save I/O.</p>
+<p><strong>What remains completely open:</strong> the actual save media type, slot/redundancy layout, magic bytes, checksum algorithm, and field map. None of these can be derived from the current evidence. This report documents that negative result precisely, rather than fabricating or guessing a field map, per the clean-room rule against unverified claims.</p>
+<h2>2. Physical Media, Slot Geometry &amp; Redundancy</h2>
+<table><thead><tr><th>Property</th><th>Value</th><th>Basis</th><th>Confidence</th></tr></thead><tbody><tr><td>Capture size</td><td>32,768 bytes (0x8000)</td><td><code>saves/cap-00-future-0.sav</code> file size</td><td>CONFIRMED_VERIFIED (of the file; not proof of real cart media size)</td></tr><tr><td>Fill byte</td><td><code>0xFF</code> across all 32,768 bytes</td><td>Python full-file scan, this session (§4)</td><td>CONFIRMED_VERIFIED</td></tr><tr><td>Active byte ranges</td><td>0</td><td><code>saves/hexdump_and_diffs.txt</code>: &quot;Active ranges (0):&quot;</td><td>CONFIRMED_VERIFIED</td></tr><tr><td>SDK save tag string</td><td><code>SRAM_F_V103</code> at ROM offset <code>0x1D6D134</code></td><td>Packet metadata (<code>SDK Save Tags in ROM</code>)</td><td>CONFIRMED_STATIC (string presence only)</td></tr><tr><td>Media kind</td><td>Unknown — <code>SRAM_F</code> tag suggests the title&#x27;s SDK build declares SRAM/Flash-class save support, but no hardware access code was traced to confirm which GBA save-chip protocol (plain SRAM vs. Flash 64K/128K command sequence) is actually used</td><td>SDK tag + total absence of corroborating I/O code</td><td>HYPOTHESIS</td></tr><tr><td>Slot count / redundancy</td><td>Unknown — 0 active byte ranges means there is no evidence of any written slot, copy, generation counter, or selection rule</td><td><code>saves/hexdump_and_diffs.txt</code></td><td>UNKNOWN</td></tr></tbody></table>
+<p>The <code>SRAM_F_V103</code> string is a generic Nintendo-SDK-era save-autodetection tag (a build-time library identifier), not a game-specific semantic discovery — it is treated here only as it was supplied in the packet metadata, not sourced from any third-party research.</p>
+<p>32,768 bytes matches the conventional GBA battery-SRAM size (32 KB), which is consistent with but <strong>does not confirm</strong> the <code>SRAM_F</code> hint — some emulator save-capture tooling pre-allocates a fixed 32 KB backing file regardless of the cartridge&#x27;s actual save-chip type, so file size alone is not proof of hardware geometry.</p>
+<h2>3. Save Writer, Reader &amp; Caller-Chain Architecture</h2>
+<p><strong>No save-hardware I/O driver, serialization/deserialization routine, or checksum routine was found among the traced functions.</strong> This section documents the methodology used to rule each of the 27 functions out, per the packet&#x27;s requirement to account for every function.</p>
+<h3>3.1 Method</h3>
+<ol><li>Searched <code>ghidra/save_related_functions.c</code> — it declares 0 MMIO seeds and 0</li></ol>
+<p>total functions (seed functions are anchored on known SRAM/Flash/EEPROM/DMA3 access instruction patterns; none fired on this trace).</p>
+<ol><li>Grepped <code>ghidra/decompiled.c</code> case-insensitively for <code>sram</code>, <code>eeprom</code>,</li></ol>
+<p><code>flash</code>, <code>dma</code>, <code>0x0d000000</code>, <code>0x0e000000</code>, <code>0x040000d4</code>, <code>checksum</code>, <code>crc</code>, <code>0x5555</code>, <code>0x2aaa</code> — <strong>zero matches</strong>.</p>
+<ol><li>Read all 27 function bodies directly and classified every memory reference</li></ol>
+<p>and BIOS call by address range. No reference falls in <code>0x02xxxxxx</code> (EWRAM)</p>
+<p><em>as a save mirror</em> with a corresponding periodic flush to <code>0x0Dxxxxxx</code>/<code>0x0Exxxxxx</code>; all <code>0x02xxxxxx</code>/<code>0x03xxxxxx</code>-style struct accesses seen are local object/channel state for the audio engine (see 3.2), not a save-record staging buffer.</p>
+<ol><li>Cross-checked the resulting two clusters against <code>ghidra/callgraph.json</code>:</li></ol>
+<p>18 functions have caller/callee edges only to each other (audio cluster), 9 functions have edges only to each other (float-library cluster), and there are <strong>0 edges between the two clusters</strong> and <strong>0 unresolved external addresses</strong> pointing at save hardware.</p>
+<h3>3.2 Cluster A — Audio/stream engine (18 functions, not save-related)</h3>
+<p><code>FUN_08117fe4</code> is a thin wrapper around <code>software_interrupt(0xC)</code> — the GBA BIOS <code>CpuFastSet</code> call, a DMA-accelerated fixed-size memory copy/fill used across the GBA SDK ecosystem for bulk EWRAM/IWRAM transfers (generic, publicly documented BIOS behavior, not game-specific). It is called from <code>FUN_0811904c</code> and <code>FUN_081192e8</code>, which in turn are driven by <code>FUN_08118f7c</code>/<code>FUN_08119224</code> and <code>FUN_08119480</code>, all of which manipulate an in-RAM structure&#x27;s offsets (<code>param_1 + 0x14/0x1c/0x20/0x24/.../0x8c/0x8d</code>) that look like double-buffer read/write cursors and an end-of-stream flag — i.e. a streaming audio-channel mixer advancing through a sample/sequence buffer each frame. <code>FUN_081185cc</code>/<code>FUN_08118630</code>/<code>FUN_0811950c</code> compute elapsed time/position using <code>FUN_0811e0a8</code>/<code>FUN_0811db9c</code> (see cluster B) to convert tick counts to fixed/float ratios — consistent with tempo or playback-rate math, not save-field math. <code>FUN_0811d348</code>/<code>FUN_0811d408</code>/<code>FUN_0811d550</code> manage a small ring/queue of per-voice counters. None of this cluster ever constructs or inspects a magic number, a checksum, or an address in <code>0x0D000000</code>–<code>0x0E00FFFF</code>.</p>
+<p><strong>Caller-chain verdict:</strong> this cluster is a sound-engine component. It is documented here (not silently dropped) to satisfy the &quot;every function&quot; requirement, but it is explicitly <strong>ruled out</strong> as a save writer/reader — it never touches cartridge save address space, and nothing it does propagates to the <code>.sav</code> buffer.</p>
+<h3>3.3 Cluster B — Software floating-point library (9 functions, not save-related)</h3>
+<p><code>FUN_0811d944</code> (unpack an IEEE-754-shaped <code>undefined4</code> into a <code>{class, sign, exponent, mantissa}</code> record), <code>FUN_0811d88c</code> (pack that record back into a <code>float</code>-shaped <code>undefined4</code>, including rounding and the <code>0xff</code> NaN/Inf class), <code>FUN_0811d9c0</code> (add/sub on unpacked operands), <code>FUN_0811db3c</code> (multiply: unpack, multiply, repack), <code>FUN_0811db9c</code> (divide: unpack, 64×64 divide via <code>FUN_0811e1d8</code>, repack), <code>FUN_0811ddec</code>/<code>FUN_0811dfd0</code> (ordering compare, with <code>-1</code> sentinel for &quot;incomparable&quot;), <code>FUN_0811e0a8</code> (signed int → float), and <code>FUN_0811e1d8</code> (branch-free 32×32→64 unsigned multiply with a linear term, used as the divide&#x27;s inner primitive). This is a textbook software float library, almost certainly linked in to support non-FPU arithmetic elsewhere in the title (e.g. the audio engine&#x27;s tick→time conversions in 3.2). It has no concept of a save buffer, a save slot, or a checksum.</p>
+<p><strong>Caller-chain verdict:</strong> ruled out as save-related for the same reason — no reference to save address space, no magic/checksum construction.</p>
+<h3>3.4 Conclusion for Section 3</h3>
+<p>There is currently <strong>no identified</strong>:</p>
+<ul><li>low-level hardware I/O driver (SRAM byte-copy / Flash 64K/128K command</li></ul>
+<p>sequence / EEPROM DMA3 bitstream),</p>
+<ul><li>serialization/deserialization routine, or</li><li>checksum/integrity routine</li></ul>
+<p>in the supplied trace. The <code>0x08xxxxxx</code> function table required by the packet template is therefore empty by evidence, not by omission — see <code>io_driver_functions: []</code> in <code>save-format.json</code>. The true save-write/read path exists in the ROM (the <code>SRAM_F_V103</code> SDK tag proves the title links save support) but was <strong>not captured by whatever trace seeded this decompilation batch</strong> (consistent with the standing guardrail that trace-seeded discovery can miss code paths that were never executed during capture — e.g. the player never saved/loaded during the session that produced this trace).</p>
+<h2>4. Magic Signatures &amp; Checksum / Integrity Algorithm</h2>
+<p><strong>None found.</strong> No candidate magic bytes or checksum/CRC routine exists in <code>ghidra/decompiled.c</code> (see the grep in §3.1, step 2), and the one <code>.sav</code> sample has no non-fill bytes to search for a magic signature in the first place.</p>
+<p>Python verification performed in this session, directly against <code>saves/cap-00-future-0.sav</code>:</p>
+<pre><code>import hashlib
+data = open(&#x27;saves/cap-00-future-0.sav&#x27;, &#x27;rb&#x27;).read()
+print(len(data))                      # 32768
+print(hashlib.sha256(data).hexdigest())
+# 2d864c0b789a43214eee8524d3182075125e5ca2cd527f3582ec87ffd94076bc
+print(all(b == 0xFF for b in data))   # True</code></pre>
+<p>Output:</p>
+<pre><code>32768
+2d864c0b789a43214eee8524d3182075125e5ca2cd527f3582ec87ffd94076bc
+True</code></pre>
+<p>This matches the prefix (<code>2d864c0b789a4321</code>) already recorded in <code>saves/hexdump_and_diffs.txt</code>, confirming the file is unchanged and entirely <code>0xFF</code>. There is no stored checksum to validate and no magic signature to locate — both are <code>UNKNOWN</code> pending a non-blank capture.</p>
+<h2>5. Complete Field Map Table</h2>
+<p>No field can be mapped with any positive confidence from the current evidence. The entire 32,768-byte capture is a single undifferentiated all-<code>0xFF</code> span.</p>
+<table><thead><tr><th>Offset (hex)</th><th>Size</th><th>Type / Endianness</th><th>RAM Mirror Addr</th><th>Writers / Callers</th><th>Readers</th><th>Observed Values in .sav</th><th>Confidence</th><th>How Mapped &amp; Updated</th></tr></thead><tbody><tr><td><code>0x0000</code>–<code>0x7FFF</code></td><td>32768</td><td><code>bytes</code> (undifferentiated)</td><td>unknown</td><td>none identified</td><td>none identified</td><td>all <code>0xFF</code> in <code>cap-00-future-0.sav</code></td><td><code>UNKNOWN</code></td><td>No writer/reader function was traced (see §3); the single sample is in its blank/erased state, so no field boundary, magic, or checksum can be inferred structurally from byte content alone.</td></tr></tbody></table>
+<h2>6. Save Fuzzing &amp; Counterfactual Verification Plan</h2>
+<p>Because no field, magic, or checksum is mapped yet, fuzzing targets cannot be specified at the byte-offset level with any justified prediction. The falsifiable next steps, in order, are:</p>
+<ol><li><strong>Produce a non-blank capture.</strong> Record a fresh gameplay session that</li></ol>
+<p>actually performs an in-game save, with the mandated paired <code>.ss</code> states (<code>sav-00-pre.ss</code> before the save menu commits, <code>sav-00-post.ss</code> immediately after) plus <code>gameplay.ss</code>/<code>final.ss</code>. Compare <code>sav-00-pre.ss</code> RAM against <code>sav-00-post.ss</code> RAM to locate the in-RAM save staging struct by diffing EWRAM/IWRAM, independent of any code trace.</p>
+<ol><li>**Re-run trace-guided MMIO-seed extraction against that new session&#x27;s</li></ol>
+<p>execution trace.** The current <code>ghidra/save_related_functions.c</code> found 0 seeds because the captured trace never executed save code; a trace that spans the actual save button press should surface the real SRAM/Flash/EEPROM driver functions and let <code>ghidra/callgraph.json</code> be regenerated with genuine save-caller edges.</p>
+<ol><li>**Diff the new non-blank <code>.sav</code> against this session&#x27;s all-<code>0xFF</code></li></ol>
+<p>baseline** (<code>saves/cap-00-future-0.sav</code>) byte-by-byte to get the first real candidate active byte ranges, magic-byte candidates (fixed values repeated across independent saves), and checksum candidates (bytes whose value tracks a sum/XOR/CRC of neighboring bytes).</p>
+<ol><li><strong>Counterfactual once a field is hypothesized:</strong> mutate one candidate byte</li></ol>
+<p>in a copy of the <code>.sav</code>, reload from the matching pre-save <code>.ss</code> state with the mutated file mounted as battery save, and observe whether the title (a) accepts it silently, (b) visibly reflects the mutated value in-game, or (c) resets/rejects it — the last case is positive evidence of an integrity check whose covered range and algorithm can then be bisected by repeating with single-bit flips at different offsets.</p>
+<ol><li>Preserve this all-<code>0xFF</code> capture and this report as the documented</li></ol>
+<p>starting point — it is a legitimate negative result (confirms blank/erased state, rules out 27 functions), not a failed run to discard.</p>
+<p>No mutation is proposed against the current sample because every byte is identical (<code>0xFF</code>); mutating a blank/fill region produces no falsifiable prediction about real save semantics.</p>
+</div>
+</main>
+  <footer>gbakit GBA Format Reference &middot; <a href="https://github.com/JidouGhost-TL/gbakit">GitHub: JidouGhost-TL/gbakit</a> &middot; Clean-room GBA binary format specs &amp; Rust toolkit.</footer>
+</body>
+</html>

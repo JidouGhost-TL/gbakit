@@ -1,0 +1,329 @@
+{
+  "schema": "gbakit-save-research/1",
+  "release_key": "A3VE-r0-5690eb0a58ac2461",
+  "display_name": "Sonic Pinball Party (USA) (En,Ja,Fr,De,Es,It)",
+  "rom_sha256": "5690eb0a58ac24616fd6747a8aedddc7777f28d6f3579cb4428ea8fa5d30208b",
+  "game_code": "A3VE",
+  "header_family": "A3V",
+  "community_id": "comm-016",
+  "overall_confidence": "MEDIUM",
+  "media": {
+    "kind": "flash512",
+    "size_bytes": 65536,
+    "sdk_tags": ["FLASH512_V131@2922592"],
+    "fill_byte": "0xff"
+  },
+  "slots_and_copies": [
+    {
+      "name": "slot_0",
+      "offset": 0,
+      "size": 4096,
+      "redundancy_role": "primary",
+      "selection_rule": "Compare 4-byte LE sequence counter at record offset 0x08 against slot_1's counter; the sector with the numerically higher value is the authoritative/newest copy (observed: slot_0 counter=1 stayed while slot_1 counter=2 was written as the newer copy)."
+    },
+    {
+      "name": "slot_1",
+      "offset": 4096,
+      "size": 4096,
+      "redundancy_role": "backup",
+      "selection_rule": "Holds the previous-generation copy once slot_0 has been superseded; becomes authoritative once its counter exceeds the other slot's."
+    }
+  ],
+  "magic_signatures": [
+    {
+      "offset": 0,
+      "bytes_hex": "534f4e49435f5042",
+      "ascii": "SONIC_PB",
+      "verified_in_code": false,
+      "verified_in_sav": true,
+      "function_addrs": []
+    }
+  ],
+  "checksums": [
+    {
+      "name": "sector_trailer_candidate",
+      "algorithm": "unknown",
+      "formula_detail": "Candidate 2-byte trailer at sector offset 0x0FFE-0x0FFF was tested against sum8, sum16_le, xor8, xor16_le, two's-complement sum16, and crc32 over the sector body (0x0000-0x0FFD); none matched. The trailer value (0x3901 LE) is also identical across both observed generations even though the sequence counter at 0x08 changed, which positively rules out any checksum formula over the full sector body for this field. No algorithm could be confirmed.",
+      "stored_offset": 4094,
+      "stored_size": 2,
+      "covered_start": 0,
+      "covered_end": 4093,
+      "function_addrs": [],
+      "verified_on_samples": [
+        {"file": "saves/cap-00-future-0.sav", "stored_hex": "0139", "computed_hex": "e2", "match": false},
+        {"file": "saves/cap-01-future-1.sav (slot_0)", "stored_hex": "0139", "computed_hex": "e2", "match": false},
+        {"file": "saves/cap-01-future-1.sav (slot_1)", "stored_hex": "0139", "computed_hex": "e3", "match": false}
+      ],
+      "confidence": "UNKNOWN"
+    }
+  ],
+  "io_driver_functions": [
+    {"addr": "0x0805ff44", "role": "read", "callers": ["0x08060420"], "notes": "Flash chip-ID probe: issues software-ID-entry command (0xAA,0x55,0x90) to the flash command ports, reads 2 manufacturer/device ID bytes via func_0x080608a4 from the 0x0E000000 flash bus, then issues ID-exit (0xF0,0xF0) and tail-jumps through an unresolved vendor-driver jump table."},
+    {"addr": "0x08060420", "role": "write", "callers": [], "notes": "Flash driver dispatcher/init. Calls FUN_0805ff44 for chip ID, scans a vendor-driver descriptor table comparing a 16-bit chip-ID field at struct offset 0x28, copies 5 function-pointer fields from the matched descriptor into globals, tail-jumps into the matched driver. No caller found anywhere in the 129-function decompiled corpus."},
+    {"addr": "0x08060134", "role": "read", "callers": ["0x080605b0"], "notes": "Generic parametric-length 16-bit word copy from a source pointer into a caller-supplied stack buffer; used by FUN_080605b0 to snapshot/restore a buffer around the destructive sector-erase operation."},
+    {"addr": "0x080605b0", "role": "erase", "callers": [], "notes": "Sector erase + program entry point. For sector index < 0x10: writes flash sector-erase command sequence 0xAA,0x55,0x80,0xAA,0x55,0x30 to the standard command addresses, computes sector base as (sector_index << shift) + 0x0E000000, calls FUN_08060134, then func_0x0806089c(2, sector_base, 0xFF, ...) to program/verify. No caller found in the traced corpus."},
+    {"addr": "0x08060198", "role": "write", "callers": [], "notes": "Bank-aware flash write wrapper; for bank values > 0xF calls out-of-corpus func_0x0805ff20(bank) to switch banks before computing the flash address and calling func_0x0806089c. Bank-switch branch is dead code on this title's actual 512K (single-bank) flash chip; driver code is shared/generic across Flash512/1M SDK titles."},
+    {"addr": "0x080602fc", "role": "read", "callers": [], "notes": "Bank-aware flash read wrapper; mirror image of 0x08060198 for reads. Same single-bank caveat applies."},
+    {"addr": "0x080612a0", "role": "write", "callers": [], "notes": "Generic unsigned 32-bit division/remainder runtime helper. Matched the MMIO-adjacent seed heuristic but contains no flash/EEPROM/SRAM address reference anywhere in its body; included here only for completeness/transparency, not treated as save-specific in the field map."}
+  ],
+  "caller_chains": [
+    {
+      "entry_caller": "0x08060420",
+      "chain": ["0x08060420", "0x0805ff44"],
+      "trigger_context": "UNKNOWN - no caller of 0x08060420 exists anywhere in the 129-function traced decompilation (ghidra/callgraph.json reports callers: [] for this address).",
+      "ram_fields_updated": [],
+      "how_mapped": "Queried ghidra/callgraph.json for the callers array of every one of the 7 save-related seed functions, then grepped ghidra/decompiled.c (all 129 functions) for any literal FUN_0x08060420 / func_0x08060420 reference outside the seed set itself; none found. Also walked the only two callerless 'root' functions in the graph (0x08006ef4 boot/init, and 0x08029018 / 0x080298a8) and confirmed by address-range inspection that the latter two write exclusively to VRAM/BG-tile addresses (0x06000000 family), i.e. graphics decompression, not save I/O."
+    },
+    {
+      "entry_caller": "0x080605b0",
+      "chain": ["0x080605b0", "0x08060134"],
+      "trigger_context": "UNKNOWN - no caller of 0x080605b0 (sector erase+program) exists in the traced corpus.",
+      "ram_fields_updated": [],
+      "how_mapped": "Same callgraph.json + full-corpus grep method as above, applied to 0x080605b0."
+    }
+  ],
+  "fields": [
+    {
+      "name": "magic_signature",
+      "offset": 0,
+      "size": 8,
+      "type": "ascii",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"ascii": "SONIC_PB"},
+      "update_mechanism": "UNKNOWN - no writer function found in traced corpus",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Identical bytes 534f4e49435f5042 present at absolute offset 0x0000 and 0x1000 in both saves/cap-00-future-0.sav and saves/cap-01-future-1.sav."
+    },
+    {
+      "name": "sequence_counter",
+      "offset": 8,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"cap-00_slot0": 1, "cap-01_slot0": 1, "cap-01_slot1": 2},
+      "update_mechanism": "Inferred to increment by 1 each time the alternate sector is committed, implementing an A/B ping-pong redundancy scheme; the responsible writer function is not present in the traced 129-function corpus.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Byte-level diff: cap-00 slot0 == cap-01 slot0 exactly; cap-01 slot0 vs slot1 differ only at this 4-byte field (0x01000000 -> 0x02000000 as raw LE32)."
+    },
+    {
+      "name": "reserved_block_0x0c",
+      "offset": 12,
+      "size": 8,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"hex": "0000000000000000"},
+      "update_mechanism": "UNKNOWN",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Constant zero in all observed samples; no mutation evidence available to confirm purpose."
+    },
+    {
+      "name": "unknown_counter_0x14",
+      "offset": 20,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"value": 100},
+      "update_mechanism": "UNKNOWN",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Constant value 0x64 (100 decimal) across both samples; value of 100 is suggestive of a percentage/max-count default but unconfirmed."
+    },
+    {
+      "name": "unknown_pair_0x18",
+      "offset": 24,
+      "size": 4,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"u16_le_pair": [8, 1]},
+      "update_mechanism": "UNKNOWN",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Constant across both samples."
+    },
+    {
+      "name": "unknown_pair_0x1c",
+      "offset": 28,
+      "size": 4,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"u16_le_pair": [32, 1]},
+      "update_mechanism": "UNKNOWN",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Constant across both samples."
+    },
+    {
+      "name": "unknown_pair_0x20",
+      "offset": 32,
+      "size": 4,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"u16_le_pair": [512, 258]},
+      "update_mechanism": "UNKNOWN",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Constant across both samples."
+    },
+    {
+      "name": "option_flags_0x2c",
+      "offset": 44,
+      "size": 4,
+      "type": "bitflags",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"bytes": [1, 1, 0, 1]},
+      "update_mechanism": "UNKNOWN",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Constant across both samples; plausibly option/menu toggles given this is a multi-language (En,Ja,Fr,De,Es,It) release, but not confirmed by any code reference."
+    },
+    {
+      "name": "option_flags_0xcc",
+      "offset": 204,
+      "size": 3,
+      "type": "bitflags",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"bytes": [1, 1, 1]},
+      "update_mechanism": "UNKNOWN",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Constant across both samples; mirrors the 0x2c cluster pattern."
+    },
+    {
+      "name": "highscore_table_board1",
+      "offset": 560,
+      "size": 320,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {
+        "record_layout": "16 bytes: u32_le zero, 3-char ASCII name + NUL, u32_le zero, u32_le score",
+        "entries": [
+          {"name": "SON", "score": 950000000}, {"name": "TAI", "score": 900000000},
+          {"name": "KNU", "score": 850000000}, {"name": "AMY", "score": 800000000},
+          {"name": "CLA", "score": 750000000}, {"name": "ELL", "score": 700000000},
+          {"name": "NIG", "score": 650000000}, {"name": "AMI", "score": 600000000},
+          {"name": "BIN", "score": 550000000}, {"name": "BON", "score": 500000000},
+          {"name": "CHU", "score": 450000000}, {"name": "REA", "score": 400000000},
+          {"name": "WIS", "score": 350000000}, {"name": "CHA", "score": 300000000},
+          {"name": "PIA", "score": 250000000}, {"name": "EGG", "score": 200000000},
+          {"name": "RIO", "score": 150000000}, {"name": "SHA", "score": 100000000},
+          {"name": "ROU", "score": 50000000}, {"name": "SEG", "score": 1000000000}
+        ]
+      },
+      "update_mechanism": "UNKNOWN - no writer function found in traced corpus",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Parsed directly from saves/cap-00-future-0.sav bytes 0x230-0x36f with struct.unpack_from; confirmed exact arithmetic progression (constant -50,000,000 step) across all transitions."
+    },
+    {
+      "name": "highscore_table_board2",
+      "offset": 880,
+      "size": 320,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"note": "Byte-for-byte identical to highscore_table_board1 (offset 0x370-0x4AF)"},
+      "update_mechanism": "UNKNOWN",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "data[0x370:0x4B0] == data[0x230:0x370] verified by direct Python equality check."
+    },
+    {
+      "name": "highscore_table_board3",
+      "offset": 1200,
+      "size": 320,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"note": "Byte-for-byte identical to highscore_table_board1 (offset 0x4B0-0x5EF)"},
+      "update_mechanism": "UNKNOWN",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "data[0x4B0:0x5F0] == data[0x230:0x370] verified by direct Python equality check."
+    },
+    {
+      "name": "highscore_table_board4_or_counter",
+      "offset": 1520,
+      "size": 320,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"note": "Identical to the other 3 blocks for its first 19 entries; final 'SEG' entry's score field is 1 instead of 1000000000 (offset 0x728, 4 bytes LE)."},
+      "update_mechanism": "UNKNOWN",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Byte-range diff against the canonical 320-byte block isolates exactly one differing 4-byte field; semantic interpretation (4th leaderboard vs. a plays/credits counter reusing the struct slot) is unresolved."
+    },
+    {
+      "name": "sector_trailer",
+      "offset": 4094,
+      "size": 2,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"hex": "0139"},
+      "update_mechanism": "UNKNOWN - checksum hypothesis tested and disproven, see checksums[0]",
+      "confidence": "UNKNOWN",
+      "evidence": "Constant 0x0139 (BE)/0x3901(LE) across both generations despite body mutation at offset 0x08, which rules out a whole-sector-body checksum under every tested formula."
+    }
+  ],
+  "fuzzing_targets": [
+    {
+      "offset": 8,
+      "size": 4,
+      "mutation": "Set slot_0's sequence counter to 3 while slot_1 remains at 2 (counters now 3 and 2 respectively, inverting which physical slot holds the higher value).",
+      "requires_checksum_repair": false,
+      "predicted_effect": "If 'highest counter wins' is correct, the game should treat slot_0 as authoritative on next boot despite it being the physically older-written slot; if it instead keeps using slot_1, the hypothesis is falsified in favor of a simpler last-physical-slot-written rule."
+    },
+    {
+      "offset": 0,
+      "size": 1,
+      "mutation": "Corrupt the first magic byte (0x53 -> 0x00) in both slot_0 and slot_1.",
+      "requires_checksum_repair": false,
+      "predicted_effect": "If the magic is checked on boot, the game should treat the save as absent/corrupt and boot to factory defaults; if it loads anyway, the magic is unused for validation."
+    },
+    {
+      "offset": 876,
+      "size": 4,
+      "mutation": "Change the 'SEG' entry's score field (absolute offset 0x36c, the last 16-byte record of highscore_table_board1) from 1,000,000,000 to 1, leaving the board2/board3 duplicate blocks (offsets 0x370-0x4AF and 0x4B0-0x5EF) untouched.",
+      "requires_checksum_repair": false,
+      "predicted_effect": "If each 320-byte block is read independently per pinball board, only one board's UI should reflect the change; if all three/four show it, the blocks are aliased through a shared pointer rather than independent per-board structures."
+    },
+    {
+      "offset": 1824,
+      "size": 4,
+      "mutation": "Toggle the divergent field at absolute offset 0x728 (within highscore_table_board4_or_counter) between 0, 1, and a large value such as 999999.",
+      "requires_checksum_repair": false,
+      "predicted_effect": "If this is a plays/credits counter, only a count-related UI element should change and no leaderboard should update; if a leaderboard updates, it is a genuine 4th high-score table whose top entry has simply never been beaten."
+    },
+    {
+      "offset": 4094,
+      "size": 2,
+      "mutation": "Flip each bit of the sector_trailer field independently (16 single-bit-flip variants) on an otherwise-untouched sector.",
+      "requires_checksum_repair": false,
+      "predicted_effect": "Given the negative checksum result in checksums[0], predicted effect is no observable change in most/all variants, supporting the 'unused/leftover data' interpretation; any observed load failure or visual glitch would be a significant unexpected finding."
+    }
+  ],
+  "open_questions": [
+    "No caller of the flash driver entry points (0x08060420, 0x080605b0, 0x08060198, 0x080602fc) exists anywhere in the 129-function traced decompilation; the actual save-commit game logic is outside this workspace's corpus.",
+    "No checksum/CRC algorithm could be confirmed for the sector_trailer field at offset 0x0FFE; its invariance across the observed sequence-counter increment actively disproves a whole-body-checksum hypothesis.",
+    "Semantic meaning of header fields at offsets 0x0C, 0x14, 0x18, 0x1C, 0x20, 0x2C, 0xCC is unmapped (constant across both samples; no mutation evidence available to infer purpose).",
+    "Whether the save scheme uses only sectors 0-1 (simple two-slot ping-pong) or cycles through all 16 available 4KB sectors for wear-leveling cannot be determined from only two capture snapshots.",
+    "Whether the 4th 320-byte block (highscore_table_board4_or_counter) is a genuine 4th leaderboard or a counter reusing the high-score record struct layout is unresolved.",
+    "func_0x0805ff20 (bank-select helper referenced by the bank-aware flash wrappers) has no definition anywhere in ghidra/decompiled.c and could not be analyzed.",
+    "The byte-program-and-verify trampoline func_0x0806089c and related stubs (0x08060890, 0x08060894, 0x08060898, 0x080608cc) are unresolved register-indirect jump targets; their actual program-loop implementation (and any verify-toggle-bit polling) was not recoverable in this corpus."
+  ]
+}

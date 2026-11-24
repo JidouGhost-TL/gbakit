@@ -13,7 +13,13 @@
       <a href="../index.html">Games</a>
       <a href="../saves/index.html">Save Formats</a>
       <a href="../patches/index.html">Debug Patches</a>
+      <a href="../debug-menus.html">Debug Gallery</a>
+      <a href="../non-retail-cartridges.html">Non-Retail</a>
+      <a href="../cartridge-hardware.html">Cartridge Hardware</a>
+      <a href="../link-multiplayer.html">Link &amp; Multiplayer</a>
+      <a href="../multiboot-museum.html">MultiBoot Museum</a>
       <a href="../assets/index.html">Assets &amp; Audio</a>
+      <a href="../text-and-fonts.html">Text &amp; Fonts</a>
       <a href="../engines/index.html">Engines &amp; Hardware</a>
       <a href="../families/index.html">Families</a>
       <a href="../gbakit/index.html">Using gbakit</a>
@@ -22,7 +28,7 @@
   <main>
 <p class="meta"><a href="../index.html">&larr; Games</a> &middot; Family <code>AAM</code></p>
 <h1>Castlevania - Circle of the Moon (USA) (Castlevania Advance Collection)</h1>
-<p><span class='badge badge-slate'>SRAM 256K</span></p>
+<p><span class='badge badge-slate'>SRAM 256K</span> <span class='badge badge-emerald'>Save Format Mapped (Family Spec)</span> <span class='badge badge-emerald'>gbakit Built-In</span> <a href='../link-multiplayer.html#multiboot'><span class='badge badge-amber'>💾 MultiBoot</span></a></p>
 
 <h2>Cartridge Identity</h2>
 <dl class="kv">
@@ -38,6 +44,31 @@
 
 
 
+
+<h2>Link Cable &amp; Multiplayer Communications</h2>
+<div class="callout">
+  This title contains detected communication capabilities: <a href='../link-multiplayer.html#multiboot'><span class='badge badge-amber'>💾 MultiBoot</span></a>.
+  Detailed protocol specifications, SIO registers, Joybus commands, and MultiBoot sequences are documented in the <a href="../link-multiplayer.html"><strong>Link &amp; Multiplayer Reference</strong></a>.
+</div>
+<dl class="kv">
+  <dt>Single-Cart MultiBoot</dt><dd>Single-Cartridge MultiBoot (Download Play) client/server handler &middot; Thumb SWI 0x25 (<code>0xDF25</code>): <code>0x12637c</code>, <code>0x13038a</code>, <code>0x17232a</code>, <code>0x18434c</code></dd>
+</dl>
+
+
+<h2>Battery Save Format Specification (Family Shared)</h2>
+<div class="callout">
+  This release shares its save architecture with canonical family reference <a href="../titles/AAME-r0-ad9fabaf4398e0f4.html"><strong>Castlevania - Circle of the Moon (USA)</strong></a> (Family <code>AAM</code>).
+</div>
+<p><a class='btn' href='../saves/AAME-r0-ad9fabaf4398e0f4.html'>Open Family Save Format Spec (AAME)</a><a class='btn btn-secondary' href='../assets/formats/AAME-r0-ad9fabaf4398e0f4/save-format.json' download>Download save-format.json</a></p>
+<dl class="kv">
+  <dt>Canonical Specification</dt><dd><code>AAME</code> &middot; <strong>5</strong> mapped fields &middot; <strong>1</strong> verified checksum(s) &middot; Confidence: <span class="badge badge-indigo">MEDIUM</span></dd>
+  <dt>gbakit Built-In Support</dt><dd><span class="badge badge-emerald">Built-in (AAME)</span></dd>
+</dl>
+<pre><code>gbakit save verify AAME save.sav
+gbakit save decode AAME save.sav
+gbakit save fix    AAME damaged.sav -o repaired.sav</code></pre>
+
+
 <h2>Observed Battery Save Layout</h2>
 <dl class="kv">
   <dt>Fill Byte &amp; Active Size</dt><dd><code>0xFF</code> fill &middot; 7,824–7,824 / 32,768 B active (entropy 0.02 bits/B)</dd>
@@ -49,6 +80,11 @@
 </dl>
 
 <h2>ROM Assets, Compression &amp; Audio</h2><dl class='kv'><dt>BIOS Compression</dt><dd>LZ77 (<code>0x10</code>): <strong>366</strong> streams &middot; RLE (<code>0x30</code>): <strong>0</strong> streams</dd><dt>ROM Pointer Tables</dt><dd>26 tables (2 pointing to validated compressed streams)</dd><dt>SDK Backup Tags</dt><dd><code>SRAM_V110</code></dd></dl>
+
+<h2>Text, Fonts &amp; Scene Data</h2>
+<dl class="kv"><dt>Primary Text Encoding</dt><dd><strong>Custom 16-bit Huffman</strong> (<code>4</code> Shift-JIS runs &middot; <code>1</code> LZ77 ASCII blocks)</dd><dt>Font &amp; VWF Indicators</dt><dd><span class='badge badge-emerald'>VWF Width Table</span> <span class='badge badge-blue'>1bpp Font</span> &middot; BIOS SWIs: BitUnPack <code>0x10</code>: <code>3</code> &middot; LZ77 <code>0x11/12</code>: <code>14</code> &middot; Huffman <code>0x13</code>: <code>9</code> &middot; RLE <code>0x14/15</code>: <code>4</code></dd><dt>Scene &amp; Packaging</dt><dd><code>26</code> ROM pointer tables (&ge;32 entries, <code>9</code> &ge;200) &middot; <code>51</code> relative <code>u32</code> TOCs &middot; <code>293</code> OAM metasprite hits</dd></dl>
+
+
 <h2>Hardware MMIO Subsystems</h2><dl class='kv'><dt><code>ppu_display</code></dt><dd><code>0x8000520</code>, <code>0x80006c8</code>, <code>0x80c03a4</code>, <code>0x80c08d0</code></dd><dt><code>save_bus_sram_flash</code></dt><dd><code>0x8010158</code></dd></dl>
 <h2>Regional Variants &amp; Revisions (Family <code>AAM</code>)</h2><ul><li><a href='AAMJ-r0-7c2ac1ab22ad6252.html'>Akumajou Dracula - Circle of the Moon (China) (Unl)</a> (<code>AAMJ</code>, 8 MiB)</li><li><a href='AAMJ-r0-05ad9e23775c80a4.html'>Akumajou Dracula - Circle of the Moon (Japan)</a> (<code>AAMJ</code>, 8 MiB)</li><li><a href='AAMJ-r0-bcef9c1207501a0a.html'>Akumajou Dracula - Circle of the Moon (Japan) (Castlevania Advance Collection)</a> (<code>AAMJ</code>, 8 MiB)</li><li><a href='AAMJ-r0-cb63999c34cbf89a.html'>Akumajou Dracula - Circle of the Moon (Japan) (Virtual Console)</a> (<code>AAMJ</code>, 8 MiB)</li><li><a href='AAMP-r0-f2a7d5dca15d5a0f.html'>Castlevania (Europe)</a> (<code>AAMP</code>, 8 MiB)</li><li><a href='AAMP-r0-086c9f17c03d56e8.html'>Castlevania (Europe) (Castlevania Advance Collection)</a> (<code>AAMP</code>, 8 MiB)</li><li><a href='AAMP-r0-369c7560c25afc72.html'>Castlevania (Europe) (Virtual Console)</a> (<code>AAMP</code>, 8 MiB)</li><li><a href='AAME-r0-ad9fabaf4398e0f4.html'>Castlevania - Circle of the Moon (USA)</a> (<code>AAME</code>, 8 MiB)</li><li><a href='AAME-r0-5379a8ae5a0d2165.html'>Castlevania - Circle of the Moon (USA) (Virtual Console)</a> (<code>AAME</code>, 8 MiB)</li></ul>
 </main>

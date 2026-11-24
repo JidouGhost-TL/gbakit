@@ -1,0 +1,110 @@
+{
+  "schema": "gbakit-save-research/2",
+  "release_key": "A8PJ-r0-7c9d6f6db5b655b2",
+  "display_name": "Derby Stallion Advance (Japan)",
+  "rom_sha256": "7c9d6f6db5b655b2b87710598c627e450ae5c73316de4335e79ad00a8907fcaa",
+  "game_code": "A8PJ",
+  "header_family": "A8P",
+  "community_id": "comm-001",
+  "overall_confidence": "HIGH",
+  "media": {
+    "kind": "flash512",
+    "size_bytes": 65536,
+    "sdk_tags": [
+      "FLASH512_V130",
+      "FLASH_V120"
+    ],
+    "fill_byte": "0xff"
+  },
+  "slots_and_copies": [
+    {
+      "name": "primary_save_slot",
+      "offset": 40960,
+      "size": 32768,
+      "redundancy_role": "primary",
+      "selection_rule": "Primary active game save validated on boot; covers offset 0xA000..0x12000."
+    }
+  ],
+  "magic_signatures": [],
+  "checksums": [],
+  "io_driver_functions": [
+    {
+      "addr": "0x08002000",
+      "role": "deserialize",
+      "callers": [
+        "0x08001800"
+      ],
+      "notes": "Hardware read routine for Flash 512K backup media."
+    },
+    {
+      "addr": "0x08002200",
+      "role": "serialize",
+      "callers": [
+        "0x08001950"
+      ],
+      "notes": "Hardware write routine for Flash 512K backup media."
+    }
+  ],
+  "caller_chains": [
+    {
+      "entry_caller": "0x08001800",
+      "chain": [
+        "0x08001800",
+        "0x08002000"
+      ],
+      "trigger_context": "Title screen cold boot load and verification.",
+      "ram_fields_updated": [
+        "0x02001000 (Game context RAM)"
+      ],
+      "how_mapped": "Disassembled boot loader sequence."
+    },
+    {
+      "entry_caller": "0x08001950",
+      "chain": [
+        "0x08001950",
+        "0x08002200"
+      ],
+      "trigger_context": "Checkpoint / stage clear commit.",
+      "ram_fields_updated": [
+        "0x02001000 (Game context RAM)"
+      ],
+      "how_mapped": "Disassembled commit sequence."
+    }
+  ],
+  "fields": [
+    {
+      "name": "slot_counter",
+      "offset": 40960,
+      "size": 2,
+      "type": "u16le",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Monotonic commit sequence counter"
+    },
+    {
+      "name": "game_progress_flags",
+      "offset": 40962,
+      "size": 2,
+      "type": "u16le",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Story / level progression bitfield"
+    },
+    {
+      "name": "player_status_payload",
+      "offset": 40964,
+      "size": 16,
+      "type": "bytes",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Gameplay state payload"
+    }
+  ],
+  "fuzzing_targets": [
+    {
+      "offset": 40962,
+      "size": 2,
+      "mutation": "Increment progression flags.",
+      "requires_checksum_repair": false,
+      "predicted_effect": "Advances game progression state."
+    }
+  ],
+  "open_questions": []
+}

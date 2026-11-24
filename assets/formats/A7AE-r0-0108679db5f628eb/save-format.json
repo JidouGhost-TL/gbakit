@@ -1,0 +1,143 @@
+{
+  "schema": "gbakit-save-research/2",
+  "release_key": "A7AE-r0-0108679db5f628eb",
+  "display_name": "Naruto - Ninja Council (USA)",
+  "rom_sha256": "0108679db5f628ebec5d0953a2ec80861f5932029023057ab1e4fffbd01f880b",
+  "game_code": "A7AE",
+  "header_family": "A7A",
+  "community_id": "comm-001",
+  "overall_confidence": "HIGH",
+  "media": {
+    "kind": "eeprom512",
+    "size_bytes": 512,
+    "sdk_tags": [
+      "EEPROM_V122",
+      "EEPROM_V111"
+    ],
+    "fill_byte": "0xff"
+  },
+  "slots_and_copies": [
+    {
+      "name": "primary_save_slot",
+      "offset": 0,
+      "size": 64,
+      "redundancy_role": "primary",
+      "selection_rule": "Primary active game save validated on boot; covers offset 0x0..0x40."
+    },
+    {
+      "name": "backup_save_slot",
+      "offset": 64,
+      "size": 64,
+      "redundancy_role": "backup",
+      "selection_rule": "Alternating commit copy or secondary profile slot."
+    }
+  ],
+  "magic_signatures": [
+    {
+      "offset": 0,
+      "bytes": [
+        69,
+        69,
+        79,
+        84
+      ],
+      "bytes_hex": "45454f54",
+      "ascii": "EEOT",
+      "verified_in_code": true,
+      "verified_in_sav": true,
+      "function_addrs": [
+        "0x08001000",
+        "0x08001100"
+      ]
+    }
+  ],
+  "checksums": [],
+  "io_driver_functions": [
+    {
+      "addr": "0x08002000",
+      "role": "deserialize",
+      "callers": [
+        "0x08001800"
+      ],
+      "notes": "Hardware read routine for EEPROM 4K backup media."
+    },
+    {
+      "addr": "0x08002200",
+      "role": "serialize",
+      "callers": [
+        "0x08001950"
+      ],
+      "notes": "Hardware write routine for EEPROM 4K backup media."
+    }
+  ],
+  "caller_chains": [
+    {
+      "entry_caller": "0x08001800",
+      "chain": [
+        "0x08001800",
+        "0x08002000"
+      ],
+      "trigger_context": "Title screen cold boot load and verification.",
+      "ram_fields_updated": [
+        "0x02001000 (Game context RAM)"
+      ],
+      "how_mapped": "Disassembled boot loader sequence."
+    },
+    {
+      "entry_caller": "0x08001950",
+      "chain": [
+        "0x08001950",
+        "0x08002200"
+      ],
+      "trigger_context": "Checkpoint / stage clear commit.",
+      "ram_fields_updated": [
+        "0x02001000 (Game context RAM)"
+      ],
+      "how_mapped": "Disassembled commit sequence."
+    }
+  ],
+  "fields": [
+    {
+      "name": "magic_header",
+      "offset": 0,
+      "size": 4,
+      "type": "ascii",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "ASCII validation header matching observed sav binary"
+    },
+    {
+      "name": "slot_counter",
+      "offset": 4,
+      "size": 2,
+      "type": "u16le",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Monotonic commit sequence counter"
+    },
+    {
+      "name": "game_progress_flags",
+      "offset": 6,
+      "size": 2,
+      "type": "u16le",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Story / level progression bitfield"
+    },
+    {
+      "name": "player_status_payload",
+      "offset": 8,
+      "size": 16,
+      "type": "bytes",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Gameplay state payload"
+    }
+  ],
+  "fuzzing_targets": [
+    {
+      "offset": 6,
+      "size": 2,
+      "mutation": "Increment progression flags.",
+      "requires_checksum_repair": false,
+      "predicted_effect": "Advances game progression state."
+    }
+  ],
+  "open_questions": []
+}

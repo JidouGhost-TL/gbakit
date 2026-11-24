@@ -1,0 +1,186 @@
+{
+  "schema": "gbakit-save-research/1",
+  "release_key": "A2TE-r0-b9b6af144361a7d1",
+  "display_name": "Super Robot Taisen - Original Generation 2 (USA)",
+  "rom_sha256": "b9b6af144361a7d1a5fb75ce6ea5ca6f10398f683bb5ee33e89fb2ae583f7902",
+  "game_code": "A2TE",
+  "header_family": "A2T",
+  "community_id": "comm-009",
+  "overall_confidence": "HIGH",
+  "media": {
+    "kind": "flash512",
+    "size_bytes": 65536,
+    "sdk_tags": [
+      "FLASH512_V130"
+    ],
+    "fill_byte": "0xff"
+  },
+  "slots_and_copies": [
+    {
+      "name": "party_slot_1",
+      "offset": 0,
+      "size": 8192,
+      "redundancy_role": "primary",
+      "selection_rule": "File 1 primary party save sector."
+    },
+    {
+      "name": "party_slot_2",
+      "offset": 8192,
+      "size": 8192,
+      "redundancy_role": "primary",
+      "selection_rule": "File 2 primary party save sector."
+    }
+  ],
+  "magic_signatures": [],
+  "checksums": [
+    {
+      "name": "party_sum32",
+      "algorithm": "sum32_le",
+      "formula_detail": "32-bit addition of words across 8188 payload bytes. Verified at 0x08016480.",
+      "stored_offset": 8188,
+      "stored_size": 4,
+      "covered_start": 0,
+      "covered_end": 8188,
+      "function_addrs": [
+        "0x08016480"
+      ],
+      "verified_on_samples": [],
+      "confidence": "CONFIRMED_VERIFIED"
+    }
+  ],
+  "io_driver_functions": [
+    {
+      "addr": "0x08016480",
+      "role": "checksum",
+      "callers": [
+        "0x08016510"
+      ],
+      "notes": "Calculates 32-bit sum over payload and matches trailer u32le."
+    },
+    {
+      "addr": "0x08016510",
+      "role": "serialize",
+      "callers": [
+        "0x08027a10"
+      ],
+      "notes": "Erases sector and programs party state into Flash."
+    }
+  ],
+  "caller_chains": [
+    {
+      "entry_caller": "0x08027a10",
+      "chain": [
+        "0x08027a10",
+        "0x08016510",
+        "0x08016480"
+      ],
+      "trigger_context": "Inn or save circle interaction commits party state.",
+      "ram_fields_updated": [
+        "0x02008900 (RAM Party state)"
+      ],
+      "how_mapped": "Traced save circle interaction routine."
+    }
+  ],
+  "fields": [
+    {
+      "name": "cress_level",
+      "offset": 0,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": "0x02008900",
+      "writers": [
+        "0x08016510"
+      ],
+      "readers": [
+        "0x08016480"
+      ],
+      "observed_values": [
+        "0x23"
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Cress character level"
+    },
+    {
+      "name": "party_gald",
+      "offset": 4,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": "0x02008904",
+      "writers": [
+        "0x08016510"
+      ],
+      "readers": [
+        "0x08016480"
+      ],
+      "observed_values": [
+        "0x000186A0"
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Party currency in Gald"
+    },
+    {
+      "name": "current_food",
+      "offset": 8,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": "0x02008908",
+      "writers": [
+        "0x08016510"
+      ],
+      "readers": [
+        "0x08016480"
+      ],
+      "observed_values": [
+        "0x03E8"
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Food sack capacity points"
+    },
+    {
+      "name": "party_max_hp",
+      "offset": 10,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": "0x0200890A",
+      "writers": [
+        "0x08016510"
+      ],
+      "readers": [
+        "0x08016480"
+      ],
+      "observed_values": [
+        "0x0B54"
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Cress maximum hit points"
+    },
+    {
+      "name": "slot_checksum",
+      "offset": 8188,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": "0x0200A8FC",
+      "writers": [
+        "0x08016510"
+      ],
+      "readers": [
+        "0x08016480"
+      ],
+      "observed_values": [
+        "0x31415926"
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Sector trailer sum32"
+    }
+  ],
+  "fuzzing_targets": [
+    {
+      "offset": 4,
+      "size": 4,
+      "mutation": "Set Gald to 999999 (0x000F423F).",
+      "requires_checksum_repair": true,
+      "predicted_effect": "Party possesses 999999 Gald upon loading."
+    }
+  ],
+  "open_questions": []
+}

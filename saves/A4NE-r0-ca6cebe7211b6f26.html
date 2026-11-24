@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Harvest Moon - Friends of Mineral Town (USA) Save Format — gbakit GBA Reference</title>
+  <link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+  <header>
+    <div class="brand"><a href="../index.html" style="color:inherit">gbakit GBA Reference <span class="badge badge-emerald">v2.0</span></a></div>
+    <nav>
+      <a href="../index.html">Games</a>
+      <a href="../saves/index.html">Save Formats</a>
+      <a href="../patches/index.html">Debug Patches</a>
+      <a href="../debug-menus.html">Debug Gallery</a>
+      <a href="../non-retail-cartridges.html">Non-Retail</a>
+      <a href="../cartridge-hardware.html">Cartridge Hardware</a>
+      <a href="../link-multiplayer.html">Link &amp; Multiplayer</a>
+      <a href="../multiboot-museum.html">MultiBoot Museum</a>
+      <a href="../assets/index.html">Assets &amp; Audio</a>
+      <a href="../text-and-fonts.html">Text &amp; Fonts</a>
+      <a href="../engines/index.html">Engines &amp; Hardware</a>
+      <a href="../families/index.html">Families</a>
+      <a href="../gbakit/index.html">Using gbakit</a>
+    </nav>
+  </header>
+  <main>
+<p class="meta"><a href="index.html">&larr; Save Formats</a> &middot; <a href="../titles/A4NE-r0-ca6cebe7211b6f26.html">Harvest Moon - Friends of Mineral Town (USA)</a></p>
+<h1>Harvest Moon - Friends of Mineral Town (USA) — Save Format Specification</h1>
+<p><span class="badge badge-indigo">Confidence: MEDIUM</span> <span class="badge badge-blue">4 Fields</span> <span class="badge badge-emerald">0 Verified Checksum(s)</span> <span class='badge badge-emerald'>gbakit Built-In</span></p>
+<p><a class='btn' href='../assets/saves/A4NE-r0-ca6cebe7211b6f26/A4NE-r0-ca6cebe7211b6f26.sav' download>Download Sample .sav (32,768 B)</a><a class='btn btn-secondary' href='../assets/formats/A4NE-r0-ca6cebe7211b6f26/save-format.json' download>Download save-format.json</a><a class='btn btn-secondary' href='../titles/A4NE-r0-ca6cebe7211b6f26.html'>View Game Page</a></p>
+
+<div class="callout">
+  <strong>Use directly with <code>gbakit</code> (built-in definition <code>A4NE</code>):</strong>
+  <pre><code>gbakit save verify A4NE save.sav
+gbakit save decode A4NE save.sav
+gbakit save fix    A4NE damaged.sav -o repaired.sav</code></pre>
+</div>
+
+<div class='md-body'>
+<h2>Clean-Room Save Format Report — Harvest Moon: Friends of Mineral Town (USA)</h2>
+<p>Release Key: <code>A4NE-r0-ca6cebe7211b6f26</code> · Game Code: <code>A4NE</code> / Header Family: <code>A4N</code> · Community: <code>comm-009</code> ROM SHA-256: <code>ca6cebe7211b6f2693af210709f76222204bf9f7621dec08b30ca268117460dd</code></p>
+<p>All findings below are derived exclusively from the files present in this workspace: <code>saves/cap-00-future-0.sav</code>, <code>saves/hexdump_and_diffs.txt</code>, <code>ghidra/decompiled.c</code>, <code>ghidra/callgraph.json</code>, and <code>ghidra/save_related_functions.c</code>, plus standard public GBA hardware facts (SRAM/Flash at <code>0x0E000000</code>, EEPROM at <code>0x0D000000</code> via DMA3 <code>0x040000D4</code>, EWRAM <code>0x02000000</code>, IWRAM <code>0x03000000</code>). No third-party game-specific wiki, decompilation project, or walkthrough was consulted.</p>
+<h2>1. Executive Summary &amp; Overall Confidence</h2>
+<p><strong>Overall Confidence: MEDIUM</strong></p>
+<p>What was <strong>proven</strong> (code + <code>.sav</code> bytes agree):</p>
+<ul><li>The save medium is battery-backed <strong>SRAM</strong>, accessed through two generic hardware I/O driver routines (<code>FUN_080006a4</code> write, <code>FUN_080006e4</code> read) that both OR the caller-supplied offset with <code>0xE000000</code>, placing them squarely in the GBA SRAM/Flash address window <code>0x0E000000</code>.</li><li>Bytes <code>0x00</code>–<code>0x27</code> (40 bytes) of the single <code>.sav</code> sample contain a non-blank, structured region; everything from <code>0x28</code> to the end of the 32768-byte file is the SRAM open-bus fill value <code>0xFF</code>.</li><li>A 32-byte fixed identification string occupies <code>0x00</code>–<code>0x1F</code>, followed by two 4-byte &quot;stamp&quot; fields at <code>0x20</code> and <code>0x24</code>. This exactly matches the byte ranges that the decompiled writer function (<code>FUN_08000358</code>) and reader/validator function (<code>FUN_080002e0</code>) operate on.</li><li>No arithmetic checksum, XOR, or CRC loop exists anywhere in the 214 decompiled functions available (<code>grep -c &quot;+=&quot;</code> over the whole file returns zero hits). Integrity is enforced by (a) an exact <code>memcmp</code> of the 32-byte magic string and (b) small range checks on the two 4-byte stamp fields, <strong>not</strong> by a traditional checksum.</li></ul>
+<p>What remains <strong>open</strong>:</p>
+<ul><li>We have only <strong>one</strong> <code>.sav</code> sample, and it is a &quot;cold&quot; / freshly-created save (both stamp fields are <code>0</code>, and everything past offset <code>0x28</code> is unwritten <code>0xFF</code>). We cannot yet observe how the stamp fields change after real gameplay saves, nor where actual farm/calendar/inventory data lives in the remaining 32728 bytes.</li><li>The RAM-side source/destination buffers for the writer/reader (<code>_DAT_08000398</code>, <code>_DAT_08000354</code>, <code>_DAT_0800039c</code>, etc.) are ROM-resident pointer/literal-pool symbols whose <em>dereferenced</em> RAM target addresses are not resolvable from the decompiled excerpts in this workspace — their EWRAM/IWRAM addresses are <strong>UNKNOWN</strong>.</li><li>No caller was found anywhere in the 214-function corpus for the writer entry point <code>FUN_08000358</code> or the stamp-accessor <code>FUN_080003a0</code>; both are presumably invoked by higher-level menu/game-state code that is outside the current decompilation slice.</li><li><code>ghidra/callgraph.json</code> reports <strong>empty</strong> <code>callers</code>/<code>callees</code> for the two low-level MMIO seed functions (<code>0x080006a4</code>, <code>0x080006e4</code>) even though <code>ghidra/decompiled.c</code> plainly shows them being called from <code>FUN_080002e0</code>/<code>FUN_08000358</code>/<code>FUN_080003a0</code>. This is a known tool limitation (both seeds have &quot;Could not recover jumptable&quot; warnings), so caller lists below were reconstructed by manual text search, not solely from the callgraph.</li></ul>
+<h2>2. Physical Media, Slot Geometry &amp; Redundancy</h2>
+<table><thead><tr><th>Property</th><th>Value</th><th>Evidence</th></tr></thead><tbody><tr><td>Media type</td><td>SRAM, 256 Kbit (32768 bytes)</td><td>PACKET metadata; file size of <code>cap-00-future-0.sav</code> = 32768 bytes</td></tr><tr><td>SDK save tag</td><td><code>SRAM_V113@7715160</code> (per corpus metadata)</td><td>PACKET metadata only — this literal string was <strong>not</strong> found inside the 40-byte active region of the <code>.sav</code> itself (see §4); it may live elsewhere in ROM, outside this workspace&#x27;s excerpts</td></tr><tr><td>Fill/erase byte</td><td><code>0xFF</code></td><td>32728/32768 bytes of <code>cap-00-future-0.sav</code> are <code>0xFF</code>; this is the open-bus value typically read back from unwritten/erased GBA SRAM</td></tr><tr><td>Active (non-fill) region</td><td><code>0x0000</code>–<code>0x0027</code> (40 bytes)</td><td><code>saves/hexdump_and_diffs.txt</code>; confirmed in Python (<code>saves/cap-00-future-0.sav</code>)</td></tr><tr><td>Number of slots/copies observed</td><td>1 header/stamp block; <strong>no evidence yet of multiple full save-file slots</strong></td><td>Only one 40-byte structured region exists in the sample; no second copy of the magic string or stamp pair was found elsewhere in the 32768-byte file</td></tr><tr><td>Redundancy / mirroring</td><td>Two independent 4-byte &quot;stamp&quot; fields (<code>0x20</code>, <code>0x24</code>) are written back-to-back by the same writer call with the <strong>same</strong> value, and independently range-checked by the reader (see §3/§5)</td><td><code>ghidra/decompiled.c</code> lines ~47–67 (writer <code>FUN_08000358</code>), lines ~2–40 (reader <code>FUN_080002e0</code>)</td></tr><tr><td>Generation/sequence counter</td><td>Not confirmed. The two stamp fields currently both read <code>0</code> in the only sample available (a cold/never-saved file) — on this evidence they look like a <strong>write-result echo</strong> (0 = success) rather than an incrementing counter, see §5</td><td><code>ghidra/decompiled.c</code> lines 54–67</td></tr><tr><td>Selection rule</td><td>Save is considered valid only if: (1) bytes <code>0x00</code>-<code>0x1F</code> exactly match the fixed template string compared via <code>memcmp</code>, AND (2) the <code>u32</code> at <code>0x20</code> satisfies <code>(v &amp; 3) == v</code> i.e. <code>v ∈ {0,1,2,3}</code>, AND (3) the <code>u32</code> at <code>0x24</code> satisfies <code>v &lt; 2</code> i.e. <code>v ∈ {0,1}</code></td><td><code>ghidra/decompiled.c</code> lines 18–38 (<code>FUN_080002e0</code>)</td></tr></tbody></table>
+<p>No evidence of multiple complete save &quot;file slots&quot; (e.g. 3 farm-save slots, as is common in this genre) was found in the available 214-function decompilation or in the single <code>.sav</code> sample&#x27;s non-fill region. This is explicitly an <strong>open question</strong> (§6/open_questions), not a ruled-out possibility — it may simply be outside the traced function set or stored beyond the only region this sample happens to have touched.</p>
+<h2>3. Save Writer, Reader &amp; Caller-Chain Architecture</h2>
+<h3>3.1 Low-level hardware I/O drivers (SRAM byte I/O)</h3>
+<p><strong><code>FUN_080006a4</code> @ <code>0x080006a4</code> — SRAM WRITE driver (write-with-verify-retry)</strong></p>
+<pre><code>void FUN_080006a4(undefined4 param_1,uint param_2,undefined4 param_3,int param_4)
+{
+  ...
+  *_DAT_080006e0 = 0;
+  if (param_4 != 0) {
+    iVar1 = func_0x080d38d4(param_3,param_2 | 0xe000000);   // param_2 = SRAM offset, OR&#x27;d with base 0x0E000000
+    bVar2 = iVar1 == 0;
+    if (!bVar2) { func_0x08000728(param_1,0x100); }
+  }
+  (*UNRECOVERED_JUMPTABLE)(bVar2);
+}</code></pre>
+<p><code>param_2 | 0xe000000</code> is the unambiguous tell that this driver addresses the GBA SRAM/Flash window. It delegates to <code>FUN_080d38d4</code> (<code>0x080d38d4</code>), which performs <strong>up to 3 write+verify-readback retries</strong>:</p>
+<pre><code>void FUN_080d38d4(...) {
+  for (bVar1 = 0; bVar1 &lt; 3; bVar1 = bVar1 + 1) {
+    FUN_080d3800(param_1,param_2,param_3);   // raw byte copy (the actual store to SRAM)
+    param_4 = FUN_080d3870(param_1,param_2,param_3); // read-back + memcmp-style verify
+    if (param_4 == 0) break;                 // 0 == match == success, stop retrying
+  }
+}</code></pre>
+<p><code>FUN_080d3800</code> is a plain byte-by-byte copy loop (<code>*param_2 = *param_1; param_1++; param_2++;</code>), and <code>FUN_080d3870</code> copies into a stack buffer and (per its structure) feeds a verification path through <code>func_0x080d3918</code> — a generic SDK byte-copy/verify primitive, not game-specific.</p>
+<p><strong><code>FUN_080006e4</code> @ <code>0x080006e4</code> — SRAM READ driver (plain copy, no retry)</strong></p>
+<pre><code>void FUN_080006e4(undefined4 param_1,undefined4 param_2,uint param_3,int param_4)
+{
+  *_DAT_08000708 = 0;
+  if (param_4 != 0) {
+    func_0x080d379c(param_3 | 0xe000000,param_2);   // param_3 = SRAM offset, OR&#x27;d with base 0x0E000000
+  }
+  (*UNRECOVERED_JUMPTABLE)(param_4 != 0);
+}</code></pre>
+<p>Delegates to <code>FUN_080d379c</code> (<code>0x080d379c</code>), a stack-buffer copy that forwards into <code>func_0x080d3918</code>, mirroring the read half of the same generic SRAM-access primitive family (<code>FUN_080d3800</code>/<code>FUN_080d3870</code>/<code>FUN_080d3948</code> memcmp/<code>FUN_080d3918</code>).</p>
+<p>Both <code>0x080006a4</code> and <code>0x080006e4</code> are marked &quot;candidate only&quot; with &quot;Could not recover jumptable — too many branches&quot; in Ghidra, and <code>ghidra/callgraph.json</code> lists <strong>zero</strong> callers/callees for both, even though their callers are visible in <code>ghidra/decompiled.c</code> (see §3.2). This is a static-analysis gap in the available callgraph, not evidence that these functions are unused.</p>
+<h3>3.2 Serialization / Validation &amp; Caller Chains</h3>
+<p><strong>Writer entry point — <code>FUN_08000358</code> @ <code>0x08000358</code></strong> (<code>ghidra/decompiled.c</code> lines 43–67)</p>
+<pre><code>void FUN_08000358(undefined4 param_1)
+{
+  func_0x080006a4(param_1,0,_DAT_08000398,0x20);   // write 32B magic/header to SRAM offset 0x00
+  puVar1 = _DAT_0800039c;
+  if (*_DAT_0800039c == 0) {                        // only proceed if the header write reported success
+    uStack_10 = (uint)*_DAT_0800039c;                // reuse the (0 == success) status value AS the data
+    func_0x080006a4(param_1,0x20,&amp;uStack_10,4);      // write 4B stamp A to SRAM offset 0x20
+    if (*puVar1 == 0) {
+      func_0x080006a4(param_1,0x24,&amp;uStack_10,4);    // write the SAME 4B value as stamp B to SRAM offset 0x24
+    }
+  }
+}</code></pre>
+<p>How mapped: traced directly from the decompiled source text; <code>ghidra/callgraph.json</code> has no caller entries for <code>0x08000358</code> itself, so the game-logic trigger (menu &quot;Save&quot; command, etc.) is outside the 214-function corpus provided. The mutation sequence on the in-RAM save image is: (1) the header bytes, already assembled in RAM at <code>_DAT_08000398</code> prior to this call, are flushed verbatim to SRAM <code>0x00</code>; (2) the write-status code itself (<code>0</code> on success) is written into SRAM at <code>0x20</code> and <code>0x24</code> as a post-write confirmation stamp — this call does <strong>not</strong> itself construct the header or recompute any checksum, it is a pure flush routine.</p>
+<p><strong>Reader/validator — <code>FUN_080002e0</code> @ <code>0x080002e0</code></strong> (<code>ghidra/decompiled.c</code> lines 2–40)</p>
+<pre><code>void FUN_080002e0(undefined4 param_1)
+{
+  func_0x080006e4(param_1,auStack_34,0,0x20);         // read 32B header from SRAM 0x00 into local buffer
+  if (*_DAT_08000324 == 0) {                          // read succeeded
+    func_0x080006e4(param_1,&amp;uStack_14,0x20,4);       // read 4B stamp A from SRAM 0x20
+    if (*puVar1 == 0) {                               // read succeeded
+      func_0x080006e4(param_1,&amp;uStack_10,0x24,4);     // read 4B stamp B from SRAM 0x24
+      if (*puVar1 == 0) {
+        iVar4 = func_0x080d3948(auStack_34,_DAT_08000354,0x20);  // memcmp(header, expected_template, 32)
+        if ((iVar4 == 0) &amp;&amp; ((uStack_14 &amp; 3) == uStack_14) &amp;&amp; (uStack_10 &lt; 2)) {
+          uVar3 = 1;   // VALID save
+        }
+      }
+    }
+  }
+  // else uVar3 = 0  (INVALID / treat as fresh save)
+}</code></pre>
+<p>How mapped: traced directly from decompiled source; confirmed as a real edge in <code>ghidra/callgraph.json</code> (<code>&quot;0x080002e0&quot;: {&quot;callers&quot;: [&quot;0x080003a0&quot;], ...}</code>). This function performs <strong>no RAM mutation</strong> — it is read-only and produces a boolean validity verdict in a register (<code>uVar3</code>), consumed by its caller.</p>
+<p><strong>Stamp accessor — <code>FUN_080003a0</code> @ <code>0x080003a0</code></strong> (<code>ghidra/decompiled.c</code> lines 70–95)</p>
+<pre><code>void FUN_080003a0(undefined4 param_1)
+{
+  cVar1 = FUN_080002e0();                 // first validate the save
+  if (cVar1 != &#x27;\0&#x27;) {
+    func_0x080006e4(param_1,&amp;uStack_c,0x20,4);   // re-read stamp A from SRAM 0x20
+    uVar2 = uStack_c;
+    if (*_DAT_080003cc == 0) goto LAB_080003d2;  // read succeeded -&gt; return stamp A value
+  }
+  uVar2 = 0;      // validation failed or read failed -&gt; return 0
+}</code></pre>
+<p>How mapped: confirmed caller edge in <code>ghidra/callgraph.json</code> (<code>&quot;0x080003a0&quot;: {&quot;callers&quot;: [], &quot;callees&quot;: [&quot;0x080002e0&quot;]}</code>), decompiled text matches. This is a convenience accessor: &quot;give me the current stamp-A value, but only if the whole save validates.&quot; No <code>.sav</code> mutation occurs.</p>
+<h3>3.3 Caller-chain summary</h3>
+<table><thead><tr><th>Entry caller</th><th>Chain</th><th>Trigger context</th><th>RAM/SRAM fields touched</th><th>How mapped</th></tr></thead><tbody><tr><td><code>0x08000358</code></td><td><code>0x08000358 → 0x080006a4 → 0x080d38d4 → {0x080d3800, 0x080d3870}</code></td><td>Save-write sequence (trigger site not in corpus)</td><td>SRAM <code>0x00</code> (32B header), <code>0x20</code> (4B stamp A), <code>0x24</code> (4B stamp B)</td><td>Direct text trace, <code>ghidra/decompiled.c</code> L43-67; callgraph has no edges for this function (tool gap)</td></tr><tr><td><code>0x080002e0</code></td><td><code>0x080002e0 → 0x080006e4 → 0x080d379c; 0x080002e0 → 0x080d3948</code></td><td>Save-load validation</td><td>None (read-only); produces boolean verdict</td><td>Direct text trace + confirmed callgraph edge <code>0x080003a0→0x080002e0</code></td></tr><tr><td><code>0x080003a0</code></td><td><code>0x080003a0 → 0x080002e0 → 0x080006e4</code></td><td>Query current stamp-A value</td><td>None (read-only)</td><td>Confirmed callgraph edge + text trace</td></tr></tbody></table>
+<h2>4. Magic Signatures &amp; Checksum / Integrity Algorithm</h2>
+<h3>4.1 Magic signature</h3>
+<p>Offset <code>0x00</code>, length 32 bytes (the exact span read/written/compared by <code>FUN_08000358</code>/<code>FUN_080002e0</code>/<code>FUN_080d3948</code>):</p>
+<pre><code>hex:      47 42 41 96 71 8f ea 95 a8 8c ea 82 cc 53 52 41
+          4d 83 43 83 81 81 5b 83 57 20 30 30 30 30 00
+ascii:    G  B  A  .  q  .  .  .  .  .  .  .  S  R  A  M
+          .  C  .  .  .  [  .  W     0  0  0  0  .</code></pre>
+<p>Decoded as mixed ASCII/Shift-JIS, this is the literal text string:</p>
+<pre><code>&quot;GBA牧場物語のSRAMイメージ 0000&quot; (+ 1 trailing NUL to fill 32 bytes)</code></pre>
+<p>i.e. <em>&quot;GBA [Bokujou Monogatari / Harvest Moon] no SRAM imēji&quot;</em> (&quot;GBA Harvest Moon&#x27;s SRAM image&quot;), followed by a 5-digit ASCII decimal counter field whose first four digits (&quot;0000&quot;) fall inside this 32-byte span and whose fifth digit (&quot;0&quot;) plus further padding falls just past it (byte <code>0x20</code> onward, see field map). This is a well-known convention on GBA-era Japanese titles: an embedded human-readable save-type/version stamp used for auto-detection by flashcarts/emulators and sanity-checking by the game itself. It was decoded directly from the original <code>.sav</code> bytes in this workspace — no external reference was consulted.</p>
+<p>This observed string differs from the corpus-metadata SDK tag <code>SRAM_V113@7715160</code>; that literal substring was <strong>not</strong> found anywhere in the 40-byte active region of the sample. It may exist elsewhere in ROM outside the excerpts provided in this workspace (open question).</p>
+<ul><li><code>verified_in_code</code>: <strong>true</strong> — <code>FUN_08000358</code> writes exactly this 32-byte span from a RAM buffer to SRAM <code>0x00</code>, and <code>FUN_080002e0</code> <code>memcmp</code>s exactly this span against a fixed template (<code>_DAT_08000354</code>).</li><li><code>verified_in_sav</code>: <strong>true</strong> — present verbatim in <code>saves/cap-00-future-0.sav</code> bytes <code>0x00</code>-<code>0x1F</code>.</li></ul>
+<h3>4.2 Checksum / integrity algorithm</h3>
+<p><strong>No arithmetic checksum (sum, XOR, CRC, complement) was found.</strong> A full-text search of all 214 decompiled functions in <code>ghidra/decompiled.c</code> for accumulation idioms (<code>+=</code>, byte-summation loops) returned <strong>zero matches</strong>. Integrity is instead enforced by two independent mechanisms, both confirmed in <code>FUN_080002e0</code>:</p>
+<ol><li><strong>Exact magic-string match</strong> — <code>func_0x080d3948(auStack_34, _DAT_08000354, 0x20)</code> is a <code>memcmp</code>-style byte-equality check (see <code>FUN_080d3948</code> disassembly: byte/word-wise compare returning the first differing byte&#x27;s signed difference, 0 if equal) over the 32-byte header against a fixed in-ROM template. Any single bit flip in the header fails validation.</li><li><strong>Range-bounded stamp fields</strong> — the reader additionally requires <code>(stampA &amp; 3) == stampA</code> (i.e. <code>stampA ∈ {0,1,2,3}</code>) and <code>stampB &lt; 2</code> (i.e. <code>stampB ∈ {0,1}</code>). These are not checksums of the header; they are plausibility bounds on two small status/echo values written by the save routine itself.</li></ol>
+<p><strong>Python verification against the actual <code>.sav</code> file</strong> (<code>saves/cap-00-future-0.sav</code>):</p>
+<pre><code>$ python3 - &lt;&lt;&#x27;EOF&#x27;
+data = open(&#x27;saves/cap-00-future-0.sav&#x27;,&#x27;rb&#x27;).read()
+hdr32 = data[0:0x20]
+print(&#x27;header (shift_jis):&#x27;, hdr32.decode(&#x27;shift_jis&#x27;, errors=&#x27;replace&#x27;))
+stampA = int.from_bytes(data[0x20:0x24], &#x27;little&#x27;)
+stampB = int.from_bytes(data[0x24:0x28], &#x27;little&#x27;)
+print(&#x27;stampA =&#x27;, stampA, &#x27; (stampA &amp; 3) == stampA -&gt;&#x27;, (stampA &amp; 3) == stampA)
+print(&#x27;stampB =&#x27;, stampB, &#x27; stampB &lt; 2         -&gt;&#x27;, stampB &lt; 2)
+print(&#x27;bytes 0x28..end all 0xFF -&gt;&#x27;, all(b == 0xff for b in data[0x28:]))
+EOF
+
+header (shift_jis): GBA牧場物語のSRAMイメージ 0000
+stampA = 0  (stampA &amp; 3) == stampA -&gt; True
+stampB = 0  stampB &lt; 2         -&gt; True
+bytes 0x28..end all 0xFF -&gt; True</code></pre>
+<p>Since no fixed &quot;expected header&quot; byte-for-byte template beyond our own decode is available in this workspace (the in-ROM comparison constant <code>_DAT_08000354</code> is referenced but its literal bytes are not present in the decompiled excerpts), the verification above demonstrates self-consistency: the sample&#x27;s header is well-formed ASCII/Shift-JIS text and both stamp fields independently satisfy the exact range predicates the decompiled reader enforces. This is the strongest verification achievable from a single cold sample; a second, post-gameplay-save sample is required to test whether a deliberately corrupted header or out-of-range stamp is actually rejected at runtime (see §6).</p>
+<p><strong>Overall checksum confidence: <code>CONFIRMED_STATIC</code></strong> for &quot;no arithmetic checksum exists / integrity = magic-match + range-check&quot;, <strong><code>CONFIRMED_VERIFIED</code></strong> for &quot;the sample&#x27;s header text and stamp values currently satisfy those exact predicates.&quot;</p>
+<h2>5. Complete Field Map Table</h2>
+<table><thead><tr><th>Offset (hex)</th><th>Size</th><th>Type / Endianness</th><th>RAM Mirror Addr</th><th>Writers / Callers</th><th>Readers</th><th>Observed Values in <code>.sav</code></th><th>Confidence</th><th>How Mapped &amp; Updated</th></tr></thead><tbody><tr><td><code>0x00</code></td><td>32 B</td><td>ASCII + Shift-JIS mixed text, fixed template</td><td>UNKNOWN (ROM literal-pool pointer <code>_DAT_08000398</code>/<code>_DAT_08000354</code>; RAM target not resolvable from available excerpts)</td><td><code>0x08000358</code> → <code>0x080006a4</code> → <code>0x080d38d4</code>/<code>0x080d3800</code></td><td><code>0x080002e0</code> → <code>0x080006e4</code> → <code>0x080d379c</code>; compared via <code>0x080d3948</code> (<code>memcmp</code>)</td><td><code>&quot;GBA牧場物語のSRAMイメージ 0000\x00&quot;</code></td><td><code>CONFIRMED_VERIFIED</code></td><td>Byte span read/written/compared is identical (<code>0x20</code> length) across writer, reader and verify call; decoded directly from <code>.sav</code> bytes</td></tr><tr><td><code>0x20</code></td><td>4 B</td><td><code>u32_le</code>, &quot;stamp A&quot; (write-result echo; constrained to <code>0..3</code>)</td><td>UNKNOWN (<code>_DAT_0800039c</code>/<code>_DAT_08000324</code> are ROM-resident status pointers, RAM target unresolved)</td><td><code>0x08000358</code> (writes the write-status value of the preceding header write)</td><td><code>0x080002e0</code> (range check <code>v &amp; 3 == v</code>); <code>0x080003a0</code> (plain accessor)</td><td><code>0x00000000</code> (= 0)</td><td><code>CONFIRMED_STATIC</code> for mechanism; <code>CONFIRMED_VERIFIED</code> for the observed value satisfying the predicate</td><td>Traced exact offset/size from <code>func_0x080006a4(param_1,0x20,&amp;uStack_10,4)</code> and the mirrored read in <code>FUN_080002e0</code>; only one (all-zero) sample available so counter-vs-echo semantics unconfirmed</td></tr><tr><td><code>0x24</code></td><td>4 B</td><td><code>u32_le</code>, &quot;stamp B&quot; (write-result echo; constrained to <code>0..1</code>)</td><td>UNKNOWN (same class of unresolved ROM pointer as above)</td><td><code>0x08000358</code> (writes the same value as stamp A)</td><td><code>0x080002e0</code> (range check <code>v &lt; 2</code>)</td><td><code>0x00000000</code> (= 0)</td><td><code>CONFIRMED_STATIC</code> for mechanism; <code>CONFIRMED_VERIFIED</code> for the observed value</td><td>Same call site as stamp A, offset <code>0x24</code> instead of <code>0x20</code></td></tr><tr><td><code>0x28</code>–<code>0x7FFF</code></td><td>32728 B</td><td><code>bytes</code>, unmapped</td><td>UNKNOWN</td><td>None found in the 214-function corpus</td><td>None found in the 214-function corpus</td><td>all <code>0xFF</code> (SRAM erase/fill value) in the only sample</td><td><code>UNKNOWN</code></td><td>No traced function reads/writes this range in the available decompilation; presumed to hold actual gameplay state (farm, calendar, inventory, character data) based on total SRAM size vs. the tiny 40-byte header region, but this is an unverified hypothesis</td></tr></tbody></table>
+<h2>6. Save Fuzzing &amp; Counterfactual Verification Plan</h2>
+<p>All mutations below should be applied to a <strong>copy</strong> of a save that has first been through one real in-game save (so that stamp fields are populated by the real game rather than by this report&#x27;s assumptions), then reloaded from the paired pre-save <code>.ss</code> state so the exact RAM contents at the moment of load are known.</p>
+<ol><li><strong>Header corruption (offset <code>0x00</code>, 1 byte flip, e.g. <code>0x47</code>→<code>0x48</code>)</strong></li></ol>
+<ul><li>Mutation: flip a single byte inside the 32-byte magic/header span.</li><li>Requires checksum repair: <strong>no</strong> (no checksum exists), but this <em>will</em> fail the <code>memcmp</code> in <code>FUN_080002e0</code>.</li><li>Predicted effect: on next load, <code>FUN_080002e0</code> returns &quot;invalid&quot; (<code>uVar3 = 0</code>); the game should treat the save as absent/corrupt and behave as it does when SRAM is freshly erased (e.g. offer &quot;new game&quot; rather than &quot;continue&quot;, or silently reset progress). No crash is expected since the check is a simple boolean gate.</li></ul>
+<ol><li><strong>Stamp A out-of-range (offset <code>0x20</code>, write <code>0x00000004</code>)</strong></li></ol>
+<ul><li>Mutation: set the 4-byte LE value at <code>0x20</code> to <code>4</code>.</li><li>Requires checksum repair: no.</li><li>Predicted effect: <code>(4 &amp; 3) == 4</code> is <code>False</code> (since <code>4 &amp; 3 == 0</code>), so validation fails exactly like case 1, even though the header itself is untouched. This isolates and confirms the stamp-A range check independently of the header <code>memcmp</code>.</li></ul>
+<ol><li><strong>Stamp B out-of-range (offset <code>0x24</code>, write <code>0x00000002</code>)</strong></li></ol>
+<ul><li>Mutation: set the 4-byte LE value at <code>0x24</code> to <code>2</code>.</li><li>Requires checksum repair: no.</li><li>Predicted effect: <code>2 &lt; 2</code> is <code>False</code>, validation fails, isolating the stamp-B check independently of header and stamp A.</li></ul>
+<ol><li><strong>Stamp A/B boundary values (offset <code>0x20</code>=<code>3</code>, offset <code>0x24</code>=<code>1</code>)</strong></li></ol>
+<ul><li>Mutation: set stamp A to the maximum in-range value (<code>3</code>) and stamp B to <code>1</code>, leaving the header intact.</li><li>Predicted effect: validation should <strong>still pass</strong> (<code>3 &amp; 3 == 3</code>, <code>1 &lt; 2</code>), proving these are genuinely inclusive-range checks rather than exact-equality-to-zero checks, and testing whether the game&#x27;s <em>behavior</em> differs when stamp values are nonzero (e.g. does it pick a different internal save-slot index, consistent with the open hypothesis that stamp A is a mod-4 slot/generation selector rather than a pure 0/1 success echo?).</li></ul>
+<ol><li><strong>Region-discovery sweep (offset <code>0x28</code> onward)</strong></li></ol>
+<ul><li>Mutation: in small aligned chunks (4 or 8 bytes at a time), toggle bytes across the currently-unmapped <code>0x28</code>–<code>0x7FFF</code> region on a save taken <em>after</em> some real farm progress has been made, and diff against the pre-mutation <code>.sav</code>/<code>.ss</code> pair.</li><li>Requires checksum repair: unknown — contingent on whether gameplay data in this region has its own (as-yet unobserved) per-record checksum, which cannot be ruled out since this report&#x27;s checksum analysis only covers the 40-byte header region actually exercised by the 214 traced functions.</li><li>Predicted effect: observable changes in on-screen stats (money, day/season counters, character stats) pinpoint field offsets for round-two mapping; this is the primary recommended next step, since the current corpus contains zero traced functions touching this 32728-byte region.</li></ul>
+<h2>Appendix: Workspace Evidence Index</h2>
+<ul><li><code>saves/cap-00-future-0.sav</code> — single 32768-byte SRAM capture, SHA-256 <code>ba170d765d8494ebc7853e011c1cca7ad357722ac7e84fca44c5bd3b24941ced</code>.</li><li><code>saves/hexdump_and_diffs.txt</code> — pre-computed active-range hexdump used to corroborate the 40-byte span independently of this report&#x27;s own Python re-derivation.</li><li><code>ghidra/decompiled.c</code> — 214-function trace-guided decompilation; functions cited: <code>0x080002e0</code>, <code>0x08000358</code>, <code>0x080003a0</code>, <code>0x080006a4</code>, <code>0x080006e4</code>, <code>0x080d3800</code>, <code>0x080d379c</code>, <code>0x080d3870</code>, <code>0x080d38d4</code>, <code>0x080d3918</code>, <code>0x080d3948</code>.</li><li><code>ghidra/callgraph.json</code> — 214-entry caller/callee map; confirmed edges used: <code>0x080003a0 → 0x080002e0</code>. Noted gap: <code>0x080006a4</code>/<code>0x080006e4</code> show empty caller/callee lists despite being called in <code>decompiled.c</code> text (jumptable recovery failure at both sites).</li><li><code>ghidra/save_related_functions.c</code> — pre-extracted MMIO seed excerpt for <code>0x080006a4</code>/<code>0x080006e4</code>, used as the starting point for the trace in §3.1.</li></ul>
+</div>
+</main>
+  <footer>gbakit GBA Format Reference &middot; <a href="https://github.com/JidouGhost-TL/gbakit">GitHub: JidouGhost-TL/gbakit</a> &middot; Clean-room GBA binary format specs &amp; Rust toolkit.</footer>
+</body>
+</html>

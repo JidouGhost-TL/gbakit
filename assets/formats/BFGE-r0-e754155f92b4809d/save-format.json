@@ -1,0 +1,179 @@
+{
+  "schema": "gbakit-save-research/1",
+  "release_key": "BFGE-r0-e754155f92b4809d",
+  "display_name": "Harvest Moon - More Friends of Mineral Town (USA)",
+  "rom_sha256": "e754155f92b4809d9f63765592d415f16497d290189cfe1267ea9571a6e14d8e",
+  "game_code": "BFGE",
+  "header_family": "BFG",
+  "community_id": "comm-009",
+  "overall_confidence": "HIGH",
+  "media": {
+    "kind": "sram",
+    "size_bytes": 32768,
+    "sdk_tags": [
+      "SRAM_V113@10325980"
+    ],
+    "fill_byte": "0xff"
+  },
+  "slots_and_copies": [
+    {
+      "name": "header_and_stamp_block",
+      "offset": 0,
+      "size": 40,
+      "redundancy_role": "global_config",
+      "selection_rule": "Valid only if memcmp(0x00..0x1F, fixed_template)==0 AND (u32le@0x20 & 3)==u32le@0x20 AND u32le@0x24 < 2; otherwise treated as corrupt/absent."
+    },
+    {
+      "name": "farm_save_data_region",
+      "offset": 40,
+      "size": 32728,
+      "redundancy_role": "primary",
+      "selection_rule": "Persistent farm state, inventory, and relationship points."
+    }
+  ],
+  "magic_signatures": [
+    {
+      "offset": 0,
+      "bytes_hex": "47424196718fea95a88cea82cc5352414d83438381815b835720303030303000",
+      "ascii": "GBA\u7267\u5834\u7269\u8a9e\u306eSRAM\u30a4\u30e1\u30fc\u30b8 00000\u0000",
+      "verified_in_code": true,
+      "verified_in_sav": true,
+      "function_addrs": [
+        "0x080006b8",
+        "0x080006f8"
+      ]
+    }
+  ],
+  "checksums": [
+    {
+      "name": "none_detected",
+      "algorithm": "unknown",
+      "formula_detail": "Integrity is enforced purely by exact 32-byte memcmp against fixed ROM template plus range checks on stamps A and B. No checksum/CRC algorithm.",
+      "stored_offset": 0,
+      "stored_size": 0,
+      "covered_start": 0,
+      "covered_end": 0,
+      "function_addrs": [
+        "0x080006f8"
+      ],
+      "verified_on_samples": [],
+      "confidence": "CONFIRMED_STATIC"
+    }
+  ],
+  "io_driver_functions": [
+    {
+      "addr": "0x080006b8",
+      "role": "write",
+      "callers": [],
+      "notes": "SRAM write driver with retry: ORs offset with 0x0E000000 and invokes write primitive func_0x080db4fc."
+    },
+    {
+      "addr": "0x080006f8",
+      "role": "read",
+      "callers": [],
+      "notes": "SRAM read driver: ORs offset with 0x0E000000 and invokes read primitive func_0x080db3c4."
+    }
+  ],
+  "caller_chains": [
+    {
+      "entry_caller": "0x080006b8",
+      "chain": [
+        "0x080006b8",
+        "func_0x080db4fc"
+      ],
+      "trigger_context": "Nightly sleep / diary save event.",
+      "ram_fields_updated": [
+        "Farm tiles, tool levels, livestock records"
+      ],
+      "how_mapped": "Direct decompilation trace of ghidra/save_related_functions.c."
+    }
+  ],
+  "fields": [
+    {
+      "name": "magic_header",
+      "offset": 0,
+      "size": 32,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [
+        "0x080006b8"
+      ],
+      "readers": [
+        "0x080006f8"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": "47424196718fea95a88cea82cc5352414d83438381815b835720303030303000"
+      },
+      "update_mechanism": "Fixed 32-byte Shift-JIS string template written on save creation.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Matches saves/cap-00-future-0.sav first 32 bytes exactly."
+    },
+    {
+      "name": "stamp_a",
+      "offset": 32,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": [
+        "0x080006b8"
+      ],
+      "readers": [
+        "0x080006f8"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": 0
+      },
+      "update_mechanism": "Slot index/counter value (validated by (v & 3) == v).",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Observed 0x00000000 in saves/cap-00-future-0.sav."
+    },
+    {
+      "name": "stamp_b",
+      "offset": 36,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": [
+        "0x080006b8"
+      ],
+      "readers": [
+        "0x080006f8"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": 0
+      },
+      "update_mechanism": "Integrity validation echo (validated by v < 2).",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Observed 0x00000000 in saves/cap-00-future-0.sav."
+    },
+    {
+      "name": "farm_data_region",
+      "offset": 40,
+      "size": 32728,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [
+        "0x080006b8"
+      ],
+      "readers": [
+        "0x080006f8"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": "fill 0xFF"
+      },
+      "update_mechanism": "Holds full gameplay state (crops, animals, relationships, inventory).",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "SRAM region from 0x28 through 0x7FFF."
+    }
+  ],
+  "fuzzing_targets": [
+    {
+      "offset": 0,
+      "size": 1,
+      "mutation": "Flip first byte from 0x47 to 0x00.",
+      "requires_checksum_repair": false,
+      "predicted_effect": "memcmp template check fails; diary read fails on startup."
+    }
+  ],
+  "open_questions": []
+}

@@ -13,7 +13,13 @@
       <a href="../index.html">Games</a>
       <a href="../saves/index.html">Save Formats</a>
       <a href="../patches/index.html">Debug Patches</a>
+      <a href="../debug-menus.html">Debug Gallery</a>
+      <a href="../non-retail-cartridges.html">Non-Retail</a>
+      <a href="../cartridge-hardware.html">Cartridge Hardware</a>
+      <a href="../link-multiplayer.html">Link &amp; Multiplayer</a>
+      <a href="../multiboot-museum.html">MultiBoot Museum</a>
       <a href="../assets/index.html">Assets &amp; Audio</a>
+      <a href="../text-and-fonts.html">Text &amp; Fonts</a>
       <a href="../engines/index.html">Engines &amp; Hardware</a>
       <a href="../families/index.html">Families</a>
       <a href="../gbakit/index.html">Using gbakit</a>
@@ -22,7 +28,7 @@
   <main>
 <p class="meta"><a href="../index.html">&larr; Games</a> &middot; Family <code>AJL</code></p>
 <h1>Justice League - Injustice for All (USA)</h1>
-<p><span class='badge badge-slate'>EEPROM 4K</span></p>
+<p><span class='badge badge-slate'>EEPROM 4K</span> <span class='badge badge-emerald'>Save Format Spec</span> <span class='badge badge-emerald'>gbakit Built-In</span> <a href='../link-multiplayer.html#multiboot'><span class='badge badge-amber'>💾 MultiBoot</span></a></p>
 
 <h2>Cartridge Identity</h2>
 <dl class="kv">
@@ -38,6 +44,30 @@
 
 
 
+
+<h2>Link Cable &amp; Multiplayer Communications</h2>
+<div class="callout">
+  This title contains detected communication capabilities: <a href='../link-multiplayer.html#multiboot'><span class='badge badge-amber'>💾 MultiBoot</span></a>.
+  Detailed protocol specifications, SIO registers, Joybus commands, and MultiBoot sequences are documented in the <a href="../link-multiplayer.html"><strong>Link &amp; Multiplayer Reference</strong></a>.
+</div>
+<dl class="kv">
+  <dt>Single-Cart MultiBoot</dt><dd>Single-Cartridge MultiBoot (Download Play) client/server handler &middot; Thumb SWI 0x25 (<code>0xDF25</code>): <code>0x1ce336</code>, <code>0x260830</code>, <code>0x26093a</code>, <code>0x2609e0</code></dd>
+</dl>
+
+
+<h2>Battery Save Format Specification</h2>
+<p><a class='btn' href='../saves/AJLE-r0-71c7829c906de735.html'>Open Full Save Format Spec</a><a class='btn btn-secondary' href='../assets/formats/AJLE-r0-71c7829c906de735/save-format.json' download>Download save-format.json</a></p>
+<p class='meta'>This specification also governs 2 regional editions &amp; revisions in Family <code>AJL</code>.</p>
+<dl class="kv">
+  <dt>Specification Coverage</dt><dd><strong>4</strong> mapped fields &middot; <strong>0</strong> verified checksum(s) &middot; Confidence: <span class="badge badge-indigo">HIGH</span></dd>
+  <dt>gbakit Built-In Support</dt><dd><span class="badge badge-emerald">Built-in (AJLE)</span></dd>
+  
+</dl>
+<pre><code>gbakit save verify AJLE save.sav
+gbakit save decode AJLE save.sav
+gbakit save fix    AJLE damaged.sav -o repaired.sav</code></pre>
+
+
 <h2>Observed Battery Save Layout</h2>
 <dl class="kv">
   <dt>Fill Byte &amp; Active Size</dt><dd><code>0x00</code> fill &middot; 40–40 / 512 B active (entropy 3.32 bits/B)</dd>
@@ -49,6 +79,11 @@
 </dl>
 
 <h2>ROM Assets, Compression &amp; Audio</h2><dl class='kv'><dt>BIOS Compression</dt><dd>LZ77 (<code>0x10</code>): <strong>176</strong> streams &middot; RLE (<code>0x30</code>): <strong>1</strong> streams</dd><dt>ROM Pointer Tables</dt><dd>15 tables (0 pointing to validated compressed streams)</dd><dt>SDK Backup Tags</dt><dd><code>EEPROM_V122</code></dd></dl>
+
+<h2>Text, Fonts &amp; Scene Data</h2>
+<dl class="kv"><dt>Primary Text Encoding</dt><dd><strong>Plain ASCII (uncompressed)</strong> (<code>929</code> ASCII strings)</dd><dt>Font &amp; VWF Indicators</dt><dd><span class='badge badge-emerald'>VWF Width Table</span> <span class='badge badge-blue'>1bpp Font</span> &middot; BIOS SWIs: BitUnPack <code>0x10</code>: <code>7</code> &middot; LZ77 <code>0x11/12</code>: <code>9</code> &middot; Huffman <code>0x13</code>: <code>11</code> &middot; RLE <code>0x14/15</code>: <code>11</code></dd><dt>Scene &amp; Packaging</dt><dd><code>36</code> ROM pointer tables (&ge;32 entries, <code>5</code> &ge;200) &middot; <code>2</code> relative <code>u32</code> TOCs &middot; <code>93</code> OAM metasprite hits</dd></dl>
+
+
 <h2>Hardware MMIO Subsystems</h2><dl class='kv'><dt><code>ppu_display</code></dt><dd><code>0x800026c</code>, <code>0x800057c</code>, <code>0x802aef0</code></dd></dl>
 <h2>Regional Variants &amp; Revisions (Family <code>AJL</code>)</h2><ul><li><a href='AJLP-r0-e12c96f3bd5bb6e5.html'>Justice League - Injustice for All (Europe) (En,Fr,De,Es,It)</a> (<code>AJLP</code>, 8 MiB)</li><li><a href='AJLE-r0-c35ec53dcdc17bdc.html'>Justice League - Injustice for All (USA) (Beta)</a> (<code>AJLE</code>, 8 MiB)</li></ul>
 </main>

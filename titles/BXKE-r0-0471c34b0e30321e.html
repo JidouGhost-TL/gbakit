@@ -13,7 +13,13 @@
       <a href="../index.html">Games</a>
       <a href="../saves/index.html">Save Formats</a>
       <a href="../patches/index.html">Debug Patches</a>
+      <a href="../debug-menus.html">Debug Gallery</a>
+      <a href="../non-retail-cartridges.html">Non-Retail</a>
+      <a href="../cartridge-hardware.html">Cartridge Hardware</a>
+      <a href="../link-multiplayer.html">Link &amp; Multiplayer</a>
+      <a href="../multiboot-museum.html">MultiBoot Museum</a>
       <a href="../assets/index.html">Assets &amp; Audio</a>
+      <a href="../text-and-fonts.html">Text &amp; Fonts</a>
       <a href="../engines/index.html">Engines &amp; Hardware</a>
       <a href="../families/index.html">Families</a>
       <a href="../gbakit/index.html">Using gbakit</a>
@@ -22,7 +28,7 @@
   <main>
 <p class="meta"><a href="../index.html">&larr; Games</a> &middot; Family <code>BXK</code></p>
 <h1>Castlevania Double Pack (USA)</h1>
-<p><span class='badge badge-slate'>SRAM 256K</span></p>
+<p><span class='badge badge-slate'>SRAM 256K</span> <span class='badge badge-emerald'>Save Format Spec</span> <span class='badge badge-emerald'>gbakit Built-In</span> <span class='badge badge-amber'>Debug Menu Patch</span> <a href='../patches/index.html#zero-patch-cheats'><span class='badge badge-purple'>🎮 Button Cheat</span></a> <a href='../link-multiplayer.html#multiboot'><span class='badge badge-amber'>💾 MultiBoot</span></a> <a href='../link-multiplayer.html#sio-multi'><span class='badge badge-blue'>🎮 4P Link</span></a></p>
 
 <h2>Cartridge Identity</h2>
 <dl class="kv">
@@ -36,6 +42,55 @@
 </dl>
 <h2>Screenshots</h2><div class='gallery'><figure><img src='../assets/thumbs/BXKE-r0-0471c34b0e30321e-boot.png' alt='Boot Screen' loading='lazy'><figcaption>Boot Screen</figcaption></figure></div>
 
+<h2>Debug Menu Re-Enablement Patch (<code>.ips</code>)</h2>
+<p><a class="btn" href="../assets/patches/BXKE-r0-0471c34b0e30321e/BXKE-debug.ips" download>Download BXKE-debug.ips (24 B IPS / 6 B delta)</a></p>
+<dl class="kv">
+  <dt>Hook Mechanism</dt><dd><code>embedded_rom_jump_table_override</code> &middot; Redirect Double Pack boot entry at 0x0001c8 to Aria of Sorrow (0x08800000) and swap Aria jump-table slot 0 at 0x800464 (0x088004b8 -&gt; 0x0880051e) to boot directly into Aria of Sorrow Test/Boss-Rush stage mode (0x088365b0)</dd>
+  <dt>IPS SHA-256</dt><dd><code>7d5ee29219acc6763851b1de4590acc392344e1990441c8f025253c8ecb79a3d</code></dd>
+</dl>
+<pre><code>gbakit patch apply BXKE-debug.ips original.gba patched-debug.gba</code></pre>
+<div class='gallery'><figure><img src='../assets/patches/BXKE-r0-0471c34b0e30321e/boot-patched.png' alt='Re-enabled debug menu' loading='lazy'><figcaption>Re-Enabled Debug Menu</figcaption></figure><figure><img src='../assets/patches/BXKE-r0-0471c34b0e30321e/after-input.png' alt='Interactive debug menu navigation' loading='lazy'><figcaption>After D-Pad / A Input</figcaption></figure></div>
+
+
+<h2>Verified Button-Combo Cheat</h2>
+<div class="callout">
+  <strong>Zero-patch retail controller cheat (Wave 1):</strong> 4-way counterfactually verified in headless <code>libmgba</code>. See all verified titles in the <a href="../patches/index.html#zero-patch-cheats"><strong>Button-Combo Cheats Catalog</strong></a>.
+</div>
+<dl class="kv">
+  <dt>Effect</dt><dd>Castlevania Sound Mode &amp; Extra Game Mode Unlock</dd>
+  <dt>Button Sequence</dt><dd><code>UP, UP, DOWN, DOWN, LEFT, RIGHT, LEFT, RIGHT, B, A</code></dd>
+  <dt>Verification Verdict</dt><dd><span class='badge badge-emerald'>Visual + RAM Unique Reaction</span></dd>
+  <dt>Target RAM Address</dt><dd><code>0x02000040</code></dd>
+  
+  <dt>Timing Protocol</dt><dd><code>boot=360f</code>, <code>hold=6f</code>, <code>release=6f</code>, <code>settle=60f</code></dd>
+  <dt>Activation Indicator</dt><dd>Sound chime and Castlevania sound mode / extra mode unlocked in RAM &amp; VRAM</dd>
+</dl>
+<pre><code>gbakit cheat verify BXKE</code></pre>
+<div class='gallery'><figure><img src='../assets/cheats/BXKE/control.png' alt='Before (Control)' loading='lazy'><figcaption>Before (Control)</figcaption></figure><figure><img src='../assets/cheats/BXKE/reaction.png' alt='After (Cheat Reaction)' loading='lazy'><figcaption>After (Cheat Reaction)</figcaption></figure></div>
+
+
+
+<h2>Link Cable &amp; Multiplayer Communications</h2>
+<div class="callout">
+  This title contains detected communication capabilities: <a href='../link-multiplayer.html#multiboot'><span class='badge badge-amber'>💾 MultiBoot</span></a> <a href='../link-multiplayer.html#sio-multi'><span class='badge badge-blue'>🎮 4P Link</span></a>.
+  Detailed protocol specifications, SIO registers, Joybus commands, and MultiBoot sequences are documented in the <a href="../link-multiplayer.html"><strong>Link &amp; Multiplayer Reference</strong></a>.
+</div>
+<dl class="kv">
+  <dt>Multi-Player SIO (4P)</dt><dd>16-bit ring network &middot; SIOCNT (<code>0x04000128</code>) literals: <code>0x8d7970</code>, <code>0x8d799c</code>, <code>0x8d7bfc</code> &middot; SIODATA32/SIOMULTI0 (<code>0x04000120</code>) literals: <code>0x8d7d10</code>, <code>0xdeebd8</code></dd><dt>Single-Cart MultiBoot</dt><dd>Single-Cartridge MultiBoot (Download Play) client/server handler &middot; Thumb SWI 0x25 (<code>0xDF25</code>): <code>0x23d394</code>, <code>0x2764f2</code>, <code>0x2a303e</code>, <code>0x41f73a</code></dd>
+</dl>
+
+
+<h2>Battery Save Format Specification</h2>
+<p><a class='btn' href='../saves/BXKE-r0-0471c34b0e30321e.html'>Open Full Save Format Spec</a><a class='btn btn-secondary' href='../assets/formats/BXKE-r0-0471c34b0e30321e/save-format.json' download>Download save-format.json</a></p>
+<p class='meta'>This specification also governs 1 regional editions &amp; revisions in Family <code>BXK</code>.</p>
+<dl class="kv">
+  <dt>Specification Coverage</dt><dd><strong>4</strong> mapped fields &middot; <strong>0</strong> verified checksum(s) &middot; Confidence: <span class="badge badge-indigo">HIGH</span></dd>
+  <dt>gbakit Built-In Support</dt><dd><span class="badge badge-emerald">Built-in (BXKE)</span></dd>
+  
+</dl>
+<pre><code>gbakit save verify BXKE save.sav
+gbakit save decode BXKE save.sav
+gbakit save fix    BXKE damaged.sav -o repaired.sav</code></pre>
 
 
 <h2>Observed Battery Save Layout</h2>
@@ -49,6 +104,11 @@
 </dl>
 
 <h2>ROM Assets, Compression &amp; Audio</h2><dl class='kv'><dt>BIOS Compression</dt><dd>LZ77 (<code>0x10</code>): <strong>1,170</strong> streams &middot; RLE (<code>0x30</code>): <strong>0</strong> streams</dd><dt>ROM Pointer Tables</dt><dd>125 tables (3 pointing to validated compressed streams)</dd><dt>SDK Backup Tags</dt><dd><code>SRAM_F_V102</code>, <code>SRAM_F_V102</code></dd></dl>
+
+<h2>Text, Fonts &amp; Scene Data</h2>
+<dl class="kv"><dt>Primary Text Encoding</dt><dd><strong>Plain ASCII (uncompressed)</strong> (<code>3,610</code> ASCII strings &middot; <code>2</code> LZ77 ASCII blocks)</dd><dt>Font &amp; VWF Indicators</dt><dd><span class='badge badge-emerald'>VWF Width Table</span> <span class='badge badge-blue'>1bpp Font</span> &middot; BIOS SWIs: BitUnPack <code>0x10</code>: <code>6</code> &middot; LZ77 <code>0x11/12</code>: <code>4</code> &middot; Huffman <code>0x13</code>: <code>0</code> &middot; RLE <code>0x14/15</code>: <code>2</code></dd><dt>Scene &amp; Packaging</dt><dd><code>60</code> ROM pointer tables (&ge;32 entries, <code>6</code> &ge;200) &middot; <code>8</code> relative <code>u32</code> TOCs &middot; <code>178</code> OAM metasprite hits</dd></dl>
+
+
 <h2>Hardware MMIO Subsystems</h2><dl class='kv'><dt><code>save_bus_sram_flash</code></dt><dd><code>0x8080de4</code>, <code>0x8080e74</code></dd></dl>
 <h2>Regional Variants &amp; Revisions (Family <code>BXK</code>)</h2><ul><li><a href='BXKP-r0-4e4469abfe046cdb.html'>Castlevania Double Pack (Europe) (En,Fr,De)</a> (<code>BXKP</code>, 16 MiB)</li></ul>
 </main>

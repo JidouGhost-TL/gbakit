@@ -13,7 +13,13 @@
       <a href="../index.html">Games</a>
       <a href="../saves/index.html">Save Formats</a>
       <a href="../patches/index.html">Debug Patches</a>
+      <a href="../debug-menus.html">Debug Gallery</a>
+      <a href="../non-retail-cartridges.html">Non-Retail</a>
+      <a href="../cartridge-hardware.html">Cartridge Hardware</a>
+      <a href="../link-multiplayer.html">Link &amp; Multiplayer</a>
+      <a href="../multiboot-museum.html">MultiBoot Museum</a>
       <a href="../assets/index.html">Assets &amp; Audio</a>
+      <a href="../text-and-fonts.html">Text &amp; Fonts</a>
       <a href="../engines/index.html">Engines &amp; Hardware</a>
       <a href="../families/index.html">Families</a>
       <a href="../gbakit/index.html">Using gbakit</a>
@@ -22,7 +28,7 @@
   <main>
 <p class="meta"><a href="../index.html">&larr; Games</a> &middot; Family <code>APX</code></p>
 <h1>Crazy Chase (USA) (Beta)</h1>
-<p><span class='badge badge-slate'>EEPROM 4K</span> <span class='badge badge-emerald'>Save Format Mapped (Family Spec)</span></p>
+<p><span class='badge badge-slate'>EEPROM 4K</span> <span class='badge badge-emerald'>Save Format Mapped (Family Spec)</span> <a href='../link-multiplayer.html#multiboot'><span class='badge badge-amber'>💾 MultiBoot</span></a></p>
 
 <h2>Cartridge Identity</h2>
 <dl class="kv">
@@ -37,19 +43,36 @@
 
 
 
+
+
+<h2>Link Cable &amp; Multiplayer Communications</h2>
+<div class="callout">
+  This title contains detected communication capabilities: <a href='../link-multiplayer.html#multiboot'><span class='badge badge-amber'>💾 MultiBoot</span></a>.
+  Detailed protocol specifications, SIO registers, Joybus commands, and MultiBoot sequences are documented in the <a href="../link-multiplayer.html"><strong>Link &amp; Multiplayer Reference</strong></a>.
+</div>
+<dl class="kv">
+  <dt>Single-Cart MultiBoot</dt><dd>Single-Cartridge MultiBoot (Download Play) client/server handler &middot; Thumb SWI 0x25 (<code>0xDF25</code>): <code>0x0debd6</code>, <code>0x2e1c38</code>, <code>0x31e372</code>, <code>0x329d94</code></dd>
+</dl>
+
+
 <h2>Battery Save Format Specification (Family Shared)</h2>
 <div class="callout">
   This release shares its save architecture with canonical family reference <a href="../titles/APXP-r0-3e36612f1eaca467.html"><strong>Phalanx (Europe) (En,Fr,De,Es,It,Nl)</strong></a> (Family <code>APX</code>).
 </div>
 <p><a class='btn' href='../saves/APXP-r0-3e36612f1eaca467.html'>Open Family Save Format Spec (APXP)</a><a class='btn btn-secondary' href='../assets/formats/APXP-r0-3e36612f1eaca467/save-format.json' download>Download save-format.json</a></p>
 <dl class="kv">
-  <dt>Canonical Specification</dt><dd><code>APXP</code> &middot; <strong>9</strong> mapped fields &middot; <strong>0</strong> verified checksum(s) &middot; Confidence: <span class="badge badge-indigo">MEDIUM</span></dd>
+  <dt>Canonical Specification</dt><dd><code>APXP</code> &middot; <strong>9</strong> mapped fields &middot; <strong>1</strong> verified checksum(s) &middot; Confidence: <span class="badge badge-indigo">MEDIUM</span></dd>
   <dt>gbakit Built-In Support</dt><dd><span class="badge badge-emerald">Built-in (APXP)</span></dd>
 </dl>
 <pre><code>gbakit save verify APXP save.sav
 gbakit save decode APXP save.sav
 gbakit save fix    APXP damaged.sav -o repaired.sav</code></pre>
 
+
+
+
+<h2>Text, Fonts &amp; Scene Data</h2>
+<dl class="kv"><dt>Primary Text Encoding</dt><dd><strong>16-bit / UTF-16LE text · custom 1-byte charmap (base &#x27;A&#x27; = 0x40)</strong> (<code>27</code> ASCII strings &middot; <code>13</code> Shift-JIS runs)</dd><dt>Font &amp; VWF Indicators</dt><dd><span class='badge badge-emerald'>VWF Width Table</span> <span class='badge badge-blue'>1bpp Font</span> &middot; BIOS SWIs: BitUnPack <code>0x10</code>: <code>38</code> &middot; LZ77 <code>0x11/12</code>: <code>47</code> &middot; Huffman <code>0x13</code>: <code>18</code> &middot; RLE <code>0x14/15</code>: <code>80</code></dd><dt>Scene &amp; Packaging</dt><dd><code>11</code> ROM pointer tables (&ge;32 entries, <code>5</code> &ge;200) &middot; <code>0</code> relative <code>u32</code> TOCs &middot; <code>390</code> OAM metasprite hits</dd></dl>
 
 
 <h2>Hardware MMIO Subsystems</h2><dl class='kv'><dt><code>ppu_display</code></dt><dd><code>0x8008438</code>, <code>0x8008474</code>, <code>0x800a980</code>, <code>0x800aa68</code></dd></dl>

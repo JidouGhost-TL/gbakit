@@ -13,7 +13,13 @@
       <a href="../index.html">Games</a>
       <a href="../saves/index.html">Save Formats</a>
       <a href="../patches/index.html">Debug Patches</a>
+      <a href="../debug-menus.html">Debug Gallery</a>
+      <a href="../non-retail-cartridges.html">Non-Retail</a>
+      <a href="../cartridge-hardware.html">Cartridge Hardware</a>
+      <a href="../link-multiplayer.html">Link &amp; Multiplayer</a>
+      <a href="../multiboot-museum.html">MultiBoot Museum</a>
       <a href="../assets/index.html">Assets &amp; Audio</a>
+      <a href="../text-and-fonts.html">Text &amp; Fonts</a>
       <a href="../engines/index.html">Engines &amp; Hardware</a>
       <a href="../families/index.html">Families</a>
       <a href="../gbakit/index.html">Using gbakit</a>
@@ -22,7 +28,7 @@
   <main>
 <p class="meta"><a href="../index.html">&larr; Games</a> &middot; Family <code>BBY</code></p>
 <h1>Barnyard (Europe) (En,Fr,De,Es,It,Nl)</h1>
-<p><span class='badge badge-slate'>EEPROM 64K</span> <span class='badge badge-emerald'>Save Format Spec</span> <span class='badge badge-emerald'>gbakit Built-In</span></p>
+<p><span class='badge badge-slate'>EEPROM 64K</span> <span class='badge badge-emerald'>Save Format Spec</span> <span class='badge badge-emerald'>gbakit Built-In</span> <a href='../link-multiplayer.html#multiboot'><span class='badge badge-amber'>💾 MultiBoot</span></a></p>
 
 <h2>Cartridge Identity</h2>
 <dl class="kv">
@@ -35,6 +41,18 @@
   <dt>Engine / SDK Group</dt><dd><a href='../engines/index.html#comm-003'><code>comm-003</code></a> (128 families)</dd>
 </dl>
 <h2>Screenshots</h2><div class='gallery'><figure><img src='../assets/thumbs/BBYX-r0-6ff7310164563ca8-boot.png' alt='Boot Screen' loading='lazy'><figcaption>Boot Screen</figcaption></figure><figure><img src='../assets/thumbs/BBYX-r0-6ff7310164563ca8-loaded.png' alt='Loaded Save' loading='lazy'><figcaption>Loaded Save</figcaption></figure></div>
+
+
+
+
+<h2>Link Cable &amp; Multiplayer Communications</h2>
+<div class="callout">
+  This title contains detected communication capabilities: <a href='../link-multiplayer.html#multiboot'><span class='badge badge-amber'>💾 MultiBoot</span></a>.
+  Detailed protocol specifications, SIO registers, Joybus commands, and MultiBoot sequences are documented in the <a href="../link-multiplayer.html"><strong>Link &amp; Multiplayer Reference</strong></a>.
+</div>
+<dl class="kv">
+  <dt>Single-Cart MultiBoot</dt><dd>Single-Cartridge MultiBoot (Download Play) client/server handler &middot; Thumb SWI 0x25 (<code>0xDF25</code>): <code>0x0cc95a</code>, <code>0x0ef536</code>, <code>0x0fee60</code>, <code>0x112cb8</code></dd>
+</dl>
 
 
 <h2>Battery Save Format Specification</h2>
@@ -59,6 +77,11 @@ gbakit save fix    BBYX damaged.sav -o repaired.sav</code></pre>
   <dt>Candidate Checksum/Counter Spans</dt><dd><code>0x1988</code>, <code>0x198A–0x198B</code>, <code>0x1A06–0x1A07</code></dd>
   <dt>Integrity Check</dt><dd><span class='badge badge-emerald'>Confirmed</span> at <code>0x1988</code></dd>
 </dl>
+
+
+
+<h2>Text, Fonts &amp; Scene Data</h2>
+<dl class="kv"><dt>Primary Text Encoding</dt><dd><strong>Plain ASCII (uncompressed)</strong> (<code>123</code> ASCII strings)</dd><dt>Font &amp; VWF Indicators</dt><dd><span class='badge badge-emerald'>VWF Width Table</span> <span class='badge badge-blue'>1bpp Font</span> &middot; BIOS SWIs: BitUnPack <code>0x10</code>: <code>15</code> &middot; LZ77 <code>0x11/12</code>: <code>20</code> &middot; Huffman <code>0x13</code>: <code>9</code> &middot; RLE <code>0x14/15</code>: <code>23</code></dd><dt>Scene &amp; Packaging</dt><dd><code>42</code> ROM pointer tables (&ge;32 entries, <code>1</code> &ge;200) &middot; <code>114</code> relative <code>u32</code> TOCs &middot; <code>382</code> OAM metasprite hits</dd></dl>
 
 
 <h2>Hardware MMIO Subsystems</h2><dl class='kv'><dt><code>ppu_display</code></dt><dd><code>0x806efe0</code>, <code>0x8071764</code>, <code>0x8071818</code>, <code>0x80845e0</code></dd></dl>

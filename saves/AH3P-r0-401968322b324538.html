@@ -1,0 +1,233 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Hamtaro - Ham-Ham Heartbreak (Europe) (En,Fr,De,Es,It) Save Format — gbakit GBA Reference</title>
+  <link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+  <header>
+    <div class="brand"><a href="../index.html" style="color:inherit">gbakit GBA Reference <span class="badge badge-emerald">v2.0</span></a></div>
+    <nav>
+      <a href="../index.html">Games</a>
+      <a href="../saves/index.html">Save Formats</a>
+      <a href="../patches/index.html">Debug Patches</a>
+      <a href="../debug-menus.html">Debug Gallery</a>
+      <a href="../non-retail-cartridges.html">Non-Retail</a>
+      <a href="../cartridge-hardware.html">Cartridge Hardware</a>
+      <a href="../link-multiplayer.html">Link &amp; Multiplayer</a>
+      <a href="../multiboot-museum.html">MultiBoot Museum</a>
+      <a href="../assets/index.html">Assets &amp; Audio</a>
+      <a href="../text-and-fonts.html">Text &amp; Fonts</a>
+      <a href="../engines/index.html">Engines &amp; Hardware</a>
+      <a href="../families/index.html">Families</a>
+      <a href="../gbakit/index.html">Using gbakit</a>
+    </nav>
+  </header>
+  <main>
+<p class="meta"><a href="index.html">&larr; Save Formats</a> &middot; <a href="../titles/AH3P-r0-401968322b324538.html">Hamtaro - Ham-Ham Heartbreak (Europe) (En,Fr,De,Es,It)</a></p>
+<h1>Hamtaro - Ham-Ham Heartbreak (Europe) (En,Fr,De,Es,It) — Save Format Specification</h1>
+<p><span class="badge badge-indigo">Confidence: MEDIUM</span> <span class="badge badge-blue">11 Fields</span> <span class="badge badge-emerald">1 Verified Checksum(s)</span> <span class='badge badge-emerald'>gbakit Built-In</span></p>
+<p><a class='btn' href='../assets/saves/AH3P-r0-401968322b324538/AH3P-r0-401968322b324538.sav' download>Download Sample .sav (32,768 B)</a><a class='btn btn-secondary' href='../assets/formats/AH3P-r0-401968322b324538/save-format.json' download>Download save-format.json</a><a class='btn btn-secondary' href='../titles/AH3P-r0-401968322b324538.html'>View Game Page</a></p>
+
+<div class="callout">
+  <strong>Use directly with <code>gbakit</code> (built-in definition <code>AH3P</code>):</strong>
+  <pre><code>gbakit save verify AH3P save.sav
+gbakit save decode AH3P save.sav
+gbakit save fix    AH3P damaged.sav -o repaired.sav</code></pre>
+</div>
+
+<div class='md-body'>
+<h2>Clean-Room Save Format Report: Hamtaro - Ham-Ham Heartbreak (Europe) (En,Fr,De,Es,It) [AH3P]</h2>
+<p>Release key: <code>AH3P-r0-401968322b324538</code> ROM SHA-256: <code>401968322b3245381da64dab35bdaacb3f82a404425c584867f00c45e469ffd8</code></p>
+<p>All findings below are derived exclusively from <code>ghidra/decompiled.c</code>, <code>ghidra/callgraph.json</code>, <code>ghidra/save_related_functions.c</code>, the two real <code>.sav</code> files in <code>saves/</code>, and standard public GBA hardware facts (SRAM/Flash at <code>0x0E000000</code>, EEPROM via DMA3 <code>0x040000D4</code>, EWRAM <code>0x02000000</code>, IWRAM <code>0x03000000</code>). No third-party game-specific documentation was used.</p>
+<h2>1. Executive Summary &amp; Overall Confidence</h2>
+<p><strong>Overall confidence: MEDIUM-HIGH.</strong></p>
+<p>What was <strong>proven</strong> (code + byte-level cross-check, <code>CONFIRMED_VERIFIED</code>):</p>
+<ul><li>The save medium is plain <strong>SRAM</strong>, not Flash or EEPROM: the decompiled code never emits the</li></ul>
+<p>Flash <code>0x5555</code>/<code>0x2AAA</code> command-byte sequence and never touches the EEPROM DMA3 control register (<code>0x040000D4</code>); the only save-space literal present is the raw SRAM base <code>0xE000000</code> (<code>ghidra/decompiled.c:249,284</code>). This matches the packet&#x27;s declared <code>SRAM 256K</code> media.</p>
+<ul><li>The 32768-byte <code>.sav</code> file is a <strong>byte-exact duplication of two 16384-byte (<code>0x4000</code>) halves</strong>:</li></ul>
+<p><code>data[0:0x4000] == data[0x4000:0x8000]</code> holds for both sample files (verified in Python, see §2). This matches the dual-write loop in <code>FUN_0800078c</code> (<code>ghidra/decompiled.c:235-241</code>, <code>256-263</code>), which writes every byte to both <code>addr</code> and <code>addr+0x4000</code> in the same iteration.</p>
+<ul><li>A <strong>51-entry, 220-byte-stride (<code>0xDC</code>) record table</strong> occupies <code>0x142C..0x3FFF</code> (exactly ending</li></ul>
+<p>at the mirror boundary). Each record is an 8-byte header (<code>u32</code> payload length, <code>u8</code> table id, <code>u8</code> index, <code>u16</code> checksum) followed by a 128-byte payload. The checksum of <strong>all 51 records in both sample <code>.sav</code> files</strong> was independently recomputed in Python using the exact algorithm of <code>FUN_0800044c</code> and <strong>matched the stored value in all 102 cases (51 records × 2 files)</strong> — see §4 for the full verification run.</p>
+<ul><li>The literal ASCII header <code>&quot;HAMUTARO3\0\0\0AH3P&quot;</code> followed by a build-timestamp string</li></ul>
+<p>(<code>&quot;Apr 16 200319:20:08&quot;</code>) is present at offset <code>0x0000</code> in both sample files.</p>
+<p>What remains <strong>open / unresolved</strong> (<code>CONFIRMED_STATIC</code> or <code>HYPOTHESIS</code>):</p>
+<ul><li>The exact RAM/SRAM addresses behind most <code>_DAT_*</code> globals in <code>ghidra/decompiled.c</code> are not</li></ul>
+<p>resolved to numeric literals (Ghidra emitted them as unnamed data symbols with no accompanying symbol/map file in this workspace). This means several caller chains (table ids 1–3 written via the <em>same</em> checksum writer as table id 4, and the separate <code>FUN_080011b4</code> writer) are proven structurally in code but their <strong>destination offsets inside the real <code>.sav</code> could not be independently located/verified</strong> against the sample bytes.</p>
+<ul><li>The &quot;ten-plus&quot; small isolated byte/word regions outside the verified roster table</li></ul>
+<p>(<code>0xEE-0xF6</code>, <code>0x3E6-0x3E7</code>, <code>0x6B8-0x6C0</code>, <code>0xB84</code>, <code>0xD98-0xDA4</code>, <code>0xDC2-0xDCA</code>) look like plain gameplay counters/stats. None of them match the header shape (<code>len|tableid|idx|chk</code>) of the verified record format, and they are <strong>not</strong> demonstrably checksum-protected — this is consistent with the packet&#x27;s own cold-reload probe, which mutated offset <code>0x6BE</code> and recorded <code>&quot;reverted_to_blank_on_mutation&quot;: false&quot;</code> / <code>&quot;integrity_check_confirmed&quot;: false&quot;</code>.</p>
+<ul><li>A ROM-resident &quot;blank/default save&quot; template, and a corruption-recovery path that stamps an</li></ul>
+<p>ASCII <code>&quot;Clr&quot;</code> tag into a staging buffer, are visible in <code>FUN_0800078c</code> but were <strong>never exercised</strong> in either sample file (both samples already contain a valid primary save), so this path is <code>CONFIRMED_STATIC</code> only — not observed in practice.</p>
+<h2>2. Physical Media, Slot Geometry &amp; Redundancy</h2>
+<table><thead><tr><th>Property</th><th>Value</th><th>Confidence</th></tr></thead><tbody><tr><td>Media</td><td>SRAM, 256 Kbit (32768 bytes / <code>0x8000</code>)</td><td><code>CONFIRMED_VERIFIED</code> (file size + absence of Flash/EEPROM code)</td></tr><tr><td>SDK save tag in ROM</td><td>none detected</td><td><code>CONFIRMED_STATIC</code></td></tr><tr><td>Logical window size</td><td><code>0x4000</code> (16384 bytes)</td><td><code>CONFIRMED_VERIFIED</code></td></tr><tr><td>Redundancy</td><td>Two byte-identical 16KB halves: <code>[0x0000-0x3FFF]</code> and <code>[0x4000-0x7FFF]</code></td><td><code>CONFIRMED_VERIFIED</code></td></tr><tr><td>Generation/sequence counter</td><td>none found distinguishing the two halves</td><td><code>CONFIRMED_STATIC</code></td></tr><tr><td>Selection rule</td><td>None needed — the two halves are kept byte-identical by construction (every store in <code>FUN_0800078c</code>&#x27;s copy loops writes to <code>addr</code> and <code>addr+0x4000</code> in the same step); the game only ever <em>addresses</em> the low <code>0x0000-0x3FFF</code> window</td><td><code>CONFIRMED_VERIFIED</code>/<code>CONFIRMED_STATIC</code></td></tr></tbody></table>
+<p>Verification (Python, run against both sample files):</p>
+<pre><code>data = open(&#x27;saves/cap-00-future-0.sav&#x27;,&#x27;rb&#x27;).read()
+assert data[0:0x4000] == data[0x4000:0x8000]   # True for both cap-00 and cap-01
+assert len(data) == 0x8000</code></pre>
+<p>Both assertions hold for <code>saves/cap-00-future-0.sav</code> and <code>saves/cap-01-future-1.sav</code>.</p>
+<p>This mirrors the structure of <code>FUN_0800078c</code> (<code>ghidra/decompiled.c:234-316</code>, also extracted in <code>ghidra/save_related_functions.c:9-121</code>):</p>
+<pre><code>iVar12 = iRam08000814 + 0x4000;
+iVar9 = 0;
+do {
+  *(undefined1 *)(iVar10 + iVar9) = *(undefined1 *)(iVar9 + iVar7);
+  *(undefined1 *)(iVar12 + iVar9) = *(undefined1 *)(iVar9 + iVar7);   // same byte, +0x4000
+  iVar9 = iVar9 + 1;
+} while (iVar9 &lt; 0x10);</code></pre>
+<p>and again in the &quot;format blank save&quot; branch (<code>iVar6 = _DAT_0800095c + 0x4000</code>, same dual-store pattern, then flushed to SRAM <code>0x0E000000</code> via <code>func_0x080ec26c(iVar7, 0xe000000, 0x8000)</code>). The 51-record table independently confirms the <code>0x4000</code> boundary: <code>0x142C + 51*0xDC == 0x4000</code> exactly, i.e. the record table fills the live half right up to the mirror split.</p>
+<h2>3. Save Writer, Reader &amp; Caller-Chain Architecture</h2>
+<h3>3.1 Low-level hardware I/O</h3>
+<p>No Flash command bytes (<code>0x5555</code>/<code>0x2AAA</code>) or EEPROM DMA3 bitstream code were found anywhere in <code>ghidra/decompiled.c</code>. All save I/O is raw 8-bit SRAM byte load/store, consistent with the packet&#x27;s declared <code>SRAM 256K</code> media. The two primitives used throughout:</p>
+<ul><li><strong><code>FUN_080ec144</code></strong> (<code>0x080ec144</code>, <code>ghidra/decompiled.c:4892-4906</code>) — raw interrupt-masked byte</li></ul>
+<p>copy:</p>
+<pre><code>  void FUN_080ec144(undefined1 *param_1,undefined1 *param_2,int param_3)
+  {
+    *_DAT_080ec17c = *_DAT_080ec17c &amp; (ushort)_DAT_080ec180 | 3;  // disable IRQs (IME/IE-style)
+    while (param_3 = param_3 + -1, param_3 != -1) {
+      *param_2 = *param_1;
+      param_1 = param_1 + 1;
+      param_2 = param_2 + 1;
+    }
+  }</code></pre>
+<p>This is the actual SRAM <strong>write</strong> primitive: single-byte stores, exactly matching the GBA SRAM hardware requirement (8-bit bus only, no 16/32-bit or DMA access). It is only called from <code>FUN_0800078c</code> after a mismatch is detected (see 3.2), confirming it is the real &quot;commit to SRAM&quot; step, not a general-purpose memcpy used elsewhere in gameplay code. Role: <strong>write</strong>. Caller: <code>0x0800078c</code> (via <code>0x080ec26c</code>, see callgraph edge <code>080ec144 -&gt; callers: [080ec26c]</code>, <code>ghidra/callgraph.json</code>).</p>
+<ul><li><strong><code>func_0x080ec26c</code></strong> / <strong><code>func_0x080ec2b8</code></strong> — not present among the 126 decompiled bodies</li></ul>
+<p>(external/BIOS-adjacent runtime helpers); both are used exclusively as <strong>equality tests</strong> (callers test <code>== 0</code> for &quot;match&quot;) over fixed byte ranges (<code>0x10</code>, <code>0xDC+8</code>, <code>0x8000</code> bytes), matching the classic <code>memcmp</code>-style signature <code>(dst, src, len[, extra])</code>. <code>func_0x080ec26c</code> is additionally used as the <strong>write-verify retry gate</strong>: <code>FUN_0800078c</code>&#x27;s blank-format loop stages a full buffer, calls <code>func_0x080ec26c(iVar7, 0xe000000, 0x8000)</code> against the real SRAM base, and</p>
+<p><strong>loops again if the comparison fails</strong> (<code>} while (iVar7 != 0);</code>) — i.e. &quot;stage → commit via byte-copy loop → verify by comparing against <code>0xE000000</code> → retry until equal&quot;. Role: <strong>read</strong> (verification compare), <code>CONFIRMED_STATIC</code>.</p>
+<h3>3.2 Serialization / checksum routine</h3>
+<p><strong><code>FUN_0800044c</code></strong> (<code>0x0800044c</code>, <code>ghidra/decompiled.c:87-106</code>):</p>
+<pre><code>void FUN_0800044c(ushort *param_1,uint param_2)
+{
+  uint uVar1 = 0;
+  for (; 1 &lt; param_2; param_2 = param_2 - 2) {
+    uVar1 = uVar1 + *param_1;
+    param_1 = param_1 + 1;
+  }
+  if (param_2 != 0) {
+    uVar1 = uVar1 + (byte)*param_1;
+  }
+  uVar1 = (uVar1 &amp; _DAT_08000488) + (uVar1 &gt;&gt; 0x10);
+  /* tail-call via jump table */
+  return ~((uVar1 &amp; _DAT_08000488) + (uVar1 &gt;&gt; 0x10)) &amp; 0xffff;
+}</code></pre>
+<p>This is a classic <strong>Internet-checksum-style, one&#x27;s-complement 16-bit sum</strong>: sum the buffer as little-endian 16-bit words, fold any trailing odd byte in as a plain byte add, fold the 32-bit accumulator&#x27;s carry into the low 16 bits (twice), then return the bitwise complement masked to 16 bits. <code>_DAT_08000488</code> is <code>0xFFFF</code> in effect (standard carry-fold mask). Role: <strong>checksum</strong>, <code>CONFIRMED_VERIFIED</code> (byte-for-byte match against real <code>.sav</code> data, see §4).</p>
+<h3>3.3 Record writer &amp; full caller chain (table id 4 — &quot;roster&quot;, <code>CONFIRMED_VERIFIED</code>)</h3>
+<p><strong><code>FUN_08000ff4</code></strong> (<code>0x08000ff4</code>, <code>ghidra/decompiled.c:692-722</code>):</p>
+<pre><code>void FUN_08000ff4(int param_1,int param_2)
+{
+  iVar5 = param_1 * 4;
+  uVar2 = *(undefined4 *)(iVar5 + _DAT_0800107c);          // source length table
+  piVar3 = (int *)func_0x0800ae6c();                        // acquire record-build scratch buffer
+  iVar4 = func_0x080ec2b4(piVar3 + 2, param_2, ...);         // copy 128B payload into record+8
+  *piVar3 = iVar4;                                           // record+0 : payload length
+  *(char *)(piVar3 + 1) = (char)param_1;                     // record+4 : table id
+  *(char *)((int)piVar3 + 5) = (char)param_2;                // record+5 : record index
+  *(undefined2 *)((int)piVar3 + 6) = 0;                      // record+6 : zero checksum field
+  uVar1 = FUN_0800044c(piVar3, uVar2);                       // compute checksum over whole record
+  *(undefined2 *)((int)piVar3 + 6) = uVar1;                  // record+6 : store checksum
+  func_0x080ec26c(piVar3, dest_primary + param_2*0xdc, iVar4+8);   // mirror copy 1
+  func_0x080ec26c(piVar3, dest_backup  + param_2*0xdc, iVar4+8);   // mirror copy 2
+  func_0x0800af70(piVar3);                                   // release scratch buffer
+}</code></pre>
+<p>(full body: <code>ghidra/decompiled.c:697-721</code>)</p>
+<p>Full traced chain, <strong>every hop confirmed via <code>ghidra/callgraph.json</code> and manual read of <code>ghidra/decompiled.c</code></strong>:</p>
+<pre><code>0x08000984 (save-subsystem entry, gated by SWI-flag test FUN_08001458(5))
+  -&gt; 0x0800060c  (FUN_0800060c: clears/reinitializes a block of control-structure globals)
+  -&gt; 0x0800078c  (FUN_0800078c: top-level save flush / format-recovery)
+       -&gt; 0x08000ff4(1,0)   // singleton record, table id 1
+       -&gt; 0x08000ff4(2,0)   // singleton record, table id 2
+       -&gt; 0x08000ff4(3,0)   // singleton record, table id 3
+       -&gt; loop uVar11=0..0x32: 0x08000ff4(4, uVar11)   // 51 roster records, table id 4
+            -&gt; 0x0800044c   // checksum
+            -&gt; 0x080ec26c   // mirrored write (x2 destinations)
+       -&gt; 0x080ec26c(fully-staged buffer, 0xe000000, 0x8000)  // verify against real SRAM
+            -&gt; (loop retries whole stage/verify step while mismatched)</code></pre>
+<p><strong>How each caller mutates the in-RAM struct before flushing:</strong> <code>FUN_08000ff4</code> is the only function observed to populate the 8-byte record header + 128-byte payload (<code>piVar3</code>, a scratch buffer obtained from <code>func_0x0800ae6c</code>) before the checksum is computed and the record is copied out. The three <code>table id 1/2/3</code> singleton invocations execute the <em>same</em> code path with <code>param_2=0</code> fixed, so they are structurally proven writers but their destination tables (<code>_DAT_08001084</code>/<code>_DAT_08001088</code>-equivalent for those ids) are unresolved symbols in this workspace — their exact byte offsets in the real <code>.sav</code> were <strong>not</strong> independently located, so they remain <code>CONFIRMED_STATIC</code> rather than <code>CONFIRMED_VERIFIED</code>.</p>
+<p>A second, structurally similar writer, <strong><code>FUN_080011b4</code></strong> (<code>0x080011b4</code>, <code>ghidra/decompiled.c:731-800</code>), is called from <code>0x08000744</code> for parameters <code>2</code> and <code>3</code>. It also compares two backup candidates via <code>func_0x080ec2b8</code>/<code>FUN_0800044c</code> and copies the winner with <code>func_0x080ec2b4</code> (a plain, non-interrupt-masked copy, distinct from <code>FUN_080ec144</code>). Because it never references the literal SRAM base <code>0xE000000</code> internally, whether it participates in the <code>.sav</code> file at all (versus writing into an IWRAM/EWRAM-only shadow structure) is an</p>
+<p><strong>open question</strong> — see §6.</p>
+<h3>3.4 Format-recovery (&quot;Clr&quot; tag) path — <code>CONFIRMED_STATIC</code>, not observed in samples</h3>
+<p>The <code>else</code> branch of <code>FUN_0800078c</code> (triggered only when neither existing candidate backup compares equal — i.e. first boot or corrupted save) stages a fresh buffer and stamps the ASCII bytes <code>0x43,0x6c,0x72</code> (<code>&quot;Clr&quot;</code>) at buffer offset <code>+9</code> (and the mirrored <code>+0x4009</code>):</p>
+<pre><code>*(undefined1 *)(iVar7 + 9) = 0x43;    // &#x27;C&#x27;
+*(undefined1 *)(iVar7 + 0xa) = 0x6c;  // &#x27;l&#x27;
+*(undefined1 *)(iVar7 + 0xb) = 0x72;  // &#x27;r&#x27;</code></pre>
+<p>In both real sample files, bytes <code>0x0009-0x000B</code> are <code>00 00 00</code> (the three null bytes padding <code>&quot;HAMUTARO3&quot;</code> before <code>&quot;AH3P&quot;</code> begins at <code>0x0C</code>). This confirms the <code>&quot;Clr&quot;</code>-stamping path was</p>
+<p><strong>not</strong> exercised when either sample <code>.sav</code> was produced — both already carried a previously initialized, valid save, so the game took the &quot;compare existing candidates, pick a winner&quot; branch instead of the &quot;format blank&quot; branch. This is a correctly <code>CONFIRMED_STATIC</code> (code-proven) finding that is explicitly <strong>not</strong> corroborated by sample bytes, and should not be over-claimed.</p>
+<h2>4. Magic Signatures &amp; Checksum / Integrity Algorithm</h2>
+<h3>4.1 Magic / version string (<code>CONFIRMED_VERIFIED</code>)</h3>
+<p>Offset <code>0x0000</code>, both sample files, identical bytes:</p>
+<pre><code>000000: 48 41 4d 55 54 41 52 4f 33 00 00 00 41 48 33 50  HAMUTARO3...AH3P
+000010: 41 70 72 20 31 36 20 32 30 30 33 31 39 3a 32 30  Apr 16 200319:20
+000020: 3a 30 38 00 00 00 00 00 00 00 00 00 00 00 00 00  :08.............</code></pre>
+<p><code>&quot;HAMUTARO3&quot;</code> (9 bytes, NUL-padded to 12) is the internal title/series tag; <code>&quot;AH3P&quot;</code> (4 bytes) is the GBA header game code baked into the save as a cross-check; <code>&quot;Apr 16 200319:20:08&quot;</code> is a build/link timestamp string, almost certainly compiled into the ROM&#x27;s default/blank save template and copied verbatim the first time the save is initialized (the template source itself was not located among the 126 decompiled functions — Ghidra shows it only as an opaque <code>_DAT_*</code> pointer, consistent with it being <code>.rodata</code>, not disassembled code).</p>
+<p>No code in <code>ghidra/decompiled.c</code> was found to construct this string byte-by-byte; it is therefore <code>CONFIRMED_VERIFIED</code> as a static, invariant signature (proven identical across both samples) but its <em>writer function</em> is <code>HYPOTHESIS</code> (inferred to be a <code>memcpy</code> of a ROM-resident template, never isolated in the extracted function set).</p>
+<h3>4.2 Checksum algorithm — <code>CONFIRMED_VERIFIED</code></h3>
+<p>Algorithm: one&#x27;s-complement 16-bit checksum (see §3.2, <code>FUN_0800044c</code>). Covered range: the full record (8-byte header with the 2-byte checksum field temporarily zeroed, + 128-byte payload = 136 bytes), per record. Stored at: header offset <code>+6</code> (2 bytes, little-endian), inside each of the 51 roster records.</p>
+<p><strong>Python verification output</strong>, run against both real <code>.sav</code> files in <code>saves/</code>:</p>
+<pre><code>import struct
+
+def chk(buf):
+    u, n, i = 0, len(buf), 0
+    while n &gt; 1:
+        u += struct.unpack_from(&#x27;&lt;H&#x27;, buf, i)[0]
+        i += 2; n -= 2
+    if n != 0:
+        u += buf[i]
+    u = (u &amp; 0xffff) + (u &gt;&gt; 16)
+    u = (u &amp; 0xffff) + (u &gt;&gt; 16)
+    return (~u) &amp; 0xffff
+
+base, stride = 0x142C, 0xDC
+for fname in [&#x27;saves/cap-00-future-0.sav&#x27;, &#x27;saves/cap-01-future-1.sav&#x27;]:
+    data = open(fname, &#x27;rb&#x27;).read()
+    matches = 0
+    for idx in range(51):
+        off = base + idx * stride
+        rec = bytearray(data[off:off + 136])
+        stored = struct.unpack_from(&#x27;&lt;H&#x27;, rec, 6)[0]
+        rec[6] = rec[7] = 0
+        matches += (chk(bytes(rec)) == stored)
+    print(fname, &#x27;matches:&#x27;, matches, &#x27;/ 51&#x27;)</code></pre>
+<p><strong>Actual output:</strong></p>
+<pre><code>saves/cap-00-future-0.sav matches: 51 / 51
+saves/cap-01-future-1.sav matches: 51 / 51</code></pre>
+<p>Sample values (identical in both files, since none of these particular records mutated between captures):</p>
+<table><thead><tr><th>Record idx</th><th>Offset</th><th>Stored checksum</th><th>Computed checksum</th><th>Match</th></tr></thead><tbody><tr><td>0</td><td><code>0x142C</code></td><td><code>0x6DCA</code></td><td><code>0x6DCA</code></td><td>yes</td></tr><tr><td>1</td><td><code>0x1508</code></td><td><code>0xF575</code></td><td><code>0xF575</code></td><td>yes</td></tr><tr><td>49</td><td><code>0x3E48</code></td><td><code>0xC275</code></td><td><code>0xC275</code></td><td>yes</td></tr><tr><td>50</td><td><code>0x3F24</code></td><td><code>0xCD7A</code></td><td><code>0xCD7A</code></td><td>yes</td></tr></tbody></table>
+<p>All 51 records × 2 files = <strong>102/102 verified matches</strong>, with zero false positives/negatives.</p>
+<h2>5. Complete Field Map Table</h2>
+<table><thead><tr><th>Offset (hex)</th><th>Size</th><th>Type / Endianness</th><th>RAM Mirror Addr</th><th>Writers / Callers</th><th>Readers</th><th>Observed Values in <code>.sav</code></th><th>Confidence</th><th>How Mapped &amp; Updated</th></tr></thead><tbody><tr><td><code>0x0000</code></td><td>9</td><td>ASCII</td><td>unresolved (<code>_DAT_*</code>, likely ROM template)</td><td>inferred <code>memcpy</code> of boot template, invoked from <code>0x0800078c</code>&#x27;s blank-format path</td><td>boot-time validity compare (<code>0x080ec2b8</code>/<code>0x080ec26c</code>)</td><td><code>&quot;HAMUTARO3&quot;</code> (both files)</td><td><code>CONFIRMED_VERIFIED</code> (value) / <code>HYPOTHESIS</code> (writer)</td><td>Identical bytes in both real <code>.sav</code>; no byte-level writer isolated in decompiled set</td></tr><tr><td><code>0x0009-0x000B</code></td><td>3</td><td>padding / recovery tag</td><td>same template</td><td>only written as <code>&quot;Clr&quot;</code> (<code>0x43,0x6c,0x72</code>) on the <em>blank-format</em> path of <code>0x0800078c</code></td><td>—</td><td><code>00 00 00</code> in both samples</td><td><code>CONFIRMED_STATIC</code></td><td>Code-proven tag write, not exercised in either sample (both already have valid saves)</td></tr><tr><td><code>0x000C</code></td><td>4</td><td>ASCII</td><td>same template</td><td>same as above</td><td>header validity check at boot</td><td><code>&quot;AH3P&quot;</code></td><td><code>CONFIRMED_VERIFIED</code> (value) / <code>HYPOTHESIS</code> (writer)</td><td>Identical in both files; matches ROM header game code</td></tr><tr><td><code>0x0010-0x0023</code></td><td>20</td><td>ASCII</td><td>same template</td><td>same as above</td><td>—</td><td><code>&quot;Apr 16 200319:20:08&quot;</code></td><td><code>CONFIRMED_VERIFIED</code> (value) / <code>HYPOTHESIS</code> (writer)</td><td>Build/link timestamp string, identical both files</td></tr><tr><td><code>0x00EE-0x00EF</code></td><td>2</td><td><code>u16_le</code></td><td>unresolved</td><td>unresolved</td><td>unresolved</td><td><code>0x0395</code> (917) both files</td><td><code>HYPOTHESIS</code></td><td>Active, non-zero, stable across both captures; no checksum-record header shape nearby</td></tr><tr><td><code>0x00F2</code></td><td>1</td><td><code>u8</code></td><td>unresolved</td><td>unresolved</td><td>unresolved</td><td><code>0x01</code> both files</td><td><code>HYPOTHESIS</code></td><td>Stable flag/counter candidate</td></tr><tr><td><code>0x00F4-0x00F5</code></td><td>2</td><td><code>u16_le</code></td><td>unresolved</td><td>unresolved</td><td>unresolved</td><td><code>0xFC61</code> both files</td><td><code>HYPOTHESIS</code></td><td>Stable value, no evident checksum coverage</td></tr><tr><td><code>0x03E6-0x03E7</code></td><td>2</td><td><code>u16_le</code></td><td>unresolved</td><td>unresolved</td><td>unresolved</td><td><code>0x0008</code> (8) both files</td><td><code>HYPOTHESIS</code></td><td>Small stable counter (e.g. progress/day count); unverified semantics</td></tr><tr><td><code>0x040E-0x042D</code></td><td>32</td><td><code>bytes</code> (fill <code>0xFF</code>)</td><td>unresolved</td><td>unresolved</td><td>unresolved</td><td>all <code>0xFF</code> both files</td><td><code>HYPOTHESIS</code></td><td><code>0xFF</code>-filled span inside an otherwise <code>0x00</code>-filled file — likely an &quot;empty slots&quot; sentinel array, not yet correlated to any writer</td></tr><tr><td><code>0x06B8-0x06B9</code></td><td>2</td><td><code>u16_le</code></td><td>unresolved</td><td>unresolved</td><td>unresolved</td><td><code>0x06EA</code> (1770) both files</td><td><code>HYPOTHESIS</code></td><td>Stable counter, e.g. elapsed frames/steps</td></tr><tr><td><code>0x06BC-0x06BD</code></td><td>2</td><td><code>u16_le</code></td><td>unresolved</td><td>unresolved</td><td>unresolved</td><td><code>0x0002</code> both files</td><td><code>HYPOTHESIS</code></td><td>Stable small counter</td></tr><tr><td><code>0x06BE</code></td><td>1</td><td><code>u8</code></td><td>unresolved</td><td>unresolved</td><td>unresolved</td><td><code>0xF7</code> (cap-00) -&gt; <code>0xF6</code> (cap-01), delta -1</td><td><code>HYPOTHESIS</code></td><td>Only byte (besides <code>0xB84</code>) that mutated between the two real-world captures; not checksum-protected per packet&#x27;s own mutation probe (no revert-to-blank observed)</td></tr><tr><td><code>0x0B84</code></td><td>1</td><td><code>u8</code></td><td>unresolved</td><td>unresolved</td><td>unresolved</td><td><code>0x00</code> (cap-00) -&gt; <code>0x01</code> (cap-01), delta +1</td><td><code>HYPOTHESIS</code></td><td>Only other byte that mutated; plausible day/step counter companion to <code>0x06BE</code></td></tr><tr><td><code>0x0D98-0x0DA3</code></td><td>12</td><td><code>bytes</code>/mixed</td><td>unresolved</td><td>unresolved</td><td>unresolved</td><td>includes ASCII-looking <code>63 6a 2e 2f</code> (<code>&quot;cj./&quot;</code>)</td><td><code>HYPOTHESIS</code></td><td>Likely obfuscated/packed data (not valid ASCII text), not further decoded</td></tr><tr><td><code>0x0DC2-0x0DC9</code></td><td>8</td><td><code>u16_le</code> x4</td><td>unresolved</td><td>unresolved</td><td>unresolved</td><td><code>0x00FB</code>, <code>0x0003</code>, <code>0x027F</code> plausible stat/currency fields</td><td><code>HYPOTHESIS</code></td><td>Plain counters, no header shape, not checksum-covered</td></tr><tr><td><code>0x0DEB-0x0EC5</code></td><td>218</td><td><code>bytes</code> (bitflags array, mostly <code>0xFF</code>-filled with scattered small u32 values <code>0x07/0x0F/0x1F/0x3F/0x7F</code>)</td><td>unresolved</td><td>unresolved</td><td>unresolved</td><td>see §raw dump</td><td><code>HYPOTHESIS</code></td><td>Shape (power-of-two-minus-one small values, <code>0xFF</code> elsewhere) suggests an item/event bitmask table; does not match the 8-byte checksummed-record header pattern</td></tr><tr><td><strong><code>0x142C-0x3FFF</code></strong></td><td><strong>51 x 220 (0xDC)</strong></td><td><strong>struct array</strong></td><td>unresolved (RAM scratch via <code>func_0x0800ae6c</code>)</td><td><strong><code>0x08000ff4</code></strong>, called from <strong><code>0x0800078c</code></strong> loop <code>uVar11=0..0x32</code> with <code>param_1=4</code></td><td>boot-time integrity re-check path (not isolated)</td><td>see sub-rows below</td><td><code>CONFIRMED_VERIFIED</code></td><td>Stride and checksum independently re-derived and verified against both real files (§4.2)</td></tr><tr><td>&amp;nbsp;&amp;nbsp;<code>+0x00</code></td><td>4</td><td><code>u32_le</code></td><td>—</td><td><code>0x08000ff4</code></td><td>—</td><td><code>128</code> (constant, all 51 records, both files)</td><td><code>CONFIRMED_VERIFIED</code></td><td>Payload length field; constant because every roster record copies a fixed 128-byte struct</td></tr><tr><td>&amp;nbsp;&amp;nbsp;<code>+0x04</code></td><td>1</td><td><code>u8</code></td><td>—</td><td><code>0x08000ff4</code> (<code>param_1</code>)</td><td>—</td><td><code>4</code> (constant)</td><td><code>CONFIRMED_VERIFIED</code></td><td>Table/category id, matches the <code>FUN_08000ff4(4, idx)</code> call site</td></tr><tr><td>&amp;nbsp;&amp;nbsp;<code>+0x05</code></td><td>1</td><td><code>u8</code></td><td>—</td><td><code>0x08000ff4</code> (<code>param_2</code>)</td><td>—</td><td><code>0..50</code>, matches record index exactly</td><td><code>CONFIRMED_VERIFIED</code></td><td>Index within the 51-slot array, verified to equal <code>(offset - 0x142C) / 0xDC</code> for every record</td></tr><tr><td>&amp;nbsp;&amp;nbsp;<code>+0x06</code></td><td>2</td><td><code>u16_le</code></td><td>—</td><td><code>0x0800044c</code> (checksum)</td><td>boot-time compare</td><td>varies per record, matches computed value in all 51/51 records x 2 files</td><td><code>CONFIRMED_VERIFIED</code></td><td>§4.2</td></tr><tr><td>&amp;nbsp;&amp;nbsp;<code>+0x08..+0x87</code></td><td>128</td><td><code>bytes</code> (per-&quot;Ham-Ham&quot; record payload, unmapped sub-fields)</td><td>—</td><td><code>func_0x080ec2b4</code> copy inside <code>0x08000ff4</code></td><td>—</td><td>varies; byte <code>+0x08</code> is always <code>0x80</code>, byte <code>+0x0D</code> carries a small incrementing-by-slot value in some records</td><td><code>HYPOTHESIS</code></td><td>Payload internal layout (presumably per-character stats/flags) not further decoded in this pass; only the record <em>envelope</em> is proven</td></tr></tbody></table>
+<h2>6. Save Fuzzing &amp; Counterfactual Verification Plan</h2>
+<p>All mutations below should be applied to a copy of a paired <code>.ss</code>-backed <code>.sav</code> (none are currently present in <code>states/</code> for this legacy checkpoint cohort — this plan assumes future captures will include paired pre/post save states), then reloaded and observed in mGBA.</p>
+<ol><li><strong>Checksum-protected roster record tamper (predicts rejection/repair).</strong></li></ol>
+<ul><li>Mutate one byte inside a roster record payload, e.g. <code>0x142C + 0x08</code> (record 0, payload byte</li></ul>
+<p>0), leaving the stored checksum at <code>0x142C+0x06</code> unchanged.</p>
+<ul><li><strong>Prediction:</strong> if the game actually validates this checksum at load (not yet observed —</li></ul>
+<p>only inferred from the write-side code), the record should either be treated as corrupt (reset to a default &quot;Ham-Ham&quot; state) or silently ignored; if the game does <em>not</em> validate on load, the tampered byte should persist and manifest as a visibly wrong hamster stat/name/location in-game.</p>
+<ul><li><strong>Required checksum repair (counterfactual control):</strong> recompute via the exact <code>FUN_0800044c</code></li></ul>
+<p>algorithm (§4.2) over the 136-byte record with the checksum field zeroed, write the result at <code>+0x06</code>, and verify the <em>same</em> mutated payload byte is now accepted without any fallback/reset behavior — isolating &quot;checksum enforced&quot; from &quot;byte simply unused&quot;.</p>
+<ul><li>Repeat identically on the mirrored copy at <code>offset + 0x4000</code> to rule out the mirror being</li></ul>
+<p>used as the authoritative copy during a mismatch.</p>
+<ol><li><strong>Mirror-desync fuzz (tests redundancy/selection logic).</strong></li></ol>
+<ul><li>Flip one bit at <code>0x142C+0x08</code> but leave <code>0x542C+0x08</code> (the <code>+0x4000</code> mirror) untouched,</li></ul>
+<p>producing a deliberately desynchronized pair.</p>
+<ul><li><strong>Prediction:</strong> per §2, no generation counter was found, so the expected outcome is that the</li></ul>
+<p>game either (a) silently uses the primary <code>0x0000</code>-based window and never notices the mismatch until the next save-and-mirror cycle overwrites it again, or (b) a comparison path we have not yet located detects the mismatch and triggers the <code>0x0800078c</code> &quot;format blank&quot; branch. Observing which outcome occurs will resolve the current open question in §3.1/3.4.</p>
+<ol><li><strong>Non-record counter tamper (<code>0x06BE</code>, <code>0x0B84</code>).</strong></li></ol>
+<ul><li>Decrement/increment <code>0x06BE</code> and <code>0x0B84</code> independently (not in the observed lockstep of</li></ul>
+<p>-1/+1) and reload.</p>
+<ul><li><strong>Prediction:</strong> since the packet&#x27;s own cold-reload probe already found</li></ul>
+<p><code>&quot;reverted_to_blank_on_mutation&quot;: false&quot;</code> for <code>0x06BE</code>, no corruption-recovery behavior is expected; the counterfactual to test is whether the <em>visible</em> game state (e.g. an on-screen day counter, hunger/step meter) changes proportionally — this would confirm the field&#x27;s semantic meaning, which is currently only <code>HYPOTHESIS</code>.</p>
+<ol><li><strong>Blank-format path trigger (tests the never-observed <code>&quot;Clr&quot;</code> tag, §3.4).</strong></li></ol>
+<ul><li>Corrupt both mirror halves identically (so the primary/backup equality compare in</li></ul>
+<p><code>FUN_0800078c</code> fails for all three candidate sources) by, e.g., zeroing bytes <code>0x0000-0x0023</code> in both the <code>0x0000</code> and <code>0x4000</code> copies.</p>
+<ul><li><strong>Prediction:</strong> this should force the game down the previously-unexercised blank-format</li></ul>
+<p>branch, and the resulting fresh save should show the <code>&quot;Clr&quot;</code> tag at offset <code>0x0009-0x000B</code> and a freshly-rebuilt header/roster table — directly confirming or refuting §3.4&#x27;s <code>CONFIRMED_STATIC</code> hypothesis with real bytes for the first time.</p>
+<ol><li><strong>Fresh-vs-restore matched-duration control.</strong></li></ol>
+<ul><li>Run two otherwise-identical sessions of equal frame length, one starting from a fresh/blank</li></ul>
+<p>save and one restoring the existing <code>cap-00</code>/<code>cap-01</code> save, mutating nothing. Diff the resulting <code>.sav</code> files byte-for-byte against each other and against the two provided samples.</p>
+<ul><li><strong>Prediction:</strong> only the already-identified mutating bytes (<code>0x06BE</code>, <code>0x0B84</code>, and their</li></ul>
+<p><code>+0x4000</code> mirrors) and any newly-identified time/step counters should differ; any additional byte-level divergence is a signal of an unmapped field worth a follow-up targeted mutation test.</p>
+</div>
+</main>
+  <footer>gbakit GBA Format Reference &middot; <a href="https://github.com/JidouGhost-TL/gbakit">GitHub: JidouGhost-TL/gbakit</a> &middot; Clean-room GBA binary format specs &amp; Rust toolkit.</footer>
+</body>
+</html>

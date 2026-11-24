@@ -13,7 +13,13 @@
       <a href="../index.html">Games</a>
       <a href="../saves/index.html">Save Formats</a>
       <a href="../patches/index.html">Debug Patches</a>
+      <a href="../debug-menus.html">Debug Gallery</a>
+      <a href="../non-retail-cartridges.html">Non-Retail</a>
+      <a href="../cartridge-hardware.html">Cartridge Hardware</a>
+      <a href="../link-multiplayer.html">Link &amp; Multiplayer</a>
+      <a href="../multiboot-museum.html">MultiBoot Museum</a>
       <a href="../assets/index.html">Assets &amp; Audio</a>
+      <a href="../text-and-fonts.html">Text &amp; Fonts</a>
       <a href="../engines/index.html">Engines &amp; Hardware</a>
       <a href="../families/index.html">Families</a>
       <a href="../gbakit/index.html">Using gbakit</a>
@@ -22,7 +28,7 @@
   <main>
 <p class="meta"><a href="../index.html">&larr; Games</a> &middot; Family <code>ARE</code></p>
 <h1>Megaman - Battle Network (USA) (Virtual Console)</h1>
-<p><span class='badge badge-slate'>SRAM 256K</span></p>
+<p><span class='badge badge-slate'>SRAM 256K</span> <span class='badge badge-emerald'>gbakit Built-In</span> <a href='../link-multiplayer.html#multiboot'><span class='badge badge-amber'>💾 MultiBoot</span></a> <a href='../link-multiplayer.html#sio-multi'><span class='badge badge-blue'>🎮 4P Link</span></a></p>
 
 <h2>Cartridge Identity</h2>
 <dl class="kv">
@@ -38,7 +44,36 @@
 
 
 
+
+<h2>Link Cable &amp; Multiplayer Communications</h2>
+<div class="callout">
+  This title contains detected communication capabilities: <a href='../link-multiplayer.html#multiboot'><span class='badge badge-amber'>💾 MultiBoot</span></a> <a href='../link-multiplayer.html#sio-multi'><span class='badge badge-blue'>🎮 4P Link</span></a>.
+  Detailed protocol specifications, SIO registers, Joybus commands, and MultiBoot sequences are documented in the <a href="../link-multiplayer.html"><strong>Link &amp; Multiplayer Reference</strong></a>.
+</div>
+<dl class="kv">
+  <dt>Multi-Player SIO (4P)</dt><dd>16-bit ring network &middot; SIOCNT (<code>0x04000128</code>) literals: <code>0x002c5c</code>, <code>0x01da8c</code>, <code>0x09bdd4</code> &middot; SIODATA32/SIOMULTI0 (<code>0x04000120</code>) literals: <code>0x180c4c</code>, <code>0x181224</code></dd><dt>Single-Cart MultiBoot</dt><dd>Single-Cartridge MultiBoot (Download Play) client/server handler &middot; Thumb SWI 0x25 (<code>0xDF25</code>): <code>0x003878</code>, <code>0x09e4a0</code>, <code>0x10b2d8</code>, <code>0x11766c</code></dd>
+</dl>
+
+
+<h2>Battery Save Support in <code>gbakit</code></h2>
+<p><span class="badge badge-emerald">Built-in definition (AREE)</span></p>
+<pre><code>gbakit save verify AREE save.sav
+gbakit save decode AREE save.sav
+gbakit save fix    AREE damaged.sav -o repaired.sav</code></pre>
+
+
 <h2>ROM Assets, Compression &amp; Audio</h2><dl class='kv'><dt>BIOS Compression</dt><dd>LZ77 (<code>0x10</code>): <strong>486</strong> streams &middot; RLE (<code>0x30</code>): <strong>1</strong> streams</dd><dt>ROM Pointer Tables</dt><dd>229 tables (1 pointing to validated compressed streams)</dd><dt>SDK Backup Tags</dt><dd><code>SRAM_V112</code></dd></dl>
+
+<h2>Text, Fonts &amp; Scene Data</h2>
+<dl class="kv"><dt>Primary Text Encoding</dt><dd><strong>16-bit / UTF-16LE text · custom 1-byte charmap (base &#x27;A&#x27; = 0x79)</strong> (<code>1</code> ASCII strings &middot; <code>7</code> Shift-JIS runs)</dd><dt>Font &amp; VWF Indicators</dt><dd><span class='badge badge-emerald'>VWF Width Table</span> <span class='badge badge-blue'>1bpp Font</span> &middot; BIOS SWIs: BitUnPack <code>0x10</code>: <code>10</code> &middot; LZ77 <code>0x11/12</code>: <code>9</code> &middot; Huffman <code>0x13</code>: <code>10</code> &middot; RLE <code>0x14/15</code>: <code>12</code></dd><dt>Scene &amp; Packaging</dt><dd><code>38</code> ROM pointer tables (&ge;32 entries, <code>2</code> &ge;200) &middot; <code>5</code> relative <code>u32</code> TOCs &middot; <code>220</code> OAM metasprite hits</dd></dl>
+
+<div class="callout">
+  <strong>Verified Deep-Dive Offsets &amp; Notes</strong> (Capcom &middot; Action-RPG) &mdash;
+  see the <a href="../text-and-fonts.html"><strong>GBA Text &amp; Fonts Guide</strong></a> for VWF, charmap, and <code>gbakit text</code> workflows.
+</div>
+<dl class="kv"><dt>Verified Text Encoding</dt><dd>Custom 1-byte charmap (0x00=&#x27; &#x27;, 0x5F=&#x27;A&#x27;, 0x79=&#x27;a&#x27;) + inline script VM opcodes (0xE5..0xFF: 0xE8=NL, 0xEB=wait, 0xEE=portrait)</dd><dt>Sample Text Offset</dt><dd><code>0x6D0FC0</code></dd><dt>Sample Decoded Text</dt><dd><code>The virus that&lt;E5&gt;&lt;0A&gt;s&lt;E8&gt;causing all this&lt;E8&gt;should be close&lt;E5&gt; &lt;EE&gt;&lt;01&gt;&lt;EB&gt;&lt;E9&gt;  &lt;EE&gt;&lt;02&gt;Mega</code></dd></dl>
+
+
 
 <h2>Regional Variants &amp; Revisions (Family <code>ARE</code>)</h2><ul><li><a href='AREJ-r0-5a453d04c8928d0e.html'>Battle Network - Rockman EXE (Japan)</a> (<code>AREJ</code>, 8 MiB)</li><li><a href='AREJ-r0-73b74911e1ff4d76.html'>Battle Network - Rockman EXE (Japan) (Virtual Console)</a> (<code>AREJ</code>, 8 MiB)</li><li><a href='AREP-r0-b8ddb8e0b334c944.html'>Megaman - Battle Network (Europe)</a> (<code>AREP</code>, 8 MiB)</li><li><a href='AREP-r0-40387bab28c2dfa3.html'>Megaman - Battle Network (Europe) (Virtual Console)</a> (<code>AREP</code>, 8 MiB)</li><li><a href='AREE-r0-87bc7257f2f9ed0a.html'>Megaman - Battle Network (USA)</a> (<code>AREE</code>, 8 MiB)</li></ul>
 </main>

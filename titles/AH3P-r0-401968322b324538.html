@@ -13,7 +13,13 @@
       <a href="../index.html">Games</a>
       <a href="../saves/index.html">Save Formats</a>
       <a href="../patches/index.html">Debug Patches</a>
+      <a href="../debug-menus.html">Debug Gallery</a>
+      <a href="../non-retail-cartridges.html">Non-Retail</a>
+      <a href="../cartridge-hardware.html">Cartridge Hardware</a>
+      <a href="../link-multiplayer.html">Link &amp; Multiplayer</a>
+      <a href="../multiboot-museum.html">MultiBoot Museum</a>
       <a href="../assets/index.html">Assets &amp; Audio</a>
+      <a href="../text-and-fonts.html">Text &amp; Fonts</a>
       <a href="../engines/index.html">Engines &amp; Hardware</a>
       <a href="../families/index.html">Families</a>
       <a href="../gbakit/index.html">Using gbakit</a>
@@ -22,7 +28,7 @@
   <main>
 <p class="meta"><a href="../index.html">&larr; Games</a> &middot; Family <code>AH3</code></p>
 <h1>Hamtaro - Ham-Ham Heartbreak (Europe) (En,Fr,De,Es,It)</h1>
-<p><span class='badge badge-slate'>SRAM 256K</span></p>
+<p><span class='badge badge-slate'>SRAM 256K</span> <span class='badge badge-emerald'>Save Format Spec</span> <span class='badge badge-emerald'>gbakit Built-In</span> <a href='../link-multiplayer.html#multiboot'><span class='badge badge-amber'>💾 MultiBoot</span></a> <a href='../link-multiplayer.html#sio-multi'><span class='badge badge-blue'>🎮 4P Link</span></a></p>
 
 <h2>Cartridge Identity</h2>
 <dl class="kv">
@@ -38,6 +44,30 @@
 
 
 
+
+<h2>Link Cable &amp; Multiplayer Communications</h2>
+<div class="callout">
+  This title contains detected communication capabilities: <a href='../link-multiplayer.html#multiboot'><span class='badge badge-amber'>💾 MultiBoot</span></a> <a href='../link-multiplayer.html#sio-multi'><span class='badge badge-blue'>🎮 4P Link</span></a>.
+  Detailed protocol specifications, SIO registers, Joybus commands, and MultiBoot sequences are documented in the <a href="../link-multiplayer.html"><strong>Link &amp; Multiplayer Reference</strong></a>.
+</div>
+<dl class="kv">
+  <dt>Multi-Player SIO (4P)</dt><dd>16-bit ring network &middot; SIOCNT (<code>0x04000128</code>) literals: <code>0x011198</code>, <code>0x0111cc</code>, <code>0x011460</code> &middot; SIODATA32/SIOMULTI0 (<code>0x04000120</code>) literals: <code>0x011458</code></dd><dt>Single-Cart MultiBoot</dt><dd>Single-Cartridge MultiBoot (Download Play) client/server handler &middot; Thumb SWI 0x25 (<code>0xDF25</code>): <code>0x27ca30</code>, <code>0x2ab664</code>, <code>0x2c2e2e</code>, <code>0x30ff20</code></dd>
+</dl>
+
+
+<h2>Battery Save Format Specification</h2>
+<p><a class='btn' href='../saves/AH3P-r0-401968322b324538.html'>Open Full Save Format Spec</a><a class='btn btn-secondary' href='../assets/saves/AH3P-r0-401968322b324538/AH3P-r0-401968322b324538.sav' download>Download Sample .sav (32,768 B)</a><a class='btn btn-secondary' href='../assets/formats/AH3P-r0-401968322b324538/save-format.json' download>Download save-format.json</a></p>
+<p class='meta'>This specification also governs 3 regional editions &amp; revisions in Family <code>AH3</code>.</p>
+<dl class="kv">
+  <dt>Specification Coverage</dt><dd><strong>11</strong> mapped fields &middot; <strong>1</strong> verified checksum(s) &middot; Confidence: <span class="badge badge-indigo">MEDIUM</span></dd>
+  <dt>gbakit Built-In Support</dt><dd><span class="badge badge-emerald">Built-in (AH3P)</span></dd>
+  
+</dl>
+<pre><code>gbakit save verify AH3P save.sav
+gbakit save decode AH3P save.sav
+gbakit save fix    AH3P damaged.sav -o repaired.sav</code></pre>
+
+
 <h2>Observed Battery Save Layout</h2>
 <dl class="kv">
   <dt>Fill Byte &amp; Active Size</dt><dd><code>0x00</code> fill &middot; 2,424–2,426 / 32,768 B active (entropy 4.07 bits/B)</dd>
@@ -47,6 +77,11 @@
   <dt>Candidate Checksum/Counter Spans</dt><dd><code>0x6BE</code>, <code>0xB84</code>, <code>0x46BE</code>, <code>0x4B84</code></dd>
   
 </dl>
+
+
+
+<h2>Text, Fonts &amp; Scene Data</h2>
+<dl class="kv"><dt>Primary Text Encoding</dt><dd><strong>Compressed / custom-encoded text</strong> (<code>4</code> ASCII strings)</dd><dt>Font &amp; VWF Indicators</dt><dd><span class='badge badge-emerald'>VWF Width Table</span> <span class='badge badge-blue'>1bpp Font</span> &middot; BIOS SWIs: BitUnPack <code>0x10</code>: <code>60</code> &middot; LZ77 <code>0x11/12</code>: <code>57</code> &middot; Huffman <code>0x13</code>: <code>4</code> &middot; RLE <code>0x14/15</code>: <code>7</code></dd><dt>Scene &amp; Packaging</dt><dd><code>57</code> ROM pointer tables (&ge;32 entries, <code>6</code> &ge;200) &middot; <code>0</code> relative <code>u32</code> TOCs &middot; <code>228</code> OAM metasprite hits</dd></dl>
 
 
 <h2>Hardware MMIO Subsystems</h2><dl class='kv'><dt><code>ppu_display</code></dt><dd><code>0x8009da0</code>, <code>0x800a44c</code>, <code>0x800a8ac</code></dd><dt><code>save_bus_sram_flash</code></dt><dd><code>0x800078c</code></dd></dl>

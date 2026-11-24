@@ -13,7 +13,13 @@
       <a href="../index.html">Games</a>
       <a href="../saves/index.html">Save Formats</a>
       <a href="../patches/index.html">Debug Patches</a>
+      <a href="../debug-menus.html">Debug Gallery</a>
+      <a href="../non-retail-cartridges.html">Non-Retail</a>
+      <a href="../cartridge-hardware.html">Cartridge Hardware</a>
+      <a href="../link-multiplayer.html">Link &amp; Multiplayer</a>
+      <a href="../multiboot-museum.html">MultiBoot Museum</a>
       <a href="../assets/index.html">Assets &amp; Audio</a>
+      <a href="../text-and-fonts.html">Text &amp; Fonts</a>
       <a href="../engines/index.html">Engines &amp; Hardware</a>
       <a href="../families/index.html">Families</a>
       <a href="../gbakit/index.html">Using gbakit</a>
@@ -22,7 +28,7 @@
   <main>
 <p class="meta"><a href="../index.html">&larr; Games</a> &middot; Family <code>BRK</code></p>
 <h1>Megaman - Battle Network 5 - Team Colonel (USA)</h1>
-<p><span class='badge badge-slate'>SRAM 256K</span></p>
+<p><span class='badge badge-slate'>SRAM 256K</span> <span class='badge badge-emerald'>gbakit Built-In</span> <a href='../patches/index.html#zero-patch-cheats'><span class='badge badge-purple'>🎮 Button Cheat</span></a> <a href='../link-multiplayer.html#multiboot'><span class='badge badge-amber'>💾 MultiBoot</span></a> <a href='../link-multiplayer.html#sio-multi'><span class='badge badge-blue'>🎮 4P Link</span></a> <a href='../link-multiplayer.html#wireless-rfu'><span class='badge badge-emerald'>📡 Wireless</span></a></p>
 
 <h2>Cartridge Identity</h2>
 <dl class="kv">
@@ -37,6 +43,45 @@
 
 
 
+<h2>Verified Button-Combo Cheat</h2>
+<div class="callout">
+  <strong>Zero-patch retail controller cheat (Wave 3):</strong> 4-way counterfactually verified in headless <code>libmgba</code>. See all verified titles in the <a href="../patches/index.html#zero-patch-cheats"><strong>Button-Combo Cheats Catalog</strong></a>.
+</div>
+<dl class="kv">
+  <dt>Effect</dt><dd>Hidden Controller Sequence Unlock (ROM table 0x08134834)</dd>
+  <dt>Button Sequence</dt><dd><code>A, B, SELECT, START, LEFT, RIGHT, UP, DOWN, L, R</code></dd>
+  <dt>Verification Verdict</dt><dd><span class='badge badge-emerald'>Visual + RAM Unique Reaction</span></dd>
+  <dt>Target RAM Address</dt><dd><code>0x03003151</code></dd>
+  <dt>ROM Table Address</dt><dd><code>0x08134834</code></dd>
+  <dt>Timing Protocol</dt><dd><code>boot=540f</code>, <code>hold=6f</code>, <code>release=6f</code>, <code>settle=60f</code></dd>
+  <dt>Activation Indicator</dt><dd>Headless libmgba 4-way counterfactual verified: unique 240x160 framebuffer and RAM/VRAM state transition distinct from control, wrong, and reversed inputs</dd>
+</dl>
+<pre><code>gbakit cheat verify BRKE</code></pre>
+<div class='gallery'><figure><img src='../assets/cheats/BRKE/control.png' alt='Before (Control)' loading='lazy'><figcaption>Before (Control)</figcaption></figure><figure><img src='../assets/cheats/BRKE/reaction.png' alt='After (Cheat Reaction)' loading='lazy'><figcaption>After (Cheat Reaction)</figcaption></figure></div>
+
+
+
+<h2>Link Cable &amp; Multiplayer Communications</h2>
+<div class="callout">
+  This title contains detected communication capabilities: <a href='../link-multiplayer.html#multiboot'><span class='badge badge-amber'>💾 MultiBoot</span></a> <a href='../link-multiplayer.html#sio-multi'><span class='badge badge-blue'>🎮 4P Link</span></a> <a href='../link-multiplayer.html#wireless-rfu'><span class='badge badge-emerald'>📡 Wireless</span></a>.
+  Detailed protocol specifications, SIO registers, Joybus commands, and MultiBoot sequences are documented in the <a href="../link-multiplayer.html"><strong>Link &amp; Multiplayer Reference</strong></a>.
+</div>
+<dl class="kv">
+  <dt>Multi-Player SIO (4P)</dt><dd>16-bit ring network &middot; SIOCNT (<code>0x04000128</code>) literals: <code>0x1431b0</code>, <code>0x143270</code>, <code>0x14340c</code> &middot; SIODATA32/SIOMULTI0 (<code>0x04000120</code>) literals: <code>0x14327c</code>, <code>0x143898</code>, <code>0x14398c</code></dd><dt>Nintendo Wireless Adapter</dt><dd>AGB-015 RFU driver signature <code>RFU_V1024</code> at offset <code>0x1bc670</code></dd><dt>Nintendo Wireless Adapter</dt><dd>AGB-015 RFU driver signature <code>RFU-MBOOT</code> at offset <code>0x1bc67c</code></dd><dt>Nintendo Wireless Adapter</dt><dd>AGB-015 RFU driver signature <code>NINTENDOSio32ID</code> at offset <code>0x1bc688</code></dd><dt>Single-Cart MultiBoot</dt><dd>Single-Cartridge MultiBoot (Download Play) client/server handler &middot; Thumb SWI 0x25 (<code>0xDF25</code>): <code>0x185406</code>, <code>0x185e52</code>, <code>0x1a4312</code>, <code>0x1b6cec</code> &middot; SDK signatures: <code>MBOOT</code> at <code>0x1bc680</code></dd>
+</dl>
+
+
+<h2>Battery Save Support in <code>gbakit</code></h2>
+<p><span class="badge badge-emerald">Built-in definition (BRKE)</span></p>
+<pre><code>gbakit save verify BRKE save.sav
+gbakit save decode BRKE save.sav
+gbakit save fix    BRKE damaged.sav -o repaired.sav</code></pre>
+
+
+
+
+<h2>Text, Fonts &amp; Scene Data</h2>
+<dl class="kv"><dt>Primary Text Encoding</dt><dd><strong>16-bit / UTF-16LE text · custom 1-byte charmap (base &#x27;A&#x27; = 0x26)</strong> (<code>4</code> ASCII strings &middot; <code>5</code> Shift-JIS runs)</dd><dt>Font &amp; VWF Indicators</dt><dd><span class='badge badge-emerald'>VWF Width Table</span> <span class='badge badge-blue'>1bpp Font</span> &middot; BIOS SWIs: BitUnPack <code>0x10</code>: <code>2</code> &middot; LZ77 <code>0x11/12</code>: <code>7</code> &middot; Huffman <code>0x13</code>: <code>4</code> &middot; RLE <code>0x14/15</code>: <code>9</code></dd><dt>Scene &amp; Packaging</dt><dd><code>71</code> ROM pointer tables (&ge;32 entries, <code>9</code> &ge;200) &middot; <code>33</code> relative <code>u32</code> TOCs &middot; <code>192</code> OAM metasprite hits</dd></dl>
 
 
 

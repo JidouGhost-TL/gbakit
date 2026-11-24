@@ -13,7 +13,13 @@
       <a href="../index.html">Games</a>
       <a href="../saves/index.html">Save Formats</a>
       <a href="../patches/index.html">Debug Patches</a>
+      <a href="../debug-menus.html">Debug Gallery</a>
+      <a href="../non-retail-cartridges.html">Non-Retail</a>
+      <a href="../cartridge-hardware.html">Cartridge Hardware</a>
+      <a href="../link-multiplayer.html">Link &amp; Multiplayer</a>
+      <a href="../multiboot-museum.html">MultiBoot Museum</a>
       <a href="../assets/index.html">Assets &amp; Audio</a>
+      <a href="../text-and-fonts.html">Text &amp; Fonts</a>
       <a href="../engines/index.html">Engines &amp; Hardware</a>
       <a href="../families/index.html">Families</a>
       <a href="../gbakit/index.html">Using gbakit</a>
@@ -22,7 +28,7 @@
   <main>
 <p class="meta"><a href="../index.html">&larr; Games</a> &middot; Family <code>BFD</code></p>
 <h1>Fruits Mura no Doubutsu-tachi (Japan) (Rev 2)</h1>
-<p><span class='badge badge-slate'>EEPROM 64K</span></p>
+<p><span class='badge badge-slate'>EEPROM 64K</span> <span class='badge badge-emerald'>gbakit Built-In</span> <a href='../patches/index.html#zero-patch-cheats'><span class='badge badge-purple'>🎮 Button Cheat</span></a> <a href='../link-multiplayer.html#multiboot'><span class='badge badge-amber'>💾 MultiBoot</span></a> <a href='../link-multiplayer.html#sio-multi'><span class='badge badge-blue'>🎮 4P Link</span></a></p>
 
 <h2>Cartridge Identity</h2>
 <dl class="kv">
@@ -37,6 +43,45 @@
 
 
 
+<h2>Verified Button-Combo Cheat</h2>
+<div class="callout">
+  <strong>Zero-patch retail controller cheat (Wave 3):</strong> 4-way counterfactually verified in headless <code>libmgba</code>. See all verified titles in the <a href="../patches/index.html#zero-patch-cheats"><strong>Button-Combo Cheats Catalog</strong></a>.
+</div>
+<dl class="kv">
+  <dt>Effect</dt><dd>Hidden Controller Sequence Unlock (ROM table 0x0829dd90)</dd>
+  <dt>Button Sequence</dt><dd><code>A, SELECT, RIGHT, UP, B, SELECT, START, LEFT, B, SELECT, START, LEFT</code></dd>
+  <dt>Verification Verdict</dt><dd><span class='badge badge-emerald'>Visual + RAM Unique Reaction</span></dd>
+  <dt>Target RAM Address</dt><dd><code>0x0300101D</code></dd>
+  <dt>ROM Table Address</dt><dd><code>0x0829dd90</code></dd>
+  <dt>Timing Protocol</dt><dd><code>boot=360f</code>, <code>hold=6f</code>, <code>release=6f</code>, <code>settle=60f</code></dd>
+  <dt>Activation Indicator</dt><dd>Headless libmgba 4-way counterfactual verified: unique 240x160 framebuffer and RAM/VRAM state transition distinct from control, wrong, and reversed inputs</dd>
+</dl>
+<pre><code>gbakit cheat verify BFDJ</code></pre>
+<div class='gallery'><figure><img src='../assets/cheats/BFDJ/control.png' alt='Before (Control)' loading='lazy'><figcaption>Before (Control)</figcaption></figure><figure><img src='../assets/cheats/BFDJ/reaction.png' alt='After (Cheat Reaction)' loading='lazy'><figcaption>After (Cheat Reaction)</figcaption></figure></div>
+
+
+
+<h2>Link Cable &amp; Multiplayer Communications</h2>
+<div class="callout">
+  This title contains detected communication capabilities: <a href='../link-multiplayer.html#multiboot'><span class='badge badge-amber'>💾 MultiBoot</span></a> <a href='../link-multiplayer.html#sio-multi'><span class='badge badge-blue'>🎮 4P Link</span></a>.
+  Detailed protocol specifications, SIO registers, Joybus commands, and MultiBoot sequences are documented in the <a href="../link-multiplayer.html"><strong>Link &amp; Multiplayer Reference</strong></a>.
+</div>
+<dl class="kv">
+  <dt>Multi-Player SIO (4P)</dt><dd>16-bit ring network &middot; SIOCNT (<code>0x04000128</code>) literals: <code>0x013470</code>, <code>0x020af0</code>, <code>0x020b70</code> &middot; SIODATA32/SIOMULTI0 (<code>0x04000120</code>) literals: <code>0x020db4</code></dd><dt>Single-Cart MultiBoot</dt><dd>Single-Cartridge MultiBoot (Download Play) client/server handler &middot; Thumb SWI 0x25 (<code>0xDF25</code>): <code>0x15f7d4</code>, <code>0x51df0a</code></dd>
+</dl>
+
+
+<h2>Battery Save Support in <code>gbakit</code></h2>
+<p><span class="badge badge-emerald">Built-in definition (BFDJ)</span></p>
+<pre><code>gbakit save verify BFDJ save.sav
+gbakit save decode BFDJ save.sav
+gbakit save fix    BFDJ damaged.sav -o repaired.sav</code></pre>
+
+
+
+
+<h2>Text, Fonts &amp; Scene Data</h2>
+<dl class="kv"><dt>Primary Text Encoding</dt><dd><strong>16-bit / UTF-16LE text</strong> (<code>15</code> ASCII strings &middot; <code>8</code> Shift-JIS runs)</dd><dt>Font &amp; VWF Indicators</dt><dd><span class='badge badge-emerald'>VWF Width Table</span> <span class='badge badge-blue'>1bpp Font</span> &middot; BIOS SWIs: BitUnPack <code>0x10</code>: <code>2</code> &middot; LZ77 <code>0x11/12</code>: <code>40</code> &middot; Huffman <code>0x13</code>: <code>3</code> &middot; RLE <code>0x14/15</code>: <code>0</code></dd><dt>Scene &amp; Packaging</dt><dd><code>113</code> ROM pointer tables (&ge;32 entries, <code>14</code> &ge;200) &middot; <code>3</code> relative <code>u32</code> TOCs &middot; <code>253</code> OAM metasprite hits</dd></dl>
 
 
 <h2>Hardware MMIO Subsystems</h2><dl class='kv'><dt><code>ppu_display</code></dt><dd><code>0x80020c8</code>, <code>0x8002114</code></dd></dl>

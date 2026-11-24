@@ -13,7 +13,13 @@
       <a href="../index.html">Games</a>
       <a href="../saves/index.html">Save Formats</a>
       <a href="../patches/index.html">Debug Patches</a>
+      <a href="../debug-menus.html">Debug Gallery</a>
+      <a href="../non-retail-cartridges.html">Non-Retail</a>
+      <a href="../cartridge-hardware.html">Cartridge Hardware</a>
+      <a href="../link-multiplayer.html">Link &amp; Multiplayer</a>
+      <a href="../multiboot-museum.html">MultiBoot Museum</a>
       <a href="../assets/index.html">Assets &amp; Audio</a>
+      <a href="../text-and-fonts.html">Text &amp; Fonts</a>
       <a href="../engines/index.html">Engines &amp; Hardware</a>
       <a href="../families/index.html">Families</a>
       <a href="../gbakit/index.html">Using gbakit</a>
@@ -22,7 +28,7 @@
   <main>
 <p class="meta"><a href="../index.html">&larr; Games</a> &middot; Family <code>AXS</code></p>
 <h1>ESPN X-Games Skateboarding (USA)</h1>
-<p><span class='badge badge-slate'>EEPROM 4K</span> <span class='badge badge-emerald'>Save Format Mapped (Family Spec)</span></p>
+<p><span class='badge badge-slate'>EEPROM 4K</span> <span class='badge badge-emerald'>Save Format Mapped (Family Spec)</span> <span class='badge badge-amber'>Debug Menu Patch</span> <a href='../link-multiplayer.html#multiboot'><span class='badge badge-amber'>💾 MultiBoot</span></a></p>
 
 <h2>Cartridge Identity</h2>
 <dl class="kv">
@@ -36,6 +42,27 @@
 </dl>
 
 
+<h2>Debug Menu Re-Enablement Patch (<code>.ips</code>)</h2>
+<p><a class="btn" href="../assets/patches/AXSE-r0-dda490a021f2e083/AXSE-debug.ips" download>Download AXSE-debug.ips (15 B IPS / 2 B delta)</a></p>
+<dl class="kv">
+  <dt>Hook Mechanism</dt><dd><code>jump_table_slot_swap</code> &middot; Redirect main state jump-table slot 2 at 0x00053c (0x08000598 -&gt; 0x080005d4) to boot directly into state 4 Developer Character/Trick Test mode (0x080173cc)</dd>
+  <dt>IPS SHA-256</dt><dd><code>27b52bfa274825d6581e5c96e0e3a6645a4f66240e77b4c423439033012e2e2d</code></dd>
+</dl>
+<pre><code>gbakit patch apply AXSE-debug.ips original.gba patched-debug.gba</code></pre>
+<div class='gallery'><figure><img src='../assets/patches/AXSE-r0-dda490a021f2e083/boot-patched.png' alt='Re-enabled debug menu' loading='lazy'><figcaption>Re-Enabled Debug Menu</figcaption></figure><figure><img src='../assets/patches/AXSE-r0-dda490a021f2e083/after-input.png' alt='Interactive debug menu navigation' loading='lazy'><figcaption>After D-Pad / A Input</figcaption></figure></div>
+
+
+
+
+<h2>Link Cable &amp; Multiplayer Communications</h2>
+<div class="callout">
+  This title contains detected communication capabilities: <a href='../link-multiplayer.html#multiboot'><span class='badge badge-amber'>💾 MultiBoot</span></a>.
+  Detailed protocol specifications, SIO registers, Joybus commands, and MultiBoot sequences are documented in the <a href="../link-multiplayer.html"><strong>Link &amp; Multiplayer Reference</strong></a>.
+</div>
+<dl class="kv">
+  <dt>Single-Cart MultiBoot</dt><dd>Single-Cartridge MultiBoot (Download Play) client/server handler &middot; Thumb SWI 0x25 (<code>0xDF25</code>): <code>0x0cd8c6</code>, <code>0x0fd1e2</code>, <code>0x0feeaa</code>, <code>0x103880</code> &middot; ARM SWI 0x25 (<code>0xEF000025</code>): <code>0x4b40b8</code>, <code>0x6394b8</code></dd>
+</dl>
+
 
 <h2>Battery Save Format Specification (Family Shared)</h2>
 <div class="callout">
@@ -43,7 +70,7 @@
 </div>
 <p><a class='btn' href='../saves/AXSP-r0-48a6a7bf74872ba1.html'>Open Family Save Format Spec (AXSP)</a><a class='btn btn-secondary' href='../assets/formats/AXSP-r0-48a6a7bf74872ba1/save-format.json' download>Download save-format.json</a></p>
 <dl class="kv">
-  <dt>Canonical Specification</dt><dd><code>AXSP</code> &middot; <strong>15</strong> mapped fields &middot; <strong>0</strong> verified checksum(s) &middot; Confidence: <span class="badge badge-indigo">MEDIUM</span></dd>
+  <dt>Canonical Specification</dt><dd><code>AXSP</code> &middot; <strong>15</strong> mapped fields &middot; <strong>2</strong> verified checksum(s) &middot; Confidence: <span class="badge badge-indigo">MEDIUM</span></dd>
   <dt>gbakit Built-In Support</dt><dd><span class="badge badge-emerald">Built-in (AXSP)</span></dd>
 </dl>
 <pre><code>gbakit save verify AXSP save.sav
@@ -52,6 +79,11 @@ gbakit save fix    AXSP damaged.sav -o repaired.sav</code></pre>
 
 
 <h2>ROM Assets, Compression &amp; Audio</h2><dl class='kv'><dt>BIOS Compression</dt><dd>LZ77 (<code>0x10</code>): <strong>0</strong> streams &middot; RLE (<code>0x30</code>): <strong>1</strong> streams</dd><dt>ROM Pointer Tables</dt><dd>849 tables (0 pointing to validated compressed streams)</dd><dt>SDK Backup Tags</dt><dd><code>EEPROM_V121</code></dd></dl>
+
+<h2>Text, Fonts &amp; Scene Data</h2>
+<dl class="kv"><dt>Primary Text Encoding</dt><dd><strong>16-bit / UTF-16LE text</strong> (<code>28</code> ASCII strings &middot; <code>2</code> Shift-JIS runs)</dd><dt>Font &amp; VWF Indicators</dt><dd><span class='badge badge-emerald'>VWF Width Table</span> <span class='badge badge-blue'>1bpp Font</span> &middot; BIOS SWIs: BitUnPack <code>0x10</code>: <code>7</code> &middot; LZ77 <code>0x11/12</code>: <code>15</code> &middot; Huffman <code>0x13</code>: <code>9</code> &middot; RLE <code>0x14/15</code>: <code>10</code></dd><dt>Scene &amp; Packaging</dt><dd><code>75</code> ROM pointer tables (&ge;32 entries, <code>3</code> &ge;200) &middot; <code>12</code> relative <code>u32</code> TOCs &middot; <code>463</code> OAM metasprite hits</dd></dl>
+
+
 <h2>Hardware MMIO Subsystems</h2><dl class='kv'><dt><code>ppu_display</code></dt><dd><code>0x8001354</code></dd></dl>
 <h2>Regional Variants &amp; Revisions (Family <code>AXS</code>)</h2><ul><li><a href='AXSP-r0-48a6a7bf74872ba1.html'>ESPN X-Games Skateboarding (Europe) (En,Fr,De,Es,It)</a> (<code>AXSP</code>, 8 MiB)</li><li><a href='AXSJ-r0-ee7fef3ad58bf5c9.html'>ESPN X-Games Skateboarding (Japan) (En)</a> (<code>AXSJ</code>, 8 MiB)</li></ul>
 </main>

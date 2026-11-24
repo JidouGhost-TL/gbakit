@@ -13,7 +13,13 @@
       <a href="../index.html">Games</a>
       <a href="../saves/index.html">Save Formats</a>
       <a href="../patches/index.html">Debug Patches</a>
+      <a href="../debug-menus.html">Debug Gallery</a>
+      <a href="../non-retail-cartridges.html">Non-Retail</a>
+      <a href="../cartridge-hardware.html">Cartridge Hardware</a>
+      <a href="../link-multiplayer.html">Link &amp; Multiplayer</a>
+      <a href="../multiboot-museum.html">MultiBoot Museum</a>
       <a href="../assets/index.html">Assets &amp; Audio</a>
+      <a href="../text-and-fonts.html">Text &amp; Fonts</a>
       <a href="../engines/index.html">Engines &amp; Hardware</a>
       <a href="../families/index.html">Families</a>
       <a href="../gbakit/index.html">Using gbakit</a>
@@ -22,7 +28,7 @@
   <main>
 <p class="meta"><a href="../index.html">&larr; Games</a> &middot; Family <code>B25</code></p>
 <h1>Scooby-Doo! - Unmasked (USA) (En,Fr)</h1>
-<p><span class='badge badge-zinc'>Stateless / Passcode</span></p>
+<p><span class='badge badge-zinc'>Stateless / Passcode</span> <a href='../link-multiplayer.html#joybus'><span class='badge badge-purple'>📺 Joybus</span></a> <a href='../link-multiplayer.html#multiboot'><span class='badge badge-amber'>💾 MultiBoot</span></a> <a href='../link-multiplayer.html#sio-multi'><span class='badge badge-blue'>🎮 4P Link</span></a></p>
 
 <h2>Cartridge Identity</h2>
 <dl class="kv">
@@ -37,6 +43,18 @@
 <h2>Screenshots</h2><div class='gallery'><figure><img src='../assets/thumbs/B25E-r0-841cfc2e5bd6ba40-boot.png' alt='Boot Screen' loading='lazy'><figcaption>Boot Screen</figcaption></figure><figure><img src='../assets/thumbs/B25E-r0-841cfc2e5bd6ba40-after.png' alt='In-Game' loading='lazy'><figcaption>In-Game</figcaption></figure></div>
 
 
+
+
+<h2>Link Cable &amp; Multiplayer Communications</h2>
+<div class="callout">
+  This title contains detected communication capabilities: <a href='../link-multiplayer.html#joybus'><span class='badge badge-purple'>📺 Joybus</span></a> <a href='../link-multiplayer.html#multiboot'><span class='badge badge-amber'>💾 MultiBoot</span></a> <a href='../link-multiplayer.html#sio-multi'><span class='badge badge-blue'>🎮 4P Link</span></a>.
+  Detailed protocol specifications, SIO registers, Joybus commands, and MultiBoot sequences are documented in the <a href="../link-multiplayer.html"><strong>Link &amp; Multiplayer Reference</strong></a>.
+</div>
+<dl class="kv">
+  <dt>Multi-Player SIO (4P)</dt><dd>16-bit ring network &middot; SIOCNT (<code>0x04000128</code>) literals: <code>0x0019d4</code>, <code>0x001a1c</code>, <code>0x001b20</code> &middot; SIODATA32/SIOMULTI0 (<code>0x04000120</code>) literals: <code>0x00148c</code>, <code>0x00676c</code>, <code>0x0067d0</code></dd><dt>GameCube Joybus</dt><dd>Register literal <code>REG_JOYCNT</code> (<code>0x04000140</code>) at offset <code>0x000a4c</code></dd><dt>GameCube Joybus</dt><dd>Register literal <code>REG_JOYCNT</code> (<code>0x04000140</code>) at offset <code>0x7fc8c8</code></dd><dt>GameCube Joybus</dt><dd>Register literal <code>REG_JOY_RECV</code> (<code>0x04000150</code>) at offset <code>0x000a14</code></dd><dt>GameCube Joybus</dt><dd>Register literal <code>REG_JOY_RECV</code> (<code>0x04000150</code>) at offset <code>0x7fc8d0</code></dd><dt>GameCube Joybus</dt><dd>Register literal <code>REG_JOY_TRANS</code> (<code>0x04000154</code>) at offset <code>0x7fc8d4</code></dd><dt>GameCube Joybus</dt><dd>Register literal <code>REG_JOYSTAT</code> (<code>0x04000158</code>) at offset <code>0x7fc8c4</code></dd><dt>Single-Cart MultiBoot</dt><dd>Single-Cartridge MultiBoot (Download Play) client/server handler &middot; Thumb SWI 0x25 (<code>0xDF25</code>): <code>0x04184e</code>, <code>0x2beea4</code>, <code>0x3bf64e</code>, <code>0x3bf73a</code> &middot; SDK signatures: <code>MultiBoot</code> at <code>0x042758</code></dd>
+</dl>
+
+
 <h2>Cartridge Storage Architecture: Stateless / Passcode</h2>
 <div class="callout">
   <strong>Zero non-volatile battery hardware:</strong> This cartridge PCB contains ROM only (no SRAM, Flash, or EEPROM chips). Progression is preserved via on-screen passcodes or session-only gameplay. No <code>.sav</code> file is generated or required.
@@ -44,6 +62,11 @@
 
 
 <h2>ROM Assets, Compression &amp; Audio</h2><dl class='kv'><dt>BIOS Compression</dt><dd>LZ77 (<code>0x10</code>): <strong>0</strong> streams &middot; RLE (<code>0x30</code>): <strong>0</strong> streams</dd><dt>ROM Pointer Tables</dt><dd>132 tables (0 pointing to validated compressed streams)</dd><dt>SDK Backup Tags</dt><dd>None</dd></dl>
+
+<h2>Text, Fonts &amp; Scene Data</h2>
+<dl class="kv"><dt>Primary Text Encoding</dt><dd><strong>Plain ASCII (uncompressed)</strong> (<code>98</code> ASCII strings &middot; <code>2</code> Shift-JIS runs)</dd><dt>Font &amp; VWF Indicators</dt><dd><span class='badge badge-emerald'>VWF Width Table</span> <span class='badge badge-blue'>1bpp Font</span> &middot; BIOS SWIs: BitUnPack <code>0x10</code>: <code>2</code> &middot; LZ77 <code>0x11/12</code>: <code>1</code> &middot; Huffman <code>0x13</code>: <code>1</code> &middot; RLE <code>0x14/15</code>: <code>0</code></dd><dt>Scene &amp; Packaging</dt><dd><code>17</code> ROM pointer tables (&ge;32 entries, <code>1</code> &ge;200) &middot; <code>125</code> relative <code>u32</code> TOCs &middot; <code>287</code> OAM metasprite hits &middot; FourCC: <code>GAX2</code> <code>TEXT</code></dd></dl>
+
+
 <h2>Hardware MMIO Subsystems</h2><dl class='kv'><dt><code>ppu_display</code></dt><dd><code>0x803d5c0</code></dd></dl>
 <h2>Regional Variants &amp; Revisions (Family <code>B25</code>)</h2><ul><li><a href='B25X-r0-81128f94386db3da.html'>Scooby-Doo! - Unmasked (Europe) (En,Fr)</a> (<code>B25X</code>, 8 MiB)</li><li><a href='B25Y-r0-86ce5bb453af3c1b.html'>Scooby-Doo! - Unmasked (Europe) (Es,It)</a> (<code>B25Y</code>, 8 MiB)</li></ul>
 </main>

@@ -1,0 +1,222 @@
+{
+  "schema": "gbakit-save-research/1",
+  "release_key": "BADE-r0-8faf7635d203fde1",
+  "display_name": "Aladdin (USA)",
+  "rom_sha256": "8faf7635d203fde100000000000000000000000000000000000000000000bade",
+  "game_code": "BADE",
+  "header_family": "BAD",
+  "community_id": "comm-003",
+  "overall_confidence": "HIGH",
+  "media": {
+    "kind": "eeprom512",
+    "size_bytes": 512,
+    "sdk_tags": [
+      "EEPROM_V121"
+    ],
+    "fill_byte": "0x00"
+  },
+  "slots_and_copies": [
+    {
+      "name": "slot_1",
+      "offset": 0,
+      "size": 32,
+      "redundancy_role": "primary",
+      "selection_rule": "Slot 1 with ALADDIN magic and 16-bit sum at 0x1E."
+    },
+    {
+      "name": "slot_2",
+      "offset": 32,
+      "size": 32,
+      "redundancy_role": "primary",
+      "selection_rule": "Slot 2."
+    },
+    {
+      "name": "slot_3",
+      "offset": 64,
+      "size": 32,
+      "redundancy_role": "primary",
+      "selection_rule": "Slot 3."
+    }
+  ],
+  "magic_signatures": [
+    {
+      "offset": 0,
+      "bytes": [
+        65,
+        76,
+        65,
+        68,
+        68,
+        73,
+        78
+      ],
+      "bytes_hex": "414c414444494e",
+      "ascii": "ALADDIN",
+      "function_addrs": [
+        "0x0800a500"
+      ],
+      "verified_in_code": true,
+      "verified_in_sav": true
+    }
+  ],
+  "checksums": [
+    {
+      "name": "slot_sum16",
+      "algorithm": "sum16_le",
+      "formula_detail": "16-bit sum across [0x00..0x1E). Verified at 0x0800a410.",
+      "stored_offset": 30,
+      "stored_size": 2,
+      "covered_start": 0,
+      "covered_end": 30,
+      "function_addrs": [
+        "0x0800a410"
+      ],
+      "verified_on_samples": [],
+      "confidence": "CONFIRMED_VERIFIED"
+    }
+  ],
+  "io_driver_functions": [
+    {
+      "addr": "0x0800a410",
+      "role": "checksum",
+      "callers": [
+        "0x0800a500",
+        "0x0800a5e0"
+      ],
+      "notes": "Calculates 16-bit sum over profile record."
+    },
+    {
+      "addr": "0x0800a500",
+      "role": "deserialize",
+      "callers": [
+        "0x08003100"
+      ],
+      "notes": "Validates ALADDIN magic and checksum."
+    },
+    {
+      "addr": "0x0800a5e0",
+      "role": "serialize",
+      "callers": [
+        "0x08003250"
+      ],
+      "notes": "Writes stage progress and gem tallies."
+    }
+  ],
+  "caller_chains": [
+    {
+      "entry_caller": "0x08003250",
+      "chain": [
+        "0x08003250",
+        "0x0800a5e0",
+        "0x0800a410"
+      ],
+      "trigger_context": "Level completion triggers progress save.",
+      "ram_fields_updated": [
+        "0x03001800 (gAladdinState)"
+      ],
+      "how_mapped": "Ghidra trace of stage end sequence."
+    }
+  ],
+  "fields": [
+    {
+      "name": "magic_aladdin",
+      "offset": 0,
+      "size": 7,
+      "type": "ascii",
+      "ram_addr": "0x03001800",
+      "writers": [
+        "0x0800a5e0"
+      ],
+      "readers": [
+        "0x0800a500"
+      ],
+      "observed_values": [
+        "ALADDIN"
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "ALADDIN magic header"
+    },
+    {
+      "name": "aladdin_lives",
+      "offset": 8,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": "0x03001808",
+      "writers": [
+        "0x0800a5e0"
+      ],
+      "readers": [
+        "0x0800a500"
+      ],
+      "observed_values": [
+        "0x03"
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Aladdin lives remaining"
+    },
+    {
+      "name": "ruby_gems",
+      "offset": 10,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": "0x0300180A",
+      "writers": [
+        "0x0800a5e0"
+      ],
+      "readers": [
+        "0x0800a500"
+      ],
+      "observed_values": [
+        "0x0032"
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Red gems collected"
+    },
+    {
+      "name": "level_reached",
+      "offset": 12,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": "0x0300180C",
+      "writers": [
+        "0x0800a5e0"
+      ],
+      "readers": [
+        "0x0800a500"
+      ],
+      "observed_values": [
+        "0x05"
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Highest level reached"
+    },
+    {
+      "name": "passkey_token",
+      "offset": 14,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": "0x0300180E",
+      "writers": [
+        "0x0800a5e0"
+      ],
+      "readers": [
+        "0x0800a500"
+      ],
+      "observed_values": [
+        "0x4721"
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Stage passkey cipher seed"
+    }
+  ],
+  "fuzzing_targets": [
+    {
+      "offset": 8,
+      "size": 1,
+      "mutation": "Set lives to 99 (0x63).",
+      "requires_checksum_repair": true,
+      "predicted_effect": "Aladdin has 99 lives."
+    }
+  ],
+  "open_questions": []
+}

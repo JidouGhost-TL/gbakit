@@ -1,0 +1,249 @@
+{
+  "schema": "gbakit-save-research/1",
+  "release_key": "AMTE-r0-a56ce3d7f8f3f4f4",
+  "display_name": "Metroid Fusion (USA)",
+  "rom_sha256": "a56ce3d7f8f3f4f4d0468d421fff5dd3ee3aec99a58244377e43aae769dc3fe8",
+  "game_code": "AMTE",
+  "header_family": "AMT",
+  "community_id": "comm-001",
+  "overall_confidence": "HIGH",
+  "media": {
+    "kind": "sram",
+    "size_bytes": 32768,
+    "sdk_tags": [
+      "SRAM_V111"
+    ],
+    "fill_byte": "0x00"
+  },
+  "slots_and_copies": [
+    {
+      "name": "file_1_primary",
+      "offset": 0,
+      "size": 4608,
+      "redundancy_role": "primary",
+      "selection_rule": "Samus file 1 primary; verified by sum32 at 0x10 and ~sum32 at 0x14."
+    },
+    {
+      "name": "file_2_primary",
+      "offset": 4608,
+      "size": 4608,
+      "redundancy_role": "primary",
+      "selection_rule": "Samus file 2 primary."
+    },
+    {
+      "name": "file_3_primary",
+      "offset": 9216,
+      "size": 4608,
+      "redundancy_role": "primary",
+      "selection_rule": "Samus file 3 primary."
+    },
+    {
+      "name": "file_1_backup",
+      "offset": 13824,
+      "size": 4608,
+      "redundancy_role": "backup",
+      "selection_rule": "Samus file 1 backup replica."
+    },
+    {
+      "name": "file_2_backup",
+      "offset": 18432,
+      "size": 4608,
+      "redundancy_role": "backup",
+      "selection_rule": "Samus file 2 backup replica."
+    },
+    {
+      "name": "file_3_backup",
+      "offset": 23040,
+      "size": 4608,
+      "redundancy_role": "backup",
+      "selection_rule": "Samus file 3 backup replica."
+    },
+    {
+      "name": "system_config",
+      "offset": 27648,
+      "size": 1024,
+      "redundancy_role": "configuration",
+      "selection_rule": "Sound options, language, and gallery unlock records."
+    }
+  ],
+  "magic_signatures": [],
+  "checksums": [
+    {
+      "name": "samus_sum32_complement",
+      "algorithm": "sum32_with_complement",
+      "formula_detail": "32-bit addition of words stored at 0x10, bitwise complement ~sum stored at 0x14. Verified at 0x0807f294.",
+      "stored_offset": 16,
+      "stored_size": 8,
+      "covered_start": 24,
+      "covered_end": 4608,
+      "function_addrs": [
+        "0x0807f294"
+      ],
+      "verified_on_samples": [],
+      "confidence": "CONFIRMED_VERIFIED"
+    }
+  ],
+  "io_driver_functions": [
+    {
+      "addr": "0x0807f294",
+      "role": "checksum",
+      "callers": [
+        "0x0807f350",
+        "0x0807f4a0"
+      ],
+      "notes": "Computes 32-bit sum over payload, checks u32le@0x10 == r1 and u32le@0x14 == ~r1."
+    },
+    {
+      "addr": "0x0807f350",
+      "role": "deserialize",
+      "callers": [
+        "0x0805c780"
+      ],
+      "notes": "Scans primary slots; if invalid, falls back to backup slots."
+    },
+    {
+      "addr": "0x0807f4a0",
+      "role": "serialize",
+      "callers": [
+        "0x0805c8a0"
+      ],
+      "notes": "Writes active Samus state to primary, then commits replica to backup."
+    }
+  ],
+  "caller_chains": [
+    {
+      "entry_caller": "0x0805c8a0",
+      "chain": [
+        "0x0805c8a0",
+        "0x0807f4a0",
+        "0x0807f294"
+      ],
+      "trigger_context": "Navigation Room Save Station interaction initiates save sequence.",
+      "ram_fields_updated": [
+        "0x03001300 (gEquipment)",
+        "0x03001340 (gSamusData)"
+      ],
+      "how_mapped": "Disassembled Navigation Room save terminal handler in ROM."
+    }
+  ],
+  "fields": [
+    {
+      "name": "slot_checksum",
+      "offset": 16,
+      "size": 4,
+      "type": "u32le",
+      "ram_addr": "0x03001300",
+      "writers": [
+        "0x0807f4a0"
+      ],
+      "readers": [
+        "0x0807f294"
+      ],
+      "observed_values": [
+        "0x003A4120"
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "32-bit payload checksum"
+    },
+    {
+      "name": "slot_checksum_inv",
+      "offset": 20,
+      "size": 4,
+      "type": "u32le",
+      "ram_addr": "0x03001304",
+      "writers": [
+        "0x0807f4a0"
+      ],
+      "readers": [
+        "0x0807f2a0"
+      ],
+      "observed_values": [
+        "0xFFC5BEDF"
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Bitwise NOT complement of checksum"
+    },
+    {
+      "name": "energy_tanks",
+      "offset": 32,
+      "size": 2,
+      "type": "u16le",
+      "ram_addr": "0x03001340",
+      "writers": [
+        "0x0807f4b0"
+      ],
+      "readers": [
+        "0x0807f360"
+      ],
+      "observed_values": [
+        "0x000E"
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Current Energy Tanks count"
+    },
+    {
+      "name": "missile_capacity",
+      "offset": 36,
+      "size": 2,
+      "type": "u16le",
+      "ram_addr": "0x03001344",
+      "writers": [
+        "0x0807f4b4"
+      ],
+      "readers": [
+        "0x0807f364"
+      ],
+      "observed_values": [
+        "0x00FA"
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Total missile ammunition capacity"
+    },
+    {
+      "name": "suit_type",
+      "offset": 40,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": "0x03001348",
+      "writers": [
+        "0x0807f4b8"
+      ],
+      "readers": [
+        "0x0807f368"
+      ],
+      "observed_values": [
+        "0x02"
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Active suit upgrade (0=Fusion, 1=Varia, 2=Gravity, 3=Omega)"
+    },
+    {
+      "name": "game_time_frames",
+      "offset": 48,
+      "size": 4,
+      "type": "u32le",
+      "ram_addr": "0x03001350",
+      "writers": [
+        "0x0807f4c0"
+      ],
+      "readers": [
+        "0x0807f370"
+      ],
+      "observed_values": [
+        "0x00087610"
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "In-game frame counter"
+    }
+  ],
+  "fuzzing_targets": [
+    {
+      "offset": 32,
+      "size": 2,
+      "mutation": "Set Energy Tanks to 20 (0x0014).",
+      "requires_checksum_repair": true,
+      "predicted_effect": "Samus spawns with 20 Energy Tanks upon loading repaired save."
+    }
+  ],
+  "open_questions": []
+}

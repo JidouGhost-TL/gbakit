@@ -13,7 +13,13 @@
       <a href="index.html">Games</a>
       <a href="saves/index.html">Save Formats</a>
       <a href="patches/index.html">Debug Patches</a>
+      <a href="debug-menus.html">Debug Gallery</a>
+      <a href="non-retail-cartridges.html">Non-Retail</a>
+      <a href="cartridge-hardware.html">Cartridge Hardware</a>
+      <a href="link-multiplayer.html">Link &amp; Multiplayer</a>
+      <a href="multiboot-museum.html">MultiBoot Museum</a>
       <a href="assets/index.html">Assets &amp; Audio</a>
+      <a href="text-and-fonts.html">Text &amp; Fonts</a>
       <a href="engines/index.html">Engines &amp; Hardware</a>
       <a href="families/index.html">Families</a>
       <a href="gbakit/index.html">Using gbakit</a>
@@ -26,9 +32,12 @@
   <div class="card"><div class="val">3,236</div><div class="lbl">GBA Releases (1,706 families)</div></div>
   <div class="card"><div class="val">1,543</div><div class="lbl">Battery-Saving Cartridges</div></div>
   <div class="card"><div class="val">1,693</div><div class="lbl">Stateless / Passcode Titles</div></div>
-  <div class="card"><div class="val"><a href="saves/index.html" style="color:inherit">336</a></div><div class="lbl">Save Specs (110 Families)</div></div>
-  <div class="card"><div class="val"><a href="gbakit/index.html#builtin-saves" style="color:inherit">100</a></div><div class="lbl">gbakit Built-In Saves</div></div>
-  <div class="card"><div class="val"><a href="patches/index.html" style="color:inherit">15</a></div><div class="lbl">Debug Menu Patches</div></div>
+  <div class="card"><div class="val"><a href="saves/index.html" style="color:inherit">1,254</a></div><div class="lbl">Save Specs (519 Families)</div></div>
+  <div class="card"><div class="val"><a href="cartridge-hardware.html" style="color:inherit">78</a></div><div class="lbl">Cartridge Hardware (18 Families)</div></div>
+  <div class="card"><div class="val"><a href="link-multiplayer.html" style="color:inherit">3,082</a></div><div class="lbl">Link &amp; Multiplayer (3,082 Titles)</div></div>
+  <div class="card"><div class="val"><a href="multiboot-museum.html" style="color:inherit">642</a></div><div class="lbl">MultiBoot Museum (642 Payloads)</div></div>
+  <div class="card"><div class="val"><a href="gbakit/index.html#builtin-saves" style="color:inherit">846</a></div><div class="lbl">gbakit Built-In Saves</div></div>
+  <div class="card"><div class="val"><a href="patches/index.html" style="color:inherit">82</a></div><div class="lbl">Debug Menu Patches</div></div>
 </div>
 
 <h2>Browse &amp; Filter 3,236 Games</h2>
@@ -41,14 +50,32 @@
   </select>
   <select id="media">
     <option value="">All save media</option>
-    <option value='EEPROM 4K'>EEPROM 4K (707)</option><option value='SRAM 256K'>SRAM 256K (480)</option><option value='EEPROM 64K'>EEPROM 64K (229)</option><option value='Flash 512K'>Flash 512K (149)</option><option value='Flash 1M'>Flash 1M (30)</option>
+    <option value='EEPROM 4K'>EEPROM 4K (791)</option><option value='SRAM 256K'>SRAM 256K (502)</option><option value='EEPROM 64K'>EEPROM 64K (243)</option><option value='Flash 512K'>Flash 512K (155)</option><option value='Flash 1M'>Flash 1M (32)</option>
+  </select>
+  <select id="hardware">
+    <option value="">All Hardware Peripherals</option>
+    <option value="any">Any Peripheral (78)</option>
+    <option value="solar">☀️ Solar Sensor (9)</option>
+    <option value="rtc">⏰ Real-Time Clock (RTC) (65)</option>
+    <option value="tilt_gyro">🎯 Tilt / Gyro Sensor (6)</option>
+    <option value="rumble">📳 Rumble Motor (9)</option>
+  </select>
+  <select id="comm">
+    <option value="">All Communication Modes</option>
+    <option value="any">Any Link / Multiplayer (3,082)</option>
+    <option value="multiplay_sio">🎮 4P Link Cable (1,689)</option>
+    <option value="joybus">📺 GameCube Joybus (894)</option>
+    <option value="wireless_rfu">📡 Wireless Adapter (123)</option>
+    <option value="multiboot">💾 Single-Cart MultiBoot (2,940)</option>
   </select>
   <select id="output">
     <option value="">All Reference Outputs</option>
-    <option value="spec">Has Save Spec (Direct or Family: 336)</option>
-    <option value="direct_spec">Direct Reverse-Engineered Spec (110)</option>
-    <option value="gbakit">gbakit Built-In Save (100)</option>
-    <option value="debug">Has Debug Menu Patch (15)</option>
+    <option value="spec">Has Save Spec (Direct or Family: 1,254)</option>
+    <option value="direct_spec">Direct Reverse-Engineered Spec (531)</option>
+    <option value="gbakit">gbakit Built-In Save (846)</option>
+    <option value="hardware">Cartridge Hardware Peripheral (78)</option>
+    <option value="comm">Has Link / Multiplayer (3,082)</option>
+    <option value="debug">Has Debug Menu Patch (82)</option>
     <option value="vram">Has VRAM Tile Sheet (91)</option>
     <option value="audio">Has DirectSound PCM (70)</option>
   </select>
@@ -79,6 +106,8 @@ let DATA = [];
 const qEl = document.getElementById('q');
 const archEl = document.getElementById('arch');
 const medEl = document.getElementById('media');
+const hwEl = document.getElementById('hardware');
+const commEl = document.getElementById('comm');
 const outEl = document.getElementById('output');
 const limEl = document.getElementById('limit');
 const tbody = document.getElementById('tbody');
@@ -92,6 +121,8 @@ function render() {
   const q = qEl.value.trim().toLowerCase();
   const arch = archEl.value;
   const med = medEl.value;
+  const hw = hwEl.value;
+  const comm = commEl.value;
   const out = outEl.value;
   const lim = parseInt(limEl.value, 10) || 100;
   const matched = [];
@@ -100,9 +131,15 @@ function render() {
     if (arch === 'saving' && r[11] !== 1) continue;
     if (arch === 'stateless' && r[11] !== 0) continue;
     if (med && r[4] !== med) continue;
+    if (hw === 'any' && (!r[14] || !r[14].length)) continue;
+    if (hw && hw !== 'any' && (!r[14] || !r[14].includes(hw))) continue;
+    if (comm === 'any' && (!r[15] || !r[15].length)) continue;
+    if (comm && comm !== 'any' && (!r[15] || !r[15].includes(comm))) continue;
     if (out === 'spec' && !r[6]) continue;
     if (out === 'direct_spec' && r[6] !== 1) continue;
     if (out === 'gbakit' && !r[7]) continue;
+    if (out === 'hardware' && (!r[14] || !r[14].length)) continue;
+    if (out === 'comm' && (!r[15] || !r[15].length)) continue;
     if (out === 'debug' && !r[12]) continue;
     if (out === 'vram' && !r[8]) continue;
     if (out === 'audio' && !r[9]) continue;
@@ -116,6 +153,24 @@ function render() {
     if (r[6] === 1) badges.push(`<a href="saves/${encodeURIComponent(r[0])}.html"><span class="badge badge-emerald">Save Spec</span></a>`);
     else if (r[6] === 2 && r[13]) badges.push(`<a href="saves/${encodeURIComponent(r[13])}.html"><span class="badge badge-emerald">Family Spec</span></a>`);
     if (r[7]) badges.push(`<span class="badge badge-emerald">gbakit</span>`);
+    if (r[14] && r[14].length) {
+      for (let k = 0; k < r[14].length; k++) {
+        const h = r[14][k];
+        if (h === 'solar') badges.push('<a href="cartridge-hardware.html#solar"><span class="badge badge-amber" title="Solar Sensor">☀️ Solar Sensor</span></a>');
+        else if (h === 'rtc') badges.push('<a href="cartridge-hardware.html#rtc"><span class="badge badge-blue" title="Real-Time Clock (RTC)">⏰ Real-Time Clock (RTC)</span></a>');
+        else if (h === 'tilt_gyro') badges.push('<a href="cartridge-hardware.html#tilt_gyro"><span class="badge badge-purple" title="Tilt / Gyro Sensor">🎯 Tilt / Gyro Sensor</span></a>');
+        else if (h === 'rumble') badges.push('<a href="cartridge-hardware.html#rumble"><span class="badge badge-emerald" title="Rumble Motor">📳 Rumble Motor</span></a>');
+      }
+    }
+    if (r[15] && r[15].length) {
+      for (let k = 0; k < r[15].length; k++) {
+        const c = r[15][k];
+        if (c === 'multiplay_sio') badges.push('<a href="link-multiplayer.html#sio-multi"><span class="badge badge-blue" title="Multi-Player SIO 4P Link">🎮 4P Link</span></a>');
+        else if (c === 'joybus') badges.push('<a href="link-multiplayer.html#joybus"><span class="badge badge-purple" title="GameCube Joybus Link">📺 Joybus</span></a>');
+        else if (c === 'wireless_rfu') badges.push('<a href="link-multiplayer.html#wireless-rfu"><span class="badge badge-emerald" title="Nintendo Wireless Adapter (AGB-015)">📡 Wireless</span></a>');
+        else if (c === 'multiboot') badges.push('<a href="link-multiplayer.html#multiboot"><span class="badge badge-amber" title="Single-Cartridge MultiBoot (Download Play)">💾 MultiBoot</span></a>');
+      }
+    }
     if (r[12]) badges.push(`<a href="patches/index.html"><span class="badge badge-amber">Debug Patch</span></a>`);
     if (r[8]) badges.push(`<span class="badge badge-blue">VRAM</span>`);
     if (r[9]) badges.push(`<span class="badge badge-indigo">Audio</span>`);
@@ -141,6 +196,8 @@ fetch('assets/corpus-index.json').then(r => r.json()).then(d => {
 qEl.addEventListener('input', render);
 archEl.addEventListener('change', render);
 medEl.addEventListener('change', render);
+hwEl.addEventListener('change', render);
+commEl.addEventListener('change', render);
 outEl.addEventListener('change', render);
 limEl.addEventListener('change', render);
 </script>

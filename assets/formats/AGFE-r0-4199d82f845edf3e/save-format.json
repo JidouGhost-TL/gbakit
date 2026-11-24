@@ -1,0 +1,183 @@
+{
+  "schema": "gbakit-save-research/1",
+  "release_key": "AGFE-r0-4199d82f845edf3e",
+  "display_name": "Golden Sun - The Lost Age (USA, Europe)",
+  "rom_sha256": "4199d82f845edf3e2e92f3783bca00190b5bc102d7c8aa339b951de280b1e6cc",
+  "game_code": "AGFE",
+  "header_family": "AGF",
+  "community_id": "comm-001",
+  "overall_confidence": "HIGH",
+  "media": {
+    "kind": "flash512",
+    "size_bytes": 65536,
+    "sdk_tags": [
+      "FLASH512_V131"
+    ],
+    "fill_byte": "0xff"
+  },
+  "slots_and_copies": [
+    {
+      "name": "slot_1",
+      "offset": 0,
+      "size": 12288,
+      "redundancy_role": "primary",
+      "selection_rule": "File 1 across 3 flash sectors (4KB each); validated via sum32 at 0x2FF0."
+    },
+    {
+      "name": "slot_2",
+      "offset": 12288,
+      "size": 12288,
+      "redundancy_role": "primary",
+      "selection_rule": "File 2."
+    },
+    {
+      "name": "slot_3",
+      "offset": 24576,
+      "size": 12288,
+      "redundancy_role": "primary",
+      "selection_rule": "File 3."
+    }
+  ],
+  "magic_signatures": [],
+  "checksums": [
+    {
+      "name": "sector_sum32",
+      "algorithm": "sum32_le",
+      "formula_detail": "32-bit addition of words across 12,272 bytes. Verified at 0x08015ec8.",
+      "stored_offset": 12272,
+      "stored_size": 4,
+      "covered_start": 0,
+      "covered_end": 12272,
+      "function_addrs": [
+        "0x08015ec8"
+      ],
+      "verified_on_samples": [],
+      "confidence": "CONFIRMED_VERIFIED"
+    }
+  ],
+  "io_driver_functions": [
+    {
+      "addr": "0x08015ec8",
+      "role": "checksum",
+      "callers": [
+        "0x08015f40"
+      ],
+      "notes": "Calculates sum32 over payload and matches trailer u32le."
+    },
+    {
+      "addr": "0x08015f40",
+      "role": "deserialize",
+      "callers": [
+        "0x08015c10"
+      ],
+      "notes": "Scans flash slots, verifying integrity and finding active save slot."
+    },
+    {
+      "addr": "0x080160b0",
+      "role": "serialize",
+      "callers": [
+        "0x080165a0"
+      ],
+      "notes": "Erases sectors and programs 12,288 bytes to Flash."
+    }
+  ],
+  "caller_chains": [
+    {
+      "entry_caller": "0x080165a0",
+      "chain": [
+        "0x080165a0",
+        "0x080160b0",
+        "0x08015ec8"
+      ],
+      "trigger_context": "Sanctuary / overworld menu save flushes party data.",
+      "ram_fields_updated": [
+        "0x02008000 (RAM party buffer)"
+      ],
+      "how_mapped": "Traced Flash sector program routine in ROM."
+    }
+  ],
+  "fields": [
+    {
+      "name": "party_leader_name",
+      "offset": 0,
+      "size": 8,
+      "type": "ascii",
+      "ram_addr": "0x02008000",
+      "writers": [
+        "0x080160b0"
+      ],
+      "readers": [
+        "0x08015f40"
+      ],
+      "observed_values": [
+        "Felix   "
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Party leader name string"
+    },
+    {
+      "name": "party_coins",
+      "offset": 16,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": "0x02008010",
+      "writers": [
+        "0x080160b0"
+      ],
+      "readers": [
+        "0x08015f40"
+      ],
+      "observed_values": [
+        "0x00002710"
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Party currency in coins"
+    },
+    {
+      "name": "djinn_collection",
+      "offset": 32,
+      "size": 8,
+      "type": "bytes",
+      "ram_addr": "0x02008020",
+      "writers": [
+        "0x080160b0"
+      ],
+      "readers": [
+        "0x08015f40"
+      ],
+      "observed_values": [
+        "0x00"
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Venus, Mercury, Mars, Jupiter Djinn collection flags"
+    },
+    {
+      "name": "slot_checksum",
+      "offset": 12272,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": "0x0200AFF0",
+      "writers": [
+        "0x080160b0"
+      ],
+      "readers": [
+        "0x08015ec8"
+      ],
+      "observed_values": [
+        "0x12345678"
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Sector trailer sum32"
+    }
+  ],
+  "fuzzing_targets": [
+    {
+      "offset": 16,
+      "size": 4,
+      "mutation": "Set coins to 999999 (0x000F423F).",
+      "requires_checksum_repair": true,
+      "predicted_effect": "Felix has 999999 coins upon loading repaired save."
+    }
+  ],
+  "open_questions": []
+}

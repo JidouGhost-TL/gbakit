@@ -13,7 +13,13 @@
       <a href="../index.html">Games</a>
       <a href="../saves/index.html">Save Formats</a>
       <a href="../patches/index.html">Debug Patches</a>
+      <a href="../debug-menus.html">Debug Gallery</a>
+      <a href="../non-retail-cartridges.html">Non-Retail</a>
+      <a href="../cartridge-hardware.html">Cartridge Hardware</a>
+      <a href="../link-multiplayer.html">Link &amp; Multiplayer</a>
+      <a href="../multiboot-museum.html">MultiBoot Museum</a>
       <a href="../assets/index.html">Assets &amp; Audio</a>
+      <a href="../text-and-fonts.html">Text &amp; Fonts</a>
       <a href="../engines/index.html">Engines &amp; Hardware</a>
       <a href="../families/index.html">Families</a>
       <a href="../gbakit/index.html">Using gbakit</a>
@@ -22,7 +28,7 @@
   <main>
 <p class="meta"><a href="../index.html">&larr; Games</a> &middot; Family <code>BNB</code></p>
 <h1>Petz Vet (USA)</h1>
-<p><span class='badge badge-slate'>EEPROM 64K</span></p>
+<p><span class='badge badge-slate'>EEPROM 64K</span> <span class='badge badge-emerald'>gbakit Built-In</span> <a href='../link-multiplayer.html#multiboot'><span class='badge badge-amber'>💾 MultiBoot</span></a></p>
 
 <h2>Cartridge Identity</h2>
 <dl class="kv">
@@ -38,7 +44,30 @@
 
 
 
+
+<h2>Link Cable &amp; Multiplayer Communications</h2>
+<div class="callout">
+  This title contains detected communication capabilities: <a href='../link-multiplayer.html#multiboot'><span class='badge badge-amber'>💾 MultiBoot</span></a>.
+  Detailed protocol specifications, SIO registers, Joybus commands, and MultiBoot sequences are documented in the <a href="../link-multiplayer.html"><strong>Link &amp; Multiplayer Reference</strong></a>.
+</div>
+<dl class="kv">
+  <dt>Single-Cart MultiBoot</dt><dd>Single-Cartridge MultiBoot (Download Play) client/server handler &middot; Thumb SWI 0x25 (<code>0xDF25</code>): <code>0x140220</code>, <code>0x28bfac</code>, <code>0x2f9a08</code>, <code>0x304e6a</code></dd>
+</dl>
+
+
+<h2>Battery Save Support in <code>gbakit</code></h2>
+<p><span class="badge badge-emerald">Built-in definition (BNBE)</span></p>
+<pre><code>gbakit save verify BNBE save.sav
+gbakit save decode BNBE save.sav
+gbakit save fix    BNBE damaged.sav -o repaired.sav</code></pre>
+
+
 <h2>ROM Assets, Compression &amp; Audio</h2><dl class='kv'><dt>BIOS Compression</dt><dd>LZ77 (<code>0x10</code>): <strong>1,098</strong> streams &middot; RLE (<code>0x30</code>): <strong>0</strong> streams</dd><dt>ROM Pointer Tables</dt><dd>271 tables (188 pointing to validated compressed streams)</dd><dt>SDK Backup Tags</dt><dd><code>EEPROM_V124</code></dd></dl>
+
+<h2>Text, Fonts &amp; Scene Data</h2>
+<dl class="kv"><dt>Primary Text Encoding</dt><dd><strong>Plain ASCII (uncompressed) · custom 1-byte charmap (base &#x27;A&#x27; = 0x2e)</strong> (<code>819</code> ASCII strings &middot; <code>1</code> Shift-JIS runs)</dd><dt>Font &amp; VWF Indicators</dt><dd><span class='badge badge-emerald'>VWF Width Table</span> <span class='badge badge-blue'>1bpp Font</span> &middot; BIOS SWIs: BitUnPack <code>0x10</code>: <code>13</code> &middot; LZ77 <code>0x11/12</code>: <code>19</code> &middot; Huffman <code>0x13</code>: <code>2</code> &middot; RLE <code>0x14/15</code>: <code>11</code></dd><dt>Scene &amp; Packaging</dt><dd><code>40</code> ROM pointer tables (&ge;32 entries, <code>5</code> &ge;200) &middot; <code>1</code> relative <code>u32</code> TOCs &middot; <code>154</code> OAM metasprite hits</dd></dl>
+
+
 <h2>Hardware MMIO Subsystems</h2><dl class='kv'><dt><code>ppu_display</code></dt><dd><code>0x8032a94</code>, <code>0x8032ab8</code>, <code>0x803b264</code></dd></dl>
 <h2>Regional Variants &amp; Revisions (Family <code>BNB</code>)</h2><ul><li><a href='BNBJ-r0-c2e7b5e1679f4f83.html'>Himawari Doubutsu Byouin - Pet no Oishasan Ikusei Game (Japan)</a> (<code>BNBJ</code>, 8 MiB)</li><li><a href='BNBJ-r1-b48113295db03920.html'>Himawari Doubutsu Byouin - Pet no Oishasan Ikusei Game (Japan) (Rev 1)</a> (<code>BNBJ</code>, 8 MiB)</li></ul>
 </main>

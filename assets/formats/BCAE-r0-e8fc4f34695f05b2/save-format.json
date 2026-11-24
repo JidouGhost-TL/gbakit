@@ -1,0 +1,174 @@
+{
+  "schema": "gbakit-save-research/1",
+  "release_key": "BCAE-r0-e8fc4f34695f05b2",
+  "display_name": "Cars (USA, Europe)",
+  "rom_sha256": "e8fc4f34695f05b28075e0be293496aeb7a3f6990be683884a4f8ad74e189635",
+  "game_code": "BCAE",
+  "header_family": "BCA",
+  "community_id": "comm-004",
+  "overall_confidence": "MEDIUM",
+  "media": {
+    "kind": "eeprom512",
+    "size_bytes": 512,
+    "sdk_tags": ["EEPROM_V124@6962676"],
+    "fill_byte": "0xff"
+  },
+  "slots_and_copies": [
+    {
+      "name": "slot_0",
+      "offset": 0,
+      "size": 216,
+      "redundancy_role": "primary",
+      "selection_rule": "Only populated slot observed in the single sample; EEPROM sector index = slot_number * 0x1b (27 sectors * 8 bytes/sector = 216 bytes/slot), derived from FUN_08016198/FUN_080160b4 computing `sector_base = (param_1 & 0xff) * 0x1b`."
+    },
+    {
+      "name": "slot_1 (hypothesis)",
+      "offset": 216,
+      "size": 216,
+      "redundancy_role": "unknown",
+      "selection_rule": "HYPOTHESIS ONLY: not proven by code or data. Entirely 0xFF in the single available sample (bytes 0xD8-0xC7+0xD8 range unobserved as non-blank). Inferred purely from the 0x1b-sector slot stride supporting a second slot_number value; no second-slot write/read call site was found in the 321 traced functions."
+    },
+    {
+      "name": "tail_region (hypothesis)",
+      "offset": 432,
+      "size": 80,
+      "redundancy_role": "global_config",
+      "selection_rule": "HYPOTHESIS ONLY: remaining 80 bytes (512 - 2*216) of the 512-byte EEPROM are unaccounted for by the 0x1b-sector slot stride; entirely 0xFF in the sample. No code path in the trace references this region directly."
+    }
+  ],
+  "magic_signatures": [
+    {
+      "offset": 196,
+      "bytes_hex": "43415253",
+      "ascii": "CARS",
+      "verified_in_code": false,
+      "verified_in_sav": true,
+      "function_addrs": []
+    }
+  ],
+  "checksums": [
+    {
+      "name": "slot_payload_byte_sum16",
+      "algorithm": "sum16_le",
+      "formula_detail": "Unsigned byte-wise sum (no rollover masking beyond 16 bits) of the 200-byte slot payload (offsets 0x00-0xC7 inclusive, which itself ends with the 4-byte 'CARS' magic trailer at 0xC4-0xC7). Proven in FUN_08016198 (RAM-cached validation branch): `do { iStack_20 += buf[uVar8]; uVar8++; } while (uVar8 < 200);` followed by a comparison against a cached RAM checksum variable (`*piRam080162ac`). The EEPROM-resident write path in the same function (via FUN_0802ad98, a confirmed EEPROM-write helper) targets sector `slot*0x1b + 0x1a` (byte offset 0xD0-0xD1 for slot 0), which does NOT match the offset of the numeric match found in the sample (0xD6-0xD7). The algorithm itself is CONFIRMED_STATIC; the exact persisted storage offset is only a verified numeric coincidence pending more samples.",
+      "stored_offset": 214,
+      "stored_size": 2,
+      "covered_start": 0,
+      "covered_end": 199,
+      "function_addrs": ["0x08016198"],
+      "verified_on_samples": [
+        {"file": "saves/cap-00-future-0.sav", "stored_hex": "0150", "computed_hex": "0150", "match": true}
+      ],
+      "confidence": "HYPOTHESIS"
+    }
+  ],
+  "io_driver_functions": [
+    {"addr": "0x08037918", "role": "read", "callers": ["0x08037998", "0x08037a5c"], "notes": "Shared low-level DMA3 serial bit-transceiver over the EEPROM bus (0x0D000000, gated via REG_DMA3CNT 0x040000D4-equivalent access through _DAT_08037978/_DAT_0803798c pointers). Direction (TX vs RX) is determined entirely by caller-supplied bit-count and buffer args; it is the common primitive for both read and write framing, not a save-specific writer/reader by itself."},
+    {"addr": "0x08037998", "role": "read", "callers": ["0x08037bbc", "0x0802ae48"], "notes": "EEPROM low-level sector READ: encodes a 'read' command + sector address bitstream, issues it via FUN_08037918 (TX), then issues a second FUN_08037918 call requesting 0x44=68 bits back (4 dummy/lead bits + 64 data bits), decodes 4x16-bit words MSB-first into the destination buffer (param_2). One sector = 8 bytes (4 u16 words)."},
+    {"addr": "0x08037a5c", "role": "write", "callers": ["0x08037a48"], "notes": "EEPROM low-level sector WRITE: encodes a 'write' command + sector address + 64 data bits read from the source buffer (param_2), transmits via a single FUN_08037918 TX call, then busy-waits on what is almost certainly REG_VCOUNT (pointer _DAT_08037b48) for ~0x88 (136) scanline deltas to let the EEPROM commit the write internally (standard ~10ms EEPROM write-busy behavior). param_3 selects retry-forever vs single-attempt wait."},
+    {"addr": "0x08037a48", "role": "write", "callers": ["0x0802ad98"], "notes": "Thin wrapper: `FUN_08037a5c(param_1, param_2, 1)` — forces the forever-retry wait variant of the low-level EEPROM write."},
+    {"addr": "0x08037bbc", "role": "read", "callers": ["0x0802ad98", "0x0802ae48"], "notes": "Write-verification helper: re-reads the just-written sector via FUN_08037998 into a local 8-byte buffer and compares it word-by-word against the caller-supplied buffer, returning 0 on match or 0x8000 on mismatch. Used after every sector write to confirm the EEPROM actually committed the data."},
+    {"addr": "0x0802ad98", "role": "write", "callers": ["0x08016198"], "notes": "Mid-level EepromWrite(sector, src_buf, byte_count): writes full 8-byte-aligned chunks directly via FUN_08037a48+FUN_08037bbc; for a trailing partial sector it performs read-modify-write (reads the existing sector via FUN_08037998, overwrites only the first N remaining bytes, writes the merged sector back via FUN_08037a48+FUN_08037bbc) so unrelated bytes already in that sector are preserved."},
+    {"addr": "0x0802ae48", "role": "read", "callers": ["0x080160b4"], "notes": "Mid-level EepromRead(sector, dest_buf, byte_count): mirror of FUN_0802ad98 for reads — full 8-byte-aligned chunks read directly via FUN_08037998+FUN_08037bbc verify, trailing partial sector read into a temp buffer and the needed leading bytes copied out to dest_buf."},
+    {"addr": "0x08016198", "role": "serialize", "callers": ["0x080160b4"], "notes": "Slot WRITE/validate entry point. If a RAM-resident cached copy of the slot is already marked valid (`*(int*)(cache_base+0xc0) == marker`), it recomputes the 200-byte checksum from the RAM buffer and validates it plus a structured sanity scan (byte fields < thresholds across 16 x 12-byte records at RAM+5) against a cached expected checksum (`*piRam080162ac`) — no EEPROM I/O in this path. Otherwise it builds/refreshes the slot payload in RAM and writes it (200 bytes via FUN_0802ad98) plus a 2-byte trailer (also via FUN_0802ad98, sector `slot*0x1b+0x1a`) to EEPROM, returning a status code (0/1/2/3/4) depending on which branch and whether the writes verified."},
+    {"addr": "0x080160b4", "role": "deserialize", "callers": [], "notes": "Slot LOAD entry point: reads 200 bytes + a 2-byte trailer from EEPROM via FUN_0802ae48 for slot `param_1`. If either read/verify fails, it falls back to calling FUN_08016198(param_1) to (re)write a fresh/default slot image, i.e. acts as the load-with-repair-on-corruption path. No caller of FUN_080160b4 exists inside the 321 traced functions — it is the top of the traced save call chain."}
+  ],
+  "caller_chains": [
+    {
+      "entry_caller": "0x080160b4",
+      "chain": ["0x080160b4", "0x0802ae48", "0x08037998", "0x08037918", "0x08037bbc"],
+      "trigger_context": "Unknown — no caller of 0x080160b4 is present in the 321-function trace, so the gameplay/menu event that invokes a slot load was not captured.",
+      "ram_fields_updated": ["_DAT_08016144 (200-byte slot payload buffer)", "_DAT_08016148 (2-byte trailer buffer)"],
+      "how_mapped": "Traced via direct call-site inspection of ghidra/decompiled.c (lines ~462-605); confirmed via ghidra/callgraph.json callee edges for 0x0802ae48->0x08037998->0x08037918 and 0x08037998's caller 0x08037bbc (verify-after-read helper is actually invoked for write-verify in the sibling writer; here read-chunks call 0x08037998 directly and only use 0x08037bbc on the full-chunk read loop)."
+    },
+    {
+      "entry_caller": "0x08016198",
+      "chain": ["0x08016198", "0x0802ad98", "0x08037a48", "0x08037a5c", "0x08037918", "0x08037bbc"],
+      "trigger_context": "Called from FUN_080160b4 (line 495) when the preceding load+verify failed (cVar5=='\\0' or cVar4=='\\0'), i.e. a repair/format write triggered by detected save corruption or a first-boot blank EEPROM.",
+      "ram_fields_updated": ["RAM slot buffer at _DAT_08016230 (200 bytes)", "checksum variable *piRam080162ac (cached)", "cache-valid marker at cache_base+0xc0 compared against _DAT_08016234"],
+      "how_mapped": "Direct call-site inspection of ghidra/decompiled.c (lines 576-599) plus ghidra/callgraph.json edges 0x0802ad98->0x08037a48->0x08037a5c->0x08037918, and 0x0802ad98's own caller edge back to 0x08037bbc for write verification."
+    }
+  ],
+  "fields": [
+    {
+      "name": "unlock_flag_block",
+      "offset": 0,
+      "size": 148,
+      "type": "bytes",
+      "ram_addr": "0x02000000-ish (cache buffer, exact EWRAM address not resolved from this trace subset)",
+      "writers": ["0x08016198"],
+      "readers": ["0x080160b4", "0x08016198"],
+      "observed_values": {"as_u32_le_array": "37 little-endian u32 values, each exactly 0 or 1"},
+      "update_mechanism": "Populated in RAM before the 200-byte EepromWrite call inside FUN_08016198; exact per-flag writer logic lies outside the 321 traced functions.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "Every 4-byte little-endian dword from offset 0x00 to 0x93 in saves/cap-00-future-0.sav is exactly 0 or 1 (verified by direct Python struct-unpack over all 37 dwords); layout matches the 200-byte region covered by the checksum in FUN_08016198."
+    },
+    {
+      "name": "structured_record_block",
+      "offset": 148,
+      "size": 48,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": ["0x08016198"],
+      "readers": ["0x080160b4", "0x08016198"],
+      "observed_values": {"0x94": "00030100", "0x98": "00040100", "0xa4": "01000000", "0xa8": "01000000", "0xac": "05020100", "0xb0": "05020100", "0xbc": "01000000", "0xc0": "00010000"},
+      "update_mechanism": "Unknown; no writer logic for individual sub-fields observed inside the 321 traced functions — only the whole-buffer EEPROM write/read is traced.",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Byte pattern (small values in bytes 0-2, zero/near-zero in byte 3, with paired duplicate dwords at 0x94/0x98 vs 0xa4/0xa8 vs 0xac/0xb0) is suggestive of small counters, times, or per-category best-record pairs, but no code, checksum boundary, or second sample confirms semantics. No third-party labels were consulted per clean-room rules."
+    },
+    {
+      "name": "slot_magic",
+      "offset": 196,
+      "size": 4,
+      "type": "ascii",
+      "ram_addr": null,
+      "writers": ["0x08016198"],
+      "readers": ["0x080160b4", "0x08016198"],
+      "observed_values": {"ascii": "CARS"},
+      "update_mechanism": "Falls inside the 200-byte checksummed payload; written as part of the same FUN_0802ad98(sector,buf,200) call. The specific instruction that stores the literal 0x43415253/'CARS' bytes into the RAM buffer was not found among the 321 traced functions (no immediate-load of that constant appears in ghidra/decompiled.c).",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "Bytes 0xC4-0xC7 of saves/cap-00-future-0.sav are exactly '43 41 52 53' = ASCII 'CARS'; this falls within the 200-byte range (0x00-0xC7) proven to be the checksum coverage window in FUN_08016198."
+    },
+    {
+      "name": "payload_checksum",
+      "offset": 214,
+      "size": 2,
+      "type": "u16",
+      "ram_addr": "piRam080162ac (cached RAM expected-checksum variable)",
+      "writers": ["0x08016198 (algorithm); exact storage-offset writer unresolved, see checksums[] entry"],
+      "readers": ["0x08016198"],
+      "observed_values": {"bytes_hex": "0150", "as_u16_be": "0x0150", "matches_computed_sum16_of_0x00_0xc7": true},
+      "update_mechanism": "Computed as the unsigned byte-sum of offsets 0x00-0xC7 (200 bytes); recomputed and compared on every validate-from-RAM-cache pass in FUN_08016198.",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Python verification: sum(data[0x00:0xc8]) & 0xffff == 0x150, and int.from_bytes(data[0xd6:0xd8],'big') == 0x150 — an exact match, but the EEPROM-write call site for this checksum in the traced code (FUN_0802ad98 at sector slot*0x1b+0x1a) addresses byte offset 0xD0-0xD1, not 0xD6-0xD7, so the storage-offset mapping is not fully reconciled against the algorithm's own call-site arithmetic from a single sample."
+    },
+    {
+      "name": "unused_tail_padding",
+      "offset": 200,
+      "size": 14,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"bytes": "all 0xFF"},
+      "update_mechanism": "Unwritten/blank fill; part of the trailing EEPROM sectors 25-26 not touched by the 200-byte primary write.",
+      "confidence": "UNKNOWN",
+      "evidence": "Offsets 0xC8-0xD5 are uniformly 0xFF in the sole available sample (background fill byte per packet metadata)."
+    }
+  ],
+  "fuzzing_targets": [
+    {"offset": 196, "size": 4, "mutation": "Corrupt the 'CARS' magic (e.g. flip to 'XARS') and reload via a paired pre/post .ss state at the title/load-slot screen.", "requires_checksum_repair": true, "predicted_effect": "If the magic is part of the checksummed 200-byte region as mapped, corrupting it changes the computed sum, so the HYPOTHESIS checksum at 0xD6-0xD7 would also need recomputation to avoid a validation failure; predicted observable effect is the game treating the slot as invalid/corrupt and falling back to FUN_08016198's default-write/repair path (visible as a reset save or 'new game' prompt)."},
+    {"offset": 214, "size": 2, "mutation": "Flip the candidate checksum bytes at 0xD6-0xD7 without touching the payload.", "requires_checksum_repair": false, "predicted_effect": "If this is truly the checksum location, the game should detect mismatch and trigger the repair/reset path on load; if nothing observably changes, this falsifies the HYPOTHESIS storage offset and supports the alternative 0xD0-0xD1 location implied by the traced write call-site."},
+    {"offset": 0, "size": 148, "mutation": "Flip individual boolean dwords in the 0x00-0x93 flag block one at a time (0<->1).", "requires_checksum_repair": true, "predicted_effect": "Each flip should toggle one discrete in-game unlock/progress boolean (car, track, or mode unlock) if the checksum is also repaired to the new sum; if checksum repair uses the 0xD6-0xD7 offset and the game still accepts the save, this corroborates the HYPOTHESIS location."},
+    {"offset": 148, "size": 48, "mutation": "Zero out the structured_record_block (offsets 0x94-0xC3) with checksum repair.", "requires_checksum_repair": true, "predicted_effect": "If these are best-time/score records, zeroing should reset displayed records to a default/blank state rather than crashing; a crash or garbage display would indicate these bytes encode something more structurally sensitive (e.g. pointers or indices) than flat counters."},
+    {"offset": 432, "size": 80, "mutation": "Write non-0xFF bytes into the hypothesized tail_region (offsets 0x1B0-0x1FF) with no other changes.", "requires_checksum_repair": false, "predicted_effect": "If this region is genuinely unused by the traced code, no behavior change is expected on load; any observable change (crash, corrupted UI, different slot behavior) would indicate an untraced consumer of this region exists."}
+  ],
+  "open_questions": [
+    "What function actually constructs the in-RAM 200-byte payload (including writing the literal 'CARS' magic bytes) before FUN_08016198 calls FUN_0802ad98? It is not among the 321 functions in ghidra/decompiled.c.",
+    "Why does the single available sample's apparent checksum value (sum16 of bytes 0x00-0xC7 = 0x150) numerically match bytes at offset 0xD6-0xD7, when the traced EEPROM-write call site for the 2-byte trailer addresses sector slot*0x1b+0x1a = byte offset 0xD0-0xD1 (which is blank/0xFF in the sample)? Needs a second non-blank sample or a direct write-time memory trace to resolve.",
+    "Is there really a second save slot (bytes 216-431) and/or a distinct global-config tail region (bytes 432-511), or does the whole 512-byte EEPROM belong to a single slot with a different internal layout than the 0x1b-sector stride suggests? No second-slot call site (param_1 != 0) was found in the trace.",
+    "What do the 12 structured bytes at 0x94-0xC3 represent? No semantics can be assigned without either additional samples showing variation, paired .ss RAM state at the moment of writing, or an authorized gameplay probe.",
+    "What is the exact RAM/EWRAM address of the slot cache buffer (_DAT_08016230/_DAT_08016144) and the cache-valid marker compared at cache_base+0xc0 vs _DAT_08016234? Not resolvable from static decompilation alone; would require a live emulator RAM-watch trace.",
+    "Is FUN_08037918's wait/poll register at _DAT_08037b48 actually REG_VCOUNT (0x04000006)? Plausible given the ~136-scanline busy-wait threshold matching known EEPROM write-commit timing, but not proven since no MMIO base-address constants are visible in this decompiled subset."
+  ]
+}

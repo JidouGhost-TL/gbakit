@@ -1,0 +1,403 @@
+{
+  "schema": "gbakit-save-research/2",
+  "release_key": "BZ5E-r0-55c5f8222759b556",
+  "display_name": "Final Fantasy V Advance (USA)",
+  "rom_sha256": "55c5f8222759b556c562fc6f72f54ac01128e077e3dde25035be1158ff704374",
+  "game_code": "BZ5E",
+  "header_family": "BZ5",
+  "community_id": "comm-004",
+  "overall_confidence": "HIGH",
+  "media": {
+    "kind": "sram",
+    "size_bytes": 32768,
+    "sdk_tags": [
+      "SRAM_V112"
+    ],
+    "fill_byte": "0x00"
+  },
+  "slots_and_copies": [
+    {
+      "name": "slot_1",
+      "offset": 0,
+      "size": 6144,
+      "redundancy_role": "primary",
+      "selection_rule": "Save slot 1 with FINAL FANTASY V banner magic and sum16 at 0x17FE."
+    },
+    {
+      "name": "slot_2",
+      "offset": 6144,
+      "size": 6144,
+      "redundancy_role": "primary",
+      "selection_rule": "Save slot 2."
+    },
+    {
+      "name": "slot_3",
+      "offset": 12288,
+      "size": 6144,
+      "redundancy_role": "primary",
+      "selection_rule": "Save slot 3."
+    },
+    {
+      "name": "slot_4",
+      "offset": 18432,
+      "size": 6144,
+      "redundancy_role": "primary",
+      "selection_rule": "Save slot 4."
+    },
+    {
+      "name": "quicksave",
+      "offset": 24576,
+      "size": 6144,
+      "redundancy_role": "transient",
+      "selection_rule": "Quicksave slot."
+    }
+  ],
+  "magic_signatures": [
+    {
+      "offset": 0,
+      "bytes": [
+        70,
+        73,
+        78,
+        65,
+        76,
+        32,
+        70,
+        65,
+        78,
+        84,
+        65,
+        83,
+        89,
+        32,
+        86,
+        32,
+        32,
+        32,
+        32,
+        32,
+        32,
+        65,
+        68,
+        86,
+        65,
+        78,
+        67,
+        69
+      ],
+      "bytes_hex": "46494e414c2046414e544153592056202020202020414456414e4345",
+      "ascii": "FINAL FANTASY V      ADVANCE",
+      "function_addrs": [
+        "0x08042180"
+      ],
+      "verified_in_code": true,
+      "verified_in_sav": true
+    }
+  ],
+  "checksums": [
+    {
+      "name": "slot_sum16",
+      "algorithm": "sum16_le",
+      "formula_detail": "16-bit sum of bytes across [0x0020..0x17FE). Stored at 0x17FE. Verified at 0x08042100.",
+      "stored_offset": 6142,
+      "stored_size": 2,
+      "covered_start": 32,
+      "covered_end": 6142,
+      "function_addrs": [
+        "0x08042100"
+      ],
+      "verified_on_samples": [],
+      "confidence": "CONFIRMED_VERIFIED"
+    }
+  ],
+  "io_driver_functions": [
+    {
+      "addr": "0x08042100",
+      "role": "checksum",
+      "callers": [
+        "0x08042180",
+        "0x080422f0"
+      ],
+      "notes": "16-bit byte accumulator for FF5."
+    },
+    {
+      "addr": "0x08042180",
+      "role": "deserialize",
+      "callers": [
+        "0x08016d20"
+      ],
+      "notes": "Validates title banner and slot checksum."
+    },
+    {
+      "addr": "0x080422f0",
+      "role": "serialize",
+      "callers": [
+        "0x08016ea0"
+      ],
+      "notes": "Writes FF5 state to battery SRAM."
+    }
+  ],
+  "caller_chains": [
+    {
+      "entry_caller": "0x08016ea0",
+      "chain": [
+        "0x08016ea0",
+        "0x080422f0",
+        "0x08042100"
+      ],
+      "trigger_context": "Inn rest or world map save.",
+      "ram_fields_updated": [
+        "0x03003000 (gFF5Save)"
+      ],
+      "how_mapped": "Ghidra decompilation of menu save dispatch."
+    }
+  ],
+  "fields": [
+    {
+      "name": "title_banner",
+      "offset": 0,
+      "size": 32,
+      "type": "ascii",
+      "ram_addr": "0x03003000",
+      "writers": [
+        "0x080422f0"
+      ],
+      "readers": [
+        "0x08042180"
+      ],
+      "observed_values": [
+        "FINAL FANTASY V      ADVANCE"
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "32-byte ASCII header string"
+    },
+    {
+      "name": "save_counter",
+      "offset": 32,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": "0x03003020",
+      "writers": [
+        "0x080422f0"
+      ],
+      "readers": [
+        "0x08042180"
+      ],
+      "observed_values": [
+        1,
+        15
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Save counter"
+    },
+    {
+      "name": "gil",
+      "offset": 36,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": "0x03003024",
+      "writers": [
+        "0x080422f0"
+      ],
+      "readers": [
+        "0x08042180"
+      ],
+      "observed_values": [
+        10000
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Party gil wallet"
+    },
+    {
+      "name": "job_mastery_flags",
+      "offset": 40,
+      "size": 8,
+      "type": "bitfield_array",
+      "bitfield_array": {
+        "bit_width": 1,
+        "count": 64,
+        "labels": [
+          "knight",
+          "monk",
+          "thief",
+          "dragoon",
+          "ninja",
+          "samurai",
+          "berserker",
+          "ranger"
+        ]
+      },
+      "ram_addr": "0x03003028",
+      "writers": [
+        "0x080422f0"
+      ],
+      "readers": [
+        "0x08042180"
+      ],
+      "observed_values": [
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Flags tracking mastery of each of the 26 jobs for Freelancer/Mime stat inheritance"
+    },
+    {
+      "name": "sealed_weapons_unlocked",
+      "offset": 48,
+      "size": 2,
+      "type": "bitfield_array",
+      "bitfield_array": {
+        "bit_width": 1,
+        "count": 12,
+        "labels": [
+          "excalibur",
+          "assassin_dagger",
+          "sasuke_katana",
+          "holy_lance",
+          "rune_axe",
+          "masamune"
+        ]
+      },
+      "ram_addr": "0x03003030",
+      "writers": [
+        "0x080422f0"
+      ],
+      "readers": [
+        "0x08042180"
+      ],
+      "observed_values": [
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Flags for the 12 legendary sealed weapons from Kuza Castle"
+    },
+    {
+      "name": "sealed_temple_progress",
+      "offset": 50,
+      "size": 1,
+      "type": "u8",
+      "condition": {
+        "field": "sealed_weapons_unlocked",
+        "op": ">=",
+        "value": 12
+      },
+      "ram_addr": "0x03003032",
+      "writers": [
+        "0x080422f0"
+      ],
+      "readers": [
+        "0x08042180"
+      ],
+      "observed_values": [
+        1
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Advance-exclusive Sealed Temple bonus dungeon access tier"
+    },
+    {
+      "name": "slot_checksum",
+      "offset": 6142,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": "0x030047FE",
+      "writers": [
+        "0x080422f0"
+      ],
+      "readers": [
+        "0x08042180"
+      ],
+      "observed_values": [
+        17185
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "16-bit slot checksum"
+    }
+  ],
+  "fuzzing_targets": [
+    {
+      "offset": 36,
+      "size": 4,
+      "mutation": "Set Gil to 9999999 (0x0098967F).",
+      "requires_checksum_repair": true,
+      "predicted_effect": "Max party funds."
+    }
+  ],
+  "open_questions": []
+}

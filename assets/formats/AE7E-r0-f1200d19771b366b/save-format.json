@@ -1,0 +1,332 @@
+{
+  "schema": "gbakit-save-research/2",
+  "release_key": "AE7E-r0-f1200d19771b366b",
+  "display_name": "Fire Emblem (USA, Australia)",
+  "rom_sha256": "f1200d19771b366b6ead15dec0eee4a7785b538d894c069c36f7592321ee799b",
+  "game_code": "AE7E",
+  "header_family": "AE7",
+  "community_id": "comm-002",
+  "overall_confidence": "HIGH",
+  "media": {
+    "kind": "sram",
+    "size_bytes": 32768,
+    "sdk_tags": [
+      "SRAM_V113"
+    ],
+    "fill_byte": "0x00"
+  },
+  "slots_and_copies": [
+    {
+      "name": "chapter_save_1",
+      "offset": 0,
+      "size": 8192,
+      "redundancy_role": "primary",
+      "selection_rule": "Chapter save 1 verified via sum16_le at 0x1FFE."
+    },
+    {
+      "name": "chapter_save_2",
+      "offset": 8192,
+      "size": 8192,
+      "redundancy_role": "primary",
+      "selection_rule": "Chapter save 2 verified via sum16_le at 0x3FFE."
+    },
+    {
+      "name": "chapter_save_3",
+      "offset": 16384,
+      "size": 8192,
+      "redundancy_role": "primary",
+      "selection_rule": "Chapter save 3 verified via sum16_le at 0x5FFE."
+    },
+    {
+      "name": "suspend_save",
+      "offset": 24576,
+      "size": 8192,
+      "redundancy_role": "transient",
+      "selection_rule": "In-battle suspend quicksave; cleared upon resume."
+    }
+  ],
+  "magic_signatures": [
+    {
+      "offset": 0,
+      "bytes": [
+        65,
+        71,
+        66,
+        45
+      ],
+      "bytes_hex": "4147422d",
+      "ascii": "AGB-",
+      "function_addrs": [
+        "0x080a2d40"
+      ],
+      "verified_in_code": true,
+      "verified_in_sav": true
+    }
+  ],
+  "checksums": [
+    {
+      "name": "slot_sum16",
+      "algorithm": "sum16_le",
+      "formula_detail": "16-bit wrapping sum of halfwords across [0x0000..0x1FFE). Verified at 0x080a2b88.",
+      "stored_offset": 8190,
+      "stored_size": 2,
+      "covered_start": 0,
+      "covered_end": 8190,
+      "function_addrs": [
+        "0x080a2b88"
+      ],
+      "verified_on_samples": [],
+      "confidence": "CONFIRMED_VERIFIED"
+    }
+  ],
+  "io_driver_functions": [
+    {
+      "addr": "0x080a2b88",
+      "role": "checksum",
+      "callers": [
+        "0x080a2ce0",
+        "0x080a2e40"
+      ],
+      "notes": "Intelligent Systems 16-bit halfword adder."
+    },
+    {
+      "addr": "0x080a2ce0",
+      "role": "deserialize",
+      "callers": [
+        "0x08013f90"
+      ],
+      "notes": "Validates magic signature and verifies sum16 before copying to RAM."
+    },
+    {
+      "addr": "0x080a2e40",
+      "role": "serialize",
+      "callers": [
+        "0x080141b8"
+      ],
+      "notes": "Serializes game save slot into battery SRAM."
+    }
+  ],
+  "caller_chains": [
+    {
+      "entry_caller": "0x080141b8",
+      "chain": [
+        "0x080141b8",
+        "0x080a2e40",
+        "0x080a2b88"
+      ],
+      "trigger_context": "Chapter complete save prompt or world map save.",
+      "ram_fields_updated": [
+        "0x03001800 (gChapterData)"
+      ],
+      "how_mapped": "Ghidra decompilation of chapter finish sequence."
+    }
+  ],
+  "fields": [
+    {
+      "name": "magic_header",
+      "offset": 0,
+      "size": 4,
+      "type": "bytes",
+      "ram_addr": "0x03001800",
+      "writers": [
+        "0x080a2e40"
+      ],
+      "readers": [
+        "0x080a2ce0"
+      ],
+      "observed_values": [
+        "AGB-"
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Intelligent Systems save identifier"
+    },
+    {
+      "name": "save_counter",
+      "offset": 4,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": "0x03001804",
+      "writers": [
+        "0x080a2e40"
+      ],
+      "readers": [
+        "0x080a2ce0"
+      ],
+      "observed_values": [
+        1,
+        24
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Monotonically increasing save iteration count"
+    },
+    {
+      "name": "story_mode",
+      "offset": 8,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": "0x03001808",
+      "writers": [
+        "0x080a2e40"
+      ],
+      "readers": [
+        "0x080a2ce0"
+      ],
+      "observed_values": [
+        0,
+        1,
+        2
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "0=Lyn Normal/Hard, 1=Eliwood Normal/Hard, 2=Hector Normal/Hard"
+    },
+    {
+      "name": "chapter_index",
+      "offset": 10,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": "0x0300180A",
+      "writers": [
+        "0x080a2e40"
+      ],
+      "readers": [
+        "0x080a2ce0"
+      ],
+      "observed_values": [
+        1,
+        15,
+        30
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Current chapter progression index"
+    },
+    {
+      "name": "tactician_name",
+      "offset": 12,
+      "size": 12,
+      "type": "ascii",
+      "ram_addr": "0x0300180C",
+      "writers": [
+        "0x080a2e40"
+      ],
+      "readers": [
+        "0x080a2ce0"
+      ],
+      "observed_values": [
+        "MARK"
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Player-entered tactician name in ASCII"
+    },
+    {
+      "name": "party_gold",
+      "offset": 24,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": "0x03001818",
+      "writers": [
+        "0x080a2e40"
+      ],
+      "readers": [
+        "0x080a2ce0"
+      ],
+      "observed_values": [
+        5000,
+        25000
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Convoy and player gold reserve"
+    },
+    {
+      "name": "unit_casualty_flags",
+      "offset": 32,
+      "size": 8,
+      "type": "bitfield_array",
+      "bitfield_array": {
+        "bit_width": 1,
+        "count": 64,
+        "labels": [
+          "kent",
+          "sain",
+          "florian",
+          "wil",
+          "dorcas",
+          "serra",
+          "erk",
+          "rath"
+        ]
+      },
+      "ram_addr": "0x03001820",
+      "writers": [
+        "0x080a2e40"
+      ],
+      "readers": [
+        "0x080a2ce0"
+      ],
+      "observed_values": [
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Classic permadeath tracking flags for all 64 playable units"
+    },
+    {
+      "name": "hector_hard_rank",
+      "offset": 40,
+      "size": 1,
+      "type": "u8",
+      "condition": {
+        "field": "story_mode",
+        "op": "==",
+        "value": 2
+      },
+      "ram_addr": "0x03001828",
+      "writers": [
+        "0x080a2e40"
+      ],
+      "readers": [
+        "0x080a2ce0"
+      ],
+      "observed_values": [
+        5
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Hector Hard Mode overall performance ranking tier (evaluated only when story_mode == 2)"
+    },
+    {
+      "name": "slot_checksum",
+      "offset": 8190,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": "0x030037FE",
+      "writers": [
+        "0x080a2e40"
+      ],
+      "readers": [
+        "0x080a2ce0"
+      ],
+      "observed_values": [
+        16675
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Sum16 integrity check word at slot boundary"
+    }
+  ],
+  "fuzzing_targets": [
+    {
+      "offset": 24,
+      "size": 4,
+      "mutation": "Set gold to 999999 (0x000F423F).",
+      "requires_checksum_repair": true,
+      "predicted_effect": "Max party gold reserve on load."
+    }
+  ],
+  "open_questions": []
+}

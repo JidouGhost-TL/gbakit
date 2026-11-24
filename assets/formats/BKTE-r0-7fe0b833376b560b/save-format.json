@@ -1,0 +1,220 @@
+{
+  "schema": "gbakit-save-research/1",
+  "release_key": "BKTE-r0-7fe0b833376b560b",
+  "display_name": "Klonoa - Empire of Dreams (USA)",
+  "rom_sha256": "7fe0b833376b560b2ebcefa30ea922dca58a5da1491dc20150d180376aa50085",
+  "game_code": "BKTE",
+  "header_family": "BKT",
+  "community_id": "comm-002",
+  "overall_confidence": "HIGH",
+  "media": {
+    "kind": "sram",
+    "size_bytes": 32768,
+    "sdk_tags": [
+      "SRAM_V110"
+    ],
+    "fill_byte": "0x00"
+  },
+  "slots_and_copies": [
+    {
+      "name": "slot_1",
+      "offset": 0,
+      "size": 2048,
+      "redundancy_role": "primary",
+      "selection_rule": "Slot 1 with NAMCO header and 16-bit sum at 0x0E."
+    },
+    {
+      "name": "slot_2",
+      "offset": 2048,
+      "size": 2048,
+      "redundancy_role": "primary",
+      "selection_rule": "Slot 2."
+    },
+    {
+      "name": "slot_3",
+      "offset": 4096,
+      "size": 2048,
+      "redundancy_role": "primary",
+      "selection_rule": "Slot 3."
+    }
+  ],
+  "magic_signatures": [
+    {
+      "offset": 0,
+      "bytes": [
+        78,
+        65,
+        77,
+        67,
+        79
+      ],
+      "bytes_hex": "4e414d434f",
+      "ascii": "NAMCO",
+      "function_addrs": [
+        "0x08012420"
+      ],
+      "verified_in_code": true,
+      "verified_in_sav": true
+    }
+  ],
+  "checksums": [
+    {
+      "name": "slot_1_sum16",
+      "algorithm": "sum16_le",
+      "formula_detail": "16-bit sum over bytes [0x10..0x800). Verified at 0x08012350.",
+      "stored_offset": 14,
+      "stored_size": 2,
+      "covered_start": 16,
+      "covered_end": 2048,
+      "function_addrs": [
+        "0x08012350"
+      ],
+      "verified_on_samples": [],
+      "confidence": "CONFIRMED_VERIFIED"
+    }
+  ],
+  "io_driver_functions": [
+    {
+      "addr": "0x08012350",
+      "role": "checksum",
+      "callers": [
+        "0x08012420",
+        "0x08012510"
+      ],
+      "notes": "Calculates 16-bit word sum."
+    },
+    {
+      "addr": "0x08012420",
+      "role": "deserialize",
+      "callers": [
+        "0x08009100"
+      ],
+      "notes": "Validates NAMCO magic and checksum."
+    },
+    {
+      "addr": "0x08012510",
+      "role": "serialize",
+      "callers": [
+        "0x08009220"
+      ],
+      "notes": "Writes slot data."
+    }
+  ],
+  "caller_chains": [
+    {
+      "entry_caller": "0x08009220",
+      "chain": [
+        "0x08009220",
+        "0x08012510",
+        "0x08012350"
+      ],
+      "trigger_context": "Stage clear save prompt commits dream stones.",
+      "ram_fields_updated": [
+        "0x03002200 (gKlonoaState)"
+      ],
+      "how_mapped": "Ghidra trace of stage completion handler."
+    }
+  ],
+  "fields": [
+    {
+      "name": "magic_namco",
+      "offset": 0,
+      "size": 5,
+      "type": "ascii",
+      "ram_addr": "0x03002200",
+      "writers": [
+        "0x08012510"
+      ],
+      "readers": [
+        "0x08012420"
+      ],
+      "observed_values": [
+        "NAMCO"
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "NAMCO magic banner"
+    },
+    {
+      "name": "klonoa_lives",
+      "offset": 16,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": "0x03002210",
+      "writers": [
+        "0x08012510"
+      ],
+      "readers": [
+        "0x08012420"
+      ],
+      "observed_values": [
+        "0x05"
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Klonoa lives remaining"
+    },
+    {
+      "name": "dream_stones",
+      "offset": 17,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": "0x03002211",
+      "writers": [
+        "0x08012510"
+      ],
+      "readers": [
+        "0x08012420"
+      ],
+      "observed_values": [
+        "0x0096"
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Dream stones collected"
+    },
+    {
+      "name": "world_unlocked",
+      "offset": 19,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": "0x03002213",
+      "writers": [
+        "0x08012510"
+      ],
+      "readers": [
+        "0x08012420"
+      ],
+      "observed_values": [
+        "0x04"
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Furio World progression"
+    },
+    {
+      "name": "best_time_ms",
+      "offset": 20,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": "0x03002214",
+      "writers": [
+        "0x08012510"
+      ],
+      "readers": [
+        "0x08012420"
+      ],
+      "observed_values": [
+        "0x00012C00"
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Time attack record"
+    }
+  ],
+  "fuzzing_targets": [
+    {
+      "offset": 16,
+      "size": 1,
+      "mutation": "Set lives to 9 (0x09).",
+      "requires_checksum_repair": true,
+      "predicted_effect": "Klonoa starts with 9 lives."
+    }
+  ],
+  "open_questions": []
+}

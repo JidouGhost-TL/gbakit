@@ -13,7 +13,13 @@
       <a href="../index.html">Games</a>
       <a href="../saves/index.html">Save Formats</a>
       <a href="../patches/index.html">Debug Patches</a>
+      <a href="../debug-menus.html">Debug Gallery</a>
+      <a href="../non-retail-cartridges.html">Non-Retail</a>
+      <a href="../cartridge-hardware.html">Cartridge Hardware</a>
+      <a href="../link-multiplayer.html">Link &amp; Multiplayer</a>
+      <a href="../multiboot-museum.html">MultiBoot Museum</a>
       <a href="../assets/index.html">Assets &amp; Audio</a>
+      <a href="../text-and-fonts.html">Text &amp; Fonts</a>
       <a href="../engines/index.html">Engines &amp; Hardware</a>
       <a href="../families/index.html">Families</a>
       <a href="../gbakit/index.html">Using gbakit</a>
@@ -22,7 +28,7 @@
   <main>
 <p class="meta"><a href="../index.html">&larr; Games</a> &middot; Family <code>BD6</code></p>
 <h1>Kid Paddle (Europe) (Fr,Nl) (Beta 1) (2005-06-28)</h1>
-<p><span class='badge badge-slate'>EEPROM 4K</span></p>
+<p><span class='badge badge-slate'>EEPROM 4K</span> <span class='badge badge-emerald'>Save Format Spec</span> <span class='badge badge-emerald'>gbakit Built-In</span> <a href='../link-multiplayer.html#multiboot'><span class='badge badge-amber'>💾 MultiBoot</span></a> <a href='../link-multiplayer.html#sio-multi'><span class='badge badge-blue'>🎮 4P Link</span></a></p>
 
 <h2>Cartridge Identity</h2>
 <dl class="kv">
@@ -38,6 +44,30 @@
 
 
 
+
+<h2>Link Cable &amp; Multiplayer Communications</h2>
+<div class="callout">
+  This title contains detected communication capabilities: <a href='../link-multiplayer.html#multiboot'><span class='badge badge-amber'>💾 MultiBoot</span></a> <a href='../link-multiplayer.html#sio-multi'><span class='badge badge-blue'>🎮 4P Link</span></a>.
+  Detailed protocol specifications, SIO registers, Joybus commands, and MultiBoot sequences are documented in the <a href="../link-multiplayer.html"><strong>Link &amp; Multiplayer Reference</strong></a>.
+</div>
+<dl class="kv">
+  <dt>Multi-Player SIO (4P)</dt><dd>16-bit ring network &middot; SIOCNT (<code>0x04000128</code>) literals: <code>0x21c6c4</code>, <code>0x21c800</code>, <code>0x21cbc0</code> &middot; SIODATA32/SIOMULTI0 (<code>0x04000120</code>) literals: <code>0x21ce6c</code></dd><dt>Single-Cart MultiBoot</dt><dd>Single-Cartridge MultiBoot (Download Play) client/server handler &middot; Thumb SWI 0x25 (<code>0xDF25</code>): <code>0x363204</code>, <code>0x364b04</code>, <code>0x365400</code>, <code>0x3677bc</code></dd>
+</dl>
+
+
+<h2>Battery Save Format Specification</h2>
+<p><a class='btn' href='../saves/BD6E-r0-61faf7b6a44782d6.html'>Open Full Save Format Spec</a><a class='btn btn-secondary' href='../assets/formats/BD6E-r0-61faf7b6a44782d6/save-format.json' download>Download save-format.json</a></p>
+<p class='meta'>This specification also governs 4 regional editions &amp; revisions in Family <code>BD6</code>.</p>
+<dl class="kv">
+  <dt>Specification Coverage</dt><dd><strong>4</strong> mapped fields &middot; <strong>0</strong> verified checksum(s) &middot; Confidence: <span class="badge badge-indigo">HIGH</span></dd>
+  <dt>gbakit Built-In Support</dt><dd><span class="badge badge-emerald">Built-in (BD6E)</span></dd>
+  
+</dl>
+<pre><code>gbakit save verify BD6E save.sav
+gbakit save decode BD6E save.sav
+gbakit save fix    BD6E damaged.sav -o repaired.sav</code></pre>
+
+
 <h2>Observed Battery Save Layout</h2>
 <dl class="kv">
   <dt>Fill Byte &amp; Active Size</dt><dd><code>0xFF</code> fill &middot; 187–187 / 512 B active (entropy 2.10 bits/B)</dd>
@@ -49,6 +79,11 @@
 </dl>
 
 <h2>ROM Assets, Compression &amp; Audio</h2><dl class='kv'><dt>BIOS Compression</dt><dd>LZ77 (<code>0x10</code>): <strong>1</strong> streams &middot; RLE (<code>0x30</code>): <strong>0</strong> streams</dd><dt>ROM Pointer Tables</dt><dd>6 tables (0 pointing to validated compressed streams)</dd><dt>SDK Backup Tags</dt><dd><code>EEPROM_V124</code></dd></dl>
+
+<h2>Text, Fonts &amp; Scene Data</h2>
+<dl class="kv"><dt>Primary Text Encoding</dt><dd><strong>Plain ASCII (uncompressed)</strong> (<code>2,425</code> ASCII strings &middot; <code>3</code> Shift-JIS runs)</dd><dt>Font &amp; VWF Indicators</dt><dd><span class='badge badge-emerald'>VWF Width Table</span> <span class='badge badge-blue'>1bpp Font</span> &middot; BIOS SWIs: BitUnPack <code>0x10</code>: <code>8</code> &middot; LZ77 <code>0x11/12</code>: <code>10</code> &middot; Huffman <code>0x13</code>: <code>5</code> &middot; RLE <code>0x14/15</code>: <code>12</code></dd><dt>Scene &amp; Packaging</dt><dd><code>7</code> ROM pointer tables (&ge;32 entries, <code>1</code> &ge;200) &middot; <code>73</code> relative <code>u32</code> TOCs &middot; <code>268</code> OAM metasprite hits &middot; FourCC: <code>GBAMOD30</code></dd></dl>
+
+
 <h2>Hardware MMIO Subsystems</h2><dl class='kv'><dt><code>dma_transfer</code></dt><dd><code>0x821b750</code></dd><dt><code>ppu_display</code></dt><dd><code>0x81ff4dc</code>, <code>0x8204fe0</code>, <code>0x8205e14</code>, <code>0x820661c</code>, <code>0x8206aa0</code>, <code>0x8206c9c</code>, <code>0x8206db4</code>, <code>0x82070fc</code>, <code>0x8207160</code>, <code>0x8207258</code> (+3 more)</dd></dl>
 <h2>Regional Variants &amp; Revisions (Family <code>BD6</code>)</h2><ul><li><a href='BD6P-r0-781a2ec857cbba8c.html'>Duel Masters - Kaijudo Showdown (Europe) (En,Fr,De,Es,It)</a> (<code>BD6P</code>, 16 MiB)</li><li><a href='BD6P-r0-c9153da6da2dc478.html'>Duel Masters - Kaijudo Showdown (Europe) (En,Fr,De,Es,It) (Beta)</a> (<code>BD6P</code>, 16 MiB)</li><li><a href='BD6E-r0-6ce2363ad2a86e3d.html'>Duel Masters - Kaijudo Showdown (USA)</a> (<code>BD6E</code>, 8 MiB)</li><li><a href='BD6E-r0-d690bebdecc3c4bd.html'>Kid Paddle (Europe) (Fr,Nl) (Beta 2) (2005-07-08)</a> (<code>BD6E</code>, 8 MiB)</li></ul>
 </main>

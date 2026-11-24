@@ -13,7 +13,13 @@
       <a href="../index.html">Games</a>
       <a href="../saves/index.html">Save Formats</a>
       <a href="../patches/index.html">Debug Patches</a>
+      <a href="../debug-menus.html">Debug Gallery</a>
+      <a href="../non-retail-cartridges.html">Non-Retail</a>
+      <a href="../cartridge-hardware.html">Cartridge Hardware</a>
+      <a href="../link-multiplayer.html">Link &amp; Multiplayer</a>
+      <a href="../multiboot-museum.html">MultiBoot Museum</a>
       <a href="../assets/index.html">Assets &amp; Audio</a>
+      <a href="../text-and-fonts.html">Text &amp; Fonts</a>
       <a href="../engines/index.html">Engines &amp; Hardware</a>
       <a href="../families/index.html">Families</a>
       <a href="../gbakit/index.html">Using gbakit</a>
@@ -22,7 +28,7 @@
   <main>
 <p class="meta"><a href="../index.html">&larr; Games</a> &middot; Family <code>BXU</code></p>
 <h1>Surf&#x27;s Up (USA) (En,Fr,Es)</h1>
-<p><span class='badge badge-zinc'>Stateless / Passcode</span></p>
+<p><span class='badge badge-slate'>EEPROM 4K</span> <span class='badge badge-emerald'>Save Format Mapped (Family Spec)</span> <a href='../link-multiplayer.html#multiboot'><span class='badge badge-amber'>💾 MultiBoot</span></a></p>
 
 <h2>Cartridge Identity</h2>
 <dl class="kv">
@@ -30,20 +36,45 @@
   <dt>Header Title</dt><dd><code>SURFS UP</code></dd>
   <dt>Maker / Revision</dt><dd><code>41</code> / rev <code>0</code></dd>
   <dt>ROM Size</dt><dd>8.0 MiB (8,388,608 B)</dd>
-  <dt>Save Media</dt><dd><code>None / Unknown</code></dd>
+  <dt>Save Media</dt><dd><code>EEPROM 4K</code></dd>
   <dt>SHA-256</dt><dd><code>dc4c34baf53a64a09bb95644fb552e6d6e2bbd88f8a48ce8888c065537d6a865</code></dd>
   <dt>Engine / SDK Group</dt><dd><a href='../engines/index.html#comm-019'><code>comm-019</code></a> (15 families)</dd>
 </dl>
 
 
 
-<h2>Cartridge Storage Architecture: Stateless / Passcode</h2>
+
+
+<h2>Link Cable &amp; Multiplayer Communications</h2>
 <div class="callout">
-  <strong>Zero non-volatile battery hardware:</strong> This cartridge PCB contains ROM only (no SRAM, Flash, or EEPROM chips). Progression is preserved via on-screen passcodes or session-only gameplay. No <code>.sav</code> file is generated or required.
+  This title contains detected communication capabilities: <a href='../link-multiplayer.html#multiboot'><span class='badge badge-amber'>💾 MultiBoot</span></a>.
+  Detailed protocol specifications, SIO registers, Joybus commands, and MultiBoot sequences are documented in the <a href="../link-multiplayer.html"><strong>Link &amp; Multiplayer Reference</strong></a>.
 </div>
+<dl class="kv">
+  <dt>Single-Cart MultiBoot</dt><dd>Single-Cartridge MultiBoot (Download Play) client/server handler &middot; Thumb SWI 0x25 (<code>0xDF25</code>): <code>0x0a50e0</code>, <code>0x16e836</code>, <code>0x399516</code>, <code>0x55c030</code></dd>
+</dl>
+
+
+<h2>Battery Save Format Specification (Family Shared)</h2>
+<div class="callout">
+  This release shares its save architecture with canonical family reference <a href="../titles/BXUX-r0-c2ab1010beffafa1.html"><strong>Surf&#x27;s Up (Europe) (En,Fr,De,Es,It)</strong></a> (Family <code>BXU</code>).
+</div>
+<p><a class='btn' href='../saves/BXUX-r0-c2ab1010beffafa1.html'>Open Family Save Format Spec (BXUX)</a><a class='btn btn-secondary' href='../assets/formats/BXUX-r0-c2ab1010beffafa1/save-format.json' download>Download save-format.json</a></p>
+<dl class="kv">
+  <dt>Canonical Specification</dt><dd><code>BXUX</code> &middot; <strong>3</strong> mapped fields &middot; <strong>0</strong> verified checksum(s) &middot; Confidence: <span class="badge badge-indigo">HIGH</span></dd>
+  <dt>gbakit Built-In Support</dt><dd><span class="badge badge-emerald">Built-in (BXUX)</span></dd>
+</dl>
+<pre><code>gbakit save verify BXUX save.sav
+gbakit save decode BXUX save.sav
+gbakit save fix    BXUX damaged.sav -o repaired.sav</code></pre>
 
 
 <h2>ROM Assets, Compression &amp; Audio</h2><dl class='kv'><dt>BIOS Compression</dt><dd>LZ77 (<code>0x10</code>): <strong>29</strong> streams &middot; RLE (<code>0x30</code>): <strong>0</strong> streams</dd><dt>ROM Pointer Tables</dt><dd>44 tables (1 pointing to validated compressed streams)</dd><dt>SDK Backup Tags</dt><dd><code>EEPROM_V124</code></dd></dl>
+
+<h2>Text, Fonts &amp; Scene Data</h2>
+<dl class="kv"><dt>Primary Text Encoding</dt><dd><strong>Shift-JIS (uncompressed)</strong> (<code>32</code> ASCII strings &middot; <code>33</code> Shift-JIS runs)</dd><dt>Font &amp; VWF Indicators</dt><dd><span class='badge badge-emerald'>VWF Width Table</span> <span class='badge badge-blue'>1bpp Font</span> &middot; BIOS SWIs: BitUnPack <code>0x10</code>: <code>7</code> &middot; LZ77 <code>0x11/12</code>: <code>8</code> &middot; Huffman <code>0x13</code>: <code>5</code> &middot; RLE <code>0x14/15</code>: <code>7</code></dd><dt>Scene &amp; Packaging</dt><dd><code>12</code> ROM pointer tables (&ge;32 entries, <code>2</code> &ge;200) &middot; <code>32</code> relative <code>u32</code> TOCs &middot; <code>190</code> OAM metasprite hits</dd></dl>
+
+
 <h2>Hardware MMIO Subsystems</h2><dl class='kv'><dt><code>ppu_display</code></dt><dd><code>0x8023620</code>, <code>0x8023760</code>, <code>0x8024358</code>, <code>0x80423b8</code>, <code>0x8043c00</code>, <code>0x8049040</code></dd></dl>
 <h2>Regional Variants &amp; Revisions (Family <code>BXU</code>)</h2><ul><li><a href='BXUX-r0-c2ab1010beffafa1.html'>Surf&#x27;s Up (Europe) (En,Fr,De,Es,It)</a> (<code>BXUX</code>, 8 MiB)</li><li><a href='BXUP-r0-740602b5d6c4bce2.html'>Surf&#x27;s Up (Europe) (En,Fr,Es)</a> (<code>BXUP</code>, 8 MiB)</li></ul>
 </main>

@@ -13,7 +13,13 @@
       <a href="../index.html">Games</a>
       <a href="../saves/index.html">Save Formats</a>
       <a href="../patches/index.html">Debug Patches</a>
+      <a href="../debug-menus.html">Debug Gallery</a>
+      <a href="../non-retail-cartridges.html">Non-Retail</a>
+      <a href="../cartridge-hardware.html">Cartridge Hardware</a>
+      <a href="../link-multiplayer.html">Link &amp; Multiplayer</a>
+      <a href="../multiboot-museum.html">MultiBoot Museum</a>
       <a href="../assets/index.html">Assets &amp; Audio</a>
+      <a href="../text-and-fonts.html">Text &amp; Fonts</a>
       <a href="../engines/index.html">Engines &amp; Hardware</a>
       <a href="../families/index.html">Families</a>
       <a href="../gbakit/index.html">Using gbakit</a>
@@ -22,7 +28,7 @@
   <main>
 <p class="meta"><a href="../index.html">&larr; Games</a> &middot; Family <code>AAO</code></p>
 <h1>Aero the Acro-Bat (USA)</h1>
-<p><span class='badge badge-slate'>EEPROM 4K</span></p>
+<p><span class='badge badge-slate'>EEPROM 4K</span> <span class='badge badge-emerald'>Save Format Spec</span> <span class='badge badge-emerald'>gbakit Built-In</span> <a href='../link-multiplayer.html#multiboot'><span class='badge badge-amber'>💾 MultiBoot</span></a></p>
 
 <h2>Cartridge Identity</h2>
 <dl class="kv">
@@ -38,6 +44,30 @@
 
 
 
+
+<h2>Link Cable &amp; Multiplayer Communications</h2>
+<div class="callout">
+  This title contains detected communication capabilities: <a href='../link-multiplayer.html#multiboot'><span class='badge badge-amber'>💾 MultiBoot</span></a>.
+  Detailed protocol specifications, SIO registers, Joybus commands, and MultiBoot sequences are documented in the <a href="../link-multiplayer.html"><strong>Link &amp; Multiplayer Reference</strong></a>.
+</div>
+<dl class="kv">
+  <dt>Single-Cart MultiBoot</dt><dd>Single-Cartridge MultiBoot (Download Play) client/server handler &middot; Thumb SWI 0x25 (<code>0xDF25</code>): <code>0x0cfc28</code>, <code>0x0ec678</code>, <code>0x14b164</code>, <code>0x1c74e8</code></dd>
+</dl>
+
+
+<h2>Battery Save Format Specification</h2>
+<p><a class='btn' href='../saves/AAOE-r0-2d1631c5568a5890.html'>Open Full Save Format Spec</a><a class='btn btn-secondary' href='../assets/saves/AAOE-r0-2d1631c5568a5890/AAOE-r0-2d1631c5568a5890.sav' download>Download Sample .sav (512 B)</a><a class='btn btn-secondary' href='../assets/formats/AAOE-r0-2d1631c5568a5890/save-format.json' download>Download save-format.json</a></p>
+<p class='meta'>This specification also governs 2 regional editions &amp; revisions in Family <code>AAO</code>.</p>
+<dl class="kv">
+  <dt>Specification Coverage</dt><dd><strong>2</strong> mapped fields &middot; <strong>1</strong> verified checksum(s) &middot; Confidence: <span class="badge badge-indigo">HIGH</span></dd>
+  <dt>gbakit Built-In Support</dt><dd><span class="badge badge-emerald">Built-in (AAOE)</span></dd>
+  
+</dl>
+<pre><code>gbakit save verify AAOE save.sav
+gbakit save decode AAOE save.sav
+gbakit save fix    AAOE damaged.sav -o repaired.sav</code></pre>
+
+
 <h2>Observed Battery Save Layout</h2>
 <dl class="kv">
   <dt>Fill Byte &amp; Active Size</dt><dd><code>0x00</code> fill &middot; 260–260 / 512 B active (entropy 0.54 bits/B)</dd>
@@ -49,6 +79,11 @@
 </dl>
 
 <h2>ROM Assets, Compression &amp; Audio</h2><dl class='kv'><dt>BIOS Compression</dt><dd>LZ77 (<code>0x10</code>): <strong>159</strong> streams &middot; RLE (<code>0x30</code>): <strong>11</strong> streams</dd><dt>ROM Pointer Tables</dt><dd>1 tables (0 pointing to validated compressed streams)</dd><dt>SDK Backup Tags</dt><dd><code>EEPROM_V122</code></dd></dl>
+
+<h2>Text, Fonts &amp; Scene Data</h2>
+<dl class="kv"><dt>Primary Text Encoding</dt><dd><strong>LZ77-compressed ASCII</strong> (<code>12</code> ASCII strings &middot; <code>2</code> LZ77 ASCII blocks)</dd><dt>Font &amp; VWF Indicators</dt><dd><span class='badge badge-emerald'>VWF Width Table</span> <span class='badge badge-blue'>1bpp Font</span> &middot; BIOS SWIs: BitUnPack <code>0x10</code>: <code>25</code> &middot; LZ77 <code>0x11/12</code>: <code>424</code> &middot; Huffman <code>0x13</code>: <code>16</code> &middot; RLE <code>0x14/15</code>: <code>20</code></dd><dt>Scene &amp; Packaging</dt><dd><code>8</code> ROM pointer tables (&ge;32 entries, <code>2</code> &ge;200) &middot; <code>91</code> relative <code>u32</code> TOCs &middot; <code>120</code> OAM metasprite hits &middot; FourCC: <code>GBAMOD2.</code></dd></dl>
+
+
 <h2>Hardware MMIO Subsystems</h2><dl class='kv'><dt><code>dma_transfer</code></dt><dd><code>0x8104620</code></dd><dt><code>ppu_display</code></dt><dd><code>0x8027c5c</code></dd></dl>
 <h2>Regional Variants &amp; Revisions (Family <code>AAO</code>)</h2><ul><li><a href='AAOJ-r0-78108a93904763a9.html'>Acrobat Kid (Japan)</a> (<code>AAOJ</code>, 4 MiB)</li><li><a href='AAOP-r0-4c3f5c1bfd2e74c5.html'>Aero the Acro-Bat (Europe)</a> (<code>AAOP</code>, 4 MiB)</li></ul>
 </main>

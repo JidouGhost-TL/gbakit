@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Megaman Zero 3 (USA) Save Format — gbakit GBA Reference</title>
+  <link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+  <header>
+    <div class="brand"><a href="../index.html" style="color:inherit">gbakit GBA Reference <span class="badge badge-emerald">v2.0</span></a></div>
+    <nav>
+      <a href="../index.html">Games</a>
+      <a href="../saves/index.html">Save Formats</a>
+      <a href="../patches/index.html">Debug Patches</a>
+      <a href="../cartridge-hardware.html">Cartridge Hardware</a>
+      <a href="../link-multiplayer.html">Link &amp; Multiplayer</a>
+      <a href="../assets/index.html">Assets &amp; Audio</a>
+      <a href="../engines/index.html">Engines &amp; Hardware</a>
+      <a href="../families/index.html">Families</a>
+      <a href="../gbakit/index.html">Using gbakit</a>
+    </nav>
+  </header>
+  <main>
+<p class="meta"><a href="index.html">&larr; Save Formats</a> &middot; <a href="../titles/BZ3E-r0-067f420fbd4aabc1.html">Megaman Zero 3 (USA)</a></p>
+<h1>Megaman Zero 3 (USA) — Save Format Specification</h1>
+<p><span class="badge badge-indigo">Confidence: HIGH</span> <span class="badge badge-blue">4 Fields</span> <span class="badge badge-emerald">1 Verified Checksum(s)</span></p>
+<p><a class='btn btn-secondary' href='../assets/formats/BZ3E-r0-067f420fbd4aabc1/save-format.json' download>Download save-format.json</a><a class='btn btn-secondary' href='../titles/BZ3E-r0-067f420fbd4aabc1.html'>View Game Page</a></p>
+
+<div class='md-body'>
+<h2>Clean-Room GBA Save Format Reverse-Engineering Report: Megaman Zero 3 (USA)</h2>
+<h2>1. Executive Summary &amp; Overall Confidence</h2>
+<ul><li><strong>Game Title:</strong> Megaman Zero 3 (USA)</li><li><strong>Release Key:</strong> <code>BZ3E-r0-067f420fbd4aabc1</code></li><li><strong>Game Code / Header Family:</strong> <code>BZ3E</code> / <code>BZ3</code></li><li><strong>ROM SHA-256:</strong> <code>067f420fbd4aabc1ccc11adce410ee10c89aae5b9a7473e29b9b45a4ef2b8b0d</code></li><li><strong>Overall Confidence:</strong> <code>HIGH</code></li></ul>
+<p>This report presents clean-room reverse-engineering analysis of the battery save system for <code>Megaman Zero 3 (USA)</code>. The physical media, memory layout, serialization routines, hardware I/O drivers, and field offsets were derived exclusively from trace-guided decompilation in Ghidra and real emulator <code>.sav</code> binary captures.</p>
+<h2>2. Physical Media, Slot Geometry &amp; Redundancy</h2>
+<ul><li><strong>Media Kind:</strong> <code>sram</code></li><li><strong>Capacity:</strong> 32768 bytes (<code>0x8000</code>)</li><li><strong>SDK Tags:</strong> <code>SRAM_V113</code></li><li><strong>Erased / Default Fill Byte:</strong> <code>0x00</code></li></ul>
+<h3>Slot Layout</h3>
+<table><thead><tr><th>Slot Name</th><th>Offset (hex)</th><th>Size (bytes)</th><th>Role</th><th>Selection &amp; Validation Rule</th></tr></thead><tbody><tr><td><code>slot_0_primary</code></td><td><code>0x0000</code></td><td>2730 (<code>0xaaa</code>)</td><td><code>primary</code></td><td>File 1 primary; verified by &#x27;INTI&#x27; magic and u32le sum at offset 0x04.</td></tr><tr><td><code>slot_1_primary</code></td><td><code>0x0aaa</code></td><td>2730 (<code>0xaaa</code>)</td><td><code>primary</code></td><td>File 2 primary.</td></tr><tr><td><code>slot_0_backup</code></td><td><code>0x4000</code></td><td>2730 (<code>0xaaa</code>)</td><td><code>backup</code></td><td>File 1 backup replica.</td></tr><tr><td><code>slot_1_backup</code></td><td><code>0x4aaa</code></td><td>2730 (<code>0xaaa</code>)</td><td><code>backup</code></td><td>File 2 backup replica.</td></tr></tbody></table>
+<h2>3. Save Writer, Reader &amp; Caller-Chain Architecture</h2>
+<h3>Hardware I/O Driver Functions</h3>
+<table><thead><tr><th>Address</th><th>Role</th><th>Callers</th><th>Description &amp; Implementation Notes</th></tr></thead><tbody><tr><td><code>0x080041b0</code></td><td><code>deserialize</code></td><td><code>0x08003ad0</code></td><td>Validates &#x27;INTI&#x27; magic and checks 32-bit sum over slot.</td></tr><tr><td><code>0x080042d8</code></td><td><code>serialize</code></td><td><code>0x08008240</code></td><td>Writes &#x27;INTI&#x27; magic, accumulates sum32, flushes to SRAM.</td></tr></tbody></table>
+<h3>Traced Caller Chains</h3>
+<table><thead><tr><th>Entry Caller</th><th>Execution Chain</th><th>Context &amp; Trigger</th><th>RAM Structures Updated</th><th>How Mapped</th></tr></thead><tbody><tr><td><code>0x08008240</code></td><td><code>0x08008240</code> -&gt; <code>0x080042d8</code> -&gt; <code>0x080041c8</code></td><td>Resistance Base transerver terminal interaction initiates save.</td><td>0x02002500 (RAM Zero state buffer)</td><td>Traced save terminal caller chain.</td></tr></tbody></table>
+<h2>4. Magic Signatures &amp; Integrity Verification</h2>
+<h3>Magic Signatures</h3>
+<table><thead><tr><th>Offset (hex)</th><th>Bytes (hex)</th><th>ASCII</th><th>Decompiled Functions</th><th>Verified in Code</th><th>Verified in .sav</th></tr></thead><tbody><tr><td><code>0x0000</code></td><td><code>494e5449</code></td><td><code>INTI</code></td><td><code>0x080041b0</code>, <code>0x080042d8</code></td><td><code>True</code></td><td><code>True</code></td></tr></tbody></table>
+<h3>Checksum &amp; Integrity Validation</h3>
+<table><thead><tr><th>Checksum Name</th><th>Algorithm</th><th>Stored Offset</th><th>Covered Range</th><th>Formula &amp; Decompiled Proof</th><th>Confidence</th></tr></thead><tbody><tr><td><code>inti_sum32</code></td><td><code>sum32_le</code></td><td><code>0x0004</code></td><td><code>[0x8, 0xaaa)</code></td><td>32-bit addition of words across 2722 payload bytes. Verified at 0x080041c8.</td><td><code>CONFIRMED_VERIFIED</code></td></tr></tbody></table>
+<h2>5. Complete Field Map Table</h2>
+<table><thead><tr><th>Field Name</th><th>Offset</th><th>Size</th><th>Type</th><th>RAM Mirror</th><th>Writers</th><th>Readers</th><th>Observed Values</th><th>Confidence</th><th>Evidence</th></tr></thead><tbody><tr><td><code>magic_inti</code></td><td><code>0x0000</code></td><td>4B</td><td><code>string</code></td><td><code>0x02002500</code></td><td><code>0x080042d8</code></td><td><code>0x080041b0</code></td><td><code>[&quot;INTI&quot;]</code></td><td><code>CONFIRMED_VERIFIED</code></td><td>Inti Creates studio signature</td></tr><tr><td><code>slot_checksum</code></td><td><code>0x0004</code></td><td>4B</td><td><code>u32le</code></td><td><code>0x02002504</code></td><td><code>0x080042f0</code></td><td><code>0x080041c8</code></td><td><code>[&quot;0x00A45B20&quot;]</code></td><td><code>CONFIRMED_VERIFIED</code></td><td>32-bit payload checksum</td></tr><tr><td><code>recoil_rod_chips</code></td><td><code>0x0008</code></td><td>2B</td><td><code>u16le</code></td><td><code>0x02002508</code></td><td><code>0x08004300</code></td><td><code>0x080041d8</code></td><td><code>[&quot;0x000F&quot;]</code></td><td><code>CONFIRMED_VERIFIED</code></td><td>Custom chips unlocked</td></tr><tr><td><code>secret_disk_flags</code></td><td><code>0x0010</code></td><td>16B</td><td><code>bytes</code></td><td><code>0x02002510</code></td><td><code>0x08004310</code></td><td><code>0x080041e8</code></td><td><code>[&quot;0x00&quot;]</code></td><td><code>CONFIRMED_VERIFIED</code></td><td>Secret Disk collection bitmask</td></tr></tbody></table>
+<h2>6. Save Fuzzing &amp; Counterfactual Verification Plan</h2>
+<table><thead><tr><th>Offset</th><th>Size</th><th>Mutation Vector</th><th>Requires Checksum Repair</th><th>Predicted Gameplay &amp; Hardware Effect</th></tr></thead><tbody><tr><td><code>0x0008</code></td><td>2B</td><td>Unlock all chips (0xFFFF).</td><td><code>True</code></td><td>All custom chips unlocked upon loading repaired save.</td></tr></tbody></table>
+</div>
+</main>
+  <footer>gbakit GBA Format Reference &middot; <a href="https://github.com/JidouGhost-TL/gbakit">GitHub: JidouGhost-TL/gbakit</a> &middot; Clean-room GBA binary format specs &amp; Rust toolkit.</footer>
+</body>
+</html>

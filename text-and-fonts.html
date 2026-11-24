@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>GBA Text &amp; Fonts Guide — gbakit GBA Reference</title>
+  <link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+  <header>
+    <div class="brand"><a href="index.html" style="color:inherit">gbakit GBA Reference <span class="badge badge-emerald">v2.0</span></a></div>
+    <nav>
+      <a href="index.html">Games</a>
+      <a href="saves/index.html">Save Formats</a>
+      <a href="patches/index.html">Debug Patches</a>
+      <a href="debug-menus.html">Debug Gallery</a>
+      <a href="non-retail-cartridges.html">Non-Retail</a>
+      <a href="cartridge-hardware.html">Cartridge Hardware</a>
+      <a href="link-multiplayer.html">Link &amp; Multiplayer</a>
+      <a href="multiboot-museum.html">MultiBoot Museum</a>
+      <a href="assets/index.html">Assets &amp; Audio</a>
+      <a href="text-and-fonts.html">Text &amp; Fonts</a>
+      <a href="engines/index.html">Engines &amp; Hardware</a>
+      <a href="families/index.html">Families</a>
+      <a href="gbakit/index.html">Using gbakit</a>
+    </nav>
+  </header>
+  <main>
+<h1>GBA Text &amp; Fonts Guide</h1>
+<p class="meta">How Game Boy Advance software renders text without a hardware text mode or font ROM — backed by our 1,698-family retail taxonomy and 20 verified deep-dive titles.</p>
+
+<div class="grid">
+  <div class="card"><div class="val">1,698</div><div class="lbl">Retail Families Profiled</div></div>
+  <div class="card"><div class="val">602</div><div class="lbl">Plain ASCII Primary (35.5%)</div></div>
+  <div class="card"><div class="val">161</div><div class="lbl">Shift-JIS Primary (9.5%)</div></div>
+  <div class="card"><div class="val">158</div><div class="lbl">LZ77 ASCII Text (9.3%)</div></div>
+  <div class="card"><div class="val">106</div><div class="lbl">Custom 16-bit Huffman (6.2%)</div></div>
+  <div class="card"><div class="val">1,649</div><div class="lbl">ROM Pointer Tables (97.1%)</div></div>
+</div>
+
+<div class="callout">
+  <strong>No Hardware Text Mode in GBA PPU:</strong> Every character on screen is drawn by game software into 4bpp (32 B/tile) or 8bpp (64 B/tile) BG tile VRAM (<code>0x06000000</code>) or OBJ sprite VRAM (<code>0x06010000</code>). Every matched title in this catalog now includes a dedicated <strong>Text, Fonts &amp; Scene Data</strong> section on its game page.
+</div>
+
+<h2>1. The Four GBA Text &amp; Font Architectures</h2>
+<ol>
+  <li><strong>Fixed-Width Tilemap Fonts (ASCII, Shift-JIS, Custom <code>.tbl</code>):</strong> Maps character codes directly to BG screenblock tile indices (<code>char_code - base + tile_base | (pal &lt;&lt; 12)</code>). Glyphs are stored as 1bpp bitmaps unpacked via BIOS <code>SWI 0x10</code> (<code>BitUnPack</code>) or LZ77-compressed 4bpp sheets (<code>SWI 0x11</code>). Japanese studios frequently pack letters from a non-ASCII base (e.g. Capcom <em>Mega Man Battle Network</em> <code>'A' = 0x5F</code>, <em>Mega Man Zero</em> <code>'A' = 0x0B</code>, Game Freak Gen 3 <code>'A' = 0xBB</code>, <em>Tactics Ogre</em> <code>'A' = 0x00</code>).</li>
+  <li><strong>Variable-Width Fonts (VWF) &amp; Software 4bpp Blitting:</strong> Because 240&times;160 fits only 30 fixed 8 px columns, text-heavy RPGs store <strong>1bpp</strong> (16 B per 8&times;16 glyph) or <strong>2bpp</strong> (32–64 B per glyph with drop-shadow/outline) bitmaps alongside a per-glyph width table (flat <code>u8[N]</code> in <em>Pok&eacute;mon Emerald</em> <code>0x633B03</code> / <em>Golden Sun</em> <code>0x0370B4</code> / <em>FFTA</em> <code>0x98D318</code>, or linked glyph structs in <em>Fire Emblem</em> <code>0x58C76C</code>) and shift rows across <code>(x_px &amp; 7)</code> tile boundaries into 4bpp VRAM.</li>
+  <li><strong>Compressed Text (BIOS LZ77, Custom 16-bit Huffman, Bigram Huffman):</strong> Large scripts compress dialogue via BIOS LZ77 (<code>SWI 0x11/0x12</code>, <code>0x10</code> header), custom global 16-bit canonical Huffman trees (<em>Fire Emblem: The Sacred Stones</em> 2,903-node tree @ <code>0x15A72C</code>), or order-1 context/bigram Huffman (<em>Golden Sun</em> 255-tree pointer table @ <code>0x029EE4</code>).</li>
+  <li><strong>16-Bit Custom &amp; UTF-16LE Encodings:</strong> Unifies Latin, kana, kanji, and inline script opcodes in 16-bit code units — e.g. <em>Metroid Fusion</em> (<code>0x0081 = 'A'</code>), <em>Mother 3</em> (<code>0x00DC = 'A'</code>), <em>Gyakuten Saiban</em> (16-bit script/kanji bytecode), and <em>Gunstar Super Heroes</em> (plain ASCII HUD @ <code>0x08C67F</code> + UTF-16LE dialogue @ <code>0x5827D4</code>).</li>
+</ol>
+
+<h2>2. Studio &amp; Company Text / Font Lineage</h2>
+<table>
+  <thead><tr><th>Studio / Company</th><th>Representative Titles</th><th>Primary Encoding &amp; Compression</th><th>Font / VWF &amp; Scene Packaging</th></tr></thead>
+  <tbody>
+    <tr><td><strong>Game Freak</strong></td><td><a href='titles/BPEE-r0-a9dec84dfe7f62ab.html'><strong>Pokémon Emerald</strong></a> (<code>BPEE</code>), <em>FireRed/LeafGreen</em>, <em>Drill Dozer</em> (<code>V49E</code>)</td><td>Custom 1-byte Gen 3 charmap (<code>'A' = 0xBB</code>, <code>0xFF = END</code>)</td><td>2bpp VWF + flat <code>u8[256]</code> width table (<code>0x633B03</code>); map group ptr tables + script VM</td></tr>
+    <tr><td><strong>Intelligent Systems</strong></td><td><a href='titles/BE8E-r0-a106b01154fd72e9.html'><strong>Fire Emblem: Sacred Stones</strong></a> (<code>BE8E</code>), <a href='titles/AWRE-r0-72f5ad9283aa709e.html'><strong>Advance Wars</strong></a> (<code>AWRE</code>)</td><td>Custom 16-bit canonical Huffman (<em>FE</em>) &middot; Plain ASCII + residual Shift-JIS (<em>AW</em>)</td><td>256-bucket linked 16&times;16 2bpp VWF structs (<code>0x58C76C</code>); 3,000+ entry ROM ptr tables</td></tr>
+    <tr><td><strong>Camelot</strong></td><td><a href='titles/AGSE-r0-c14f1151897e8d73.html'><strong>Golden Sun</strong></a> (<code>AGSE</code>)</td><td>255-tree order-1 bigram Huffman (<code>0x029EE4</code>)</td><td>1bpp VWF + flat ASCII width table (<code>0x0370B4</code>); 974-entry master asset pack (<code>0x320000</code>)</td></tr>
+    <tr><td><strong>Capcom / Flagship / Inti Creates</strong></td><td><a href='titles/BZME-r0-bedc74df62755f70.html'><strong>Zelda: Minish Cap</strong></a> (<code>BZME</code>), <a href='titles/AREE-r0-87bc7257f2f9ed0a.html'><strong>Mega Man Battle Network</strong></a> (<code>AREE</code>), <a href='titles/AZCE-r0-302415ba1d435b0a.html'><strong>Mega Man Zero</strong></a> (<code>AZCE</code>), <a href='titles/ASBJ-r0-f2690a0f5cfc1c1d.html'><strong>Gyakuten Saiban</strong></a> (<code>ASBJ</code>)</td><td>Plain ASCII + binary control codes (<em>Minish Cap</em>) &middot; Custom 1-byte <code>.tbl</code> (<code>0x5F</code>/<code>0x0B</code>) + inline VM &middot; 16-bit script/kanji (<em>GS</em>)</td><td>1bpp/2bpp VWF &amp; 16&times;16 kanji sheets; relative <code>u32</code> string tables (<code>0x9B1DEC</code>)</td></tr>
+    <tr><td><strong>Nintendo R&amp;D1 / AlphaDream / HAL</strong></td><td><a href='titles/AMTE-r0-a56ce3d7f8f3f4f4.html'><strong>Metroid Fusion</strong></a> (<code>AMTE</code>), <a href='titles/A88E-r0-af9066e7eacdab91.html'><strong>Mario &amp; Luigi: Superstar Saga</strong></a> (<code>A88E</code>), <a href='titles/A3UJ-r0-d0f76a5a75454793.html'><strong>Mother 3</strong></a> (<code>A3UJ</code>), <a href='titles/A7KE-r0-caa4e11b61022579.html'><strong>Kirby: Nightmare in Dream Land</strong></a> (<code>A7KE</code>)</td><td>16-bit LE custom charmap (<em>Metroid</em>, <em>Mother 3</em>) &middot; Plain ASCII (<em>M&amp;L</em>) &middot; Tile UI (<em>Kirby</em>)</td><td>60-byte room headers + RLE/LZ77 layers (<em>Metroid</em>); categorized ROM ptr tables</td></tr>
+    <tr><td><strong>Konami KCE</strong></td><td><a href='titles/A2CE-r0-910f88d3701e6c9f.html'><strong>Castlevania: Aria of Sorrow</strong></a> (<code>A2CE</code>), <em>Boktai</em></td><td>Plain ASCII (<code>0x01 0x00</code> prefix + <code>0x03..0x07</code> codes) &middot; Shift-JIS</td><td>2,895-entry string ptr table (<code>0x506B38</code>) &amp; 1,077-entry anim frame table (<code>0x638FB8</code>)</td></tr>
+    <tr><td><strong>Square Enix / Quest</strong></td><td><a href='titles/AFXE-r0-43fc8204c6dceee5.html'><strong>Final Fantasy Tactics Advance</strong></a> (<code>AFXE</code>), <a href='titles/ATOE-r0-c5b439c2530331f3.html'><strong>Tactics Ogre</strong></a> (<code>ATOE</code>)</td><td>BIOS LZ77 + dictionary/Huffman (<em>FFTA</em>) &middot; Custom 1-byte <code>'A' = 0x00</code> (<em>Tactics Ogre</em>)</td><td>2bpp VWF + width table (<code>0x98D318</code>); large ROM pointer tables</td></tr>
+    <tr><td><strong>WayForward</strong></td><td><a href='titles/B3GE-r0-0fa1daa6099ce9a1.html'><strong>Sigma Star Saga</strong></a> (<code>B3GE</code>)</td><td>Plain ASCII null-terminated dialogue</td><td>Relative <code>u32</code> archive TOCs (<code>0x25154C</code>, 334 entries) + <code>WAYF</code> signature</td></tr>
+    <tr><td><strong>Vicarious Visions</strong></td><td><a href='titles/BH9E-r0-5aba14ffb5b7784d.html'><strong>Tony Hawk&#x27;s American Sk8land</strong></a> (<code>BH9E</code>)</td><td>Plain ASCII strings</td><td>Relative <code>u32</code> packed asset TOCs (<code>0x042138</code>, 68 entries)</td></tr>
+    <tr><td><strong>Treasure / Shin'en / Dimps</strong></td><td><a href='titles/BHGE-r0-392eff9282764f7e.html'><strong>Gunstar Super Heroes</strong></a> (<code>BHGE</code>), <a href='titles/AI2E-r0-8f89c1ab8fb52f30.html'><strong>Iridion II</strong></a> (<code>AI2E</code>), <a href='titles/ASOE-r0-afc29e3325baf68a.html'><strong>Sonic Advance</strong></a> (<code>ASOE</code>)</td><td>Dual ASCII HUD + UTF-16LE dialogue (<em>GSH</em>) &middot; Multi-language ASCII (<em>Iridion II</em>) &middot; Tile UI (<em>Sonic</em>)</td><td><code>GAX2</code> blocks (150 families); 72-entry level pointer tables (<code>0x0B7F4C</code>)</td></tr>
+  </tbody>
+</table>
+
+<h2>3. Top Publishers by Primary Text Strategy (1,698 Families)</h2>
+<table>
+  <thead><tr><th>Publisher (Maker Code)</th><th class="num">Plain ASCII</th><th class="num">Shift-JIS</th><th class="num">LZ77 ASCII</th><th class="num">Custom Huffman</th><th class="num">16-bit / UTF-16LE</th><th class="num">Custom / Compressed</th></tr></thead>
+  <tbody><tr><td>78 (THQ)</td><td class='num'>95</td><td class='num'>1</td><td class='num'>1</td><td class='num'>16</td><td class='num'>26</td><td class='num'>13</td></tr><tr><td>A4 (Konami)</td><td class='num'>37</td><td class='num'>35</td><td class='num'>7</td><td class='num'>4</td><td class='num'>39</td><td class='num'>17</td></tr><tr><td>01 (Nintendo)</td><td class='num'>24</td><td class='num'>10</td><td class='num'>13</td><td class='num'>11</td><td class='num'>18</td><td class='num'>61</td></tr><tr><td>52 (Activision)</td><td class='num'>46</td><td class='num'>0</td><td class='num'>0</td><td class='num'>6</td><td class='num'>7</td><td class='num'>5</td></tr><tr><td>41 (Ubisoft)</td><td class='num'>42</td><td class='num'>2</td><td class='num'>2</td><td class='num'>1</td><td class='num'>13</td><td class='num'>3</td></tr><tr><td>70 (Infogrames / Atari)</td><td class='num'>31</td><td class='num'>1</td><td class='num'>1</td><td class='num'>1</td><td class='num'>17</td><td class='num'>7</td></tr><tr><td>20 (Destination Software)</td><td class='num'>24</td><td class='num'>2</td><td class='num'>0</td><td class='num'>5</td><td class='num'>13</td><td class='num'>10</td></tr><tr><td>69 (Other)</td><td class='num'>24</td><td class='num'>0</td><td class='num'>0</td><td class='num'>0</td><td class='num'>22</td><td class='num'>2</td></tr></tbody>
+</table>
+<p class="meta">For per-engine/SDK text and archive rollups across all 91 discovered communities, see <a href="engines/index.html"><strong>Engines &amp; Hardware</strong></a>.</p>
+
+<h2>4. Working with GBA Text &amp; Fonts in <code>gbakit</code></h2>
+<pre><code># List built-in charmaps (ascii, pokemon-gen3-en, shift-jis) or load any custom .tbl:
+gbakit text tables [--json]
+
+# Scan a ROM for string pointer tables matching a charmap:
+gbakit text scan path/to/game.gba --table pokemon-gen3-en --min-entries 10 [--json]
+
+# Extract or replace strings in-place or via 0xFF free-space relocation + pointer patching:
+gbakit text extract path/to/game.gba --offset 0x1C582D --table pokemon-gen3-en
+gbakit text replace path/to/game.gba --offset 0x1C582D --table pokemon-gen3-en \
+  --text "Custom GBA text!" --allow-relocate -o modded.gba [--json]
+
+# Dump or re-inject 1bpp / 2bpp bitmap &amp; VWF font sheets as PNG/PPM:
+gbakit text font-dump    path/to/game.gba --offset 0x200000 --count 128 --width 8 --height 16 --bpp 2 -o font.png
+gbakit text font-replace path/to/game.gba --offset 0x200000 --image font.png --count 128 --width 8 --height 16 --bpp 2 -o modded.gba</code></pre>
+</main>
+  <footer>gbakit GBA Format Reference &middot; <a href="https://github.com/JidouGhost-TL/gbakit">GitHub: JidouGhost-TL/gbakit</a> &middot; Clean-room GBA binary format specs &amp; Rust toolkit.</footer>
+</body>
+</html>

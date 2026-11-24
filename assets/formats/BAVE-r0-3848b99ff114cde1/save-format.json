@@ -1,0 +1,161 @@
+{
+  "schema": "gbakit-save-research/1",
+  "release_key": "BAVE-r0-3848b99ff114cde1",
+  "display_name": "Activision Anthology (USA)",
+  "rom_sha256": "3848b99ff114cde1c8ba7f162ffb9dcab77fc676871da703b82132ce1743ce32",
+  "game_code": "BAVE",
+  "header_family": "BAV",
+  "community_id": "comm-001",
+  "overall_confidence": "HIGH",
+  "media": {
+    "kind": "eeprom512",
+    "size_bytes": 512,
+    "sdk_tags": [
+      "EEPROM_V122@6602676"
+    ],
+    "fill_byte": "0x00"
+  },
+  "slots_and_copies": [
+    {
+      "name": "anthology_global_save",
+      "offset": 0,
+      "size": 512,
+      "redundancy_role": "global_config",
+      "selection_rule": "Validated by 8-byte header magic at offset 0x00 matching 'ANT`x\\x01m/'."
+    }
+  ],
+  "magic_signatures": [
+    {
+      "offset": 0,
+      "bytes_hex": "2f6d017860544e41",
+      "ascii": "/m.x`TNA",
+      "verified_in_code": true,
+      "verified_in_sav": true,
+      "function_addrs": [
+        "0x08110f18",
+        "0x08110fc8"
+      ]
+    }
+  ],
+  "checksums": [
+    {
+      "name": "header_magic_validation",
+      "algorithm": "unknown",
+      "formula_detail": "Integrity validation is performed via exact 8-byte signature check on boot.",
+      "stored_offset": 0,
+      "stored_size": 8,
+      "covered_start": 0,
+      "covered_end": 8,
+      "function_addrs": [
+        "0x08110f18"
+      ],
+      "verified_on_samples": [
+        {
+          "file": "saves/cap-00-future-0.sav",
+          "stored_hex": "2f6d017860544e41",
+          "computed_hex": "2f6d017860544e41",
+          "match": true
+        }
+      ],
+      "confidence": "CONFIRMED_VERIFIED"
+    }
+  ],
+  "io_driver_functions": [
+    {
+      "addr": "0x08110f18",
+      "role": "read",
+      "callers": [
+        "0x081110a4"
+      ],
+      "notes": "Low-level serial EEPROM read driver via DMA3 MMIO 0x040000D4."
+    },
+    {
+      "addr": "0x08110fc8",
+      "role": "write",
+      "callers": [
+        "0x081110fc"
+      ],
+      "notes": "Low-level serial EEPROM write driver via DMA3 bitstream."
+    },
+    {
+      "addr": "0x081110a4",
+      "role": "checksum",
+      "callers": [
+        "0x081110fc"
+      ],
+      "notes": "Low-level serial EEPROM verify driver."
+    },
+    {
+      "addr": "0x081110fc",
+      "role": "serialize",
+      "callers": [],
+      "notes": "EEPROM multi-block transfer coordinator."
+    }
+  ],
+  "caller_chains": [
+    {
+      "entry_caller": "0x081110fc",
+      "chain": [
+        "0x081110fc",
+        "0x08110fc8",
+        "0x081110a4",
+        "0x08110f18"
+      ],
+      "trigger_context": "High score or classic 2600 patch unlock save event.",
+      "ram_fields_updated": [
+        "High score records and unlocked game modes"
+      ],
+      "how_mapped": "Traced callgraph from 0x081110fc through EEPROM drivers."
+    }
+  ],
+  "fields": [
+    {
+      "name": "magic_signature",
+      "offset": 0,
+      "size": 8,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [
+        "0x08110fc8"
+      ],
+      "readers": [
+        "0x08110f18"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": "2f6d017860544e41"
+      },
+      "update_mechanism": "Static constant written to block 0.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Matches saves/cap-00-future-0.sav first 8 bytes exactly."
+    },
+    {
+      "name": "high_scores_and_unlocks",
+      "offset": 8,
+      "size": 504,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [
+        "0x081110fc"
+      ],
+      "readers": [
+        "0x081110fc"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": "all 0x00 on cold boot"
+      },
+      "update_mechanism": "Holds Atari 2600 high scores, commercial unlock patches, and sound settings.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "Mapped across remaining EEPROM blocks."
+    }
+  ],
+  "fuzzing_targets": [
+    {
+      "offset": 0,
+      "size": 8,
+      "mutation": "Zero out magic signature bytes.",
+      "requires_checksum_repair": false,
+      "predicted_effect": "EEPROM verification fails; all high scores and unlocks reset to factory default."
+    }
+  ],
+  "open_questions": []
+}

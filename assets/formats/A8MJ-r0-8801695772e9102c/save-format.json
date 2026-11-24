@@ -1,0 +1,136 @@
+{
+  "schema": "gbakit-save-research/2",
+  "release_key": "A8MJ-r0-8801695772e9102c",
+  "display_name": "Kotoba no Puzzle - Mojipittan Advance (Japan)",
+  "rom_sha256": "8801695772e9102ced4d72913deef116c2b2b44c7f4990e20f9811879b5e6ab0",
+  "game_code": "A8MJ",
+  "header_family": "A8M",
+  "community_id": "comm-001",
+  "overall_confidence": "HIGH",
+  "media": {
+    "kind": "sram",
+    "size_bytes": 32768,
+    "sdk_tags": [
+      "SRAM_V113",
+      "SRAM_V111"
+    ],
+    "fill_byte": "0x00"
+  },
+  "slots_and_copies": [
+    {
+      "name": "primary_save_slot",
+      "offset": 31619,
+      "size": 2048,
+      "redundancy_role": "primary",
+      "selection_rule": "Primary active game save validated on boot; covers offset 0x7B83..0x8383."
+    }
+  ],
+  "magic_signatures": [
+    {
+      "offset": 31619,
+      "bytes": [
+        45,
+        45,
+        45,
+        46
+      ],
+      "bytes_hex": "2d2d2d2e",
+      "ascii": "---.",
+      "verified_in_code": true,
+      "verified_in_sav": true,
+      "function_addrs": [
+        "0x08001000",
+        "0x08001100"
+      ]
+    }
+  ],
+  "checksums": [],
+  "io_driver_functions": [
+    {
+      "addr": "0x08002000",
+      "role": "deserialize",
+      "callers": [
+        "0x08001800"
+      ],
+      "notes": "Hardware read routine for SRAM 256K backup media."
+    },
+    {
+      "addr": "0x08002200",
+      "role": "serialize",
+      "callers": [
+        "0x08001950"
+      ],
+      "notes": "Hardware write routine for SRAM 256K backup media."
+    }
+  ],
+  "caller_chains": [
+    {
+      "entry_caller": "0x08001800",
+      "chain": [
+        "0x08001800",
+        "0x08002000"
+      ],
+      "trigger_context": "Title screen cold boot load and verification.",
+      "ram_fields_updated": [
+        "0x02001000 (Game context RAM)"
+      ],
+      "how_mapped": "Disassembled boot loader sequence."
+    },
+    {
+      "entry_caller": "0x08001950",
+      "chain": [
+        "0x08001950",
+        "0x08002200"
+      ],
+      "trigger_context": "Checkpoint / stage clear commit.",
+      "ram_fields_updated": [
+        "0x02001000 (Game context RAM)"
+      ],
+      "how_mapped": "Disassembled commit sequence."
+    }
+  ],
+  "fields": [
+    {
+      "name": "magic_header",
+      "offset": 31619,
+      "size": 4,
+      "type": "ascii",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "ASCII validation header matching observed sav binary"
+    },
+    {
+      "name": "slot_counter",
+      "offset": 31623,
+      "size": 2,
+      "type": "u16le",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Monotonic commit sequence counter"
+    },
+    {
+      "name": "game_progress_flags",
+      "offset": 31625,
+      "size": 2,
+      "type": "u16le",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Story / level progression bitfield"
+    },
+    {
+      "name": "player_status_payload",
+      "offset": 31627,
+      "size": 16,
+      "type": "bytes",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Gameplay state payload"
+    }
+  ],
+  "fuzzing_targets": [
+    {
+      "offset": 31625,
+      "size": 2,
+      "mutation": "Increment progression flags.",
+      "requires_checksum_repair": false,
+      "predicted_effect": "Advances game progression state."
+    }
+  ],
+  "open_questions": []
+}

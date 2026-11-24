@@ -1,0 +1,209 @@
+{
+  "schema": "gbakit-save-research/1",
+  "release_key": "BMGE-r0-f58b827e5b1d2ccb",
+  "display_name": "Mario Golf - Advance Tour (USA)",
+  "rom_sha256": "f58b827e5b1d2ccbd1cb5eab81d38a3dc6716f0ff6c2591475bb06a862bffc0f",
+  "game_code": "BMGE",
+  "header_family": "BMG",
+  "community_id": "comm-009",
+  "overall_confidence": "HIGH",
+  "media": {
+    "kind": "sram",
+    "size_bytes": 32768,
+    "sdk_tags": [
+      "SRAM_V113"
+    ],
+    "fill_byte": "0xff"
+  },
+  "slots_and_copies": [
+    {
+      "name": "system_record_0",
+      "offset": 0,
+      "size": 224,
+      "redundancy_role": "global_config",
+      "selection_rule": "Validated by 'MarioGolfGBABUD' at offset 0x04 and sum16_le checksum at 0x02."
+    },
+    {
+      "name": "tour_profile_records",
+      "offset": 3840,
+      "size": 5088,
+      "redundancy_role": "primary",
+      "selection_rule": "Partition table entry 1 (sram_off=0x0F00)."
+    },
+    {
+      "name": "character_customization_partitions",
+      "offset": 8928,
+      "size": 23840,
+      "redundancy_role": "primary",
+      "selection_rule": "Partition table entries 2..19 (sram_off=0x1460..0x2560)."
+    }
+  ],
+  "magic_signatures": [
+    {
+      "offset": 4,
+      "bytes_hex": "4d6172696f476f6c66474241425544",
+      "ascii": "MarioGolfGBABUD",
+      "verified_in_code": true,
+      "verified_in_sav": true,
+      "function_addrs": [
+        "0x08017eac"
+      ]
+    }
+  ],
+  "checksums": [
+    {
+      "name": "record_0_checksum",
+      "algorithm": "sum16_le",
+      "formula_detail": "16-bit little-endian sum of halfwords across the payload (bytes 4..224), compared against stored u16le at offset 2. Formula verified by FUN_08017eac.",
+      "stored_offset": 2,
+      "stored_size": 2,
+      "covered_start": 4,
+      "covered_end": 224,
+      "function_addrs": [
+        "0x08017eac"
+      ],
+      "verified_on_samples": [
+        {
+          "file": "saves/cap-00-future-0.sav",
+          "stored_hex": "0x5ccb",
+          "computed_hex": "0x5ccb",
+          "match": true
+        }
+      ],
+      "confidence": "CONFIRMED_VERIFIED"
+    }
+  ],
+  "io_driver_functions": [
+    {
+      "addr": "0x08017e88",
+      "role": "deserialize",
+      "callers": [
+        "0x08017eac"
+      ],
+      "notes": "Partition table lookup resolver: inspects ROM table at 0x080233fc for partition offsets and maximum lengths."
+    },
+    {
+      "addr": "0x08017eac",
+      "role": "deserialize",
+      "callers": [],
+      "notes": "Record reader and checksum verifier: reads 4-byte header [length: u16, checksum: u16], reads payload from offset 4, computes sum16_le, and verifies integrity."
+    },
+    {
+      "addr": "0x0801e20c",
+      "role": "read",
+      "callers": [
+        "0x08017eac"
+      ],
+      "notes": "Low-level SRAM read helper routine."
+    },
+    {
+      "addr": "0x0801e344",
+      "role": "write",
+      "callers": [],
+      "notes": "Low-level SRAM 4096-byte sector transfer routine."
+    }
+  ],
+  "caller_chains": [
+    {
+      "entry_caller": "0x08017eac",
+      "chain": [
+        "0x08017eac",
+        "0x08017e88",
+        "0x0801e20c"
+      ],
+      "trigger_context": "Boot sequence and clubhouse save load.",
+      "ram_fields_updated": [
+        "Player handicap, clubs, tournament trophies"
+      ],
+      "how_mapped": "Traced decompilation and disassembly of FUN_08017eac."
+    }
+  ],
+  "fields": [
+    {
+      "name": "record_0_payload_length",
+      "offset": 0,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": [
+        "0x08017eac"
+      ],
+      "readers": [
+        "0x08017eac"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": 220
+      },
+      "update_mechanism": "Length of payload in bytes.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "saves/cap-00-future-0.sav bytes 0x00-0x01 = dc 00 (220)."
+    },
+    {
+      "name": "record_0_checksum",
+      "offset": 2,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": [
+        "0x08017eac"
+      ],
+      "readers": [
+        "0x08017eac"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": "0x5ccb"
+      },
+      "update_mechanism": "16-bit sum of all halfwords in payload.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Calculated checksum over bytes 4..224 matches stored value 0x5ccb exactly."
+    },
+    {
+      "name": "magic_identifier",
+      "offset": 4,
+      "size": 15,
+      "type": "ascii",
+      "ram_addr": null,
+      "writers": [
+        "0x08017eac"
+      ],
+      "readers": [
+        "0x08017eac"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": "MarioGolfGBABUD"
+      },
+      "update_mechanism": "Static constant string identifying title and build.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "saves/cap-00-future-0.sav bytes 0x04-0x12."
+    },
+    {
+      "name": "system_config_and_scores",
+      "offset": 19,
+      "size": 205,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [
+        "0x08017eac"
+      ],
+      "readers": [
+        "0x08017eac"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": "active system settings"
+      },
+      "update_mechanism": "System settings, controller config, and tournament progress.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Active payload in record 0."
+    }
+  ],
+  "fuzzing_targets": [
+    {
+      "offset": 2,
+      "size": 2,
+      "mutation": "Invert checksum bytes (0x5ccb -> 0xa334).",
+      "requires_checksum_repair": false,
+      "predicted_effect": "0x08017eac comparison fails; game reports corrupted save data."
+    }
+  ],
+  "open_questions": []
+}

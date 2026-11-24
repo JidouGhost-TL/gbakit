@@ -13,7 +13,13 @@
       <a href="../index.html">Games</a>
       <a href="../saves/index.html">Save Formats</a>
       <a href="../patches/index.html">Debug Patches</a>
+      <a href="../debug-menus.html">Debug Gallery</a>
+      <a href="../non-retail-cartridges.html">Non-Retail</a>
+      <a href="../cartridge-hardware.html">Cartridge Hardware</a>
+      <a href="../link-multiplayer.html">Link &amp; Multiplayer</a>
+      <a href="../multiboot-museum.html">MultiBoot Museum</a>
       <a href="../assets/index.html">Assets &amp; Audio</a>
+      <a href="../text-and-fonts.html">Text &amp; Fonts</a>
       <a href="../engines/index.html">Engines &amp; Hardware</a>
       <a href="../families/index.html">Families</a>
       <a href="../gbakit/index.html">Using gbakit</a>
@@ -22,7 +28,7 @@
   <main>
 <p class="meta"><a href="../index.html">&larr; Games</a> &middot; Family <code>BRB</code></p>
 <h1>Rockman EXE 5 - Team of Blues (Japan)</h1>
-<p><span class='badge badge-zinc'>Stateless / Passcode</span></p>
+<p><span class='badge badge-zinc'>Stateless / Passcode</span> <a href='../link-multiplayer.html#multiboot'><span class='badge badge-amber'>💾 MultiBoot</span></a> <a href='../link-multiplayer.html#sio-multi'><span class='badge badge-blue'>🎮 4P Link</span></a> <a href='../link-multiplayer.html#wireless-rfu'><span class='badge badge-emerald'>📡 Wireless</span></a></p>
 
 <h2>Cartridge Identity</h2>
 <dl class="kv">
@@ -37,11 +43,28 @@
 
 
 
+
+
+<h2>Link Cable &amp; Multiplayer Communications</h2>
+<div class="callout">
+  This title contains detected communication capabilities: <a href='../link-multiplayer.html#multiboot'><span class='badge badge-amber'>💾 MultiBoot</span></a> <a href='../link-multiplayer.html#sio-multi'><span class='badge badge-blue'>🎮 4P Link</span></a> <a href='../link-multiplayer.html#wireless-rfu'><span class='badge badge-emerald'>📡 Wireless</span></a>.
+  Detailed protocol specifications, SIO registers, Joybus commands, and MultiBoot sequences are documented in the <a href="../link-multiplayer.html"><strong>Link &amp; Multiplayer Reference</strong></a>.
+</div>
+<dl class="kv">
+  <dt>Multi-Player SIO (4P)</dt><dd>16-bit ring network &middot; SIOCNT (<code>0x04000128</code>) literals: <code>0x142c48</code>, <code>0x142d08</code>, <code>0x142e94</code> &middot; SIODATA32/SIOMULTI0 (<code>0x04000120</code>) literals: <code>0x142d14</code>, <code>0x143320</code>, <code>0x143414</code></dd><dt>Nintendo Wireless Adapter</dt><dd>AGB-015 RFU driver signature <code>RFU_V1024</code> at offset <code>0x1bc0f0</code></dd><dt>Nintendo Wireless Adapter</dt><dd>AGB-015 RFU driver signature <code>RFU-MBOOT</code> at offset <code>0x1bc0fc</code></dd><dt>Nintendo Wireless Adapter</dt><dd>AGB-015 RFU driver signature <code>NINTENDOSio32ID</code> at offset <code>0x1bc108</code></dd><dt>Single-Cart MultiBoot</dt><dd>Single-Cartridge MultiBoot (Download Play) client/server handler &middot; Thumb SWI 0x25 (<code>0xDF25</code>): <code>0x0ade20</code>, <code>0x0cde34</code>, <code>0x184e86</code>, <code>0x1858d2</code> &middot; SDK signatures: <code>MBOOT</code> at <code>0x1bc100</code></dd>
+</dl>
+
+
 <h2>Cartridge Storage Architecture: Stateless / Passcode</h2>
 <div class="callout">
   <strong>Zero non-volatile battery hardware:</strong> This cartridge PCB contains ROM only (no SRAM, Flash, or EEPROM chips). Progression is preserved via on-screen passcodes or session-only gameplay. No <code>.sav</code> file is generated or required.
 </div>
 
+
+
+
+<h2>Text, Fonts &amp; Scene Data</h2>
+<dl class="kv"><dt>Primary Text Encoding</dt><dd><strong>16-bit / UTF-16LE text · custom 1-byte charmap (base &#x27;A&#x27; = 0x26)</strong> (<code>4</code> ASCII strings &middot; <code>5</code> Shift-JIS runs)</dd><dt>Font &amp; VWF Indicators</dt><dd><span class='badge badge-emerald'>VWF Width Table</span> <span class='badge badge-blue'>1bpp Font</span> &middot; BIOS SWIs: BitUnPack <code>0x10</code>: <code>2</code> &middot; LZ77 <code>0x11/12</code>: <code>6</code> &middot; Huffman <code>0x13</code>: <code>2</code> &middot; RLE <code>0x14/15</code>: <code>9</code></dd><dt>Scene &amp; Packaging</dt><dd><code>71</code> ROM pointer tables (&ge;32 entries, <code>9</code> &ge;200) &middot; <code>34</code> relative <code>u32</code> TOCs &middot; <code>218</code> OAM metasprite hits</dd></dl>
 
 
 

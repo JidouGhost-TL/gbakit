@@ -1,0 +1,345 @@
+{
+  "schema": "gbakit-save-research/1",
+  "release_key": "BMXP-r0-0d061ff36c62ebbf",
+  "display_name": "Metroid - Zero Mission (Europe) (En,Fr,De,Es,It)",
+  "rom_sha256": "0d061ff36c62ebbf2220e106ea34abdb8d813943515b35007fd8fdba3ed019b0",
+  "game_code": "BMXP",
+  "header_family": "BMX",
+  "community_id": "comm-047",
+  "overall_confidence": "MEDIUM",
+  "media": {
+    "kind": "sram",
+    "size_bytes": 32768,
+    "sdk_tags": [],
+    "fill_byte": "0xff"
+  },
+  "slots_and_copies": [
+    {
+      "name": "header_primary",
+      "offset": 0,
+      "size": 64,
+      "redundancy_role": "primary",
+      "selection_rule": "Validated independently via FUN_08073620 (checksum + complement + 20-byte magic string); exact primary-vs-mirror tie-break rule when both validate is unresolved in this workspace."
+    },
+    {
+      "name": "header_mirror",
+      "offset": 27968,
+      "size": 64,
+      "redundancy_role": "backup",
+      "selection_rule": "Byte-identical to header_primary in both available .sav samples; used as fallback if primary fails FUN_08073620 validation."
+    },
+    {
+      "name": "debug_trace_region",
+      "offset": 28096,
+      "size": 128,
+      "redundancy_role": "unknown",
+      "selection_rule": "No writer or selection logic located; content differs between the two .sav samples with no corresponding checksum domain."
+    },
+    {
+      "name": "per_slot_payload",
+      "offset": 0,
+      "size": 4640,
+      "redundancy_role": "unknown",
+      "selection_rule": "Absolute offset unresolved (runtime pointer, not a ROM literal); size and dispatcher id (0x0F) are CONFIRMED_STATIC from FUN_08000c9c. Not present/non-blank in either available .sav sample."
+    }
+  ],
+  "magic_signatures": [
+    {
+      "offset": 28,
+      "bytes_hex": "5a65726f4d697373696f6e455552766572303035",
+      "ascii": "ZeroMissionEURver005",
+      "verified_in_code": true,
+      "verified_in_sav": true,
+      "function_addrs": ["0x08073438", "0x08073620"]
+    },
+    {
+      "offset": 27996,
+      "bytes_hex": "5a65726f4d697373696f6e455552766572303035",
+      "ascii": "ZeroMissionEURver005",
+      "verified_in_code": true,
+      "verified_in_sav": true,
+      "function_addrs": ["0x08073438", "0x08073620"]
+    }
+  ],
+  "checksums": [
+    {
+      "name": "header_sum32",
+      "algorithm": "sum32_le",
+      "formula_detail": "checksum = (sum of 14 little-endian u32 words covering header bytes +0x08..+0x3F) - 1, mod 2^32. The '-1' falls out of the write routine (FUN_08073438) summing the OLD 64-byte header (including the old checksum+complement pair, which always sum to 0xFFFFFFFF for any previously valid header) before overwriting +0x00/+0x04 with the new checksum/complement. complement is stored as the bitwise NOT of checksum.",
+      "stored_offset": 0,
+      "stored_size": 4,
+      "covered_start": 8,
+      "covered_end": 63,
+      "function_addrs": ["0x08073438", "0x08073620"],
+      "verified_on_samples": [
+        {"file": "saves/cap-00-future-0.sav", "stored_hex": "c3f9f236", "computed_hex": "c3f9f236", "match": true},
+        {"file": "saves/cap-01-future-1.sav", "stored_hex": "c3f9f236", "computed_hex": "c3f9f236", "match": true}
+      ],
+      "confidence": "CONFIRMED_VERIFIED"
+    },
+    {
+      "name": "header_complement",
+      "algorithm": "xor8",
+      "formula_detail": "complement = bitwise NOT of header_sum32 checksum, mod 2^32, stored little-endian. Verified as ~stored_checksum == stored_complement in all 4 header copies.",
+      "stored_offset": 4,
+      "stored_size": 4,
+      "covered_start": 0,
+      "covered_end": 3,
+      "function_addrs": ["0x08073438", "0x08073620"],
+      "verified_on_samples": [
+        {"file": "saves/cap-00-future-0.sav", "stored_hex": "3c060dc9", "computed_hex": "3c060dc9", "match": true},
+        {"file": "saves/cap-01-future-1.sav", "stored_hex": "3c060dc9", "computed_hex": "3c060dc9", "match": true}
+      ],
+      "confidence": "CONFIRMED_VERIFIED"
+    }
+  ],
+  "io_driver_functions": [
+    {"addr": "0x080052b0", "role": "write", "callers": ["0x08005384"], "notes": "Raw SRAM byte-copy driver: sets WAITCNT-style wait-state bits via a masked OR on a 16-bit global register, then copies strictly one byte at a time, matching the GBA SRAM 8-bit bus requirement."},
+    {"addr": "0x08005320", "role": "read", "callers": ["0x08005384"], "notes": "Called as the post-write verification step inside the retry loop; its own body manipulates unrelated global pointers and calls func_0x0808b890, so its exact verify mechanism is not fully resolved from this workspace (reported as read/verify-adjacent, not a confirmed CRC/compare)."},
+    {"addr": "0x08005384", "role": "write", "callers": ["0x0807443c"], "notes": "Retry wrapper: calls 0x080052b0 then 0x08005320, up to 3 attempts, breaking early on a zero result."},
+    {"addr": "0x08000c58", "role": "erase", "callers": ["0x080734cc"], "notes": "Fills a 32KB EWRAM mirror buffer with a pattern byte, then conditionally flushes exactly 0x8000 bytes to literal address 0xe000000 via 0x08005384 -- this call pins the exact 32768-byte media size."},
+    {"addr": "0x08003308", "role": "write", "callers": ["0x08000c58", "0x08004ba4", "0x080744dc", "0x0807475c", "0x08075148", "0x0807f5f4", "0x08000c9c"], "notes": "Generic software-DMA-queue fill (memset) primitive; also used for non-save VRAM/OAM/palette clears elsewhere in the ROM, so only its save-related call sites (from 0x08000c58 and 0x08000c9c ids 0x0E/0x0F) are treated as save I/O here."},
+    {"addr": "0x08003238", "role": "serialize", "callers": ["0x080734cc", "0x080744dc", "0x0807f4b0", "0x080808dc"], "notes": "Generic software-DMA-queue block copy; used by 0x080734cc for EWRAM-to-EWRAM 0x40-byte header staging copies. Also used for unrelated non-save transfers elsewhere, so not save-exclusive."},
+    {"addr": "0x08000c9c", "role": "write", "callers": ["0x080733e8", "0x08073438", "0x080734cc", "0x080744dc", "0x08074e30", "0x08074edc", "0x08075148"], "notes": "Generic id-keyed dispatcher (ids 0-0x10) shared across engine subsystems. Only ids 0x0E (full 32KB buffer op) and 0x0F (0x1220-byte per-slot op) are argued here to be save-specific, gated by a distinct 'SRAM op mode' flag."},
+    {"addr": "0x08073438", "role": "checksum", "callers": ["0x080734cc"], "notes": "Writes header fields (+0x08..+0x2F), computes header_sum32 over the pre-overwrite 64-byte header, stores checksum/complement at +0x00/+0x04, then calls 0x08000c9c(0) to stage/flush."},
+    {"addr": "0x08073620", "role": "checksum", "callers": [], "notes": "Per-candidate validator (checksum + complement + 20-byte magic string). Called 3x from 0x080734cc by direct address in decompiled.c, but this edge is absent from callgraph.json -- a known gap in the provided callgraph."},
+    {"addr": "0x080734cc", "role": "serialize", "callers": [], "notes": "Top-level slot validate/select/commit orchestrator; no caller found anywhere in this workspace's 89-function corpus or callgraph.json (likely invoked from a save-trigger outside the provided function subset)."},
+    {"addr": "0x080733e8", "role": "read", "callers": [], "notes": "Boot-time SRAM presence/pattern self-test (via 0x0807443c) followed by staging the full buffer (id 0x0E) and per-slot buffer (id 0x0F), then calling 0x080734cc to validate/select."}
+  ],
+  "caller_chains": [
+    {
+      "entry_caller": "0x080733e8",
+      "chain": ["0x0807443c", "0x08005384", "0x080052b0", "0x08005320", "0x08000c9c", "0x080734cc"],
+      "trigger_context": "Cold boot / title-screen init",
+      "ram_fields_updated": ["whole 32KB SRAM shadow staged into EWRAM via ids 0x0E/0x0F"],
+      "how_mapped": "Read 0x080733e8's body directly in decompiled.c; confirmed callee edges 0x0807443c->{0x0800524c,0x08005384} and 0x08005384->{0x080052b0,0x08005320} against callgraph.json (these edges are present and agree)."
+    },
+    {
+      "entry_caller": "0x080734cc",
+      "chain": ["0x08073620", "0x08003238", "0x08000c9c", "0x08000c58", "0x08073438"],
+      "trigger_context": "Save-slot validate, select winning/losing copy, and commit",
+      "ram_fields_updated": ["header +0x00 checksum", "header +0x04 complement", "header +0x0A sequence counter", "header +0x08..+0x2F copied/constant fields", "header +0x1C..+0x2F magic string"],
+      "how_mapped": "Read 0x080734cc's full body in decompiled.c; callgraph.json confirms 0x080734cc->{0x08000c58,0x08000c9c,0x08003238,0x08073438} but is missing the 0x08073620 edge (verified by reading source text directly, flagged as a callgraph gap)."
+    },
+    {
+      "entry_caller": "0x08073438",
+      "chain": ["0x08000c9c"],
+      "trigger_context": "Checksum finalize-and-flush, called only from 0x080734cc",
+      "ram_fields_updated": ["header +0x00 checksum", "header +0x04 complement"],
+      "how_mapped": "Direct read of 0x08073438 body; callgraph.json confirms 0x08073438->0x08000c9c and 0x080734cc->0x08073438."
+    }
+  ],
+  "fields": [
+    {
+      "name": "header_checksum",
+      "offset": 0,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": ["0x08073438"],
+      "readers": ["0x08073620"],
+      "observed_values": {"cap-00-future-0.sav@0x0": "0xc3f9f236", "cap-00-future-0.sav@0x6d40": "0xc3f9f236", "cap-01-future-1.sav@0x0": "0xc3f9f236", "cap-01-future-1.sav@0x6d40": "0xc3f9f236"},
+      "update_mechanism": "Recomputed on every commit by 0x08073438 as sum(words +0x08..+0x3F) - 1 mod 2^32",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Decompiled C in 0x08073438/0x08073620 plus Python verification against all 4 header copies (see SAVE-FORMAT-REPORT.md section 4.3)"
+    },
+    {
+      "name": "header_complement",
+      "offset": 4,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": ["0x08073438"],
+      "readers": ["0x08073620"],
+      "observed_values": {"cap-00-future-0.sav@0x0": "0x3c060dc9", "cap-01-future-1.sav@0x0": "0x3c060dc9"},
+      "update_mechanism": "Set to bitwise NOT of header_checksum on every commit",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "0x08073438 'puVar7[1] = ~uVar3'; verified ~stored_checksum == stored_complement in all 4 header copies"
+    },
+    {
+      "name": "const_ascii_01_tag",
+      "offset": 8,
+      "size": 2,
+      "type": "ascii",
+      "ram_addr": null,
+      "writers": ["0x08073438"],
+      "readers": [],
+      "observed_values": {"all_samples": "0x30 0x31"},
+      "update_mechanism": "Hard-coded immediate bytes 0x30 ('0'), 0x31 ('1') written every commit",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "Literal immediates in 0x08073438"
+    },
+    {
+      "name": "sequence_counter",
+      "offset": 10,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": ["0x08073438"],
+      "readers": [],
+      "observed_values": {"all_samples": "0x0000"},
+      "update_mechanism": "Incremented by 1 on every commit (*(short*)(header+0xA) += 1)",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "0x08073438: '*(short *)((int)puVar7 + 10) = *(short *)((int)puVar7 + 10) + 1;'"
+    },
+    {
+      "name": "copied_field_0x0c",
+      "offset": 12,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": ["0x08073438"],
+      "readers": [],
+      "observed_values": {"all_samples": "0x0000"},
+      "update_mechanism": "Copied from an engine-internal source record pointer (_DAT_080734c4) on every commit",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "0x08073438: '*(undefined2 *)(puVar7 + 3) = *_DAT_080734c4;'. Semantic meaning (e.g. language/profile id) is unresolved -- no gameplay sample varies this byte."
+    },
+    {
+      "name": "copied_field_0x0e",
+      "offset": 14,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": ["0x08073438"],
+      "readers": [],
+      "observed_values": {"all_samples": "0x00"},
+      "update_mechanism": "Copied from engine-internal source record on every commit",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "0x08073438: '*(undefined1 *)((int)puVar7 + 0xe) = *(undefined1 *)(puVar2 + 2);' -- destination confirmed, source semantics unresolved"
+    },
+    {
+      "name": "const_0x01",
+      "offset": 15,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": ["0x08073438"],
+      "readers": [],
+      "observed_values": {"all_samples": "0x01"},
+      "update_mechanism": "Hard-coded immediate",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "0x08073438: '*(undefined1 *)((int)puVar7 + 0xf) = 1;'"
+    },
+    {
+      "name": "const_ascii_4",
+      "offset": 16,
+      "size": 1,
+      "type": "ascii",
+      "ram_addr": null,
+      "writers": ["0x08073438"],
+      "readers": [],
+      "observed_values": {"all_samples": "0x34"},
+      "update_mechanism": "Hard-coded immediate",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "0x08073438: '*(undefined1 *)(puVar7 + 4) = 0x34;'"
+    },
+    {
+      "name": "copied_field_0x11_0x13",
+      "offset": 17,
+      "size": 3,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": ["0x08073438"],
+      "readers": [],
+      "observed_values": {"all_samples": "0x00 0x00 0x00"},
+      "update_mechanism": "Three bytes copied from the engine-internal source record on every commit",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "0x08073438 lines writing offsets 0x11,0x12,0x13 from puVar2-relative byte reads; destination offsets confirmed, source field semantics unresolved"
+    },
+    {
+      "name": "copied_field_0x14",
+      "offset": 20,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": ["0x08073438"],
+      "readers": [],
+      "observed_values": {"all_samples": "0x0000"},
+      "update_mechanism": "Copied from engine-internal source record (puVar2[1]) on every commit",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "0x08073438: '*(undefined2 *)(puVar7 + 5) = puVar2[1];'"
+    },
+    {
+      "name": "unused_tail_0x16",
+      "offset": 22,
+      "size": 2,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"all_samples": "0xFFFF"},
+      "update_mechanism": "Not written by any located function; value matches the global blank-fill byte",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Byte range falls between two writer statements in 0x08073438 but is skipped by both; observed value is consistent with stale/unused fill bytes"
+    },
+    {
+      "name": "copied_field_0x18",
+      "offset": 24,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": ["0x08073438"],
+      "readers": [],
+      "observed_values": {"all_samples": "0x00000000"},
+      "update_mechanism": "Copied from engine-internal source record (puVar2+4) on every commit",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "0x08073438: 'puVar7[6] = *(uint *)(puVar2 + 4);'"
+    },
+    {
+      "name": "build_version_magic",
+      "offset": 28,
+      "size": 20,
+      "type": "ascii",
+      "ram_addr": null,
+      "writers": ["0x08073438"],
+      "readers": ["0x08073620"],
+      "observed_values": {"all_samples": "ZeroMissionEURver005"},
+      "update_mechanism": "Copied from a ROM-embedded 20-byte constant on every commit; compared against a second ROM constant on every validation",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "0x08073438 copy loop writing offsets 0x1C-0x2F; 0x08073620 compare loop over the same 20 bytes; confirmed present verbatim in all 4 header copies across both .sav files"
+    },
+    {
+      "name": "reserved_tail_0x30",
+      "offset": 48,
+      "size": 16,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"all_samples": "all 0x00"},
+      "update_mechanism": "Included in the checksum's 64-byte summation domain but no individual writer located in this workspace",
+      "confidence": "UNKNOWN",
+      "evidence": "0x08073438 sums 16 u32 words (0x40 bytes total) but only individually addresses up to +0x2F; bytes +0x30..+0x3F are untouched by any located store instruction"
+    },
+    {
+      "name": "debug_trace_blob",
+      "offset": 28096,
+      "size": 128,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"cap-00-future-0.sav": "all 0x00", "cap-01-future-1.sav": "1f 01 1a 90 e5 6f 5f 53 45 4c 45 43 54 5f 4c 41 4e 47 55 41 47 45 02 45 4e 44 4b 45 59 5f 4c 41 4e 47 55 41 47 45 5f + zero padding (contains ASCII 'o_SELECT_LANGUAGE' / 'ENDKEY_LANGUAGE_')"},
+      "update_mechanism": "Unknown -- no writer located in the 89-function decompiled corpus available in this workspace",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Byte diff between the two .sav samples in saves/hexdump_and_diffs.txt; no code reference found"
+    }
+  ],
+  "fuzzing_targets": [
+    {"offset": 0, "size": 4, "mutation": "flip one bit, do not update complement at +0x04", "requires_checksum_repair": false, "predicted_effect": "0x08073620 flags bit0 (checksum mismatch) and bit2 (sum/complement mismatch) for this candidate; engine should prefer the other valid copy (primary vs mirror) if one remains intact"},
+    {"offset": 28, "size": 1, "mutation": "change one ASCII byte inside the 20-byte build magic string, then recompute checksum/complement", "requires_checksum_repair": true, "predicted_effect": "0x08073620 still flags bit1 (magic-string mismatch) independently of a now-valid checksum, isolating the version-string gate from the checksum gate"},
+    {"offset": 10, "size": 2, "mutation": "decrement sequence counter, then recompute checksum", "requires_checksum_repair": true, "predicted_effect": "Unknown/open: no code located in this workspace compares the two header copies' sequence numbers; if such logic exists outside the provided function subset, predict the mirror copy becomes preferred"},
+    {"offset": 28096, "size": 128, "mutation": "zero the entire debug/trace blob region", "requires_checksum_repair": false, "predicted_effect": "Unknown/open: tests whether this region is load-bearing (observable UI/behavior change) or a cosmetic/dead debug trace buffer"},
+    {"offset": 48, "size": 16, "mutation": "set reserved tail bytes +0x30..+0x3F to 0xAA, then recompute checksum", "requires_checksum_repair": true, "predicted_effect": "Unknown/open: best available target to discover whether this span is truly unused padding or an unidentified field only exercised during real gameplay"}
+  ],
+  "open_questions": [
+    "Which engine-internal source fields feed the copied header bytes at +0x0C, +0x0E, +0x11..+0x13, +0x14, +0x18 -- no gameplay sample in this workspace varies them.",
+    "What writes and reads the 128-byte debug/trace blob at absolute offset 0x6DC0-0x6E3F -- no function in the 89-function decompiled corpus references it.",
+    "What is the absolute .sav byte offset of the 0x1220-byte per-slot gameplay payload addressed by FUN_08000c9c id 0x0F -- the base pointer is runtime state, not a ROM literal, and neither available .sav sample contains a created save slot.",
+    "What is the exact selection rule FUN_080734cc applies when both the primary and mirror header copies validate successfully (or when more than one of the three FUN_08073620 candidate ids pass).",
+    "What does FUN_08005320 actually verify inside the 0x08005384 write-retry loop -- its body touches unrelated global pointers and calls func_0x0808b890 rather than performing an obvious re-read/compare of the just-written bytes.",
+    "Who calls FUN_080734cc -- no caller is present anywhere in this workspace's decompiled.c or callgraph.json.",
+    "ghidra/callgraph.json is missing at least one real call edge visible in ghidra/decompiled.c (FUN_080734cc -> FUN_08073620, called 3 times by address); other callgraph gaps may exist and were not exhaustively cross-checked beyond the functions discussed in this report."
+  ]
+}

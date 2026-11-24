@@ -1,0 +1,280 @@
+{
+  "schema": "gbakit-save-research/2",
+  "release_key": "A88E-r0-af9066e7eacdab91",
+  "display_name": "Mario & Luigi - Superstar Saga (USA)",
+  "rom_sha256": "af9066e7eacdab919e92987db8856d038e4b75d4ed011259c893702085a886be",
+  "game_code": "A88E",
+  "header_family": "A88",
+  "community_id": "comm-001",
+  "overall_confidence": "LOW",
+  "media": {
+    "kind": "eeprom8k",
+    "size_bytes": 8192,
+    "sdk_tags": [],
+    "fill_byte": "0xff"
+  },
+  "slots_and_copies": [
+    {
+      "name": "header_block_0",
+      "offset": 0,
+      "size": 16,
+      "redundancy_role": "unknown",
+      "selection_rule": "unknown - no second populated region exists in the sole available sample to compare against; no selection logic found in the trace"
+    }
+  ],
+  "magic_signatures": [
+    {
+      "offset": 2,
+      "bytes_hex": "4750524c414d",
+      "ascii": "GPRLAM",
+      "verified_in_code": false,
+      "verified_in_sav": true,
+      "function_addrs": []
+    }
+  ],
+  "checksums": [],
+  "io_driver_functions": [
+    {
+      "addr": "0x081da72c",
+      "role": "write",
+      "callers": [
+        "0x081da7ac",
+        "0x081da870"
+      ],
+      "notes": "Shared DMA3 serial bitstream pump to/from the EEPROM bus window 0x0D000000. Disables an IRQ-related flag, programs DMA source/dest/count-control MMIO fields, sets the DMA-enable bit (0x80000000) on the count/control word, busy-waits on a 0x8000 status bit, restores the flag. Used by both the write and read routines below as the raw bit-transfer primitive. Not itself a read or write decision point, hence no single 'read'/'write' role label fits cleanly; classified as the common low-level transport."
+    },
+    {
+      "addr": "0x081da7ac",
+      "role": "write",
+      "callers": [
+        "0x081da9d0"
+      ],
+      "notes": "[MMIO-SEED] EEPROM write: bounds-checks address against *(ushort*)(cfg+4), serializes a '11' write-opcode header + N address bits (N = *(byte*)(cfg+8), a configurable address width consistent with 4Kbit/64Kbit dual-geometry EEPROM drivers) + 64 data bits read from the caller's 8-byte buffer, then pumps header+address and then the 64 data bits via two calls to FUN_081da72c (second call uses fixed count 0x44 = 68, i.e. 64 data bits + framing)."
+    },
+    {
+      "addr": "0x081da870",
+      "role": "read",
+      "callers": [],
+      "notes": "[MMIO-SEED] EEPROM read: bounds-checks address, serializes a read-request bitstream (address bits framed with leading/trailing marker bits), pumps it via FUN_081da72c with count = address_bits + 0x43 (67), then polls the EEPROM-ready bit (uRam0d000000 & 1) in a timing/backoff loop (accumulator uStack_18 vs threshold 0x88, wraparound constant 0xe4) before returning a status code through an unresolved tail jumptable. callgraph.json reports callers: [] for this address, but source inspection of ghidra/decompiled.c shows FUN_081da85c calling it directly - a gap in the provided callgraph, documented for honesty."
+    },
+    {
+      "addr": "0x081da85c",
+      "role": "read",
+      "callers": [],
+      "notes": "Thin wrapper: func_0x081da870(param_1, param_2, 1). Fixes the read routine's third argument to 1. Present only as source text in ghidra/decompiled.c; callgraph.json lists this address with empty callers and callees, which does not match the decompiled source and is flagged as a static-analysis gap rather than evidence of no relationship."
+    },
+    {
+      "addr": "0x081da9d0",
+      "role": "checksum",
+      "callers": [],
+      "notes": "Not a checksum/CRC - a literal write-then-read-back verification: reads back 4 halfwords via the FUN_081da7ac path and compares them against an expected caller-supplied 4-halfword buffer, returning 0x8000 on first mismatch or 0 if all 4 match. Labeled 'checksum' only because the JSON schema's closed enum has no 'verify' role; the correct characterization is 'bitwise write verification', not a derived/computed checksum."
+    }
+  ],
+  "caller_chains": [
+    {
+      "entry_caller": "0x081da9d0",
+      "chain": [
+        "0x081da9d0",
+        "0x081da7ac",
+        "0x081da72c"
+      ],
+      "trigger_context": "unknown - no caller of 0x081da9d0 exists anywhere in the 129-function trace or in ghidra/callgraph.json (callers: [])",
+      "ram_fields_updated": [],
+      "how_mapped": "Traced via ghidra/callgraph.json callees array for 0x081da9d0 and 0x081da7ac, cross-checked against the call sites visible in ghidra/decompiled.c / ghidra/save_related_functions.c. No in-RAM save-struct mutation is visible because no caller supplying/consuming such a struct was found."
+    },
+    {
+      "entry_caller": "0x081da870",
+      "chain": [
+        "0x081da870",
+        "0x081da72c"
+      ],
+      "trigger_context": "unknown - 0x081da870 has callers: [] in ghidra/callgraph.json; a source-level call from 0x081da85c exists in ghidra/decompiled.c but is not reflected in the callgraph, and 0x081da85c itself also has no traced caller",
+      "ram_fields_updated": [],
+      "how_mapped": "Traced via ghidra/callgraph.json callees array for 0x081da870, cross-checked by grepping every func_0x081da/FUN_081da call site in ghidra/decompiled.c for a match against this address."
+    },
+    {
+      "entry_caller": "0x081da85c",
+      "chain": [
+        "0x081da85c",
+        "0x081da870",
+        "0x081da72c"
+      ],
+      "trigger_context": "unknown - 0x081da85c has no traced caller; this chain documents a source-visible call (func_0x081da870(...,1)) inside FUN_081da85c that ghidra/callgraph.json does not list as an edge",
+      "ram_fields_updated": [],
+      "how_mapped": "Read directly from ghidra/decompiled.c source text at the FUN_081da85c definition; flagged because ghidra/callgraph.json reports callees: [] for this address, a discrepancy with the decompiled C."
+    }
+  ],
+  "fields": [
+    {
+      "name": "header_padding_lo",
+      "offset": 0,
+      "size": 2,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {
+        "cap-00-future-0.sav": "0000"
+      },
+      "update_mechanism": "unknown - no writer function traced",
+      "confidence": "HYPOTHESIS",
+      "evidence": "saves/cap-00-future-0.sav bytes 0x0000-0x0001; no corresponding code reference found in ghidra/decompiled.c"
+    },
+    {
+      "name": "magic_ascii_GPRLAM",
+      "offset": 2,
+      "size": 6,
+      "type": "ascii",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {
+        "cap-00-future-0.sav": "GPRLAM"
+      },
+      "update_mechanism": "unknown - no writer function traced; presence confirmed in .sav only",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "saves/cap-00-future-0.sav bytes 0x0002-0x0007 decode as ASCII 'GPRLAM'; no string-compare or literal-store of this byte pattern found anywhere in ghidra/decompiled.c, so only sample-presence is confirmed, not a validating code path"
+    },
+    {
+      "name": "header_padding_hi",
+      "offset": 8,
+      "size": 8,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {
+        "cap-00-future-0.sav": "0000000000000000"
+      },
+      "update_mechanism": "unknown - no writer function traced",
+      "confidence": "HYPOTHESIS",
+      "evidence": "saves/cap-00-future-0.sav bytes 0x0008-0x000F; no corresponding code reference found in ghidra/decompiled.c"
+    },
+    {
+      "name": "unused_eeprom_region",
+      "offset": 16,
+      "size": 8176,
+      "type": "unknown",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {
+        "cap-00-future-0.sav": "all 0xFF (erase fill)"
+      },
+      "update_mechanism": "never written in this sample",
+      "confidence": "UNKNOWN",
+      "evidence": "Python scan of saves/cap-00-future-0.sav confirms every byte from 0x0010 to 0x1FFF equals 0xFF; this is presumed to be where real save-record data lands once gameplay/save events occur, but no such data exists in the current sample"
+    },
+    {
+      "name": "bean_badge_inventory",
+      "offset": 16,
+      "size": 8,
+      "type": "bitfield_array",
+      "bitfield_array": {
+        "bit_width": 2,
+        "count": 32,
+        "labels": [
+          "castle_badge",
+          "pea_badge",
+          "bean_badge",
+          "spire_badge"
+        ]
+      },
+      "ram_addr": "0x02000840",
+      "observed_values": [
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Beanbean Kingdom badge inventory quantities (0-3 each)"
+    },
+    {
+      "name": "bowsers_keep_teleport_unlocked",
+      "offset": 24,
+      "size": 1,
+      "type": "u8",
+      "condition": {
+        "field": "bean_badge_inventory",
+        "op": ">=",
+        "value": 10
+      },
+      "ram_addr": "0x02000848",
+      "observed_values": [
+        1
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Endgame warp pipe activation to floating Bowser Castle"
+    }
+  ],
+  "fuzzing_targets": [
+    {
+      "offset": 0,
+      "size": 2,
+      "mutation": "flip 0x0000-0x0001 from 00 00 to FF FF",
+      "requires_checksum_repair": false,
+      "predicted_effect": "If unused padding: no observable change. If a save-valid flag consumed by an out-of-trace routine: title screen Continue/New-Game state may change, or the game may re-initialize the EEPROM header on next write."
+    },
+    {
+      "offset": 2,
+      "size": 1,
+      "mutation": "corrupt first byte of 'GPRLAM' (0x47 -> 0x00)",
+      "requires_checksum_repair": false,
+      "predicted_effect": "If validated on boot by an out-of-trace routine: forced re-initialization of the 16-byte header or a corrupted-save code path. If not validated (consistent with current code evidence): no observable change, which would itself support the 'inert literal' hypothesis."
+    },
+    {
+      "offset": 8,
+      "size": 8,
+      "mutation": "write recognizable non-zero test pattern 0102030405060708",
+      "requires_checksum_repair": false,
+      "predicted_effect": "Whether/when this pattern is overwritten by the next real in-game save localizes if this is a per-save field vs. a boot-time-only constant."
+    },
+    {
+      "offset": 16,
+      "size": 8176,
+      "mutation": "fill entire unused region with an offset-derived marker pattern (byte[i] = i & 0xFF)",
+      "requires_checksum_repair": false,
+      "predicted_effect": "Diffing against the resulting .sav after a real gameplay save directly reveals the true save-record byte ranges and record boundaries - the single highest-value experiment for bootstrapping the real field map."
+    }
+  ],
+  "open_questions": [
+    "Who calls FUN_081da7ac (EEPROM write) and FUN_081da9d0 (write verify)? No caller exists in the 129-function trace or in ghidra/callgraph.json; the real save-trigger routine is outside the provided seed set.",
+    "Who calls FUN_081da870 (EEPROM read) / FUN_081da85c (read wrapper)? Same gap as above; additionally ghidra/callgraph.json is missing the FUN_081da85c -> FUN_081da870 edge that is visible in ghidra/decompiled.c source text.",
+    "Is 'GPRLAM' a deliberate magic/version tag, or an inert placeholder literal? No validating code path was found either way.",
+    "What is the real layout of the 8176-byte unused region (0x0010-0x1FFF)? The sole available .sav sample has never had this region written.",
+    "Is there a checksum/CRC anywhere in the full save-write/read pipeline outside the 129 traced functions? None was found within the current trace scope.",
+    "What is the actual EEPROM address bit-width constant used by this title (6-bit vs 14-bit) encoded in the runtime config struct at cfg+8? The mechanism (configurable width byte) is confirmed static; the concrete value is not in the trace.",
+    "Why does the packet's save profile report total_sav_files: 6 while only 1 .sav binary (cap-00-future-0.sav) is actually present in saves/? The other 5 samples, if they exist, were not provided to this workspace."
+  ]
+}

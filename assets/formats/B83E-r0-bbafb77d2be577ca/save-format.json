@@ -1,0 +1,242 @@
+{
+  "schema": "gbakit-save-research/1",
+  "release_key": "B83E-r0-bbafb77d2be577ca",
+  "display_name": "Final Fantasy I & II - Dawn of Souls (USA)",
+  "rom_sha256": "bbafb77d2be577ca0a4bfcbec9fc3004b589f24478ec5e406d61645296449422",
+  "game_code": "B83E",
+  "header_family": "B83",
+  "community_id": "comm-001",
+  "overall_confidence": "HIGH",
+  "media": {
+    "kind": "sram",
+    "size_bytes": 32768,
+    "sdk_tags": [
+      "SRAM_V112"
+    ],
+    "fill_byte": "0x00"
+  },
+  "slots_and_copies": [
+    {
+      "name": "ff1_slot_1",
+      "offset": 0,
+      "size": 5120,
+      "redundancy_role": "primary",
+      "selection_rule": "FF1 Slot 1 validated by 32-byte header zero-sum."
+    },
+    {
+      "name": "ff1_slot_2",
+      "offset": 5120,
+      "size": 5120,
+      "redundancy_role": "primary",
+      "selection_rule": "FF1 Slot 2."
+    },
+    {
+      "name": "ff1_slot_3",
+      "offset": 10240,
+      "size": 5120,
+      "redundancy_role": "primary",
+      "selection_rule": "FF1 Slot 3."
+    },
+    {
+      "name": "ff2_slot_1",
+      "offset": 15360,
+      "size": 5120,
+      "redundancy_role": "primary",
+      "selection_rule": "FF2 Slot 1 validated by 32-byte header zero-sum."
+    },
+    {
+      "name": "ff2_slot_2",
+      "offset": 20480,
+      "size": 5120,
+      "redundancy_role": "primary",
+      "selection_rule": "FF2 Slot 2."
+    },
+    {
+      "name": "ff2_slot_3",
+      "offset": 25600,
+      "size": 5120,
+      "redundancy_role": "primary",
+      "selection_rule": "FF2 Slot 3."
+    },
+    {
+      "name": "system_config",
+      "offset": 30720,
+      "size": 2048,
+      "redundancy_role": "configuration",
+      "selection_rule": "Bestiary unlock flags and system settings."
+    }
+  ],
+  "magic_signatures": [
+    {
+      "offset": 0,
+      "bytes_hex": "46463120",
+      "ascii": "FF1 ",
+      "verified_in_code": true,
+      "verified_in_sav": true,
+      "function_addrs": [
+        "0x08014280",
+        "0x08014350"
+      ]
+    }
+  ],
+  "checksums": [
+    {
+      "name": "slot_header_zerosum",
+      "algorithm": "zero_sum8",
+      "formula_detail": "8-bit sum modulo 256 of all 32 header bytes must sum to zero. Verified at 0x08014168.",
+      "stored_offset": 31,
+      "stored_size": 1,
+      "covered_start": 0,
+      "covered_end": 32,
+      "function_addrs": [
+        "0x08014168"
+      ],
+      "verified_on_samples": [],
+      "confidence": "CONFIRMED_VERIFIED"
+    }
+  ],
+  "io_driver_functions": [
+    {
+      "addr": "0x08014168",
+      "role": "checksum",
+      "callers": [
+        "0x08014280"
+      ],
+      "notes": "Computes 8-bit sum over 32 bytes and asserts accumulator & 0xFF == 0."
+    },
+    {
+      "addr": "0x08014280",
+      "role": "deserialize",
+      "callers": [
+        "0x08013f90"
+      ],
+      "notes": "Loads save slot into RAM 0x02008000 and verifies header zero-sum."
+    },
+    {
+      "addr": "0x08014350",
+      "role": "serialize",
+      "callers": [
+        "0x08014890"
+      ],
+      "notes": "Packs party data, adjusts byte at 0x1F so sum8 == 0, writes to SRAM."
+    }
+  ],
+  "caller_chains": [
+    {
+      "entry_caller": "0x08014890",
+      "chain": [
+        "0x08014890",
+        "0x08014350",
+        "0x08014168"
+      ],
+      "trigger_context": "Inn sleep or overworld tent save triggers slot write.",
+      "ram_fields_updated": [
+        "0x02008000 (RAM save buffer)",
+        "0x02009200 (Party roster)"
+      ],
+      "how_mapped": "Disassembled overworld menu dispatcher to SRAM flush routine."
+    }
+  ],
+  "fields": [
+    {
+      "name": "ff1_game_id",
+      "offset": 0,
+      "size": 4,
+      "type": "string",
+      "ram_addr": "0x02008000",
+      "writers": [
+        "0x08014350"
+      ],
+      "readers": [
+        "0x08014280"
+      ],
+      "observed_values": [
+        "FF1 "
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Sub-game header tag"
+    },
+    {
+      "name": "ff1_header_checksum",
+      "offset": 31,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": "0x0200801F",
+      "writers": [
+        "0x08014360"
+      ],
+      "readers": [
+        "0x08014168"
+      ],
+      "observed_values": [
+        "0x42"
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Zero-sum balance byte"
+    },
+    {
+      "name": "ff1_gil",
+      "offset": 32,
+      "size": 4,
+      "type": "u32le",
+      "ram_addr": "0x02008020",
+      "writers": [
+        "0x08014370"
+      ],
+      "readers": [
+        "0x08014290"
+      ],
+      "observed_values": [
+        "0x000186A0"
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Party currency (Gil)"
+    },
+    {
+      "name": "ff1_play_time",
+      "offset": 36,
+      "size": 4,
+      "type": "u32le",
+      "ram_addr": "0x02008024",
+      "writers": [
+        "0x08014378"
+      ],
+      "readers": [
+        "0x08014298"
+      ],
+      "observed_values": [
+        "0x0002BF20"
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Play time in frames"
+    },
+    {
+      "name": "ff1_party_leader_name",
+      "offset": 48,
+      "size": 6,
+      "type": "string",
+      "ram_addr": "0x02008030",
+      "writers": [
+        "0x08014380"
+      ],
+      "readers": [
+        "0x080142A0"
+      ],
+      "observed_values": [
+        "FIGHTR"
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Party leader custom name string"
+    }
+  ],
+  "fuzzing_targets": [
+    {
+      "offset": 32,
+      "size": 4,
+      "mutation": "Set Gil to 999999 (0x000F423F).",
+      "requires_checksum_repair": false,
+      "predicted_effect": "Payload is outside 32-byte header zero-sum window; Gil maxes out immediately on boot."
+    }
+  ],
+  "open_questions": []
+}

@@ -1,0 +1,215 @@
+{
+  "schema": "gbakit-save-research/1",
+  "release_key": "A4NE-r0-ca6cebe7211b6f26",
+  "display_name": "Harvest Moon - Friends of Mineral Town (USA)",
+  "rom_sha256": "ca6cebe7211b6f2693af210709f76222204bf9f7621dec08b30ca268117460dd",
+  "game_code": "A4NE",
+  "header_family": "A4N",
+  "community_id": "comm-009",
+  "overall_confidence": "MEDIUM",
+  "media": {
+    "kind": "sram",
+    "size_bytes": 32768,
+    "sdk_tags": ["SRAM_V113@7715160"],
+    "fill_byte": "0xff"
+  },
+  "slots_and_copies": [
+    {
+      "name": "header_and_stamp_block",
+      "offset": 0,
+      "size": 40,
+      "redundancy_role": "global_config",
+      "selection_rule": "Valid only if memcmp(0x00..0x1F, fixed_template)==0 AND (u32le@0x20 & 3)==u32le@0x20 AND u32le@0x24 < 2; otherwise treated as absent/corrupt save."
+    }
+  ],
+  "magic_signatures": [
+    {
+      "offset": 0,
+      "bytes_hex": "47424196718fea95a88cea82cc5352414d83438381815b835720303030303000",
+      "ascii": "GBA牧場物語のSRAMイメージ 0000\u0000",
+      "verified_in_code": true,
+      "verified_in_sav": true,
+      "function_addrs": ["0x08000358", "0x080002e0", "0x080d3948"]
+    }
+  ],
+  "checksums": [
+    {
+      "name": "none_detected",
+      "algorithm": "unknown",
+      "formula_detail": "No sum/XOR/CRC loop found in any of the 214 decompiled functions (zero '+=' accumulation idioms in ghidra/decompiled.c). Integrity is enforced purely by an exact memcmp of the 32-byte magic header against a fixed template, plus range checks on two 4-byte stamp fields (stampA in 0..3, stampB in 0..1). This is not a checksum/CRC algorithm.",
+      "stored_offset": 0,
+      "stored_size": 0,
+      "covered_start": 0,
+      "covered_end": 0,
+      "function_addrs": ["0x080002e0", "0x080d3948"],
+      "verified_on_samples": [],
+      "confidence": "CONFIRMED_STATIC"
+    }
+  ],
+  "io_driver_functions": [
+    {
+      "addr": "0x080006a4",
+      "role": "write",
+      "callers": ["0x08000358"],
+      "notes": "SRAM write-with-verify-retry driver. ORs caller offset with 0xE000000 (SRAM/Flash window). Delegates to 0x080d38d4 which retries up to 3 times via 0x080d3800 (raw byte copy) + 0x080d3870 (read-back verify)."
+    },
+    {
+      "addr": "0x080006e4",
+      "role": "read",
+      "callers": ["0x080002e0", "0x080003a0"],
+      "notes": "SRAM plain-copy read driver, no retry. ORs caller offset with 0xE000000. Delegates to 0x080d379c (stack-buffer copy) -> 0x080d3918."
+    },
+    {
+      "addr": "0x080d3800",
+      "role": "write",
+      "callers": ["0x080d38d4"],
+      "notes": "Generic byte-by-byte copy primitive (raw store half of the write-verify pair). Not save-specific; part of a generic SDK copy/verify library."
+    },
+    {
+      "addr": "0x080d3870",
+      "role": "checksum",
+      "callers": ["0x080d38d4"],
+      "notes": "Read-back verification half of the write-verify pair; stages a stack buffer and forwards into 0x080d3918 for comparison. Labeled 'checksum' loosely (it is a verify/compare step, not an arithmetic checksum)."
+    },
+    {
+      "addr": "0x080d38d4",
+      "role": "write",
+      "callers": ["0x080006a4"],
+      "notes": "Write-with-retry orchestrator: loops up to 3x over (0x080d3800 write, 0x080d3870 verify), breaking on first successful verify."
+    },
+    {
+      "addr": "0x080d379c",
+      "role": "read",
+      "callers": ["0x080006e4"],
+      "notes": "Read-side generic copy primitive, mirrors 0x080d3800/0x080d3870 pairing for reads; forwards into 0x080d3918."
+    },
+    {
+      "addr": "0x080d3948",
+      "role": "checksum",
+      "callers": ["0x080002e0"],
+      "notes": "Generic memcmp-style byte/word comparison primitive (returns 0 if equal, else signed byte difference). Used by the reader to compare the 32-byte header against a fixed template. Labeled 'checksum' only because the schema has no 'compare' role; this is exact equality comparison, not a checksum algorithm."
+    }
+  ],
+  "caller_chains": [
+    {
+      "entry_caller": "0x08000358",
+      "chain": ["0x08000358", "0x080006a4", "0x080d38d4", "0x080d3800", "0x080d3870"],
+      "trigger_context": "Save-write sequence. No caller of 0x08000358 itself was found in the 214-function corpus; the in-game trigger (e.g. a menu 'Save' command) is outside the available decompilation slice.",
+      "ram_fields_updated": ["0x00 (32B header)", "0x20 (4B stamp A)", "0x24 (4B stamp B)"],
+      "how_mapped": "Direct text trace of ghidra/decompiled.c lines ~43-67; ghidra/callgraph.json has no caller/callee edges for 0x08000358 or 0x080006a4 (jumptable-recovery tool gap), so this chain was reconstructed manually from call-site text, not from the callgraph alone."
+    },
+    {
+      "entry_caller": "0x080002e0",
+      "chain": ["0x080002e0", "0x080006e4", "0x080d379c", "0x080d3948"],
+      "trigger_context": "Save-load validation: reads header + both stamps, memcmp's the header, range-checks both stamps.",
+      "ram_fields_updated": [],
+      "how_mapped": "Direct text trace of ghidra/decompiled.c lines ~2-40; confirmed as a real callgraph edge via 0x080003a0 -> 0x080002e0, though 0x080002e0 -> 0x080006e4/0x080d3948 edges are themselves not present in ghidra/callgraph.json (same tool gap as above)."
+    },
+    {
+      "entry_caller": "0x080003a0",
+      "chain": ["0x080003a0", "0x080002e0", "0x080006e4"],
+      "trigger_context": "Accessor: validate the save, then return the current stamp-A value (or 0 if invalid/read failed).",
+      "ram_fields_updated": [],
+      "how_mapped": "Confirmed callgraph edge '0x080003a0': {\"callees\": [\"0x080002e0\"]} plus direct text trace of ghidra/decompiled.c lines ~70-95."
+    }
+  ],
+  "fields": [
+    {
+      "name": "magic_header_stamp",
+      "offset": 0,
+      "size": 32,
+      "type": "ascii",
+      "ram_addr": null,
+      "writers": ["0x08000358", "0x080006a4"],
+      "readers": ["0x080002e0", "0x080006e4", "0x080d3948"],
+      "observed_values": {"cap-00-future-0.sav": "GBA牧場物語のSRAMイメージ 0000"},
+      "update_mechanism": "Flushed verbatim from a RAM buffer (_DAT_08000398) to SRAM offset 0x00 by FUN_08000358 via the FUN_080006a4 write-verify driver; never constructed or mutated byte-by-byte by any traced function, only copied as a fixed block.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Identical 0x20-byte span used by writer call (func_0x080006a4(param_1,0,_DAT_08000398,0x20)), reader call (func_0x080006e4(param_1,auStack_34,0,0x20)) and memcmp call (func_0x080d3948(auStack_34,_DAT_08000354,0x20)); bytes present verbatim in saves/cap-00-future-0.sav offsets 0x00-0x1F."
+    },
+    {
+      "name": "stamp_a",
+      "offset": 32,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": ["0x08000358", "0x080006a4"],
+      "readers": ["0x080002e0", "0x080003a0", "0x080006e4"],
+      "observed_values": {"cap-00-future-0.sav": 0},
+      "update_mechanism": "Writer re-reads the just-completed header write's status code (0 = success) and writes that same value as 4 bytes at offset 0x20. Reader requires (value & 3) == value, i.e. value in {0,1,2,3}. Only one all-zero sample is available, so it is unconfirmed whether this field ever takes on a real counter/slot-index role versus always being a plain 0/success echo.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "ghidra/decompiled.c FUN_08000358 (write) and FUN_080002e0 (range-check read); saves/cap-00-future-0.sav bytes 0x20-0x23 = 00000000, which satisfies the predicate (verified via Python: (0 & 3) == 0 -> True)."
+    },
+    {
+      "name": "stamp_b",
+      "offset": 36,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": ["0x08000358", "0x080006a4"],
+      "readers": ["0x080002e0", "0x080006e4"],
+      "observed_values": {"cap-00-future-0.sav": 0},
+      "update_mechanism": "Written with the identical value as stamp_a, at offset 0x24, only if the stamp_a write also reported success. Reader requires value < 2, i.e. value in {0,1}.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "ghidra/decompiled.c FUN_08000358 (write) and FUN_080002e0 (range-check read); saves/cap-00-future-0.sav bytes 0x24-0x27 = 00000000, which satisfies the predicate (verified via Python: 0 < 2 -> True)."
+    },
+    {
+      "name": "unmapped_data_region",
+      "offset": 40,
+      "size": 32728,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"cap-00-future-0.sav": "all 0xFF (SRAM fill/erase value)"},
+      "update_mechanism": "Unknown; no function in the available 214-function decompilation reads or writes this range. Hypothesized to hold actual gameplay save data (farm/character/calendar/inventory state) given the total 32KB SRAM size versus the tiny 40-byte header region, but this is unverified.",
+      "confidence": "UNKNOWN",
+      "evidence": "saves/hexdump_and_diffs.txt shows only one active range (0x0000-0x0028); saves/cap-00-future-0.sav bytes 0x28 onward are all 0xFF, consistent with an untouched/cold save."
+    }
+  ],
+  "fuzzing_targets": [
+    {
+      "offset": 0,
+      "size": 1,
+      "mutation": "Flip a single bit/byte inside the 32-byte magic header (e.g. 0x47 -> 0x48 at offset 0x00).",
+      "requires_checksum_repair": false,
+      "predicted_effect": "FUN_080002e0's memcmp against the fixed template fails; save is treated as invalid/absent on next load (no checksum to repair since none exists)."
+    },
+    {
+      "offset": 32,
+      "size": 4,
+      "mutation": "Set the little-endian u32 at offset 0x20 to 4 (out of the valid 0..3 range).",
+      "requires_checksum_repair": false,
+      "predicted_effect": "(4 & 3) == 0 != 4, so the stamp-A range check fails independently of the header, isolating this check's effect."
+    },
+    {
+      "offset": 36,
+      "size": 4,
+      "mutation": "Set the little-endian u32 at offset 0x24 to 2 (out of the valid 0..1 range).",
+      "requires_checksum_repair": false,
+      "predicted_effect": "2 < 2 is false, so the stamp-B range check fails independently of header and stamp A, isolating this check's effect."
+    },
+    {
+      "offset": 32,
+      "size": 8,
+      "mutation": "Set stamp A to 3 and stamp B to 1 (maximum valid boundary values), leaving the header untouched.",
+      "requires_checksum_repair": false,
+      "predicted_effect": "Validation should still pass (3 & 3 == 3, 1 < 2); tests whether in-game behavior differs for nonzero stamp values, which would support the hypothesis that stamp A is a rotating slot/generation selector rather than a pure success echo."
+    },
+    {
+      "offset": 40,
+      "size": 8,
+      "mutation": "Toggle small aligned 4-8 byte chunks across offset 0x28-0x7FFF on a save taken after real gameplay progress, diffing against the pre-mutation .sav/.ss pair.",
+      "requires_checksum_repair": true,
+      "predicted_effect": "Unknown/exploratory: observable on-screen stat changes (money, day/season, character stats) would pinpoint field offsets for round-two mapping of the currently-unmapped 32728-byte region; may also reveal an as-yet-unobserved per-record checksum not visible in the 40-byte header region covered by this report."
+    }
+  ],
+  "open_questions": [
+    "What are the actual EWRAM/IWRAM addresses behind the ROM literal-pool symbols _DAT_08000398, _DAT_08000354, _DAT_0800039c, _DAT_08000324, _DAT_080003cc, _DAT_080006e0, _DAT_08000708? Not resolvable from the decompiled excerpts available in this workspace.",
+    "Is stamp_a (offset 0x20) ever a meaningful counter/slot-selector (values 1-3), or is it always a plain 0/success echo? Only one all-zero sample is available.",
+    "Where does the actual gameplay save data (farm state, character stats, calendar, inventory) live within the 32728-byte unmapped region (0x28-0x7FFF)? No function in the 214-function corpus touches this range.",
+    "Does the literal SDK tag string 'SRAM_V113@7715160' (from corpus metadata) exist elsewhere in ROM? It was not found in the 40-byte active region of the sample .sav.",
+    "Does this title use multiple distinct save-file slots (common in this genre) beyond the single 40-byte header/stamp block observed here? Not observable from a single-sample capture.",
+    "Why does ghidra/callgraph.json report empty callers/callees for 0x080006a4 and 0x080006e4 despite their call sites being visible in ghidra/decompiled.c text? Appears to be a jumptable-recovery limitation in the tool, not evidence the functions are uncalled."
+  ]
+}

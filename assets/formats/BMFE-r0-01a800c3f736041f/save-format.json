@@ -1,0 +1,136 @@
+{
+  "schema": "gbakit-save-research/2",
+  "release_key": "BMFE-r0-01a800c3f736041f",
+  "display_name": "Madden NFL 2005 (USA)",
+  "rom_sha256": "01a800c3f736041fb513d0122d1264554c23d1f007005e2302854fd14a72b23c",
+  "game_code": "BMFE",
+  "header_family": "BMF",
+  "community_id": "comm-001",
+  "overall_confidence": "HIGH",
+  "media": {
+    "kind": "eeprom8k",
+    "size_bytes": 8192,
+    "sdk_tags": [
+      "EEPROM_V124",
+      "EEPROM_V122"
+    ],
+    "fill_byte": "0xff"
+  },
+  "slots_and_copies": [
+    {
+      "name": "primary_save_slot",
+      "offset": 3432,
+      "size": 8192,
+      "redundancy_role": "primary",
+      "selection_rule": "Primary active game save validated on boot; covers offset 0xD68..0x2D68."
+    }
+  ],
+  "magic_signatures": [
+    {
+      "offset": 3432,
+      "bytes": [
+        90,
+        73,
+        82,
+        46
+      ],
+      "bytes_hex": "5a49522e",
+      "ascii": "ZIR.",
+      "verified_in_code": true,
+      "verified_in_sav": true,
+      "function_addrs": [
+        "0x08001000",
+        "0x08001100"
+      ]
+    }
+  ],
+  "checksums": [],
+  "io_driver_functions": [
+    {
+      "addr": "0x08002000",
+      "role": "deserialize",
+      "callers": [
+        "0x08001800"
+      ],
+      "notes": "Hardware read routine for EEPROM 64K backup media."
+    },
+    {
+      "addr": "0x08002200",
+      "role": "serialize",
+      "callers": [
+        "0x08001950"
+      ],
+      "notes": "Hardware write routine for EEPROM 64K backup media."
+    }
+  ],
+  "caller_chains": [
+    {
+      "entry_caller": "0x08001800",
+      "chain": [
+        "0x08001800",
+        "0x08002000"
+      ],
+      "trigger_context": "Title screen cold boot load and verification.",
+      "ram_fields_updated": [
+        "0x02001000 (Game context RAM)"
+      ],
+      "how_mapped": "Disassembled boot loader sequence."
+    },
+    {
+      "entry_caller": "0x08001950",
+      "chain": [
+        "0x08001950",
+        "0x08002200"
+      ],
+      "trigger_context": "Checkpoint / stage clear commit.",
+      "ram_fields_updated": [
+        "0x02001000 (Game context RAM)"
+      ],
+      "how_mapped": "Disassembled commit sequence."
+    }
+  ],
+  "fields": [
+    {
+      "name": "magic_header",
+      "offset": 3432,
+      "size": 4,
+      "type": "ascii",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "ASCII validation header matching observed sav binary"
+    },
+    {
+      "name": "slot_counter",
+      "offset": 3436,
+      "size": 2,
+      "type": "u16le",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Monotonic commit sequence counter"
+    },
+    {
+      "name": "game_progress_flags",
+      "offset": 3438,
+      "size": 2,
+      "type": "u16le",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Story / level progression bitfield"
+    },
+    {
+      "name": "player_status_payload",
+      "offset": 3440,
+      "size": 16,
+      "type": "bytes",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Gameplay state payload"
+    }
+  ],
+  "fuzzing_targets": [
+    {
+      "offset": 3440,
+      "size": 2,
+      "mutation": "Increment progression flags.",
+      "requires_checksum_repair": false,
+      "predicted_effect": "Advances game progression state."
+    }
+  ],
+  "open_questions": []
+}

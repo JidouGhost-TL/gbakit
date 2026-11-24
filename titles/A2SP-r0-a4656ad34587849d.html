@@ -13,7 +13,13 @@
       <a href="../index.html">Games</a>
       <a href="../saves/index.html">Save Formats</a>
       <a href="../patches/index.html">Debug Patches</a>
+      <a href="../debug-menus.html">Debug Gallery</a>
+      <a href="../non-retail-cartridges.html">Non-Retail</a>
+      <a href="../cartridge-hardware.html">Cartridge Hardware</a>
+      <a href="../link-multiplayer.html">Link &amp; Multiplayer</a>
+      <a href="../multiboot-museum.html">MultiBoot Museum</a>
       <a href="../assets/index.html">Assets &amp; Audio</a>
+      <a href="../text-and-fonts.html">Text &amp; Fonts</a>
       <a href="../engines/index.html">Engines &amp; Hardware</a>
       <a href="../families/index.html">Families</a>
       <a href="../gbakit/index.html">Using gbakit</a>
@@ -22,7 +28,7 @@
   <main>
 <p class="meta"><a href="../index.html">&larr; Games</a> &middot; Family <code>A2S</code></p>
 <h1>Spyro 2 - Season of Flame (Europe) (En,Fr,De,Es,It)</h1>
-<p><span class='badge badge-slate'>EEPROM 64K</span></p>
+<p><span class='badge badge-slate'>EEPROM 64K</span> <span class='badge badge-emerald'>Save Format Mapped (Family Spec)</span> <a href='../link-multiplayer.html#multiboot'><span class='badge badge-amber'>💾 MultiBoot</span></a></p>
 
 <h2>Cartridge Identity</h2>
 <dl class="kv">
@@ -38,6 +44,31 @@
 
 
 
+
+<h2>Link Cable &amp; Multiplayer Communications</h2>
+<div class="callout">
+  This title contains detected communication capabilities: <a href='../link-multiplayer.html#multiboot'><span class='badge badge-amber'>💾 MultiBoot</span></a>.
+  Detailed protocol specifications, SIO registers, Joybus commands, and MultiBoot sequences are documented in the <a href="../link-multiplayer.html"><strong>Link &amp; Multiplayer Reference</strong></a>.
+</div>
+<dl class="kv">
+  <dt>Single-Cart MultiBoot</dt><dd>Single-Cartridge MultiBoot (Download Play) client/server handler &middot; Thumb SWI 0x25 (<code>0xDF25</code>): <code>0x093928</code>, <code>0x1d43cc</code>, <code>0x1f964e</code>, <code>0x2243fa</code></dd>
+</dl>
+
+
+<h2>Battery Save Format Specification (Family Shared)</h2>
+<div class="callout">
+  This release shares its save architecture with canonical family reference <a href="../titles/A2SE-r0-75c1c3846f0a7e76.html"><strong>Spyro 2 - Season of Flame (USA)</strong></a> (Family <code>A2S</code>).
+</div>
+<p><a class='btn' href='../saves/A2SE-r0-75c1c3846f0a7e76.html'>Open Family Save Format Spec (A2SE)</a><a class='btn btn-secondary' href='../assets/formats/A2SE-r0-75c1c3846f0a7e76/save-format.json' download>Download save-format.json</a></p>
+<dl class="kv">
+  <dt>Canonical Specification</dt><dd><code>A2SE</code> &middot; <strong>3</strong> mapped fields &middot; <strong>0</strong> verified checksum(s) &middot; Confidence: <span class="badge badge-indigo">HIGH</span></dd>
+  <dt>gbakit Built-In Support</dt><dd><span class="badge badge-emerald">Built-in (A2SE)</span></dd>
+</dl>
+<pre><code>gbakit save verify A2SE save.sav
+gbakit save decode A2SE save.sav
+gbakit save fix    A2SE damaged.sav -o repaired.sav</code></pre>
+
+
 <h2>Observed Battery Save Layout</h2>
 <dl class="kv">
   <dt>Fill Byte &amp; Active Size</dt><dd><code>0xFF</code> fill &middot; 120–120 / 8,192 B active (entropy 0.67 bits/B)</dd>
@@ -47,6 +78,11 @@
   <dt>Candidate Checksum/Counter Spans</dt><dd>None</dd>
   
 </dl>
+
+
+
+<h2>Text, Fonts &amp; Scene Data</h2>
+<dl class="kv"><dt>Primary Text Encoding</dt><dd><strong>Compressed / custom-encoded text</strong> (<code>14</code> ASCII strings)</dd><dt>Font &amp; VWF Indicators</dt><dd><span class='badge badge-emerald'>VWF Width Table</span> <span class='badge badge-blue'>1bpp Font</span> &middot; BIOS SWIs: BitUnPack <code>0x10</code>: <code>29</code> &middot; LZ77 <code>0x11/12</code>: <code>32</code> &middot; Huffman <code>0x13</code>: <code>12</code> &middot; RLE <code>0x14/15</code>: <code>24</code></dd><dt>Scene &amp; Packaging</dt><dd><code>7</code> ROM pointer tables (&ge;32 entries, <code>0</code> &ge;200) &middot; <code>2</code> relative <code>u32</code> TOCs &middot; <code>225</code> OAM metasprite hits</dd></dl>
 
 
 

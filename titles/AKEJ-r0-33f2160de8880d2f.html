@@ -13,7 +13,13 @@
       <a href="../index.html">Games</a>
       <a href="../saves/index.html">Save Formats</a>
       <a href="../patches/index.html">Debug Patches</a>
+      <a href="../debug-menus.html">Debug Gallery</a>
+      <a href="../non-retail-cartridges.html">Non-Retail</a>
+      <a href="../cartridge-hardware.html">Cartridge Hardware</a>
+      <a href="../link-multiplayer.html">Link &amp; Multiplayer</a>
+      <a href="../multiboot-museum.html">MultiBoot Museum</a>
       <a href="../assets/index.html">Assets &amp; Audio</a>
+      <a href="../text-and-fonts.html">Text &amp; Fonts</a>
       <a href="../engines/index.html">Engines &amp; Hardware</a>
       <a href="../families/index.html">Families</a>
       <a href="../gbakit/index.html">Using gbakit</a>
@@ -22,7 +28,7 @@
   <main>
 <p class="meta"><a href="../index.html">&larr; Games</a> &middot; Family <code>AKE</code></p>
 <h1>Hikaru no Go 2 (Japan)</h1>
-<p><span class='badge badge-slate'>SRAM 256K</span></p>
+<p><span class='badge badge-slate'>SRAM 256K</span> <span class='badge badge-emerald'>Save Format Spec</span> <span class='badge badge-emerald'>gbakit Built-In</span> <a href='../link-multiplayer.html#multiboot'><span class='badge badge-amber'>💾 MultiBoot</span></a></p>
 
 <h2>Cartridge Identity</h2>
 <dl class="kv">
@@ -38,6 +44,30 @@
 
 
 
+
+<h2>Link Cable &amp; Multiplayer Communications</h2>
+<div class="callout">
+  This title contains detected communication capabilities: <a href='../link-multiplayer.html#multiboot'><span class='badge badge-amber'>💾 MultiBoot</span></a>.
+  Detailed protocol specifications, SIO registers, Joybus commands, and MultiBoot sequences are documented in the <a href="../link-multiplayer.html"><strong>Link &amp; Multiplayer Reference</strong></a>.
+</div>
+<dl class="kv">
+  <dt>Single-Cart MultiBoot</dt><dd>Single-Cartridge MultiBoot (Download Play) client/server handler &middot; Thumb SWI 0x25 (<code>0xDF25</code>): <code>0x2a9158</code>, <code>0x2bf6f8</code>, <code>0x2c99b8</code>, <code>0x2d8c96</code></dd>
+</dl>
+
+
+<h2>Battery Save Format Specification</h2>
+<p><a class='btn' href='../saves/AKEJ-r0-33f2160de8880d2f.html'>Open Full Save Format Spec</a><a class='btn btn-secondary' href='../assets/formats/AKEJ-r0-33f2160de8880d2f/save-format.json' download>Download save-format.json</a></p>
+
+<dl class="kv">
+  <dt>Specification Coverage</dt><dd><strong>4</strong> mapped fields &middot; <strong>0</strong> verified checksum(s) &middot; Confidence: <span class="badge badge-indigo">HIGH</span></dd>
+  <dt>gbakit Built-In Support</dt><dd><span class="badge badge-emerald">Built-in (AKEJ)</span></dd>
+  
+</dl>
+<pre><code>gbakit save verify AKEJ save.sav
+gbakit save decode AKEJ save.sav
+gbakit save fix    AKEJ damaged.sav -o repaired.sav</code></pre>
+
+
 <h2>Observed Battery Save Layout</h2>
 <dl class="kv">
   <dt>Fill Byte &amp; Active Size</dt><dd><code>0x00</code> fill &middot; 11,644–11,644 / 32,768 B active (entropy 0.51 bits/B)</dd>
@@ -49,6 +79,11 @@
 </dl>
 
 <h2>ROM Assets, Compression &amp; Audio</h2><dl class='kv'><dt>BIOS Compression</dt><dd>LZ77 (<code>0x10</code>): <strong>1</strong> streams &middot; RLE (<code>0x30</code>): <strong>0</strong> streams</dd><dt>ROM Pointer Tables</dt><dd>162 tables (0 pointing to validated compressed streams)</dd><dt>SDK Backup Tags</dt><dd><code>SRAM_F_V102</code></dd></dl>
+
+<h2>Text, Fonts &amp; Scene Data</h2>
+<dl class="kv"><dt>Primary Text Encoding</dt><dd><strong>Shift-JIS (uncompressed)</strong> (<code>30</code> ASCII strings &middot; <code>200</code> Shift-JIS runs)</dd><dt>Font &amp; VWF Indicators</dt><dd><span class='badge badge-emerald'>VWF Width Table</span> <span class='badge badge-blue'>1bpp Font</span> &middot; BIOS SWIs: BitUnPack <code>0x10</code>: <code>0</code> &middot; LZ77 <code>0x11/12</code>: <code>0</code> &middot; Huffman <code>0x13</code>: <code>0</code> &middot; RLE <code>0x14/15</code>: <code>0</code></dd><dt>Scene &amp; Packaging</dt><dd><code>18</code> ROM pointer tables (&ge;32 entries, <code>3</code> &ge;200) &middot; <code>105</code> relative <code>u32</code> TOCs &middot; <code>250</code> OAM metasprite hits</dd></dl>
+
+
 <h2>Hardware MMIO Subsystems</h2><dl class='kv'><dt><code>ppu_display</code></dt><dd><code>0x80011d0</code>, <code>0x800183c</code>, <code>0x8003c4c</code>, <code>0x8007d98</code>, <code>0x8008088</code></dd><dt><code>save_bus_sram_flash</code></dt><dd><code>0x80002d4</code>, <code>0x80003a0</code>, <code>0x80004e0</code>, <code>0x8000674</code>, <code>0x80007e8</code>, <code>0x80008d8</code></dd></dl>
 
 </main>

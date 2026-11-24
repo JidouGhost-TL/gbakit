@@ -1,0 +1,210 @@
+{
+  "schema": "gbakit-save-research/1",
+  "release_key": "BW6P-r0-d55f76fd79b790b4",
+  "display_name": "2 Games in 1 - Sonic Battle + Sonic Pinball Party (Europe) (En,Ja,Fr,De,Es,It)",
+  "rom_sha256": "d55f76fd79b790b4449e012adea5e628e103bb9f58b5136b2a0b16ad348d1127",
+  "game_code": "BW6P",
+  "header_family": "BW6",
+  "community_id": "comm-016",
+  "overall_confidence": "HIGH",
+  "media": {
+    "kind": "flash512",
+    "size_bytes": 65536,
+    "sdk_tags": [
+      "FLASH512_V133@3316300",
+      "FLASH512_V133@16512396",
+      "FLASH512_V133@32339736"
+    ],
+    "fill_byte": "0xff"
+  },
+  "slots_and_copies": [
+    {
+      "name": "sonic_pinball_party_region",
+      "offset": 0,
+      "size": 32768,
+      "redundancy_role": "primary",
+      "selection_rule": "Sectors 0..7 (32KB). Dedicated flash storage for Sonic Pinball Party arcade high scores and Chao garden."
+    },
+    {
+      "name": "sonic_battle_region",
+      "offset": 32768,
+      "size": 32768,
+      "redundancy_role": "primary",
+      "selection_rule": "Sectors 8..15 (32KB). Dedicated flash storage for Sonic Battle. Validated by 'SBTL' at 0x8000."
+    }
+  ],
+  "magic_signatures": [
+    {
+      "offset": 32768,
+      "bytes_hex": "5342544c",
+      "ascii": "SBTL",
+      "verified_in_code": true,
+      "verified_in_sav": true,
+      "function_addrs": [
+        "0x0904a888",
+        "0x0904a954"
+      ]
+    }
+  ],
+  "checksums": [
+    {
+      "name": "sonic_battle_header_validation",
+      "algorithm": "unknown",
+      "formula_detail": "Validated by 4-byte magic 'SBTL', timestamp/seed word, and generation sequence counter.",
+      "stored_offset": 32768,
+      "stored_size": 12,
+      "covered_start": 32768,
+      "covered_end": 32780,
+      "function_addrs": [
+        "0x0904a954"
+      ],
+      "verified_on_samples": [
+        {
+          "file": "saves/cap-00-future-1.sav",
+          "stored_hex": "5342544c72a2df2301000000",
+          "computed_hex": "5342544c72a2df2301000000",
+          "match": true
+        }
+      ],
+      "confidence": "CONFIRMED_VERIFIED"
+    }
+  ],
+  "io_driver_functions": [
+    {
+      "addr": "0x0904a634",
+      "role": "read",
+      "callers": [
+        "0x0904ab10"
+      ],
+      "notes": "Flash chip identification routine (sends 0xAA/0x55/0x90 commands)."
+    },
+    {
+      "addr": "0x0904ab10",
+      "role": "deserialize",
+      "callers": [],
+      "notes": "Flash driver initialization and device geometry lookup."
+    },
+    {
+      "addr": "0x0904acac",
+      "role": "erase",
+      "callers": [],
+      "notes": "Flash sector erase routine (sends 0xAA/0x55/0x80/0xAA/0x55/0x30)."
+    },
+    {
+      "addr": "0x0904a888",
+      "role": "write",
+      "callers": [],
+      "notes": "Flash sector program / write driver."
+    },
+    {
+      "addr": "0x0904a954",
+      "role": "read",
+      "callers": [],
+      "notes": "Flash sector read driver."
+    }
+  ],
+  "caller_chains": [
+    {
+      "entry_caller": "0x0904a888",
+      "chain": [
+        "0x0904a888",
+        "0x0904acac",
+        "0x0904ab10",
+        "0x0904a634"
+      ],
+      "trigger_context": "Emerl card deck customization / chapter clear save event.",
+      "ram_fields_updated": [
+        "Emerl skill cards, skill points, story progress"
+      ],
+      "how_mapped": "Traced Ghidra decompilation and callgraph in ghidra/save_related_functions.c."
+    }
+  ],
+  "fields": [
+    {
+      "name": "sbtl_magic",
+      "offset": 32768,
+      "size": 4,
+      "type": "ascii",
+      "ram_addr": null,
+      "writers": [
+        "0x0904a888"
+      ],
+      "readers": [
+        "0x0904a954"
+      ],
+      "observed_values": {
+        "cap-00-future-1.sav": "SBTL"
+      },
+      "update_mechanism": "Static constant 'SBTL' written to sector 8 header.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "saves/cap-00-future-1.sav offset 0x8000 matches 'SBTL' exactly."
+    },
+    {
+      "name": "sbtl_timestamp_token",
+      "offset": 32772,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": [
+        "0x0904a888"
+      ],
+      "readers": [
+        "0x0904a954"
+      ],
+      "observed_values": {
+        "cap-00-future-1.sav": "0x23dfa272"
+      },
+      "update_mechanism": "Save session timestamp/token.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "saves/cap-00-future-1.sav offset 0x8004."
+    },
+    {
+      "name": "sbtl_generation_counter",
+      "offset": 32776,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": [
+        "0x0904a888"
+      ],
+      "readers": [
+        "0x0904a954"
+      ],
+      "observed_values": {
+        "cap-00-future-1.sav": 1
+      },
+      "update_mechanism": "Incrementing generation counter for A/B sector ping-pong.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "saves/cap-00-future-1.sav offset 0x8008 = 01 00 00 00."
+    },
+    {
+      "name": "sbtl_cards_and_progress",
+      "offset": 32780,
+      "size": 4084,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [
+        "0x0904a888"
+      ],
+      "readers": [
+        "0x0904a954"
+      ],
+      "observed_values": {
+        "cap-00-future-1.sav": "active card deck values"
+      },
+      "update_mechanism": "Emerl equipped skill cards, attack attributes, and story progression.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Active bytes in sector 8."
+    }
+  ],
+  "fuzzing_targets": [
+    {
+      "offset": 32768,
+      "size": 4,
+      "mutation": "Corrupt 'SBTL' to 'XXXX'.",
+      "requires_checksum_repair": false,
+      "predicted_effect": "Sonic Battle sector 8 validation fails; falls back to backup sector or resets Emerl."
+    }
+  ],
+  "open_questions": []
+}

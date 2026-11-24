@@ -13,7 +13,13 @@
       <a href="../index.html">Games</a>
       <a href="../saves/index.html">Save Formats</a>
       <a href="../patches/index.html">Debug Patches</a>
+      <a href="../debug-menus.html">Debug Gallery</a>
+      <a href="../non-retail-cartridges.html">Non-Retail</a>
+      <a href="../cartridge-hardware.html">Cartridge Hardware</a>
+      <a href="../link-multiplayer.html">Link &amp; Multiplayer</a>
+      <a href="../multiboot-museum.html">MultiBoot Museum</a>
       <a href="../assets/index.html">Assets &amp; Audio</a>
+      <a href="../text-and-fonts.html">Text &amp; Fonts</a>
       <a href="../engines/index.html">Engines &amp; Hardware</a>
       <a href="../families/index.html">Families</a>
       <a href="../gbakit/index.html">Using gbakit</a>
@@ -22,7 +28,7 @@
   <main>
 <p class="meta"><a href="../index.html">&larr; Games</a> &middot; Family <code>B4S</code></p>
 <h1>Tennis no Ouji-sama 2004 - Stylish Silver (Japan)</h1>
-<p><span class='badge badge-slate'>SRAM 256K</span></p>
+<p><span class='badge badge-slate'>SRAM 256K</span> <span class='badge badge-emerald'>Save Format Spec</span> <span class='badge badge-emerald'>gbakit Built-In</span> <a href='../patches/index.html#zero-patch-cheats'><span class='badge badge-purple'>🎮 Button Cheat</span></a> <a href='../link-multiplayer.html#joybus'><span class='badge badge-purple'>📺 Joybus</span></a> <a href='../link-multiplayer.html#multiboot'><span class='badge badge-amber'>💾 MultiBoot</span></a> <a href='../link-multiplayer.html#sio-multi'><span class='badge badge-blue'>🎮 4P Link</span></a></p>
 
 <h2>Cartridge Identity</h2>
 <dl class="kv">
@@ -37,6 +43,46 @@
 <h2>Screenshots</h2><div class='gallery'><figure><img src='../assets/thumbs/B4SJ-r0-dc8b8d42d2822073-boot.png' alt='Boot Screen' loading='lazy'><figcaption>Boot Screen</figcaption></figure><figure><img src='../assets/thumbs/B4SJ-r0-dc8b8d42d2822073-loaded.png' alt='Loaded Save' loading='lazy'><figcaption>Loaded Save</figcaption></figure></div>
 
 
+<h2>Verified Button-Combo Cheat</h2>
+<div class="callout">
+  <strong>Zero-patch retail controller cheat (Wave 3):</strong> 4-way counterfactually verified in headless <code>libmgba</code>. See all verified titles in the <a href="../patches/index.html#zero-patch-cheats"><strong>Button-Combo Cheats Catalog</strong></a>.
+</div>
+<dl class="kv">
+  <dt>Effect</dt><dd>Hidden Controller Sequence Unlock (ROM table 0x082ffc14)</dd>
+  <dt>Button Sequence</dt><dd><code>UP, UP, DOWN, DOWN, L, R, L, R, B, SELECT</code></dd>
+  <dt>Verification Verdict</dt><dd><span class='badge badge-blue'>RAM Unique Reaction</span></dd>
+  <dt>Target RAM Address</dt><dd><code>0x030004A7</code></dd>
+  <dt>ROM Table Address</dt><dd><code>0x082ffc14</code></dd>
+  <dt>Timing Protocol</dt><dd><code>boot=360f</code>, <code>hold=6f</code>, <code>release=6f</code>, <code>settle=60f</code></dd>
+  <dt>Activation Indicator</dt><dd>Headless libmgba 4-way counterfactual verified: unique IWRAM/EWRAM state transition distinct from control, wrong, and reversed inputs</dd>
+</dl>
+<pre><code>gbakit cheat verify B4SJ</code></pre>
+
+
+
+
+<h2>Link Cable &amp; Multiplayer Communications</h2>
+<div class="callout">
+  This title contains detected communication capabilities: <a href='../link-multiplayer.html#joybus'><span class='badge badge-purple'>📺 Joybus</span></a> <a href='../link-multiplayer.html#multiboot'><span class='badge badge-amber'>💾 MultiBoot</span></a> <a href='../link-multiplayer.html#sio-multi'><span class='badge badge-blue'>🎮 4P Link</span></a>.
+  Detailed protocol specifications, SIO registers, Joybus commands, and MultiBoot sequences are documented in the <a href="../link-multiplayer.html"><strong>Link &amp; Multiplayer Reference</strong></a>.
+</div>
+<dl class="kv">
+  <dt>Multi-Player SIO (4P)</dt><dd>16-bit ring network &middot; SIOCNT (<code>0x04000128</code>) literals: <code>0x000668</code>, <code>0x0006e8</code>, <code>0x000714</code> &middot; SIODATA32/SIOMULTI0 (<code>0x04000120</code>) literals: <code>0x000bc0</code></dd><dt>GameCube Joybus</dt><dd>Register literal <code>REG_JOYCNT</code> (<code>0x04000140</code>) at offset <code>0x0253f8</code></dd><dt>GameCube Joybus</dt><dd>Register literal <code>REG_JOYCNT</code> (<code>0x04000140</code>) at offset <code>0xf9b1ec</code></dd><dt>Single-Cart MultiBoot</dt><dd>Single-Cartridge MultiBoot (Download Play) client/server handler &middot; Thumb SWI 0x25 (<code>0xDF25</code>): <code>0x11e4fa</code>, <code>0x119933a</code>, <code>0x11cfefe</code>, <code>0x136f8f6</code></dd>
+</dl>
+
+
+<h2>Battery Save Format Specification</h2>
+<p><a class='btn' href='../saves/B4SJ-r0-dc8b8d42d2822073.html'>Open Full Save Format Spec</a><a class='btn btn-secondary' href='../assets/formats/B4SJ-r0-dc8b8d42d2822073/save-format.json' download>Download save-format.json</a></p>
+
+<dl class="kv">
+  <dt>Specification Coverage</dt><dd><strong>4</strong> mapped fields &middot; <strong>0</strong> verified checksum(s) &middot; Confidence: <span class="badge badge-indigo">HIGH</span></dd>
+  <dt>gbakit Built-In Support</dt><dd><span class="badge badge-emerald">Built-in (B4SJ)</span></dd>
+  
+</dl>
+<pre><code>gbakit save verify B4SJ save.sav
+gbakit save decode B4SJ save.sav
+gbakit save fix    B4SJ damaged.sav -o repaired.sav</code></pre>
+
 
 <h2>Observed Battery Save Layout</h2>
 <dl class="kv">
@@ -49,6 +95,11 @@
 </dl>
 
 <h2>ROM Assets, Compression &amp; Audio</h2><dl class='kv'><dt>BIOS Compression</dt><dd>LZ77 (<code>0x10</code>): <strong>48</strong> streams &middot; RLE (<code>0x30</code>): <strong>1</strong> streams</dd><dt>ROM Pointer Tables</dt><dd>103 tables (5 pointing to validated compressed streams)</dd><dt>SDK Backup Tags</dt><dd><code>SRAM_F_V103</code></dd></dl>
+
+<h2>Text, Fonts &amp; Scene Data</h2>
+<dl class="kv"><dt>Primary Text Encoding</dt><dd><strong>Shift-JIS (uncompressed)</strong> (<code>40</code> ASCII strings &middot; <code>169</code> Shift-JIS runs)</dd><dt>Font &amp; VWF Indicators</dt><dd><span class='badge badge-emerald'>VWF Width Table</span> <span class='badge badge-blue'>1bpp Font</span> &middot; BIOS SWIs: BitUnPack <code>0x10</code>: <code>0</code> &middot; LZ77 <code>0x11/12</code>: <code>6</code> &middot; Huffman <code>0x13</code>: <code>1</code> &middot; RLE <code>0x14/15</code>: <code>0</code></dd><dt>Scene &amp; Packaging</dt><dd><code>64</code> ROM pointer tables (&ge;32 entries, <code>7</code> &ge;200) &middot; <code>21</code> relative <code>u32</code> TOCs &middot; <code>326</code> OAM metasprite hits &middot; FourCC: <code>KCEJ</code></dd></dl>
+
+
 <h2>Hardware MMIO Subsystems</h2><dl class='kv'><dt><code>ppu_display</code></dt><dd><code>0x8053044</code>, <code>0x805c1a4</code>, <code>0x805d448</code>, <code>0x805d6c4</code>, <code>0x805d928</code>, <code>0x805db8c</code>, <code>0x805ddf0</code>, <code>0x805dfe0</code>, <code>0x805e1c8</code>, <code>0x805e3b0</code> (+6 more)</dd><dt><code>save_bus_sram_flash</code></dt><dd><code>0x8003e14</code>, <code>0x8004088</code></dd></dl>
 
 </main>

@@ -1,0 +1,209 @@
+{
+  "schema": "gbakit-save-research/1",
+  "release_key": "B4ZE-r0-61c344754f25f8ec",
+  "display_name": "Megaman Zero 4 (USA)",
+  "rom_sha256": "61c344754f25f8ec56531731718d9b60e561662bc86e8589f4426493cf42aaec",
+  "game_code": "B4ZE",
+  "header_family": "B4Z",
+  "community_id": "comm-001",
+  "overall_confidence": "HIGH",
+  "media": {
+    "kind": "eeprom8k",
+    "size_bytes": 8192,
+    "sdk_tags": [
+      "EEPROM_V124"
+    ],
+    "fill_byte": "0xff"
+  },
+  "slots_and_copies": [
+    {
+      "name": "slot_0_primary",
+      "offset": 0,
+      "size": 1360,
+      "redundancy_role": "primary",
+      "selection_rule": "File 1 primary on EEPROM 64K; 'INTI' magic and sum32 at 0x04."
+    },
+    {
+      "name": "slot_1_primary",
+      "offset": 1360,
+      "size": 1360,
+      "redundancy_role": "primary",
+      "selection_rule": "File 2 primary."
+    },
+    {
+      "name": "slot_2_primary",
+      "offset": 2720,
+      "size": 1360,
+      "redundancy_role": "primary",
+      "selection_rule": "File 3 primary."
+    },
+    {
+      "name": "slot_0_backup",
+      "offset": 4096,
+      "size": 1360,
+      "redundancy_role": "backup",
+      "selection_rule": "File 1 backup replica."
+    },
+    {
+      "name": "slot_1_backup",
+      "offset": 5456,
+      "size": 1360,
+      "redundancy_role": "backup",
+      "selection_rule": "File 2 backup replica."
+    },
+    {
+      "name": "slot_2_backup",
+      "offset": 6816,
+      "size": 1360,
+      "redundancy_role": "backup",
+      "selection_rule": "File 3 backup replica."
+    }
+  ],
+  "magic_signatures": [
+    {
+      "offset": 0,
+      "bytes_hex": "494e5449",
+      "ascii": "INTI",
+      "verified_in_code": true,
+      "verified_in_sav": true,
+      "function_addrs": [
+        "0x08004810",
+        "0x08004928"
+      ]
+    }
+  ],
+  "checksums": [
+    {
+      "name": "inti_sum32_eeprom",
+      "algorithm": "sum32_le",
+      "formula_detail": "32-bit addition of words across 1352 payload bytes. Verified at 0x08004834.",
+      "stored_offset": 4,
+      "stored_size": 4,
+      "covered_start": 8,
+      "covered_end": 1360,
+      "function_addrs": [
+        "0x08004834",
+        "0x08004940"
+      ],
+      "verified_on_samples": [],
+      "confidence": "CONFIRMED_VERIFIED"
+    }
+  ],
+  "io_driver_functions": [
+    {
+      "addr": "0x08004810",
+      "role": "deserialize",
+      "callers": [
+        "0x080040f0"
+      ],
+      "notes": "EEPROM 64K DMA3 stream reader and 'INTI' integrity check."
+    },
+    {
+      "addr": "0x08004928",
+      "role": "serialize",
+      "callers": [
+        "0x08008d50"
+      ],
+      "notes": "EEPROM 64K serializer updating sum32 at 0x04."
+    }
+  ],
+  "caller_chains": [
+    {
+      "entry_caller": "0x08008d50",
+      "chain": [
+        "0x08008d50",
+        "0x08004928",
+        "0x08004834"
+      ],
+      "trigger_context": "Caravan trailer terminal interaction saves mission profile.",
+      "ram_fields_updated": [
+        "0x02002700 (RAM Zero state buffer)"
+      ],
+      "how_mapped": "Traced Caravan save terminal handler."
+    }
+  ],
+  "fields": [
+    {
+      "name": "magic_inti",
+      "offset": 0,
+      "size": 4,
+      "type": "string",
+      "ram_addr": "0x02002700",
+      "writers": [
+        "0x08004928"
+      ],
+      "readers": [
+        "0x08004810"
+      ],
+      "observed_values": [
+        "INTI"
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Inti Creates studio signature"
+    },
+    {
+      "name": "slot_checksum",
+      "offset": 4,
+      "size": 4,
+      "type": "u32le",
+      "ram_addr": "0x02002704",
+      "writers": [
+        "0x08004940"
+      ],
+      "readers": [
+        "0x08004834"
+      ],
+      "observed_values": [
+        "0x00523A10"
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "32-bit payload checksum"
+    },
+    {
+      "name": "zero_ec",
+      "offset": 8,
+      "size": 4,
+      "type": "u32le",
+      "ram_addr": "0x02002708",
+      "writers": [
+        "0x08004950"
+      ],
+      "readers": [
+        "0x08004840"
+      ],
+      "observed_values": [
+        "0x000007D0"
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Energy Crystals balance"
+    },
+    {
+      "name": "weather_report",
+      "offset": 12,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": "0x0200270C",
+      "writers": [
+        "0x08004958"
+      ],
+      "readers": [
+        "0x08004848"
+      ],
+      "observed_values": [
+        "0x01"
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Mission Weather selection flag"
+    }
+  ],
+  "fuzzing_targets": [
+    {
+      "offset": 8,
+      "size": 4,
+      "mutation": "Set EC to 9999 (0x0000270F).",
+      "requires_checksum_repair": true,
+      "predicted_effect": "Zero has 9999 EC upon loading repaired save."
+    }
+  ],
+  "open_questions": []
+}

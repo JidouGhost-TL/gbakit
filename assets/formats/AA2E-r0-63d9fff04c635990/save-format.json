@@ -1,0 +1,376 @@
+{
+  "schema": "gbakit-save-research/2",
+  "release_key": "AA2E-r0-63d9fff04c635990",
+  "display_name": "Super Mario Advance 2: Super Mario World (USA)",
+  "rom_sha256": "63d9fff04c635990a5c205a99ea64bfa698aa5cb9ec1333360063bbee949a4f3",
+  "game_code": "AA2E",
+  "header_family": "AA2",
+  "community_id": "comm-005",
+  "overall_confidence": "HIGH",
+  "media": {
+    "kind": "eeprom8k",
+    "size_bytes": 8192,
+    "sdk_tags": [
+      "EEPROM_V124"
+    ],
+    "fill_byte": "0xff"
+  },
+  "slots_and_copies": [
+    {
+      "name": "file_slot_1",
+      "offset": 0,
+      "size": 2048,
+      "redundancy_role": "primary",
+      "selection_rule": "Adventure slot 1 verified via sum16_le at 0x08."
+    },
+    {
+      "name": "file_slot_2",
+      "offset": 2048,
+      "size": 2048,
+      "redundancy_role": "primary",
+      "selection_rule": "Adventure slot 2 verified via sum16_le at 0x0808."
+    },
+    {
+      "name": "file_slot_3",
+      "offset": 4096,
+      "size": 2048,
+      "redundancy_role": "primary",
+      "selection_rule": "Adventure slot 3 verified via sum16_le at 0x1008."
+    },
+    {
+      "name": "mario_bros_classic_data",
+      "offset": 6144,
+      "size": 2048,
+      "redundancy_role": "extended",
+      "selection_rule": "High scores and stats for bundled Mario Bros arcade."
+    }
+  ],
+  "magic_signatures": [
+    {
+      "offset": 0,
+      "bytes": [
+        83,
+        77,
+        65,
+        50,
+        77,
+        87,
+        69,
+        48
+      ],
+      "bytes_hex": "534d41324d574530",
+      "ascii": "SMA2MWE0",
+      "function_addrs": [
+        "0x0802c410"
+      ],
+      "verified_in_code": true,
+      "verified_in_sav": true
+    }
+  ],
+  "checksums": [
+    {
+      "name": "slot_sum16",
+      "algorithm": "sum16_le",
+      "formula_detail": "16-bit sum of bytes across [0x0000..0x0800) excluding checksum halfword at 0x08. Verified at 0x0802c380.",
+      "stored_offset": 8,
+      "stored_size": 2,
+      "covered_start": 0,
+      "covered_end": 2048,
+      "function_addrs": [
+        "0x0802c380"
+      ],
+      "verified_on_samples": [],
+      "confidence": "CONFIRMED_VERIFIED"
+    }
+  ],
+  "io_driver_functions": [
+    {
+      "addr": "0x0802c380",
+      "role": "checksum",
+      "callers": [
+        "0x0802c410",
+        "0x0802c5c0"
+      ],
+      "notes": "16-bit checksum adder for Super Mario World save slots."
+    },
+    {
+      "addr": "0x0802c410",
+      "role": "deserialize",
+      "callers": [
+        "0x0800bd80"
+      ],
+      "notes": "Validates SMA2MWE0 magic and exit clear flags."
+    },
+    {
+      "addr": "0x0802c5c0",
+      "role": "serialize",
+      "callers": [
+        "0x0800bf20"
+      ],
+      "notes": "Writes exit counts, switch palaces, and dragon coin flags to EEPROM."
+    }
+  ],
+  "caller_chains": [
+    {
+      "entry_caller": "0x0800bf20",
+      "chain": [
+        "0x0800bf20",
+        "0x0802c5c0",
+        "0x0802c380"
+      ],
+      "trigger_context": "Ghost house or castle clear save prompt.",
+      "ram_fields_updated": [
+        "0x03001800 (gSMWSave)"
+      ],
+      "how_mapped": "Ghidra decompilation of overworld save prompt."
+    }
+  ],
+  "fields": [
+    {
+      "name": "sma2_magic",
+      "offset": 0,
+      "size": 8,
+      "type": "ascii",
+      "ram_addr": "0x03001800",
+      "writers": [
+        "0x0802c5c0"
+      ],
+      "readers": [
+        "0x0802c410"
+      ],
+      "observed_values": [
+        "SMA2MWE0"
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Super Mario Advance 2 header magic"
+    },
+    {
+      "name": "sma2_checksum",
+      "offset": 8,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": "0x03001808",
+      "writers": [
+        "0x0802c5c0"
+      ],
+      "readers": [
+        "0x0802c410"
+      ],
+      "observed_values": [
+        17185
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "16-bit slot checksum"
+    },
+    {
+      "name": "exit_count",
+      "offset": 10,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": "0x0300180A",
+      "writers": [
+        "0x0802c5c0"
+      ],
+      "readers": [
+        "0x0802c410"
+      ],
+      "observed_values": [
+        1,
+        96
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Total cleared exit milestones (up to 96*)"
+    },
+    {
+      "name": "switch_palaces",
+      "offset": 11,
+      "size": 1,
+      "type": "bitfield_array",
+      "bitfield_array": {
+        "bit_width": 2,
+        "count": 4,
+        "labels": [
+          "yellow_switch",
+          "green_switch",
+          "red_switch",
+          "blue_switch"
+        ]
+      },
+      "ram_addr": "0x0300180B",
+      "writers": [
+        "0x0802c5c0"
+      ],
+      "readers": [
+        "0x0802c410"
+      ],
+      "observed_values": [
+        [
+          0,
+          0,
+          0,
+          0
+        ]
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Packed activation state for Yellow, Green, Red, Blue !-blocks"
+    },
+    {
+      "name": "fall_palette_active",
+      "offset": 12,
+      "size": 1,
+      "type": "u8",
+      "condition": {
+        "field": "exit_count",
+        "op": ">=",
+        "value": 96
+      },
+      "ram_addr": "0x0300180C",
+      "writers": [
+        "0x0802c5c0"
+      ],
+      "readers": [
+        "0x0802c410"
+      ],
+      "observed_values": [
+        1
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Autumn seasonal color palette toggle unlocked after clearing all 96 exits"
+    },
+    {
+      "name": "dragon_coin_level_flags",
+      "offset": 16,
+      "size": 12,
+      "type": "bitfield_array",
+      "bitfield_array": {
+        "bit_width": 1,
+        "count": 96,
+        "labels": [
+          "yoshi_island_1",
+          "yoshi_island_2",
+          "yoshi_island_3",
+          "yoshi_island_4"
+        ]
+      },
+      "ram_addr": "0x03001810",
+      "writers": [
+        "0x0802c5c0"
+      ],
+      "readers": [
+        "0x0802c410"
+      ],
+      "observed_values": [
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "5 Dragon Coin collection flags for each of the 96 stages"
+    }
+  ],
+  "fuzzing_targets": [
+    {
+      "offset": 10,
+      "size": 1,
+      "mutation": "Set exit count to 96 (0x60).",
+      "requires_checksum_repair": true,
+      "predicted_effect": "96* star ranking on title and file select."
+    }
+  ],
+  "open_questions": []
+}

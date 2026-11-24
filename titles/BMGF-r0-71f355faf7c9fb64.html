@@ -13,7 +13,13 @@
       <a href="../index.html">Games</a>
       <a href="../saves/index.html">Save Formats</a>
       <a href="../patches/index.html">Debug Patches</a>
+      <a href="../debug-menus.html">Debug Gallery</a>
+      <a href="../non-retail-cartridges.html">Non-Retail</a>
+      <a href="../cartridge-hardware.html">Cartridge Hardware</a>
+      <a href="../link-multiplayer.html">Link &amp; Multiplayer</a>
+      <a href="../multiboot-museum.html">MultiBoot Museum</a>
       <a href="../assets/index.html">Assets &amp; Audio</a>
+      <a href="../text-and-fonts.html">Text &amp; Fonts</a>
       <a href="../engines/index.html">Engines &amp; Hardware</a>
       <a href="../families/index.html">Families</a>
       <a href="../gbakit/index.html">Using gbakit</a>
@@ -22,7 +28,7 @@
   <main>
 <p class="meta"><a href="../index.html">&larr; Games</a> &middot; Family <code>BMG</code></p>
 <h1>Mario Golf - Advance Tour (France)</h1>
-<p><span class='badge badge-slate'>SRAM 256K</span> <span class='badge badge-emerald'>Save Format Mapped (Family Spec)</span></p>
+<p><span class='badge badge-slate'>SRAM 256K</span> <span class='badge badge-emerald'>Save Format Mapped (Family Spec)</span> <a href='../link-multiplayer.html#joybus'><span class='badge badge-purple'>📺 Joybus</span></a> <a href='../link-multiplayer.html#multiboot'><span class='badge badge-amber'>💾 MultiBoot</span></a> <a href='../link-multiplayer.html#sio-multi'><span class='badge badge-blue'>🎮 4P Link</span></a> <a href='../link-multiplayer.html#wireless-rfu'><span class='badge badge-emerald'>📡 Wireless</span></a></p>
 
 <h2>Cartridge Identity</h2>
 <dl class="kv">
@@ -37,6 +43,18 @@
 
 
 
+
+
+<h2>Link Cable &amp; Multiplayer Communications</h2>
+<div class="callout">
+  This title contains detected communication capabilities: <a href='../link-multiplayer.html#joybus'><span class='badge badge-purple'>📺 Joybus</span></a> <a href='../link-multiplayer.html#multiboot'><span class='badge badge-amber'>💾 MultiBoot</span></a> <a href='../link-multiplayer.html#sio-multi'><span class='badge badge-blue'>🎮 4P Link</span></a> <a href='../link-multiplayer.html#wireless-rfu'><span class='badge badge-emerald'>📡 Wireless</span></a>.
+  Detailed protocol specifications, SIO registers, Joybus commands, and MultiBoot sequences are documented in the <a href="../link-multiplayer.html"><strong>Link &amp; Multiplayer Reference</strong></a>.
+</div>
+<dl class="kv">
+  <dt>Multi-Player SIO (4P)</dt><dd>16-bit ring network &middot; SIOCNT (<code>0x04000128</code>) literals: <code>0x01839c</code>, <code>0x018494</code>, <code>0x018584</code> &middot; SIODATA32/SIOMULTI0 (<code>0x04000120</code>) literals: <code>0x018fb4</code>, <code>0x019620</code>, <code>0x01edfc</code></dd><dt>GameCube Joybus</dt><dd>Register literal <code>REG_JOYCNT</code> (<code>0x04000140</code>) at offset <code>0x0179d8</code></dd><dt>GameCube Joybus</dt><dd>Register literal <code>REG_JOY_RECV</code> (<code>0x04000150</code>) at offset <code>0x017928</code></dd><dt>GameCube Joybus</dt><dd>Register literal <code>REG_JOY_RECV</code> (<code>0x04000150</code>) at offset <code>0x0179e0</code></dd><dt>GameCube Joybus</dt><dd>Register literal <code>REG_JOY_TRANS</code> (<code>0x04000154</code>) at offset <code>0x017780</code></dd><dt>GameCube Joybus</dt><dd>Register literal <code>REG_JOY_TRANS</code> (<code>0x04000154</code>) at offset <code>0x0177e0</code></dd><dt>GameCube Joybus</dt><dd>Register literal <code>REG_JOYSTAT</code> (<code>0x04000158</code>) at offset <code>0x017784</code></dd><dt>GameCube Joybus</dt><dd>Register literal <code>REG_JOYSTAT</code> (<code>0x04000158</code>) at offset <code>0x0179dc</code></dd><dt>Nintendo Wireless Adapter</dt><dd>AGB-015 RFU driver signature <code>RFU-MBOOT</code> at offset <code>0x0280fc</code></dd><dt>Nintendo Wireless Adapter</dt><dd>AGB-015 RFU driver signature <code>NINTENDOSio32ID</code> at offset <code>0x028108</code></dd><dt>Single-Cart MultiBoot</dt><dd>Single-Cartridge MultiBoot (Download Play) client/server handler &middot; Thumb SWI 0x25 (<code>0xDF25</code>): <code>0x07d260</code>, <code>0x0a640e</code>, <code>0x0a6ee6</code>, <code>0x149aa8</code> &middot; SDK signatures: <code>MBOOT</code> at <code>0x028100</code></dd>
+</dl>
+
+
 <h2>Battery Save Format Specification (Family Shared)</h2>
 <div class="callout">
   This release shares its save architecture with canonical family reference <a href="../titles/BMGU-r0-95549077594083a8.html"><strong>Mario Golf - Advance Tour (Australia)</strong></a> (Family <code>BMG</code>).
@@ -44,9 +62,11 @@
 <p><a class='btn' href='../saves/BMGU-r0-95549077594083a8.html'>Open Family Save Format Spec (BMGU)</a><a class='btn btn-secondary' href='../assets/formats/BMGU-r0-95549077594083a8/save-format.json' download>Download save-format.json</a></p>
 <dl class="kv">
   <dt>Canonical Specification</dt><dd><code>BMGU</code> &middot; <strong>14</strong> mapped fields &middot; <strong>1</strong> verified checksum(s) &middot; Confidence: <span class="badge badge-indigo">MEDIUM</span></dd>
-  <dt>gbakit Built-In Support</dt><dd>JSON schema download available</dd>
+  <dt>gbakit Built-In Support</dt><dd><span class="badge badge-emerald">Built-in (BMGU)</span></dd>
 </dl>
-
+<pre><code>gbakit save verify BMGU save.sav
+gbakit save decode BMGU save.sav
+gbakit save fix    BMGU damaged.sav -o repaired.sav</code></pre>
 
 
 <h2>Observed Battery Save Layout</h2>
@@ -58,6 +78,11 @@
   <dt>Candidate Checksum/Counter Spans</dt><dd>None</dd>
   
 </dl>
+
+
+
+<h2>Text, Fonts &amp; Scene Data</h2>
+<dl class="kv"><dt>Primary Text Encoding</dt><dd><strong>Compressed / custom-encoded text</strong> (<code>18</code> ASCII strings &middot; <code>1</code> Shift-JIS runs)</dd><dt>Font &amp; VWF Indicators</dt><dd><span class='badge badge-emerald'>VWF Width Table</span> <span class='badge badge-blue'>1bpp Font</span> &middot; BIOS SWIs: BitUnPack <code>0x10</code>: <code>9</code> &middot; LZ77 <code>0x11/12</code>: <code>14</code> &middot; Huffman <code>0x13</code>: <code>4</code> &middot; RLE <code>0x14/15</code>: <code>10</code></dd><dt>Scene &amp; Packaging</dt><dd><code>45</code> ROM pointer tables (&ge;32 entries, <code>5</code> &ge;200) &middot; <code>160</code> relative <code>u32</code> TOCs &middot; <code>94</code> OAM metasprite hits</dd></dl>
 
 
 <h2>Hardware MMIO Subsystems</h2><dl class='kv'><dt><code>dma_transfer</code></dt><dd><code>0x8014bac</code>, <code>0x8014c64</code>, <code>0x8014cc0</code>, <code>0x8014e50</code>, <code>0x80156e0</code>, <code>0x8015cf4</code>, <code>0x80167dc</code>, <code>0x8016818</code>, <code>0x8016870</code>, <code>0x80168d0</code> (+6 more)</dd><dt><code>ppu_display</code></dt><dd><code>0x8014cc0</code>, <code>0x8014d38</code>, <code>0x8014e50</code>, <code>0x8015740</code>, <code>0x80167dc</code>, <code>0x8039e8c</code>, <code>0x81a65f4</code>, <code>0x81a79b0</code>, <code>0x81a8dc0</code>, <code>0x8201194</code></dd><dt><code>save_bus_sram_flash</code></dt><dd><code>0x8017ec4</code>, <code>0x8017fc0</code>, <code>0x8018180</code></dd></dl>

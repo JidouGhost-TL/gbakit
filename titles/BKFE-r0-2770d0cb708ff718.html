@@ -13,7 +13,13 @@
       <a href="../index.html">Games</a>
       <a href="../saves/index.html">Save Formats</a>
       <a href="../patches/index.html">Debug Patches</a>
+      <a href="../debug-menus.html">Debug Gallery</a>
+      <a href="../non-retail-cartridges.html">Non-Retail</a>
+      <a href="../cartridge-hardware.html">Cartridge Hardware</a>
+      <a href="../link-multiplayer.html">Link &amp; Multiplayer</a>
+      <a href="../multiboot-museum.html">MultiBoot Museum</a>
       <a href="../assets/index.html">Assets &amp; Audio</a>
+      <a href="../text-and-fonts.html">Text &amp; Fonts</a>
       <a href="../engines/index.html">Engines &amp; Hardware</a>
       <a href="../families/index.html">Families</a>
       <a href="../gbakit/index.html">Using gbakit</a>
@@ -22,7 +28,7 @@
   <main>
 <p class="meta"><a href="../index.html">&larr; Games</a> &middot; Family <code>BKF</code></p>
 <h1>Bee Game, The (USA)</h1>
-<p><span class='badge badge-zinc'>Stateless / Passcode</span></p>
+<p><span class='badge badge-slate'>EEPROM 4K</span> <span class='badge badge-emerald'>Save Format Mapped (Family Spec)</span></p>
 
 <h2>Cartridge Identity</h2>
 <dl class="kv">
@@ -30,20 +36,36 @@
   <dt>Header Title</dt><dd><code>THE BEE GAME</code></dd>
   <dt>Maker / Revision</dt><dd><code>5D</code> / rev <code>0</code></dd>
   <dt>ROM Size</dt><dd>4.0 MiB (4,194,304 B)</dd>
-  <dt>Save Media</dt><dd><code>None / Unknown</code></dd>
+  <dt>Save Media</dt><dd><code>EEPROM 4K</code></dd>
   <dt>SHA-256</dt><dd><code>2770d0cb708ff71841913a9621f6ead43a4d3c076c846816a5c7e8b2eb02190f</code></dd>
   <dt>Engine / SDK Group</dt><dd><a href='../engines/index.html#comm-006'><code>comm-006</code></a> (66 families)</dd>
 </dl>
 
 
 
-<h2>Cartridge Storage Architecture: Stateless / Passcode</h2>
+
+
+
+<h2>Battery Save Format Specification (Family Shared)</h2>
 <div class="callout">
-  <strong>Zero non-volatile battery hardware:</strong> This cartridge PCB contains ROM only (no SRAM, Flash, or EEPROM chips). Progression is preserved via on-screen passcodes or session-only gameplay. No <code>.sav</code> file is generated or required.
+  This release shares its save architecture with canonical family reference <a href="../titles/BKFX-r0-e079a782fc2d4c1e.html"><strong>Biene Maja, Die - Klatschmohnwiese in Gefahr (Germany)</strong></a> (Family <code>BKF</code>).
 </div>
+<p><a class='btn' href='../saves/BKFX-r0-e079a782fc2d4c1e.html'>Open Family Save Format Spec (BKFX)</a><a class='btn btn-secondary' href='../assets/formats/BKFX-r0-e079a782fc2d4c1e/save-format.json' download>Download save-format.json</a></p>
+<dl class="kv">
+  <dt>Canonical Specification</dt><dd><code>BKFX</code> &middot; <strong>3</strong> mapped fields &middot; <strong>0</strong> verified checksum(s) &middot; Confidence: <span class="badge badge-indigo">HIGH</span></dd>
+  <dt>gbakit Built-In Support</dt><dd><span class="badge badge-emerald">Built-in (BKFX)</span></dd>
+</dl>
+<pre><code>gbakit save verify BKFX save.sav
+gbakit save decode BKFX save.sav
+gbakit save fix    BKFX damaged.sav -o repaired.sav</code></pre>
 
 
 <h2>ROM Assets, Compression &amp; Audio</h2><dl class='kv'><dt>BIOS Compression</dt><dd>LZ77 (<code>0x10</code>): <strong>0</strong> streams &middot; RLE (<code>0x30</code>): <strong>0</strong> streams</dd><dt>ROM Pointer Tables</dt><dd>8 tables (0 pointing to validated compressed streams)</dd><dt>SDK Backup Tags</dt><dd><code>EEPROM_V124</code></dd></dl>
+
+<h2>Text, Fonts &amp; Scene Data</h2>
+<dl class="kv"><dt>Primary Text Encoding</dt><dd><strong>16-bit / UTF-16LE text</strong> (<code>15</code> ASCII strings)</dd><dt>Font &amp; VWF Indicators</dt><dd><span class='badge badge-emerald'>VWF Width Table</span> <span class='badge badge-blue'>1bpp Font</span> &middot; BIOS SWIs: BitUnPack <code>0x10</code>: <code>1</code> &middot; LZ77 <code>0x11/12</code>: <code>2</code> &middot; Huffman <code>0x13</code>: <code>1</code> &middot; RLE <code>0x14/15</code>: <code>1</code></dd><dt>Scene &amp; Packaging</dt><dd><code>5</code> ROM pointer tables (&ge;32 entries, <code>0</code> &ge;200) &middot; <code>35</code> relative <code>u32</code> TOCs &middot; <code>635</code> OAM metasprite hits</dd></dl>
+
+
 
 <h2>Regional Variants &amp; Revisions (Family <code>BKF</code>)</h2><ul><li><a href='BKFX-r0-e079a782fc2d4c1e.html'>Biene Maja, Die - Klatschmohnwiese in Gefahr (Germany)</a> (<code>BKFX</code>, 4 MiB)</li></ul>
 </main>

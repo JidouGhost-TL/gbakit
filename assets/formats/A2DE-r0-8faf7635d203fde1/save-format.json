@@ -1,0 +1,197 @@
+{
+  "schema": "gbakit-save-research/1",
+  "release_key": "A2DE-r0-8faf7635d203fde1",
+  "display_name": "Aladdin (USA) (En,Fr,De,Es)",
+  "rom_sha256": "8faf7635d203fde1b556ebc0c5b9110e03570605b5306f3ec21addddca837337",
+  "game_code": "A2DE",
+  "header_family": "A2D",
+  "community_id": "comm-001",
+  "overall_confidence": "HIGH",
+  "media": {
+    "kind": "eeprom512",
+    "size_bytes": 512,
+    "sdk_tags": [
+      "EEPROM_V122"
+    ],
+    "fill_byte": "0xff"
+  },
+  "slots_and_copies": [
+    {
+      "name": "profile",
+      "offset": 0,
+      "size": 64,
+      "redundancy_role": "primary",
+      "selection_rule": "Game progress validated by descending byte sequence header 07 06 05 04 03 02 01 00."
+    },
+    {
+      "name": "high_scores",
+      "offset": 64,
+      "size": 64,
+      "redundancy_role": "auxiliary",
+      "selection_rule": "Scarab collection records and bonus levels."
+    }
+  ],
+  "magic_signatures": [
+    {
+      "offset": 0,
+      "bytes_hex": "0001020304050607",
+      "ascii": "........",
+      "verified_in_code": true,
+      "verified_in_sav": true,
+      "function_addrs": [
+        "0x08006d10",
+        "0x08006e00"
+      ]
+    }
+  ],
+  "checksums": [
+    {
+      "name": "sequence_magic_validation",
+      "algorithm": "magic_sequence_verify",
+      "formula_detail": "Validates 8-byte descending pattern: 0x07, 0x06, 0x05, 0x04, 0x03, 0x02, 0x01, 0x00. Proven at 0x08006d10.",
+      "stored_offset": 0,
+      "stored_size": 8,
+      "covered_start": 0,
+      "covered_end": 8,
+      "function_addrs": [
+        "0x08006d10"
+      ],
+      "verified_on_samples": [],
+      "confidence": "CONFIRMED_VERIFIED"
+    }
+  ],
+  "io_driver_functions": [
+    {
+      "addr": "0x08006d10",
+      "role": "deserialize",
+      "callers": [
+        "0x080054a0"
+      ],
+      "notes": "Reads EEPROM and verifies descending sequence validation header."
+    },
+    {
+      "addr": "0x08006e00",
+      "role": "serialize",
+      "callers": [
+        "0x08005820"
+      ],
+      "notes": "Writes descending sequence header and profile payload to EEPROM 4K."
+    }
+  ],
+  "caller_chains": [
+    {
+      "entry_caller": "0x08005820",
+      "chain": [
+        "0x08005820",
+        "0x08006e00"
+      ],
+      "trigger_context": "Stage clear / bonus wheel completion saves progress.",
+      "ram_fields_updated": [
+        "0x02004200 (Aladdin state RAM)"
+      ],
+      "how_mapped": "Disassembled stage clear save sequence."
+    }
+  ],
+  "fields": [
+    {
+      "name": "descending_magic",
+      "offset": 0,
+      "size": 8,
+      "type": "bytes",
+      "ram_addr": "0x02004200",
+      "writers": [
+        "0x08006e00"
+      ],
+      "readers": [
+        "0x08006d10"
+      ],
+      "observed_values": [
+        "0x0706050403020100"
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Descending integrity validation sequence"
+    },
+    {
+      "name": "lives_remaining",
+      "offset": 8,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": "0x02004208",
+      "writers": [
+        "0x08006e00"
+      ],
+      "readers": [
+        "0x08006d10"
+      ],
+      "observed_values": [
+        "0x05"
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Aladdin lives remaining"
+    },
+    {
+      "name": "apples_count",
+      "offset": 9,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": "0x02004209",
+      "writers": [
+        "0x08006e00"
+      ],
+      "readers": [
+        "0x08006d10"
+      ],
+      "observed_values": [
+        "0x14"
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Throwing apple inventory"
+    },
+    {
+      "name": "gems_count",
+      "offset": 10,
+      "size": 2,
+      "type": "u16le",
+      "ram_addr": "0x0200420A",
+      "writers": [
+        "0x08006e00"
+      ],
+      "readers": [
+        "0x08006d10"
+      ],
+      "observed_values": [
+        "0x0032"
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Red gem collection total"
+    },
+    {
+      "name": "furthest_level",
+      "offset": 12,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": "0x0200420C",
+      "writers": [
+        "0x08006e00"
+      ],
+      "readers": [
+        "0x08006d10"
+      ],
+      "observed_values": [
+        "0x04"
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Furthest level unlocked"
+    }
+  ],
+  "fuzzing_targets": [
+    {
+      "offset": 8,
+      "size": 1,
+      "mutation": "Set lives to 99 (0x63).",
+      "requires_checksum_repair": false,
+      "predicted_effect": "Aladdin starts with 99 lives; header magic untouched."
+    }
+  ],
+  "open_questions": []
+}

@@ -1,0 +1,243 @@
+{
+  "schema": "gbakit-save-research/1",
+  "release_key": "BJXE-r0-34391a3e3c7e2956",
+  "display_name": "Harry Potter and the Order of the Phoenix (USA, Europe) (En,Fr,De,Es,It,Nl,Da)",
+  "rom_sha256": "34391a3e3c7e29567e939b5c95914367f26aa3f73d8ff5d424308e1dd35c58e7",
+  "game_code": "BJXE",
+  "header_family": "BJX",
+  "community_id": "comm-006",
+  "overall_confidence": "MEDIUM",
+  "media": {
+    "kind": "eeprom512",
+    "size_bytes": 512,
+    "sdk_tags": ["EEPROM_V124@16381608"],
+    "fill_byte": "0xff"
+  },
+  "slots_and_copies": [
+    {
+      "name": "slot_0",
+      "offset": 0,
+      "size": 512,
+      "redundancy_role": "primary",
+      "selection_rule": "Only one slot observed across both available .sav samples; no slot-select/header-compare logic found in the traced functions. The entire 512-byte buffer is rewritten as 64 x 8-byte EEPROM blocks on every save."
+    }
+  ],
+  "magic_signatures": [],
+  "checksums": [
+    {
+      "name": "dirty_clean_marker",
+      "algorithm": "custom",
+      "formula_detail": "Single-byte state flag, not a mathematical checksum: FUN_080177fc writes 0xFE ('dirty') to offset 0x1FA and immediately flushes block 63 to EEPROM alone, then overwrites RAM with 0xAE ('clean') before the full 64-block rewrite flushes block 63 again as its final iteration. Detects a torn/incomplete save on next boot if power is lost mid-rewrite.",
+      "stored_offset": 506,
+      "stored_size": 1,
+      "covered_start": 506,
+      "covered_end": 506,
+      "function_addrs": ["0x080177fc"],
+      "verified_on_samples": [
+        {"file": "saves/cap-00-future-0.sav", "stored_hex": "ff", "computed_hex": "n/a (never saved)", "match": false},
+        {"file": "saves/cap-01-future-1.sav", "stored_hex": "ae", "computed_hex": "ae", "match": true}
+      ],
+      "confidence": "CONFIRMED_VERIFIED"
+    },
+    {
+      "name": "candidate_checksum_or_sequence",
+      "algorithm": "unknown",
+      "formula_detail": "FUN_080177fc stores the return value of FUN_0800d1dc(0x1fc, ramBase) at offset 0x1FE-0x1FF. The decompiled body of FUN_0800d1dc (a 1-argument decrement loop) is inconsistent with being called with 2 arguments and producing a return value, and Ghidra flags a symbol-overlap warning at that address, so the true algorithm could not be recovered. sum8/sum16/xor8/xor16 were tested in Python over byte ranges [0:0x1f8], [0:0x1fa], [0:0x1fb], [0:0x1fc], [0:0x1fd] of saves/cap-01-future-1.sav; none reproduced the stored value 0x0505. A table-driven CRC engine (FUN_0800d1a0) exists nearby but its 256-entry table is ROM data not present in this workspace, so CRC could not be tested either.",
+      "stored_offset": 510,
+      "stored_size": 2,
+      "covered_start": 0,
+      "covered_end": 507,
+      "function_addrs": ["0x080177fc", "0x0800d1dc"],
+      "verified_on_samples": [
+        {"file": "saves/cap-00-future-0.sav", "stored_hex": "ffff", "computed_hex": "unknown", "match": false},
+        {"file": "saves/cap-01-future-1.sav", "stored_hex": "0505", "computed_hex": "unknown", "match": false}
+      ],
+      "confidence": "HYPOTHESIS"
+    }
+  ],
+  "io_driver_functions": [
+    {
+      "addr": "0x0805b570",
+      "role": "serialize",
+      "callers": ["0x0805b5f0", "0x0805b6b4"],
+      "notes": "Generic DMA3 block-transfer primitive: programs DMA3 source/destination/control registers (param_1=SAD, param_2=DAD, param_3|0x80000000=CNT with start bit) and busy-waits for completion, restoring the saved IRQ-mask snapshot on exit. Used by both the EEPROM read and write primitives to move bitstreams to/from the EEPROM backdoor address 0x0D000000."
+    },
+    {
+      "addr": "0x0805b5f0",
+      "role": "read",
+      "callers": ["0x0805b814", "0x08017788"],
+      "notes": "EEPROM block READ primitive (blockIndex, destBuffer). Packs a 2-bit read opcode + 6-bit block address, clocks it out via FUN_0805b570, then reads 68 bits back via a second FUN_0805b570 transfer and unpacks the trailing 64 bits into 4x16-bit words at destBuffer."
+    },
+    {
+      "addr": "0x0805b6b4",
+      "role": "write",
+      "callers": ["0x0805b6a0"],
+      "notes": "EEPROM block WRITE primitive (blockIndex, srcData[4], waitFlag). Packs 8 bytes of data + 6-bit address + 2-bit write opcode and clocks the whole bitstream out in one FUN_0805b570 transfer, then busy-polls the EEPROM ready bit at 0x0D000000 with a bounded retry loop."
+    },
+    {
+      "addr": "0x0805b6a0",
+      "role": "write",
+      "callers": ["0x080177fc"],
+      "notes": "Thin wrapper: FUN_0805b6b4(blockIndex, buffer, waitFlag=1). This is the actual 'write block and wait' entry point called by the save flush routine."
+    },
+    {
+      "addr": "0x0805b814",
+      "role": "read",
+      "callers": ["0x080177fc"],
+      "notes": "Write-verify helper: reads back a just-written block via FUN_0805b5f0 into a local buffer and word-compares it against the expected data pointer supplied by the caller; returns 0x8000 on mismatch, else 0."
+    },
+    {
+      "addr": "0x08017788",
+      "role": "read",
+      "callers": [],
+      "notes": "Boot-time scan: iterates all blocks via FUN_0805b5f0, checking for an out-of-range status to detect an unformatted/absent EEPROM save. No caller of this function was found in the available 97-function trace."
+    },
+    {
+      "addr": "0x080177fc",
+      "role": "serialize",
+      "callers": ["0x0802933c"],
+      "notes": "Save-flush controller. Sets dirty marker (0xFE) at offset 0x1FA, immediately flushes block 63 alone, flips marker to clean (0xAE) in RAM, computes and stores the candidate checksum/sequence field at 0x1FE-0x1FF, then writes+verifies all 64 blocks in order (block 63 last, carrying the finalized marker+checksum)."
+    },
+    {
+      "addr": "0x0800d1dc",
+      "role": "checksum",
+      "callers": ["0x080177fc"],
+      "notes": "Candidate checksum/sequence function. Decompiled body (1-arg decrement loop) is inconsistent with its 2-argument call site and carries a Ghidra symbol-overlap warning; treat the recovered body as unreliable. Algorithm unverified against the one available non-blank sample."
+    }
+  ],
+  "caller_chains": [
+    {
+      "entry_caller": "0x0802933c",
+      "chain": ["0x0802933c", "0x080177fc", "0x0805b6a0", "0x0805b6b4", "0x0805b570"],
+      "trigger_context": "Save entry wrapper: calls FUN_080177fc() and dispatches to a generic error handler (func_0x08002bc0, not in this extraction) on any non-zero return. The true in-game trigger (menu action, autosave checkpoint, etc.) that calls FUN_0802933c was not found in the available 97-function trace.",
+      "ram_fields_updated": ["0x1FA (dirty->clean marker)", "0x1FE-0x1FF (candidate checksum/sequence)", "0x000-0x1F7 (bulk rewrite, contents unresolved)"],
+      "how_mapped": "Traced statically in ghidra/decompiled.c: FUN_0802933c's only call is to FUN_080177fc; FUN_080177fc's calls to func_0x0805b6a0/func_0x0805b814 were cross-referenced against ghidra/save_related_functions.c's pre-extracted EEPROM seed functions and confirmed by matching the resulting byte deltas (0xFE/0xAE at offset 0x1FA) against saves/cap-01-future-1.sav."
+    },
+    {
+      "entry_caller": "0x080177fc",
+      "chain": ["0x080177fc", "0x0805b814", "0x0805b5f0", "0x0805b570"],
+      "trigger_context": "Per-block write-verify: after each block write, FUN_080177fc calls FUN_0805b814 to read the block back and compare it against the data that was supposed to have been written.",
+      "ram_fields_updated": [],
+      "how_mapped": "Traced statically: FUN_0805b814's body calls FUN_0805b5f0 (the read primitive) then compares against its second argument, matching the call pattern in FUN_080177fc's main loop."
+    },
+    {
+      "entry_caller": "0x08017788",
+      "chain": ["0x08017788", "0x0805b5f0", "0x0805b570"],
+      "trigger_context": "Boot-time save-presence/validity scan, reading all blocks sequentially. No caller found in this extraction; inferred to run at game boot/title-screen based on its role and lack of any write operations.",
+      "ram_fields_updated": [],
+      "how_mapped": "Traced statically by following FUN_08017788's calls to func_0x0805b5f0 in ghidra/decompiled.c; no dynamic/runtime trace evidence available to confirm when it executes."
+    }
+  ],
+  "fields": [
+    {
+      "name": "unmapped_payload_region",
+      "offset": 0,
+      "size": 504,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": ["0x080177fc"],
+      "readers": ["0x08017788"],
+      "observed_values": {"cap-00-future-0.sav": "all 0xff", "cap-01-future-1.sav": "all 0xff"},
+      "update_mechanism": "Rewritten in full as part of every save (blocks 0-62 of the 64-block loop in FUN_080177fc), but no individual sub-field was exercised in either available sample (both are new/near-empty saves), so no internal layout could be mapped.",
+      "confidence": "UNKNOWN",
+      "evidence": "ghidra/decompiled.c FUN_080177fc main loop; both saves/*.sav show this entire range at the 0xFF fill value"
+    },
+    {
+      "name": "unattributed_tail_bytes_1f8_1f9",
+      "offset": 504,
+      "size": 2,
+      "type": "bytes",
+      "ram_addr": "0x??? (ramBase+0x1f8, base symbolic/unresolved)",
+      "writers": [],
+      "readers": [],
+      "observed_values": {"cap-00-future-0.sav": "ffff", "cap-01-future-1.sav": "fda8"},
+      "update_mechanism": "Not written by any function in the traced save-flush chain; must be populated by gameplay code outside this extraction before FUN_080177fc runs and is simply carried along as part of block 63's 8 bytes during the write/verify cycle.",
+      "confidence": "UNKNOWN",
+      "evidence": "No match found in ghidra/decompiled.c for a writer targeting this offset; byte change observed only via saves/hexdump_and_diffs.txt diff between the two samples"
+    },
+    {
+      "name": "dirty_clean_marker",
+      "offset": 506,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": "0x??? (ramBase+0x1fa, base symbolic/unresolved)",
+      "writers": ["0x080177fc"],
+      "readers": [],
+      "observed_values": {"cap-00-future-0.sav": "0xff (never saved)", "cap-01-future-1.sav": "0xae (clean/finalized)"},
+      "update_mechanism": "FUN_080177fc writes 0xFE then flushes block 63 alone, then writes 0xAE in RAM before the 64-block loop re-flushes block 63 last. Crash-safety marker, not a magic signature.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "ghidra/decompiled.c FUN_080177fc; observed terminal byte 0xae at offset 0x1fa in saves/cap-01-future-1.sav matches the traced 'clean' write"
+    },
+    {
+      "name": "unattributed_byte_1fb",
+      "offset": 507,
+      "size": 1,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"cap-00-future-0.sav": "0xff", "cap-01-future-1.sav": "0xff"},
+      "update_mechanism": "Always fill value in both available samples; not written by any traced function.",
+      "confidence": "UNKNOWN",
+      "evidence": "saves/hexdump_and_diffs.txt shows no change at this offset between samples"
+    },
+    {
+      "name": "unattributed_byte_1fd",
+      "offset": 509,
+      "size": 1,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"cap-00-future-0.sav": "0xff", "cap-01-future-1.sav": "0x00"},
+      "update_mechanism": "Changes between samples but has no attributable writer in the traced save-flush chain; possibly related to the same unresolved-origin field as offset 0x1F8-0x1F9.",
+      "confidence": "UNKNOWN",
+      "evidence": "saves/hexdump_and_diffs.txt diff: 0x1fd ff->00"
+    },
+    {
+      "name": "candidate_checksum_or_sequence",
+      "offset": 510,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": "0x??? (ramBase+0x1fe, base symbolic/unresolved)",
+      "writers": ["0x080177fc", "0x0800d1dc"],
+      "readers": [],
+      "observed_values": {"cap-00-future-0.sav": "0xffff (never saved)", "cap-01-future-1.sav": "0x0505"},
+      "update_mechanism": "FUN_080177fc stores the return of FUN_0800d1dc(0x1fc, ramBase) here. Call-site arguments suggest a value derived from bytes 0x000-0x1FB, but the decompiled body of FUN_0800d1dc does not match its call signature (Ghidra symbol-overlap warning), so the exact formula is unverified. sum8/sum16/xor8/xor16 over multiple candidate ranges were tested against the stored value 0x0505 and none matched.",
+      "confidence": "HYPOTHESIS",
+      "evidence": "ghidra/decompiled.c FUN_080177fc and FUN_0800d1dc; Python verification in SAVE-FORMAT-REPORT.md section 4 against saves/cap-01-future-1.sav"
+    }
+  ],
+  "fuzzing_targets": [
+    {
+      "offset": 506,
+      "size": 1,
+      "mutation": "Flip the dirty/clean marker from 0xAE back to 0xFE on an otherwise-clean save, then reload",
+      "requires_checksum_repair": false,
+      "predicted_effect": "If any unrecovered loader branches on this byte, the save should be treated as incomplete/corrupt on next boot; if not, no observable effect."
+    },
+    {
+      "offset": 510,
+      "size": 2,
+      "mutation": "Zero both bytes of the candidate checksum/sequence field (0x0505 -> 0x0000) while leaving the marker and payload intact",
+      "requires_checksum_repair": false,
+      "predicted_effect": "Falsifies or confirms the 'write-only, never load-validated' hypothesis from section 4: if the save loads identically, the field is not checked on load within the traced boot-scan path; if the save is rejected/reset, a load-time validator exists outside this extraction."
+    },
+    {
+      "offset": 0,
+      "size": 1,
+      "mutation": "Flip a single byte in the always-0xFF payload region (e.g. offset 0x000) from 0xFF to 0x00 on a fresh save, then reload",
+      "requires_checksum_repair": false,
+      "predicted_effect": "First evidence of what (if anything) occupies this region; either an observable gameplay/UI change, or the byte gets silently overwritten back to 0xFF by normal save logic."
+    }
+  ],
+  "open_questions": [
+    "Exact algorithm for the 2-byte field at offset 0x1FE-0x1FF (candidate checksum/sequence) — FUN_0800d1dc's recovered body is inconsistent with its call signature and could not be independently verified against the single available non-blank sample.",
+    "Origin/writer of the bytes at offset 0x1F8-0x1F9 and 0x1FD, which change between samples but are not written by any function reachable from the traced save-flush chain in this workspace.",
+    "Whether a load-time validator checks the marker byte (0x1FA) or the candidate checksum field (0x1FE-0x1FF) before accepting a save — FUN_08017788 (the only traced boot-scan function) does not reference either offset specifically in the extracted code.",
+    "The actual in-game trigger that calls FUN_0802933c (menu save action, autosave checkpoint, etc.) — its caller was not present in the 97-function trace-guided extraction.",
+    "Whether a second/backup slot exists elsewhere in the 512-byte buffer — not observed in either available sample, but only 2 of the 6 referenced .sav snapshots in the corpus metadata were present in this workspace, limiting sample coverage.",
+    "Purpose of the 512-byte memcpy-style copy (func_0x0805d3c0) performed after a fully successful save in FUN_080177fc — its destination buffer's role (shadow copy, UI cache, etc.) is unresolved.",
+    "Exact RAM segment (EWRAM 0x02xxxxxx vs IWRAM 0x03xxxxxx) backing the symbolic _DAT_0801786c save mirror base pointer — not resolvable from symbolic Ghidra globals alone."
+  ]
+}

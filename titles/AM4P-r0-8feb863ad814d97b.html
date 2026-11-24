@@ -13,7 +13,13 @@
       <a href="../index.html">Games</a>
       <a href="../saves/index.html">Save Formats</a>
       <a href="../patches/index.html">Debug Patches</a>
+      <a href="../debug-menus.html">Debug Gallery</a>
+      <a href="../non-retail-cartridges.html">Non-Retail</a>
+      <a href="../cartridge-hardware.html">Cartridge Hardware</a>
+      <a href="../link-multiplayer.html">Link &amp; Multiplayer</a>
+      <a href="../multiboot-museum.html">MultiBoot Museum</a>
       <a href="../assets/index.html">Assets &amp; Audio</a>
+      <a href="../text-and-fonts.html">Text &amp; Fonts</a>
       <a href="../engines/index.html">Engines &amp; Hardware</a>
       <a href="../families/index.html">Families</a>
       <a href="../gbakit/index.html">Using gbakit</a>
@@ -22,7 +28,7 @@
   <main>
 <p class="meta"><a href="../index.html">&larr; Games</a> &middot; Family <code>AM4</code></p>
 <h1>MotoGP (Europe) (En,Fr,De,Es,It)</h1>
-<p><span class='badge badge-zinc'>Stateless / Passcode</span></p>
+<p><span class='badge badge-slate'>EEPROM 4K</span> <span class='badge badge-emerald'>Save Format Mapped (Family Spec)</span> <a href='../link-multiplayer.html#multiboot'><span class='badge badge-amber'>💾 MultiBoot</span></a> <a href='../link-multiplayer.html#sio-multi'><span class='badge badge-blue'>🎮 4P Link</span></a></p>
 
 <h2>Cartridge Identity</h2>
 <dl class="kv">
@@ -30,18 +36,43 @@
   <dt>Header Title</dt><dd><code>MOTOGP</code></dd>
   <dt>Maker / Revision</dt><dd><code>78</code> / rev <code>0</code></dd>
   <dt>ROM Size</dt><dd>4.0 MiB (4,194,304 B)</dd>
-  <dt>Save Media</dt><dd><code>None / Unknown</code></dd>
+  <dt>Save Media</dt><dd><code>EEPROM 4K</code></dd>
   <dt>SHA-256</dt><dd><code>8feb863ad814d97bae246e9fbc7c3eb5b4b1b9f19eae3a2f30514f65dbbfcf23</code></dd>
   <dt>Engine / SDK Group</dt><dd><a href='../engines/index.html#comm-005'><code>comm-005</code></a> (81 families)</dd>
 </dl>
 
 
 
-<h2>Cartridge Storage Architecture: Stateless / Passcode</h2>
-<div class="callout">
-  <strong>Zero non-volatile battery hardware:</strong> This cartridge PCB contains ROM only (no SRAM, Flash, or EEPROM chips). Progression is preserved via on-screen passcodes or session-only gameplay. No <code>.sav</code> file is generated or required.
-</div>
 
+
+<h2>Link Cable &amp; Multiplayer Communications</h2>
+<div class="callout">
+  This title contains detected communication capabilities: <a href='../link-multiplayer.html#multiboot'><span class='badge badge-amber'>💾 MultiBoot</span></a> <a href='../link-multiplayer.html#sio-multi'><span class='badge badge-blue'>🎮 4P Link</span></a>.
+  Detailed protocol specifications, SIO registers, Joybus commands, and MultiBoot sequences are documented in the <a href="../link-multiplayer.html"><strong>Link &amp; Multiplayer Reference</strong></a>.
+</div>
+<dl class="kv">
+  <dt>Multi-Player SIO (4P)</dt><dd>16-bit ring network &middot; SIOCNT (<code>0x04000128</code>) literals: <code>0x010d80</code>, <code>0x010ec0</code>, <code>0x01102c</code> &middot; SIODATA32/SIOMULTI0 (<code>0x04000120</code>) literals: <code>0x010f88</code></dd><dt>Single-Cart MultiBoot</dt><dd>Single-Cartridge MultiBoot (Download Play) client/server handler &middot; Thumb SWI 0x25 (<code>0xDF25</code>): <code>0x050e7c</code>, <code>0x052ad2</code>, <code>0x057ed6</code>, <code>0x066ac0</code></dd>
+</dl>
+
+
+<h2>Battery Save Format Specification (Family Shared)</h2>
+<div class="callout">
+  This release shares its save architecture with canonical family reference <a href="../titles/AM4J-r0-2fa333d2fd4f9f02.html"><strong>MotoGP (Japan) (En)</strong></a> (Family <code>AM4</code>).
+</div>
+<p><a class='btn' href='../saves/AM4J-r0-2fa333d2fd4f9f02.html'>Open Family Save Format Spec (AM4J)</a><a class='btn btn-secondary' href='../assets/formats/AM4J-r0-2fa333d2fd4f9f02/save-format.json' download>Download save-format.json</a></p>
+<dl class="kv">
+  <dt>Canonical Specification</dt><dd><code>AM4J</code> &middot; <strong>4</strong> mapped fields &middot; <strong>0</strong> verified checksum(s) &middot; Confidence: <span class="badge badge-indigo">HIGH</span></dd>
+  <dt>gbakit Built-In Support</dt><dd><span class="badge badge-emerald">Built-in (AM4J)</span></dd>
+</dl>
+<pre><code>gbakit save verify AM4J save.sav
+gbakit save decode AM4J save.sav
+gbakit save fix    AM4J damaged.sav -o repaired.sav</code></pre>
+
+
+
+
+<h2>Text, Fonts &amp; Scene Data</h2>
+<dl class="kv"><dt>Primary Text Encoding</dt><dd><strong>16-bit / UTF-16LE text</strong></dd><dt>Font &amp; VWF Indicators</dt><dd><span class='badge badge-emerald'>VWF Width Table</span> <span class='badge badge-blue'>1bpp Font</span> &middot; BIOS SWIs: BitUnPack <code>0x10</code>: <code>27</code> &middot; LZ77 <code>0x11/12</code>: <code>45</code> &middot; Huffman <code>0x13</code>: <code>9</code> &middot; RLE <code>0x14/15</code>: <code>28</code></dd><dt>Scene &amp; Packaging</dt><dd><code>3</code> ROM pointer tables (&ge;32 entries, <code>0</code> &ge;200) &middot; <code>33</code> relative <code>u32</code> TOCs &middot; <code>240</code> OAM metasprite hits</dd></dl>
 
 
 <h2>Hardware MMIO Subsystems</h2><dl class='kv'><dt><code>ppu_display</code></dt><dd><code>0x8001dcc</code></dd></dl>

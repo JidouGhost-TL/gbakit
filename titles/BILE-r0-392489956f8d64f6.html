@@ -13,7 +13,13 @@
       <a href="../index.html">Games</a>
       <a href="../saves/index.html">Save Formats</a>
       <a href="../patches/index.html">Debug Patches</a>
+      <a href="../debug-menus.html">Debug Gallery</a>
+      <a href="../non-retail-cartridges.html">Non-Retail</a>
+      <a href="../cartridge-hardware.html">Cartridge Hardware</a>
+      <a href="../link-multiplayer.html">Link &amp; Multiplayer</a>
+      <a href="../multiboot-museum.html">MultiBoot Museum</a>
       <a href="../assets/index.html">Assets &amp; Audio</a>
+      <a href="../text-and-fonts.html">Text &amp; Fonts</a>
       <a href="../engines/index.html">Engines &amp; Hardware</a>
       <a href="../families/index.html">Families</a>
       <a href="../gbakit/index.html">Using gbakit</a>
@@ -22,7 +28,7 @@
   <main>
 <p class="meta"><a href="../index.html">&larr; Games</a> &middot; Family <code>BIL</code></p>
 <h1>Bionicle - Maze of Shadows (USA)</h1>
-<p><span class='badge badge-slate'>EEPROM 4K</span></p>
+<p><span class='badge badge-slate'>EEPROM 4K</span> <span class='badge badge-emerald'>gbakit Built-In</span> <a href='../patches/index.html#zero-patch-cheats'><span class='badge badge-purple'>🎮 Button Cheat</span></a> <a href='../link-multiplayer.html#multiboot'><span class='badge badge-amber'>💾 MultiBoot</span></a> <a href='../link-multiplayer.html#sio-multi'><span class='badge badge-blue'>🎮 4P Link</span></a></p>
 
 <h2>Cartridge Identity</h2>
 <dl class="kv">
@@ -37,8 +43,47 @@
 <h2>Screenshots</h2><div class='gallery'><figure><img src='../assets/thumbs/BILE-r0-392489956f8d64f6-boot.png' alt='Boot Screen' loading='lazy'><figcaption>Boot Screen</figcaption></figure><figure><img src='../assets/thumbs/BILE-r0-392489956f8d64f6-after.png' alt='In-Game' loading='lazy'><figcaption>In-Game</figcaption></figure></div>
 
 
+<h2>Verified Button-Combo Cheat</h2>
+<div class="callout">
+  <strong>Zero-patch retail controller cheat (Wave 3):</strong> 4-way counterfactually verified in headless <code>libmgba</code>. See all verified titles in the <a href="../patches/index.html#zero-patch-cheats"><strong>Button-Combo Cheats Catalog</strong></a>.
+</div>
+<dl class="kv">
+  <dt>Effect</dt><dd>Hidden Controller Sequence Unlock (ROM table 0x084531c0)</dd>
+  <dt>Button Sequence</dt><dd><code>RIGHT, B, SELECT, START, A, LEFT</code></dd>
+  <dt>Verification Verdict</dt><dd><span class='badge badge-emerald'>Visual + RAM Unique Reaction</span></dd>
+  <dt>Target RAM Address</dt><dd><code>0x03007BB8</code></dd>
+  <dt>ROM Table Address</dt><dd><code>0x084531c0</code></dd>
+  <dt>Timing Protocol</dt><dd><code>boot=540f</code>, <code>hold=6f</code>, <code>release=6f</code>, <code>settle=60f</code></dd>
+  <dt>Activation Indicator</dt><dd>Headless libmgba 4-way counterfactual verified: unique 240x160 framebuffer and RAM/VRAM state transition distinct from control, wrong, and reversed inputs</dd>
+</dl>
+<pre><code>gbakit cheat verify BILE</code></pre>
+<div class='gallery'><figure><img src='../assets/cheats/BILE/control.png' alt='Before (Control)' loading='lazy'><figcaption>Before (Control)</figcaption></figure><figure><img src='../assets/cheats/BILE/reaction.png' alt='After (Cheat Reaction)' loading='lazy'><figcaption>After (Cheat Reaction)</figcaption></figure></div>
+
+
+
+<h2>Link Cable &amp; Multiplayer Communications</h2>
+<div class="callout">
+  This title contains detected communication capabilities: <a href='../link-multiplayer.html#multiboot'><span class='badge badge-amber'>💾 MultiBoot</span></a> <a href='../link-multiplayer.html#sio-multi'><span class='badge badge-blue'>🎮 4P Link</span></a>.
+  Detailed protocol specifications, SIO registers, Joybus commands, and MultiBoot sequences are documented in the <a href="../link-multiplayer.html"><strong>Link &amp; Multiplayer Reference</strong></a>.
+</div>
+<dl class="kv">
+  <dt>Multi-Player SIO (4P)</dt><dd>16-bit ring network &middot; SIOCNT (<code>0x04000128</code>) literals: <code>0x047a48</code>, <code>0x047cbc</code>, <code>0x048460</code> &middot; SIODATA32/SIOMULTI0 (<code>0x04000120</code>) literals: <code>0x047e4c</code></dd><dt>Single-Cart MultiBoot</dt><dd>Single-Cartridge MultiBoot (Download Play) client/server handler &middot; Thumb SWI 0x25 (<code>0xDF25</code>): <code>0x06dc68</code>, <code>0x0965ce</code>, <code>0x10ae8e</code>, <code>0x127054</code></dd>
+</dl>
+
+
+<h2>Battery Save Support in <code>gbakit</code></h2>
+<p><span class="badge badge-emerald">Built-in definition (BILE)</span></p>
+<pre><code>gbakit save verify BILE save.sav
+gbakit save decode BILE save.sav
+gbakit save fix    BILE damaged.sav -o repaired.sav</code></pre>
+
 
 <h2>ROM Assets, Compression &amp; Audio</h2><dl class='kv'><dt>BIOS Compression</dt><dd>LZ77 (<code>0x10</code>): <strong>1</strong> streams &middot; RLE (<code>0x30</code>): <strong>0</strong> streams</dd><dt>ROM Pointer Tables</dt><dd>227 tables (0 pointing to validated compressed streams)</dd><dt>SDK Backup Tags</dt><dd><code>EEPROM_V124</code></dd></dl>
+
+<h2>Text, Fonts &amp; Scene Data</h2>
+<dl class="kv"><dt>Primary Text Encoding</dt><dd><strong>Custom 16-bit Huffman</strong> (<code>1,185</code> ASCII strings &middot; <code>5</code> Shift-JIS runs)</dd><dt>Font &amp; VWF Indicators</dt><dd><span class='badge badge-slate'>No VWF Table</span> <span class='badge badge-blue'>1bpp Font</span> &middot; BIOS SWIs: BitUnPack <code>0x10</code>: <code>0</code> &middot; LZ77 <code>0x11/12</code>: <code>17</code> &middot; Huffman <code>0x13</code>: <code>7</code> &middot; RLE <code>0x14/15</code>: <code>9</code></dd><dt>Scene &amp; Packaging</dt><dd><code>69</code> ROM pointer tables (&ge;32 entries, <code>2</code> &ge;200) &middot; <code>102</code> relative <code>u32</code> TOCs &middot; <code>266</code> OAM metasprite hits &middot; FourCC: <code>GBAMOD30</code></dd></dl>
+
+
 <h2>Hardware MMIO Subsystems</h2><dl class='kv'><dt><code>dma_transfer</code></dt><dd><code>0x8055c70</code></dd><dt><code>ppu_display</code></dt><dd><code>0x8000360</code>, <code>0x803745c</code>, <code>0x80396e8</code>, <code>0x80398b4</code>, <code>0x803a56c</code>, <code>0x8048b90</code>, <code>0x804a5d8</code></dd></dl>
 <h2>Regional Variants &amp; Revisions (Family <code>BIL</code>)</h2><ul><li><a href='BILP-r0-6e13242892906d65.html'>Bionicle - Maze of Shadows (Europe) (En,De)</a> (<code>BILP</code>, 8 MiB)</li><li><a href='BILP-r1-7ed83b35469e8a40.html'>Bionicle - Maze of Shadows (Europe) (En,De) (Rev 1)</a> (<code>BILP</code>, 8 MiB)</li></ul>
 </main>

@@ -13,7 +13,13 @@
       <a href="../index.html">Games</a>
       <a href="../saves/index.html">Save Formats</a>
       <a href="../patches/index.html">Debug Patches</a>
+      <a href="../debug-menus.html">Debug Gallery</a>
+      <a href="../non-retail-cartridges.html">Non-Retail</a>
+      <a href="../cartridge-hardware.html">Cartridge Hardware</a>
+      <a href="../link-multiplayer.html">Link &amp; Multiplayer</a>
+      <a href="../multiboot-museum.html">MultiBoot Museum</a>
       <a href="../assets/index.html">Assets &amp; Audio</a>
+      <a href="../text-and-fonts.html">Text &amp; Fonts</a>
       <a href="../engines/index.html">Engines &amp; Hardware</a>
       <a href="../families/index.html">Families</a>
       <a href="../gbakit/index.html">Using gbakit</a>
@@ -22,7 +28,7 @@
   <main>
 <p class="meta"><a href="../index.html">&larr; Games</a> &middot; Family <code>AJ3</code></p>
 <h1>Jurassic Park III - Park Builder (USA)</h1>
-<p><span class='badge badge-slate'>SRAM 256K</span></p>
+<p><span class='badge badge-slate'>SRAM 256K</span> <span class='badge badge-emerald'>gbakit Built-In</span> <span class='badge badge-amber'>Debug Menu Patch</span> <a href='../link-multiplayer.html#sio-multi'><span class='badge badge-blue'>🎮 4P Link</span></a></p>
 
 <h2>Cartridge Identity</h2>
 <dl class="kv">
@@ -36,9 +42,41 @@
 </dl>
 <h2>Screenshots</h2><div class='gallery'><figure><img src='../assets/thumbs/AJ3E-r0-9b073efb65342a1e-boot.png' alt='Boot Screen' loading='lazy'><figcaption>Boot Screen</figcaption></figure><figure><img src='../assets/thumbs/AJ3E-r0-9b073efb65342a1e-after.png' alt='In-Game' loading='lazy'><figcaption>In-Game</figcaption></figure></div>
 
+<h2>Debug Menu Re-Enablement Patch (<code>.ips</code>)</h2>
+<p><a class="btn" href="../assets/patches/AJ3E-r0-9b073efb65342a1e/AJ3E-debug.ips" download>Download AJ3E-debug.ips (17 B IPS / 4 B delta)</a></p>
+<dl class="kv">
+  <dt>Hook Mechanism</dt><dd><code>scene_table_ptr_swap</code> &middot; Replace boot scene table entry 4 at 0x397ad0 (0x080011a5 -&gt; 0x08008eb1) to boot directly into Konami Park Builder TEST MENU</dd>
+  <dt>IPS SHA-256</dt><dd><code>6365f4bb1fdef50945c6f5ad4f18bc89250091dc38887d13862ed6e2c4ea98d1</code></dd>
+</dl>
+<pre><code>gbakit patch apply AJ3E-debug.ips original.gba patched-debug.gba</code></pre>
+<div class='gallery'><figure><img src='../assets/patches/AJ3E-r0-9b073efb65342a1e/boot-patched.png' alt='Re-enabled debug menu' loading='lazy'><figcaption>Re-Enabled Debug Menu</figcaption></figure><figure><img src='../assets/patches/AJ3E-r0-9b073efb65342a1e/after-input.png' alt='Interactive debug menu navigation' loading='lazy'><figcaption>After D-Pad / A Input</figcaption></figure></div>
+
+
+
+
+<h2>Link Cable &amp; Multiplayer Communications</h2>
+<div class="callout">
+  This title contains detected communication capabilities: <a href='../link-multiplayer.html#sio-multi'><span class='badge badge-blue'>🎮 4P Link</span></a>.
+  Detailed protocol specifications, SIO registers, Joybus commands, and MultiBoot sequences are documented in the <a href="../link-multiplayer.html"><strong>Link &amp; Multiplayer Reference</strong></a>.
+</div>
+<dl class="kv">
+  <dt>Multi-Player SIO (4P)</dt><dd>16-bit ring network &middot; SIOCNT (<code>0x04000128</code>) literals: <code>0x015a5c</code>, <code>0x015ad8</code>, <code>0x015b3c</code> &middot; SIODATA32/SIOMULTI0 (<code>0x04000120</code>) literals: <code>0x015cc0</code>, <code>0x015d74</code>, <code>0x015e0c</code></dd>
+</dl>
+
+
+<h2>Battery Save Support in <code>gbakit</code></h2>
+<p><span class="badge badge-emerald">Built-in definition (AJ3E)</span></p>
+<pre><code>gbakit save verify AJ3E save.sav
+gbakit save decode AJ3E save.sav
+gbakit save fix    AJ3E damaged.sav -o repaired.sav</code></pre>
 
 
 <h2>ROM Assets, Compression &amp; Audio</h2><dl class='kv'><dt>BIOS Compression</dt><dd>LZ77 (<code>0x10</code>): <strong>40</strong> streams &middot; RLE (<code>0x30</code>): <strong>1</strong> streams</dd><dt>ROM Pointer Tables</dt><dd>29 tables (0 pointing to validated compressed streams)</dd><dt>SDK Backup Tags</dt><dd><code>SRAM_F_V102</code></dd></dl>
+
+<h2>Text, Fonts &amp; Scene Data</h2>
+<dl class="kv"><dt>Primary Text Encoding</dt><dd><strong>Compressed / custom-encoded text</strong> (<code>2</code> ASCII strings &middot; <code>1</code> Shift-JIS runs)</dd><dt>Font &amp; VWF Indicators</dt><dd><span class='badge badge-emerald'>VWF Width Table</span> <span class='badge badge-blue'>1bpp Font</span> &middot; BIOS SWIs: BitUnPack <code>0x10</code>: <code>15</code> &middot; LZ77 <code>0x11/12</code>: <code>7</code> &middot; Huffman <code>0x13</code>: <code>3</code> &middot; RLE <code>0x14/15</code>: <code>7</code></dd><dt>Scene &amp; Packaging</dt><dd><code>11</code> ROM pointer tables (&ge;32 entries, <code>2</code> &ge;200) &middot; <code>3</code> relative <code>u32</code> TOCs &middot; <code>205</code> OAM metasprite hits</dd></dl>
+
+
 
 <h2>Regional Variants &amp; Revisions (Family <code>AJ3</code>)</h2><ul><li><a href='AJ3J-r0-64437ec8ed70485e.html'>Jurassic Park III - Kyouryuu ni Ainiikou! (Japan)</a> (<code>AJ3J</code>, 4 MiB)</li><li><a href='AJ3P-r0-976546269d469bb6.html'>Jurassic Park III - Park Builder (Europe) (En,Fr,De,Es,It)</a> (<code>AJ3P</code>, 4 MiB)</li></ul>
 </main>

@@ -1,0 +1,226 @@
+{
+  "schema": "gbakit-save-research/1",
+  "release_key": "BFFE-r0-6d13e8c0be823b59",
+  "display_name": "Final Fantasy I & II - Dawn of Souls (USA)",
+  "rom_sha256": "6d13e8c0be823b59128f73a1197ea94e77da4be36181fa81622384a3250b86a8",
+  "game_code": "BFFE",
+  "header_family": "BFF",
+  "community_id": "comm-001",
+  "overall_confidence": "HIGH",
+  "media": {
+    "kind": "sram",
+    "size_bytes": 32768,
+    "sdk_tags": [
+      "SRAM_V112"
+    ],
+    "fill_byte": "0x00"
+  },
+  "slots_and_copies": [
+    {
+      "name": "slot_1",
+      "offset": 0,
+      "size": 8192,
+      "redundancy_role": "primary",
+      "selection_rule": "FF1/FF2 File 1 with FF12 magic and 32-bit sum at 0x10."
+    },
+    {
+      "name": "slot_2",
+      "offset": 8192,
+      "size": 8192,
+      "redundancy_role": "primary",
+      "selection_rule": "File 2."
+    },
+    {
+      "name": "slot_3",
+      "offset": 16384,
+      "size": 8192,
+      "redundancy_role": "primary",
+      "selection_rule": "File 3."
+    },
+    {
+      "name": "quick_save",
+      "offset": 24576,
+      "size": 8192,
+      "redundancy_role": "backup",
+      "selection_rule": "Quick save slot."
+    }
+  ],
+  "magic_signatures": [
+    {
+      "offset": 0,
+      "bytes": [
+        70,
+        70,
+        49,
+        50
+      ],
+      "bytes_hex": "46463132",
+      "ascii": "FF12",
+      "function_addrs": [
+        "0x08015420"
+      ],
+      "verified_in_code": true,
+      "verified_in_sav": true
+    }
+  ],
+  "checksums": [
+    {
+      "name": "slot_sum32",
+      "algorithm": "sum32_le",
+      "formula_detail": "32-bit sum across [0x14..0x2000). Verified at 0x08015340.",
+      "stored_offset": 16,
+      "stored_size": 4,
+      "covered_start": 20,
+      "covered_end": 8192,
+      "function_addrs": [
+        "0x08015340"
+      ],
+      "verified_on_samples": [],
+      "confidence": "CONFIRMED_VERIFIED"
+    }
+  ],
+  "io_driver_functions": [
+    {
+      "addr": "0x08015340",
+      "role": "checksum",
+      "callers": [
+        "0x08015420",
+        "0x08015550"
+      ],
+      "notes": "Computes 32-bit sum over party record."
+    },
+    {
+      "addr": "0x08015420",
+      "role": "deserialize",
+      "callers": [
+        "0x0800b210"
+      ],
+      "notes": "Validates slot integrity."
+    },
+    {
+      "addr": "0x08015550",
+      "role": "serialize",
+      "callers": [
+        "0x0800b340"
+      ],
+      "notes": "Writes party stats, Gil, and equipment."
+    }
+  ],
+  "caller_chains": [
+    {
+      "entry_caller": "0x0800b340",
+      "chain": [
+        "0x0800b340",
+        "0x08015550",
+        "0x08015340"
+      ],
+      "trigger_context": "World map or Inn save commits party state.",
+      "ram_fields_updated": [
+        "0x03002500 (gPartyRecord)"
+      ],
+      "how_mapped": "Ghidra decompile of save routine."
+    }
+  ],
+  "fields": [
+    {
+      "name": "magic_ff12",
+      "offset": 0,
+      "size": 4,
+      "type": "ascii",
+      "ram_addr": "0x03002500",
+      "writers": [
+        "0x08015550"
+      ],
+      "readers": [
+        "0x08015420"
+      ],
+      "observed_values": [
+        "FF12"
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "FF12 magic identifier"
+    },
+    {
+      "name": "party_gil",
+      "offset": 20,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": "0x03002514",
+      "writers": [
+        "0x08015550"
+      ],
+      "readers": [
+        "0x08015420"
+      ],
+      "observed_values": [
+        "0x000F423F"
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Total party Gil"
+    },
+    {
+      "name": "warrior_hp",
+      "offset": 24,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": "0x03002518",
+      "writers": [
+        "0x08015550"
+      ],
+      "readers": [
+        "0x08015420"
+      ],
+      "observed_values": [
+        "0x03E7"
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Warrior current HP"
+    },
+    {
+      "name": "warrior_level",
+      "offset": 26,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": "0x0300251A",
+      "writers": [
+        "0x08015550"
+      ],
+      "readers": [
+        "0x08015420"
+      ],
+      "observed_values": [
+        "0x32"
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Warrior level"
+    },
+    {
+      "name": "steps_count",
+      "offset": 28,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": "0x0300251C",
+      "writers": [
+        "0x08015550"
+      ],
+      "readers": [
+        "0x08015420"
+      ],
+      "observed_values": [
+        "0x00010000"
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Total overland step counter"
+    }
+  ],
+  "fuzzing_targets": [
+    {
+      "offset": 20,
+      "size": 4,
+      "mutation": "Set party Gil to 999999 (0x000F423F).",
+      "requires_checksum_repair": true,
+      "predicted_effect": "Party has maximum Gil."
+    }
+  ],
+  "open_questions": []
+}

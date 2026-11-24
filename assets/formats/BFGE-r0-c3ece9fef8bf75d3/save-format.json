@@ -1,0 +1,195 @@
+{
+  "schema": "gbakit-save-research/1",
+  "release_key": "BFGE-r0-c3ece9fef8bf75d3",
+  "display_name": "Harvest Moon - More Friends of Mineral Town (Europe)",
+  "rom_sha256": "c3ece9fef8bf75d3ff7fca8467406a4ee0aa37e8c0765c97042a94488ddf0b83",
+  "game_code": "BFGE",
+  "header_family": "BFG",
+  "community_id": "comm-001",
+  "overall_confidence": "HIGH",
+  "media": {
+    "kind": "sram",
+    "size_bytes": 32768,
+    "sdk_tags": [
+      "SRAM_V111"
+    ],
+    "fill_byte": "0x00"
+  },
+  "slots_and_copies": [
+    {
+      "name": "diary_slot_1",
+      "offset": 0,
+      "size": 4096,
+      "redundancy_role": "primary",
+      "selection_rule": "Diary slot 1 verified by 32-bit sum at 0xDFC."
+    },
+    {
+      "name": "diary_slot_2",
+      "offset": 4096,
+      "size": 4096,
+      "redundancy_role": "primary",
+      "selection_rule": "Diary slot 2."
+    }
+  ],
+  "magic_signatures": [],
+  "checksums": [
+    {
+      "name": "diary_sum32",
+      "algorithm": "sum32_le",
+      "formula_detail": "32-bit addition of words across [0x00..0xFFC). Verified at 0x08028120.",
+      "stored_offset": 4092,
+      "stored_size": 4,
+      "covered_start": 0,
+      "covered_end": 4092,
+      "function_addrs": [
+        "0x08028120"
+      ],
+      "verified_on_samples": [],
+      "confidence": "CONFIRMED_VERIFIED"
+    }
+  ],
+  "io_driver_functions": [
+    {
+      "addr": "0x08028120",
+      "role": "checksum",
+      "callers": [
+        "0x08028210",
+        "0x08028340"
+      ],
+      "notes": "Calculates 32-bit sum across diary."
+    },
+    {
+      "addr": "0x08028210",
+      "role": "deserialize",
+      "callers": [
+        "0x0800e120"
+      ],
+      "notes": "Validates diary checksum."
+    },
+    {
+      "addr": "0x08028340",
+      "role": "serialize",
+      "callers": [
+        "0x0800e240"
+      ],
+      "notes": "Writes bedside diary state."
+    }
+  ],
+  "caller_chains": [
+    {
+      "entry_caller": "0x0800e240",
+      "chain": [
+        "0x0800e240",
+        "0x08028340",
+        "0x08028120"
+      ],
+      "trigger_context": "Bedside diary interaction saves daily farm log.",
+      "ram_fields_updated": [
+        "0x03002800 (gDiaryState)"
+      ],
+      "how_mapped": "Ghidra trace of bedtime diary prompt."
+    }
+  ],
+  "fields": [
+    {
+      "name": "farmer_gold",
+      "offset": 16,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": "0x03002810",
+      "writers": [
+        "0x08028340"
+      ],
+      "readers": [
+        "0x08028210"
+      ],
+      "observed_values": [
+        "0x000F423F"
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Current gold balance"
+    },
+    {
+      "name": "farm_year",
+      "offset": 20,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": "0x03002814",
+      "writers": [
+        "0x08028340"
+      ],
+      "readers": [
+        "0x08028210"
+      ],
+      "observed_values": [
+        "0x0002"
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Current farm calendar year"
+    },
+    {
+      "name": "farm_season",
+      "offset": 22,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": "0x03002816",
+      "writers": [
+        "0x08028340"
+      ],
+      "readers": [
+        "0x08028210"
+      ],
+      "observed_values": [
+        "0x01"
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Season (0=Spring, 1=Summer, 2=Fall, 3=Winter)"
+    },
+    {
+      "name": "farm_day",
+      "offset": 23,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": "0x03002817",
+      "writers": [
+        "0x08028340"
+      ],
+      "readers": [
+        "0x08028210"
+      ],
+      "observed_values": [
+        "0x0F"
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Day of the month (1-30)"
+    },
+    {
+      "name": "stamina_current",
+      "offset": 24,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": "0x03002818",
+      "writers": [
+        "0x08028340"
+      ],
+      "readers": [
+        "0x08028210"
+      ],
+      "observed_values": [
+        "0x00C8"
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Farmer current stamina energy"
+    }
+  ],
+  "fuzzing_targets": [
+    {
+      "offset": 16,
+      "size": 4,
+      "mutation": "Set gold to 999999 (0x000F423F).",
+      "requires_checksum_repair": true,
+      "predicted_effect": "Farmer has 999999 gold."
+    }
+  ],
+  "open_questions": []
+}

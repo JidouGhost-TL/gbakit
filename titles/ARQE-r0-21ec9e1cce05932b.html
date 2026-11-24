@@ -13,7 +13,13 @@
       <a href="../index.html">Games</a>
       <a href="../saves/index.html">Save Formats</a>
       <a href="../patches/index.html">Debug Patches</a>
+      <a href="../debug-menus.html">Debug Gallery</a>
+      <a href="../non-retail-cartridges.html">Non-Retail</a>
+      <a href="../cartridge-hardware.html">Cartridge Hardware</a>
+      <a href="../link-multiplayer.html">Link &amp; Multiplayer</a>
+      <a href="../multiboot-museum.html">MultiBoot Museum</a>
       <a href="../assets/index.html">Assets &amp; Audio</a>
+      <a href="../text-and-fonts.html">Text &amp; Fonts</a>
       <a href="../engines/index.html">Engines &amp; Hardware</a>
       <a href="../families/index.html">Families</a>
       <a href="../gbakit/index.html">Using gbakit</a>
@@ -22,7 +28,7 @@
   <main>
 <p class="meta"><a href="../index.html">&larr; Games</a> &middot; Family <code>ARQ</code></p>
 <h1>Matchbox Cross Town Heroes (USA)</h1>
-<p><span class='badge badge-zinc'>Stateless / Passcode</span></p>
+<p><span class='badge badge-zinc'>Stateless / Passcode</span> <a href='../patches/index.html#zero-patch-cheats'><span class='badge badge-purple'>🎮 Button Cheat</span></a></p>
 
 <h2>Cartridge Identity</h2>
 <dl class="kv">
@@ -37,6 +43,25 @@
 <h2>Screenshots</h2><div class='gallery'><figure><img src='../assets/thumbs/ARQE-r0-21ec9e1cce05932b-boot.png' alt='Boot Screen' loading='lazy'><figcaption>Boot Screen</figcaption></figure><figure><img src='../assets/thumbs/ARQE-r0-21ec9e1cce05932b-after.png' alt='In-Game' loading='lazy'><figcaption>In-Game</figcaption></figure></div>
 
 
+<h2>Verified Button-Combo Cheat</h2>
+<div class="callout">
+  <strong>Zero-patch retail controller cheat (Wave 1):</strong> 4-way counterfactually verified in headless <code>libmgba</code>. See all verified titles in the <a href="../patches/index.html#zero-patch-cheats"><strong>Button-Combo Cheats Catalog</strong></a>.
+</div>
+<dl class="kv">
+  <dt>Effect</dt><dd>All Bonus Emergency Vehicles Unlocked</dd>
+  <dt>Button Sequence</dt><dd><code>UP, UP, DOWN, DOWN, LEFT, RIGHT, LEFT, RIGHT, B, A</code></dd>
+  <dt>Verification Verdict</dt><dd><span class='badge badge-emerald'>Visual + RAM Unique Reaction</span></dd>
+  <dt>Target RAM Address</dt><dd><code>0x02001000</code></dd>
+  
+  <dt>Timing Protocol</dt><dd><code>boot=360f</code>, <code>hold=6f</code>, <code>release=6f</code>, <code>settle=60f</code></dd>
+  <dt>Activation Indicator</dt><dd>Bonus cars unlocked in EWRAM and VRAM update</dd>
+</dl>
+<pre><code>gbakit cheat verify ARQE</code></pre>
+<div class='gallery'><figure><img src='../assets/cheats/ARQE/control.png' alt='Before (Control)' loading='lazy'><figcaption>Before (Control)</figcaption></figure><figure><img src='../assets/cheats/ARQE/reaction.png' alt='After (Cheat Reaction)' loading='lazy'><figcaption>After (Cheat Reaction)</figcaption></figure></div>
+
+
+
+
 <h2>Cartridge Storage Architecture: Stateless / Passcode</h2>
 <div class="callout">
   <strong>Zero non-volatile battery hardware:</strong> This cartridge PCB contains ROM only (no SRAM, Flash, or EEPROM chips). Progression is preserved via on-screen passcodes or session-only gameplay. No <code>.sav</code> file is generated or required.
@@ -44,6 +69,11 @@
 
 
 <h2>ROM Assets, Compression &amp; Audio</h2><dl class='kv'><dt>BIOS Compression</dt><dd>LZ77 (<code>0x10</code>): <strong>0</strong> streams &middot; RLE (<code>0x30</code>): <strong>0</strong> streams</dd><dt>ROM Pointer Tables</dt><dd>59 tables (0 pointing to validated compressed streams)</dd><dt>SDK Backup Tags</dt><dd>None</dd></dl>
+
+<h2>Text, Fonts &amp; Scene Data</h2>
+<dl class="kv"><dt>Primary Text Encoding</dt><dd><strong>Plain ASCII (uncompressed)</strong> (<code>86</code> ASCII strings &middot; <code>3</code> Shift-JIS runs)</dd><dt>Font &amp; VWF Indicators</dt><dd><span class='badge badge-emerald'>VWF Width Table</span> <span class='badge badge-blue'>1bpp Font</span> &middot; BIOS SWIs: BitUnPack <code>0x10</code>: <code>0</code> &middot; LZ77 <code>0x11/12</code>: <code>0</code> &middot; Huffman <code>0x13</code>: <code>0</code> &middot; RLE <code>0x14/15</code>: <code>0</code></dd><dt>Scene &amp; Packaging</dt><dd><code>12</code> ROM pointer tables (&ge;32 entries, <code>3</code> &ge;200) &middot; <code>7</code> relative <code>u32</code> TOCs &middot; <code>408</code> OAM metasprite hits</dd></dl>
+
+
 <h2>Hardware MMIO Subsystems</h2><dl class='kv'><dt><code>ppu_display</code></dt><dd><code>0x8002ed4</code>, <code>0x8003dc0</code>, <code>0x800a610</code>, <code>0x800fe94</code>, <code>0x8012324</code>, <code>0x80160dc</code>, <code>0x801b308</code></dd></dl>
 <h2>Regional Variants &amp; Revisions (Family <code>ARQ</code>)</h2><ul><li><a href='ARQP-r0-3cb34229e13bafab.html'>Matchbox Cross Town Heroes (Europe)</a> (<code>ARQP</code>, 4 MiB)</li></ul>
 </main>

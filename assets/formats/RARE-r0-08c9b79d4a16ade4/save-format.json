@@ -1,0 +1,273 @@
+{
+  "schema": "gbakit-save-research/1",
+  "release_key": "RARE-r0-08c9b79d4a16ade4",
+  "display_name": "Diddy Kong Pilot (Unknown) (Proto) (2003)",
+  "rom_sha256": "08c9b79d4a16ade44d036dd837d9577881202a5424990839f86551139d421bdf",
+  "game_code": "RARE",
+  "header_family": "RAR",
+  "community_id": "comm-002",
+  "overall_confidence": "MEDIUM",
+  "media": {
+    "kind": "eeprom512",
+    "size_bytes": 512,
+    "sdk_tags": ["EEPROM_V122@8703148"],
+    "fill_byte": "0xff"
+  },
+  "slots_and_copies": [
+    {
+      "name": "slot_0",
+      "offset": 0,
+      "size": 512,
+      "redundancy_role": "primary",
+      "selection_rule": "Only one save region exists; FUN_0801d55c unconditionally reads all 64 blocks (0x00-0x3F) with no slot-select read beforehand. No second magic-tagged region or backup copy was found anywhere in the 512-byte file."
+    }
+  ],
+  "magic_signatures": [
+    {
+      "offset": 4,
+      "bytes_hex": "45524152",
+      "ascii": "ERAR",
+      "verified_in_code": true,
+      "verified_in_sav": true,
+      "function_addrs": ["0x0801d384", "0x0801d55c"]
+    },
+    {
+      "offset": 28,
+      "bytes_hex": "16",
+      "ascii": "",
+      "verified_in_code": true,
+      "verified_in_sav": true,
+      "function_addrs": ["0x0801d384", "0x0801d55c"]
+    }
+  ],
+  "checksums": [
+    {
+      "name": "candidate_subtract_accumulate",
+      "algorithm": "custom",
+      "formula_detail": "16-bit running subtraction accumulator over 254 (0xfe) bytes starting at the record base: uVar6=0; for i in 0..0xfd: uVar6 = (uVar6 - byte[i]) & 0xffff; final uVar6 stored as a 16-bit value at offset base+0xfe. Found in FUN_0801d384, but could NOT be matched against either real .sav file at any tried base offset (0x00 or 0x04) or endianness, and the candidate target bytes (file 0xFE/0xFF or 0x102/0x103) fall in the all-zero unused tail of the file, suggesting this loop applies to a non-persisted scratch structure rather than the on-disk 512-byte image.",
+      "stored_offset": 254,
+      "stored_size": 2,
+      "covered_start": 0,
+      "covered_end": 253,
+      "function_addrs": ["0x0801d384"],
+      "verified_on_samples": [
+        {"file": "saves/cap-00-future-0.sav", "stored_hex": "ffff", "computed_hex": "1fe0", "match": false},
+        {"file": "saves/cap-01-future-1.sav", "stored_hex": "ffff", "computed_hex": "20df", "match": false}
+      ],
+      "confidence": "HYPOTHESIS"
+    }
+  ],
+  "io_driver_functions": [
+    {"addr": "0x0803274c", "role": "serialize", "callers": ["0x080327cc", "0x0803287c"], "notes": "Generic DMA3 bit-serial clock-N-bits primitive used by every EEPROM operation; programs DMA3 control and busy-waits on a status bit."},
+    {"addr": "0x080327cc", "role": "read", "callers": ["0x08032958", "0x0801d55c"], "notes": "EEPROM read of one 8-byte (4x u16) block: serializes a READ opcode + 6-bit block address, then clocks back 68 bits and unpacks 4 u16 words."},
+    {"addr": "0x0803287c", "role": "write", "callers": ["0x0801d2ec"], "notes": "EEPROM write of one 8-byte (4x u16) block: serializes WRITE opcode + block address + 64 data bits + stop bit; guards with FUN_08032680/FUN_08032708 IRQ mask toggles and polls the EEPROM busy bit."},
+    {"addr": "0x08032958", "role": "checksum", "callers": ["0x0801d2ec"], "notes": "Not a stored checksum - a post-write read-back VERIFY: reads a block via FUN_080327cc and compares all 4 u16 words against the expected value, returning 0x8000 on mismatch, 0 on match."},
+    {"addr": "0x08032680", "role": "write", "callers": ["0x0803287c"], "notes": "IRQ/DMA critical-section enter, used only around the EEPROM write command."},
+    {"addr": "0x08032708", "role": "write", "callers": ["0x0803287c"], "notes": "IRQ/DMA critical-section exit, mirrors FUN_08032680."}
+  ],
+  "caller_chains": [
+    {
+      "entry_caller": "0x0801d55c",
+      "chain": ["0x0801d55c", "0x080327cc", "0x0801d4ec", "0x0801d384", "0x0801d2ec", "0x0803287c", "0x08032958"],
+      "trigger_context": "Load/boot path (static callers unresolved in callgraph - reached only via an unrecovered jump table in every function in this cluster, consistent with being dispatched from a title-screen/init state machine).",
+      "ram_fields_updated": ["0x00-0x03", "0x04-0x07 (ERAR)", "0x08-0x13 (nibble pack)", "0x14", "0x16-0x17", "0x18-0x19", "0x1c (0x16 marker)", "0x1d-0x1e"],
+      "how_mapped": "Grepped ghidra/decompiled.c for literal hex addresses of the EEPROM driver functions since ghidra/callgraph.json reported empty caller lists for FUN_0803287c and FUN_08032958; found the 3 real call sites inside FUN_0801d2ec and FUN_0801d55c, then read the surrounding block-loop code to confirm 64x8-byte block iteration."
+    },
+    {
+      "entry_caller": "0x0801d698",
+      "chain": ["0x0801d698", "0x0801d384", "0x0801d2ec", "0x0803287c", "0x08032958"],
+      "trigger_context": "Called 11 times from inside FUN_0801e5a4 (lines 3748-4441 of decompiled.c), a large menu/state-machine function - consistent with a 'new game' or 'erase/format save' menu action that unconditionally rebuilds defaults and flushes.",
+      "ram_fields_updated": ["same full record as 0x0801d384 builds, then flushed via 0x0801d2ec"],
+      "how_mapped": "callgraph.json lists callers:['0x0801d55c','0x0801d698'] for both FUN_0801d384 and FUN_0801d2ec; text-grepped decompiled.c for '0801d698' to find and count its own 11 call sites inside FUN_0801e5a4."
+    }
+  ],
+  "fields": [
+    {
+      "name": "unknown_header_dword",
+      "offset": 0,
+      "size": 4,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": ["0x0801d384"],
+      "readers": ["0x0801d55c"],
+      "observed_values": {"cap-00-future-0.sav": "00000000", "cap-01-future-1.sav": "00000000"},
+      "update_mechanism": "FUN_0801d384: *param_1 = *_DAT_0801d438 (fixed source, value always observed as 0)",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "Decompiled assignment identified; always zero in both samples so semantics are unproven"
+    },
+    {
+      "name": "magic_ERAR",
+      "offset": 4,
+      "size": 4,
+      "type": "ascii",
+      "ram_addr": null,
+      "writers": ["0x0801d384"],
+      "readers": ["0x0801d55c"],
+      "observed_values": {"cap-00-future-0.sav": "ERAR", "cap-01-future-1.sav": "ERAR"},
+      "update_mechanism": "FUN_0801d384: param_1[1] = *(u32*)(ctx+0x1c); read back and compared in FUN_0801d55c's validity gate",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Byte-identical in both real .sav files; matching write site located in decompiled.c"
+    },
+    {
+      "name": "nibble_pack_block",
+      "offset": 8,
+      "size": 12,
+      "type": "bitflags",
+      "ram_addr": null,
+      "writers": ["0x0801d384"],
+      "readers": [],
+      "observed_values": {"cap-00-future-0.sav": "000000000000ff f0", "cap-01-future-1.sav": "000000000000ff 00"},
+      "update_mechanism": "FUN_0801d384 loop: byte[i] = (src2[i]<<4) | src1[i] for i=0..11, two 4-bit sub-fields packed per byte (24 nibble slots total)",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "Loop and packing formula read directly from decompiled code; byte offset 0x13 (slot 11, high nibble) is the only byte in this span that differs between the two samples (0xF0->0x00)"
+    },
+    {
+      "name": "nibble_combo_byte",
+      "offset": 20,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": ["0x0801d384"],
+      "readers": [],
+      "observed_values": {"cap-00-future-0.sav": "00", "cap-01-future-1.sav": "00"},
+      "update_mechanism": "FUN_0801d384: (src[0x16]&0xf) | (src[0x18]<<4)",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "Both source nibbles are 0 in both samples"
+    },
+    {
+      "name": "copy_field_u16_a",
+      "offset": 22,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": ["0x0801d384"],
+      "readers": [],
+      "observed_values": {"cap-00-future-0.sav": "0000", "cap-01-future-1.sav": "0000"},
+      "update_mechanism": "FUN_0801d384: *(u16*)(param_1+0x16) = *(u16*)(ctx+0x1f8)",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "Direct 2-byte copy in decompiled code; constant zero in both samples"
+    },
+    {
+      "name": "copy_field_bytes_b",
+      "offset": 24,
+      "size": 2,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": ["0x0801d384"],
+      "readers": [],
+      "observed_values": {"cap-00-future-0.sav": "ff00", "cap-01-future-1.sav": "ff00"},
+      "update_mechanism": "FUN_0801d384 byte-copy loop from ctx+0x20 and ctx+0x21 (one byte per iteration, not a single u16 load)",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Both real .sav files show the exact predicted constant bytes FF 00"
+    },
+    {
+      "name": "validity_marker_0x16",
+      "offset": 28,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": ["0x0801d384"],
+      "readers": ["0x0801d55c"],
+      "observed_values": {"cap-00-future-0.sav": "16", "cap-01-future-1.sav": "16"},
+      "update_mechanism": "FUN_0801d384 writes a hardcoded 0x16 literal; FUN_0801d55c gates load validity on this byte == 0x16 (logical AND with the ERAR magic compare)",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Constant 0x16 in both samples; decompiled source line has a known +/-1 byte offset ambiguity (file offset 0x1b is always 0x00, file offset 0x1c is the real constant) attributed to Ghidra's own flagged overlapping-globals warning for this binary"
+    },
+    {
+      "name": "trailer_field_c",
+      "offset": 29,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": ["0x0801d384"],
+      "readers": [],
+      "observed_values": {"cap-00-future-0.sav": "00", "cap-01-future-1.sav": "00"},
+      "update_mechanism": "FUN_0801d384: low byte of *(u16*)(param_1+7) = *(u16*)(ctx+0x24)",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "Direct copy in decompiled code; always zero observed"
+    },
+    {
+      "name": "trailer_field_d",
+      "offset": 30,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": ["0x0801d384"],
+      "readers": [],
+      "observed_values": {"cap-00-future-0.sav": "00", "cap-01-future-1.sav": "00"},
+      "update_mechanism": "FUN_0801d384: *(byte*)(param_1+0x1e) = *(byte*)(ctx+0x26)",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "Direct byte copy; always zero observed"
+    },
+    {
+      "name": "bulk_gameplay_span",
+      "offset": 32,
+      "size": 216,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": ["0x0801d2ec", "0x0803287c"],
+      "readers": ["0x0801d55c", "0x080327cc"],
+      "observed_values": {"cap-00-future-0.sav": "mostly 0xFF fill", "cap-01-future-1.sav": "mostly 0xFF fill"},
+      "update_mechanism": "Flushed generically as part of the 64x8-byte block write-if-dirty loop in FUN_0801d2ec; no individual sub-field writer was located within this span",
+      "confidence": "UNKNOWN",
+      "evidence": "No mutation observed between the 2 available samples anywhere in this span"
+    },
+    {
+      "name": "mutating_word_0xF8",
+      "offset": 248,
+      "size": 2,
+      "type": "u16",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"cap-00-future-0.sav": "1eb0", "cap-01-future-1.sav": "1fa0"},
+      "update_mechanism": "Not isolated to a specific decompiled writer line; transits as part of block 31 (bytes 0xF8-0xFF) of the generic FUN_0801d2ec flush loop. Big-endian reading (0x1EB0->0x1FA0) changes by exactly +0xF0, numerically matching the magnitude of the nibble cleared at offset 0x13 (0xF0->0x00) in the same two samples",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Identified purely from byte-diffing the 2 real .sav samples (saves/hexdump_and_diffs.txt); circumstantial numeric correlation with offset 0x13, not yet confirmed causally"
+    }
+  ],
+  "fuzzing_targets": [
+    {
+      "offset": 28,
+      "size": 1,
+      "mutation": "Flip validity marker byte from 0x16 to 0x00",
+      "requires_checksum_repair": false,
+      "predicted_effect": "FUN_0801d55c's validity gate should fail, triggering FUN_0801d4ec + FUN_0801d384 + FUN_0801d2ec to silently rebuild and flush a fresh default record, losing existing progress"
+    },
+    {
+      "offset": 4,
+      "size": 1,
+      "mutation": "Flip first byte of ERAR magic (0x45 -> 0x00)",
+      "requires_checksum_repair": false,
+      "predicted_effect": "Same default-rebuild behavior as the marker-byte test, since the validity check ANDs both conditions"
+    },
+    {
+      "offset": 19,
+      "size": 1,
+      "mutation": "Set offset 0x13 to 0xFF (saturate both nibbles) and separately to 0x00",
+      "requires_checksum_repair": false,
+      "predicted_effect": "If this is a per-slot counter/flag nibble pair, expect an observable change in whatever state array indexes slot 11 of the 12-byte nibble-pack block at 0x08-0x13"
+    },
+    {
+      "offset": 248,
+      "size": 2,
+      "mutation": "Set 0xF8-0xF9 to cap-00's original value (0x1E 0xB0), then advance gameplay by the smallest observable unit",
+      "requires_checksum_repair": false,
+      "predicted_effect": "If genuinely linked to the 0x13 nibble counter, should reproduce the same +0x01/-0x10 byte delta and the matching 0xF0 clear at 0x13; a mismatch falsifies the hypothesized link"
+    },
+    {
+      "offset": 80,
+      "size": 1,
+      "mutation": "Flip an arbitrary byte inside the currently-UNKNOWN bulk span (e.g. offset 0x50) with no checksum repair",
+      "requires_checksum_repair": false,
+      "predicted_effect": "Per the packet's cold-reload probe (reverted_to_blank_on_mutation: false, save_rewritten_after_mutation: false), expect the save to load without being flagged corrupt, corroborating that no whole-save checksum is enforced beyond the 0x04/0x1C validity gate"
+    }
+  ],
+  "open_questions": [
+    "What does the 254-byte subtract-accumulate loop in FUN_0801d384 actually checksum, if anything persisted? It did not match either real .sav file at any offset/endianness tried.",
+    "Is the ±1-byte offset ambiguity between the hardcoded 0x16 write (decompiled offset param_1+0x1b) and the real constant byte at file offset 0x1C a genuine decompiler artifact, or evidence of an additional 1-byte field we have not identified?",
+    "What is the true semantic meaning of the 12-byte nibble-packed block at 0x08-0x13 and the mutating word at 0xF8-0xF9? Only structural/positional evidence exists; no gameplay-linked .ss save states were available in this packet to correlate.",
+    "Why does ghidra/callgraph.json report empty caller lists for FUN_0801d55c, FUN_0801d698, FUN_0803287c, and FUN_08032958 despite real call sites existing in ghidra/decompiled.c? (Likely because all are reached only via unresolved indirect/jump-table calls that Ghidra could not statically link.)",
+    "Does a failed EEPROM write (FUN_0803287c returning non-zero) during FUN_0801d2ec's flush loop actually skip the read-back verify pass, as the decompiled OR-accumulated return code suggests, and what are the real-world reliability implications?"
+  ]
+}

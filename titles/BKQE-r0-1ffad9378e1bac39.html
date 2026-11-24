@@ -13,7 +13,13 @@
       <a href="../index.html">Games</a>
       <a href="../saves/index.html">Save Formats</a>
       <a href="../patches/index.html">Debug Patches</a>
+      <a href="../debug-menus.html">Debug Gallery</a>
+      <a href="../non-retail-cartridges.html">Non-Retail</a>
+      <a href="../cartridge-hardware.html">Cartridge Hardware</a>
+      <a href="../link-multiplayer.html">Link &amp; Multiplayer</a>
+      <a href="../multiboot-museum.html">MultiBoot Museum</a>
       <a href="../assets/index.html">Assets &amp; Audio</a>
+      <a href="../text-and-fonts.html">Text &amp; Fonts</a>
       <a href="../engines/index.html">Engines &amp; Hardware</a>
       <a href="../families/index.html">Families</a>
       <a href="../gbakit/index.html">Using gbakit</a>
@@ -22,7 +28,7 @@
   <main>
 <p class="meta"><a href="../index.html">&larr; Games</a> &middot; Family <code>BKQ</code></p>
 <h1>Kong - The 8th Wonder of the World (USA) (En,Fr,Es)</h1>
-<p><span class='badge badge-zinc'>Stateless / Passcode</span></p>
+<p><span class='badge badge-slate'>EEPROM 4K</span> <span class='badge badge-emerald'>Save Format Mapped (Family Spec)</span> <a href='../link-multiplayer.html#multiboot'><span class='badge badge-amber'>💾 MultiBoot</span></a></p>
 
 <h2>Cartridge Identity</h2>
 <dl class="kv">
@@ -30,20 +36,45 @@
   <dt>Header Title</dt><dd><code>KINGKONG GBA</code></dd>
   <dt>Maker / Revision</dt><dd><code>41</code> / rev <code>0</code></dd>
   <dt>ROM Size</dt><dd>8.0 MiB (8,388,608 B)</dd>
-  <dt>Save Media</dt><dd><code>None / Unknown</code></dd>
+  <dt>Save Media</dt><dd><code>EEPROM 4K</code></dd>
   <dt>SHA-256</dt><dd><code>1ffad9378e1bac39bfc6d6180a153f35275b59e65c6122527718d7055ed18e7a</code></dd>
   <dt>Engine / SDK Group</dt><dd><a href='../engines/index.html#comm-019'><code>comm-019</code></a> (15 families)</dd>
 </dl>
 
 
 
-<h2>Cartridge Storage Architecture: Stateless / Passcode</h2>
+
+
+<h2>Link Cable &amp; Multiplayer Communications</h2>
 <div class="callout">
-  <strong>Zero non-volatile battery hardware:</strong> This cartridge PCB contains ROM only (no SRAM, Flash, or EEPROM chips). Progression is preserved via on-screen passcodes or session-only gameplay. No <code>.sav</code> file is generated or required.
+  This title contains detected communication capabilities: <a href='../link-multiplayer.html#multiboot'><span class='badge badge-amber'>💾 MultiBoot</span></a>.
+  Detailed protocol specifications, SIO registers, Joybus commands, and MultiBoot sequences are documented in the <a href="../link-multiplayer.html"><strong>Link &amp; Multiplayer Reference</strong></a>.
 </div>
+<dl class="kv">
+  <dt>Single-Cart MultiBoot</dt><dd>Single-Cartridge MultiBoot (Download Play) client/server handler &middot; Thumb SWI 0x25 (<code>0xDF25</code>): <code>0x151428</code>, <code>0x151c3e</code>, <code>0x1a78d8</code>, <code>0x1cbe6e</code></dd>
+</dl>
+
+
+<h2>Battery Save Format Specification (Family Shared)</h2>
+<div class="callout">
+  This release shares its save architecture with canonical family reference <a href="../titles/BKQP-r0-5cf9f744d23bb10c.html"><strong>King Kong - The Official Game of the Movie (Europe) (En,Fr,De,Es,It,Nl)</strong></a> (Family <code>BKQ</code>).
+</div>
+<p><a class='btn' href='../saves/BKQP-r0-5cf9f744d23bb10c.html'>Open Family Save Format Spec (BKQP)</a><a class='btn btn-secondary' href='../assets/formats/BKQP-r0-5cf9f744d23bb10c/save-format.json' download>Download save-format.json</a></p>
+<dl class="kv">
+  <dt>Canonical Specification</dt><dd><code>BKQP</code> &middot; <strong>3</strong> mapped fields &middot; <strong>0</strong> verified checksum(s) &middot; Confidence: <span class="badge badge-indigo">HIGH</span></dd>
+  <dt>gbakit Built-In Support</dt><dd><span class="badge badge-emerald">Built-in (BKQP)</span></dd>
+</dl>
+<pre><code>gbakit save verify BKQP save.sav
+gbakit save decode BKQP save.sav
+gbakit save fix    BKQP damaged.sav -o repaired.sav</code></pre>
 
 
 <h2>ROM Assets, Compression &amp; Audio</h2><dl class='kv'><dt>BIOS Compression</dt><dd>LZ77 (<code>0x10</code>): <strong>81</strong> streams &middot; RLE (<code>0x30</code>): <strong>0</strong> streams</dd><dt>ROM Pointer Tables</dt><dd>17 tables (1 pointing to validated compressed streams)</dd><dt>SDK Backup Tags</dt><dd><code>EEPROM_V124</code></dd></dl>
+
+<h2>Text, Fonts &amp; Scene Data</h2>
+<dl class="kv"><dt>Primary Text Encoding</dt><dd><strong>Plain ASCII (uncompressed)</strong> (<code>2,783</code> ASCII strings &middot; <code>44</code> Shift-JIS runs)</dd><dt>Font &amp; VWF Indicators</dt><dd><span class='badge badge-emerald'>VWF Width Table</span> <span class='badge badge-blue'>1bpp Font</span> &middot; BIOS SWIs: BitUnPack <code>0x10</code>: <code>9</code> &middot; LZ77 <code>0x11/12</code>: <code>15</code> &middot; Huffman <code>0x13</code>: <code>4</code> &middot; RLE <code>0x14/15</code>: <code>15</code></dd><dt>Scene &amp; Packaging</dt><dd><code>14</code> ROM pointer tables (&ge;32 entries, <code>2</code> &ge;200) &middot; <code>39</code> relative <code>u32</code> TOCs &middot; <code>330</code> OAM metasprite hits</dd></dl>
+
+
 
 <h2>Regional Variants &amp; Revisions (Family <code>BKQ</code>)</h2><ul><li><a href='BKQP-r0-5cf9f744d23bb10c.html'>King Kong - The Official Game of the Movie (Europe) (En,Fr,De,Es,It,Nl)</a> (<code>BKQP</code>, 8 MiB)</li><li><a href='BKQX-r0-b5fb1b539158d963.html'>King Kong - The Official Game of the Movie (Europe) (En,Sv,No,Da,Fi)</a> (<code>BKQX</code>, 8 MiB)</li></ul>
 </main>

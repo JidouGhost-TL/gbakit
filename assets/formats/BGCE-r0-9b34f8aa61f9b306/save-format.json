@@ -1,0 +1,196 @@
+{
+  "schema": "gbakit-save-research/1",
+  "release_key": "BGCE-r0-9b34f8aa61f9b306",
+  "display_name": "Advance Guardian Heroes (USA)",
+  "rom_sha256": "9b34f8aa61f9b3065bf5d2c5816f259c3ce348ba5a507c83aa9343690e0bdb4c",
+  "game_code": "BGCE",
+  "header_family": "BGC",
+  "community_id": "comm-011",
+  "overall_confidence": "HIGH",
+  "media": {
+    "kind": "eeprom512",
+    "size_bytes": 512,
+    "sdk_tags": [
+      "EEPROM_V124@7689668"
+    ],
+    "fill_byte": "0x00"
+  },
+  "slots_and_copies": [
+    {
+      "name": "system_header_block",
+      "offset": 0,
+      "size": 64,
+      "redundancy_role": "global_config",
+      "selection_rule": "Verified if ASCII magic at 0x00 matches '     AGH' and format version tag at 0x0C matches '005\\xfa'."
+    },
+    {
+      "name": "story_and_characters_block",
+      "offset": 64,
+      "size": 448,
+      "redundancy_role": "primary",
+      "selection_rule": "Direct persistent record for character stat points, campaign unlocks, and vs modes."
+    }
+  ],
+  "magic_signatures": [
+    {
+      "offset": 0,
+      "bytes_hex": "2020202020484741",
+      "ascii": "     AGH",
+      "verified_in_code": true,
+      "verified_in_sav": true,
+      "function_addrs": [
+        "0x080e45c0",
+        "0x080e4684"
+      ]
+    },
+    {
+      "offset": 12,
+      "bytes_hex": "fa353030",
+      "ascii": ".500",
+      "verified_in_code": true,
+      "verified_in_sav": true,
+      "function_addrs": [
+        "0x080e45c0",
+        "0x080e4684"
+      ]
+    }
+  ],
+  "checksums": [
+    {
+      "name": "magic_and_version_guard",
+      "algorithm": "unknown",
+      "formula_detail": "Integrity is guarded by exact 8-byte ASCII title tag ('     AGH') and 4-byte revision tag ('005\\xfa') comparison; no algebraic checksum loop is used.",
+      "stored_offset": 0,
+      "stored_size": 16,
+      "covered_start": 0,
+      "covered_end": 16,
+      "function_addrs": [
+        "0x080e45c0"
+      ],
+      "verified_on_samples": [
+        {
+          "file": "saves/cap-00-future-0.sav",
+          "stored_hex": "202020202048474100000000fa353030",
+          "computed_hex": "202020202048474100000000fa353030",
+          "match": true
+        }
+      ],
+      "confidence": "CONFIRMED_VERIFIED"
+    }
+  ],
+  "io_driver_functions": [
+    {
+      "addr": "0x080e45c0",
+      "role": "read",
+      "callers": [
+        "0x080e47e4"
+      ],
+      "notes": "Low-level serial EEPROM read driver: streams 64 bits from EEPROM via DMA3 MMIO 0x040000D4 into stack."
+    },
+    {
+      "addr": "0x080e4684",
+      "role": "write",
+      "callers": [],
+      "notes": "Low-level serial EEPROM write driver: serializes 64 bits to EEPROM bus address via DMA3 bitstream."
+    },
+    {
+      "addr": "0x080e47e4",
+      "role": "checksum",
+      "callers": [
+        "0x080e483c"
+      ],
+      "notes": "Low-level serial EEPROM verify driver: reads 64 bits and compares against source buffer."
+    },
+    {
+      "addr": "0x080e483c",
+      "role": "serialize",
+      "callers": [],
+      "notes": "EEPROM multi-block transfer loop: processes 64-bit blocks sequentially with verify retry."
+    }
+  ],
+  "caller_chains": [
+    {
+      "entry_caller": "0x080e483c",
+      "chain": [
+        "0x080e483c",
+        "0x080e47e4",
+        "0x080e45c0",
+        "0x080e4540"
+      ],
+      "trigger_context": "Save trigger flushes active hero stats and progress to EEPROM blocks.",
+      "ram_fields_updated": [
+        "0x02000000-0x0203FFFF (gameplay RAM state)"
+      ],
+      "how_mapped": "Traced caller hierarchy in ghidra/callgraph.json and ghidra/save_related_functions.c."
+    }
+  ],
+  "fields": [
+    {
+      "name": "game_id_magic",
+      "offset": 0,
+      "size": 8,
+      "type": "ascii",
+      "ram_addr": null,
+      "writers": [
+        "0x080e4684"
+      ],
+      "readers": [
+        "0x080e45c0"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": "     AGH"
+      },
+      "update_mechanism": "Static constant written to block 0 on save initialization.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "saves/cap-00-future-0.sav bytes 0x00-0x07 match '     AGH' exactly."
+    },
+    {
+      "name": "version_tag",
+      "offset": 12,
+      "size": 4,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [
+        "0x080e4684"
+      ],
+      "readers": [
+        "0x080e45c0"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": "fa353030"
+      },
+      "update_mechanism": "Version and formatting signature constant.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "saves/cap-00-future-0.sav bytes 0x0C-0x0F match fa353030."
+    },
+    {
+      "name": "hero_stats_and_story_unlocks",
+      "offset": 16,
+      "size": 496,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [
+        "0x080e483c"
+      ],
+      "readers": [
+        "0x080e483c"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": "partially populated state bytes"
+      },
+      "update_mechanism": "Character level, stat allocation, and story branching flags.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "Active bytes in saves/cap-00-future-0.sav at offsets 0x17, 0x2B-0x2E, 0x1B0-0x1D8, 0x1DE-0x200."
+    }
+  ],
+  "fuzzing_targets": [
+    {
+      "offset": 0,
+      "size": 8,
+      "mutation": "Corrupt ASCII '     AGH' to '     XXX'.",
+      "requires_checksum_repair": false,
+      "predicted_effect": "EEPROM validation check fails on boot; save is treated as unformatted."
+    }
+  ],
+  "open_questions": []
+}

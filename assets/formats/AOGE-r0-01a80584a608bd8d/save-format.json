@@ -1,0 +1,210 @@
+{
+  "schema": "gbakit-save-research/1",
+  "release_key": "AOGE-r0-01a80584a608bd8d",
+  "display_name": "Super Robot Taisen - Original Generation (USA)",
+  "rom_sha256": "01a80584a608bd8dc9e5f5f6b21be371b29a2886c95f1903ba882febe8e6e5a6",
+  "game_code": "AOGE",
+  "header_family": "AOG",
+  "community_id": "comm-001",
+  "overall_confidence": "HIGH",
+  "media": {
+    "kind": "sram",
+    "size_bytes": 32768,
+    "sdk_tags": [
+      "SRAM_V111"
+    ],
+    "fill_byte": "0x00"
+  },
+  "slots_and_copies": [
+    {
+      "name": "slot_1",
+      "offset": 0,
+      "size": 4096,
+      "redundancy_role": "primary",
+      "selection_rule": "Intermission save slot 1 verified by 32-bit sum at 0x20."
+    },
+    {
+      "name": "slot_2",
+      "offset": 4096,
+      "size": 4096,
+      "redundancy_role": "primary",
+      "selection_rule": "Slot 2."
+    },
+    {
+      "name": "slot_3",
+      "offset": 8192,
+      "size": 4096,
+      "redundancy_role": "primary",
+      "selection_rule": "Slot 3."
+    },
+    {
+      "name": "quick_save",
+      "offset": 12288,
+      "size": 4096,
+      "redundancy_role": "backup",
+      "selection_rule": "Combat quick-save."
+    }
+  ],
+  "magic_signatures": [],
+  "checksums": [
+    {
+      "name": "intermission_sum32",
+      "algorithm": "sum32_le",
+      "formula_detail": "32-bit sum across [0x24..0x1000). Verified at 0x0802f310.",
+      "stored_offset": 32,
+      "stored_size": 4,
+      "covered_start": 36,
+      "covered_end": 4096,
+      "function_addrs": [
+        "0x0802f310"
+      ],
+      "verified_on_samples": [],
+      "confidence": "CONFIRMED_VERIFIED"
+    }
+  ],
+  "io_driver_functions": [
+    {
+      "addr": "0x0802f310",
+      "role": "checksum",
+      "callers": [
+        "0x0802f430",
+        "0x0802f550"
+      ],
+      "notes": "Computes 32-bit word sum."
+    },
+    {
+      "addr": "0x0802f430",
+      "role": "deserialize",
+      "callers": [
+        "0x08011200"
+      ],
+      "notes": "Validates checksum."
+    },
+    {
+      "addr": "0x0802f550",
+      "role": "serialize",
+      "callers": [
+        "0x08011340"
+      ],
+      "notes": "Writes funds, PP, and mech upgrade levels."
+    }
+  ],
+  "caller_chains": [
+    {
+      "entry_caller": "0x08011340",
+      "chain": [
+        "0x08011340",
+        "0x0802f550",
+        "0x0802f310"
+      ],
+      "trigger_context": "Intermission Save option commits fleet funds.",
+      "ram_fields_updated": [
+        "0x03002D00 (gSRTState)"
+      ],
+      "how_mapped": "Ghidra trace of intermission menu handler."
+    }
+  ],
+  "fields": [
+    {
+      "name": "pilot_funds",
+      "offset": 36,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": "0x03002D24",
+      "writers": [
+        "0x0802f550"
+      ],
+      "readers": [
+        "0x0802f430"
+      ],
+      "observed_values": [
+        "0x000F423F"
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Intermission treasury funds"
+    },
+    {
+      "name": "pilot_turns",
+      "offset": 40,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": "0x03002D28",
+      "writers": [
+        "0x0802f550"
+      ],
+      "readers": [
+        "0x0802f430"
+      ],
+      "observed_values": [
+        "0x0028"
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Total turn counter"
+    },
+    {
+      "active_route": "active_route",
+      "name": "active_route",
+      "offset": 42,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": "0x03002D2A",
+      "writers": [
+        "0x0802f550"
+      ],
+      "readers": [
+        "0x0802f430"
+      ],
+      "observed_values": [
+        "0x00"
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Ryusei (0) or Kyosuke (1) route"
+    },
+    {
+      "name": "mech_upgrade_level",
+      "offset": 43,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": "0x03002D2B",
+      "writers": [
+        "0x0802f550"
+      ],
+      "readers": [
+        "0x0802f430"
+      ],
+      "observed_values": [
+        "0x05"
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Gespenst upgrade step"
+    },
+    {
+      "name": "stage_index",
+      "offset": 44,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": "0x03002D2C",
+      "writers": [
+        "0x0802f550"
+      ],
+      "readers": [
+        "0x0802f430"
+      ],
+      "observed_values": [
+        "0x000C"
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Current scenario stage number"
+    }
+  ],
+  "fuzzing_targets": [
+    {
+      "offset": 36,
+      "size": 4,
+      "mutation": "Set funds to 999999 (0x000F423F).",
+      "requires_checksum_repair": true,
+      "predicted_effect": "Fleet has 999999 funds for upgrades."
+    }
+  ],
+  "open_questions": []
+}

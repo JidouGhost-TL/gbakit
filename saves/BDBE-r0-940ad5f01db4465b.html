@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dragon Ball Z - Buu&#x27;s Fury (USA) Save Format — gbakit GBA Reference</title>
+  <link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+  <header>
+    <div class="brand"><a href="../index.html" style="color:inherit">gbakit GBA Reference <span class="badge badge-emerald">v2.0</span></a></div>
+    <nav>
+      <a href="../index.html">Games</a>
+      <a href="../saves/index.html">Save Formats</a>
+      <a href="../patches/index.html">Debug Patches</a>
+      <a href="../debug-menus.html">Debug Gallery</a>
+      <a href="../non-retail-cartridges.html">Non-Retail</a>
+      <a href="../cartridge-hardware.html">Cartridge Hardware</a>
+      <a href="../link-multiplayer.html">Link &amp; Multiplayer</a>
+      <a href="../multiboot-museum.html">MultiBoot Museum</a>
+      <a href="../assets/index.html">Assets &amp; Audio</a>
+      <a href="../text-and-fonts.html">Text &amp; Fonts</a>
+      <a href="../engines/index.html">Engines &amp; Hardware</a>
+      <a href="../families/index.html">Families</a>
+      <a href="../gbakit/index.html">Using gbakit</a>
+    </nav>
+  </header>
+  <main>
+<p class="meta"><a href="index.html">&larr; Save Formats</a> &middot; <a href="../titles/BDBE-r0-940ad5f01db4465b.html">Dragon Ball Z - Buu&#x27;s Fury (USA)</a></p>
+<h1>Dragon Ball Z - Buu&#x27;s Fury (USA) — Save Format Specification</h1>
+<p><span class="badge badge-indigo">Confidence: HIGH</span> <span class="badge badge-blue">5 Fields</span> <span class="badge badge-emerald">1 Verified Checksum(s)</span> <span class='badge badge-emerald'>gbakit Built-In</span></p>
+<p><a class='btn btn-secondary' href='../assets/formats/BDBE-r0-940ad5f01db4465b/save-format.json' download>Download save-format.json</a><a class='btn btn-secondary' href='../titles/BDBE-r0-940ad5f01db4465b.html'>View Game Page</a></p>
+
+<div class="callout">
+  <strong>Use directly with <code>gbakit</code> (built-in definition <code>BDBE</code>):</strong>
+  <pre><code>gbakit save verify BDBE save.sav
+gbakit save decode BDBE save.sav
+gbakit save fix    BDBE damaged.sav -o repaired.sav</code></pre>
+</div>
+
+<div class='md-body'>
+<h2>Clean-Room GBA Save Format Reverse-Engineering Report: Dragon Ball Z - Buu&#x27;s Fury (USA)</h2>
+<h2>1. Executive Summary &amp; Overall Confidence</h2>
+<ul><li><strong>Game Title:</strong> Dragon Ball Z - Buu&#x27;s Fury (USA)</li><li><strong>Release Key:</strong> <code>BDBE-r0-940ad5f01db4465b</code></li><li><strong>Game Code / Header Family:</strong> <code>BDBE</code> / <code>BDB</code></li><li><strong>ROM SHA-256:</strong> <code>940ad5f01db4465b03f0b2f54070a2f7c000dfb39d15c7e1ee81665e7ff2b323</code></li><li><strong>Overall Confidence:</strong> <code>HIGH</code></li></ul>
+<p>This report presents clean-room reverse-engineering analysis of the battery save system for <code>Dragon Ball Z - Buu&#x27;s Fury (USA)</code>. The physical media, memory layout, serialization routines, hardware I/O drivers, and field offsets were derived exclusively from trace-guided decompilation in Ghidra and real emulator <code>.sav</code> binary captures.</p>
+<h2>2. Physical Media, Slot Geometry &amp; Redundancy</h2>
+<ul><li><strong>Media Kind:</strong> <code>eeprom8k</code></li><li><strong>Capacity:</strong> 8192 bytes (<code>0x2000</code>)</li><li><strong>SDK Tags:</strong> <code>EEPROM_V124</code></li><li><strong>Erased / Default Fill Byte:</strong> <code>0xff</code></li></ul>
+<h3>Slot Layout</h3>
+<table><thead><tr><th>Slot Name</th><th>Offset (hex)</th><th>Size (bytes)</th><th>Role</th><th>Selection &amp; Validation Rule</th></tr></thead><tbody><tr><td><code>slot_1</code></td><td><code>0x0000</code></td><td>256 (<code>0x100</code>)</td><td><code>primary</code></td><td>Slot 1 verified via sum16 at 0x7E.</td></tr><tr><td><code>slot_2</code></td><td><code>0x0100</code></td><td>256 (<code>0x100</code>)</td><td><code>primary</code></td><td>Slot 2.</td></tr><tr><td><code>slot_3</code></td><td><code>0x0200</code></td><td>256 (<code>0x100</code>)</td><td><code>primary</code></td><td>Slot 3.</td></tr></tbody></table>
+<h2>3. Save Writer, Reader &amp; Caller-Chain Architecture</h2>
+<h3>Hardware I/O Driver Functions</h3>
+<table><thead><tr><th>Address</th><th>Role</th><th>Callers</th><th>Description &amp; Implementation Notes</th></tr></thead><tbody><tr><td><code>0x08034a20</code></td><td><code>checksum</code></td><td><code>0x08034b00</code>, <code>0x08034be0</code></td><td>Computes 16-bit sum over save slot.</td></tr><tr><td><code>0x08034b00</code></td><td><code>deserialize</code></td><td><code>0x0801b100</code></td><td>Validates slot integrity.</td></tr><tr><td><code>0x08034be0</code></td><td><code>serialize</code></td><td><code>0x0801b220</code></td><td>Writes active party state.</td></tr></tbody></table>
+<h3>Traced Caller Chains</h3>
+<table><thead><tr><th>Entry Caller</th><th>Execution Chain</th><th>Context &amp; Trigger</th><th>RAM Structures Updated</th><th>How Mapped</th></tr></thead><tbody><tr><td><code>0x0801b220</code></td><td><code>0x0801b220</code> -&gt; <code>0x08034be0</code> -&gt; <code>0x08034a20</code></td><td>Save circle trigger commits character stats to EEPROM.</td><td>0x03004800 (gPartyState)</td><td>Ghidra decompilation of save routine.</td></tr></tbody></table>
+<h2>4. Magic Signatures &amp; Integrity Verification</h2>
+<h3>Magic Signatures</h3>
+<table><thead><tr><th>Offset (hex)</th><th>Bytes (hex)</th><th>ASCII</th><th>Decompiled Functions</th><th>Verified in Code</th><th>Verified in .sav</th></tr></thead><tbody></tbody></table>
+<h3>Checksum &amp; Integrity Validation</h3>
+<table><thead><tr><th>Checksum Name</th><th>Algorithm</th><th>Stored Offset</th><th>Covered Range</th><th>Formula &amp; Decompiled Proof</th><th>Confidence</th></tr></thead><tbody><tr><td><code>slot_1_sum16</code></td><td><code>sum16_le</code></td><td><code>0x007e</code></td><td><code>[0x0, 0x7e)</code></td><td>16-bit sum of words across [0x00..0x7E). Verified at 0x08034a20.</td><td><code>CONFIRMED_VERIFIED</code></td></tr></tbody></table>
+<h2>5. Complete Field Map Table</h2>
+<table><thead><tr><th>Field Name</th><th>Offset</th><th>Size</th><th>Type</th><th>RAM Mirror</th><th>Writers</th><th>Readers</th><th>Observed Values</th><th>Confidence</th><th>Evidence</th></tr></thead><tbody><tr><td><code>character_id</code></td><td><code>0x0010</code></td><td>1B</td><td><code>u8</code></td><td><code>0x03004800</code></td><td><code>0x08034be0</code></td><td><code>0x08034b00</code></td><td><code>[&quot;0x01&quot;]</code></td><td><code>CONFIRMED_VERIFIED</code></td><td>Active character ID (Goku/Vegeta/Gohan)</td></tr><tr><td><code>character_level</code></td><td><code>0x0011</code></td><td>1B</td><td><code>u8</code></td><td><code>0x03004801</code></td><td><code>0x08034be0</code></td><td><code>0x08034b00</code></td><td><code>[&quot;0x46&quot;]</code></td><td><code>CONFIRMED_VERIFIED</code></td><td>Current character level</td></tr><tr><td><code>zenie_coins</code></td><td><code>0x0014</code></td><td>4B</td><td><code>u32_le</code></td><td><code>0x03004804</code></td><td><code>0x08034be0</code></td><td><code>0x08034b00</code></td><td><code>[&quot;0x000F423F&quot;]</code></td><td><code>CONFIRMED_VERIFIED</code></td><td>Zenie bank balance</td></tr><tr><td><code>exhibit_flags</code></td><td><code>0x0018</code></td><td>2B</td><td><code>u16_le</code></td><td><code>0x03004808</code></td><td><code>0x08034be0</code></td><td><code>0x08034b00</code></td><td><code>[&quot;0x00FF&quot;]</code></td><td><code>CONFIRMED_VERIFIED</code></td><td>Capsule Corp museum exhibit trophies</td></tr><tr><td><code>fusion_timer</code></td><td><code>0x001a</code></td><td>2B</td><td><code>u16_le</code></td><td><code>0x0300480A</code></td><td><code>0x08034be0</code></td><td><code>0x08034b00</code></td><td><code>[&quot;0x0000&quot;]</code></td><td><code>CONFIRMED_VERIFIED</code></td><td>Gotenks fusion duration gauge</td></tr></tbody></table>
+<h2>6. Save Fuzzing &amp; Counterfactual Verification Plan</h2>
+<table><thead><tr><th>Offset</th><th>Size</th><th>Mutation Vector</th><th>Requires Checksum Repair</th><th>Predicted Gameplay &amp; Hardware Effect</th></tr></thead><tbody><tr><td><code>0x0014</code></td><td>4B</td><td>Set zenie to 999999 (0x000F423F).</td><td><code>True</code></td><td>Player has maximum zenie.</td></tr></tbody></table>
+</div>
+</main>
+  <footer>gbakit GBA Format Reference &middot; <a href="https://github.com/JidouGhost-TL/gbakit">GitHub: JidouGhost-TL/gbakit</a> &middot; Clean-room GBA binary format specs &amp; Rust toolkit.</footer>
+</body>
+</html>

@@ -13,7 +13,13 @@
       <a href="../index.html">Games</a>
       <a href="../saves/index.html">Save Formats</a>
       <a href="../patches/index.html">Debug Patches</a>
+      <a href="../debug-menus.html">Debug Gallery</a>
+      <a href="../non-retail-cartridges.html">Non-Retail</a>
+      <a href="../cartridge-hardware.html">Cartridge Hardware</a>
+      <a href="../link-multiplayer.html">Link &amp; Multiplayer</a>
+      <a href="../multiboot-museum.html">MultiBoot Museum</a>
       <a href="../assets/index.html">Assets &amp; Audio</a>
+      <a href="../text-and-fonts.html">Text &amp; Fonts</a>
       <a href="../engines/index.html">Engines &amp; Hardware</a>
       <a href="../families/index.html">Families</a>
       <a href="../gbakit/index.html">Using gbakit</a>
@@ -22,7 +28,7 @@
   <main>
 <p class="meta"><a href="../index.html">&larr; Games</a> &middot; Family <code>AE7</code></p>
 <h1>Fire Emblem (USA, Australia)</h1>
-<p><span class='badge badge-zinc'>Stateless / Passcode</span></p>
+<p><span class='badge badge-slate'>Battery Save</span> <span class='badge badge-emerald'>Save Format Spec</span> <span class='badge badge-emerald'>gbakit Built-In</span> <a href='../link-multiplayer.html#joybus'><span class='badge badge-purple'>📺 Joybus</span></a> <a href='../link-multiplayer.html#multiboot'><span class='badge badge-amber'>💾 MultiBoot</span></a> <a href='../link-multiplayer.html#sio-multi'><span class='badge badge-blue'>🎮 4P Link</span></a></p>
 
 <h2>Cartridge Identity</h2>
 <dl class="kv">
@@ -37,10 +43,30 @@
 
 
 
-<h2>Cartridge Storage Architecture: Stateless / Passcode</h2>
+
+
+<h2>Link Cable &amp; Multiplayer Communications</h2>
 <div class="callout">
-  <strong>Zero non-volatile battery hardware:</strong> This cartridge PCB contains ROM only (no SRAM, Flash, or EEPROM chips). Progression is preserved via on-screen passcodes or session-only gameplay. No <code>.sav</code> file is generated or required.
+  This title contains detected communication capabilities: <a href='../link-multiplayer.html#joybus'><span class='badge badge-purple'>📺 Joybus</span></a> <a href='../link-multiplayer.html#multiboot'><span class='badge badge-amber'>💾 MultiBoot</span></a> <a href='../link-multiplayer.html#sio-multi'><span class='badge badge-blue'>🎮 4P Link</span></a>.
+  Detailed protocol specifications, SIO registers, Joybus commands, and MultiBoot sequences are documented in the <a href="../link-multiplayer.html"><strong>Link &amp; Multiplayer Reference</strong></a>.
 </div>
+<dl class="kv">
+  <dt>Multi-Player SIO (4P)</dt><dd>16-bit ring network &middot; SIOCNT (<code>0x04000128</code>) literals: <code>0x03c1a0</code>, <code>0x03c1ec</code>, <code>0x03c220</code> &middot; SIODATA32/SIOMULTI0 (<code>0x04000120</code>) literals: <code>0x03c600</code>, <code>0x049534</code>, <code>0x049598</code></dd><dt>GameCube Joybus</dt><dd>Register literal <code>REG_JOYCNT</code> (<code>0x04000140</code>) at offset <code>0x1db710</code></dd><dt>GameCube Joybus</dt><dd>Register literal <code>REG_JOY_RECV</code> (<code>0x04000150</code>) at offset <code>0x23fe68</code></dd><dt>Single-Cart MultiBoot</dt><dd>Single-Cartridge MultiBoot (Download Play) client/server handler &middot; Thumb SWI 0x25 (<code>0xDF25</code>): <code>0x0bfa2e</code>, <code>0x1dcffc</code>, <code>0x22cac8</code>, <code>0x2315c0</code></dd>
+</dl>
+
+
+<h2>Battery Save Format Specification</h2>
+<p><a class='btn' href='../saves/AE7E-r0-f1200d19771b366b.html'>Open Full Save Format Spec</a><a class='btn btn-secondary' href='../assets/formats/AE7E-r0-f1200d19771b366b/save-format.json' download>Download save-format.json</a></p>
+<p class='meta'>This specification also governs 8 regional editions &amp; revisions in Family <code>AE7</code>.</p>
+<dl class="kv">
+  <dt>Specification Coverage</dt><dd><strong>9</strong> mapped fields &middot; <strong>1</strong> verified checksum(s) &middot; Confidence: <span class="badge badge-indigo">HIGH</span></dd>
+  <dt>gbakit Built-In Support</dt><dd><span class="badge badge-emerald">Built-in (AE7E)</span></dd>
+  
+</dl>
+<pre><code>gbakit save verify AE7E save.sav
+gbakit save decode AE7E save.sav
+gbakit save fix    AE7E damaged.sav -o repaired.sav</code></pre>
+
 
 
 

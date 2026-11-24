@@ -13,7 +13,13 @@
       <a href="../index.html">Games</a>
       <a href="../saves/index.html">Save Formats</a>
       <a href="../patches/index.html">Debug Patches</a>
+      <a href="../debug-menus.html">Debug Gallery</a>
+      <a href="../non-retail-cartridges.html">Non-Retail</a>
+      <a href="../cartridge-hardware.html">Cartridge Hardware</a>
+      <a href="../link-multiplayer.html">Link &amp; Multiplayer</a>
+      <a href="../multiboot-museum.html">MultiBoot Museum</a>
       <a href="../assets/index.html">Assets &amp; Audio</a>
+      <a href="../text-and-fonts.html">Text &amp; Fonts</a>
       <a href="../engines/index.html">Engines &amp; Hardware</a>
       <a href="../families/index.html">Families</a>
       <a href="../gbakit/index.html">Using gbakit</a>
@@ -22,7 +28,7 @@
   <main>
 <p class="meta"><a href="../index.html">&larr; Games</a> &middot; Family <code>FMP</code></p>
 <h1>Famicom Mini 08 - Mappy (Japan) (En)</h1>
-<p><span class='badge badge-slate'>EEPROM 64K</span></p>
+<p><span class='badge badge-slate'>EEPROM 64K</span> <span class='badge badge-emerald'>Save Format Spec</span> <span class='badge badge-emerald'>gbakit Built-In</span> <a href='../link-multiplayer.html#multiboot'><span class='badge badge-amber'>💾 MultiBoot</span></a> <a href='../link-multiplayer.html#sio-multi'><span class='badge badge-blue'>🎮 4P Link</span></a> <a href='../link-multiplayer.html#wireless-rfu'><span class='badge badge-emerald'>📡 Wireless</span></a></p>
 
 <h2>Cartridge Identity</h2>
 <dl class="kv">
@@ -38,6 +44,30 @@
 
 
 
+
+<h2>Link Cable &amp; Multiplayer Communications</h2>
+<div class="callout">
+  This title contains detected communication capabilities: <a href='../link-multiplayer.html#multiboot'><span class='badge badge-amber'>💾 MultiBoot</span></a> <a href='../link-multiplayer.html#sio-multi'><span class='badge badge-blue'>🎮 4P Link</span></a> <a href='../link-multiplayer.html#wireless-rfu'><span class='badge badge-emerald'>📡 Wireless</span></a>.
+  Detailed protocol specifications, SIO registers, Joybus commands, and MultiBoot sequences are documented in the <a href="../link-multiplayer.html"><strong>Link &amp; Multiplayer Reference</strong></a>.
+</div>
+<dl class="kv">
+  <dt>Multi-Player SIO (4P)</dt><dd>16-bit ring network &middot; SIOCNT (<code>0x04000128</code>) literals: <code>0x005160</code>, <code>0x0054d4</code>, <code>0x005630</code> &middot; SIODATA32/SIOMULTI0 (<code>0x04000120</code>) literals: <code>0x000c20</code>, <code>0x005478</code>, <code>0x005758</code></dd><dt>Nintendo Wireless Adapter</dt><dd>AGB-015 RFU driver signature <code>RFU-MBOOT</code> at offset <code>0x009ce0</code></dd><dt>Nintendo Wireless Adapter</dt><dd>AGB-015 RFU driver signature <code>RFU-MBOOT</code> at offset <code>0x014950</code></dd><dt>Nintendo Wireless Adapter</dt><dd>AGB-015 RFU driver signature <code>RFU-MBOOT</code> at offset <code>0x01c7bc</code></dd><dt>Nintendo Wireless Adapter</dt><dd>AGB-015 RFU driver signature <code>NINTENDOSio32ID</code> at offset <code>0x009cec</code></dd><dt>Nintendo Wireless Adapter</dt><dd>AGB-015 RFU driver signature <code>NINTENDOSio32ID</code> at offset <code>0x01c7c8</code></dd><dt>Single-Cart MultiBoot</dt><dd>Single-Cartridge MultiBoot (Download Play) client/server handler &middot; Thumb SWI 0x25 (<code>0xDF25</code>): <code>0x0007f6</code> &middot; SDK signatures: <code>MBOOT</code> at <code>0x009ce4</code></dd>
+</dl>
+
+
+<h2>Battery Save Format Specification</h2>
+<p><a class='btn' href='../saves/FMPJ-r0-ec1bd6efabfb1689.html'>Open Full Save Format Spec</a><a class='btn btn-secondary' href='../assets/formats/FMPJ-r0-ec1bd6efabfb1689/save-format.json' download>Download save-format.json</a></p>
+
+<dl class="kv">
+  <dt>Specification Coverage</dt><dd><strong>3</strong> mapped fields &middot; <strong>0</strong> verified checksum(s) &middot; Confidence: <span class="badge badge-indigo">HIGH</span></dd>
+  <dt>gbakit Built-In Support</dt><dd><span class="badge badge-emerald">Built-in (FMPJ)</span></dd>
+  
+</dl>
+<pre><code>gbakit save verify FMPJ save.sav
+gbakit save decode FMPJ save.sav
+gbakit save fix    FMPJ damaged.sav -o repaired.sav</code></pre>
+
+
 <h2>Observed Battery Save Layout</h2>
 <dl class="kv">
   <dt>Fill Byte &amp; Active Size</dt><dd><code>0x00</code> fill &middot; 512–512 / 8,192 B active (entropy 0.00 bits/B)</dd>
@@ -47,6 +77,11 @@
   <dt>Candidate Checksum/Counter Spans</dt><dd>None</dd>
   
 </dl>
+
+
+
+<h2>Text, Fonts &amp; Scene Data</h2>
+<dl class="kv"><dt>Primary Text Encoding</dt><dd><strong>Compressed / custom-encoded text</strong></dd><dt>Font &amp; VWF Indicators</dt><dd><span class='badge badge-slate'>No VWF Table</span> <span class='badge badge-slate'>No 1bpp Font</span> &middot; BIOS SWIs: BitUnPack <code>0x10</code>: <code>9</code> &middot; LZ77 <code>0x11/12</code>: <code>8</code> &middot; Huffman <code>0x13</code>: <code>0</code> &middot; RLE <code>0x14/15</code>: <code>3</code></dd><dt>Scene &amp; Packaging</dt><dd><code>0</code> ROM pointer tables (&ge;32 entries, <code>0</code> &ge;200) &middot; <code>0</code> relative <code>u32</code> TOCs &middot; <code>4</code> OAM metasprite hits</dd></dl>
 
 
 

@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Pokemon - Sapphire Version (USA, Europe) Save Format — gbakit GBA Reference</title>
+  <link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+  <header>
+    <div class="brand"><a href="../index.html" style="color:inherit">gbakit GBA Reference <span class="badge badge-emerald">v2.0</span></a></div>
+    <nav>
+      <a href="../index.html">Games</a>
+      <a href="../saves/index.html">Save Formats</a>
+      <a href="../patches/index.html">Debug Patches</a>
+      <a href="../debug-menus.html">Debug Gallery</a>
+      <a href="../non-retail-cartridges.html">Non-Retail</a>
+      <a href="../cartridge-hardware.html">Cartridge Hardware</a>
+      <a href="../link-multiplayer.html">Link &amp; Multiplayer</a>
+      <a href="../multiboot-museum.html">MultiBoot Museum</a>
+      <a href="../assets/index.html">Assets &amp; Audio</a>
+      <a href="../text-and-fonts.html">Text &amp; Fonts</a>
+      <a href="../engines/index.html">Engines &amp; Hardware</a>
+      <a href="../families/index.html">Families</a>
+      <a href="../gbakit/index.html">Using gbakit</a>
+    </nav>
+  </header>
+  <main>
+<p class="meta"><a href="index.html">&larr; Save Formats</a> &middot; <a href="../titles/AXPE-r0-c36c1b899503e882.html">Pokemon - Sapphire Version (USA, Europe)</a></p>
+<h1>Pokemon - Sapphire Version (USA, Europe) — Save Format Specification</h1>
+<p><span class="badge badge-indigo">Confidence: HIGH</span> <span class="badge badge-blue">2 Fields</span> <span class="badge badge-emerald">1 Verified Checksum(s)</span> <span class='badge badge-emerald'>gbakit Built-In</span></p>
+<p><a class='btn btn-secondary' href='../assets/formats/AXPE-r0-c36c1b899503e882/save-format.json' download>Download save-format.json</a><a class='btn btn-secondary' href='../titles/AXPE-r0-c36c1b899503e882.html'>View Game Page</a></p>
+
+<div class="callout">
+  <strong>Use directly with <code>gbakit</code> (built-in definition <code>AXPE</code>):</strong>
+  <pre><code>gbakit save verify AXPE save.sav
+gbakit save decode AXPE save.sav
+gbakit save fix    AXPE damaged.sav -o repaired.sav</code></pre>
+</div>
+
+<div class='md-body'>
+<h2>Clean-Room GBA Save Format Reverse-Engineering Report: Pokemon - Sapphire Version (USA, Europe)</h2>
+<h2>1. Executive Summary &amp; Overall Confidence</h2>
+<ul><li><strong>Game Title:</strong> Pokemon - Sapphire Version (USA, Europe)</li><li><strong>Release Key:</strong> <code>AXPE-r0-c36c1b899503e882</code></li><li><strong>Game Code / Header Family:</strong> <code>AXPE</code> / <code>AXP</code></li><li><strong>ROM SHA-256:</strong> <code>c36c1b899503e8823ee7eb607eea583adcef7ea92ff804838b193c227f2c6657</code></li><li><strong>Overall Confidence:</strong> <code>HIGH</code></li></ul>
+<p>This report presents clean-room reverse-engineering analysis of the battery save system for <code>Pokemon - Sapphire Version (USA, Europe)</code>. The physical media, memory layout, serialization routines, hardware I/O drivers, and field offsets were derived exclusively from trace-guided decompilation in Ghidra and real emulator <code>.sav</code> binary captures.</p>
+<h2>2. Physical Media, Slot Geometry &amp; Redundancy</h2>
+<ul><li><strong>Media Kind:</strong> <code>flash1m</code></li><li><strong>Capacity:</strong> 131072 bytes (<code>0x20000</code>)</li><li><strong>SDK Tags:</strong> <code>FLASH1M_V102</code></li><li><strong>Erased / Default Fill Byte:</strong> <code>0xff</code></li></ul>
+<h3>Slot Layout</h3>
+<table><thead><tr><th>Slot Name</th><th>Offset (hex)</th><th>Size (bytes)</th><th>Role</th><th>Selection &amp; Validation Rule</th></tr></thead><tbody><tr><td><code>slot_primary</code></td><td><code>0x0000</code></td><td>57344 (<code>0xe000</code>)</td><td><code>primary</code></td><td>14 sectors (4KB each). Active bank determined by higher save counter (u32le@0xFFC).</td></tr><tr><td><code>slot_backup</code></td><td><code>0xe000</code></td><td>57344 (<code>0xe000</code>)</td><td><code>backup</code></td><td>14 sectors (4KB each). Alternately updated on successive saves.</td></tr></tbody></table>
+<h2>3. Save Writer, Reader &amp; Caller-Chain Architecture</h2>
+<h3>Hardware I/O Driver Functions</h3>
+<table><thead><tr><th>Address</th><th>Role</th><th>Callers</th><th>Description &amp; Implementation Notes</th></tr></thead><tbody><tr><td><code>0x080ba8fc</code></td><td><code>checksum</code></td><td><code>0x080ba834</code></td><td>Computes 16-bit folded sum over sector payload.</td></tr><tr><td><code>0x080ba620</code></td><td><code>deserialize</code></td><td><code>0x0803fb20</code></td><td>Scans sectors, checks magic 0x08012025, validates checksums, picks slot with highest counter.</td></tr><tr><td><code>0x080ba834</code></td><td><code>serialize</code></td><td><code>0x0803fc80</code></td><td>Writes 14 sectors with updated counter and checksums, programs via Flash 1M driver.</td></tr></tbody></table>
+<h3>Traced Caller Chains</h3>
+<table><thead><tr><th>Entry Caller</th><th>Execution Chain</th><th>Context &amp; Trigger</th><th>RAM Structures Updated</th><th>How Mapped</th></tr></thead><tbody><tr><td><code>0x0803fc80</code></td><td><code>0x0803fc80</code> -&gt; <code>0x080ba834</code> -&gt; <code>0x080ba8fc</code></td><td>Start menu SAVE command execution.</td><td>0x03004ac0 (gSaveBlock2), 0x02024ea4 (gSaveBlock1)</td><td>Disassembled save state machine in ROM.</td></tr></tbody></table>
+<h2>4. Magic Signatures &amp; Integrity Verification</h2>
+<h3>Magic Signatures</h3>
+<table><thead><tr><th>Offset (hex)</th><th>Bytes (hex)</th><th>ASCII</th><th>Decompiled Functions</th><th>Verified in Code</th><th>Verified in .sav</th></tr></thead><tbody><tr><td><code>0x0ff8</code></td><td><code>25200108</code></td><td><code> %..</code></td><td><code>0x080ba620</code>, <code>0x080ba834</code></td><td><code>True</code></td><td><code>True</code></td></tr></tbody></table>
+<h3>Checksum &amp; Integrity Validation</h3>
+<table><thead><tr><th>Checksum Name</th><th>Algorithm</th><th>Stored Offset</th><th>Covered Range</th><th>Formula &amp; Decompiled Proof</th><th>Confidence</th></tr></thead><tbody><tr><td><code>gen3_sum32_fold16</code></td><td><code>sum32_fold16</code></td><td><code>0x0ff6</code></td><td><code>[0x0, 0xff4)</code></td><td>Sum 32-bit words across sector payload, then fold: ((sum &gt;&gt; 16) + (sum &amp; 0xFFFF)) &amp; 0xFFFF.</td><td><code>CONFIRMED_VERIFIED</code></td></tr></tbody></table>
+<h2>5. Complete Field Map Table</h2>
+<table><thead><tr><th>Field Name</th><th>Offset</th><th>Size</th><th>Type</th><th>RAM Mirror</th><th>Writers</th><th>Readers</th><th>Observed Values</th><th>Confidence</th><th>Evidence</th></tr></thead><tbody><tr><td><code>player_name</code></td><td><code>0x0000</code></td><td>7B</td><td><code>string</code></td><td><code>0x03004ac0</code></td><td><code>0x080ba834</code></td><td><code>0x080ba620</code></td><td><code>[&quot;SAPPH  &quot;]</code></td><td><code>CONFIRMED_VERIFIED</code></td><td>Trainer name string</td></tr><tr><td><code>sector_magic</code></td><td><code>0x0ff8</code></td><td>4B</td><td><code>u32le</code></td><td><code>0x02030004</code></td><td><code>0x080ba834</code></td><td><code>0x080ba620</code></td><td><code>[&quot;0x08012025&quot;]</code></td><td><code>CONFIRMED_VERIFIED</code></td><td>Canonical Gen 3 magic 0x08012025</td></tr></tbody></table>
+<h2>6. Save Fuzzing &amp; Counterfactual Verification Plan</h2>
+<table><thead><tr><th>Offset</th><th>Size</th><th>Mutation Vector</th><th>Requires Checksum Repair</th><th>Predicted Gameplay &amp; Hardware Effect</th></tr></thead><tbody><tr><td><code>0x0ff8</code></td><td>4B</td><td>Corrupt magic 0x08012025.</td><td><code>False</code></td><td>Sector rejected; falls back to backup bank.</td></tr></tbody></table>
+</div>
+</main>
+  <footer>gbakit GBA Format Reference &middot; <a href="https://github.com/JidouGhost-TL/gbakit">GitHub: JidouGhost-TL/gbakit</a> &middot; Clean-room GBA binary format specs &amp; Rust toolkit.</footer>
+</body>
+</html>

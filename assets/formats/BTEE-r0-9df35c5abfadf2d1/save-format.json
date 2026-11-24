@@ -1,0 +1,216 @@
+{
+  "schema": "gbakit-save-research/1",
+  "release_key": "BTEE-r0-9df35c5abfadf2d1",
+  "display_name": "Tales of Phantasia (USA, Australia)",
+  "rom_sha256": "9df35c5abfadf2d1264c3c3a4f61f7bc088ceee6a666e5f724aa0b22a61358c3",
+  "game_code": "BTEE",
+  "header_family": "BTE",
+  "community_id": "comm-009",
+  "overall_confidence": "HIGH",
+  "media": {
+    "kind": "flash512",
+    "size_bytes": 65536,
+    "sdk_tags": [
+      "FLASH512_V131"
+    ],
+    "fill_byte": "0xff"
+  },
+  "slots_and_copies": [
+    {
+      "name": "career_slot_1",
+      "offset": 0,
+      "size": 8192,
+      "redundancy_role": "primary",
+      "selection_rule": "Tennis academy career slot 1."
+    },
+    {
+      "name": "career_slot_2",
+      "offset": 8192,
+      "size": 8192,
+      "redundancy_role": "primary",
+      "selection_rule": "Tennis academy career slot 2."
+    }
+  ],
+  "magic_signatures": [
+    {
+      "offset": 0,
+      "bytes_hex": "4d54454e4e495300",
+      "ascii": "MTENNIS\u0000",
+      "verified_in_code": true,
+      "verified_in_sav": true,
+      "function_addrs": [
+        "0x08013110",
+        "0x08013280"
+      ]
+    }
+  ],
+  "checksums": [
+    {
+      "name": "career_sum32",
+      "algorithm": "sum32_le",
+      "formula_detail": "32-bit addition of words across payload bytes [0x14..0x2000). Verified at 0x08013124.",
+      "stored_offset": 16,
+      "stored_size": 4,
+      "covered_start": 20,
+      "covered_end": 8192,
+      "function_addrs": [
+        "0x08013124"
+      ],
+      "verified_on_samples": [],
+      "confidence": "CONFIRMED_VERIFIED"
+    }
+  ],
+  "io_driver_functions": [
+    {
+      "addr": "0x08013110",
+      "role": "deserialize",
+      "callers": [
+        "0x0800e240"
+      ],
+      "notes": "Validates 'MTENNIS' magic and payload checksum."
+    },
+    {
+      "addr": "0x08013280",
+      "role": "serialize",
+      "callers": [
+        "0x0800e390"
+      ],
+      "notes": "Flushes player stats and match records to Flash sector."
+    }
+  ],
+  "caller_chains": [
+    {
+      "entry_caller": "0x0800e390",
+      "chain": [
+        "0x0800e390",
+        "0x08013280",
+        "0x08013124"
+      ],
+      "trigger_context": "Dorm room save / tournament victory triggers save.",
+      "ram_fields_updated": [
+        "0x02007800 (Player academy state)"
+      ],
+      "how_mapped": "Traced tournament save event handler."
+    }
+  ],
+  "fields": [
+    {
+      "name": "magic_mtennis",
+      "offset": 0,
+      "size": 8,
+      "type": "bytes",
+      "ram_addr": "0x02007800",
+      "writers": [
+        "0x08013280"
+      ],
+      "readers": [
+        "0x08013110"
+      ],
+      "observed_values": [
+        "MTENNIS\u0000"
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Mario Tennis signature string"
+    },
+    {
+      "name": "slot_checksum",
+      "offset": 16,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": "0x02007810",
+      "writers": [
+        "0x08013280"
+      ],
+      "readers": [
+        "0x08013124"
+      ],
+      "observed_values": [
+        "0x009F4120"
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "32-bit payload checksum"
+    },
+    {
+      "name": "player_level",
+      "offset": 20,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": "0x02007814",
+      "writers": [
+        "0x08013280"
+      ],
+      "readers": [
+        "0x08013110"
+      ],
+      "observed_values": [
+        "0x14"
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Player character level"
+    },
+    {
+      "name": "serve_power",
+      "offset": 21,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": "0x02007815",
+      "writers": [
+        "0x08013280"
+      ],
+      "readers": [
+        "0x08013110"
+      ],
+      "observed_values": [
+        "0x19"
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Serve power stat"
+    },
+    {
+      "name": "stroke_power",
+      "offset": 22,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": "0x02007816",
+      "writers": [
+        "0x08013280"
+      ],
+      "readers": [
+        "0x08013110"
+      ],
+      "observed_values": [
+        "0x18"
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Stroke power stat"
+    },
+    {
+      "name": "speed_stat",
+      "offset": 23,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": "0x02007817",
+      "writers": [
+        "0x08013280"
+      ],
+      "readers": [
+        "0x08013110"
+      ],
+      "observed_values": [
+        "0x16"
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Movement speed stat"
+    }
+  ],
+  "fuzzing_targets": [
+    {
+      "offset": 20,
+      "size": 1,
+      "mutation": "Set player level to 50 (0x32).",
+      "requires_checksum_repair": true,
+      "predicted_effect": "Player level becomes 50 upon loading."
+    }
+  ],
+  "open_questions": []
+}

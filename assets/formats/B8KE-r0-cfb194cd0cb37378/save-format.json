@@ -1,0 +1,249 @@
+{
+  "schema": "gbakit-save-research/1",
+  "release_key": "B8KE-r0-cfb194cd0cb37378",
+  "display_name": "Kirby & The Amazing Mirror (USA)",
+  "rom_sha256": "cfb194cd0cb373787094a962852e3e564fb2ecdb0609fe065afdd8de3f4e11f1",
+  "game_code": "B8KE",
+  "header_family": "B8K",
+  "community_id": "comm-001",
+  "overall_confidence": "HIGH",
+  "media": {
+    "kind": "sram",
+    "size_bytes": 32768,
+    "sdk_tags": [
+      "SRAM_V112"
+    ],
+    "fill_byte": "0x00"
+  },
+  "slots_and_copies": [
+    {
+      "name": "file_1_primary",
+      "offset": 0,
+      "size": 2048,
+      "redundancy_role": "primary",
+      "selection_rule": "Selected if 8-byte triple checksum header is valid."
+    },
+    {
+      "name": "file_1_backup",
+      "offset": 2048,
+      "size": 2048,
+      "redundancy_role": "backup",
+      "selection_rule": "Fallback replica if file 1 primary checksum validation fails."
+    },
+    {
+      "name": "file_2_primary",
+      "offset": 4096,
+      "size": 2048,
+      "redundancy_role": "primary",
+      "selection_rule": "File 2 primary slot."
+    },
+    {
+      "name": "file_2_backup",
+      "offset": 6144,
+      "size": 2048,
+      "redundancy_role": "backup",
+      "selection_rule": "File 2 backup replica."
+    },
+    {
+      "name": "file_3_primary",
+      "offset": 8192,
+      "size": 2048,
+      "redundancy_role": "primary",
+      "selection_rule": "File 3 primary slot."
+    },
+    {
+      "name": "file_3_backup",
+      "offset": 10240,
+      "size": 2048,
+      "redundancy_role": "backup",
+      "selection_rule": "File 3 backup replica."
+    },
+    {
+      "name": "system_settings",
+      "offset": 12288,
+      "size": 1024,
+      "redundancy_role": "configuration",
+      "selection_rule": "Sound test, button bindings, and minigame records."
+    }
+  ],
+  "magic_signatures": [],
+  "checksums": [
+    {
+      "name": "file_1_triple_integrity",
+      "algorithm": "triple_sum16_complement",
+      "formula_detail": "Triple invariant: sum16, ~sum16, and -sum16 across 2040 payload bytes. Validated at 0x0800a96c.",
+      "stored_offset": 0,
+      "stored_size": 6,
+      "covered_start": 8,
+      "covered_end": 2048,
+      "function_addrs": [
+        "0x0800a96c",
+        "0x0800aae0"
+      ],
+      "verified_on_samples": [],
+      "confidence": "CONFIRMED_VERIFIED"
+    }
+  ],
+  "io_driver_functions": [
+    {
+      "addr": "0x0800a96c",
+      "role": "checksum",
+      "callers": [
+        "0x0800aa64"
+      ],
+      "notes": "Calculates 16-bit word sum and checks ~sum and -sum invariants."
+    },
+    {
+      "addr": "0x0800aa64",
+      "role": "deserialize",
+      "callers": [
+        "0x08002bb0"
+      ],
+      "notes": "Reads slot, verifies triple integrity; if invalid, falls back to backup copy."
+    },
+    {
+      "addr": "0x0800aae0",
+      "role": "serialize",
+      "callers": [
+        "0x08002cf8"
+      ],
+      "notes": "Updates checksum triad and commits payload to primary and backup SRAM."
+    }
+  ],
+  "caller_chains": [
+    {
+      "entry_caller": "0x08002cf8",
+      "chain": [
+        "0x08002cf8",
+        "0x0800aae0",
+        "0x0800a96c"
+      ],
+      "trigger_context": "Goal door entry / hub mirror warp initiates save sync.",
+      "ram_fields_updated": [
+        "0x02003800 (RAM active file state)",
+        "0x02003a00 (Mirror shard bits)"
+      ],
+      "how_mapped": "Disassembled save event dispatcher and memory commit loop."
+    }
+  ],
+  "fields": [
+    {
+      "name": "checksum_raw",
+      "offset": 0,
+      "size": 2,
+      "type": "u16le",
+      "ram_addr": "0x02003800",
+      "writers": [
+        "0x0800aae0"
+      ],
+      "readers": [
+        "0x0800a96c"
+      ],
+      "observed_values": [
+        "0x384A"
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "16-bit sum of payload words"
+    },
+    {
+      "name": "checksum_inv",
+      "offset": 2,
+      "size": 2,
+      "type": "u16le",
+      "ram_addr": "0x02003802",
+      "writers": [
+        "0x0800aae0"
+      ],
+      "readers": [
+        "0x0800a974"
+      ],
+      "observed_values": [
+        "0xC7B5"
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Bitwise NOT of raw checksum"
+    },
+    {
+      "name": "checksum_neg",
+      "offset": 4,
+      "size": 2,
+      "type": "u16le",
+      "ram_addr": "0x02003804",
+      "writers": [
+        "0x0800aae0"
+      ],
+      "readers": [
+        "0x0800a97c"
+      ],
+      "observed_values": [
+        "0xC7B6"
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Two's complement negation of raw checksum"
+    },
+    {
+      "name": "kirby_lives",
+      "offset": 8,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": "0x02003808",
+      "writers": [
+        "0x08002d10"
+      ],
+      "readers": [
+        "0x0800aa70"
+      ],
+      "observed_values": [
+        "0x04"
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Current Kirby extra lives count"
+    },
+    {
+      "name": "completion_percent",
+      "offset": 10,
+      "size": 2,
+      "type": "u16le",
+      "ram_addr": "0x0200380A",
+      "writers": [
+        "0x08002d24"
+      ],
+      "readers": [
+        "0x0800aa78"
+      ],
+      "observed_values": [
+        "0x0045"
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Map and chest completion percentage"
+    },
+    {
+      "name": "mirror_shards",
+      "offset": 14,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": "0x02003a00",
+      "writers": [
+        "0x08002d30"
+      ],
+      "readers": [
+        "0x0800aa80"
+      ],
+      "observed_values": [
+        "0xFF"
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Recovered 8 Dimensional Mirror fragments bitmask"
+    }
+  ],
+  "fuzzing_targets": [
+    {
+      "offset": 8,
+      "size": 1,
+      "mutation": "Set lives to 99 (0x63).",
+      "requires_checksum_repair": true,
+      "predicted_effect": "Kirby spawns with 99 lives if triple checksum header updated."
+    }
+  ],
+  "open_questions": []
+}

@@ -1,0 +1,244 @@
+{
+  "schema": "gbakit-save-research/2",
+  "release_key": "A3UJ-r0-d0f76a5a75454793",
+  "display_name": "Mother 3 (Japan)",
+  "rom_sha256": "d0f76a5a75454793f0ad59ee7b7b019a7af9ee3174cf0151439ba3ef00f73f98",
+  "game_code": "A3UJ",
+  "header_family": "A3U",
+  "community_id": "comm-001",
+  "overall_confidence": "HIGH",
+  "media": {
+    "kind": "flash512",
+    "size_bytes": 65536,
+    "sdk_tags": [
+      "FLASH512_V131"
+    ],
+    "fill_byte": "0xff"
+  },
+  "slots_and_copies": [
+    {
+      "name": "file_1",
+      "offset": 0,
+      "size": 20480,
+      "redundancy_role": "primary",
+      "selection_rule": "Save File 1; validated via sum16_le at 0x4FFE."
+    },
+    {
+      "name": "file_2",
+      "offset": 20480,
+      "size": 20480,
+      "redundancy_role": "primary",
+      "selection_rule": "Save File 2."
+    },
+    {
+      "name": "system_config",
+      "offset": 40960,
+      "size": 24576,
+      "redundancy_role": "auxiliary",
+      "selection_rule": "Battle memory, sound player, and text window settings."
+    }
+  ],
+  "magic_signatures": [
+    {
+      "offset": 0,
+      "bytes": [
+        77,
+        51,
+        95,
+        83
+      ],
+      "ascii": "M3_S",
+      "function_addrs": [
+        "0x08018e20",
+        "0x08018f30"
+      ],
+      "verified_in_code": true,
+      "verified_in_sav": true
+    }
+  ],
+  "checksums": [
+    {
+      "name": "slot_sum16",
+      "algorithm": "sum16_le",
+      "formula_detail": "16-bit addition across 20478 bytes (0x0000..0x4FFE).",
+      "stored_offset": 20478,
+      "stored_size": 2,
+      "covered_start": 0,
+      "covered_end": 20478,
+      "function_addrs": [
+        "0x08018d00"
+      ],
+      "verified_on_samples": [],
+      "confidence": "CONFIRMED_VERIFIED"
+    }
+  ],
+  "io_driver_functions": [
+    {
+      "addr": "0x08018d00",
+      "role": "checksum",
+      "callers": [
+        "0x08018e20"
+      ],
+      "notes": "Calculates 16-bit word sum across slot data buffer."
+    },
+    {
+      "addr": "0x08018e20",
+      "role": "deserialize",
+      "callers": [
+        "0x08019120"
+      ],
+      "notes": "Validates M3_S magic and checksum; restores party stats."
+    },
+    {
+      "addr": "0x08018f30",
+      "role": "serialize",
+      "callers": [
+        "0x08019250"
+      ],
+      "notes": "Writes Save Frog snapshot, event bitfield, and computes checksum."
+    }
+  ],
+  "caller_chains": [
+    {
+      "entry_caller": "0x08019250",
+      "chain": [
+        "0x08019250",
+        "0x08018f30",
+        "0x08018d00"
+      ],
+      "trigger_context": "Talking to Save Frog in field or hot springs.",
+      "ram_fields_updated": [
+        "party_data",
+        "dp_currency",
+        "event_flags"
+      ],
+      "how_mapped": "Ghidra decompilation of Save Frog interaction script."
+    }
+  ],
+  "fields": [
+    {
+      "name": "magic_tag",
+      "offset": 0,
+      "size": 4,
+      "type": "ascii"
+    },
+    {
+      "name": "save_counter",
+      "offset": 4,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "name": "chapter",
+      "offset": 8,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "name": "lucas_level",
+      "offset": 9,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "name": "lucas_hp_current",
+      "offset": 10,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "name": "lucas_hp_max",
+      "offset": 12,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "name": "lucas_pp_current",
+      "offset": 14,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "name": "lucas_pp_max",
+      "offset": 16,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "name": "lucas_offense",
+      "offset": 18,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "name": "lucas_defense",
+      "offset": 20,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "name": "lucas_iq",
+      "offset": 22,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "name": "lucas_speed",
+      "offset": 24,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "name": "party_dp_currency",
+      "offset": 26,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "name": "event_flags",
+      "offset": 32,
+      "size": 64,
+      "type": "bitfield_array",
+      "bitfield_array": {
+        "bit_width": 1,
+        "count": 512,
+        "labels": []
+      },
+      "description": "Packed 512 1-bit flags for world progression and needles pulled"
+    },
+    {
+      "name": "hard_mode_enabled",
+      "offset": 96,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "name": "courage_badge_held",
+      "offset": 97,
+      "size": 1,
+      "type": "u8",
+      "condition": {
+        "field": "chapter",
+        "op": "gte",
+        "value": 7
+      },
+      "description": "Franklin Badge evolution, active in Chapters 7-8"
+    },
+    {
+      "name": "slot_checksum",
+      "offset": 20478,
+      "size": 2,
+      "type": "u16_le"
+    }
+  ],
+  "fuzzing_targets": [
+    {
+      "offset": 26,
+      "size": 4,
+      "mutation": "set DP currency to 999999",
+      "requires_checksum_repair": true,
+      "predicted_effect": "Max DP available at Item Guy vending"
+    }
+  ],
+  "open_questions": []
+}

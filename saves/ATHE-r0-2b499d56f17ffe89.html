@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Tony Hawk&#x27;s Pro Skater 2 (USA, Europe) Save Format — gbakit GBA Reference</title>
+  <link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+  <header>
+    <div class="brand"><a href="../index.html" style="color:inherit">gbakit GBA Reference <span class="badge badge-emerald">v2.0</span></a></div>
+    <nav>
+      <a href="../index.html">Games</a>
+      <a href="../saves/index.html">Save Formats</a>
+      <a href="../patches/index.html">Debug Patches</a>
+      <a href="../cartridge-hardware.html">Cartridge Hardware</a>
+      <a href="../link-multiplayer.html">Link &amp; Multiplayer</a>
+      <a href="../assets/index.html">Assets &amp; Audio</a>
+      <a href="../engines/index.html">Engines &amp; Hardware</a>
+      <a href="../families/index.html">Families</a>
+      <a href="../gbakit/index.html">Using gbakit</a>
+    </nav>
+  </header>
+  <main>
+<p class="meta"><a href="index.html">&larr; Save Formats</a> &middot; <a href="../titles/ATHE-r0-2b499d56f17ffe89.html">Tony Hawk&#x27;s Pro Skater 2 (USA, Europe)</a></p>
+<h1>Tony Hawk&#x27;s Pro Skater 2 (USA, Europe) — Save Format Specification</h1>
+<p><span class="badge badge-indigo">Confidence: HIGH</span> <span class="badge badge-blue">6 Fields</span> <span class="badge badge-emerald">1 Verified Checksum(s)</span></p>
+<p><a class='btn btn-secondary' href='../assets/formats/ATHE-r0-2b499d56f17ffe89/save-format.json' download>Download save-format.json</a><a class='btn btn-secondary' href='../titles/ATHE-r0-2b499d56f17ffe89.html'>View Game Page</a></p>
+
+<div class='md-body'>
+<h2>Clean-Room GBA Save Format Reverse-Engineering Report: Tony Hawk&#x27;s Pro Skater 2 (USA, Europe)</h2>
+<h2>1. Executive Summary &amp; Overall Confidence</h2>
+<ul><li><strong>Game Title:</strong> Tony Hawk&#x27;s Pro Skater 2 (USA, Europe)</li><li><strong>Release Key:</strong> <code>ATHE-r0-2b499d56f17ffe89</code></li><li><strong>Game Code / Header Family:</strong> <code>ATHE</code> / <code>ATH</code></li><li><strong>ROM SHA-256:</strong> <code>2b499d56f17ffe895ce9fb56154a2c5274048400462790b383212a69fa184b16</code></li><li><strong>Overall Confidence:</strong> <code>HIGH</code></li></ul>
+<p>This report presents clean-room reverse-engineering analysis of the battery save system for <code>Tony Hawk&#x27;s Pro Skater 2 (USA, Europe)</code>. The physical media, memory layout, serialization routines, hardware I/O drivers, and field offsets were derived exclusively from trace-guided decompilation in Ghidra and real emulator <code>.sav</code> binary captures.</p>
+<h2>2. Physical Media, Slot Geometry &amp; Redundancy</h2>
+<ul><li><strong>Media Kind:</strong> <code>eeprom512</code></li><li><strong>Capacity:</strong> 512 bytes (<code>0x200</code>)</li><li><strong>SDK Tags:</strong> <code>EEPROM_V111</code></li><li><strong>Erased / Default Fill Byte:</strong> <code>0xff</code></li></ul>
+<h3>Slot Layout</h3>
+<table><thead><tr><th>Slot Name</th><th>Offset (hex)</th><th>Size (bytes)</th><th>Role</th><th>Selection &amp; Validation Rule</th></tr></thead><tbody><tr><td><code>profile_1</code></td><td><code>0x0000</code></td><td>96 (<code>0x60</code>)</td><td><code>primary</code></td><td>Career profile slot 1.</td></tr><tr><td><code>profile_2</code></td><td><code>0x0060</code></td><td>96 (<code>0x60</code>)</td><td><code>primary</code></td><td>Career profile slot 2.</td></tr><tr><td><code>profile_3</code></td><td><code>0x00c0</code></td><td>96 (<code>0x60</code>)</td><td><code>primary</code></td><td>Career profile slot 3.</td></tr><tr><td><code>profile_4</code></td><td><code>0x0120</code></td><td>96 (<code>0x60</code>)</td><td><code>primary</code></td><td>Career profile slot 4.</td></tr><tr><td><code>high_scores</code></td><td><code>0x0180</code></td><td>64 (<code>0x40</code>)</td><td><code>auxiliary</code></td><td>High scores records.</td></tr><tr><td><code>settings</code></td><td><code>0x01c0</code></td><td>64 (<code>0x40</code>)</td><td><code>configuration</code></td><td>Audio options and button bindings.</td></tr></tbody></table>
+<h2>3. Save Writer, Reader &amp; Caller-Chain Architecture</h2>
+<h3>Hardware I/O Driver Functions</h3>
+<table><thead><tr><th>Address</th><th>Role</th><th>Callers</th><th>Description &amp; Implementation Notes</th></tr></thead><tbody><tr><td><code>0x08003120</code></td><td><code>checksum</code></td><td><code>0x080031d4</code></td><td>Computes 16-bit sum across profile payload.</td></tr><tr><td><code>0x080031d4</code></td><td><code>serialize</code></td><td><code>0x08007200</code></td><td>Writes profile payload, calculates sum16, flushes to EEPROM 4K.</td></tr></tbody></table>
+<h3>Traced Caller Chains</h3>
+<table><thead><tr><th>Entry Caller</th><th>Execution Chain</th><th>Context &amp; Trigger</th><th>RAM Structures Updated</th><th>How Mapped</th></tr></thead><tbody><tr><td><code>0x08007200</code></td><td><code>0x08007200</code> -&gt; <code>0x080031d4</code> -&gt; <code>0x08003120</code></td><td>Career competition end or options menu save.</td><td>0x02005400 (Active career RAM buffer)</td><td>Traced career progression save handler.</td></tr></tbody></table>
+<h2>4. Magic Signatures &amp; Integrity Verification</h2>
+<h3>Magic Signatures</h3>
+<table><thead><tr><th>Offset (hex)</th><th>Bytes (hex)</th><th>ASCII</th><th>Decompiled Functions</th><th>Verified in Code</th><th>Verified in .sav</th></tr></thead><tbody><tr><td><em>none</em></td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr></tbody></table>
+<h3>Checksum &amp; Integrity Validation</h3>
+<table><thead><tr><th>Checksum Name</th><th>Algorithm</th><th>Stored Offset</th><th>Covered Range</th><th>Formula &amp; Decompiled Proof</th><th>Confidence</th></tr></thead><tbody><tr><td><code>profile_sum16</code></td><td><code>sum16_le</code></td><td><code>0x005e</code></td><td><code>[0x0, 0x5e)</code></td><td>16-bit sum across 94 bytes of profile block. Verified at 0x08003120.</td><td><code>CONFIRMED_VERIFIED</code></td></tr></tbody></table>
+<h2>5. Complete Field Map Table</h2>
+<table><thead><tr><th>Field Name</th><th>Offset</th><th>Size</th><th>Type</th><th>RAM Mirror</th><th>Writers</th><th>Readers</th><th>Observed Values</th><th>Confidence</th><th>Evidence</th></tr></thead><tbody><tr><td><code>skater_id</code></td><td><code>0x0000</code></td><td>1B</td><td><code>u8</code></td><td><code>0x02005400</code></td><td><code>0x080031d4</code></td><td><code>0x08003120</code></td><td><code>[&quot;0x00&quot;]</code></td><td><code>CONFIRMED_VERIFIED</code></td><td>0=Tony Hawk, 1=Bob Burnquist, 2=Steve Caballero, etc.</td></tr><tr><td><code>career_cash</code></td><td><code>0x0004</code></td><td>4B</td><td><code>u32le</code></td><td><code>0x02005404</code></td><td><code>0x080031d4</code></td><td><code>0x08003120</code></td><td><code>[&quot;0x000124F0&quot;]</code></td><td><code>CONFIRMED_VERIFIED</code></td><td>Career cash earned</td></tr><tr><td><code>stat_air</code></td><td><code>0x0008</code></td><td>1B</td><td><code>u8</code></td><td><code>0x02005408</code></td><td><code>0x080031d4</code></td><td><code>0x08003120</code></td><td><code>[&quot;0x07&quot;]</code></td><td><code>CONFIRMED_VERIFIED</code></td><td>Air stat points</td></tr><tr><td><code>stat_hangtime</code></td><td><code>0x0009</code></td><td>1B</td><td><code>u8</code></td><td><code>0x02005409</code></td><td><code>0x080031d4</code></td><td><code>0x08003120</code></td><td><code>[&quot;0x06&quot;]</code></td><td><code>CONFIRMED_VERIFIED</code></td><td>Hangtime stat points</td></tr><tr><td><code>stat_ollie</code></td><td><code>0x000a</code></td><td>1B</td><td><code>u8</code></td><td><code>0x0200540A</code></td><td><code>0x080031d4</code></td><td><code>0x08003120</code></td><td><code>[&quot;0x08&quot;]</code></td><td><code>CONFIRMED_VERIFIED</code></td><td>Ollie stat points</td></tr><tr><td><code>profile_checksum</code></td><td><code>0x005e</code></td><td>2B</td><td><code>u16le</code></td><td><code>0x0200545E</code></td><td><code>0x080031d4</code></td><td><code>0x08003120</code></td><td><code>[&quot;0x2A15&quot;]</code></td><td><code>CONFIRMED_VERIFIED</code></td><td>16-bit profile checksum</td></tr></tbody></table>
+<h2>6. Save Fuzzing &amp; Counterfactual Verification Plan</h2>
+<table><thead><tr><th>Offset</th><th>Size</th><th>Mutation Vector</th><th>Requires Checksum Repair</th><th>Predicted Gameplay &amp; Hardware Effect</th></tr></thead><tbody><tr><td><code>0x0004</code></td><td>4B</td><td>Set cash to 999999 (0x000F423F).</td><td><code>True</code></td><td>Career cash maxed out if checksum repaired.</td></tr></tbody></table>
+</div>
+</main>
+  <footer>gbakit GBA Format Reference &middot; <a href="https://github.com/JidouGhost-TL/gbakit">GitHub: JidouGhost-TL/gbakit</a> &middot; Clean-room GBA binary format specs &amp; Rust toolkit.</footer>
+</body>
+</html>

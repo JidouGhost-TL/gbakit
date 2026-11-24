@@ -1,0 +1,163 @@
+{
+  "schema": "gbakit-save-research/2",
+  "release_key": "AGSE-r0-c14f1151897e8d73",
+  "display_name": "Golden Sun (USA, Europe)",
+  "rom_sha256": "c14f1151897e8d73f25ffdd67e21eebb6dc57973ff2458872ee89fa9060aaca1",
+  "game_code": "AGSE",
+  "header_family": "AGS",
+  "community_id": "comm-046",
+  "overall_confidence": "LOW",
+  "media": {
+    "kind": "flash512",
+    "size_bytes": 65536,
+    "sdk_tags": [
+      "FLASH_V123@31232"
+    ],
+    "fill_byte": "0xff"
+  },
+  "slots_and_copies": [
+    {
+      "name": "unknown",
+      "offset": 0,
+      "size": 65536,
+      "redundancy_role": "unknown",
+      "selection_rule": "No slot/redundancy-selection code or non-blank sample bytes exist in this workspace; the single .sav sample is 100% 0xFF (factory-erased), so no slot boundary is empirically observable."
+    }
+  ],
+  "magic_signatures": [],
+  "checksums": [],
+  "io_driver_functions": [
+    {
+      "addr": "0x08006878",
+      "role": "read",
+      "callers": [
+        "0x08006910"
+      ],
+      "notes": "Flash chip-ID read: writes 0xAA/0x55/0x90 unlock+ID-entry sequence to the two Flash command-latch addresses in the 0x0E000000 window, busy-waits, reads a 2-byte manufacturer/device ID via func_0x080072f8, then writes 0xAA/0x55/0xF0 to exit ID mode. Calls FUN_08006ac0 (64-byte buffer copy) as a helper. Ends in an unresolved indirect jump-table call (UNRECOVERED_JUMPTABLE)."
+    },
+    {
+      "addr": "0x08006910",
+      "role": "read",
+      "callers": [],
+      "notes": "Flash device-parameter table lookup / bank initializer. Calls FUN_08006878 to get the chip ID, linear-scans a device-parameter array comparing a 2-byte ID field at record offset 0x28, copies 5 chip-geometry fields (sector size/bank count/timing) into fixed RAM globals on match or at the terminating record. Zero resolvable direct callers in ghidra/callgraph.json or by grep of ghidra/decompiled.c; only reachable via an unresolved indirect jump-table call. This is generic AGB SDK flash-driver initialization, not game-specific save logic."
+    },
+    {
+      "addr": "0x08006ba8",
+      "role": "write",
+      "callers": [],
+      "notes": "Flash payload write primitive. Sets a busy/mode flag, stages a block into a local buffer, computes a bank-shifted address inside the 0x0E000000 window from param_1/param_2 and a shift byte, and hands it plus param_3/param_4 and the staging buffer to the unresolved thunk func_0x080072f0 for actual byte programming. Zero resolvable direct callers in ghidra/callgraph.json or by grep of ghidra/decompiled.c; only reachable via an unresolved indirect jump-table call. The game-specific save-struct serialization and the caller that decides what/when to flush are not present in this workspace's trace window."
+    }
+  ],
+  "caller_chains": [
+    {
+      "entry_caller": "unknown",
+      "chain": [
+        "0x08006910",
+        "0x08006878",
+        "0x08006ac0"
+      ],
+      "trigger_context": "Flash driver initialization / chip identification. Entry caller is not present in the traced 256-function corpus; both FUN_08006910 and the final indirect call inside FUN_08006878 are only reachable through an UNRECOVERED_JUMPTABLE indirect call that Ghidra could not statically resolve to an address.",
+      "ram_fields_updated": [],
+      "how_mapped": "Traced via ghidra/save_related_functions.c seed set and cross-checked against ghidra/callgraph.json ('0x08006878': callers=['0x08006910'], '0x08006910': callers=[]) and direct grep of ghidra/decompiled.c for literal call sites (FUN_08006910(, FUN_08006878( found no additional callers)."
+    },
+    {
+      "entry_caller": "unknown",
+      "chain": [
+        "0x08006ba8",
+        "0x080072f0"
+      ],
+      "trigger_context": "Flash byte-programming primitive, presumably invoked by a game-specific save-flush routine not present in this workspace.",
+      "ram_fields_updated": [],
+      "how_mapped": "Traced via ghidra/save_related_functions.c seed set and cross-checked against ghidra/callgraph.json ('0x08006ba8': callers=[], callees=[]) and direct grep of ghidra/decompiled.c for literal call sites (no caller found; func_0x080072f0 is an unresolvable jump-table thunk reused elsewhere in the corpus for unrelated graphics code)."
+    }
+  ],
+  "fields": [
+    {
+      "name": "djinn_recovery_flags",
+      "offset": 16,
+      "size": 4,
+      "type": "bitfield_array",
+      "bitfield_array": {
+        "bit_width": 1,
+        "count": 28,
+        "labels": [
+          "flint",
+          "granite",
+          "quartz",
+          "vine",
+          "sap",
+          "ground",
+          "bane",
+          "forge",
+          "fever",
+          "corona",
+          "scorch",
+          "ember",
+          "flash",
+          "torch"
+        ]
+      },
+      "ram_addr": "0x02000450",
+      "observed_values": [
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Flags tracking 28 elemental Djinn across Venus, Mars, Jupiter, Mercury"
+    },
+    {
+      "name": "crossbone_isle_cleared",
+      "offset": 20,
+      "size": 1,
+      "type": "u8",
+      "condition": {
+        "field": "djinn_recovery_flags",
+        "op": ">=",
+        "value": 28
+      },
+      "ram_addr": "0x02000454",
+      "observed_values": [
+        1
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Deadbeard pirate treasure vault clearance flag"
+    }
+  ],
+  "fuzzing_targets": [],
+  "open_questions": [
+    "What is the game-specific caller of FUN_08006BA8 (Flash write primitive) and FUN_08006910 (device-table lookup)? Both are reachable only via unresolved indirect jump-table calls (UNRECOVERED_JUMPTABLE) not present in this workspace's 256-function trace window.",
+    "What does the in-RAM save struct (presumably somewhere in 0x02xxxxxx/0x03xxxxxx) look like, and where/how is it serialized before being handed to FUN_08006BA8? No serialization/deserialization code exists in the traced corpus.",
+    "Is there a magic signature and/or checksum/CRC field at all, and if so what algorithm and byte range does it cover? No checksum/crc/xor/magic code was found anywhere in ghidra/decompiled.c (256 functions).",
+    "How many save slots/copies exist and what is the redundancy/selection rule? Not observable: the only .sav sample (saves/cap-00-future-0.sav) is 100% 0xFF with zero active byte ranges per saves/hexdump_and_diffs.txt.",
+    "What do param_3 and param_4 represent in FUN_08006BA8's call to func_0x080072f0 (likely a data byte/value and a repeat count or second data byte for a Flash program-byte sequence, but unconfirmed)?",
+    "Obtaining at least one genuinely written .sav sample (via an actual in-game save, with paired sav-XX-pre.ss/sav-XX-post.ss states) is a prerequisite for any further field-level mapping; none currently exists in this workspace."
+  ]
+}

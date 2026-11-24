@@ -1,0 +1,253 @@
+{
+  "schema": "gbakit-save-research/1",
+  "release_key": "AMHP-r0-84c73c0d0f0c68fe",
+  "display_name": "Bomberman Max 2 - Blue Advance (Europe) (En,Fr,De)",
+  "rom_sha256": "84c73c0d0f0c68fea530cd7a17afb51b891528c267dc267ec34a64420fde052d",
+  "game_code": "AMHP",
+  "header_family": "AMH",
+  "community_id": "comm-079",
+  "overall_confidence": "MEDIUM",
+  "media": {
+    "kind": "eeprom8k",
+    "size_bytes": 8192,
+    "sdk_tags": [],
+    "fill_byte": "0xff"
+  },
+  "slots_and_copies": [
+    {
+      "name": "slot_0",
+      "offset": 0,
+      "size": 768,
+      "redundancy_role": "unknown",
+      "selection_rule": "HYPOTHESIS: no slot-comparison/selection function found in the 87-function corpus; slot_0/slot_1/slot_2 are byte-identical in both sample .sav files, consistent with triple-mirrored redundancy, but the reader-side selection/repair rule is unverified."
+    },
+    {
+      "name": "slot_1",
+      "offset": 768,
+      "size": 768,
+      "redundancy_role": "unknown",
+      "selection_rule": "HYPOTHESIS: see slot_0. Byte-identical to slot_0 and slot_2 in both samples."
+    },
+    {
+      "name": "slot_2",
+      "offset": 1536,
+      "size": 768,
+      "redundancy_role": "unknown",
+      "selection_rule": "HYPOTHESIS: see slot_0. Byte-identical to slot_0 and slot_1 in both samples."
+    },
+    {
+      "name": "trailer_flag_block",
+      "offset": 2304,
+      "size": 8,
+      "redundancy_role": "unknown",
+      "selection_rule": "Not a mirrored copy; single shared 8-byte block immediately after the three slots (EEPROM block index 288). Observed 0xFF..FF (cap-00) -> 0x00..00 (cap-01); semantics (flag vs counter) unresolved."
+    }
+  ],
+  "magic_signatures": [
+    {
+      "offset": 0,
+      "bytes_hex": "414d5245424d4f42d2003258414d2d4e",
+      "ascii": "AMREBMOB\\xd2\\x002XAM-N (raw); reversing each 8-byte half yields 'BOMBERMA' + 'N-MAX2\\x00\\xd2' -> 'BOMBERMAN-MAX2' + 2 trailing bytes",
+      "verified_in_code": false,
+      "verified_in_sav": true,
+      "function_addrs": []
+    }
+  ],
+  "checksums": [
+    {
+      "name": "unidentified_candidate",
+      "algorithm": "unknown",
+      "formula_detail": "No checksum/CRC routine was found among the 87 decompiled functions. Both .sav samples are byte-identical across the entire 0x000-0x8FF record region, so no checksum formula could be exercised against changing data; only the independent 0x900-0x907 trailer block differed, ruling it out as a content-dependent checksum of the preceding data (it flips unconditionally, not as a function of unchanged data).",
+      "stored_offset": null,
+      "stored_size": 0,
+      "covered_start": 0,
+      "covered_end": 2304,
+      "function_addrs": [],
+      "verified_on_samples": [
+        {"file": "saves/cap-00-future-0.sav", "stored_hex": "unknown", "computed_hex": "sum8=0x0f sum16=0x3c0f sum32=0x3c0f xor8=0x61 xor16=0xf293", "match": false},
+        {"file": "saves/cap-01-future-1.sav", "stored_hex": "unknown", "computed_hex": "sum8=0x0f sum16=0x3c0f sum32=0x3c0f xor8=0x61 xor16=0xf293", "match": false}
+      ],
+      "confidence": "UNKNOWN"
+    }
+  ],
+  "io_driver_functions": [
+    {
+      "addr": "0x0806ba08",
+      "role": "read | write",
+      "callers": ["0x0806ba88", "0x0806bb40"],
+      "notes": "Raw DMA3 transfer primitive: programs SAD/DAD/CNT (CNT |= 0x80000000 enable bit), busy-waits completion bit 0x8000. Address-agnostic; both callers pass literal 0xD000000 (GBA EEPROM I/O port)."
+    },
+    {
+      "addr": "0x0806b960",
+      "role": "write",
+      "callers": ["0x0806bb40"],
+      "notes": "DMA/IRQ-channel enable helper bracketing the write path in FUN_0806bb40; sets an IRQ-enable-shaped bit pattern and stages a second source/length pair."
+    },
+    {
+      "addr": "0x0806b9c4",
+      "role": "write",
+      "callers": ["0x0806bb40"],
+      "notes": "Paired teardown helper for 0x0806b960; clears the bit pattern it set."
+    },
+    {
+      "addr": "0x0806ba88",
+      "role": "read",
+      "callers": ["0x0806bc24"],
+      "notes": "EEPROM block READ: validates block_index against a runtime block-count limit, issues a read-request bitstream then a 68-halfword (4 dummy + 64 data bits) response transfer via FUN_0806ba08, both targeting 0xD000000. Matches the standard GBA EEPROM serial read protocol exactly (length = addr_bits + 3 for the request, 0x44=68 for the response)."
+    },
+    {
+      "addr": "0x0806bb40",
+      "role": "write",
+      "callers": [],
+      "notes": "EEPROM block WRITE: validates block_index, serializes 8 input bytes + address bits + '10' write opcode + stop bit, issues via FUN_0806ba08 with length = addr_bits + 67 (2 opcode + 64 data + 1 stop), matching the standard protocol exactly. No caller found in the 87-function corpus -- top-level entry point, trigger chain unresolved."
+    },
+    {
+      "addr": "0x0806bc24",
+      "role": "write",
+      "callers": [],
+      "notes": "WRITE-VERIFY: calls FUN_0806ba88 to read back a block and compares it word-by-word against an expected 8-byte buffer, returning 0x8000 on mismatch. No caller found in the 87-function corpus -- top-level entry point, trigger chain unresolved."
+    }
+  ],
+  "caller_chains": [
+    {
+      "entry_caller": "0x0806bb40",
+      "chain": ["0x0806bb40", "0x0806b960", "0x0806ba08", "0x0806b9c4"],
+      "trigger_context": "unknown - no caller present in the supplied 87-function corpus (callgraph.json lists callers: [] for 0x0806bb40)",
+      "ram_fields_updated": [],
+      "how_mapped": "Traced forward from the FUN_0806bb40 entry point via static calls visible in ghidra/decompiled.c and cross-checked against ghidra/callgraph.json callee lists; could not trace backward to any caller because none exists in the provided extraction."
+    },
+    {
+      "entry_caller": "0x0806bc24",
+      "chain": ["0x0806bc24", "0x0806ba88", "0x0806ba08"],
+      "trigger_context": "unknown - no caller present in the supplied 87-function corpus (callgraph.json lists callers: [] for 0x0806bc24)",
+      "ram_fields_updated": [],
+      "how_mapped": "Traced forward from the FUN_0806bc24 entry point via static calls visible in ghidra/decompiled.c and cross-checked against ghidra/callgraph.json callee lists; could not trace backward to any caller because none exists in the provided extraction."
+    }
+  ],
+  "fields": [
+    {
+      "name": "slot_magic_header",
+      "offset": 0,
+      "size": 16,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"cap-00-future-0.sav": "414d5245424d4f42d2003258414d2d4e", "cap-01-future-1.sav": "414d5245424d4f42d2003258414d2d4e"},
+      "update_mechanism": "unknown - no writer present in the 87-function corpus; value is identical across all 3 slots and both samples",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "Direct byte read of saves/*.sav at offsets 0x000, 0x300, 0x600; reversing each 8-byte half yields legible ASCII 'BOMBERMA'+'N-MAX2\\x00\\xd2' matching the release title text from this packet's own metadata."
+    },
+    {
+      "name": "slot_reserved_padding",
+      "offset": 16,
+      "size": 32,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"cap-00-future-0.sav": "all 0x00", "cap-01-future-1.sav": "all 0x00"},
+      "update_mechanism": "unknown",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "Direct byte read; zero-filled run identical in all 3 slots and both samples."
+    },
+    {
+      "name": "slot_flag_array",
+      "offset": 48,
+      "size": 240,
+      "type": "u16",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"distinct_values": ["0x0000", "0x0001"], "count_0x0001": 80, "count_0x0000": 40},
+      "update_mechanism": "unknown",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Python Counter over in-slot bytes 0x30-0x11F (120 u16 entries) shows only two distinct values (0 and 1) in both samples, consistent with a boolean/flag array; no writer/reader traced and no semantic labels assigned per clean-room rule."
+    },
+    {
+      "name": "slot_record_table_main",
+      "offset": 288,
+      "size": 416,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"row_count": 26, "row_size": 16, "nonzero_word_indices_per_row": [0, 2, 6, 7]},
+      "update_mechanism": "unknown",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Hex inspection of in-slot bytes 0x120-0x2BF shows a 16-byte-period repeating row shape across 26 rows, with only 4 of each row's 8 u16 words ever non-zero; identical across all 3 slots and both samples. No semantic meaning assigned."
+    },
+    {
+      "name": "slot_record_table_summary",
+      "offset": 704,
+      "size": 64,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"row_count": 4, "row_size": 16, "example_row_0x2e0": "012c 0000 0055 0000 0000 0000 0118 010e"},
+      "update_mechanism": "unknown",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Same 16-byte row shape as slot_record_table_main but larger-magnitude values and only 4 rows; distinguished purely by position/magnitude, not by any traced code. Possible aggregate/summary rows -- unverified."
+    },
+    {
+      "name": "trailer_flag_block",
+      "offset": 2304,
+      "size": 8,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"cap-00-future-0.sav": "ffffffffffffffff", "cap-01-future-1.sav": "0000000000000000"},
+      "update_mechanism": "unknown - sole byte difference between the two sample .sav files; the entire 2304-byte redundant-slot region is otherwise byte-identical between samples",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Byte diff of saves/hexdump_and_diffs.txt and independent Python re-diff; absolute offset 0x900 equals EEPROM block index 288, immediately after the 3x768-byte slot region (96 blocks each)."
+    }
+  ],
+  "fuzzing_targets": [
+    {
+      "offset": 2304,
+      "size": 8,
+      "mutation": "Reset trailer_flag_block from 0x00..00 back to 0xff..ff (its cap-00 value) while leaving all 3 slots untouched.",
+      "requires_checksum_repair": false,
+      "predicted_effect": "If this block is a pure one-shot 'ever saved' flag, load behavior should be unaffected (data still present in all 3 slots). If it gates whether the save is considered valid at all, the game should treat the cartridge as blank/new-game."
+    },
+    {
+      "offset": 48,
+      "size": 2,
+      "mutation": "In slot 0 only (in-slot offset 0x30), flip one u16 flag-array entry (0x0001 -> 0x0000), leaving slot 1/2 copies at offsets 0x330/0x630 unchanged.",
+      "requires_checksum_repair": false,
+      "predicted_effect": "If a majority-vote/repair reader exists across the 3 redundant slots, slot 0 should be silently corrected back to match slots 1/2 on next read or save. If no such reader exists, the single-slot divergence should persist, disproving the redundancy-repair hypothesis."
+    },
+    {
+      "offset": 0,
+      "size": 8,
+      "mutation": "Zero out in-slot offset 0x00-0x07 (first half of the magic header) in slot 0 only.",
+      "requires_checksum_repair": false,
+      "predicted_effect": "Tests whether a per-slot identity/validity check exists; a validity check would cause the game to ignore/rebuild slot 0 from slot 1 or 2, while no check would leave slot 0 silently corrupted."
+    },
+    {
+      "offset": 48,
+      "size": 2,
+      "mutation": "Toggle one flag-array entry (in-slot offset 0x31, byte 0x01 -> 0x00) identically across all 3 slots (0x31/0x331/0x631) to avoid confounding with the single-slot divergence test.",
+      "requires_checksum_repair": false,
+      "predicted_effect": "Unknown pending event-aligned capture; establishes only whether this array is consumed at all during boot/load."
+    },
+    {
+      "offset": 307,
+      "size": 2,
+      "mutation": "Raise one non-zero word in the slot_record_table_main row at in-slot offset 0x120 (word index 2, in-slot byte 0x133) by +0x10, identically across all 3 slots.",
+      "requires_checksum_repair": false,
+      "predicted_effect": "Unknown; establishes read/consumption of this table as a prerequisite before any future semantic labeling."
+    }
+  ],
+  "open_questions": [
+    "No checksum/CRC routine was found in the 87-function corpus; because both .sav samples share byte-identical primary data, checksum presence/absence over the record region is unproven, not disproven.",
+    "Callers of the EEPROM WRITE (0x0806bb40) and WRITE-VERIFY (0x0806bc24) entry points are absent from the supplied corpus (callgraph.json lists callers: [] for both); the full gameplay-to-flush trigger chain is unknown.",
+    "No slot-comparison/selection/repair function was found; the apparent triple-redundant mirrored-slot layout's actual read-side selection rule is unverified.",
+    "Semantic meaning of the 120-entry flag array (in-slot 0x30-0x11F) and the two numeric record tables (in-slot 0x120-0x2FF) is unknown; only structural shape could be derived without importing outside game-specific research.",
+    "Whether the trailer block at absolute offset 0x900 is a one-shot flag or the low bits of an incrementing counter cannot be determined from only two samples (0xFF..FF -> 0x00..00); a third capture after additional save-triggering gameplay would disambiguate.",
+    "Exact EEPROM address bit-width (6-bit for 512B vs 14-bit for 8K EEPROM) is loaded from a runtime table in FUN_0806ba88/FUN_0806bb40 rather than a compile-time literal, so it could not be read directly from the decompilation; inferred as 14-bit from the 8192-byte .sav size per generic GBA hardware behavior.",
+    "Meaning of the two non-ASCII trailing bytes in the magic header (stored 0xD2, 0x00) is unresolved -- possibly a version/region tag."
+  ]
+}

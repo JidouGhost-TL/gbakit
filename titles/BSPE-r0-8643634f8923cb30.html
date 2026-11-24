@@ -13,7 +13,13 @@
       <a href="../index.html">Games</a>
       <a href="../saves/index.html">Save Formats</a>
       <a href="../patches/index.html">Debug Patches</a>
+      <a href="../debug-menus.html">Debug Gallery</a>
+      <a href="../non-retail-cartridges.html">Non-Retail</a>
+      <a href="../cartridge-hardware.html">Cartridge Hardware</a>
+      <a href="../link-multiplayer.html">Link &amp; Multiplayer</a>
+      <a href="../multiboot-museum.html">MultiBoot Museum</a>
       <a href="../assets/index.html">Assets &amp; Audio</a>
+      <a href="../text-and-fonts.html">Text &amp; Fonts</a>
       <a href="../engines/index.html">Engines &amp; Hardware</a>
       <a href="../families/index.html">Families</a>
       <a href="../gbakit/index.html">Using gbakit</a>
@@ -22,7 +28,7 @@
   <main>
 <p class="meta"><a href="../index.html">&larr; Games</a> &middot; Family <code>BSP</code></p>
 <h1>Spider-Man 2 (USA, Europe)</h1>
-<p><span class='badge badge-slate'>EEPROM 4K</span> <span class='badge badge-indigo'>12 PCM Samples</span></p>
+<p><span class='badge badge-slate'>EEPROM 4K</span> <span class='badge badge-emerald'>gbakit Built-In</span> <span class='badge badge-indigo'>12 PCM Samples</span> <a href='../link-multiplayer.html#joybus'><span class='badge badge-purple'>📺 Joybus</span></a> <a href='../link-multiplayer.html#multiboot'><span class='badge badge-amber'>💾 MultiBoot</span></a></p>
 
 <h2>Cartridge Identity</h2>
 <dl class="kv">
@@ -38,7 +44,30 @@
 
 
 
+
+<h2>Link Cable &amp; Multiplayer Communications</h2>
+<div class="callout">
+  This title contains detected communication capabilities: <a href='../link-multiplayer.html#joybus'><span class='badge badge-purple'>📺 Joybus</span></a> <a href='../link-multiplayer.html#multiboot'><span class='badge badge-amber'>💾 MultiBoot</span></a>.
+  Detailed protocol specifications, SIO registers, Joybus commands, and MultiBoot sequences are documented in the <a href="../link-multiplayer.html"><strong>Link &amp; Multiplayer Reference</strong></a>.
+</div>
+<dl class="kv">
+  <dt>GameCube Joybus</dt><dd>Register literal <code>REG_JOY_RECV</code> (<code>0x04000150</code>) at offset <code>0x3ed1ac</code></dd><dt>Single-Cart MultiBoot</dt><dd>Single-Cartridge MultiBoot (Download Play) client/server handler &middot; Thumb SWI 0x25 (<code>0xDF25</code>): <code>0x09cd90</code>, <code>0x0ba738</code>, <code>0x0c4f60</code>, <code>0x0c5600</code> &middot; ARM SWI 0x25 (<code>0xEF000025</code>): <code>0x36c4ac</code></dd>
+</dl>
+
+
+<h2>Battery Save Support in <code>gbakit</code></h2>
+<p><span class="badge badge-emerald">Built-in definition (BSPE)</span></p>
+<pre><code>gbakit save verify BSPE save.sav
+gbakit save decode BSPE save.sav
+gbakit save fix    BSPE damaged.sav -o repaired.sav</code></pre>
+
+
 <h2>ROM Assets, Compression &amp; Audio</h2><dl class='kv'><dt>BIOS Compression</dt><dd>LZ77 (<code>0x10</code>): <strong>33</strong> streams &middot; RLE (<code>0x30</code>): <strong>0</strong> streams</dd><dt>ROM Pointer Tables</dt><dd>14 tables (0 pointing to validated compressed streams)</dd><dt>SDK Backup Tags</dt><dd><code>EEPROM_V124</code></dd><dt>DirectSound PCM Samples</dt><dd><strong>12</strong> WaveData samples (0 looped, 694,341 B PCM)</dd></dl>
+
+<h2>Text, Fonts &amp; Scene Data</h2>
+<dl class="kv"><dt>Primary Text Encoding</dt><dd><strong>Custom 16-bit Huffman</strong> (<code>1,406</code> ASCII strings &middot; <code>21</code> Shift-JIS runs)</dd><dt>Font &amp; VWF Indicators</dt><dd><span class='badge badge-emerald'>VWF Width Table</span> <span class='badge badge-blue'>1bpp Font</span> &middot; BIOS SWIs: BitUnPack <code>0x10</code>: <code>6</code> &middot; LZ77 <code>0x11/12</code>: <code>13</code> &middot; Huffman <code>0x13</code>: <code>5</code> &middot; RLE <code>0x14/15</code>: <code>8</code></dd><dt>Scene &amp; Packaging</dt><dd><code>18</code> ROM pointer tables (&ge;32 entries, <code>6</code> &ge;200) &middot; <code>93</code> relative <code>u32</code> TOCs &middot; <code>400</code> OAM metasprite hits</dd></dl>
+
+
 <h2>Hardware MMIO Subsystems</h2><dl class='kv'><dt><code>audio_sound</code></dt><dd><code>0x8052f14</code></dd><dt><code>dma_transfer</code></dt><dd><code>0x8052f14</code></dd><dt><code>keyinput</code></dt><dd><code>0x8052f14</code></dd><dt><code>ppu_display</code></dt><dd><code>0x801f7b4</code>, <code>0x801fb10</code>, <code>0x801fb38</code>, <code>0x801fc24</code>, <code>0x80205ac</code>, <code>0x8020d28</code>, <code>0x8052f14</code></dd><dt><code>timers</code></dt><dd><code>0x8052f14</code></dd></dl>
 <h2>Regional Variants &amp; Revisions (Family <code>BSP</code>)</h2><ul><li><a href='BSPX-r0-0f194e208ba0d027.html'>Spider-Man 2 (Europe) (En,Fr,De,Es)</a> (<code>BSPX</code>, 16 MiB)</li><li><a href='BSPI-r0-dc407969d773ada3.html'>Spider-Man 2 (Italy)</a> (<code>BSPI</code>, 16 MiB)</li></ul>
 </main>

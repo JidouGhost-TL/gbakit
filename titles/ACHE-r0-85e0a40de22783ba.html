@@ -13,7 +13,13 @@
       <a href="../index.html">Games</a>
       <a href="../saves/index.html">Save Formats</a>
       <a href="../patches/index.html">Debug Patches</a>
+      <a href="../debug-menus.html">Debug Gallery</a>
+      <a href="../non-retail-cartridges.html">Non-Retail</a>
+      <a href="../cartridge-hardware.html">Cartridge Hardware</a>
+      <a href="../link-multiplayer.html">Link &amp; Multiplayer</a>
+      <a href="../multiboot-museum.html">MultiBoot Museum</a>
       <a href="../assets/index.html">Assets &amp; Audio</a>
+      <a href="../text-and-fonts.html">Text &amp; Fonts</a>
       <a href="../engines/index.html">Engines &amp; Hardware</a>
       <a href="../families/index.html">Families</a>
       <a href="../gbakit/index.html">Using gbakit</a>
@@ -22,7 +28,7 @@
   <main>
 <p class="meta"><a href="../index.html">&larr; Games</a> &middot; Family <code>ACH</code></p>
 <h1>Castlevania - Harmony of Dissonance (USA)</h1>
-<p><span class='badge badge-slate'>SRAM 256K</span> <span class='badge badge-emerald'>Save Format Mapped (Family Spec)</span></p>
+<p><span class='badge badge-slate'>SRAM 256K</span> <span class='badge badge-emerald'>Save Format Mapped (Family Spec)</span> <span class='badge badge-amber'>Debug Menu Patch</span> <a href='../patches/index.html#zero-patch-cheats'><span class='badge badge-purple'>🎮 Button Cheat</span></a> <a href='../link-multiplayer.html#multiboot'><span class='badge badge-amber'>💾 MultiBoot</span></a></p>
 
 <h2>Cartridge Identity</h2>
 <dl class="kv">
@@ -36,6 +42,43 @@
 </dl>
 
 
+<h2>Debug Menu Re-Enablement Patch (<code>.ips</code>)</h2>
+<p><a class="btn" href="../assets/patches/ACHE-r0-85e0a40de22783ba/ACHE-debug.ips" download>Download ACHE-debug.ips (15 B IPS / 2 B delta)</a></p>
+<dl class="kv">
+  <dt>Hook Mechanism</dt><dd><code>thumb_imm_scene_override</code> &middot; Konami scene dispatcher override at 0x08000522: replace scene byte load with movs r0, #0x10 to boot directly into developer test menu mode 16</dd>
+  <dt>IPS SHA-256</dt><dd><code>eeeb97bb7f118fd6629234c3fe5d41741f05c2d759c4bfa55e11b3b974ffef22</code></dd>
+</dl>
+<pre><code>gbakit patch apply ACHE-debug.ips original.gba patched-debug.gba</code></pre>
+<div class='gallery'><figure><img src='../assets/patches/ACHE-r0-85e0a40de22783ba/boot-patched.png' alt='Re-enabled debug menu' loading='lazy'><figcaption>Re-Enabled Debug Menu</figcaption></figure><figure><img src='../assets/patches/ACHE-r0-85e0a40de22783ba/after-input.png' alt='Interactive debug menu navigation' loading='lazy'><figcaption>After D-Pad / A Input</figcaption></figure></div>
+
+
+<h2>Verified Button-Combo Cheat</h2>
+<div class="callout">
+  <strong>Zero-patch retail controller cheat (Wave 1):</strong> 4-way counterfactually verified in headless <code>libmgba</code>. See all verified titles in the <a href="../patches/index.html#zero-patch-cheats"><strong>Button-Combo Cheats Catalog</strong></a>.
+</div>
+<dl class="kv">
+  <dt>Effect</dt><dd>Boss Rush Mode &amp; Extra Modes Unlock</dd>
+  <dt>Button Sequence</dt><dd><code>UP, UP, DOWN, DOWN, LEFT, RIGHT, LEFT, RIGHT, B, A</code></dd>
+  <dt>Verification Verdict</dt><dd><span class='badge badge-emerald'>Visual + RAM Unique Reaction</span></dd>
+  <dt>Target RAM Address</dt><dd><code>0x02000020</code></dd>
+  
+  <dt>Timing Protocol</dt><dd><code>boot=360f</code>, <code>hold=6f</code>, <code>release=6f</code>, <code>settle=60f</code></dd>
+  <dt>Activation Indicator</dt><dd>Sound chime and Boss Rush / extra modes unlocked in VRAM &amp; RAM</dd>
+</dl>
+<pre><code>gbakit cheat verify ACHE</code></pre>
+<div class='gallery'><figure><img src='../assets/cheats/ACHE/control.png' alt='Before (Control)' loading='lazy'><figcaption>Before (Control)</figcaption></figure><figure><img src='../assets/cheats/ACHE/reaction.png' alt='After (Cheat Reaction)' loading='lazy'><figcaption>After (Cheat Reaction)</figcaption></figure></div>
+
+
+
+<h2>Link Cable &amp; Multiplayer Communications</h2>
+<div class="callout">
+  This title contains detected communication capabilities: <a href='../link-multiplayer.html#multiboot'><span class='badge badge-amber'>💾 MultiBoot</span></a>.
+  Detailed protocol specifications, SIO registers, Joybus commands, and MultiBoot sequences are documented in the <a href="../link-multiplayer.html"><strong>Link &amp; Multiplayer Reference</strong></a>.
+</div>
+<dl class="kv">
+  <dt>Single-Cart MultiBoot</dt><dd>Single-Cartridge MultiBoot (Download Play) client/server handler &middot; Thumb SWI 0x25 (<code>0xDF25</code>): <code>0x1bd874</code>, <code>0x1f69d2</code>, <code>0x22351e</code>, <code>0x39fc1a</code></dd>
+</dl>
+
 
 <h2>Battery Save Format Specification (Family Shared)</h2>
 <div class="callout">
@@ -44,9 +87,11 @@
 <p><a class='btn' href='../saves/ACHJ-r0-e50df7b87f8523f6.html'>Open Family Save Format Spec (ACHJ)</a><a class='btn btn-secondary' href='../assets/formats/ACHJ-r0-e50df7b87f8523f6/save-format.json' download>Download save-format.json</a></p>
 <dl class="kv">
   <dt>Canonical Specification</dt><dd><code>ACHJ</code> &middot; <strong>6</strong> mapped fields &middot; <strong>0</strong> verified checksum(s) &middot; Confidence: <span class="badge badge-indigo">MEDIUM</span></dd>
-  <dt>gbakit Built-In Support</dt><dd>JSON schema download available</dd>
+  <dt>gbakit Built-In Support</dt><dd><span class="badge badge-emerald">Built-in (ACHJ)</span></dd>
 </dl>
-
+<pre><code>gbakit save verify ACHJ save.sav
+gbakit save decode ACHJ save.sav
+gbakit save fix    ACHJ damaged.sav -o repaired.sav</code></pre>
 
 
 <h2>Observed Battery Save Layout</h2>
@@ -60,6 +105,11 @@
 </dl>
 
 <h2>ROM Assets, Compression &amp; Audio</h2><dl class='kv'><dt>BIOS Compression</dt><dd>LZ77 (<code>0x10</code>): <strong>703</strong> streams &middot; RLE (<code>0x30</code>): <strong>0</strong> streams</dd><dt>ROM Pointer Tables</dt><dd>63 tables (1 pointing to validated compressed streams)</dd><dt>SDK Backup Tags</dt><dd><code>SRAM_F_V102</code></dd></dl>
+
+<h2>Text, Fonts &amp; Scene Data</h2>
+<dl class="kv"><dt>Primary Text Encoding</dt><dd><strong>LZ77-compressed ASCII</strong> (<code>6</code> ASCII strings &middot; <code>2</code> LZ77 ASCII blocks)</dd><dt>Font &amp; VWF Indicators</dt><dd><span class='badge badge-emerald'>VWF Width Table</span> <span class='badge badge-blue'>1bpp Font</span> &middot; BIOS SWIs: BitUnPack <code>0x10</code>: <code>8</code> &middot; LZ77 <code>0x11/12</code>: <code>10</code> &middot; Huffman <code>0x13</code>: <code>6</code> &middot; RLE <code>0x14/15</code>: <code>5</code></dd><dt>Scene &amp; Packaging</dt><dd><code>25</code> ROM pointer tables (&ge;32 entries, <code>2</code> &ge;200) &middot; <code>3</code> relative <code>u32</code> TOCs &middot; <code>204</code> OAM metasprite hits</dd></dl>
+
+
 <h2>Hardware MMIO Subsystems</h2><dl class='kv'><dt><code>save_bus_sram_flash</code></dt><dd><code>0x8000ea0</code>, <code>0x8000f30</code></dd></dl>
 <h2>Regional Variants &amp; Revisions (Family <code>ACH</code>)</h2><ul><li><a href='ACHJ-r0-e50df7b87f8523f6.html'>Castlevania - Byakuya no Concerto (Japan)</a> (<code>ACHJ</code>, 8 MiB)</li><li><a href='ACHJ-r0-2606be0a3fae8f8f.html'>Castlevania - Byakuya no Concerto (Japan) (Castlevania Advance Collection)</a> (<code>ACHJ</code>, 8 MiB)</li><li><a href='ACHP-r0-e47cd67259f4cf47.html'>Castlevania - Harmony of Dissonance (Europe)</a> (<code>ACHP</code>, 8 MiB)</li><li><a href='ACHP-r0-fd6bbbdb0f400888.html'>Castlevania - Harmony of Dissonance (Europe) (Castlevania Advance Collection)</a> (<code>ACHP</code>, 8 MiB)</li><li><a href='ACHE-r0-ff27e065385994c4.html'>Castlevania - Harmony of Dissonance (USA) (Castlevania Advance Collection)</a> (<code>ACHE</code>, 8 MiB)</li></ul>
 </main>

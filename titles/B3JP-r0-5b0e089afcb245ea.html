@@ -13,7 +13,13 @@
       <a href="../index.html">Games</a>
       <a href="../saves/index.html">Save Formats</a>
       <a href="../patches/index.html">Debug Patches</a>
+      <a href="../debug-menus.html">Debug Gallery</a>
+      <a href="../non-retail-cartridges.html">Non-Retail</a>
+      <a href="../cartridge-hardware.html">Cartridge Hardware</a>
+      <a href="../link-multiplayer.html">Link &amp; Multiplayer</a>
+      <a href="../multiboot-museum.html">MultiBoot Museum</a>
       <a href="../assets/index.html">Assets &amp; Audio</a>
+      <a href="../text-and-fonts.html">Text &amp; Fonts</a>
       <a href="../engines/index.html">Engines &amp; Hardware</a>
       <a href="../families/index.html">Families</a>
       <a href="../gbakit/index.html">Using gbakit</a>
@@ -22,7 +28,7 @@
   <main>
 <p class="meta"><a href="../index.html">&larr; Games</a> &middot; Family <code>B3J</code></p>
 <h1>Curious George (Europe) (En,Fr,De,Es,It,Sv,Da)</h1>
-<p><span class='badge badge-zinc'>Stateless / Passcode</span> <span class='badge badge-indigo'>1 PCM Samples</span></p>
+<p><span class='badge badge-zinc'>Stateless / Passcode</span> <span class='badge badge-indigo'>1 PCM Samples</span> <a href='../link-multiplayer.html#multiboot'><span class='badge badge-amber'>💾 MultiBoot</span></a> <a href='../link-multiplayer.html#sio-multi'><span class='badge badge-blue'>🎮 4P Link</span></a></p>
 
 <h2>Cartridge Identity</h2>
 <dl class="kv">
@@ -37,6 +43,18 @@
 
 
 
+
+
+<h2>Link Cable &amp; Multiplayer Communications</h2>
+<div class="callout">
+  This title contains detected communication capabilities: <a href='../link-multiplayer.html#multiboot'><span class='badge badge-amber'>💾 MultiBoot</span></a> <a href='../link-multiplayer.html#sio-multi'><span class='badge badge-blue'>🎮 4P Link</span></a>.
+  Detailed protocol specifications, SIO registers, Joybus commands, and MultiBoot sequences are documented in the <a href="../link-multiplayer.html"><strong>Link &amp; Multiplayer Reference</strong></a>.
+</div>
+<dl class="kv">
+  <dt>Multi-Player SIO (4P)</dt><dd>16-bit ring network &middot; SIOCNT (<code>0x04000128</code>) literals: <code>0x0527e8</code>, <code>0x053108</code>, <code>0x053118</code> &middot; SIODATA32/SIOMULTI0 (<code>0x04000120</code>) literals: <code>0x052f54</code></dd><dt>Single-Cart MultiBoot</dt><dd>Single-Cartridge MultiBoot (Download Play) client/server handler &middot; Thumb SWI 0x25 (<code>0xDF25</code>): <code>0x0a6114</code>, <code>0x0bb7c2</code>, <code>0x0ed22e</code></dd>
+</dl>
+
+
 <h2>Cartridge Storage Architecture: Stateless / Passcode</h2>
 <div class="callout">
   <strong>Zero non-volatile battery hardware:</strong> This cartridge PCB contains ROM only (no SRAM, Flash, or EEPROM chips). Progression is preserved via on-screen passcodes or session-only gameplay. No <code>.sav</code> file is generated or required.
@@ -44,6 +62,11 @@
 
 
 <h2>ROM Assets, Compression &amp; Audio</h2><dl class='kv'><dt>DirectSound PCM Samples</dt><dd><strong>1</strong> WaveData samples (0 looped, 3,295 B PCM)</dd></dl>
+
+<h2>Text, Fonts &amp; Scene Data</h2>
+<dl class="kv"><dt>Primary Text Encoding</dt><dd><strong>Plain ASCII (uncompressed)</strong> (<code>96</code> ASCII strings)</dd><dt>Font &amp; VWF Indicators</dt><dd><span class='badge badge-emerald'>VWF Width Table</span> <span class='badge badge-blue'>1bpp Font</span> &middot; BIOS SWIs: BitUnPack <code>0x10</code>: <code>10</code> &middot; LZ77 <code>0x11/12</code>: <code>16</code> &middot; Huffman <code>0x13</code>: <code>4</code> &middot; RLE <code>0x14/15</code>: <code>18</code></dd><dt>Scene &amp; Packaging</dt><dd><code>8</code> ROM pointer tables (&ge;32 entries, <code>0</code> &ge;200) &middot; <code>81</code> relative <code>u32</code> TOCs &middot; <code>141</code> OAM metasprite hits</dd></dl>
+
+
 <h2>Hardware MMIO Subsystems</h2><dl class='kv'><dt><code>audio_sound</code></dt><dd><code>0x8065be0</code>, <code>0x8066078</code></dd><dt><code>dma_transfer</code></dt><dd><code>0x806304e</code>, <code>0x8065be0</code>, <code>0x8066078</code></dd><dt><code>ppu_display</code></dt><dd><code>0x8051ecc</code></dd><dt><code>timers</code></dt><dd><code>0x8065be0</code>, <code>0x8066078</code></dd></dl>
 <h2>Regional Variants &amp; Revisions (Family <code>B3J</code>)</h2><ul><li><a href='B3JE-r0-e3ea35e9a3500c26.html'>Curious George (USA)</a> (<code>B3JE</code>, 4 MiB)</li></ul>
 </main>

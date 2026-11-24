@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Castlevania - Circle of the Moon (USA) Save Format — gbakit GBA Reference</title>
+  <link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+  <header>
+    <div class="brand"><a href="../index.html" style="color:inherit">gbakit GBA Reference <span class="badge badge-emerald">v2.0</span></a></div>
+    <nav>
+      <a href="../index.html">Games</a>
+      <a href="../saves/index.html">Save Formats</a>
+      <a href="../patches/index.html">Debug Patches</a>
+      <a href="../debug-menus.html">Debug Gallery</a>
+      <a href="../non-retail-cartridges.html">Non-Retail</a>
+      <a href="../cartridge-hardware.html">Cartridge Hardware</a>
+      <a href="../link-multiplayer.html">Link &amp; Multiplayer</a>
+      <a href="../multiboot-museum.html">MultiBoot Museum</a>
+      <a href="../assets/index.html">Assets &amp; Audio</a>
+      <a href="../text-and-fonts.html">Text &amp; Fonts</a>
+      <a href="../engines/index.html">Engines &amp; Hardware</a>
+      <a href="../families/index.html">Families</a>
+      <a href="../gbakit/index.html">Using gbakit</a>
+    </nav>
+  </header>
+  <main>
+<p class="meta"><a href="index.html">&larr; Save Formats</a> &middot; <a href="../titles/AAME-r0-ad9fabaf4398e0f4.html">Castlevania - Circle of the Moon (USA)</a></p>
+<h1>Castlevania - Circle of the Moon (USA) — Save Format Specification</h1>
+<p><span class="badge badge-indigo">Confidence: MEDIUM</span> <span class="badge badge-blue">5 Fields</span> <span class="badge badge-emerald">1 Verified Checksum(s)</span> <span class='badge badge-emerald'>gbakit Built-In</span></p>
+<p><a class='btn' href='../assets/saves/AAME-r0-ad9fabaf4398e0f4/AAME-r0-ad9fabaf4398e0f4.sav' download>Download Sample .sav (32,768 B)</a><a class='btn btn-secondary' href='../assets/formats/AAME-r0-ad9fabaf4398e0f4/save-format.json' download>Download save-format.json</a><a class='btn btn-secondary' href='../titles/AAME-r0-ad9fabaf4398e0f4.html'>View Game Page</a></p>
+
+<div class="callout">
+  <strong>Use directly with <code>gbakit</code> (built-in definition <code>AAME</code>):</strong>
+  <pre><code>gbakit save verify AAME save.sav
+gbakit save decode AAME save.sav
+gbakit save fix    AAME damaged.sav -o repaired.sav</code></pre>
+</div>
+
+<div class='md-body'>
+<h2>Clean-Room Save Format Report: Castlevania - Circle of the Moon (USA)</h2>
+<p>Release Key: <code>AAME-r0-ad9fabaf4398e0f4</code> | Game Code: <code>AAME</code> | Header Family: <code>AAM</code> | Community: <code>comm-009</code> ROM SHA-256: <code>ad9fabaf4398e0f4a2a095bacddc6c0dc7e139903b41e088ca3590c44b684da0</code></p>
+<p>All findings below are derived exclusively from this workspace: <code>ghidra/decompiled.c</code> (253 trace-guided decompiled functions), <code>ghidra/callgraph.json</code>, <code>ghidra/save_related_functions.c</code> (seed set), and the single <code>.sav</code> sample in <code>saves/cap-00-future-0.sav</code> (plus <code>saves/hexdump_and_diffs.txt</code>). No external wiki, decomp, or cheat-table data was consulted.</p>
+<h2>1. Executive Summary &amp; Overall Confidence</h2>
+<p><strong>Overall Confidence: MEDIUM</strong> (structural layout and media type are byte-exact <strong>HIGH</strong> confidence; checksum <em>algorithm</em> is code-proven but numerically under-determined by this single all-zero sample; per-field gameplay semantics inside each save slot are <strong>UNKNOWN</strong> — no non-blank sample exists in this workspace).</p>
+<p>Proven (verified against both decompiled C and the actual <code>.sav</code> bytes):</p>
+<ul><li>The save image is a flat <strong>SRAM</strong> image, not Flash or EEPROM (no <code>0x5555</code>/<code>0x2AAA</code> Flash command</li></ul>
+<p>sequences, no EEPROM/DMA3 bitstream code anywhere in the 253-function corpus).</p>
+<ul><li>A 16-byte global header beginning with the ASCII magic <code>&quot;DRACULA AGB&quot;</code> (11 bytes) followed by 5 padding</li></ul>
+<p>bytes, located at file offset <code>0x0000</code>.</p>
+<ul><li>Eight fixed-size save &quot;slots&quot; of <code>0x3D0</code> (976) bytes each, placed contiguously starting at file offset</li></ul>
+<p><code>0x0010</code>, for a total active region of <code>0x10 + 8*0x3D0 = 0x1E90</code> (7824) bytes. This arithmetic reproduces the corpus-reported active range (<code>0x0000</code>–<code>0x1E8F</code>, 7824 bytes) <strong>exactly</strong>, byte for byte.</p>
+<ul><li>Every byte at file offset <code>0x1E90</code> and beyond in the sample is <code>0xFF</code> (SRAM erase/fill value), confirming</li></ul>
+<p>the remaining <code>32768 - 0x1E90 = 5168</code> bytes of the 32 KiB (256 Kbit) SRAM chip are untouched.</p>
+<ul><li>Each 976-byte slot reserves a single checksum byte at local offset <code>+9</code> (i.e. file offsets <code>0x0019</code>,</li></ul>
+<p><code>0x03E9</code>, <code>0x07B9</code>, <code>0x0B89</code>, <code>0x0F59</code>, <code>0x1329</code>, <code>0x16F9</code>, <code>0x1AC9</code>), computed by an 8-bit additive &quot;sum-excluding-self&quot; routine.</p>
+<p>Open (not provable from this workspace):</p>
+<ul><li>The semantic purpose of the 8 slots (distinct in-game save files vs. internal redundancy/wear copies vs.</li></ul>
+<p>per-area records) — the only sample available is a freshly-initialized, all-zero save, so no slot ever diverges from any other slot.</p>
+<ul><li>The exact length of the checksum coverage range (<code>_DAT_080104bc</code>, a ROM data constant not captured in</li></ul>
+<p>this decompilation dump) and the layout of in-slot gameplay fields (HP, position, inventory, etc.).</p>
+<ul><li>The exact 16-byte expected-header comparison constants used by the mismatch test in <code>0x08010158</code>.</li></ul>
+<h2>2. Physical Media, Slot Geometry &amp; Redundancy</h2>
+<table><thead><tr><th>Property</th><th>Value</th><th>Evidence</th></tr></thead><tbody><tr><td>Media kind</td><td>SRAM (static, byte-addressable; <strong>not</strong> Flash/EEPROM)</td><td>No <code>0x5555</code>/<code>0x2AAA</code> Flash unlock sequence or EEPROM/DMA3 (<code>0x040000D4</code>) serial bitstream code exists anywhere in <code>ghidra/decompiled.c</code>; the only save-plane byte-copy primitives (<code>FUN_080c3060</code>) are plain <code>*dst++ = *src++</code> loops, consistent with SRAM&#x27;s 8-bit-only bus requirement.</td></tr><tr><td>Reported save media</td><td><code>SRAM 256K</code> (packet metadata)</td><td>Matches file size <code>32768</code> bytes = 256 Kbit / 8.</td></tr><tr><td>File size</td><td>32768 bytes (<code>0x8000</code>)</td><td><code>saves/cap-00-future-0.sav</code></td></tr><tr><td>Global header</td><td>16 bytes (<code>0x0000</code>–<code>0x000F</code>)</td><td>Magic <code>&quot;DRACULA AGB&quot;</code> (11 bytes) + 5 zero pad bytes, written literal-byte-by-byte in <code>FUN_08010158</code>; verified in sample.</td></tr><tr><td>Slot count</td><td>8</td><td><code>FUN_08010158</code> loop: <code>for (uVar3 = 0; uVar3 &lt; 8; uVar3++) FUN_08010320(uVar3)</code>.</td></tr><tr><td>Slot size</td><td><code>0x3D0</code> (976) bytes</td><td>Literal immediate in <code>FUN_08010320</code>: <code>iVar6 = *_DAT_08010364 + (param_1 &amp; 0xff) * 0x3d0 + 0x10;</code> and the two byte-copies in the same function both pass length <code>0x3d0</code>.</td></tr><tr><td>Slot base offset</td><td><code>0x0010</code> (slot 0)</td><td>Same expression: <code>+ 0x10</code> after the per-slot stride.</td></tr><tr><td>Active region total</td><td><code>0x0000</code>–<code>0x1E8F</code> (7824 bytes)</td><td><code>16 + 8*976 = 7824 = 0x1E90</code>; matches corpus profile exactly.</td></tr><tr><td>Redundancy / mirroring</td><td><strong>Unproven</strong> — 8 physically separate slots exist, but no code path was found that compares slots against each other or selects a &quot;most recent&quot;/&quot;valid&quot; slot by sequence number. Each slot&#x27;s own checksum (offset <code>+9</code>) only guards that single slot&#x27;s own integrity, not cross-slot agreement.</td><td>See Section 3.</td></tr><tr><td>Selection rule</td><td><strong>Unknown</strong> — no slot-selection/active-slot-index logic was located in the decompiled corpus; the 8 slots may correspond to 8 independent game save files (plausible, matches &quot;slot&quot; naming convention) or to an internal subsystem unrelated to player-facing save selection.</td><td>Open question.</td></tr><tr><td>Generation/sequence counters</td><td>None found inside the 16-byte header or within the parts of each 976-byte slot visible in the (all-zero) sample.</td><td>Cannot rule out a counter deeper inside the still-unmapped slot body.</td></tr></tbody></table>
+<h2>3. Save Writer, Reader &amp; Caller-Chain Architecture</h2>
+<h3>3.1 Methodology note (important, affects confidence throughout this section)</h3>
+<p><code>ghidra/callgraph.json</code> reports <strong>empty <code>callers</code> and <code>callees</code> arrays for every function in the save subsystem described below</strong> (<code>0x08010158</code>, <code>0x08010250</code>, <code>0x0801026c</code>, <code>0x08010320</code>, <code>0x08010490</code>, <code>0x080c2f88</code>, <code>0x080c3060</code>, <code>0x080c3100</code>), even though <code>ghidra/decompiled.c</code> plainly shows these functions calling each other. Every one of these functions ends its body with the pattern:</p>
+<pre><code>/* WARNING: Could not recover jumptable at 0x0xxxxxxx. Too many branches */
+/* WARNING: Treating indirect jump as call */
+(*UNRECOVERED_JUMPTABLE)();</code></pre>
+<p>This is the most likely explanation for the missing callgraph edges: these routines are reached through an indirect/tail-call dispatch (a jump table or task-trampoline) that Ghidra&#x27;s static analysis could not resolve into a direct <code>BL</code>, and the trace-derived <code>direct-calls.json</code> runtime overlay evidently did not observe this code path being exercised either (the capture for this release contains no paired <code>.ss</code> states — <code>states/</code> is empty for this cohort — so there is no runtime trace to confirm the real top-level caller).</p>
+<p><strong>Consequently, all caller/callee relationships below were mapped manually</strong>, by literal cross-referencing of <code>func_0x########(...)</code> / <code>FUN_########(...)</code> call-site text and address labels inside <code>ghidra/decompiled.c</code> — not by trusting <code>ghidra/callgraph.json</code> edges, which are empty for this entire subsystem. This is explicitly flagged per function below.</p>
+<h3>3.2 Seed candidates evaluated and ruled out</h3>
+<p><code>ghidra/save_related_functions.c</code> flagged <code>0x08005e80</code>, <code>0x08007b3c</code>, <code>0x08010158</code>, <code>0x08016238</code>, <code>0x0806a7ac</code>, <code>0x0806bcd8</code>, and <code>0x080c36e4</code> as &quot;MMIO-seed&quot; or 2-hop candidates. A full-corpus search of <code>ghidra/decompiled.c</code> for GBA save/cart-I/O markers (<code>0xe000000</code>/<code>0x0e000000</code> SRAM base, <code>0xd000000</code> EEPROM base, DMA3 control <code>0x040000d4</code>, Flash unlock bytes <code>0x5555</code>/<code>0x2aaa</code>, <code>WAITCNT</code> <code>0x04000204</code>) found <strong>exactly one hit</strong>, inside <code>0x08010158</code> (<code>*_DAT_080101f0 = 0xe000000;</code>). The other six seeds (<code>0x08005e80</code> jump-table dispatch over a sprite/OAM-like list, <code>0x08007b3c</code> a small lookup-table read, <code>0x08016238</code> a spatial proximity/collision scan over linked actor records, <code>0x0806a7ac</code> a 2-argument event-dispatch trampoline, <code>0x0806bcd8</code> a large state machine resembling enemy-AI / room-transition logic, <code>0x080c36e4</code> a signed 32-bit division routine) contain <strong>no</strong> SRAM/Flash/EEPROM address literals and are therefore classified <code>UNKNOWN / not save-related</code> — they are retained here only to document that they were checked and excluded, per the clean-room honesty requirement.</p>
+<h3>3.3 Function-by-function trace</h3>
+<h4><code>0x08010158</code> — Header check &amp; full-save (re)initialization orchestrator (role: <code>write</code> entry point / repair)</h4>
+<ul><li>Sets a global pointer to the literal SRAM base address: <code>*_DAT_080101f0 = 0xe000000;</code>.</li><li>Calls <code>0x08010250()</code> to read the current 16-byte header out of SRAM into a RAM scratch buffer.</li><li>Compares 3 fields of the header-in-RAM (<code>*_DAT_080101f4</code>, <code>_DAT_080101f4[1]</code>, masked <code>_DAT_080101f4[2]</code>)</li></ul>
+<p>against three &quot;expected&quot; constants (<code>_DAT_080101f8</code>, <code>iRam080101fc</code>, <code>uRam08010200</code>/<code>uRam08010204</code>).</p>
+<p><strong>The literal values of these expected constants are ROM data-section bytes not present in this decompilation dump — the exact expected header bitpattern cannot be stated</strong>, only that a mismatch triggers the branch below.</p>
+<ul><li>On mismatch, it writes the literal ASCII bytes <code>44 52 41 43 55 4c 41 20 41 47 42</code> (<code>&quot;DRACULA AGB&quot;</code>,</li></ul>
+<p>11 bytes) one byte at a time into the header buffer, calls <code>0x0801026c()</code> (header write+verify), then loops <code>uVar3</code> from 0 to 7 calling <code>0x08010320(uVar3)</code> once per slot — i.e. <strong>re-initializing the entire 16-byte header plus all 8 save slots</strong> whenever the header fails its sanity check.</p>
+<ul><li>How mapped: direct text read of the function body in <code>ghidra/decompiled.c</code> lines ~3235–3280; callgraph</li></ul>
+<p>edge absent (see §3.1).</p>
+<ul><li>RAM struct mutated: the header RAM mirror at <code>_DAT_080101f4</code> (bytes 0–10 set to the magic string).</li></ul>
+<h4><code>0x08010250</code> — Header read helper (role: <code>read</code>)</h4>
+<ul><li>Single statement: <code>func_0x080c2f88(*_DAT_08010264, _DAT_08010268, 0x10);</code> — reads/transfers exactly 16</li></ul>
+<p>bytes, matching the header size established in §2.</p>
+<ul><li>How mapped: text search for the only caller of this exact <code>0x10</code>-length transfer, <code>0x08010158</code>.</li></ul>
+<h4><code>0x0801026c</code> — Header write+verify retry loop (role: <code>write</code> / <code>checksum</code>-adjacent integrity loop)</h4>
+<ul><li>Runs <code>for (uVar4 = 0; uVar4 &lt; 10; uVar4++) { FUN_080c3060(write); if (FUN_080c3100(verify) == 0) break; }</code></li></ul>
+<p>— writes the 16-byte header buffer to SRAM and immediately reads it back for comparison, retrying up to 10 times until the verify call reports success (<code>0</code>).</p>
+<ul><li>Mutates a fallback/failure RAM flag (<code>piRam080102e8</code> family) only if all 10 attempts fail.</li><li>How mapped: sole caller found by text search is <code>0x08010158</code>.</li></ul>
+<h4><code>0x08010320(param_1 = slot_index 0..7)</code> — Per-slot checksum + write + verify (role: <code>serialize</code> / <code>checksum</code> / <code>write</code>)</h4>
+<ul><li>Computes <code>iVar6 = *_DAT_08010364 + (param_1 &amp; 0xff) * 0x3d0 + 0x10;</code> — the SRAM-mirror address of slot</li></ul>
+<p><code>param_1</code>.</p>
+<ul><li>Calls <code>0x08010490(puVar8)</code> to compute the slot&#x27;s checksum byte and stores the result at local offset <code>+9</code></li></ul>
+<p>of the slot buffer (<code>(&amp;stack0xfffffff9)[iVar1] = uVar3;</code>).</p>
+<ul><li>Runs the same write+verify retry pattern as <code>0x0801026c</code>, but with length <code>0x3d0</code> (976 bytes) instead of</li></ul>
+<p>16: <code>for (uVar5 = 0; uVar5 &lt; 10; uVar5++) { FUN_080c3060(write, 0x3d0); if (FUN_080c3100(verify, 0x3d0)==0) break; }</code>.</p>
+<ul><li>How mapped: sole caller found by text search is the 8-iteration loop inside <code>0x08010158</code>.</li><li>RAM struct mutated: slot buffer bytes <code>[0..0x3cf]</code> of slot <code>param_1</code>, specifically byte <code>+9</code> (checksum).</li></ul>
+<h4><code>0x08010490</code> — Checksum computation (role: <code>checksum</code>)</h4>
+<pre><code>cVar1 = 0;
+for (uVar2 = 0; uVar2 &lt;= _DAT_080104bc; uVar2++) cVar1 += *(char *)(param_1 + uVar2);
+return cVar1 - *(char *)(param_1 + 9);</code></pre>
+<ul><li>Sums bytes <code>[0.._DAT_080104bc]</code> (inclusive; upper bound is an uncaptured ROM data constant — **UNKNOWN</li></ul>
+<p>exact length<strong>) of the slot buffer, including whatever stale value currently sits at byte <code>+9</code>, then subtracts that same byte back out. The net effect: the returned value is the 8-bit sum of every byte in the covered range </strong>except** byte <code>+9</code>, regardless of what was previously stored there — a standard &quot;additive checksum with self-exclusion&quot; construction. The caller (<code>0x08010320</code>) stores this result at byte <code>+9</code>.</p>
+<ul><li>How mapped: sole caller found by text search is <code>0x08010320</code>.</li></ul>
+<h4><code>0x080c3060</code> — Raw byte-wise copy primitive (role: <code>write</code>, low-level I/O driver)</h4>
+<pre><code>*_DAT_080c3094 = *_DAT_080c3094 &amp; (ushort)_DAT_080c3098 | 3;   // IRQ-mask-style guard, 2-bit set
+while (iStack_c-- != -1) *puStack_10++ = *puStack_14++;         // plain 1-byte-at-a-time copy</code></pre>
+<ul><li>This is the actual hardware I/O driver for SRAM: a byte-granular copy loop (no 16/32-bit accesses),</li></ul>
+<p>exactly as required because GBA SRAM only supports 8-bit bus transactions. Used for both the 16-byte header write (<code>0x0801026c</code>) and the 976-byte slot write (<code>0x08010320</code>).</p>
+<ul><li>How mapped: both callers found by text search (<code>0x0801026c</code>, <code>0x08010320</code>); no callgraph edge recorded.</li></ul>
+<h4><code>0x080c3100</code> — Raw byte-wise verify/compare wrapper (role: <code>read</code> / integrity check)</h4>
+<ul><li>Same IRQ-guard pattern as <code>0x080c3060</code>, then delegates to the opaque, non-decompiled routine</li></ul>
+<p><code>0x080c31e8(param_1, param_2, param_3, iStack_10)</code> and returns its result (<code>0</code> presumably = match, matching the <code>if (iVar4 == 0) break;</code> success condition seen in both <code>0x0801026c</code> and <code>0x08010320</code>).</p>
+<ul><li>How mapped: both callers found by text search (<code>0x0801026c</code>, <code>0x08010320</code>); no callgraph edge recorded.</li></ul>
+<h4><code>0x080c31e8</code> — Opaque low-level transfer/compare primitive (role: <code>unknown</code>, likely final read-back/compare)</h4>
+<ul><li>Ghidra could not decompile a body for this address in this dump (<code>UNRECOVERED_JUMPTABLE</code> stub only). Its</li></ul>
+<p>exact semantics (byte compare vs. re-copy vs. BIOS call) are <strong>UNKNOWN</strong>; only its call signature and position in the retry loop are provable.</p>
+<h2>4. Magic Signatures &amp; Checksum / Integrity Algorithm</h2>
+<h3>4.1 Magic signature</h3>
+<table><thead><tr><th>Field</th><th>Value</th></tr></thead><tbody><tr><td>Offset</td><td><code>0x0000</code></td></tr><tr><td>Bytes (hex)</td><td><code>44 52 41 43 55 4c 41 20 41 47 42</code></td></tr><tr><td>ASCII</td><td><code>DRACULA AGB</code></td></tr><tr><td>Length</td><td>11 bytes</td></tr><tr><td>Written by</td><td><code>0x08010158</code> (literal byte-by-byte store, see §3.3)</td></tr><tr><td>Verified in code</td><td>Yes — exact byte sequence reproduced in decompiled C</td></tr><tr><td>Verified in <code>.sav</code></td><td>Yes — <strong>byte-identical</strong> match at offset <code>0x0000</code> in <code>saves/cap-00-future-0.sav</code></td></tr></tbody></table>
+<h3>4.2 Checksum algorithm</h3>
+<ul><li><strong>Algorithm:</strong> custom 8-bit additive &quot;sum excluding self&quot; (not CRC, not XOR, not two&#x27;s-complement sum).</li><li><strong>Formula:</strong> <code>stored_byte[+9] = (Σ byte[i] for i in [0, N]) mod 256</code>, where the sum in the decompiled code</li></ul>
+<p>literally includes the stale byte at <code>+9</code> and then subtracts it back out (net: sum of all <em>other</em> bytes in range <code>[0, N]</code>). <code>N = _DAT_080104bc</code>, a ROM constant not captured in this decompilation dump (exact value <strong>UNKNOWN</strong>).</p>
+<ul><li><strong>Stored offset:</strong> local slot offset <code>+9</code> (one checksum byte per 976-byte slot; 8 independent checksums,</li></ul>
+<p>no header-level or whole-file checksum was found).</p>
+<ul><li><strong>Endianness:</strong> N/A — single byte.</li><li><strong>Decompiled C proof:</strong> <code>0x08010490</code> (quoted in full in §3.3) plus its only caller <code>0x08010320</code>.</li></ul>
+<h3>4.3 Python verification against the real <code>.sav</code> file</h3>
+<p>Only one <code>.sav</code> sample exists in this workspace, and its slot bodies are entirely zero-filled (a freshly initialized, never-played save). This makes the checksum <strong>trivially satisfied for any candidate value of N</strong> (the sum of an all-zero range is 0 regardless of range length), so this sample can verify the <em>location</em> and <em>resting value</em> of the checksum byte, but <strong>cannot distinguish the exact coverage length <code>N</code></strong>. This limitation is stated explicitly rather than concealed.</p>
+<pre><code>$ python3 - &lt;&lt;&#x27;EOF&#x27;
+data = open(&#x27;saves/cap-00-future-0.sav&#x27;,&#x27;rb&#x27;).read()
+for i in range(8):
+    slot_start = 0x10 + i*0x3d0
+    chk_off = slot_start + 9
+    slot_body = data[slot_start:slot_start+0x3d0]
+    computed = (sum(slot_body) - slot_body[9]) &amp; 0xff   # sum over whole slot, excluding byte+9
+    stored   = data[chk_off]
+    print(f&quot;slot {i}: stored=0x{stored:02x} computed(any N&lt;=0x3cf)=0x{computed:02x} match={stored==computed}&quot;)
+EOF
+
+slot 0: stored=0x00 computed(any N&lt;=0x3cf)=0x00 match=True
+slot 1: stored=0x00 computed(any N&lt;=0x3cf)=0x00 match=True
+slot 2: stored=0x00 computed(any N&lt;=0x3cf)=0x00 match=True
+slot 3: stored=0x00 computed(any N&lt;=0x3cf)=0x00 match=True
+slot 4: stored=0x00 computed(any N&lt;=0x3cf)=0x00 match=True
+slot 5: stored=0x00 computed(any N&lt;=0x3cf)=0x00 match=True
+slot 6: stored=0x00 computed(any N&lt;=0x3cf)=0x00 match=True
+slot 7: stored=0x00 computed(any N&lt;=0x3cf)=0x00 match=True</code></pre>
+<p>Additionally confirmed structurally:</p>
+<pre><code>$ python3 - &lt;&lt;&#x27;EOF&#x27;
+data = open(&#x27;saves/cap-00-future-0.sav&#x27;,&#x27;rb&#x27;).read()
+assert data[0:11] == b&quot;DRACULA AGB&quot;
+assert data[11:16] == b&quot;\x00\x00\x00\x00\x00&quot;
+active_end = 0x10 + 8*0x3d0
+assert active_end == 0x1e90
+assert all(b == 0 for b in data[0x10:active_end])          # all 8 slots blank
+assert all(b == 0xff for b in data[active_end:])           # untouched SRAM tail
+print(&quot;header/slot geometry and fill-byte boundary confirmed exactly&quot;)
+EOF
+header/slot geometry and fill-byte boundary confirmed exactly</code></pre>
+<p><strong>Conclusion:</strong> magic signature, header size, slot count, slot stride, and checksum byte <em>position</em> are <code>CONFIRMED_VERIFIED</code>. The checksum <em>coverage length</em> and the comparison semantics at load time (is the checksum ever re-checked on boot/load, or only recomputed on every write?) remain <code>CONFIRMED_STATIC</code> / <code>UNKNOWN</code> respectively, since no load-side consumer of this checksum was located in the corpus.</p>
+<h2>5. Complete Field Map Table</h2>
+<table><thead><tr><th>Offset (hex)</th><th>Size</th><th>Type / Endianness</th><th>RAM Mirror Addr</th><th>Writers / Callers</th><th>Readers</th><th>Observed Values in <code>.sav</code></th><th>Confidence</th><th>How Mapped &amp; Updated</th></tr></thead><tbody><tr><td><code>0x0000</code></td><td>11</td><td>ASCII</td><td><code>_DAT_080101f4</code> (SRAM-mapped, <code>0x0E000000</code>-based)</td><td><code>0x08010158</code> (literal byte stores) → <code>0x0801026c</code> → <code>0x080c3060</code>/<code>0x080c3100</code></td><td><code>0x08010250</code>/<code>0x080c2f88</code> (header read-back)</td><td><code>&quot;DRACULA AGB&quot;</code></td><td>CONFIRMED_VERIFIED</td><td>Literal byte assignments in <code>0x08010158</code>; byte-identical in sample.</td></tr><tr><td><code>0x000B</code></td><td>5</td><td>bytes (padding)</td><td>same header mirror, +0xB</td><td><code>0x08010158</code> (implicitly left as whatever the RAM scratch buffer held — not explicitly zeroed in the visible code, but observed as zero)</td><td><code>0x08010250</code></td><td><code>00 00 00 00 00</code></td><td>CONFIRMED_STATIC (explicit zero-write not located; value only confirmed empirically)</td><td>Byte range observed in sample; no explicit store instruction found for these 5 bytes in the decompiled header-write path.</td></tr><tr><td><code>0x0010</code>–<code>0x1E8F</code></td><td>7808 (8×976)</td><td>8 fixed-size records</td><td>per-slot RAM buffer, base <code>*_DAT_08010364 + slot*0x3d0 + 0x10</code></td><td><code>0x08010320</code> (slot writer, called 8× from <code>0x08010158</code>)</td><td>unidentified — no slot-reader function located</td><td>all-zero in this sample</td><td>CONFIRMED_VERIFIED (geometry/offsets), UNKNOWN (semantic field contents)</td><td>Arithmetic in <code>0x08010320</code>; stride and base verified against sample&#x27;s active-range boundary.</td></tr><tr><td><code>0x0010+9</code> (slot 0 checksum, and <code>+0x3d0*n+9</code> for slots 1-7)</td><td>1</td><td>u8</td><td>slot buffer <code>+9</code></td><td><code>0x08010490</code> (compute) called from <code>0x08010320</code> (store)</td><td>unidentified</td><td><code>0x00</code> for all 8 slots</td><td>CONFIRMED_VERIFIED (position &amp; resting value); CONFIRMED_STATIC (exact algorithm/range <code>N</code>)</td><td>Decompiled formula in §4.2; numerically confirmed location, but all-zero sample cannot disambiguate coverage length <code>N</code>.</td></tr><tr><td><code>0x0010+[0..8]</code> and <code>0x0010+[10..0x3cf]</code> (per slot, excluding byte +9)</td><td>975</td><td>unknown (gameplay fields: unmapped)</td><td>slot buffer</td><td><code>0x08010320</code> byte-copy (bulk, undifferentiated)</td><td>unidentified</td><td>all-zero</td><td>UNKNOWN</td><td>No individual field boundaries could be derived — the bulk copy in <code>0x08010320</code> treats the whole 976 bytes opaquely; only the checksum byte has a distinct, individually-addressed store. A non-blank save (post-gameplay) is required to map any further fields.</td></tr><tr><td><code>0x1E90</code>–<code>0x7FFF</code></td><td>5168</td><td>unused SRAM tail</td><td>n/a</td><td>none found</td><td>none found</td><td>all <code>0xFF</code></td><td>CONFIRMED_VERIFIED</td><td>Directly observed in sample; no code references any address in this range as a slot/header target.</td></tr></tbody></table>
+<h2>6. Save Fuzzing &amp; Counterfactual Verification Plan</h2>
+<p>No paired <code>.ss</code> emulator save states exist yet for this release (<code>states/</code> is empty for this legacy checkpoint cohort). The following targets are written to be run as soon as paired pre/post <code>.ss</code> states become available for this title, per the project&#x27;s mandatory paired-save-state policy.</p>
+<table><thead><tr><th>#</th><th>Offset(s)</th><th>Mutation</th><th>Checksum repair needed?</th><th>Predicted observable effect</th><th>Rationale / what it tests</th></tr></thead><tbody><tr><td>1</td><td><code>0x0000</code>–<code>0x000A</code></td><td>Flip one byte of <code>&quot;DRACULA AGB&quot;</code> (e.g. <code>0x0000: 0x44 → 0x00</code>)</td><td>No — the game itself will rewrite the checksum/header as part of its repair path</td><td>On next boot, <code>0x08010158</code>&#x27;s header-mismatch branch should fire, causing the game to <strong>rewrite the full 16-byte header AND all 8 slots back to the initialized state</strong> (observable as any pre-existing slot progress reverting to the blank/default state).</td><td>Directly tests the header mismatch→full-reinit branch traced in §3.3; this is the highest-confidence prediction since the branch condition and its body are both fully decompiled.</td></tr><tr><td>2</td><td><code>0x0019</code> (slot 0 checksum byte)</td><td>Set to an arbitrary wrong value, e.g. <code>0xFF</code>, while leaving the rest of slot 0 untouched</td><td>Not pre-repaired by the fuzz (intentionally left wrong)</td><td><strong>Unknown/open</strong> — no load-time consumer of this checksum was located in the corpus, so it is unproven whether the game validates it on boot/load at all, or only recomputes it on every write (in which case the corrupted value would simply be silently overwritten on the next save and have <em>no</em> visible effect until then).</td><td>This test is specifically designed to resolve the open question in §3.3/§4.3: does anything ever <em>read</em> and <em>validate</em> this checksum, or is it write-only bookkeeping?</td></tr><tr><td>3</td><td><code>0x03E0</code> (start of slot 1, byte 0)</td><td>Write a recognizable marker pattern, e.g. 16 bytes of <code>0xAA</code></td><td>Recompute slot 1&#x27;s checksum at <code>0x03E9</code> only if the game is observed to validate it per test #2</td><td>If slots are genuinely independent save files, the marker should appear/affect only &quot;save file 2&quot; in-game and not bleed into neighboring slots.</td><td>Validates the <code>0x3D0</code>-byte slot stride and slot independence empirically, beyond the purely arithmetic confirmation already done against the blank sample.</td></tr><tr><td>4</td><td><code>0x1E90</code>–<code>0x1E9F</code> (first 16 bytes beyond the active region)</td><td>Flip from <code>0xFF</code> to <code>0x00</code></td><td>No</td><td>Predicted <strong>no observable effect</strong> on gameplay or save integrity, since no code path in the corpus ever addresses this region.</td><td>Tests whether the declared &quot;unused SRAM tail&quot; boundary is truly dead space or merely unanalyzed in this trace-guided decompilation.</td></tr></tbody></table>
+<p>All four tests should be executed with a <code>gameplay.ss</code> captured immediately before the mutation and a <code>final.ss</code> captured after reload, per the paired-save-state retention policy, so the exact RAM-mirror state at <code>_DAT_080101f4</code> / slot buffers can be inspected directly rather than inferred only from the flushed <code>.sav</code> bytes.</p>
+</div>
+</main>
+  <footer>gbakit GBA Format Reference &middot; <a href="https://github.com/JidouGhost-TL/gbakit">GitHub: JidouGhost-TL/gbakit</a> &middot; Clean-room GBA binary format specs &amp; Rust toolkit.</footer>
+</body>
+</html>

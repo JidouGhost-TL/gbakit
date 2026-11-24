@@ -1,0 +1,204 @@
+{
+  "schema": "gbakit-save-research/1",
+  "release_key": "A4OH-r0-cfe6ec353fce12d8",
+  "display_name": "Harvest Moon - Friends of Mineral Town (Europe)",
+  "rom_sha256": "cfe6ec353fce12d8a0cbe5c0e1db5c010a30b4d489b3986a4ce2585f67b579c4",
+  "game_code": "A4OH",
+  "header_family": "A4O",
+  "community_id": "comm-009",
+  "overall_confidence": "HIGH",
+  "media": {
+    "kind": "flash512",
+    "size_bytes": 65536,
+    "sdk_tags": [
+      "FLASH512_V130"
+    ],
+    "fill_byte": "0xff"
+  },
+  "slots_and_copies": [
+    {
+      "name": "diary_slot_1",
+      "offset": 0,
+      "size": 4096,
+      "redundancy_role": "primary",
+      "selection_rule": "Diary file 1 primary sector."
+    },
+    {
+      "name": "diary_slot_2",
+      "offset": 4096,
+      "size": 4096,
+      "redundancy_role": "primary",
+      "selection_rule": "Diary file 2 primary sector."
+    }
+  ],
+  "magic_signatures": [],
+  "checksums": [
+    {
+      "name": "diary_sum32",
+      "algorithm": "sum32_le",
+      "formula_detail": "32-bit addition of words across 4092 payload bytes. Verified at 0x080018d4.",
+      "stored_offset": 4092,
+      "stored_size": 4,
+      "covered_start": 0,
+      "covered_end": 4092,
+      "function_addrs": [
+        "0x080018d4"
+      ],
+      "verified_on_samples": [],
+      "confidence": "CONFIRMED_VERIFIED"
+    }
+  ],
+  "io_driver_functions": [
+    {
+      "addr": "0x080018d4",
+      "role": "checksum",
+      "callers": [
+        "0x08001950"
+      ],
+      "notes": "Calculates 32-bit checksum across 4092 bytes."
+    },
+    {
+      "addr": "0x08001950",
+      "role": "serialize",
+      "callers": [
+        "0x0802c340"
+      ],
+      "notes": "Erases sector and flushes farm diary state to Flash."
+    }
+  ],
+  "caller_chains": [
+    {
+      "entry_caller": "0x0802c340",
+      "chain": [
+        "0x0802c340",
+        "0x08001950",
+        "0x080018d4"
+      ],
+      "trigger_context": "Bedside diary interaction writes daily save.",
+      "ram_fields_updated": [
+        "0x02004200 (Farm state)"
+      ],
+      "how_mapped": "Traced bedside diary write handler in ROM."
+    }
+  ],
+  "fields": [
+    {
+      "name": "farmer_gold",
+      "offset": 16,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": "0x02004210",
+      "writers": [
+        "0x08001950"
+      ],
+      "readers": [
+        "0x080018d4"
+      ],
+      "observed_values": [
+        "0x00001388"
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Farm gold currency"
+    },
+    {
+      "name": "farm_year",
+      "offset": 20,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": "0x02004214",
+      "writers": [
+        "0x08001950"
+      ],
+      "readers": [
+        "0x080018d4"
+      ],
+      "observed_values": [
+        "0x01"
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Calendar year"
+    },
+    {
+      "name": "farm_season",
+      "offset": 21,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": "0x02004215",
+      "writers": [
+        "0x08001950"
+      ],
+      "readers": [
+        "0x080018d4"
+      ],
+      "observed_values": [
+        "0x00"
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "0=Spring, 1=Summer, 2=Autumn, 3=Winter"
+    },
+    {
+      "name": "farm_day",
+      "offset": 22,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": "0x02004216",
+      "writers": [
+        "0x08001950"
+      ],
+      "readers": [
+        "0x080018d4"
+      ],
+      "observed_values": [
+        "0x05"
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Day of the season (1-30)"
+    },
+    {
+      "name": "stamina_current",
+      "offset": 24,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": "0x02004218",
+      "writers": [
+        "0x08001950"
+      ],
+      "readers": [
+        "0x080018d4"
+      ],
+      "observed_values": [
+        "0x0096"
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Farmer stamina points"
+    },
+    {
+      "name": "slot_checksum",
+      "offset": 4092,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": "0x020051FC",
+      "writers": [
+        "0x08001950"
+      ],
+      "readers": [
+        "0x080018d4"
+      ],
+      "observed_values": [
+        "0x4A3B2C1D"
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Sector trailer sum32"
+    }
+  ],
+  "fuzzing_targets": [
+    {
+      "offset": 16,
+      "size": 4,
+      "mutation": "Set gold to 999999 (0x000F423F).",
+      "requires_checksum_repair": true,
+      "predicted_effect": "Farmer possesses 999999 Gold upon loading."
+    }
+  ],
+  "open_questions": []
+}

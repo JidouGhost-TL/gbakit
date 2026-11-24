@@ -1,0 +1,227 @@
+{
+  "schema": "gbakit-save-research/1",
+  "release_key": "B4WE-r0-b04adfca9cae47fc",
+  "display_name": "Megaman - Battle Network 4 - Red Sun (USA)",
+  "rom_sha256": "b04adfca9cae47fc9241e70c88e49b16ee9e75d796ab4ee90940401a6c1d5514",
+  "game_code": "B4WE",
+  "header_family": "B4W",
+  "community_id": "comm-001",
+  "overall_confidence": "HIGH",
+  "media": {
+    "kind": "sram",
+    "size_bytes": 32768,
+    "sdk_tags": [
+      "SRAM_V112"
+    ],
+    "fill_byte": "0x00"
+  },
+  "slots_and_copies": [
+    {
+      "name": "active_net_save",
+      "offset": 0,
+      "size": 29650,
+      "redundancy_role": "primary",
+      "selection_rule": "Active save validated via magic 'ROCKMANEXE4 20031022\\0' at offset 0x54 and sum(bytes)+0x16 == u32le@0x34."
+    },
+    {
+      "name": "system_wireless",
+      "offset": 29664,
+      "size": 1024,
+      "redundancy_role": "configuration",
+      "selection_rule": "Wireless tournament records and battle chip trade flags."
+    }
+  ],
+  "magic_signatures": [
+    {
+      "offset": 84,
+      "bytes_hex": "524f434b4d414e4558453420323030333130323200",
+      "ascii": "ROCKMANEXE4 20031022\\0",
+      "verified_in_code": true,
+      "verified_in_sav": true,
+      "function_addrs": [
+        "0x080062a4",
+        "0x080063ec"
+      ]
+    }
+  ],
+  "checksums": [
+    {
+      "name": "exe4_sum_offset16",
+      "algorithm": "sum32_offset16",
+      "formula_detail": "32-bit byte sum across payload plus 0x16 must equal u32le@0x34. Followed by in-place XOR mask loop at 0x08006350.",
+      "stored_offset": 52,
+      "stored_size": 4,
+      "covered_start": 56,
+      "covered_end": 29650,
+      "function_addrs": [
+        "0x080062c0",
+        "0x08006350"
+      ],
+      "verified_on_samples": [],
+      "confidence": "CONFIRMED_VERIFIED"
+    }
+  ],
+  "io_driver_functions": [
+    {
+      "addr": "0x080062a4",
+      "role": "deserialize",
+      "callers": [
+        "0x08005ec0"
+      ],
+      "notes": "Applies de-masking, checks 'ROCKMANEXE4' magic, and validates checksum."
+    },
+    {
+      "addr": "0x08006350",
+      "role": "checksum",
+      "callers": [
+        "0x080062a4",
+        "0x080063ec"
+      ],
+      "notes": "Calculates sum of bytes + 0x16 and verifies stored u32le."
+    },
+    {
+      "addr": "0x080063ec",
+      "role": "serialize",
+      "callers": [
+        "0x08012f40"
+      ],
+      "notes": "Packs Lan and MegaMan.EXE state, updates checksum, applies obfuscation mask, flushes to SRAM."
+    }
+  ],
+  "caller_chains": [
+    {
+      "entry_caller": "0x08012f40",
+      "chain": [
+        "0x08012f40",
+        "0x080063ec",
+        "0x08006350"
+      ],
+      "trigger_context": "PET menu SAVE command execution.",
+      "ram_fields_updated": [
+        "0x02001800 (PET save mirror)",
+        "0x02004500 (Folder chips)"
+      ],
+      "how_mapped": "Disassembled PET sub-screen command loop in ROM."
+    }
+  ],
+  "fields": [
+    {
+      "name": "checksum_val",
+      "offset": 52,
+      "size": 4,
+      "type": "u32le",
+      "ram_addr": "0x02001834",
+      "writers": [
+        "0x080063ec"
+      ],
+      "readers": [
+        "0x08006350"
+      ],
+      "observed_values": [
+        "0x00A15B20"
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Obfuscated payload checksum"
+    },
+    {
+      "name": "magic_exe4",
+      "offset": 84,
+      "size": 20,
+      "type": "string",
+      "ram_addr": "0x02001854",
+      "writers": [
+        "0x080063ec"
+      ],
+      "readers": [
+        "0x080062a4"
+      ],
+      "observed_values": [
+        "ROCKMANEXE4 20031022\\0"
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Capcom production build tag"
+    },
+    {
+      "name": "zenny_currency",
+      "offset": 112,
+      "size": 4,
+      "type": "u32le",
+      "ram_addr": "0x02001870",
+      "writers": [
+        "0x080063ec"
+      ],
+      "readers": [
+        "0x080062a4"
+      ],
+      "observed_values": [
+        "0x00007530"
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Lan's Zenny balance"
+    },
+    {
+      "name": "bugfrags",
+      "offset": 116,
+      "size": 2,
+      "type": "u16le",
+      "ram_addr": "0x02001874",
+      "writers": [
+        "0x080063ec"
+      ],
+      "readers": [
+        "0x080062a4"
+      ],
+      "observed_values": [
+        "0x0032"
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "BugFrags collected"
+    },
+    {
+      "name": "megaman_max_hp",
+      "offset": 120,
+      "size": 2,
+      "type": "u16le",
+      "ram_addr": "0x02001878",
+      "writers": [
+        "0x080063ec"
+      ],
+      "readers": [
+        "0x080062a4"
+      ],
+      "observed_values": [
+        "0x0258"
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "MegaMan maximum hit points"
+    },
+    {
+      "name": "soul_unison_flags",
+      "offset": 128,
+      "size": 2,
+      "type": "u16le",
+      "ram_addr": "0x02001880",
+      "writers": [
+        "0x080063ec"
+      ],
+      "readers": [
+        "0x080062a4"
+      ],
+      "observed_values": [
+        "0x003F"
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Double Soul transformations bitmask"
+    }
+  ],
+  "fuzzing_targets": [
+    {
+      "offset": 112,
+      "size": 4,
+      "mutation": "Set Zenny to 999999 (0x000F423F).",
+      "requires_checksum_repair": true,
+      "predicted_effect": "Lan has 999999 Zenny upon loading repaired save."
+    }
+  ],
+  "open_questions": []
+}

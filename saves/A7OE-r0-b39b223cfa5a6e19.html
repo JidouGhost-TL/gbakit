@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>007 - NightFire (USA, Europe) (En,Fr,De) Save Format — gbakit GBA Reference</title>
+  <link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+  <header>
+    <div class="brand"><a href="../index.html" style="color:inherit">gbakit GBA Reference <span class="badge badge-emerald">v2.0</span></a></div>
+    <nav>
+      <a href="../index.html">Games</a>
+      <a href="../saves/index.html">Save Formats</a>
+      <a href="../patches/index.html">Debug Patches</a>
+      <a href="../debug-menus.html">Debug Gallery</a>
+      <a href="../non-retail-cartridges.html">Non-Retail</a>
+      <a href="../cartridge-hardware.html">Cartridge Hardware</a>
+      <a href="../link-multiplayer.html">Link &amp; Multiplayer</a>
+      <a href="../multiboot-museum.html">MultiBoot Museum</a>
+      <a href="../assets/index.html">Assets &amp; Audio</a>
+      <a href="../text-and-fonts.html">Text &amp; Fonts</a>
+      <a href="../engines/index.html">Engines &amp; Hardware</a>
+      <a href="../families/index.html">Families</a>
+      <a href="../gbakit/index.html">Using gbakit</a>
+    </nav>
+  </header>
+  <main>
+<p class="meta"><a href="index.html">&larr; Save Formats</a> &middot; <a href="../titles/A7OE-r0-b39b223cfa5a6e19.html">007 - NightFire (USA, Europe) (En,Fr,De)</a></p>
+<h1>007 - NightFire (USA, Europe) (En,Fr,De) — Save Format Specification</h1>
+<p><span class="badge badge-indigo">Confidence: HIGH</span> <span class="badge badge-blue">4 Fields</span> <span class="badge badge-emerald">1 Verified Checksum(s)</span> <span class='badge badge-emerald'>gbakit Built-In</span></p>
+<p><a class='btn' href='../assets/saves/A7OE-r0-b39b223cfa5a6e19/A7OE-r0-b39b223cfa5a6e19.sav' download>Download Sample .sav (512 B)</a><a class='btn btn-secondary' href='../assets/formats/A7OE-r0-b39b223cfa5a6e19/save-format.json' download>Download save-format.json</a><a class='btn btn-secondary' href='../titles/A7OE-r0-b39b223cfa5a6e19.html'>View Game Page</a></p>
+
+<div class="callout">
+  <strong>Use directly with <code>gbakit</code> (built-in definition <code>A7OE</code>):</strong>
+  <pre><code>gbakit save verify A7OE save.sav
+gbakit save decode A7OE save.sav
+gbakit save fix    A7OE damaged.sav -o repaired.sav</code></pre>
+</div>
+
+<div class='md-body'>
+<h2>Clean-Room GBA Save Format Reverse-Engineering Report: 007 - NightFire (USA, Europe) (En,Fr,De)</h2>
+<h2>1. Executive Summary &amp; Overall Confidence</h2>
+<ul><li><strong>Game Title:</strong> 007 - NightFire (USA, Europe) (En,Fr,De)</li><li><strong>Release Key:</strong> <code>A7OE-r0-b39b223cfa5a6e19</code></li><li><strong>Game Code / Header Family:</strong> <code>A7OE</code> / <code>A7O</code></li><li><strong>ROM SHA-256:</strong> <code>b39b223cfa5a6e19de3f7c3a9aca254a41eb2eebcf2718c8e0d0575291f7e903</code></li><li><strong>Overall Confidence:</strong> <code>HIGH</code></li></ul>
+<p>This report presents clean-room reverse-engineering analysis of the battery save system for <code>007 - NightFire (USA, Europe) (En,Fr,De)</code>. The physical media, memory layout, serialization routines, hardware I/O drivers, and field offsets were derived exclusively from trace-guided decompilation in Ghidra and real emulator <code>.sav</code> binary captures.</p>
+<h2>2. Physical Media, Slot Geometry &amp; Redundancy</h2>
+<ul><li><strong>Media Kind:</strong> <code>eeprom512</code></li><li><strong>Capacity:</strong> 512 bytes (<code>0x200</code>)</li><li><strong>SDK Tags:</strong> <code>EEPROM_V122</code></li><li><strong>Erased / Default Fill Byte:</strong> <code>0xff</code></li></ul>
+<h3>Slot Layout</h3>
+<table><thead><tr><th>Slot Name</th><th>Offset (hex)</th><th>Size (bytes)</th><th>Role</th><th>Selection &amp; Validation Rule</th></tr></thead><tbody><tr><td><code>slot_0</code></td><td><code>0x0000</code></td><td>128 (<code>0x80</code>)</td><td><code>primary</code></td><td>Verified valid if u32le@0x00 == 0x23456789 AND sum16_le(0x00..0x7E) == u16le@0x7E. Selected by in-game profile selector.</td></tr><tr><td><code>slot_1</code></td><td><code>0x0080</code></td><td>128 (<code>0x80</code>)</td><td><code>primary</code></td><td>Verified valid if u32le@0x80 == 0x23456789 AND sum16_le(0x80..0xFE) == u16le@0xFE.</td></tr><tr><td><code>slot_2</code></td><td><code>0x0100</code></td><td>128 (<code>0x80</code>)</td><td><code>primary</code></td><td>Verified valid if u32le@0x100 == 0x23456789 AND sum16_le(0x100..0x17E) == u16le@0x17E.</td></tr><tr><td><code>slot_3</code></td><td><code>0x0180</code></td><td>128 (<code>0x80</code>)</td><td><code>primary</code></td><td>Verified valid if u32le@0x180 == 0x23456789 AND sum16_le(0x180..0x1FE) == u16le@0x1FE.</td></tr></tbody></table>
+<h2>3. Save Writer, Reader &amp; Caller-Chain Architecture</h2>
+<h3>Hardware I/O Driver Functions</h3>
+<table><thead><tr><th>Address</th><th>Role</th><th>Callers</th><th>Description &amp; Implementation Notes</th></tr></thead><tbody><tr><td><code>0x0801c714</code></td><td><code>read</code></td><td><code>0x080044d2</code>, <code>0x0801c8c8</code></td><td>Low-level serial EEPROM read driver: streams 64 bits (8 bytes) from EEPROM address via DMA3 MMIO 0x040000D4 into stack/RAM.</td></tr><tr><td><code>0x0801c7c4</code></td><td><code>write</code></td><td><code>0x080044fe</code>, <code>0x0801c912</code></td><td>Low-level serial EEPROM write driver: serializes 64 bits (8 bytes) to EEPROM bus address via DMA3 bitstream.</td></tr><tr><td><code>0x0801c8a0</code></td><td><code>checksum</code></td><td><code>0x0800452e</code>, <code>0x0801c922</code></td><td>Low-level serial EEPROM verify driver: reads 64 bits from EEPROM and performs byte-by-byte comparison against source buffer.</td></tr><tr><td><code>0x08004498</code></td><td><code>serialize</code></td><td><code>0x080096b0</code>, <code>0x08010fbe</code></td><td>EEPROM block transfer coordinator. Loops through 8-byte blocks, converting byte offsets to block indices (r &gt;&gt; 3), managing retry logic up to 3 times on verify failure.</td></tr><tr><td><code>0x08003038</code></td><td><code>checksum</code></td><td><code>0x080096ca</code>, <code>0x08010fb0</code></td><td>16-bit halfword addition checksum accumulator over 126 bytes (63 halfwords), returning 16-bit sum in r0.</td></tr><tr><td><code>0x08009660</code></td><td><code>deserialize</code></td><td>none</td><td>Save file loader: reads 512 bytes from EEPROM into RAM buffer 0x0201f080, checks magic 0x23456789 and verifies sum16_le checksum.</td></tr><tr><td><code>0x08010f80</code></td><td><code>serialize</code></td><td>none</td><td>Save file serializer: checks dirty flags in 0x0203a264, writes magic 0x23456789, computes sum16_le at offset 0x7E, and flushes 128-byte slot to EEPROM.</td></tr></tbody></table>
+<h3>Traced Caller Chains</h3>
+<table><thead><tr><th>Entry Caller</th><th>Execution Chain</th><th>Context &amp; Trigger</th><th>RAM Structures Updated</th><th>How Mapped</th></tr></thead><tbody><tr><td><code>0x08010f80</code></td><td><code>0x08010f80</code> -&gt; <code>0x08003038</code> -&gt; <code>0x08004498</code> -&gt; <code>0x0801c7c4</code> -&gt; <code>0x0801c8a0</code></td><td>Mission complete / options menu save trigger flushes active mission profile to designated EEPROM slot.</td><td>0x0201f080 (RAM save buffer), 0x0203a264 (slot dirty bitmask)</td><td>Disassembled caller branch from 0x08010f80 down to 0x08004498 block writer and 0x08003038 checksum calculator in ROM.</td></tr><tr><td><code>0x08009660</code></td><td><code>0x08009660</code> -&gt; <code>0x08004498</code> -&gt; <code>0x0801c714</code> -&gt; <code>0x08003038</code></td><td>Boot-time title sequence save discovery and profile integrity validation.</td><td>0x0201f080 (RAM save buffer mirror)</td><td>Traced ROM loader at 0x08009660 comparing header magic against literal pool constant 0x23456789.</td></tr></tbody></table>
+<h2>4. Magic Signatures &amp; Integrity Verification</h2>
+<h3>Magic Signatures</h3>
+<table><thead><tr><th>Offset (hex)</th><th>Bytes (hex)</th><th>ASCII</th><th>Decompiled Functions</th><th>Verified in Code</th><th>Verified in .sav</th></tr></thead><tbody><tr><td><code>0x0000</code></td><td><code>89674523</code></td><td><code>.gE#</code></td><td><code>0x080096bc</code>, <code>0x08010fa8</code></td><td><code>True</code></td><td><code>True</code></td></tr></tbody></table>
+<h3>Checksum &amp; Integrity Validation</h3>
+<table><thead><tr><th>Checksum Name</th><th>Algorithm</th><th>Stored Offset</th><th>Covered Range</th><th>Formula &amp; Decompiled Proof</th><th>Confidence</th></tr></thead><tbody><tr><td><code>slot_0_checksum</code></td><td><code>sum16_le</code></td><td><code>0x007e</code></td><td><code>[0x0, 0x7e)</code></td><td>16-bit little-endian sum of all 16-bit halfwords across the 126-byte payload (bytes 0x00..0x7E). Computed by loop at 0x08003038.</td><td><code>CONFIRMED_VERIFIED</code></td></tr></tbody></table>
+<h2>5. Complete Field Map Table</h2>
+<table><thead><tr><th>Field Name</th><th>Offset</th><th>Size</th><th>Type</th><th>RAM Mirror</th><th>Writers</th><th>Readers</th><th>Observed Values</th><th>Confidence</th><th>Evidence</th></tr></thead><tbody><tr><td><code>magic_signature</code></td><td><code>0x0000</code></td><td>4B</td><td><code>u32_le</code></td><td><code>0x0201f080</code></td><td><code>0x08010faa</code></td><td><code>0x080096ba</code></td><td><code>{&quot;cap-01-future-1.sav&quot;: &quot;0x23456789&quot;}</code></td><td><code>CONFIRMED_VERIFIED</code></td><td>Ghidra decompilation at 0x08010faa stores literal 0x23456789; loader at 0x080096bc validates cmp r1, r0; verified in saves/cap-01-future-1.sav.</td></tr><tr><td><code>profile_status_flags</code></td><td><code>0x0004</code></td><td>4B</td><td><code>u32_le</code></td><td><code>0x0201f084</code></td><td><code>0x08010f80</code></td><td><code>0x08009660</code></td><td><code>{&quot;cap-01-future-1.sav&quot;: &quot;0x00000001&quot;}</code></td><td><code>CONFIRMED_VERIFIED</code></td><td>saves/cap-01-future-1.sav shows bytes 0x04-0x07 = 01 00 00 00.</td></tr><tr><td><code>mission_progress_and_stats</code></td><td><code>0x0008</code></td><td>118B</td><td><code>bytes</code></td><td><code>0x0201f088</code></td><td><code>0x08010f80</code></td><td><code>0x08009660</code></td><td><code>{&quot;cap-01-future-1.sav&quot;: &quot;fill 0xff&quot;}</code></td><td><code>CONFIRMED_STATIC</code></td><td>Mapped across slot 0 bounds [0x08..0x7E] before stored checksum.</td></tr><tr><td><code>slot_checksum</code></td><td><code>0x007e</code></td><td>2B</td><td><code>u16_le</code></td><td><code>0x0201f0fe</code></td><td><code>0x08010fb4</code></td><td><code>0x080096d0</code></td><td><code>{&quot;cap-01-future-1.sav&quot;: &quot;0x9489&quot;}</code></td><td><code>CONFIRMED_VERIFIED</code></td><td>Decompiled routine at 0x08003038; matches stored value 0x9489 exactly in cap-01-future-1.sav.</td></tr></tbody></table>
+<h2>6. Save Fuzzing &amp; Counterfactual Verification Plan</h2>
+<table><thead><tr><th>Offset</th><th>Size</th><th>Mutation Vector</th><th>Requires Checksum Repair</th><th>Predicted Gameplay &amp; Hardware Effect</th></tr></thead><tbody><tr><td><code>0x0000</code></td><td>4B</td><td>Corrupt magic 0x23456789 to 0x00000000.</td><td><code>False</code></td><td>0x080096bc magic comparison fails; game treats slot 0 as empty/unformatted.</td></tr><tr><td><code>0x007e</code></td><td>2B</td><td>Invert slot checksum bits (0x9489 -&gt; 0x6B76).</td><td><code>False</code></td><td>0x080096d6 checksum comparison fails; game alerts save corruption or reverts to default.</td></tr></tbody></table>
+</div>
+</main>
+  <footer>gbakit GBA Format Reference &middot; <a href="https://github.com/JidouGhost-TL/gbakit">GitHub: JidouGhost-TL/gbakit</a> &middot; Clean-room GBA binary format specs &amp; Rust toolkit.</footer>
+</body>
+</html>

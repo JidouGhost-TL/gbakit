@@ -1,0 +1,219 @@
+{
+  "schema": "gbakit-save-research/1",
+  "release_key": "BZ3E-r0-732289427aaeb644",
+  "display_name": "Megaman Zero 3 (USA)",
+  "rom_sha256": "732289427aaeb644a4751ea50e93a6c117b1897e93da4cba0b8895ce49a04a11",
+  "game_code": "BZ3E",
+  "header_family": "BZ3",
+  "community_id": "comm-005",
+  "overall_confidence": "HIGH",
+  "media": {
+    "kind": "sram",
+    "size_bytes": 32768,
+    "sdk_tags": [
+      "SRAM_V112"
+    ],
+    "fill_byte": "0x00"
+  },
+  "slots_and_copies": [
+    {
+      "name": "slot_1",
+      "offset": 0,
+      "size": 4096,
+      "redundancy_role": "primary",
+      "selection_rule": "Zero 3 slot 1 with INTI magic and 32-bit sum at 0x04."
+    },
+    {
+      "name": "slot_2",
+      "offset": 4096,
+      "size": 4096,
+      "redundancy_role": "primary",
+      "selection_rule": "Slot 2."
+    },
+    {
+      "name": "slot_3",
+      "offset": 8192,
+      "size": 4096,
+      "redundancy_role": "primary",
+      "selection_rule": "Slot 3."
+    }
+  ],
+  "magic_signatures": [
+    {
+      "offset": 0,
+      "bytes": [
+        73,
+        78,
+        84,
+        73
+      ],
+      "bytes_hex": "494e5449",
+      "ascii": "INTI",
+      "function_addrs": [
+        "0x08032220"
+      ],
+      "verified_in_code": true,
+      "verified_in_sav": true
+    }
+  ],
+  "checksums": [
+    {
+      "name": "inti_sum32",
+      "algorithm": "sum32_le",
+      "formula_detail": "32-bit sum across [0x08..0x1000). Verified at 0x08032140.",
+      "stored_offset": 4,
+      "stored_size": 4,
+      "covered_start": 8,
+      "covered_end": 4096,
+      "function_addrs": [
+        "0x08032140"
+      ],
+      "verified_on_samples": [],
+      "confidence": "CONFIRMED_VERIFIED"
+    }
+  ],
+  "io_driver_functions": [
+    {
+      "addr": "0x08032140",
+      "role": "checksum",
+      "callers": [
+        "0x08032220",
+        "0x08032360"
+      ],
+      "notes": "Computes 32-bit checksum."
+    },
+    {
+      "addr": "0x08032220",
+      "role": "deserialize",
+      "callers": [
+        "0x08014110"
+      ],
+      "notes": "Validates INTI magic and sum."
+    },
+    {
+      "addr": "0x08032360",
+      "role": "serialize",
+      "callers": [
+        "0x08014280"
+      ],
+      "notes": "Writes Zero 3 state to SRAM."
+    }
+  ],
+  "caller_chains": [
+    {
+      "entry_caller": "0x08014280",
+      "chain": [
+        "0x08014280",
+        "0x08032360",
+        "0x08032140"
+      ],
+      "trigger_context": "Ciel computer terminal interaction triggers save.",
+      "ram_fields_updated": [
+        "0x03003000 (gZero3Save)"
+      ],
+      "how_mapped": "Ghidra decompilation of command room computer save routine."
+    }
+  ],
+  "fields": [
+    {
+      "name": "magic_inti",
+      "offset": 0,
+      "size": 4,
+      "type": "ascii",
+      "ram_addr": "0x03003000",
+      "writers": [
+        "0x08032360"
+      ],
+      "readers": [
+        "0x08032220"
+      ],
+      "observed_values": [
+        "INTI"
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "INTI magic header"
+    },
+    {
+      "name": "recoil_rod_chips",
+      "offset": 8,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": "0x03003008",
+      "writers": [
+        "0x08032360"
+      ],
+      "readers": [
+        "0x08032220"
+      ],
+      "observed_values": [
+        "0x000F"
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Recoil rod modification parts bitmask"
+    },
+    {
+      "name": "secret_disk_flags",
+      "offset": 10,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": "0x0300300A",
+      "writers": [
+        "0x08032360"
+      ],
+      "readers": [
+        "0x08032220"
+      ],
+      "observed_values": [
+        "0xFFFFFFFF"
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Secret disks collected flags (1-180)"
+    },
+    {
+      "name": "zero_ecrystals",
+      "offset": 14,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": "0x0300300E",
+      "writers": [
+        "0x08032360"
+      ],
+      "readers": [
+        "0x08032220"
+      ],
+      "observed_values": [
+        "0x000186A0"
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "E-Crystal reserve"
+    },
+    {
+      "name": "satellite_elf_1",
+      "offset": 18,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": "0x03003012",
+      "writers": [
+        "0x08032360"
+      ],
+      "readers": [
+        "0x08032220"
+      ],
+      "observed_values": [
+        "0x02"
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Active Satellite Cyber-Elf A slot"
+    }
+  ],
+  "fuzzing_targets": [
+    {
+      "offset": 14,
+      "size": 4,
+      "mutation": "Set E-Crystals to 99999 (0x0001869F).",
+      "requires_checksum_repair": true,
+      "predicted_effect": "Zero has 99999 E-Crystals."
+    }
+  ],
+  "open_questions": []
+}

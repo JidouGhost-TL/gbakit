@@ -13,7 +13,13 @@
       <a href="../index.html">Games</a>
       <a href="../saves/index.html">Save Formats</a>
       <a href="../patches/index.html">Debug Patches</a>
+      <a href="../debug-menus.html">Debug Gallery</a>
+      <a href="../non-retail-cartridges.html">Non-Retail</a>
+      <a href="../cartridge-hardware.html">Cartridge Hardware</a>
+      <a href="../link-multiplayer.html">Link &amp; Multiplayer</a>
+      <a href="../multiboot-museum.html">MultiBoot Museum</a>
       <a href="../assets/index.html">Assets &amp; Audio</a>
+      <a href="../text-and-fonts.html">Text &amp; Fonts</a>
       <a href="../engines/index.html">Engines &amp; Hardware</a>
       <a href="../families/index.html">Families</a>
       <a href="../gbakit/index.html">Using gbakit</a>
@@ -22,7 +28,7 @@
   <main>
 <p class="meta"><a href="../index.html">&larr; Games</a> &middot; Family <code>A29</code></p>
 <h1>Mickey to Minnie no Magical Quest 2 (Japan)</h1>
-<p><span class='badge badge-slate'>EEPROM 4K</span> <span class='badge badge-blue'>VRAM Tile Sheet</span></p>
+<p><span class='badge badge-slate'>EEPROM 4K</span> <span class='badge badge-emerald'>gbakit Built-In</span> <span class='badge badge-amber'>Debug Menu Patch</span> <a href='../patches/index.html#zero-patch-cheats'><span class='badge badge-purple'>🎮 Button Cheat</span></a> <span class='badge badge-blue'>VRAM Tile Sheet</span> <a href='../link-multiplayer.html#multiboot'><span class='badge badge-amber'>💾 MultiBoot</span></a> <a href='../link-multiplayer.html#sio-multi'><span class='badge badge-blue'>🎮 4P Link</span></a></p>
 
 <h2>Cartridge Identity</h2>
 <dl class="kv">
@@ -36,9 +42,57 @@
 </dl>
 <h2>Screenshots</h2><div class='gallery'><figure><img src='../assets/thumbs/A29J-r0-b96b203aecf90146-boot.png' alt='Boot Screen' loading='lazy'><figcaption>Boot Screen</figcaption></figure><figure><img src='../assets/thumbs/A29J-r0-b96b203aecf90146-after.png' alt='In-Game' loading='lazy'><figcaption>In-Game</figcaption></figure></div>
 
+<h2>Debug Menu Re-Enablement Patch (<code>.ips</code>)</h2>
+<p><a class="btn" href="../assets/patches/A29J-r0-b96b203aecf90146/A29J-debug.ips" download>Download A29J-debug.ips (15 B IPS / 2 B delta)</a></p>
+<dl class="kv">
+  <dt>Hook Mechanism</dt><dd><code>thumb_imm_scene_override</code> &middot; Patch scene dispatcher at 0x0800698c (movs r0, #0 -&gt; movs r0, #20) to select Capcom test mode menu slot 10 (0x0801996d)</dd>
+  <dt>IPS SHA-256</dt><dd><code>87150958c335d6a318841971efd9a2cd7efd3637db38479ce3f1e1427ef989ac</code></dd>
+</dl>
+<pre><code>gbakit patch apply A29J-debug.ips original.gba patched-debug.gba</code></pre>
+<div class='gallery'><figure><img src='../assets/patches/A29J-r0-b96b203aecf90146/boot-patched.png' alt='Re-enabled debug menu' loading='lazy'><figcaption>Re-Enabled Debug Menu</figcaption></figure><figure><img src='../assets/patches/A29J-r0-b96b203aecf90146/after-input.png' alt='Interactive debug menu navigation' loading='lazy'><figcaption>After D-Pad / A Input</figcaption></figure></div>
+
+
+<h2>Verified Button-Combo Cheat</h2>
+<div class="callout">
+  <strong>Zero-patch retail controller cheat (Wave 3):</strong> 4-way counterfactually verified in headless <code>libmgba</code>. See all verified titles in the <a href="../patches/index.html#zero-patch-cheats"><strong>Button-Combo Cheats Catalog</strong></a>.
+</div>
+<dl class="kv">
+  <dt>Effect</dt><dd>Hidden Controller Sequence Unlock (ROM table 0x0806eb1c)</dd>
+  <dt>Button Sequence</dt><dd><code>DOWN, A, B, SELECT, START, RIGHT, LEFT, UP, R, L</code></dd>
+  <dt>Verification Verdict</dt><dd><span class='badge badge-blue'>RAM Unique Reaction</span></dd>
+  <dt>Target RAM Address</dt><dd><code>0x03000012</code></dd>
+  <dt>ROM Table Address</dt><dd><code>0x0806eb1c</code></dd>
+  <dt>Timing Protocol</dt><dd><code>boot=360f</code>, <code>hold=6f</code>, <code>release=6f</code>, <code>settle=60f</code></dd>
+  <dt>Activation Indicator</dt><dd>Headless libmgba 4-way counterfactual verified: unique IWRAM/EWRAM state transition distinct from control, wrong, and reversed inputs</dd>
+</dl>
+<pre><code>gbakit cheat verify A29J</code></pre>
+
+
+
+
+<h2>Link Cable &amp; Multiplayer Communications</h2>
+<div class="callout">
+  This title contains detected communication capabilities: <a href='../link-multiplayer.html#multiboot'><span class='badge badge-amber'>💾 MultiBoot</span></a> <a href='../link-multiplayer.html#sio-multi'><span class='badge badge-blue'>🎮 4P Link</span></a>.
+  Detailed protocol specifications, SIO registers, Joybus commands, and MultiBoot sequences are documented in the <a href="../link-multiplayer.html"><strong>Link &amp; Multiplayer Reference</strong></a>.
+</div>
+<dl class="kv">
+  <dt>Multi-Player SIO (4P)</dt><dd>16-bit ring network &middot; SIOCNT (<code>0x04000128</code>) literals: <code>0x008794</code>, <code>0x008918</code>, <code>0x008998</code> &middot; SIODATA32/SIOMULTI0 (<code>0x04000120</code>) literals: <code>0x008910</code></dd><dt>Single-Cart MultiBoot</dt><dd>Single-Cartridge MultiBoot (Download Play) client/server handler &middot; Thumb SWI 0x25 (<code>0xDF25</code>): <code>0x0f815c</code>, <code>0x12c2be</code>, <code>0x20c172</code>, <code>0x2165fa</code></dd>
+</dl>
+
+
+<h2>Battery Save Support in <code>gbakit</code></h2>
+<p><span class="badge badge-emerald">Built-in definition (A29J)</span></p>
+<pre><code>gbakit save verify A29J save.sav
+gbakit save decode A29J save.sav
+gbakit save fix    A29J damaged.sav -o repaired.sav</code></pre>
 
 
 <h2>ROM Assets, Compression &amp; Audio</h2><dl class='kv'><dt>BIOS Compression</dt><dd>LZ77 (<code>0x10</code>): <strong>0</strong> streams &middot; RLE (<code>0x30</code>): <strong>0</strong> streams</dd><dt>ROM Pointer Tables</dt><dd>35 tables (0 pointing to validated compressed streams)</dd><dt>SDK Backup Tags</dt><dd><code>EEPROM_V122</code></dd><dt>VRAM / Palette Snapshot</dt><dd>1,071 non-zero 8&times;8 tiles &middot; 22 palettes &middot; Direct ROM matches: <strong>26</strong> VRAM blocks, <strong>0</strong> palette blocks</dd></dl><div class='gallery'><figure><img src='../assets/vram-sheets/A29J-r0-b96b203aecf90146-vram.png' alt='VRAM 4bpp tile sheet' style='width:256px;height:256px;image-rendering:pixelated' loading='lazy'><figcaption>VRAM 4bpp Tile Sheet</figcaption></figure></div>
+
+<h2>Text, Fonts &amp; Scene Data</h2>
+<dl class="kv"><dt>Primary Text Encoding</dt><dd><strong>16-bit / UTF-16LE text</strong> (<code>14</code> ASCII strings &middot; <code>2</code> Shift-JIS runs)</dd><dt>Font &amp; VWF Indicators</dt><dd><span class='badge badge-emerald'>VWF Width Table</span> <span class='badge badge-blue'>1bpp Font</span> &middot; BIOS SWIs: BitUnPack <code>0x10</code>: <code>9</code> &middot; LZ77 <code>0x11/12</code>: <code>9</code> &middot; Huffman <code>0x13</code>: <code>5</code> &middot; RLE <code>0x14/15</code>: <code>8</code></dd><dt>Scene &amp; Packaging</dt><dd><code>33</code> ROM pointer tables (&ge;32 entries, <code>4</code> &ge;200) &middot; <code>1</code> relative <code>u32</code> TOCs &middot; <code>133</code> OAM metasprite hits</dd></dl>
+
+
 <h2>Hardware MMIO Subsystems</h2><dl class='kv'><dt><code>ppu_display</code></dt><dd><code>0x8006ae8</code>, <code>0x800f238</code></dd></dl>
 
 </main>

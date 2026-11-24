@@ -13,7 +13,13 @@
       <a href="../index.html">Games</a>
       <a href="../saves/index.html">Save Formats</a>
       <a href="../patches/index.html">Debug Patches</a>
+      <a href="../debug-menus.html">Debug Gallery</a>
+      <a href="../non-retail-cartridges.html">Non-Retail</a>
+      <a href="../cartridge-hardware.html">Cartridge Hardware</a>
+      <a href="../link-multiplayer.html">Link &amp; Multiplayer</a>
+      <a href="../multiboot-museum.html">MultiBoot Museum</a>
       <a href="../assets/index.html">Assets &amp; Audio</a>
+      <a href="../text-and-fonts.html">Text &amp; Fonts</a>
       <a href="../engines/index.html">Engines &amp; Hardware</a>
       <a href="../families/index.html">Families</a>
       <a href="../gbakit/index.html">Using gbakit</a>
@@ -22,7 +28,7 @@
   <main>
 <p class="meta"><a href="../index.html">&larr; Games</a> &middot; Family <code>BE8</code></p>
 <h1>Fire Emblem - The Sacred Stones (USA, Australia)</h1>
-<p><span class='badge badge-zinc'>Stateless / Passcode</span></p>
+<p><span class='badge badge-slate'>Battery Save</span> <span class='badge badge-emerald'>Save Format Spec</span> <span class='badge badge-emerald'>gbakit Built-In</span> <span class='badge badge-amber'>Debug Menu Patch</span> <a href='../link-multiplayer.html#joybus'><span class='badge badge-purple'>📺 Joybus</span></a> <a href='../link-multiplayer.html#multiboot'><span class='badge badge-amber'>💾 MultiBoot</span></a> <a href='../link-multiplayer.html#sio-multi'><span class='badge badge-blue'>🎮 4P Link</span></a></p>
 
 <h2>Cartridge Identity</h2>
 <dl class="kv">
@@ -36,12 +42,51 @@
 </dl>
 <h2>Screenshots</h2><div class='gallery'><figure><img src='../assets/thumbs/BE8E-r0-638cda9d9b726572-boot.png' alt='Boot Screen' loading='lazy'><figcaption>Boot Screen</figcaption></figure><figure><img src='../assets/thumbs/BE8E-r0-638cda9d9b726572-after.png' alt='In-Game' loading='lazy'><figcaption>In-Game</figcaption></figure></div>
 
+<h2>Debug Menu Re-Enablement Patch (<code>.ips</code>)</h2>
+<p><a class="btn" href="../assets/patches/BE8E-r0-638cda9d9b726572/BE8E-debug.ips" download>Download BE8E-debug.ips (15 B IPS / 2 B delta)</a></p>
+<dl class="kv">
+  <dt>Hook Mechanism</dt><dd><code>thumb_branch_bypass</code> &middot; Intelligent Systems GAMECTRL proc developer check bypass at 0x08009a10: nop conditional branch bne to force Proc_Goto(proc, 0x12) into developer debug SIO/multiplayer/battle test menu</dd>
+  <dt>IPS SHA-256</dt><dd><code>d1de3ac9f4834a9071db157006392e9465a1ccc4f651bfbaa55ac04c315843c8</code></dd>
+</dl>
+<pre><code>gbakit patch apply BE8E-debug.ips original.gba patched-debug.gba</code></pre>
+<div class='gallery'><figure><img src='../assets/patches/BE8E-r0-638cda9d9b726572/boot-patched.png' alt='Re-enabled debug menu' loading='lazy'><figcaption>Re-Enabled Debug Menu</figcaption></figure><figure><img src='../assets/patches/BE8E-r0-638cda9d9b726572/after-input.png' alt='Interactive debug menu navigation' loading='lazy'><figcaption>After D-Pad / A Input</figcaption></figure></div>
 
-<h2>Cartridge Storage Architecture: Stateless / Passcode</h2>
+
+
+
+<h2>Link Cable &amp; Multiplayer Communications</h2>
 <div class="callout">
-  <strong>Zero non-volatile battery hardware:</strong> This cartridge PCB contains ROM only (no SRAM, Flash, or EEPROM chips). Progression is preserved via on-screen passcodes or session-only gameplay. No <code>.sav</code> file is generated or required.
+  This title contains detected communication capabilities: <a href='../link-multiplayer.html#joybus'><span class='badge badge-purple'>📺 Joybus</span></a> <a href='../link-multiplayer.html#multiboot'><span class='badge badge-amber'>💾 MultiBoot</span></a> <a href='../link-multiplayer.html#sio-multi'><span class='badge badge-blue'>🎮 4P Link</span></a>.
+  Detailed protocol specifications, SIO registers, Joybus commands, and MultiBoot sequences are documented in the <a href="../link-multiplayer.html"><strong>Link &amp; Multiplayer Reference</strong></a>.
 </div>
+<dl class="kv">
+  <dt>Multi-Player SIO (4P)</dt><dd>16-bit ring network &middot; SIOCNT (<code>0x04000128</code>) literals: <code>0x041620</code>, <code>0x04166c</code>, <code>0x0416a4</code> &middot; SIODATA32/SIOMULTI0 (<code>0x04000120</code>) literals: <code>0x041a84</code>, <code>0x04db10</code>, <code>0x04db74</code></dd><dt>GameCube Joybus</dt><dd>Register literal <code>REG_JOY_RECV</code> (<code>0x04000150</code>) at offset <code>0x6438f8</code></dd><dt>Single-Cart MultiBoot</dt><dd>Single-Cartridge MultiBoot (Download Play) client/server handler &middot; Thumb SWI 0x25 (<code>0xDF25</code>): <code>0x0d169a</code>, <code>0x1f5a3e</code>, <code>0x1fcd82</code>, <code>0x27f826</code></dd>
+</dl>
 
+
+<h2>Battery Save Format Specification</h2>
+<p><a class='btn' href='../saves/BE8E-r0-638cda9d9b726572.html'>Open Full Save Format Spec</a><a class='btn btn-secondary' href='../assets/formats/BE8E-r0-638cda9d9b726572/save-format.json' download>Download save-format.json</a></p>
+<p class='meta'>This specification also governs 5 regional editions &amp; revisions in Family <code>BE8</code>.</p>
+<dl class="kv">
+  <dt>Specification Coverage</dt><dd><strong>21</strong> mapped fields &middot; <strong>1</strong> verified checksum(s) &middot; Confidence: <span class="badge badge-indigo">HIGH</span></dd>
+  <dt>gbakit Built-In Support</dt><dd><span class="badge badge-emerald">Built-in (BE8E)</span></dd>
+  
+</dl>
+<pre><code>gbakit save verify BE8E save.sav
+gbakit save decode BE8E save.sav
+gbakit save fix    BE8E damaged.sav -o repaired.sav</code></pre>
+
+
+
+
+<h2>Text, Fonts &amp; Scene Data</h2>
+<dl class="kv"><dt>Primary Text Encoding</dt><dd><strong>Custom 16-bit Huffman</strong> (<code>11</code> ASCII strings &middot; <code>4</code> Shift-JIS runs)</dd><dt>Font &amp; VWF Indicators</dt><dd><span class='badge badge-emerald'>VWF Width Table</span> <span class='badge badge-blue'>1bpp Font</span> &middot; BIOS SWIs: BitUnPack <code>0x10</code>: <code>95</code> &middot; LZ77 <code>0x11/12</code>: <code>27</code> &middot; Huffman <code>0x13</code>: <code>11</code> &middot; RLE <code>0x14/15</code>: <code>11</code></dd><dt>Scene &amp; Packaging</dt><dd><code>110</code> ROM pointer tables (&ge;32 entries, <code>7</code> &ge;200) &middot; <code>2</code> relative <code>u32</code> TOCs &middot; <code>121</code> OAM metasprite hits</dd></dl>
+
+<div class="callout">
+  <strong>Verified Deep-Dive Offsets &amp; Notes</strong> (Intelligent Systems / Nintendo &middot; Tactical RPG) &mdash;
+  see the <a href="../text-and-fonts.html"><strong>GBA Text &amp; Fonts Guide</strong></a> for VWF, charmap, and <code>gbakit text</code> workflows.
+</div>
+<dl class="kv"><dt>Verified Text Encoding</dt><dd>Custom canonical Huffman (2,903-node u16-pair tree @ 0x15A72C, root @ 0x15D484, 3,404-entry ptr table @ 0x15D488)</dd><dt>Sample String Offset</dt><dd><code>0xf4b36</code></dd><dt>Sample Decoded Text</dt><dd><code>\x0D\x10+\x01\x0DBehold, the secret strike of\x01Frelia&#x27;s pegasus knights!\x1F\x03\x01Tr</code></dd><dt>VWF Font Table</dt><dd><code>0x58C76C</code></dd><dt>VWF Glyph Struct</dt><dd><code>{next_ptr: u32, glyph_byte: u8, width_px: u8, pad: u16, bitmap_2bpp: [u8; 64]}</code></dd><dt>Sample Glyph &#x27;A&#x27; Offset</dt><dd><code>0x589d2c</code></dd><dt>Sample Glyph &#x27;A&#x27; Width</dt><dd><code>4 px</code></dd><dt>Chapter Asset Pointer Table</dt><dd><code>0x9A2E00</code> (254 entries)</dd></dl>
 
 
 

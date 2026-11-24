@@ -1,0 +1,360 @@
+{
+  "schema": "gbakit-save-research/1",
+  "release_key": "ASOJ-r0-017573e07c55da4b",
+  "display_name": "Sonic Advance (Japan) (En,Ja)",
+  "rom_sha256": "017573e07c55da4b13ab8cd98b55710c41d471fd5399d2af1663707a9d02252e",
+  "game_code": "ASOJ",
+  "header_family": "ASO",
+  "community_id": "comm-016",
+  "overall_confidence": "MEDIUM",
+  "media": {
+    "kind": "flash512",
+    "size_bytes": 65536,
+    "sdk_tags": [],
+    "fill_byte": "0xff"
+  },
+  "slots_and_copies": [
+    {
+      "name": "slot_0",
+      "offset": 0,
+      "size": 4096,
+      "redundancy_role": "primary",
+      "selection_rule": "Only one populated region exists in the 64KB image; no backup/mirror copy was found. Remainder of the chip (0x1000-0xFFFF) stays at erase fill (0xFF)."
+    }
+  ],
+  "magic_signatures": [
+    {
+      "offset": 0,
+      "bytes_hex": "50495249524f",
+      "ascii": "PIRO",
+      "verified_in_code": false,
+      "verified_in_sav": true,
+      "function_addrs": []
+    }
+  ],
+  "checksums": [
+    {
+      "name": "none_identified",
+      "algorithm": "unknown",
+      "formula_detail": "No checksum/CRC routine was found in the provided decompilation (86 functions), and no byte range in the populated region (0x0-0x41F) numerically matches sum8/xor8/sum16le of any neighboring span. Swept sum8(0x0-0x420)=0x50, xor8(0x0-0x420)=0x04, sum16le(0x0-0x420)=0x4e98, sum8(0x0-0x1000)=0xd7, xor8(0x0-0x1000)=0x5f against all stored byte/u16 values in the file; no match found. Absence is reported, not proven, since only one non-blank sample is available.",
+      "stored_offset": 0,
+      "stored_size": 0,
+      "covered_start": 0,
+      "covered_end": 0,
+      "function_addrs": [],
+      "verified_on_samples": [
+        {"file": "saves/cap-01-future-1.sav", "stored_hex": "", "computed_hex": "", "match": false}
+      ],
+      "confidence": "UNKNOWN"
+    }
+  ],
+  "io_driver_functions": [
+    {
+      "addr": "0x08098c5c",
+      "role": "read",
+      "callers": ["0x08098cf4"],
+      "notes": "Flash chip-ID autoselect: 0xAA/0x55/0x90 unlock+ID-entry, reads 2 ID bytes via func_0x08099860, then 0xAA/0x55/0xF0 ID-exit/reset. MMIO seed function."
+    },
+    {
+      "addr": "0x08098cf4",
+      "role": "read",
+      "callers": [],
+      "notes": "Calls FUN_08098c5c to get chip ID, scans a chip-descriptor table on the 16-bit ID field at +0x28, copies matched chip parameters + driver function pointer (+0x14) into globals, tail-calls it via unresolved jumptable."
+    },
+    {
+      "addr": "0x08098ed4",
+      "role": "read",
+      "callers": ["0x08099250"],
+      "notes": "Bank-switch/timing copy helper using a ^1-toggled pointer countdown loop; called explicitly by the sector-erase routine, and its body is independently inlined inside 0x08098fbc and 0x080990dc."
+    },
+    {
+      "addr": "0x08098fbc",
+      "role": "write",
+      "callers": [],
+      "notes": "Multi-byte Flash program, bank-relative addressing form: builds (param_1<<shift)+param_2+0xE000000 and calls func_0x08099858(addr,data,count,scratch). Caller unresolved (jumptable)."
+    },
+    {
+      "addr": "0x080990dc",
+      "role": "write",
+      "callers": ["0x08099194"],
+      "notes": "Multi-byte Flash program, fixed-base addressing form; invoked as the retry path from the write+verify loop at 0x08099194."
+    },
+    {
+      "addr": "0x08099194",
+      "role": "write",
+      "callers": [],
+      "notes": "Write-with-verify loop: up to 3 attempts of func_0x08099854 (compare) + FUN_080990dc (reprogram) until verification succeeds. Caller unresolved (jumptable)."
+    },
+    {
+      "addr": "0x08099250",
+      "role": "erase",
+      "callers": [],
+      "notes": "4KB sector erase (guarded by sector index < 0x10, i.e. 16 sectors = 64KB total). Writes 0xAA/0x55/0x80, 0xAA/0x55/0x30 sector-erase command sequence, calls bank-switch helper 0x08098ed4, polls completion via func_0x08099858. MMIO seed function. Caller unresolved (jumptable)."
+    },
+    {
+      "addr": "0x080992ec",
+      "role": "write",
+      "callers": [],
+      "notes": "Single-byte Flash program: 0xAA/0x55/0xA0 command then func_0x08099858(1,dst,byte,...). Caller unresolved (jumptable)."
+    }
+  ],
+  "caller_chains": [
+    {
+      "entry_caller": "0x08098cf4",
+      "chain": ["0x08098cf4", "0x08098c5c"],
+      "trigger_context": "Chip detection/initialization",
+      "ram_fields_updated": [],
+      "how_mapped": "Direct static call edge confirmed in ghidra/callgraph.json and ghidra/decompiled.c; FUN_08098cf4 calls FUN_08098c5c() and branches on the returned 16-bit chip ID."
+    },
+    {
+      "entry_caller": "0x08099250",
+      "chain": ["0x08099250", "0x08098ed4"],
+      "trigger_context": "Sector erase, state save/restore around the erase busy-wait",
+      "ram_fields_updated": [],
+      "how_mapped": "Direct static call edge confirmed in ghidra/callgraph.json; FUN_08099250 calls FUN_08098ed4(auStack_54) before issuing the erase-poll."
+    },
+    {
+      "entry_caller": "0x08099194",
+      "chain": ["0x08099194", "0x080990dc"],
+      "trigger_context": "Program-then-verify retry loop (up to 3 attempts)",
+      "ram_fields_updated": [],
+      "how_mapped": "Direct static call edge confirmed in ghidra/callgraph.json; FUN_08099194 calls FUN_080990dc on verification failure."
+    }
+  ],
+  "fields": [
+    {
+      "name": "magic",
+      "offset": 0,
+      "size": 4,
+      "type": "ascii",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"cap-00-future-0.sav": "0xFFFFFFFF (absent/erased)", "cap-01-future-1.sav": "PIRO"},
+      "update_mechanism": "UNKNOWN - no writer found in provided decompilation (86 functions); only confirmed by direct byte comparison of the two real .sav samples",
+      "confidence": "HYPOTHESIS",
+      "evidence": "saves/cap-01-future-1.sav bytes 0x0000-0x0003 = 50 49 52 4F; absent (0xFF) in saves/cap-00-future-0.sav"
+    },
+    {
+      "name": "reserved_post_magic",
+      "offset": 4,
+      "size": 28,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"cap-01-future-1.sav": "all 0x00"},
+      "update_mechanism": "UNKNOWN",
+      "confidence": "HYPOTHESIS",
+      "evidence": "saves/cap-01-future-1.sav bytes 0x0004-0x001F, all zero"
+    },
+    {
+      "name": "default_filler_table",
+      "offset": 32,
+      "size": 864,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"cap-01-future-1.sav": "216 identical u32_le entries, each 0x00008CA0"},
+      "update_mechanism": "UNKNOWN - every one of the 216 four-byte entries is bit-identical, consistent with a single block-initialization loop writing one constant repeatedly",
+      "confidence": "HYPOTHESIS",
+      "evidence": "saves/cap-01-future-1.sav bytes 0x0020-0x037F, Python 4-byte-stride scan"
+    },
+    {
+      "name": "record_table",
+      "offset": 896,
+      "size": 160,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"cap-01-future-1.sav": "10 identical 16-byte records"},
+      "update_mechanism": "UNKNOWN",
+      "confidence": "HYPOTHESIS",
+      "evidence": "saves/cap-01-future-1.sav bytes 0x0380-0x041F, Python 16-byte-stride scan; each record = 00000000 20202020 20202020 ff000000"
+    },
+    {
+      "name": "record_id_or_score",
+      "offset": 896,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"all 10 records": "0x00000000"},
+      "update_mechanism": "UNKNOWN",
+      "confidence": "HYPOTHESIS",
+      "evidence": "First 4 bytes of each 16-byte record in 0x0380-0x041F, all zero"
+    },
+    {
+      "name": "record_name_field",
+      "offset": 900,
+      "size": 8,
+      "type": "ascii",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"all 10 records": "\"        \" (8x 0x20)"},
+      "update_mechanism": "UNKNOWN",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Bytes +0x4..+0xB of each 16-byte record, all 0x20 (ASCII space)"
+    },
+    {
+      "name": "record_flag_byte",
+      "offset": 908,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"all 10 records": "0xFF"},
+      "update_mechanism": "UNKNOWN - only non-zero/non-space byte inside each record; candidate 'slot unused' sentinel or string terminator",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Byte +0xC of each 16-byte record"
+    },
+    {
+      "name": "record_padding",
+      "offset": 909,
+      "size": 3,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"all 10 records": "0x000000"},
+      "update_mechanism": "UNKNOWN",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Bytes +0xD..+0xF of each 16-byte record"
+    },
+    {
+      "name": "trailer_value_50000",
+      "offset": 1056,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"cap-01-future-1.sav": 50000},
+      "update_mechanism": "UNKNOWN - only numerically distinct, non-default-looking field in the file; candidate default score/threshold constant",
+      "confidence": "HYPOTHESIS",
+      "evidence": "saves/cap-01-future-1.sav bytes 0x0420-0x0423 = 50 c3 00 00"
+    },
+    {
+      "name": "trailer_reserved",
+      "offset": 1060,
+      "size": 8,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"cap-01-future-1.sav": "all 0x00"},
+      "update_mechanism": "UNKNOWN",
+      "confidence": "HYPOTHESIS",
+      "evidence": "saves/cap-01-future-1.sav bytes 0x0424-0x042B"
+    },
+    {
+      "name": "trailer_u16_a",
+      "offset": 1068,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"cap-01-future-1.sav": 16406},
+      "update_mechanism": "UNKNOWN - no corroborating code found",
+      "confidence": "UNKNOWN",
+      "evidence": "saves/cap-01-future-1.sav bytes 0x042C-0x042D = 16 40"
+    },
+    {
+      "name": "trailer_u16_b",
+      "offset": 1070,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"cap-01-future-1.sav": 53836},
+      "update_mechanism": "UNKNOWN - no corroborating code found",
+      "confidence": "UNKNOWN",
+      "evidence": "saves/cap-01-future-1.sav bytes 0x042E-0x042F = 4c d2"
+    },
+    {
+      "name": "zero_tail",
+      "offset": 1072,
+      "size": 3024,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"cap-01-future-1.sav": "all 0x00 (explicitly written, not erase fill 0xFF)"},
+      "update_mechanism": "UNKNOWN - confirmed written as zero rather than left at Flash erase value, implying it is part of the same flush operation",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "saves/cap-01-future-1.sav bytes 0x0430-0x0FFF, full byte scan"
+    },
+    {
+      "name": "unwritten_chip_remainder",
+      "offset": 4096,
+      "size": 61440,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"cap-00-future-0.sav": "all 0xFF", "cap-01-future-1.sav": "all 0xFF"},
+      "update_mechanism": "Never written by the save operation captured in cap-01; matches the fully-erased baseline in cap-00",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "saves/cap-00-future-0.sav and saves/cap-01-future-1.sav bytes 0x1000-0xFFFF, full byte scan"
+    }
+  ],
+  "fuzzing_targets": [
+    {
+      "offset": 0,
+      "size": 4,
+      "mutation": "Corrupt \"PIRO\" magic to an arbitrary 4 bytes, then reload",
+      "requires_checksum_repair": false,
+      "predicted_effect": "If validated on load, expect a fallback/'corrupt save' path or the magic being silently rewritten; if unvalidated, expect no observable change"
+    },
+    {
+      "offset": 32,
+      "size": 4,
+      "mutation": "Zero the first 0x00008CA0 table entry",
+      "requires_checksum_repair": false,
+      "predicted_effect": "If this table is ever read, expect a crash or a changed in-game default; if write-only/unused, expect no visible effect"
+    },
+    {
+      "offset": 900,
+      "size": 8,
+      "mutation": "Overwrite record 0's space-padded name field with printable ASCII",
+      "requires_checksum_repair": false,
+      "predicted_effect": "If rendered anywhere, the substituted text should appear in a menu/list UI"
+    },
+    {
+      "offset": 908,
+      "size": 1,
+      "mutation": "Change record 0's flag byte from 0xFF to 0x00",
+      "requires_checksum_repair": false,
+      "predicted_effect": "If 0xFF marks 'slot unused', clearing it may cause the blank record to be treated as populated in a list UI"
+    },
+    {
+      "offset": 1056,
+      "size": 4,
+      "mutation": "Change the 50000 trailer value to 1",
+      "requires_checksum_repair": false,
+      "predicted_effect": "If displayed anywhere as a default score/threshold, expect a visible numeric change"
+    },
+    {
+      "offset": 1072,
+      "size": 1,
+      "mutation": "Flip one byte in the zero-filled tail (0x0430-0x0FFF) from 0x00 to 0xFF",
+      "requires_checksum_repair": false,
+      "predicted_effect": "Any visible change indicates the zero tail is structured data, not pure padding"
+    }
+  ],
+  "open_questions": [
+    "What code builds the PIRO payload, the 216x0x00008CA0 table, and the 10-record block? Not present in the provided 86-function decompilation.",
+    "What resolves the UNRECOVERED_JUMPTABLE dispatches that gate nearly every Flash driver entry point, i.e. who actually calls into this driver from game logic?",
+    "Is there a checksum/CRC at all? Only one non-blank sample exists; a second sample with different payload bytes is required to test cumulative-sum/CRC hypotheses.",
+    "What do the trailer values 0x0000C350 (50000), 0x4016, and 0xD24C at offsets 0x0420/0x042C/0x042E represent?",
+    "Is the 0xFF byte at +0xC of each 16-byte record a per-slot 'unused' flag, a string terminator, or something else? All 10 observed records are identical, so no contrastive evidence exists yet.",
+    "Is 10 records a meaningful fixed table size (e.g. a roster/ranking table), or an artifact specific to this capture?"
+  ]
+}

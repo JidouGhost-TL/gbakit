@@ -1,0 +1,370 @@
+{
+  "schema": "gbakit-save-research/1",
+  "release_key": "TCHK-r0-61f4222cb17fc0ac",
+  "display_name": "AGB Aging Cartridge (World) (v1.0) (Test Program)",
+  "rom_sha256": "61f4222cb17fc0ac49f8779298433c293f52266a23722965575ceceb150d8a7c",
+  "game_code": "TCHK",
+  "header_family": "TCH",
+  "community_id": "comm-001",
+  "overall_confidence": "MEDIUM",
+  "media": {
+    "kind": "eeprom512",
+    "size_bytes": 512,
+    "sdk_tags": [
+      "EEPROM_V110@1271784"
+    ],
+    "fill_byte": "0xff"
+  },
+  "slots_and_copies": [
+    {
+      "name": "block_0_validity_tag",
+      "offset": 0,
+      "size": 8,
+      "redundancy_role": "global_config",
+      "selection_rule": "Fixed block address 0; validated by strcmp (FUN_0800ff1c) against ROM constant _DAT_0800d164 in FUN_0800d130; auto-rewritten on mismatch via FUN_0800d03c(0, buf)."
+    },
+    {
+      "name": "block_1_mode_identity_tag",
+      "offset": 8,
+      "size": 8,
+      "redundancy_role": "global_config",
+      "selection_rule": "Fixed block address 1; classified by strcmp against up to 5 ROM constants in FUN_080001e4; written via FUN_080003b4 -> FUN_0800d03c(1, buf)."
+    },
+    {
+      "name": "blocks_2_63_unused_or_unknown",
+      "offset": 16,
+      "size": 496,
+      "redundancy_role": "unknown",
+      "selection_rule": "No writer/reader for block addresses 2-63 was found in the supplied decompilation; both .sav samples show 0xFF (unwritten EEPROM) across this entire span."
+    }
+  ],
+  "magic_signatures": [
+    {
+      "offset": 0,
+      "bytes_hex": "00204d4f52504545",
+      "ascii": "reversed-bytes-1..7-decode-to-'EEPROM '",
+      "verified_in_code": true,
+      "verified_in_sav": true,
+      "function_addrs": [
+        "0x0800d130",
+        "0x0800ff1c",
+        "0x0800fedc",
+        "0x0800d03c",
+        "0x0800d0c4"
+      ]
+    },
+    {
+      "offset": 8,
+      "bytes_hex": "0054494e5544434c",
+      "ascii": "reversed-bytes-9..15-decode-to-'LCDUNIT' (observed only in cap-01-future-1.sav; cap-00-future-0.sav holds 0xFFFFFFFFFFFFFFFF at this offset)",
+      "verified_in_code": true,
+      "verified_in_sav": true,
+      "function_addrs": [
+        "0x080001e4",
+        "0x080003b4",
+        "0x0800fedc",
+        "0x0800d03c",
+        "0x0800d0c4"
+      ]
+    }
+  ],
+  "checksums": [],
+  "io_driver_functions": [
+    {
+      "addr": "0x0800f78c",
+      "role": "serialize",
+      "callers": [
+        "0x0800f810",
+        "0x0800f960"
+      ],
+      "notes": "Core DMA3 bit-serial transfer primitive to/from 0x0D000000; sets src/dst/bitcount|0x80000000 and performs an indirect jump (standard GBA EEPROM DMA3 idiom)."
+    },
+    {
+      "addr": "0x0800f960",
+      "role": "write",
+      "callers": [
+        "0x0800d03c"
+      ],
+      "notes": "Low-level EEPROM block WRITE: serializes 8 bytes into a 73-bit stream (2 start + 6-bit addr + 64 data + 1 stop), transmits via FUN_0800f78c(...,0x49), busy-waits on ready bit of 0x0D000000."
+    },
+    {
+      "addr": "0x0800f810",
+      "role": "read",
+      "callers": [
+        "0x0800fae8",
+        "0x0800d0c4"
+      ],
+      "notes": "Low-level EEPROM block READ: sends 9-bit request (2 start + 6-bit addr + 1 stop), clocks in 0x44=68-bit response (4 dummy + 64 data), deserializes into 4x u16 output words."
+    },
+    {
+      "addr": "0x0800fae8",
+      "role": "checksum",
+      "callers": [
+        "0x0800d03c"
+      ],
+      "notes": "Write-verify: reads block back via FUN_0800f810 and compares word-by-word against expected data; returns 0x8000 on mismatch. Not a checksum algorithm, but the only integrity-verification function in the write path."
+    },
+    {
+      "addr": "0x0800f690",
+      "role": "write",
+      "callers": [
+        "0x0800f960"
+      ],
+      "notes": "Write-enable/status-prep helper invoked at start of the WRITE sequence."
+    },
+    {
+      "addr": "0x0800f718",
+      "role": "write",
+      "callers": [
+        "0x0800f960"
+      ],
+      "notes": "Write-sequence teardown/restore helper invoked at end of the WRITE sequence."
+    },
+    {
+      "addr": "0x0800f774",
+      "role": "read",
+      "callers": [
+        "0x0800f960"
+      ],
+      "notes": "Busy-wait poll body used while waiting for the EEPROM ready bit during a write."
+    },
+    {
+      "addr": "0x0800d0c4",
+      "role": "deserialize",
+      "callers": [
+        "0x0800d130",
+        "0x080001e4"
+      ],
+      "notes": "Mid-level ReadBlock(block, out_buf): IRQ-disable bracket (FUN_0800bcc4/bd88) + device-type select (FUN_0800f640(0,...)) around FUN_0800f810."
+    },
+    {
+      "addr": "0x0800d03c",
+      "role": "serialize",
+      "callers": [
+        "0x0800d130",
+        "0x080003b4"
+      ],
+      "notes": "Mid-level WriteAndVerifyBlock(block, in_buf): same IRQ/device-select bracket around FUN_0800f960 then FUN_0800fae8; returns OR'd failure bitmask."
+    },
+    {
+      "addr": "0x0800fd2c",
+      "role": "write",
+      "callers": [],
+      "notes": "FALSE POSITIVE: generic 32-bit unsigned division/shift helper, no MMIO/EEPROM access, no callers traced. Excluded from the save architecture."
+    }
+  ],
+  "caller_chains": [
+    {
+      "entry_caller": "0x0800d130",
+      "chain": [
+        "0x0800d130",
+        "0x0800d0c4",
+        "0x0800f810",
+        "0x0800ff1c",
+        "0x0800fedc",
+        "0x0800d03c",
+        "0x0800f960",
+        "0x0800fae8"
+      ],
+      "trigger_context": "No static caller found (callgraph.json lists callers: [] for 0x0800d130); almost certainly invoked indirectly via jumptable during title boot/init, consistent with the pervasive 'Could not recover jumptable' pattern throughout this binary.",
+      "ram_fields_updated": [
+        "stack buffer only (auStack_10[8]); no persistent EWRAM/IWRAM save-struct mirror found"
+      ],
+      "how_mapped": "Direct body inspection of FUN_0800d130: reads block 0 via FUN_0800d0c4, strcmp's against ROM constant, and on mismatch rebuilds+rewrites block 0 via FUN_0800fedc + FUN_0800d03c. Confirmed by callgraph.json edge 0x0800d03c.callers=[0x0800d130]."
+    },
+    {
+      "entry_caller": "0x080001e4",
+      "chain": [
+        "0x080001a0",
+        "0x080001e4",
+        "0x08000290",
+        "0x0800d130",
+        "0x0800d0c4",
+        "0x0800f810",
+        "0x0800ff1c"
+      ],
+      "trigger_context": "0x080001a0 gates the call on (~*_DAT_080001cc & 0x3ff)==0x300 (a BIOS/hardware-id style check); if false, calls FUN_080001e4 which also runs a ROM-header sanity check (FUN_08000290, non-save) before the magic-check and mode classification.",
+      "ram_fields_updated": [
+        "stack buffer only (auStack_10[8])"
+      ],
+      "how_mapped": "Direct body inspection of FUN_080001e4: calls FUN_0800d130 first (block 0 validity); if that returned 1 (repaired), short-circuits to mode index 3; otherwise reads block 1 via FUN_0800d0c4(1,...) and strcmp's sequentially against 5 ROM constants, returning index 1-5 or -1."
+    },
+    {
+      "entry_caller": "0x080003b4",
+      "chain": [
+        "0x080003b4",
+        "0x0800fedc",
+        "0x0800d03c",
+        "0x0800f960",
+        "0x0800fae8",
+        "0x0800f810"
+      ],
+      "trigger_context": "Called with an integer mode_index (1-4); no static caller found (consistent with indirect jumptable dispatch, presumably from a diagnostic-mode selection menu in this factory test ROM).",
+      "ram_fields_updated": [
+        "stack buffer only (auStack_94[8]); downstream UI state in uRam08000440-range buffers (not save data)"
+      ],
+      "how_mapped": "Direct body inspection: switch on param_1 selects one of 4 candidate name constants, formats it into a local 8-byte buffer via FUN_0800fedc, writes+verifies block 1 via FUN_0800d03c(1, buf). This is the exact and only traced writer that can produce the observed cap-00->cap-01 byte diff at offset 0x08-0x0F."
+    }
+  ],
+  "fields": [
+    {
+      "name": "validity_tag_null_byte",
+      "offset": 0,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": [
+        "0x0800fedc",
+        "0x0800d03c"
+      ],
+      "readers": [
+        "0x0800d0c4"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": "0x00",
+        "cap-01-future-1.sav": "0x00"
+      },
+      "update_mechanism": "Set to 0 unconditionally by FUN_0800fedc after formatting the tag string into the buffer, immediately before FUN_0800d03c writes+verifies the block.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Identical 0x00 byte present in both .sav files at offset 0; matches FUN_0800fedc's '*apuStack_6c[0]=0' statement."
+    },
+    {
+      "name": "validity_tag_text",
+      "offset": 1,
+      "size": 7,
+      "type": "ascii",
+      "ram_addr": null,
+      "writers": [
+        "0x0800fedc",
+        "0x0800d03c",
+        "0x0800f960"
+      ],
+      "readers": [
+        "0x0800d0c4",
+        "0x0800f810",
+        "0x0800ff1c"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": "20 4d 4f 52 50 45 45 (reversed='EEPROM ')",
+        "cap-01-future-1.sav": "20 4d 4f 52 50 45 45 (reversed='EEPROM ')"
+      },
+      "update_mechanism": "Compared via strcmp (FUN_0800ff1c) against ROM constant _DAT_0800d164 in FUN_0800d130; rewritten on mismatch. Content is stored byte-reversed relative to normal reading order.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Byte-identical across both .sav samples; reverses cleanly to ASCII 'EEPROM ' using Python verification in SAVE-FORMAT-REPORT.md section 4."
+    },
+    {
+      "name": "mode_identity_tag_null_byte",
+      "offset": 8,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": [
+        "0x0800fedc",
+        "0x0800d03c"
+      ],
+      "readers": [
+        "0x0800d0c4"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": "0xff (unwritten)",
+        "cap-01-future-1.sav": "0x00 (written)"
+      },
+      "update_mechanism": "Same leading-null-byte mechanism as offset 0, applied to block 1 via FUN_080003b4.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Direct byte diff between the two .sav snapshots isolates exactly this transition."
+    },
+    {
+      "name": "mode_identity_tag_text",
+      "offset": 9,
+      "size": 7,
+      "type": "ascii",
+      "ram_addr": null,
+      "writers": [
+        "0x080003b4",
+        "0x0800fedc",
+        "0x0800d03c",
+        "0x0800f960"
+      ],
+      "readers": [
+        "0x080001e4",
+        "0x0800d0c4",
+        "0x0800f810",
+        "0x0800ff1c"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": "ff ff ff ff ff ff ff (unwritten)",
+        "cap-01-future-1.sav": "54 49 4e 55 44 43 4c (reversed='LCDUNIT')"
+      },
+      "update_mechanism": "FUN_080003b4 selects one of 4 ROM-constant candidate strings by its mode_index parameter, formats it reversed into the buffer via FUN_0800fedc, writes block 1. FUN_080001e4 classifies the stored tag against up to 5 ROM constants to recover a numeric mode index (1-5, or -1 if unrecognized, or 3 as a just-repaired default).",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Byte diff between cap-00/cap-01 plus full static caller-chain trace in SAVE-FORMAT-REPORT.md section 3.4. Which of the 4 writer-side constants maps to the observed 'LCDUNIT' text, and which numeric mode_index FUN_080001e4 would classify it back to, is UNKNOWN since the literal ROM constant bytes are not present in the supplied decompilation."
+    },
+    {
+      "name": "unused_blocks_2_63",
+      "offset": 16,
+      "size": 496,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {
+        "cap-00-future-0.sav": "0xff (unwritten EEPROM)",
+        "cap-01-future-1.sav": "0xff (unwritten EEPROM)"
+      },
+      "update_mechanism": "unknown",
+      "confidence": "UNKNOWN",
+      "evidence": "No writer or reader targeting block addresses 2-63 was found anywhere in the supplied ghidra/decompiled.c or ghidra/callgraph.json."
+    }
+  ],
+  "fuzzing_targets": [
+    {
+      "offset": 8,
+      "size": 1,
+      "mutation": "0x00 -> 0xff (restore leading byte to unwritten state while keeping bytes 9-15 as 'LCDUNIT')",
+      "requires_checksum_repair": false,
+      "predicted_effect": "strcmp in FUN_080001e4 fails to match any of the 5 known tags; predict mode classification returns -1 (unrecognized)"
+    },
+    {
+      "offset": 9,
+      "size": 7,
+      "mutation": "zero-fill (0x00 x7), keep offset 8 = 0x00",
+      "requires_checksum_repair": false,
+      "predicted_effect": "predict mode classification returns -1 unless a ROM constant happens to be an empty string"
+    },
+    {
+      "offset": 8,
+      "size": 8,
+      "mutation": "restore entire block 1 to 0xff x8 (simulate factory-fresh EEPROM)",
+      "requires_checksum_repair": false,
+      "predicted_effect": "predict mode classification returns -1 (first-boot/blank state); lowest-risk, highest-value fuzz target since it reproduces the exact cap-00 state"
+    },
+    {
+      "offset": 0,
+      "size": 8,
+      "mutation": "corrupt a single byte of the block-0 validity tag (e.g. offset 4: 0x4f -> 0x00)",
+      "requires_checksum_repair": false,
+      "predicted_effect": "FUN_0800d130's strcmp fails, triggering auto-repair: engine should rewrite block 0 back to the canonical 00 20 4d 4f 52 50 45 45 bytes on next boot; a paired pre/post .ss capture should show this self-heal happening"
+    },
+    {
+      "offset": 16,
+      "size": 8,
+      "mutation": "write non-0xff garbage into block 2 (offset 0x10-0x17), never observed in use",
+      "requires_checksum_repair": false,
+      "predicted_effect": "protocol negative control: no traced function ever addresses block 2, so predict zero observable effect; any observed effect would falsify the 'only blocks 0-1 used' conclusion"
+    },
+    {
+      "offset": 512,
+      "size": 8,
+      "mutation": "write garbage anywhere in the 0x200-0x1fff padding region",
+      "requires_checksum_repair": false,
+      "predicted_effect": "protocol negative control: region is outside the param_1<0x40-gated address space entirely; predict zero observable effect"
+    }
+  ],
+  "open_questions": [
+    "Literal ROM-constant string bytes for _DAT_0800021c, _DAT_08000234, _DAT_0800024c, _DAT_08000264, _DAT_0800027c (read-side mode-tag candidates in 0x080001e4) and _DAT_080003e0, uRam080003f0, uRam08000400, uRam08000410 (write-side candidates in 0x080003b4) are not present in the supplied decompilation; only the one observed tag ('LCDUNIT') is confirmed.",
+    "No static caller was found for 0x0800d130, 0x080001a0, or 0x080003b4 in ghidra/callgraph.json; all are presumed reached via indirect/jumptable dispatch during boot or diagnostic-menu navigation, consistent with the pervasive 'Could not recover jumptable' warnings throughout this binary, but this was not independently confirmed via an execution trace.",
+    "Whether blocks 0x02-0x3F are ever written during longer aging/diagnostic test sessions is unknown; only 2 short capture snapshots were available.",
+    "The meaning of the (~*_DAT_080001cc & 0x3ff)==0x300 hardware/BIOS-id gate in 0x080001a0, and whether it unlocks additional save paths on different hardware revisions, is untested.",
+    "No paired pre/post .ss save-state captures were supplied in this workspace's states/ directory for this title; the fuzzing plan in SAVE-FORMAT-REPORT.md section 6 cannot yet be executed against real emulator state."
+  ]
+}

@@ -1,0 +1,168 @@
+{
+  "schema": "gbakit-save-research/1",
+  "release_key": "AJ6J-r0-8774705c3069564e",
+  "display_name": "Aladdin (Japan)",
+  "rom_sha256": "8774705c3069564e3a45a4a109f45b112699d1fd15ffed33aa17d31d31e7c9a8",
+  "game_code": "AJ6J",
+  "header_family": "AJ6",
+  "community_id": "comm-001",
+  "overall_confidence": "HIGH",
+  "media": {
+    "kind": "eeprom512",
+    "size_bytes": 512,
+    "sdk_tags": [
+      "EEPROM_V122@2401688"
+    ],
+    "fill_byte": "0xff"
+  },
+  "slots_and_copies": [
+    {
+      "name": "save_block_0",
+      "offset": 0,
+      "size": 40,
+      "redundancy_role": "primary",
+      "selection_rule": "Validated by 8-byte sequence pattern at offset 0x00."
+    },
+    {
+      "name": "unmapped_tail",
+      "offset": 40,
+      "size": 472,
+      "redundancy_role": "unknown",
+      "selection_rule": "Retained as unformatted 0xFF fill in cold capture."
+    }
+  ],
+  "magic_signatures": [
+    {
+      "offset": 0,
+      "bytes_hex": "0706050403020100",
+      "ascii": "........",
+      "verified_in_code": true,
+      "verified_in_sav": true,
+      "function_addrs": [
+        "0x08049244",
+        "0x080492f4"
+      ]
+    }
+  ],
+  "checksums": [
+    {
+      "name": "sequence_pattern_validation",
+      "algorithm": "unknown",
+      "formula_detail": "Integrity validation is enforced by an 8-byte descending pattern (0x07..0x00) check at offset 0x00.",
+      "stored_offset": 0,
+      "stored_size": 8,
+      "covered_start": 0,
+      "covered_end": 8,
+      "function_addrs": [
+        "0x08049244"
+      ],
+      "verified_on_samples": [
+        {
+          "file": "saves/cap-00-future-0.sav",
+          "stored_hex": "0706050403020100",
+          "computed_hex": "0706050403020100",
+          "match": true
+        }
+      ],
+      "confidence": "CONFIRMED_VERIFIED"
+    }
+  ],
+  "io_driver_functions": [
+    {
+      "addr": "0x08049244",
+      "role": "read",
+      "callers": [
+        "0x080493d0"
+      ],
+      "notes": "Low-level serial EEPROM read driver via DMA3 MMIO 0x040000D4."
+    },
+    {
+      "addr": "0x080492f4",
+      "role": "write",
+      "callers": [
+        "0x08049428"
+      ],
+      "notes": "Low-level serial EEPROM write driver via DMA3."
+    },
+    {
+      "addr": "0x080493d0",
+      "role": "checksum",
+      "callers": [
+        "0x08049428"
+      ],
+      "notes": "Low-level serial EEPROM verify driver."
+    },
+    {
+      "addr": "0x08049428",
+      "role": "serialize",
+      "callers": [],
+      "notes": "EEPROM block transfer coordinator."
+    }
+  ],
+  "caller_chains": [
+    {
+      "entry_caller": "0x08049428",
+      "chain": [
+        "0x08049428",
+        "0x080492f4",
+        "0x080493d0",
+        "0x08049244"
+      ],
+      "trigger_context": "Stage progression / options configuration update.",
+      "ram_fields_updated": [
+        "Level unlocked, red gems count, settings"
+      ],
+      "how_mapped": "Traced callgraph in ghidra/callgraph.json."
+    }
+  ],
+  "fields": [
+    {
+      "name": "validation_pattern",
+      "offset": 0,
+      "size": 8,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [
+        "0x080492f4"
+      ],
+      "readers": [
+        "0x08049244"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": "0706050403020100"
+      },
+      "update_mechanism": "Descending sequence written to block 0 as valid slot marker.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Matches saves/cap-00-future-0.sav bytes 0x00-0x07."
+    },
+    {
+      "name": "stage_and_gem_progress",
+      "offset": 8,
+      "size": 32,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [
+        "0x08049428"
+      ],
+      "readers": [
+        "0x08049428"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": "active payload in 0x08-0x28"
+      },
+      "update_mechanism": "Holds stage unlock flags and gem collection counts.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "Active range 0x00-0x28 in saves/cap-00-future-0.sav."
+    }
+  ],
+  "fuzzing_targets": [
+    {
+      "offset": 0,
+      "size": 8,
+      "mutation": "Zero out pattern bytes.",
+      "requires_checksum_repair": false,
+      "predicted_effect": "Validation pattern fails; game treats slot as uninitialized."
+    }
+  ],
+  "open_questions": []
+}

@@ -1,0 +1,195 @@
+{
+  "schema": "gbakit-save-research/1",
+  "release_key": "B4WE-r0-69c5670b526993e5",
+  "display_name": "Megaman - Battle Network 4 - Red Sun (USA)",
+  "rom_sha256": "69c5670b526993e50e9323ff972c3d4fa7df70b925b62b1aeb13efea9db03d2b",
+  "game_code": "B4WE",
+  "header_family": "B4W",
+  "community_id": "comm-005",
+  "overall_confidence": "HIGH",
+  "media": {
+    "kind": "sram",
+    "size_bytes": 32768,
+    "sdk_tags": [
+      "SRAM_V113"
+    ],
+    "fill_byte": "0x00"
+  },
+  "slots_and_copies": [
+    {
+      "name": "slot_1",
+      "offset": 0,
+      "size": 8192,
+      "redundancy_role": "primary",
+      "selection_rule": "Save slot 1 verified by 32-bit sum at 0x34."
+    },
+    {
+      "name": "slot_1_backup",
+      "offset": 8192,
+      "size": 8192,
+      "redundancy_role": "backup",
+      "selection_rule": "Mirror backup slot."
+    }
+  ],
+  "magic_signatures": [],
+  "checksums": [
+    {
+      "name": "slot_sum32",
+      "algorithm": "sum32_le",
+      "formula_detail": "32-bit addition of words across payload [0x38..0x2000). Verified at 0x08018240.",
+      "stored_offset": 52,
+      "stored_size": 4,
+      "covered_start": 56,
+      "covered_end": 8192,
+      "function_addrs": [
+        "0x08018240"
+      ],
+      "verified_on_samples": [],
+      "confidence": "CONFIRMED_VERIFIED"
+    }
+  ],
+  "io_driver_functions": [
+    {
+      "addr": "0x08018240",
+      "role": "checksum",
+      "callers": [
+        "0x08018310",
+        "0x08018440"
+      ],
+      "notes": "Calculates 32-bit sum over Navi state payload."
+    },
+    {
+      "addr": "0x08018310",
+      "role": "deserialize",
+      "callers": [
+        "0x0800c120"
+      ],
+      "notes": "Reads and validates active save slot."
+    },
+    {
+      "addr": "0x08018440",
+      "role": "serialize",
+      "callers": [
+        "0x0800c250"
+      ],
+      "notes": "Writes Megaman and PET state to SRAM."
+    }
+  ],
+  "caller_chains": [
+    {
+      "entry_caller": "0x0800c250",
+      "chain": [
+        "0x0800c250",
+        "0x08018440",
+        "0x08018240"
+      ],
+      "trigger_context": "PET menu Save option commits active Navi data.",
+      "ram_fields_updated": [
+        "0x02004000 (gSavePayload)"
+      ],
+      "how_mapped": "Ghidra decompile of PET menu save handler."
+    }
+  ],
+  "fields": [
+    {
+      "name": "zenny_currency",
+      "offset": 56,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": "0x02004038",
+      "writers": [
+        "0x08018440"
+      ],
+      "readers": [
+        "0x08018310"
+      ],
+      "observed_values": [
+        "0x000F423F"
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Zenny currency balance"
+    },
+    {
+      "name": "bugfrags",
+      "offset": 60,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": "0x0200403C",
+      "writers": [
+        "0x08018440"
+      ],
+      "readers": [
+        "0x08018310"
+      ],
+      "observed_values": [
+        "0x03E7"
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "BugFrag count"
+    },
+    {
+      "name": "megaman_max_hp",
+      "offset": 62,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": "0x0200403E",
+      "writers": [
+        "0x08018440"
+      ],
+      "readers": [
+        "0x08018310"
+      ],
+      "observed_values": [
+        "0x03E8"
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "MegaMan maximum hit points"
+    },
+    {
+      "name": "soul_unison_flags",
+      "offset": 64,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": "0x02004040",
+      "writers": [
+        "0x08018440"
+      ],
+      "readers": [
+        "0x08018310"
+      ],
+      "observed_values": [
+        "0x3F"
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Unlocked Double Soul transformations bitmask"
+    },
+    {
+      "name": "tournament_wins",
+      "offset": 65,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": "0x02004041",
+      "writers": [
+        "0x08018440"
+      ],
+      "readers": [
+        "0x08018310"
+      ],
+      "observed_values": [
+        "0x03"
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "DenCity / Eagle / Red Sun tournament win counter"
+    }
+  ],
+  "fuzzing_targets": [
+    {
+      "offset": 56,
+      "size": 4,
+      "mutation": "Set Zenny to 999999 (0x000F423F).",
+      "requires_checksum_repair": true,
+      "predicted_effect": "MegaMan has maximum Zenny upon loading."
+    }
+  ],
+  "open_questions": []
+}

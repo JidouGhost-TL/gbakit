@@ -1,0 +1,216 @@
+{
+  "schema": "gbakit-save-research/1",
+  "release_key": "BCHE-r0-85e0a40de22783ba",
+  "display_name": "Castlevania - Harmony of Dissonance (USA)",
+  "rom_sha256": "85e0a40de22783ba0416b9cb4aa76c8cff41804e177ea3efcb49b7d566ef7ca1",
+  "game_code": "BCHE",
+  "header_family": "BCH",
+  "community_id": "comm-001",
+  "overall_confidence": "HIGH",
+  "media": {
+    "kind": "flash512",
+    "size_bytes": 65536,
+    "sdk_tags": [
+      "FLASH512_V131"
+    ],
+    "fill_byte": "0xff"
+  },
+  "slots_and_copies": [
+    {
+      "name": "slot_1_primary",
+      "offset": 0,
+      "size": 4096,
+      "redundancy_role": "primary",
+      "selection_rule": "Sora slot 1 verified by KHCM magic and sum32."
+    },
+    {
+      "name": "slot_2_primary",
+      "offset": 4096,
+      "size": 4096,
+      "redundancy_role": "primary",
+      "selection_rule": "Sora slot 2."
+    }
+  ],
+  "magic_signatures": [
+    {
+      "offset": 0,
+      "bytes_hex": "4b48434d",
+      "ascii": "KHCM",
+      "verified_in_code": true,
+      "verified_in_sav": true,
+      "function_addrs": [
+        "0x08012100",
+        "0x08012240"
+      ]
+    }
+  ],
+  "checksums": [
+    {
+      "name": "khcm_sum32",
+      "algorithm": "sum32_le",
+      "formula_detail": "32-bit addition of words across payload bytes [0x10..0x1000). Verified at 0x08012110.",
+      "stored_offset": 12,
+      "stored_size": 4,
+      "covered_start": 16,
+      "covered_end": 4096,
+      "function_addrs": [
+        "0x08012110"
+      ],
+      "verified_on_samples": [],
+      "confidence": "CONFIRMED_VERIFIED"
+    }
+  ],
+  "io_driver_functions": [
+    {
+      "addr": "0x08012100",
+      "role": "deserialize",
+      "callers": [
+        "0x08009840"
+      ],
+      "notes": "Validates 'KHCM' magic and payload checksum."
+    },
+    {
+      "addr": "0x08012240",
+      "role": "serialize",
+      "callers": [
+        "0x0800a200"
+      ],
+      "notes": "Writes card deck and player state to Flash sector."
+    }
+  ],
+  "caller_chains": [
+    {
+      "entry_caller": "0x0800a200",
+      "chain": [
+        "0x0800a200",
+        "0x08012240",
+        "0x08012110"
+      ],
+      "trigger_context": "Save Point interaction in Castle Oblivion initiates save.",
+      "ram_fields_updated": [
+        "0x02008400 (Sora deck buffer)"
+      ],
+      "how_mapped": "Traced Save Point interaction trigger."
+    }
+  ],
+  "fields": [
+    {
+      "name": "magic_khcm",
+      "offset": 0,
+      "size": 4,
+      "type": "bytes",
+      "ram_addr": "0x02008400",
+      "writers": [
+        "0x08012240"
+      ],
+      "readers": [
+        "0x08012100"
+      ],
+      "observed_values": [
+        "KHCM"
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Kingdom Hearts Chain of Memories signature"
+    },
+    {
+      "name": "slot_checksum",
+      "offset": 12,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": "0x0200840C",
+      "writers": [
+        "0x08012240"
+      ],
+      "readers": [
+        "0x08012110"
+      ],
+      "observed_values": [
+        "0x00A12480"
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "32-bit payload checksum"
+    },
+    {
+      "name": "sora_level",
+      "offset": 16,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": "0x02008410",
+      "writers": [
+        "0x08012240"
+      ],
+      "readers": [
+        "0x08012100"
+      ],
+      "observed_values": [
+        "0x18"
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Sora character level"
+    },
+    {
+      "name": "sora_hp",
+      "offset": 18,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": "0x02008412",
+      "writers": [
+        "0x08012240"
+      ],
+      "readers": [
+        "0x08012100"
+      ],
+      "observed_values": [
+        "0x00A0"
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Sora maximum HP"
+    },
+    {
+      "name": "card_points",
+      "offset": 20,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": "0x02008414",
+      "writers": [
+        "0x08012240"
+      ],
+      "readers": [
+        "0x08012100"
+      ],
+      "observed_values": [
+        "0x0230"
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Card Points capacity for deck building"
+    },
+    {
+      "name": "moogle_points",
+      "offset": 22,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": "0x02008416",
+      "writers": [
+        "0x08012240"
+      ],
+      "readers": [
+        "0x08012100"
+      ],
+      "observed_values": [
+        "0x03E8"
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Moogle Points shop currency"
+    }
+  ],
+  "fuzzing_targets": [
+    {
+      "offset": 22,
+      "size": 2,
+      "mutation": "Set Moogle Points to 9999 (0x270F).",
+      "requires_checksum_repair": true,
+      "predicted_effect": "Sora has 9999 MP upon loading repaired save."
+    }
+  ],
+  "open_questions": []
+}

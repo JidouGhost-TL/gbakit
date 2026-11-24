@@ -13,7 +13,13 @@
       <a href="../index.html">Games</a>
       <a href="../saves/index.html">Save Formats</a>
       <a href="../patches/index.html">Debug Patches</a>
+      <a href="../debug-menus.html">Debug Gallery</a>
+      <a href="../non-retail-cartridges.html">Non-Retail</a>
+      <a href="../cartridge-hardware.html">Cartridge Hardware</a>
+      <a href="../link-multiplayer.html">Link &amp; Multiplayer</a>
+      <a href="../multiboot-museum.html">MultiBoot Museum</a>
       <a href="../assets/index.html">Assets &amp; Audio</a>
+      <a href="../text-and-fonts.html">Text &amp; Fonts</a>
       <a href="../engines/index.html">Engines &amp; Hardware</a>
       <a href="../families/index.html">Families</a>
       <a href="../gbakit/index.html">Using gbakit</a>
@@ -22,7 +28,7 @@
   <main>
 <p class="meta"><a href="../index.html">&larr; Games</a> &middot; Family <code>A2T</code></p>
 <h1>Pinball Tycoon (USA)</h1>
-<p><span class='badge badge-zinc'>Stateless / Passcode</span> <span class='badge badge-blue'>VRAM Tile Sheet</span></p>
+<p><span class='badge badge-slate'>Battery Save</span> <span class='badge badge-emerald'>Save Format Mapped (Family Spec)</span> <span class='badge badge-emerald'>gbakit Built-In</span> <span class='badge badge-blue'>VRAM Tile Sheet</span></p>
 
 <h2>Cartridge Identity</h2>
 <dl class="kv">
@@ -37,13 +43,29 @@
 <h2>Screenshots</h2><div class='gallery'><figure><img src='../assets/thumbs/A2TE-r0-8703d37ccf8980ab-boot.png' alt='Boot Screen' loading='lazy'><figcaption>Boot Screen</figcaption></figure><figure><img src='../assets/thumbs/A2TE-r0-8703d37ccf8980ab-after.png' alt='In-Game' loading='lazy'><figcaption>In-Game</figcaption></figure></div>
 
 
-<h2>Cartridge Storage Architecture: Stateless / Passcode</h2>
+
+
+
+<h2>Battery Save Format Specification (Family Shared)</h2>
 <div class="callout">
-  <strong>Zero non-volatile battery hardware:</strong> This cartridge PCB contains ROM only (no SRAM, Flash, or EEPROM chips). Progression is preserved via on-screen passcodes or session-only gameplay. No <code>.sav</code> file is generated or required.
+  This release shares its save architecture with canonical family reference <a href="../titles/A2TE-r0-b9b6af144361a7d1.html"><strong>Super Robot Taisen - Original Generation 2 (USA)</strong></a> (Family <code>A2T</code>).
 </div>
+<p><a class='btn' href='../saves/A2TE-r0-b9b6af144361a7d1.html'>Open Family Save Format Spec (A2TE)</a><a class='btn btn-secondary' href='../assets/formats/A2TE-r0-b9b6af144361a7d1/save-format.json' download>Download save-format.json</a></p>
+<dl class="kv">
+  <dt>Canonical Specification</dt><dd><code>A2TE</code> &middot; <strong>5</strong> mapped fields &middot; <strong>1</strong> verified checksum(s) &middot; Confidence: <span class="badge badge-indigo">HIGH</span></dd>
+  <dt>gbakit Built-In Support</dt><dd><span class="badge badge-emerald">Built-in (A2TE)</span></dd>
+</dl>
+<pre><code>gbakit save verify A2TE save.sav
+gbakit save decode A2TE save.sav
+gbakit save fix    A2TE damaged.sav -o repaired.sav</code></pre>
 
 
 <h2>ROM Assets, Compression &amp; Audio</h2><dl class='kv'><dt>BIOS Compression</dt><dd>LZ77 (<code>0x10</code>): <strong>0</strong> streams &middot; RLE (<code>0x30</code>): <strong>0</strong> streams</dd><dt>ROM Pointer Tables</dt><dd>1 tables (0 pointing to validated compressed streams)</dd><dt>SDK Backup Tags</dt><dd>None</dd><dt>VRAM / Palette Snapshot</dt><dd>1,968 non-zero 8&times;8 tiles &middot; 32 palettes &middot; Direct ROM matches: <strong>0</strong> VRAM blocks, <strong>0</strong> palette blocks</dd></dl><div class='gallery'><figure><img src='../assets/vram-sheets/A2TE-r0-8703d37ccf8980ab-vram.png' alt='VRAM 4bpp tile sheet' style='width:256px;height:256px;image-rendering:pixelated' loading='lazy'><figcaption>VRAM 4bpp Tile Sheet</figcaption></figure></div>
+
+<h2>Text, Fonts &amp; Scene Data</h2>
+<dl class="kv"><dt>Primary Text Encoding</dt><dd><strong>16-bit / UTF-16LE text</strong> (<code>18</code> ASCII strings &middot; <code>1</code> Shift-JIS runs)</dd><dt>Font &amp; VWF Indicators</dt><dd><span class='badge badge-emerald'>VWF Width Table</span> <span class='badge badge-blue'>1bpp Font</span> &middot; BIOS SWIs: BitUnPack <code>0x10</code>: <code>25</code> &middot; LZ77 <code>0x11/12</code>: <code>5</code> &middot; Huffman <code>0x13</code>: <code>1</code> &middot; RLE <code>0x14/15</code>: <code>3</code></dd><dt>Scene &amp; Packaging</dt><dd><code>3</code> ROM pointer tables (&ge;32 entries, <code>0</code> &ge;200) &middot; <code>0</code> relative <code>u32</code> TOCs &middot; <code>108</code> OAM metasprite hits</dd></dl>
+
+
 
 <h2>Regional Variants &amp; Revisions (Family <code>A2T</code>)</h2><ul><li><a href='A2TP-r0-21f4d8ec95c842c9.html'>Pinball Tycoon (Europe)</a> (<code>A2TP</code>, 4 MiB)</li></ul>
 </main>

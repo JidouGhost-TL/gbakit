@@ -1,0 +1,275 @@
+{
+  "schema": "gbakit-save-research/1",
+  "release_key": "APDP-r0-57578a9edff81079",
+  "display_name": "Pinball of the Dead, The (Europe) (En,Fr,De,Es,It)",
+  "rom_sha256": "57578a9edff810790d7430e6d4f2c08cf0cd36299cb738862cefba104f0da7ef",
+  "game_code": "APDP",
+  "header_family": "APD",
+  "community_id": "comm-002",
+  "overall_confidence": "MEDIUM",
+  "media": {
+    "kind": "eeprom512",
+    "size_bytes": 512,
+    "sdk_tags": [],
+    "fill_byte": "0x00"
+  },
+  "slots_and_copies": [
+    {
+      "name": "slot_0",
+      "offset": 0,
+      "size": 424,
+      "redundancy_role": "primary",
+      "selection_rule": "single logical block occupying offset 0x0 to 0x1A8; no mirrored/backup copy found; remaining 88 bytes (0x1A8-0x1FF) are all-zero padding"
+    }
+  ],
+  "magic_signatures": [
+    {
+      "offset": 3,
+      "bytes_hex": "4454 4f50 54",
+      "ascii": "DTOPT",
+      "verified_in_code": false,
+      "verified_in_sav": true,
+      "function_addrs": []
+    }
+  ],
+  "checksums": [
+    {
+      "name": "generic_stamp_sum16_xor16 (unmapped candidate)",
+      "algorithm": "custom",
+      "formula_detail": "FUN_0801b8c0 builds a 12-byte stamp: 6-byte literal magic + u16 version(0x0100) + u16 additive signed-word sum over 500 bytes (FUN_0801b958) + u16 XOR-word checksum over the same 500 bytes (FUN_0801b980). FUN_0801b914 verifies only the magic+version, never the sum16/xor16 fields. No byte-offset alignment of this 12-byte struct against the observed 16-byte header was found to be consistent (see report section 4.4).",
+      "stored_offset": -1,
+      "stored_size": 0,
+      "covered_start": -1,
+      "covered_end": -1,
+      "function_addrs": ["0x0801b8c0", "0x0801b914", "0x0801b958", "0x0801b980"],
+      "verified_on_samples": [
+        {"file": "saves/cap-00-future-0.sav", "stored_hex": "unknown", "computed_hex": "unknown", "match": false},
+        {"file": "saves/cap-01-future-1.sav", "stored_hex": "unknown", "computed_hex": "unknown", "match": false}
+      ],
+      "confidence": "CONFIRMED_STATIC"
+    },
+    {
+      "name": "header_bytes_0B_0D_0F (candidate counters, unresolved algorithm)",
+      "algorithm": "unknown",
+      "formula_detail": "Single bytes at offsets 0x0B, 0x0D, 0x0F each increase by +5 between cap-00 and cap-01 while interleaved bytes 0x0C (0x15) and 0x0E (0x60) stay constant. sum8/xor8/sum16/xor16 over every tested byte window (0x00-0x1FF, multiple start/length combinations) failed to reproduce these deltas non-trivially; see report section 4.3 for the exact Python verification performed.",
+      "stored_offset": 11,
+      "stored_size": 1,
+      "covered_start": -1,
+      "covered_end": -1,
+      "function_addrs": [],
+      "verified_on_samples": [
+        {"file": "saves/cap-00-future-0.sav", "stored_hex": "0x00", "computed_hex": "unknown", "match": false},
+        {"file": "saves/cap-01-future-1.sav", "stored_hex": "0x05", "computed_hex": "unknown", "match": false}
+      ],
+      "confidence": "UNKNOWN"
+    }
+  ],
+  "io_driver_functions": [
+    {"addr": "0x08024504", "role": "read", "callers": ["0x08024584", "0x08024634"], "notes": "Generic DMA3 transfer primitive: programs src/dst/count|enable globals, busy-polls completion bit, used for both EEPROM read and write bit-streams"},
+    {"addr": "0x08024584", "role": "read", "callers": ["0x08024710"], "notes": "EEPROM READ command builder + DMA3 bit-serialize (2-bit opcode '11' + 6-bit record address) and 64-bit response unpack into 4x u16 words; MMIO seed function"},
+    {"addr": "0x08024634", "role": "write", "callers": ["0x08024768"], "notes": "EEPROM WRITE command builder + DMA3 bit-serialize (2-bit opcode '10' + 6-bit address + 64-bit payload), busy-polls 0x0D000000 ready bit; MMIO seed function"},
+    {"addr": "0x08024710", "role": "read", "callers": ["0x08024768"], "notes": "Write-verify: reads back via FUN_08024584 and compares against expected 4x u16 words, returns 0x8000 on mismatch"},
+    {"addr": "0x08024768", "role": "write", "callers": [], "notes": "Top of hardware tier: write-with-retry orchestrator, up to 3 attempts of write(FUN_08024634)+verify(FUN_08024710); no static caller found in callgraph.json"},
+    {"addr": "0x08024438", "role": "write", "callers": ["0x08024634"], "notes": "Arms a secondary transfer descriptor / enable flag immediately before the EEPROM busy-poll in the write path"},
+    {"addr": "0x080244c0", "role": "write", "callers": ["0x08024634"], "notes": "Disarms/tears down the descriptor armed by FUN_08024438"},
+    {"addr": "0x08024398", "role": "write", "callers": ["0x0801b440"], "notes": "Generic interrupt-vector get/set dispatch (mode selector 4/0x40/other), used to install a transfer-complete callback"},
+    {"addr": "0x08024400", "role": "write", "callers": ["0x0801b440"], "notes": "Generic record-count/metadata setter (bounds-checked against 4), used during per-transfer setup"}
+  ],
+  "caller_chains": [
+    {
+      "entry_caller": "0x0801b518",
+      "chain": ["0x0801b518", "0x0801b914", "0x0801b440", "0x08024398", "0x08024400", "0x08024584", "0x08024504"],
+      "trigger_context": "EEPROM READ task state machine (states 0x65 init/stamp-check, 1->100 setup, 100 per-record read loop, 11/900 terminal). No static caller found for FUN_0801b518 itself in callgraph.json; almost certainly invoked indirectly via a function-pointer task-scheduler slot not present in the provided decompilation window.",
+      "ram_fields_updated": ["in-RAM record buffer populated word-by-word from FUN_08024584 output"],
+      "how_mapped": "Traced by reading FUN_0801b518's body in decompiled.c state-by-state and matching each call site (FUN_0801b914, FUN_0801b440, func_0x08024584) against ghidra/callgraph.json; the FUN_0801b914 call is present in the C source but NOT recorded as a caller edge in callgraph.json -- flagged explicitly as a static-analysis blind spot"
+    },
+    {
+      "entry_caller": "0x0801b684",
+      "chain": ["0x0801b684", "0x0801b440", "0x08024398", "0x08024400", "0x08024768", "0x08024634", "0x08024710", "0x08024504"],
+      "trigger_context": "EEPROM WRITE task state machine (states 0x65 init, 1->100 setup, 100 per-record write+verify loop via FUN_08024768, 11 finalize via no-op stub FUN_0801b514, 900 abort). No static caller found for FUN_0801b684 itself in callgraph.json.",
+      "ram_fields_updated": ["record bytes streamed from in-RAM record buffer to EEPROM via FUN_08024634/FUN_08024710"],
+      "how_mapped": "Traced by reading FUN_0801b684's body state-by-state in decompiled.c and matching each call to the hardware tier via ghidra/callgraph.json (0x0801b684 callees: 0x0801b440, 0x0801b4c4, 0x0801b514; hardware calls reached via func_0x08024768 are not caller-edges in the JSON but are literal call sites in the C source)"
+    }
+  ],
+  "fields": [
+    {
+      "name": "slot_valid_flag",
+      "offset": 0,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"cap-00-future-0.sav": "0x01", "cap-01-future-1.sav": "0x01"},
+      "update_mechanism": "unknown - constant in both samples",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "Raw byte read from both .sav files; no writer/reader function identified in the provided decompilation window"
+    },
+    {
+      "name": "reserved_1",
+      "offset": 1,
+      "size": 2,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"cap-00-future-0.sav": "0x0000", "cap-01-future-1.sav": "0x0000"},
+      "update_mechanism": "unknown - constant in both samples",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Raw byte read, identical in both files"
+    },
+    {
+      "name": "magic_DTOPT",
+      "offset": 3,
+      "size": 5,
+      "type": "ascii",
+      "ram_addr": null,
+      "writers": ["0x0801b8c0"],
+      "readers": ["0x0801b914"],
+      "observed_values": {"cap-00-future-0.sav": "DTOPT", "cap-01-future-1.sav": "DTOPT"},
+      "update_mechanism": "Hypothesized link to FUN_0801b8c0 (builder) / FUN_0801b914 (verifier) generic stamp pair; byte-offset alignment of the 12-byte stamp struct against this 16-byte header region could not be fully verified (see report 4.4)",
+      "confidence": "HYPOTHESIS",
+      "evidence": "ASCII decoded directly from raw .sav bytes; constant across both snapshots"
+    },
+    {
+      "name": "reserved_2",
+      "offset": 8,
+      "size": 3,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"cap-00-future-0.sav": "0x000000", "cap-01-future-1.sav": "0x000000"},
+      "update_mechanism": "unknown - constant in both samples",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Raw byte read, identical in both files"
+    },
+    {
+      "name": "counter_candidate_A",
+      "offset": 11,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"cap-00-future-0.sav": "0x00", "cap-01-future-1.sav": "0x05"},
+      "update_mechanism": "Unresolved. Increases by +5 in lockstep with offsets 0x0D and 0x0F between the two capture points; no checksum formula in the decompiled corpus reproduces this (tested sum8/xor8/sum16/xor16 across many windows, see report 4.3)",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Byte-diff between saves/cap-00-future-0.sav and saves/cap-01-future-1.sav; matches packet's own mutation_probe offset 0xB"
+    },
+    {
+      "name": "header_const_C",
+      "offset": 12,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"cap-00-future-0.sav": "0x15", "cap-01-future-1.sav": "0x15"},
+      "update_mechanism": "unknown - constant in both samples",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Raw byte read, identical in both files"
+    },
+    {
+      "name": "counter_candidate_B",
+      "offset": 13,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"cap-00-future-0.sav": "0x70", "cap-01-future-1.sav": "0x75"},
+      "update_mechanism": "Unresolved, same +5 delta behavior as counter_candidate_A",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Byte-diff between the two .sav snapshots"
+    },
+    {
+      "name": "header_const_E",
+      "offset": 14,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"cap-00-future-0.sav": "0x60", "cap-01-future-1.sav": "0x60"},
+      "update_mechanism": "unknown - constant in both samples",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Raw byte read, identical in both files"
+    },
+    {
+      "name": "counter_candidate_C",
+      "offset": 15,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"cap-00-future-0.sav": "0xFA", "cap-01-future-1.sav": "0xFF"},
+      "update_mechanism": "Unresolved, same +5 delta behavior as counter_candidate_A/B",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Byte-diff between the two .sav snapshots"
+    },
+    {
+      "name": "record_table_entry_0_anomalous",
+      "offset": 16,
+      "size": 8,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"cap-00-future-0.sav": "00989680 01010100", "cap-01-future-1.sav": "00989680 01010100"},
+      "update_mechanism": "First 8-byte slot of the record table region; trailing 4 bytes are not ASCII (01 01 01 00) unlike every subsequent record, suggesting a config/default record rather than a score+name entry",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Raw byte read; pattern-breaks from all other 50 records which have a 1-pad-byte + up to 3 ASCII char trailing field"
+    },
+    {
+      "name": "record_table",
+      "offset": 24,
+      "size": 400,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {
+        "stride_bytes": 8,
+        "record_count": 50,
+        "layout": "u32_be score + 4-byte tag (1 pad byte + up to 3 ASCII chars, or all-zero terminator)",
+        "sample_scores_desc": [10000000, 9000000, 8000000, 7000000, 6000000, 5000000, 4000000, 3000000, 2000000, 1000000],
+        "sample_tags": ["SMA", "MAJ", "YRG", "YRH", "YMA", "SMT", "  G", "POS", "RUC", "DLG", "BOB", "KIR", "ZIM", "DOP"]
+      },
+      "update_mechanism": "Writer function not identified in the provided 111-function decompilation window; structure derived purely from fixed-stride parsing of the raw .sav bytes",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Python fixed-stride parse of saves/cap-00-future-0.sav and saves/cap-01-future-1.sav bytes 0x18-0x1A7; byte-identical in both snapshots (region untouched by the probe mutation)"
+    },
+    {
+      "name": "unused_tail",
+      "offset": 424,
+      "size": 88,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"cap-00-future-0.sav": "all 0x00", "cap-01-future-1.sav": "all 0x00"},
+      "update_mechanism": "unused padding to the 512-byte EEPROM 4K boundary",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Raw byte read, identical in both files"
+    }
+  ],
+  "fuzzing_targets": [
+    {"offset": 11, "size": 1, "mutation": "set to arbitrary value (e.g. 0xFF) while leaving 0x0D/0x0F untouched", "requires_checksum_repair": false, "predicted_effect": "Most likely no visible effect (packet probe already observed visual_delta_after_mutation=false for this offset); isolates whether this byte is read independently of 0x0D/0x0F"},
+    {"offset": 13, "size": 1, "mutation": "set to arbitrary value while leaving 0x0B/0x0F untouched", "requires_checksum_repair": false, "predicted_effect": "Determines whether 0x0D is read independently or only in combination with 0x0B/0x0F"},
+    {"offset": 3, "size": 1, "mutation": "flip 0x44 -> 0x45 (break 'DTOPT' magic to 'ETOPT')", "requires_checksum_repair": false, "predicted_effect": "If FUN_0801b914's magic check genuinely gates this region, expect a corrupted-save/default-reset path; if the game loads normally, this disproves the magic-check hypothesis for this specific 512-byte file"},
+    {"offset": 96, "size": 4, "mutation": "change record score field at 0x60 from 00 98 96 80 to 00 00 00 01", "requires_checksum_repair": false, "predicted_effect": "If a high-score UI exists, the displayed value for the 'DLG'-tagged entry should change to reflect the new big-endian 32-bit value"},
+    {"offset": 100, "size": 4, "mutation": "change tag bytes at 0x64 from 00 44 4c 47 ('DLG') to 00 5a 5a 5a ('ZZZ')", "requires_checksum_repair": false, "predicted_effect": "Confirms the tag field is consumed independently of the score field (name display changes without score changing)"},
+    {"offset": 416, "size": 8, "mutation": "overwrite terminator record at 0x1A0 (score 0, tag 'DOP') with a non-zero score and a 3-letter tag", "requires_checksum_repair": false, "predicted_effect": "Reveals whether this slot is a true list terminator (ignored) or a genuine 51st table entry (accepted as a new high score)"},
+    {"offset": 20, "size": 4, "mutation": "zero the trailing 01 01 01 00 bytes at 0x14-0x17 of the anomalous first record", "requires_checksum_repair": false, "predicted_effect": "Distinguishes a consumed options/config record (visible settings change) from dead padding (no observable change)"}
+  ],
+  "open_questions": [
+    "What algorithm (if any) produces the three single-byte values at offsets 0x0B, 0x0D, 0x0F, which moved by an identical +5 delta between the two captured snapshots?",
+    "Which game-logic function(s) outside the provided 111-function decompilation window populate and consume the 50-entry record table at offset 0x18-0x1A7?",
+    "Is the generic FUN_0801b8c0/FUN_0801b914 magic+version+sum16+xor16 stamp pair actually responsible for any bytes in this specific 512-byte save, given that no offset alignment in [0,16) reproduces its expected 12-byte shape?",
+    "What is the scheduling/trigger mechanism (indirect task-table call) that invokes FUN_0801b518 (read task) and FUN_0801b684 (write task), since neither has a statically-recorded caller in callgraph.json?",
+    "Is the first record at offset 0x10-0x17 (trailing bytes 01 01 01 00, non-ASCII) a config/options record distinct from the following 50 score-table entries, or is it a writer-side artifact of a shared record-initialization routine?",
+    "What determines the true per-block record count (the data shows irregular block boundaries at 9-10-10-9-11 entries), and is the all-zero final record at 0x1A0 a genuine terminator or simply an unused slot?"
+  ]
+}

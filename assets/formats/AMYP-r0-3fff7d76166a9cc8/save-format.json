@@ -1,0 +1,312 @@
+{
+  "schema": "gbakit-save-research/1",
+  "release_key": "AMYP-r0-3fff7d76166a9cc8",
+  "display_name": "Bomberman Max 2 - Red Advance (Europe) (En,Fr,De)",
+  "rom_sha256": "3fff7d76166a9cc85358c16285bbb217504e3091a1180ba41e32fc4134aa8a81",
+  "game_code": "AMYP",
+  "header_family": "AMY",
+  "community_id": "comm-079",
+  "overall_confidence": "MEDIUM",
+  "media": {
+    "kind": "eeprom8k",
+    "size_bytes": 8192,
+    "sdk_tags": [],
+    "fill_byte": "0xff"
+  },
+  "slots_and_copies": [
+    {
+      "name": "slot_record_0",
+      "offset": 0,
+      "size": 768,
+      "redundancy_role": "primary",
+      "selection_rule": "Loaded/written by FUN_08002a50/FUN_08002930 with slot_index=0; EEPROM block base = slot_index*0x60 (96 blocks * 8 bytes = 0x300 bytes/slot)."
+    },
+    {
+      "name": "slot_record_1",
+      "offset": 768,
+      "size": 768,
+      "redundancy_role": "unknown",
+      "selection_rule": "slot_index=1; same reader/writer functions as slot_record_0, parameterized by slot_index."
+    },
+    {
+      "name": "slot_record_2",
+      "offset": 1536,
+      "size": 768,
+      "redundancy_role": "unknown",
+      "selection_rule": "slot_index=2; same reader/writer functions as slot_record_0, parameterized by slot_index."
+    },
+    {
+      "name": "global_meta_block",
+      "offset": 2304,
+      "size": 8,
+      "redundancy_role": "global_config",
+      "selection_rule": "Single fixed EEPROM block 0x120 (byte offset 0x900); read by FUN_08002eac, written by FUN_08002e3c. Not indexed by slot_index."
+    }
+  ],
+  "magic_signatures": [
+    {
+      "offset": 0,
+      "bytes_hex": "414d5245424d4f42d200325841",
+      "ascii": "AMREBMOBÒ\u00002XAM",
+      "verified_in_code": false,
+      "verified_in_sav": true,
+      "function_addrs": ["0x08002a94"]
+    }
+  ],
+  "checksums": [
+    {
+      "name": "slot_record_checksum",
+      "algorithm": "sum8",
+      "formula_detail": "Zero byte at relative offset 0x0F, then sum (mod 256) every byte 0x00-0x0F, every byte 0x10-0x2F (two interleaved byte ranges 0x10-0x1F/0x20-0x2F), every byte 0x30-0x11F (5 chunks of 48 bytes, interleaved even/odd), and every little-endian u16 word 0x120-0x2FF (30 rows x 8 words). Store the BITWISE ONE'S COMPLEMENT (NOT) of the low byte of the sum into relative offset 0x0F. NOTE: the Ghidra decompilation of FUN_08002ac8 renders the store as '*(char*)(param_1+0xf) = -(char)sVar1' (arithmetic two's-complement negation), but live-byte verification against saves/cap-00-future-0.sav and saves/cap-01-future-1.sav proves the actual stored byte matches (~sum)&0xff, not (-sum)&0xff (they differ by exactly 1 whenever the low byte of the sum is non-zero). This is flagged as a probable decompiler NEG/MVN misread, not a semantic hypothesis.",
+      "stored_offset": 15,
+      "stored_size": 1,
+      "covered_start": 0,
+      "covered_end": 767,
+      "function_addrs": ["0x08002ac8"],
+      "verified_on_samples": [
+        {"file": "saves/cap-00-future-0.sav", "stored_hex": "0x4e", "computed_hex": "0x4e", "match": true},
+        {"file": "saves/cap-01-future-1.sav", "stored_hex": "0x4e", "computed_hex": "0x4e", "match": true}
+      ],
+      "confidence": "CONFIRMED_VERIFIED"
+    }
+  ],
+  "io_driver_functions": [
+    {
+      "addr": "0x0806bc1c",
+      "role": "read",
+      "callers": ["0x0806bdb8"],
+      "notes": "Raw EEPROM block reader. Packs the block-address (param_1, in 8-byte-block units) into a serial bitstream, calls FUN_0806bb9c twice to drive the EEPROM serial protocol over 0x0D000000 via DMA3, then unpacks 4 returned 16-bit words into param_2[0..3] (8 bytes). Used by both the slot loader (FUN_08002a50) and the verify helper (FUN_0806bdb8)."
+    },
+    {
+      "addr": "0x0806bcd4",
+      "role": "write",
+      "callers": [],
+      "notes": "Raw EEPROM block writer. Packs 4 source words from param_2 plus the block address into a serial bitstream, calls FUN_0806bb9c to shift the bitstream out over 0x0D000000, calls FUN_0806baf4 to strobe the write-enable sequence, then polls bit0 of 0x0D000000 (busy flag) until the chip reports ready. Used by both slot save (FUN_08002930) and the global-meta writer (FUN_08002e3c)."
+    },
+    {
+      "addr": "0x0806bdb8",
+      "role": "read",
+      "callers": [],
+      "notes": "Write-verify helper: calls FUN_0806bc1c to re-read the just-written 8-byte block into a local stack buffer, then compares it word-for-word against param_2 (the expected/source data). Returns 0 on match, 0x8000 on first mismatched word. Used after FUN_0806bcd4 writes in both the slot-save and global-meta-write paths."
+    },
+    {
+      "addr": "0x0806bb9c",
+      "role": "read",
+      "callers": ["0x0806bc1c", "0x0806bcd4"],
+      "notes": "Lowest-level DMA3 MMIO primitive: programs source/count/control around the 0x040000D4 DMA3 register block to shift bits to/from the EEPROM serial line at 0x0D000000, busy-waiting on a ready flag. Shared by both the read and write block drivers (direction depends on caller-supplied src/dst)."
+    },
+    {
+      "addr": "0x0806baf4",
+      "role": "write",
+      "callers": ["0x0806bcd4"],
+      "notes": "Write-strobe helper invoked only from the write path (FUN_0806bcd4) after the data bitstream has been shifted out; appears to issue the EEPROM write-commit sequence."
+    },
+    {
+      "addr": "0x0806bb58",
+      "role": "write",
+      "callers": ["0x0806bcd4"],
+      "notes": "Teardown/cleanup helper invoked at the end of FUN_0806bcd4's write sequence (clears an internal queue head pointer and an interrupt-enable bit)."
+    }
+  ],
+  "caller_chains": [
+    {
+      "entry_caller": "unknown (indirect jumptable dispatch)",
+      "chain": ["0x08002930", "0x0806bcd4", "0x0806bb9c", "0x0806baf4", "0x0806bb58", "0x0806bdb8", "0x0806bc1c"],
+      "trigger_context": "No direct BL caller found in ghidra/callgraph.json for FUN_08002930; every function body in this corpus ends in an '(*UNRECOVERED_JUMPTABLE)()' indirect call, indicating the engine dispatches save operations through a function-pointer/task table rather than ordinary BL instructions, which static callgraph extraction cannot follow.",
+      "ram_fields_updated": ["0x300-byte RAM mirror pointed to by _DAT_0800299c (exact address unresolved from decompilation text alone)"],
+      "how_mapped": "Seed function 0x0806bc1c/0x0806bcd4 from ghidra/save_related_functions.c; traced 1-hop callees via ghidra/callgraph.json and cross-referenced the 96-iteration (0x60) block loop in FUN_08002930/decompiled.c against the EEPROM block math (slot_index*0x60 blocks = slot_index*0x300 bytes), matching the 3x768-byte active range measured in saves/*.sav."
+    },
+    {
+      "entry_caller": "unknown (indirect jumptable dispatch)",
+      "chain": ["0x08002a50", "0x0806bc1c", "0x0806bb9c"],
+      "trigger_context": "No direct BL caller found for FUN_08002a50 in ghidra/callgraph.json; same indirect-dispatch limitation as above.",
+      "ram_fields_updated": ["0x300-byte RAM mirror pointed to by _DAT_08002a90 (exact address unresolved)"],
+      "how_mapped": "Same block-address math as the save chain, but using the pure-read driver (0x0806bc1c) instead of write+verify, confirming this is the load/restore path rather than the save path."
+    },
+    {
+      "entry_caller": "unknown (indirect jumptable dispatch, one direct BL edge confirmed)",
+      "chain": ["0x08002e3c", "0x08002ac8", "0x0806bcd4", "0x0806bdb8"],
+      "trigger_context": "ghidra/callgraph.json shows FUN_08002e3c directly calling FUN_08002ac8 (the only non-indirect edge found among the save-cluster functions); FUN_08002e3c itself has no recorded caller.",
+      "ram_fields_updated": ["+0xe flag byte and +0xf checksum byte of a >=0x300-byte RAM struct pointed to by _DAT_08002ea8; only an 8-byte slice of that struct (base+_DAT_08002e98) is actually flushed to EEPROM block 0x120"],
+      "how_mapped": "Matched FUN_08002e3c's single EEPROM block address (0x120) against the mutated 8-byte region (file offset 0x900-0x907) observed in saves/hexdump_and_diffs.txt, and matched its write-then-verify call pair against the same FUN_0806bcd4/FUN_0806bdb8 pattern used by the slot writer."
+    },
+    {
+      "entry_caller": "unknown (indirect jumptable dispatch)",
+      "chain": ["0x08002eac", "0x0806bc1c", "0x0806bb9c"],
+      "trigger_context": "No direct BL caller found for FUN_08002eac in ghidra/callgraph.json.",
+      "ram_fields_updated": ["*puRam08002ef4 (1 byte) or *_DAT_08002ee0 (set to 0), selected by the u16 value at the global-meta block's +6 offset (file offset 0x906-0x907)"],
+      "how_mapped": "Read-back of EEPROM block 0x120 followed by a branch on *(ushort*)(buf+6) == 1 or == 2; matched against the global-meta block identified in the FUN_08002e3c chain above."
+    }
+  ],
+  "fields": [
+    {
+      "name": "slot_header_signature",
+      "offset": 0,
+      "size": 14,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": ["0x08002930"],
+      "readers": ["0x08002a50", "0x08002a94"],
+      "observed_values": {"cap-00-future-0.sav": "414d5245424d4f42d200325841", "cap-01-future-1.sav": "414d5245424d4f42d200325841"},
+      "update_mechanism": "Identical constant bytes at relative offset 0 in all 3 slot copies and in both capture samples; never observed to vary. FUN_08002a94 performs a 14-byte compare of a struct against a constant (_DAT_08002abc) whose literal value could not be resolved from the decompiled text alone, so the exact relationship between that compare and this field is unconfirmed.",
+      "confidence": "HYPOTHESIS",
+      "evidence": "ghidra/decompiled.c FUN_08002a94 (lines ~485-508); saves/hexdump_and_diffs.txt identical header bytes at 0x000/0x300/0x600"
+    },
+    {
+      "name": "slot_flag_byte",
+      "offset": 14,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": ["0x08002930"],
+      "readers": ["0x08002a94"],
+      "observed_values": {"cap-00-future-0.sav": "0x2d", "cap-01-future-1.sav": "0x2d"},
+      "update_mechanism": "Constant 0x2D in every slot/sample observed; FUN_08002a94 expects this byte to be 0x00 for a struct to be considered 'valid', which is NOT satisfied here, so either this is not the struct FUN_08002a94 validates, or validity is determined elsewhere.",
+      "confidence": "HYPOTHESIS",
+      "evidence": "ghidra/decompiled.c FUN_08002a94 lines 497-503; saves/*.sav byte 0x0e in all 3 slots"
+    },
+    {
+      "name": "slot_checksum",
+      "offset": 15,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": ["0x08002ac8"],
+      "readers": [],
+      "observed_values": {"cap-00-future-0.sav": "0x4e", "cap-01-future-1.sav": "0x4e"},
+      "update_mechanism": "Computed by FUN_08002ac8 as the one's-complement of a sum8 over the whole 768-byte record (see checksums[0]). No reader/verify call for this byte was traced anywhere in the load path (FUN_08002a50), which is noted as an open question.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "ghidra/decompiled.c FUN_08002ac8 lines 513-565; Python verification against saves/cap-00-future-0.sav and saves/cap-01-future-1.sav, all 3 slots, see SAVE-FORMAT-REPORT.md section 4"
+    },
+    {
+      "name": "reserved_block_10_2f",
+      "offset": 16,
+      "size": 32,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": ["0x08002930"],
+      "readers": ["0x08002a50", "0x08002ac8"],
+      "observed_values": {"cap-00-future-0.sav": "all 0x00", "cap-01-future-1.sav": "all 0x00"},
+      "update_mechanism": "Covered by the checksum's third summation loop (two interleaved 16-byte ranges 0x10-0x1f/0x20-0x2f); all-zero in both samples, no non-zero value observed to infer purpose from.",
+      "confidence": "UNKNOWN",
+      "evidence": "ghidra/decompiled.c FUN_08002ac8 lines 534-539; saves/hexdump_and_diffs.txt"
+    },
+    {
+      "name": "flag_or_unlock_table",
+      "offset": 48,
+      "size": 240,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": ["0x08002930"],
+      "readers": ["0x08002a50", "0x08002ac8"],
+      "observed_values": {"pattern": "mostly u16-aligned 0x0000/0x0001 values, e.g. bytes at 0x30 read '00 00 00 01 00 01 00 01...'"},
+      "update_mechanism": "Checksum loop proves this 240-byte span is organized as 5 interleaved 48-byte chunks (relative 0x30-0x11f); byte-level content in both samples looks like a repeating array of 16-bit 0/1 values, consistent with (but not proven to be) a per-item unlock/clear bitfield table. No writer other than the generic slot-save routine was traced; no code was found that sets individual entries, so the semantic meaning is unproven.",
+      "confidence": "HYPOTHESIS",
+      "evidence": "ghidra/decompiled.c FUN_08002ac8 lines 540-550; saves/hexdump_and_diffs.txt offsets 0x30-0x1f0"
+    },
+    {
+      "name": "stage_record_table",
+      "offset": 288,
+      "size": 480,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": ["0x08002930"],
+      "readers": ["0x08002a50", "0x08002ac8"],
+      "observed_values": {"pattern": "30 rows x 8 u16 little-endian words, e.g. row at 0x120: 0005 0000 0001 0000 0000 0000 0002 0003"},
+      "update_mechanism": "Checksum's final loop proves this 480-byte span (relative 0x120-0x2ff) is exactly 30 rows of 8 little-endian u16 words each; values observed are small non-zero integers consistent with (but not proven to be) per-stage score/time/rank records. No individual-field writer was traced.",
+      "confidence": "HYPOTHESIS",
+      "evidence": "ghidra/decompiled.c FUN_08002ac8 lines 551-559; saves/hexdump_and_diffs.txt offsets 0x120-0x1f0"
+    },
+    {
+      "name": "global_meta_word_0",
+      "offset": 2304,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": ["0x08002e3c"],
+      "readers": ["0x08002eac"],
+      "observed_values": {"cap-00-future-0.sav": "0xffff (unwritten)", "cap-01-future-1.sav": "0x0000"},
+      "update_mechanism": "Explicitly zeroed by FUN_08002e3c ('*puVar4 = 0') before the 8-byte global-meta block is flushed to EEPROM block 0x120.",
+      "confidence": "HYPOTHESIS",
+      "evidence": "ghidra/decompiled.c FUN_08002e3c lines 583; saves/hexdump_and_diffs.txt diff at 0x900-0x907"
+    },
+    {
+      "name": "global_meta_word_1",
+      "offset": 2306,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": ["0x08002e3c"],
+      "readers": ["0x08002eac"],
+      "observed_values": {"cap-00-future-0.sav": "0xffff (unwritten)", "cap-01-future-1.sav": "0x0000"},
+      "update_mechanism": "Explicitly zeroed by FUN_08002e3c at offset iVar2 (two adjacent u16 zero-stores).",
+      "confidence": "HYPOTHESIS",
+      "evidence": "ghidra/decompiled.c FUN_08002e3c lines 585-586"
+    },
+    {
+      "name": "global_meta_word_2",
+      "offset": 2308,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": ["0x08002e3c"],
+      "readers": ["0x08002eac"],
+      "observed_values": {"cap-00-future-0.sav": "0xffff (unwritten)", "cap-01-future-1.sav": "0x0000"},
+      "update_mechanism": "Set from an external global (*_DAT_08002ea0) rather than hard-coded to zero, unlike the two preceding words; candidate for an active difficulty/profile value, but unproven.",
+      "confidence": "HYPOTHESIS",
+      "evidence": "ghidra/decompiled.c FUN_08002e3c line 587"
+    },
+    {
+      "name": "global_meta_slot_selector",
+      "offset": 2310,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": ["0x08002e3c"],
+      "readers": ["0x08002eac"],
+      "observed_values": {"cap-00-future-0.sav": "0xffff (unwritten)", "cap-01-future-1.sav": "0x0000"},
+      "update_mechanism": "FUN_08002eac reads this word and only treats it as a valid selector if it equals 1 or 2 (storing it into *puRam08002ef4); any other value (including the 0x0000 seen in cap-01) falls through to the 'no active slot' branch that zeroes *_DAT_08002ee0. In both available samples the value is in the 'no active slot' state, so the 1/2-selector hypothesis is not yet positively exercised.",
+      "confidence": "HYPOTHESIS",
+      "evidence": "ghidra/decompiled.c FUN_08002eac lines 620-626; saves/hexdump_and_diffs.txt diff at 0x906-0x907"
+    }
+  ],
+  "fuzzing_targets": [
+    {
+      "offset": 352,
+      "size": 2,
+      "mutation": "Flip a 0x0000 u16 entry in the flag_or_unlock_table (e.g. relative 0x60/file offset 0x60 in slot 0) to 0x0001, without touching the checksum byte at 0x0f.",
+      "requires_checksum_repair": true,
+      "predicted_effect": "If the load path (FUN_08002a50) truly performs no checksum verification (no such call was traced from it), the mutated slot should load and visibly change whichever in-game unlock/clear state this entry gates, with no corruption warning. Must be run with the checksum left stale on one trial and correctly repaired on a second trial to isolate whether the checksum is actually enforced anywhere outside FUN_08002ac8's own write path."
+    },
+    {
+      "offset": 2310,
+      "size": 2,
+      "mutation": "Set the global_meta_slot_selector word (file offset 0x906-0x907) to 0x0001, then 0x0002, each in its own save-state-paired trial, repairing nothing else.",
+      "requires_checksum_repair": false,
+      "predicted_effect": "FUN_08002eac's comparison (==1 or ==2) should take the branch that writes the value into *puRam08002ef4 instead of the 'no active slot' branch; expected observable is a change in which save slot the title/continue screen reports as active, compared to the 0x0000 baseline in both current samples."
+    },
+    {
+      "offset": 14,
+      "size": 1,
+      "mutation": "Set the slot_flag_byte (relative 0x0e) of slot 0 to 0x00 (its code-implied 'valid' value per FUN_08002a94), repairing the checksum afterward.",
+      "requires_checksum_repair": true,
+      "predicted_effect": "Tests whether FUN_08002a94's validity check is actually wired into the load path for this struct; if so, changing this byte from the observed constant 0x2d to 0x00 should change slot-valid/invalid behavior (e.g. 'continue' availability). If no observable change occurs, it confirms FUN_08002a94 validates a different structure than the EEPROM slot record."
+    },
+    {
+      "offset": 15,
+      "size": 1,
+      "mutation": "Corrupt only the stored checksum byte (relative 0x0f) of slot 0 to an arbitrary wrong value, leaving all payload bytes untouched.",
+      "requires_checksum_repair": false,
+      "predicted_effect": "Directly tests whether ANY code path rejects a mismatched checksum on load; since no verify-on-read call was traced from FUN_08002a50, the predicted (falsifiable) outcome is that the slot still loads normally with no visible rejection."
+    }
+  ],
+  "open_questions": [
+    "Exact literal value/semantics of the 14-byte constant at relative offset 0x00-0x0d (slot_header_signature): whether it is a build/version tag, an encoded title string, or an unrelated constant could not be confirmed without resolving the ROM-resident value of _DAT_08002abc, which is outside the files available in this workspace.",
+    "FUN_08002a94's validity check expects byte offset+0x0e == 0, but the observed slot records all have 0x2d at that offset; it is unresolved whether FUN_08002a94 operates on this EEPROM slot struct at all, or on an unrelated in-RAM struct with the same layout convention.",
+    "No checksum/signature verification call was traced anywhere in the slot-load chain (FUN_08002a50 -> FUN_0806bc1c -> FUN_0806bb9c); it is unknown whether validation happens in an untraced caller, or whether this title simply does not validate on load.",
+    "The RAM struct written by FUN_08002e3c (pointed to by _DAT_08002ea8/_DAT_08002e94) appears larger than the 8 bytes actually flushed to EEPROM block 0x120; what happens to the rest of that struct (discarded, persisted elsewhere, or part of a larger record never captured in this 87-function decompilation subset) is unknown.",
+    "True invocation sites/trigger contexts for FUN_08002930 (save), FUN_08002a50 (load), FUN_08002e3c and FUN_08002eac (global meta) could not be statically resolved: every function in this corpus ends in an indirect '(*UNRECOVERED_JUMPTABLE)()' call, meaning the engine's task-dispatch mechanism hides real callers from BL-based callgraph extraction.",
+    "Semantic meaning of the 240-byte flag_or_unlock_table (relative 0x30-0x11f) and the 480-byte stage_record_table (relative 0x120-0x2ff) is unproven; only their byte/word structure is proven by the checksum routine's loop bounds, not their gameplay meaning. No gameplay playthrough or paired .ss save states were available in this workspace to correlate specific entries with specific in-game events.",
+    "Only two .sav snapshots (an EEPROM-adjacent pair labeled 'future-0'/'future-1') were available; redundancy semantics across slot_record_0/1/2 (whether they are truly independent save files, or primary/backup copies of the same data) could not be tested since all 3 slots were byte-identical in both samples."
+  ]
+}

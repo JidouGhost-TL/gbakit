@@ -13,7 +13,13 @@
       <a href="../index.html">Games</a>
       <a href="../saves/index.html">Save Formats</a>
       <a href="../patches/index.html">Debug Patches</a>
+      <a href="../debug-menus.html">Debug Gallery</a>
+      <a href="../non-retail-cartridges.html">Non-Retail</a>
+      <a href="../cartridge-hardware.html">Cartridge Hardware</a>
+      <a href="../link-multiplayer.html">Link &amp; Multiplayer</a>
+      <a href="../multiboot-museum.html">MultiBoot Museum</a>
       <a href="../assets/index.html">Assets &amp; Audio</a>
+      <a href="../text-and-fonts.html">Text &amp; Fonts</a>
       <a href="../engines/index.html">Engines &amp; Hardware</a>
       <a href="../families/index.html">Families</a>
       <a href="../gbakit/index.html">Using gbakit</a>
@@ -22,7 +28,7 @@
   <main>
 <p class="meta"><a href="../index.html">&larr; Games</a> &middot; Family <code>AQT</code></p>
 <h1>Dr. Seuss&#x27; The Cat in the Hat (USA)</h1>
-<p><span class='badge badge-slate'>EEPROM 4K</span></p>
+<p><span class='badge badge-slate'>EEPROM 4K</span> <span class='badge badge-emerald'>Save Format Spec</span> <span class='badge badge-emerald'>gbakit Built-In</span> <a href='../link-multiplayer.html#multiboot'><span class='badge badge-amber'>💾 MultiBoot</span></a></p>
 
 <h2>Cartridge Identity</h2>
 <dl class="kv">
@@ -38,6 +44,30 @@
 
 
 
+
+<h2>Link Cable &amp; Multiplayer Communications</h2>
+<div class="callout">
+  This title contains detected communication capabilities: <a href='../link-multiplayer.html#multiboot'><span class='badge badge-amber'>💾 MultiBoot</span></a>.
+  Detailed protocol specifications, SIO registers, Joybus commands, and MultiBoot sequences are documented in the <a href="../link-multiplayer.html"><strong>Link &amp; Multiplayer Reference</strong></a>.
+</div>
+<dl class="kv">
+  <dt>Single-Cart MultiBoot</dt><dd>Single-Cartridge MultiBoot (Download Play) client/server handler &middot; Thumb SWI 0x25 (<code>0xDF25</code>): <code>0x3586a0</code>, <code>0x386006</code></dd>
+</dl>
+
+
+<h2>Battery Save Format Specification</h2>
+<p><a class='btn' href='../saves/AQTE-r0-6259e10489779d8e.html'>Open Full Save Format Spec</a><a class='btn btn-secondary' href='../assets/formats/AQTE-r0-6259e10489779d8e/save-format.json' download>Download save-format.json</a></p>
+<p class='meta'>This specification also governs 1 regional editions &amp; revisions in Family <code>AQT</code>.</p>
+<dl class="kv">
+  <dt>Specification Coverage</dt><dd><strong>3</strong> mapped fields &middot; <strong>0</strong> verified checksum(s) &middot; Confidence: <span class="badge badge-indigo">HIGH</span></dd>
+  <dt>gbakit Built-In Support</dt><dd><span class="badge badge-emerald">Built-in (AQTE)</span></dd>
+  
+</dl>
+<pre><code>gbakit save verify AQTE save.sav
+gbakit save decode AQTE save.sav
+gbakit save fix    AQTE damaged.sav -o repaired.sav</code></pre>
+
+
 <h2>Observed Battery Save Layout</h2>
 <dl class="kv">
   <dt>Fill Byte &amp; Active Size</dt><dd><code>0xFF</code> fill &middot; 24–24 / 512 B active (entropy 0.25 bits/B)</dd>
@@ -49,6 +79,11 @@
 </dl>
 
 <h2>ROM Assets, Compression &amp; Audio</h2><dl class='kv'><dt>BIOS Compression</dt><dd>LZ77 (<code>0x10</code>): <strong>332</strong> streams &middot; RLE (<code>0x30</code>): <strong>0</strong> streams</dd><dt>ROM Pointer Tables</dt><dd>2 tables (0 pointing to validated compressed streams)</dd><dt>SDK Backup Tags</dt><dd><code>EEPROM_V122</code></dd></dl>
+
+<h2>Text, Fonts &amp; Scene Data</h2>
+<dl class="kv"><dt>Primary Text Encoding</dt><dd><strong>LZ77-compressed ASCII</strong> (<code>1</code> LZ77 ASCII blocks)</dd><dt>Font &amp; VWF Indicators</dt><dd><span class='badge badge-emerald'>VWF Width Table</span> <span class='badge badge-blue'>1bpp Font</span> &middot; BIOS SWIs: BitUnPack <code>0x10</code>: <code>21</code> &middot; LZ77 <code>0x11/12</code>: <code>47</code> &middot; Huffman <code>0x13</code>: <code>6</code> &middot; RLE <code>0x14/15</code>: <code>18</code></dd><dt>Scene &amp; Packaging</dt><dd><code>5</code> ROM pointer tables (&ge;32 entries, <code>0</code> &ge;200) &middot; <code>0</code> relative <code>u32</code> TOCs &middot; <code>180</code> OAM metasprite hits</dd></dl>
+
+
 
 <h2>Regional Variants &amp; Revisions (Family <code>AQT</code>)</h2><ul><li><a href='AQTP-r0-5fa9cbdcedc63b23.html'>Cat in the Hat, The (Europe) (En,Fr,De,Es,It)</a> (<code>AQTP</code>, 4 MiB)</li></ul>
 </main>

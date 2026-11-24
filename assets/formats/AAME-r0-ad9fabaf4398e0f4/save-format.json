@@ -1,0 +1,253 @@
+{
+  "schema": "gbakit-save-research/1",
+  "release_key": "AAME-r0-ad9fabaf4398e0f4",
+  "display_name": "Castlevania - Circle of the Moon (USA)",
+  "rom_sha256": "ad9fabaf4398e0f4a2a095bacddc6c0dc7e139903b41e088ca3590c44b684da0",
+  "game_code": "AAME",
+  "header_family": "AAM",
+  "community_id": "comm-009",
+  "overall_confidence": "MEDIUM",
+  "media": {
+    "kind": "sram",
+    "size_bytes": 32768,
+    "sdk_tags": [],
+    "fill_byte": "0xff"
+  },
+  "slots_and_copies": [
+    {
+      "name": "global_header",
+      "offset": 0,
+      "size": 16,
+      "redundancy_role": "global_config",
+      "selection_rule": "Always read/written as a single 16-byte block; magic 'DRACULA AGB' checked on boot by 0x08010158, full header+slot reinit triggered on mismatch."
+    },
+    {
+      "name": "slot_0",
+      "offset": 16,
+      "size": 976,
+      "redundancy_role": "unknown",
+      "selection_rule": "Written by FUN_08010320(0). No slot-selection/active-slot-index logic located in the decompiled corpus; semantic relationship between the 8 slots (independent save files vs. internal copies) is unproven."
+    },
+    {
+      "name": "slot_1",
+      "offset": 992,
+      "size": 976,
+      "redundancy_role": "unknown",
+      "selection_rule": "Written by FUN_08010320(1)."
+    },
+    {
+      "name": "slot_2",
+      "offset": 1968,
+      "size": 976,
+      "redundancy_role": "unknown",
+      "selection_rule": "Written by FUN_08010320(2)."
+    },
+    {
+      "name": "slot_3",
+      "offset": 2944,
+      "size": 976,
+      "redundancy_role": "unknown",
+      "selection_rule": "Written by FUN_08010320(3)."
+    },
+    {
+      "name": "slot_4",
+      "offset": 3920,
+      "size": 976,
+      "redundancy_role": "unknown",
+      "selection_rule": "Written by FUN_08010320(4)."
+    },
+    {
+      "name": "slot_5",
+      "offset": 4896,
+      "size": 976,
+      "redundancy_role": "unknown",
+      "selection_rule": "Written by FUN_08010320(5)."
+    },
+    {
+      "name": "slot_6",
+      "offset": 5872,
+      "size": 976,
+      "redundancy_role": "unknown",
+      "selection_rule": "Written by FUN_08010320(6)."
+    },
+    {
+      "name": "slot_7",
+      "offset": 6848,
+      "size": 976,
+      "redundancy_role": "unknown",
+      "selection_rule": "Written by FUN_08010320(7)."
+    },
+    {
+      "name": "unused_sram_tail",
+      "offset": 7824,
+      "size": 24944,
+      "redundancy_role": "unknown",
+      "selection_rule": "No code in the decompiled corpus addresses this region; observed all 0xff in the sample."
+    }
+  ],
+  "magic_signatures": [
+    {
+      "offset": 0,
+      "bytes_hex": "44524143554c4120414742",
+      "ascii": "DRACULA AGB",
+      "verified_in_code": true,
+      "verified_in_sav": true,
+      "function_addrs": ["0x08010158"]
+    }
+  ],
+  "checksums": [
+    {
+      "name": "slot_checksum",
+      "algorithm": "sum8",
+      "formula_detail": "stored_byte = (sum of all bytes in the slot's covered range [0..N], where N = ROM constant _DAT_080104bc not captured in this decompilation dump, computed while including the stale byte at local offset +9 and then subtracting that same stale byte back out) mod 256. Net effect: an 8-bit additive checksum of every byte in the covered range except the checksum byte itself, stored back at local offset +9 of each 976-byte slot.",
+      "stored_offset": 9,
+      "stored_size": 1,
+      "covered_start": 0,
+      "covered_end": 975,
+      "function_addrs": ["0x08010490", "0x08010320"],
+      "verified_on_samples": [
+        {"file": "saves/cap-00-future-0.sav", "stored_hex": "0x00", "computed_hex": "0x00", "match": true}
+      ],
+      "confidence": "CONFIRMED_STATIC"
+    }
+  ],
+  "io_driver_functions": [
+    {"addr": "0x08010158", "role": "write", "callers": [], "notes": "Header check & full reinit orchestrator. Reads 16-byte header, compares against uncaptured expected constants, on mismatch writes 'DRACULA AGB' magic and reinitializes header + all 8 slots. No callgraph.json edges exist for this function (see methodology note); mapped by manual text cross-reference of decompiled.c."},
+    {"addr": "0x08010250", "role": "read", "callers": ["0x08010158"], "notes": "Reads the 16-byte header from SRAM via FUN_080c2f88. Callgraph edge absent; mapped manually."},
+    {"addr": "0x0801026c", "role": "write", "callers": ["0x08010158"], "notes": "Header write+verify retry loop (up to 10 attempts) using FUN_080c3060 (write) / FUN_080c3100 (verify)."},
+    {"addr": "0x08010320", "role": "serialize", "callers": ["0x08010158"], "notes": "Per-slot checksum compute (via FUN_08010490) + write+verify retry loop (up to 10 attempts), length 0x3d0 (976) bytes."},
+    {"addr": "0x08010490", "role": "checksum", "callers": ["0x08010320"], "notes": "Computes the sum8-excluding-self checksum stored at local slot offset +9."},
+    {"addr": "0x080c2f88", "role": "read", "callers": ["0x08010250"], "notes": "Low-level transfer helper; delegates to opaque FUN_080c31e8."},
+    {"addr": "0x080c3060", "role": "write", "callers": ["0x0801026c", "0x08010320"], "notes": "Raw byte-wise copy loop (*dst++ = *src++); the actual SRAM write primitive, consistent with SRAM's 8-bit-only bus. Also sets an IRQ-mask-style guard bit before copying."},
+    {"addr": "0x080c3100", "role": "read", "callers": ["0x0801026c", "0x08010320"], "notes": "Raw byte-wise verify wrapper; same IRQ guard, delegates final compare/transfer to opaque FUN_080c31e8 and returns its result (0 == match, used as the write-verify success condition)."},
+    {"addr": "0x080c31e8", "role": "read", "callers": ["0x080c2f88", "0x080c3100"], "notes": "Opaque/non-decompiled primitive (UNRECOVERED_JUMPTABLE stub only in this dump); exact semantics unknown."}
+  ],
+  "caller_chains": [
+    {
+      "entry_caller": "0x08010158",
+      "chain": ["0x08010158", "0x08010250", "0x080c2f88", "0x080c31e8"],
+      "trigger_context": "Header integrity check on invocation (likely boot/save-subsystem init, exact trigger site not located due to empty callgraph.json edges for this subsystem)",
+      "ram_fields_updated": ["header RAM mirror bytes 0-10 (magic string) at _DAT_080101f4"],
+      "how_mapped": "Manual text cross-reference of func_0x#######/FUN_####### call sites in ghidra/decompiled.c, since ghidra/callgraph.json reports empty caller/callee edges for every function in this subsystem (each ends in an UNRECOVERED_JUMPTABLE indirect dispatch that the static analysis could not resolve)."
+    },
+    {
+      "entry_caller": "0x08010158",
+      "chain": ["0x08010158", "0x0801026c", "0x080c3060", "0x080c3100", "0x080c31e8"],
+      "trigger_context": "Header mismatch branch: writes the re-initialized 16-byte header and verifies the write with up to 10 retries",
+      "ram_fields_updated": ["header RAM mirror, full 16 bytes"],
+      "how_mapped": "Manual text cross-reference; same methodology note as above."
+    },
+    {
+      "entry_caller": "0x08010158",
+      "chain": ["0x08010158", "0x08010320", "0x08010490", "0x080c3060", "0x080c3100", "0x080c31e8"],
+      "trigger_context": "8-iteration loop (slot index 0..7) inside the header-mismatch branch: computes each slot's checksum, writes the 976-byte slot, verifies with up to 10 retries",
+      "ram_fields_updated": ["slot buffer bytes 0-975 for the given slot index, specifically byte +9 (checksum)"],
+      "how_mapped": "Manual text cross-reference; same methodology note as above."
+    }
+  ],
+  "fields": [
+    {
+      "name": "magic_signature",
+      "offset": 0,
+      "size": 11,
+      "type": "ascii",
+      "ram_addr": "0x0e000000",
+      "writers": ["0x08010158"],
+      "readers": ["0x08010250"],
+      "observed_values": {"saves/cap-00-future-0.sav": "DRACULA AGB"},
+      "update_mechanism": "Literal byte-by-byte store in FUN_08010158, triggered only when the existing header fails its mismatch check against uncaptured expected constants.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "ghidra/decompiled.c FUN_08010158 byte stores reproduce the exact ASCII sequence found at saves/cap-00-future-0.sav offset 0x0000."
+    },
+    {
+      "name": "header_padding",
+      "offset": 11,
+      "size": 5,
+      "type": "bytes",
+      "ram_addr": "0x0e00000b",
+      "writers": [],
+      "readers": ["0x08010250"],
+      "observed_values": {"saves/cap-00-future-0.sav": "0000000000"},
+      "update_mechanism": "Unknown; no explicit store instruction for these 5 bytes was located in the decompiled header-write path (0x08010158/0x0801026c). Value is only confirmed empirically from the sample.",
+      "confidence": "UNKNOWN",
+      "evidence": "saves/hexdump_and_diffs.txt shows zero bytes at offset 0x000b-0x000f; no corresponding write instruction found in ghidra/decompiled.c."
+    },
+    {
+      "name": "slot_checksum_byte",
+      "offset": 25,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": "0x0e000019",
+      "writers": ["0x08010320", "0x08010490"],
+      "readers": [],
+      "observed_values": {"saves/cap-00-future-0.sav": "0x00 (slot 0, and all 7 other slots at their respective +9 offsets)"},
+      "update_mechanism": "Computed by FUN_08010490 as sum8-excluding-self over the slot's covered byte range, stored by FUN_08010320 at local slot offset +9 every time the slot is (re)written.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "Formula in ghidra/decompiled.c FUN_08010490; position/resting-value verified numerically against all 8 slots in saves/cap-00-future-0.sav, but the all-zero sample cannot disambiguate the exact coverage length N."
+    },
+    {
+      "name": "slot_body_unmapped",
+      "offset": 16,
+      "size": 7808,
+      "type": "bytes",
+      "ram_addr": "0x0e000010",
+      "writers": ["0x08010320"],
+      "readers": [],
+      "observed_values": {"saves/cap-00-future-0.sav": "all zero across all 8 slots"},
+      "update_mechanism": "Bulk byte-copy in FUN_08010320 treats the whole 976-byte slot opaquely except for the explicitly-addressed checksum byte at +9; no individual gameplay field boundaries could be derived from this workspace.",
+      "confidence": "UNKNOWN",
+      "evidence": "Only a blank/never-played save sample is available; a post-gameplay non-blank .sav is required to map any field inside the slot body."
+    },
+    {
+      "name": "unused_sram_tail",
+      "offset": 7824,
+      "size": 24944,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"saves/cap-00-future-0.sav": "all 0xff"},
+      "update_mechanism": "No code in the decompiled corpus addresses any location in this range.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Directly observed byte range in saves/cap-00-future-0.sav; corroborated by absence of any matching address arithmetic in ghidra/decompiled.c."
+    }
+  ],
+  "fuzzing_targets": [
+    {
+      "offset": 0,
+      "size": 1,
+      "mutation": "Flip one byte of the 'DRACULA AGB' magic (e.g. offset 0x0000 0x44 -> 0x00)",
+      "requires_checksum_repair": false,
+      "predicted_effect": "Header-mismatch branch in FUN_08010158 fires on next boot, fully reinitializing the 16-byte header and all 8 save slots (any prior slot progress reverts to the blank/default state)."
+    },
+    {
+      "offset": 25,
+      "size": 1,
+      "mutation": "Set slot 0's checksum byte (offset 0x0019) to an arbitrary wrong value (e.g. 0xff) while leaving the rest of slot 0 unchanged",
+      "requires_checksum_repair": false,
+      "predicted_effect": "Unknown/open question: no load-time consumer of this checksum was located in the corpus, so it is unproven whether the game validates it on boot/load, or only recomputes it on every write (in which case the corruption would be silently overwritten on the next save with no visible interim effect)."
+    },
+    {
+      "offset": 992,
+      "size": 16,
+      "mutation": "Write 16 bytes of 0xaa starting at slot 1 (offset 0x03e0)",
+      "requires_checksum_repair": true,
+      "predicted_effect": "If slots are independent save files, the marker should appear/affect only save slot 1 in-game, confirming the 0x3d0-byte stride and slot independence empirically."
+    },
+    {
+      "offset": 7824,
+      "size": 16,
+      "mutation": "Flip the first 16 bytes beyond the active region (offset 0x1e90) from 0xff to 0x00",
+      "requires_checksum_repair": false,
+      "predicted_effect": "No observable effect on gameplay or save integrity, since no code path in the corpus addresses this region; tests whether the declared unused-tail boundary is genuinely dead space."
+    }
+  ],
+  "open_questions": [
+    "Exact expected-header comparison constants used by FUN_08010158's mismatch test (_DAT_080101f8 / iRam080101fc / uRam08010200 / uRam08010204) are ROM data-section values not captured in this decompilation dump.",
+    "Exact checksum coverage length N (_DAT_080104bc) cannot be numerically disambiguated from an all-zero sample.",
+    "No slot-reader / slot-selection function was located anywhere in the 253-function decompiled corpus; it is unknown whether the 8 slots represent independent player-facing save files, internal redundant copies, or something else, and whether any load-time path re-validates the per-slot checksum at all.",
+    "The true top-level caller of FUN_08010158 (boot sequence vs. explicit save-menu trigger) could not be identified because ghidra/callgraph.json reports no caller edges for this function, and no runtime trace/paired .ss states exist for this release cohort to confirm it empirically.",
+    "The 5 padding bytes at header offset 0x000b-0x000f have no located explicit write instruction, only an empirically observed zero value.",
+    "The full 975-byte-per-slot gameplay field layout (beyond the single checksum byte) is entirely unmapped; requires a non-blank, post-gameplay .sav sample to analyze."
+  ]
+}

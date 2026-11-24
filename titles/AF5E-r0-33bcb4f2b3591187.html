@@ -13,7 +13,13 @@
       <a href="../index.html">Games</a>
       <a href="../saves/index.html">Save Formats</a>
       <a href="../patches/index.html">Debug Patches</a>
+      <a href="../debug-menus.html">Debug Gallery</a>
+      <a href="../non-retail-cartridges.html">Non-Retail</a>
+      <a href="../cartridge-hardware.html">Cartridge Hardware</a>
+      <a href="../link-multiplayer.html">Link &amp; Multiplayer</a>
+      <a href="../multiboot-museum.html">MultiBoot Museum</a>
       <a href="../assets/index.html">Assets &amp; Audio</a>
+      <a href="../text-and-fonts.html">Text &amp; Fonts</a>
       <a href="../engines/index.html">Engines &amp; Hardware</a>
       <a href="../families/index.html">Families</a>
       <a href="../gbakit/index.html">Using gbakit</a>
@@ -22,7 +28,7 @@
   <main>
 <p class="meta"><a href="../index.html">&larr; Games</a> &middot; Family <code>AF5</code></p>
 <h1>Shining Force - Resurrection of the Dark Dragon (USA)</h1>
-<p><span class='badge badge-zinc'>Stateless / Passcode</span> <span class='badge badge-amber'>Debug Menu Patch</span></p>
+<p><span class='badge badge-slate'>Battery Save</span> <span class='badge badge-emerald'>Save Format Spec</span> <span class='badge badge-emerald'>gbakit Built-In</span> <span class='badge badge-amber'>Debug Menu Patch</span> <a href='../link-multiplayer.html#multiboot'><span class='badge badge-amber'>💾 MultiBoot</span></a></p>
 
 <h2>Cartridge Identity</h2>
 <dl class="kv">
@@ -46,13 +52,37 @@
 <div class='gallery'><figure><img src='../assets/patches/AF5E-r0-33bcb4f2b3591187/boot-patched.png' alt='Re-enabled debug menu' loading='lazy'><figcaption>Re-Enabled Debug Menu</figcaption></figure><figure><img src='../assets/patches/AF5E-r0-33bcb4f2b3591187/after-input.png' alt='Interactive debug menu navigation' loading='lazy'><figcaption>After D-Pad / A Input</figcaption></figure></div>
 
 
-<h2>Cartridge Storage Architecture: Stateless / Passcode</h2>
+
+
+<h2>Link Cable &amp; Multiplayer Communications</h2>
 <div class="callout">
-  <strong>Zero non-volatile battery hardware:</strong> This cartridge PCB contains ROM only (no SRAM, Flash, or EEPROM chips). Progression is preserved via on-screen passcodes or session-only gameplay. No <code>.sav</code> file is generated or required.
+  This title contains detected communication capabilities: <a href='../link-multiplayer.html#multiboot'><span class='badge badge-amber'>💾 MultiBoot</span></a>.
+  Detailed protocol specifications, SIO registers, Joybus commands, and MultiBoot sequences are documented in the <a href="../link-multiplayer.html"><strong>Link &amp; Multiplayer Reference</strong></a>.
 </div>
+<dl class="kv">
+  <dt>Single-Cart MultiBoot</dt><dd>Single-Cartridge MultiBoot (Download Play) client/server handler &middot; Thumb SWI 0x25 (<code>0xDF25</code>): <code>0x0893dc</code>, <code>0x0fac00</code>, <code>0x1022b8</code>, <code>0x10e1c8</code></dd>
+</dl>
+
+
+<h2>Battery Save Format Specification</h2>
+<p><a class='btn' href='../saves/AF5E-r0-33bcb4f2b3591187.html'>Open Full Save Format Spec</a><a class='btn btn-secondary' href='../assets/formats/AF5E-r0-33bcb4f2b3591187/save-format.json' download>Download save-format.json</a></p>
+<p class='meta'>This specification also governs 3 regional editions &amp; revisions in Family <code>AF5</code>.</p>
+<dl class="kv">
+  <dt>Specification Coverage</dt><dd><strong>3</strong> mapped fields &middot; <strong>0</strong> verified checksum(s) &middot; Confidence: <span class="badge badge-indigo">HIGH</span></dd>
+  <dt>gbakit Built-In Support</dt><dd><span class="badge badge-emerald">Built-in (AF5E)</span></dd>
+  
+</dl>
+<pre><code>gbakit save verify AF5E save.sav
+gbakit save decode AF5E save.sav
+gbakit save fix    AF5E damaged.sav -o repaired.sav</code></pre>
 
 
 <h2>ROM Assets, Compression &amp; Audio</h2><dl class='kv'><dt>BIOS Compression</dt><dd>LZ77 (<code>0x10</code>): <strong>0</strong> streams &middot; RLE (<code>0x30</code>): <strong>0</strong> streams</dd><dt>ROM Pointer Tables</dt><dd>72 tables (0 pointing to validated compressed streams)</dd><dt>SDK Backup Tags</dt><dd><code>SRAM_V113</code></dd></dl>
+
+<h2>Text, Fonts &amp; Scene Data</h2>
+<dl class="kv"><dt>Primary Text Encoding</dt><dd><strong>Shift-JIS (uncompressed) · custom 1-byte charmap (base &#x27;A&#x27; = 0x48)</strong> (<code>11</code> ASCII strings &middot; <code>42</code> Shift-JIS runs)</dd><dt>Font &amp; VWF Indicators</dt><dd><span class='badge badge-emerald'>VWF Width Table</span> <span class='badge badge-blue'>1bpp Font</span> &middot; BIOS SWIs: BitUnPack <code>0x10</code>: <code>12</code> &middot; LZ77 <code>0x11/12</code>: <code>18</code> &middot; Huffman <code>0x13</code>: <code>7</code> &middot; RLE <code>0x14/15</code>: <code>11</code></dd><dt>Scene &amp; Packaging</dt><dd><code>79</code> ROM pointer tables (&ge;32 entries, <code>4</code> &ge;200) &middot; <code>0</code> relative <code>u32</code> TOCs &middot; <code>149</code> OAM metasprite hits</dd></dl>
+
+
 <h2>Hardware MMIO Subsystems</h2><dl class='kv'><dt><code>ppu_display</code></dt><dd><code>0x800a2c0</code>, <code>0x800a2dc</code>, <code>0x800a2f0</code>, <code>0x800a31c</code>, <code>0x80204b4</code>, <code>0x805dcf0</code></dd></dl>
 <h2>Regional Variants &amp; Revisions (Family <code>AF5</code>)</h2><ul><li><a href='AF5J-r0-0387ab2fb037beec.html'>Shining Force - Kuroki Ryuu no Fukkatsu (Japan)</a> (<code>AF5J</code>, 8 MiB)</li><li><a href='AF5J-r0-3803c8f84b8bc137.html'>Shining Force - Kuroki Ryuu no Fukkatsu (Japan) (Virtual Console)</a> (<code>AF5J</code>, 8 MiB)</li><li><a href='AF5P-r0-8a8485e100d9747e.html'>Shining Force - Resurrection of the Dark Dragon (Europe) (En,Fr,De,Es,It)</a> (<code>AF5P</code>, 16 MiB)</li></ul>
 </main>

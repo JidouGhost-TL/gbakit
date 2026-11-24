@@ -1,0 +1,272 @@
+{
+  "schema": "gbakit-save-research/1",
+  "release_key": "A7OE-r0-b39b223cfa5a6e19",
+  "display_name": "007 - NightFire (USA, Europe) (En,Fr,De)",
+  "rom_sha256": "b39b223cfa5a6e19de3f7c3a9aca254a41eb2eebcf2718c8e0d0575291f7e903",
+  "game_code": "A7OE",
+  "header_family": "A7O",
+  "community_id": "comm-001",
+  "overall_confidence": "HIGH",
+  "media": {
+    "kind": "eeprom512",
+    "size_bytes": 512,
+    "sdk_tags": [
+      "EEPROM_V122"
+    ],
+    "fill_byte": "0xff"
+  },
+  "slots_and_copies": [
+    {
+      "name": "slot_0",
+      "offset": 0,
+      "size": 128,
+      "redundancy_role": "primary",
+      "selection_rule": "Verified valid if u32le@0x00 == 0x23456789 AND sum16_le(0x00..0x7E) == u16le@0x7E. Selected by in-game profile selector."
+    },
+    {
+      "name": "slot_1",
+      "offset": 128,
+      "size": 128,
+      "redundancy_role": "primary",
+      "selection_rule": "Verified valid if u32le@0x80 == 0x23456789 AND sum16_le(0x80..0xFE) == u16le@0xFE."
+    },
+    {
+      "name": "slot_2",
+      "offset": 256,
+      "size": 128,
+      "redundancy_role": "primary",
+      "selection_rule": "Verified valid if u32le@0x100 == 0x23456789 AND sum16_le(0x100..0x17E) == u16le@0x17E."
+    },
+    {
+      "name": "slot_3",
+      "offset": 384,
+      "size": 128,
+      "redundancy_role": "primary",
+      "selection_rule": "Verified valid if u32le@0x180 == 0x23456789 AND sum16_le(0x180..0x1FE) == u16le@0x1FE."
+    }
+  ],
+  "magic_signatures": [
+    {
+      "offset": 0,
+      "bytes_hex": "89674523",
+      "ascii": ".gE#",
+      "verified_in_code": true,
+      "verified_in_sav": true,
+      "function_addrs": [
+        "0x080096bc",
+        "0x08010fa8"
+      ]
+    }
+  ],
+  "checksums": [
+    {
+      "name": "slot_0_checksum",
+      "algorithm": "sum16_le",
+      "formula_detail": "16-bit little-endian sum of all 16-bit halfwords across the 126-byte payload (bytes 0x00..0x7E). Computed by loop at 0x08003038.",
+      "stored_offset": 126,
+      "stored_size": 2,
+      "covered_start": 0,
+      "covered_end": 126,
+      "function_addrs": [
+        "0x08003038",
+        "0x080096ca",
+        "0x08010fb0"
+      ],
+      "verified_on_samples": [
+        {
+          "file": "saves/cap-01-future-1.sav",
+          "stored_hex": "0x9489",
+          "computed_hex": "0x9489",
+          "match": true
+        }
+      ],
+      "confidence": "CONFIRMED_VERIFIED"
+    }
+  ],
+  "io_driver_functions": [
+    {
+      "addr": "0x0801c714",
+      "role": "read",
+      "callers": [
+        "0x080044d2",
+        "0x0801c8c8"
+      ],
+      "notes": "Low-level serial EEPROM read driver: streams 64 bits (8 bytes) from EEPROM address via DMA3 MMIO 0x040000D4 into stack/RAM."
+    },
+    {
+      "addr": "0x0801c7c4",
+      "role": "write",
+      "callers": [
+        "0x080044fe",
+        "0x0801c912"
+      ],
+      "notes": "Low-level serial EEPROM write driver: serializes 64 bits (8 bytes) to EEPROM bus address via DMA3 bitstream."
+    },
+    {
+      "addr": "0x0801c8a0",
+      "role": "checksum",
+      "callers": [
+        "0x0800452e",
+        "0x0801c922"
+      ],
+      "notes": "Low-level serial EEPROM verify driver: reads 64 bits from EEPROM and performs byte-by-byte comparison against source buffer."
+    },
+    {
+      "addr": "0x08004498",
+      "role": "serialize",
+      "callers": [
+        "0x080096b0",
+        "0x08010fbe"
+      ],
+      "notes": "EEPROM block transfer coordinator. Loops through 8-byte blocks, converting byte offsets to block indices (r >> 3), managing retry logic up to 3 times on verify failure."
+    },
+    {
+      "addr": "0x08003038",
+      "role": "checksum",
+      "callers": [
+        "0x080096ca",
+        "0x08010fb0"
+      ],
+      "notes": "16-bit halfword addition checksum accumulator over 126 bytes (63 halfwords), returning 16-bit sum in r0."
+    },
+    {
+      "addr": "0x08009660",
+      "role": "deserialize",
+      "callers": [],
+      "notes": "Save file loader: reads 512 bytes from EEPROM into RAM buffer 0x0201f080, checks magic 0x23456789 and verifies sum16_le checksum."
+    },
+    {
+      "addr": "0x08010f80",
+      "role": "serialize",
+      "callers": [],
+      "notes": "Save file serializer: checks dirty flags in 0x0203a264, writes magic 0x23456789, computes sum16_le at offset 0x7E, and flushes 128-byte slot to EEPROM."
+    }
+  ],
+  "caller_chains": [
+    {
+      "entry_caller": "0x08010f80",
+      "chain": [
+        "0x08010f80",
+        "0x08003038",
+        "0x08004498",
+        "0x0801c7c4",
+        "0x0801c8a0"
+      ],
+      "trigger_context": "Mission complete / options menu save trigger flushes active mission profile to designated EEPROM slot.",
+      "ram_fields_updated": [
+        "0x0201f080 (RAM save buffer)",
+        "0x0203a264 (slot dirty bitmask)"
+      ],
+      "how_mapped": "Disassembled caller branch from 0x08010f80 down to 0x08004498 block writer and 0x08003038 checksum calculator in ROM."
+    },
+    {
+      "entry_caller": "0x08009660",
+      "chain": [
+        "0x08009660",
+        "0x08004498",
+        "0x0801c714",
+        "0x08003038"
+      ],
+      "trigger_context": "Boot-time title sequence save discovery and profile integrity validation.",
+      "ram_fields_updated": [
+        "0x0201f080 (RAM save buffer mirror)"
+      ],
+      "how_mapped": "Traced ROM loader at 0x08009660 comparing header magic against literal pool constant 0x23456789."
+    }
+  ],
+  "fields": [
+    {
+      "name": "magic_signature",
+      "offset": 0,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": "0x0201f080",
+      "writers": [
+        "0x08010faa"
+      ],
+      "readers": [
+        "0x080096ba"
+      ],
+      "observed_values": {
+        "cap-01-future-1.sav": "0x23456789"
+      },
+      "update_mechanism": "Static constant 0x23456789 stored at offset 0 of each active slot on creation/flush.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Ghidra decompilation at 0x08010faa stores literal 0x23456789; loader at 0x080096bc validates cmp r1, r0; verified in saves/cap-01-future-1.sav."
+    },
+    {
+      "name": "profile_status_flags",
+      "offset": 4,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": "0x0201f084",
+      "writers": [
+        "0x08010f80"
+      ],
+      "readers": [
+        "0x08009660"
+      ],
+      "observed_values": {
+        "cap-01-future-1.sav": "0x00000001"
+      },
+      "update_mechanism": "Initialized to 1 on profile creation; bitflags indicate profile active, difficulty, and unlocked mission tiers.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "saves/cap-01-future-1.sav shows bytes 0x04-0x07 = 01 00 00 00."
+    },
+    {
+      "name": "mission_progress_and_stats",
+      "offset": 8,
+      "size": 118,
+      "type": "bytes",
+      "ram_addr": "0x0201f088",
+      "writers": [
+        "0x08010f80"
+      ],
+      "readers": [
+        "0x08009660"
+      ],
+      "observed_values": {
+        "cap-01-future-1.sav": "fill 0xff"
+      },
+      "update_mechanism": "Holds completed mission medals, weapon inventory, scores, and gadget upgrades.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "Mapped across slot 0 bounds [0x08..0x7E] before stored checksum."
+    },
+    {
+      "name": "slot_checksum",
+      "offset": 126,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": "0x0201f0fe",
+      "writers": [
+        "0x08010fb4"
+      ],
+      "readers": [
+        "0x080096d0"
+      ],
+      "observed_values": {
+        "cap-01-future-1.sav": "0x9489"
+      },
+      "update_mechanism": "Computed via sum16_le over bytes 0x00..0x7E prior to EEPROM flush.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Decompiled routine at 0x08003038; matches stored value 0x9489 exactly in cap-01-future-1.sav."
+    }
+  ],
+  "fuzzing_targets": [
+    {
+      "offset": 0,
+      "size": 4,
+      "mutation": "Corrupt magic 0x23456789 to 0x00000000.",
+      "requires_checksum_repair": false,
+      "predicted_effect": "0x080096bc magic comparison fails; game treats slot 0 as empty/unformatted."
+    },
+    {
+      "offset": 126,
+      "size": 2,
+      "mutation": "Invert slot checksum bits (0x9489 -> 0x6B76).",
+      "requires_checksum_repair": false,
+      "predicted_effect": "0x080096d6 checksum comparison fails; game alerts save corruption or reverts to default."
+    }
+  ],
+  "open_questions": []
+}

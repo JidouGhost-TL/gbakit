@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Croket! 4 - Bank no Mori no Mamorigami (Japan) Save Format — gbakit GBA Reference</title>
+  <link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+  <header>
+    <div class="brand"><a href="../index.html" style="color:inherit">gbakit GBA Reference <span class="badge badge-emerald">v2.0</span></a></div>
+    <nav>
+      <a href="../index.html">Games</a>
+      <a href="../saves/index.html">Save Formats</a>
+      <a href="../patches/index.html">Debug Patches</a>
+      <a href="../debug-menus.html">Debug Gallery</a>
+      <a href="../non-retail-cartridges.html">Non-Retail</a>
+      <a href="../cartridge-hardware.html">Cartridge Hardware</a>
+      <a href="../link-multiplayer.html">Link &amp; Multiplayer</a>
+      <a href="../multiboot-museum.html">MultiBoot Museum</a>
+      <a href="../assets/index.html">Assets &amp; Audio</a>
+      <a href="../text-and-fonts.html">Text &amp; Fonts</a>
+      <a href="../engines/index.html">Engines &amp; Hardware</a>
+      <a href="../families/index.html">Families</a>
+      <a href="../gbakit/index.html">Using gbakit</a>
+    </nav>
+  </header>
+  <main>
+<p class="meta"><a href="index.html">&larr; Save Formats</a> &middot; <a href="../titles/BK4J-r0-a0d3dab3b1cac3f1.html">Croket! 4 - Bank no Mori no Mamorigami (Japan)</a></p>
+<h1>Croket! 4 - Bank no Mori no Mamorigami (Japan) — Save Format Specification</h1>
+<p><span class="badge badge-indigo">Confidence: LOW</span> <span class="badge badge-blue">10 Fields</span> <span class="badge badge-emerald">1 Verified Checksum(s)</span> <span class='badge badge-emerald'>gbakit Built-In</span></p>
+<p><a class='btn' href='../assets/saves/BK4J-r0-a0d3dab3b1cac3f1/BK4J-r0-a0d3dab3b1cac3f1.sav' download>Download Sample .sav (32,768 B)</a><a class='btn btn-secondary' href='../assets/formats/BK4J-r0-a0d3dab3b1cac3f1/save-format.json' download>Download save-format.json</a><a class='btn btn-secondary' href='../titles/BK4J-r0-a0d3dab3b1cac3f1.html'>View Game Page</a></p>
+
+<div class="callout">
+  <strong>Use directly with <code>gbakit</code> (built-in definition <code>BK4J</code>):</strong>
+  <pre><code>gbakit save verify BK4J save.sav
+gbakit save decode BK4J save.sav
+gbakit save fix    BK4J damaged.sav -o repaired.sav</code></pre>
+</div>
+
+<div class='md-body'>
+<h2>Save Format Report: Croket! 4 - Bank no Mori no Mamorigami (Japan) [BK4J]</h2>
+<p>Release key: <code>BK4J-r0-a0d3dab3b1cac3f1</code> · ROM SHA-256: <code>a0d3dab3b1cac3f1ae1e79d1e1bc7628c272c0f673f63cf6160c61fd931a6f44</code></p>
+<p>All findings below are derived strictly from this workspace: <code>ghidra/decompiled.c</code> (191 functions), <code>ghidra/callgraph.json</code>, <code>ghidra/save_related_functions.c</code>, and <code>saves/cap-00-future-0.sav</code> (the only <code>.sav</code> binary present), cross-checked with a fresh byte-level Python pass over the raw file (not just the pre-computed hexdump excerpt). No third-party game-specific research was consulted.</p>
+<h2>1. Executive Summary &amp; Overall Confidence</h2>
+<p><strong>Overall confidence: LOW.</strong></p>
+<p>What is proven (code + bytes agree):</p>
+<ul><li>The save region is partitioned into fixed <strong>128-byte (0x80) slots</strong>, computed in code by <code>FUN_0806db08</code> as <code>0x0E000000 + (index &amp; 0xFF) * 0x80</code>. The 32768-byte (0x8000) <code>.sav</code> file divides exactly into <strong>256 such slots</strong>, and this is independently confirmed by the raw bytes: the last byte of every one of the 254 &quot;blank&quot; slots is the identical sentinel <code>0x41</code>, recurring at every 0x80 boundary exactly as the address arithmetic predicts.</li><li>A narrow <strong>read-only</strong> path exists for <strong>slot 0 only</strong>: <code>FUN_0806d824</code> deserializes one 3-byte record (<code>u8</code> flag + <code>u16</code> little-endian value) from slot 0 at <code>base + record_index*3 + 1</code>, and the on-disk bytes at that exact offset match the format perfectly (record 0 = <code>01 06 00</code> → flag=1, value=6; records 1-36 = <code>00 FF FF</code> → flag=0, value=0xFFFF, a clear &quot;empty&quot; sentinel).</li><li><code>FUN_0806d71c</code> / <code>FUN_08072a20</code> consume records 1 and 2 as a self-test/comparator that feeds into bit-flag clears in a large in-RAM struct (consumers <code>FUN_08088e68</code>, <code>FUN_08089044</code>).</li></ul>
+<p>What remains open (not provable from this capture):</p>
+<ul><li><strong>No save WRITE path was present anywhere in the traced decompilation.</strong> Across all 191 decompiled functions, the string <code>0x0e00</code>/<code>0xe000000</code> (or any Flash/EEPROM hardware address) appears <strong>exactly once</strong>, inside <code>FUN_0806db08</code> itself. No function in this capture performs a store to that address range, no Flash command sequence (<code>0x5555</code>/<code>0x2AAA</code>/<code>0xAA</code>/<code>0x55</code> unlock bytes) appears anywhere, and no EEPROM DMA3 (<code>0x040000D4</code>) bitstream code appears anywhere. The actual writer/flush/checksum routine that produced this <code>.sav</code> file was not captured by the trace that seeded this packet.</li><li>The checksum/trailer byte at the end of each slot (<code>0x9E</code> for slot 0, <code>0xF6</code> for slot 1, <code>0x41</code> for all 254 blank slots) could <strong>not</strong> be reproduced by any of sum8, xor8, 2&#x27;s-complement-sum, or CRC32 over any tested byte range, using the single <code>.sav</code> sample available. With only one real sample and no paired pre/post save-states (the <code>states/</code> directory is empty for this cohort), a checksum formula cannot be confirmed or falsified — this is marked <code>UNKNOWN</code>, not guessed.</li><li>Slot 1&#x27;s content (<code>A0 00 00 00 00 1F ...</code>, trailer <code>0xF6</code>) is <strong>not reached by any function in the trace</strong> — nothing in <code>ghidra/decompiled.c</code> ever calls the slot-address function with an index other than literal <code>0</code>. Slot 1&#x27;s structure and the leading unmapped byte at slot 0 offset <code>0x00</code> (<code>0xC0</code>) are therefore pure byte observations with <strong>no code corroboration</strong> and are reported as <code>UNKNOWN</code>.</li><li>Media kind is inferred, not proven: the direct pointer dereference in <code>FUN_0806d824</code> (<code>*pbVar3</code>, no command-byte protocol) is inconsistent with Flash (which requires <code>0x5555</code>/<code>0x2AAA</code> unlock sequences) and with EEPROM (serial, DMA3-driven, mapped at <code>0x0D000000</code>), and is consistent with plain memory-mapped SRAM at <code>0x0E000000</code>. The ROM&#x27;s own SDK save tag, <code>SRAM_F_V103@14961228</code>, independently corroborates &quot;SRAM&quot; naming. This is treated as <code>CONFIRMED_STATIC</code> for &quot;media behaves like directly-addressed SRAM,&quot; not as proof of the physical chip.</li></ul>
+<h2>2. Physical Media, Slot Geometry &amp; Redundancy</h2>
+<ul><li><strong>Total capture size:</strong> 32768 bytes (0x8000), file <code>saves/cap-00-future-0.sav</code>.</li><li><strong>SDK save tag (from ROM metadata, packet-supplied):</strong> <code>SRAM_F_V103@14961228</code>.</li><li><strong>Background fill byte:</strong> <code>0x00</code> (confirmed by direct read of the file; 254/256 slots are all-zero apart from their trailer byte).</li><li><strong>Slot size:</strong> 128 bytes (0x80), derived directly from <code>FUN_0806db08</code>&#x27;s arithmetic: <code>(index &amp; 0xFF) * 0x80 + 0x0E000000</code>.</li><li><strong>Slot count:</strong> 256 (0x8000 / 0x80), which exactly matches the file size — the hardware-addressable capacity and the capture size agree exactly, which is strong corroborating evidence for the slot size.</li><li><strong>Slots actually populated in this sample:</strong> only slot 0 and slot 1 have non-zero body content. Slots 2-255 are entirely zero-filled except for a constant trailer byte <code>0x41</code>.</li><li><strong>Redundancy / mirroring:</strong> none observed. Slot 0 and slot 1 have structurally different first bytes and different trailer values, so they are not mirrors of each other. There is no evidence of a primary/backup pair, generation counter, or rotating-slot scheme in the traced code — the only &quot;index&quot; parameter ever passed to the slot-address function is the literal constant <code>0</code>.</li><li><strong>Selection rule:</strong> not determined. Only slot 0 is read by any traced function; whatever selects/writes slot 1 is outside this capture.</li></ul>
+<h2>3. Save Writer, Reader &amp; Caller-Chain Architecture</h2>
+<h3>Low-level hardware I/O driver</h3>
+<p><strong><code>FUN_0806db08</code></strong> (<code>0x0806db08</code>) — the only function in the entire 191-function capture that references a save-hardware address.</p>
+<pre><code>int FUN_0806db08(uint param_1)
+{
+  return (param_1 &amp; 0xff) * 0x80 + 0xe000000;
+}</code></pre>
+<p>Role: slot-index → absolute address translator for the SRAM window at <code>0x0E000000</code>. It is a pure address calculator; it performs no I/O itself (no load/store), which is why <code>ghidra/save_related_functions.c</code> correctly flags it as an &quot;MMIO-seed&quot; candidate rather than a full driver.</p>
+<p>Note on the callgraph: <code>ghidra/callgraph.json</code> lists <code>&quot;0x0806db08&quot;: {&quot;callers&quot;: [], &quot;callees&quot;: []}</code>, i.e. <strong>no recorded caller</strong>. This is contradicted by the decompiled source itself — <code>FUN_0806d824</code> (line ~335 of <code>ghidra/decompiled.c</code>) contains an explicit call <code>iVar2 = func_0x0806db08(0);</code>. The static C is treated as ground truth here; the callgraph&#x27;s caller/callee edges for this address are incomplete and should not be trusted in isolation.</p>
+<p><strong>No store-side driver (SRAM byte-copy write, Flash command sequence, or EEPROM DMA3 bitstream) exists anywhere in <code>ghidra/decompiled.c</code>.</strong> This was confirmed by grepping the full 7370-line decompilation for every hardware-save address and command pattern listed in the clean-room rules (<code>0x0e00</code>, <code>0x0d00</code>, <code>0xe000000</code>, <code>0xd000000</code>, <code>5555</code>, <code>2aaa</code>, <code>0x40000d4</code>, <code>DMA3</code>); the only hit in the entire file is the single line quoted above.</p>
+<h3>Reader / deserializer chain for slot 0&#x27;s record table</h3>
+<p><strong><code>FUN_0806d824</code></strong> (<code>0x0806d824</code>), callers: <code>[0x0806d71c]</code> (per <code>ghidra/decompiled.c</code>; callgraph.json agrees here).</p>
+<pre><code>void FUN_0806d824(int param_1,ushort param_2)
+{
+  byte bVar1;
+  int iVar2;
+  byte *pbVar3;
+  iVar2 = func_0x0806db08(0);
+  pbVar3 = (byte *)(iVar2 + (uint)param_2 * 3 + 1);
+  *(ushort *)(param_1 + 2) = param_2;
+  *(ushort *)(param_1 + 6) = (ushort)*pbVar3;
+  bVar1 = pbVar3[1];
+  *(ushort *)(param_1 + 4) = (ushort)bVar1;      // dead store, overwritten next line
+  *(ushort *)(param_1 + 4) = CONCAT11(pbVar3[2],bVar1);
+  ...
+}</code></pre>
+<p>How mapped: <code>param_2</code> is a record index. <code>pbVar3</code> is always computed from slot 0&#x27;s base (<code>FUN_0806db08(0)</code> — the literal <code>0</code>, never any other slot). Each record is 3 bytes, starting at slot-relative offset <code>param_2*3 + 1</code> (i.e. offset <code>0x00</code> of the slot is skipped — it is never read by this function). The function writes three fields into a caller-supplied 8-byte-ish output struct at <code>param_1</code>:</p>
+<ul><li><code>param_1+2</code> (<code>u16</code>): the record index itself (echoed from the input, not read from the file).</li><li><code>param_1+6</code> (<code>u16</code>, zero-extended from a <code>u8</code>): the record&#x27;s flag byte, <code>pbVar3[0]</code>.</li><li><code>param_1+4</code> (<code>u16</code>, little-endian): the record&#x27;s value, built from <code>CONCAT11(pbVar3[2], pbVar3[1])</code> = <code>(pbVar3[2]&lt;&lt;8) | pbVar3[1]</code>.</li></ul>
+<p>This was verified byte-for-byte against <code>saves/cap-00-future-0.sav</code> (see §4/§5) — record 0 is <code>01 06 00</code> (flag=1, value=6); records 1-36 are uniformly <code>00 FF FF</code> (flag=0, value=0xFFFF).</p>
+<p><strong><code>FUN_0806d71c</code></strong> (<code>0x0806d71c</code>), callers: <code>[0x08072a20]</code>.</p>
+<pre><code>void FUN_0806d71c(undefined2 param_1)
+{
+  uint uVar1;
+  undefined1 auStack_18 [4];
+  ushort uStack_14;
+  short sStack_12;
+  uVar1 = 0;
+  if (((*_DAT_0806d75c &amp; 1) == 0) &amp;&amp; (func_0x0806d824(auStack_18,param_1), sStack_12 != 0)) {
+    uVar1 = (-(uStack_14 ^ uRam0806d760) | uStack_14 ^ uRam0806d760) &gt;&gt; 0x1f;
+  }
+  ...(*UNRECOVERED_JUMPTABLE)(uVar1);
+}</code></pre>
+<p>Role: a comparator/self-test, not a writer. It gates on a device/status byte (<code>*_DAT_0806d75c &amp; 1 == 0</code>), reads one record via <code>FUN_0806d824</code>, and — if the record&#x27;s value field is non-zero — compares the record&#x27;s flag byte against a global in-RAM reference byte <code>uRam0806d760</code> using the classic branch-free &quot;is-nonzero&quot; idiom <code>(-(v)|v)&gt;&gt;31</code>. It returns <code>1</code> if the stored flag differs from the expected in-RAM value, <code>0</code> otherwise. This is a verification primitive, never a mutation of RAM or SRAM.</p>
+<p><strong><code>FUN_08072a20</code></strong> (<code>0x08072a20</code>), callers: <code>[0x08088e68, 0x08089044]</code>.</p>
+<pre><code>void FUN_08072a20(void)
+{
+  uVar2 = FUN_0806d71c(1);
+  iVar3 = -((int)(-(uVar2 &amp; 0xffff) | uVar2 &amp; 0xffff) &gt;&gt; 0x1f);
+  sVar1 = FUN_0806d71c(2);
+  if (sVar1 != 0) { iVar3 = iVar3 + 1; }
+  (*UNRECOVERED_JUMPTABLE)(iVar3);
+}</code></pre>
+<p>Combines the comparator result for records 1 and 2 into a 0/1/2 mismatch count. This is the entry point the two big RAM-struct builders call.</p>
+<p><strong><code>FUN_08072b38</code></strong> (<code>0x08072b38</code>), callers: <code>[0x08088e68, 0x08089044]</code> — a second, unrelated bit-test (<code>-(*_DAT_08072b48 &amp; param_1) &gt;&gt; 0x1f</code>) against a different global flag; it never touches the SRAM/slot path at all. It is listed here because the two consumer functions call it alongside the slot-0 self-test.</p>
+<h3>Callers that mutate the in-RAM save/profile struct based on the self-test</h3>
+<p><strong><code>FUN_08088e68</code></strong> and <strong><code>FUN_08089044</code></strong> (both large state-machine-style functions, <code>0x08088e68</code>/<code>0x08089044</code>) build and update a large in-RAM structure (observed field offsets up to at least <code>+0x1A0</code> from a base pointer <code>*_DAT_0808902c</code>) covering sub-ranges <code>+0x20</code>, <code>+0x3C</code>, <code>+0x100..0x104</code>, <code>+0x110</code>, <code>+0x11C</code>, <code>+0x128</code>, <code>+0x140</code>, <code>+0x180</code> (an 0xF-entry array), <code>+0x198</code>, <code>+0x1A0</code>. Relevant excerpt from <code>FUN_08088e68</code>:</p>
+<pre><code>sVar3 = FUN_08072a20();
+if (sVar3 == 0) {
+  **(byte **)(*_DAT_0808902c + 0x1a0) = **(byte **)(*_DAT_0808902c + 0x1a0) &amp; 0x7f;
+}
+sVar3 = FUN_08072b38(1);
+if (sVar3 == 0) {
+  **(byte **)(*_DAT_0808902c + 0x198) = **(byte **)(*_DAT_0808902c + 0x198) &amp; 0x7f;
+}</code></pre>
+<p>How mapped: when the slot-0 self-test (<code>FUN_08072a20</code>) reports no mismatch (<code>0</code>), bit 7 (<code>0x80</code>) of the byte at RAM struct offset <code>+0x1A0</code> is cleared. Independently, when the unrelated flag test (<code>FUN_08072b38</code>) reports <code>0</code>, bit 7 of the byte at <code>+0x198</code> is cleared. Both are read-driven RAM mutations (clearing a flag bit based on what was read from slot 0 / a global flag); <strong>neither writes anything back to SRAM</strong>. <code>FUN_08089044</code> repeats the identical two-call pattern. These are the only two call sites in the entire capture that consume the slot-0 read path; no caller above them (into these two functions) was present in the trace, so the ultimate trigger (e.g., title-screen boot vs. save-select menu) is unknown.</p>
+<h3>Gap: no writer/flush function was captured</h3>
+<p>The clean-room rule requires documenting &quot;ALL callers&quot; and the write path — honestly, none exists in this trace. <code>ghidra/save_related_functions.c</code> itself states only &quot;1 MMIO seeds, 1 total&quot; were extracted, consistent with this: the trace that produced this packet seeded from the hardware-address literal and expanded 2 hops of callers / 1 hop of callees, and that expansion simply never encountered a store to the SRAM window. This is reported as an open gap rather than filled with speculation.</p>
+<h2>4. Magic Signatures &amp; Checksum / Integrity Algorithm</h2>
+<h3>Observed candidate signatures (byte-level only — no corroborating code)</h3>
+<table><thead><tr><th>Offset (file)</th><th>Bytes (hex)</th><th>ASCII</th><th>Verified in code?</th><th>Verified in .sav?</th></tr></thead><tbody><tr><td>0x0070-0x0074</td><td><code>BA DB AF B9 34</code></td><td>n/a</td><td>No</td><td>Yes (present once, slot 0 only)</td></tr><tr><td>0x0075-0x007E</td><td><code>76 65 72 30 30 30 30 30 30 36</code></td><td><code>ver0000006</code></td><td>No</td><td>Yes (present once, slot 0 only)</td></tr></tbody></table>
+<p>These two spans sit immediately after the 37-record table and immediately before slot 0&#x27;s trailer byte. The ASCII string <code>ver0000006</code> is plausibly an SDK/build version marker, which would corroborate the ROM&#x27;s own SDK save tag <code>SRAM_F_V103@14961228</code> (an &quot;SRAM_F&quot; library, version 1.03) — but <strong>no function in <code>ghidra/decompiled.c</code> reads or writes offset <code>0x70</code> of slot 0</strong>, so this correlation is a <code>HYPOTHESIS</code>, not a <code>CONFIRMED</code> fact. It is reported because it is a strong, falsifiable, testable hypothesis, not because it is proven.</p>
+<h3>Checksum / trailer-byte algorithm: UNKNOWN</h3>
+<p>Every 128-byte slot ends in a single byte that differs between &quot;blank&quot; and &quot;used&quot; slots:</p>
+<pre><code>slot 0 (used):   trailer = 0x9E
+slot 1 (used):   trailer = 0xF6
+slots 2-255:     trailer = 0x41   (all 254 of them, identical, over all-zero bodies)</code></pre>
+<p>Python verification was run against the real file (not just the pre-computed hexdump excerpt) for every candidate algorithm the clean-room hardware rules make plausible:</p>
+<pre><code>$ python3 - &lt;&lt;&#x27;EOF&#x27;
+import zlib
+data = open(&#x27;saves/cap-00-future-0.sav&#x27;,&#x27;rb&#x27;).read()
+s0, s1 = data[0:0x80], data[0x80:0x100]
+
+def check(body, trailer, label):
+    s = sum(body) &amp; 0xff
+    x = 0
+    for b in body: x ^= b
+    print(label, &quot;sum8=&quot;, hex(s), &quot;xor8=&quot;, hex(x), &quot;trailer=&quot;, hex(trailer))
+
+check(s0[:-1], s0[-1], &quot;slot0&quot;)
+check(s1[:-1], s1[-1], &quot;slot1&quot;)
+check(bytes(0x7f), 0x41, &quot;blank-slot body&quot;)
+print(&quot;crc32(slot0 body)=&quot;, hex(zlib.crc32(s0[:0x7f])), &quot;low byte=&quot;, hex(zlib.crc32(s0[:0x7f]) &amp; 0xff))
+print(&quot;crc32(slot1 body)=&quot;, hex(zlib.crc32(s1[:0x7f])))
+EOF
+slot0 sum8= 0x53 xor8= 0xd3 trailer= 0x9e
+slot1 sum8= 0xbf xor8= 0xbf trailer= 0xf6
+blank-slot body sum8= 0x0 xor8= 0x0 trailer= 0x41
+crc32(slot0 body)= 0x4592c55e low byte= 0x91
+crc32(slot1 body)= 0xaf0caf91
+crc32(slot1 body)= 0x3c753d06</code></pre>
+<p>None of <code>sum8</code>, <code>xor8</code>, or <code>crc32</code> (full or truncated to one byte) over the slot body reproduce the observed trailer byte for either used slot, and no simple additive/complement relationship (<code>trailer - sum</code>, <code>trailer + sum</code>, <code>0x41 - sum</code>) was constant across the two used slots either. <strong>Conclusion: the trailer byte&#x27;s algorithm cannot be determined from this single <code>.sav</code> sample.</strong> It is marked <code>UNKNOWN</code> rather than guessed. Confirming it requires either (a) the actual checksum-computation function, which is not present anywhere in this 191-function trace, or (b) multiple <code>.sav</code> samples with deliberately varied slot-0 content so the trailer&#x27;s dependence on specific bytes can be isolated differentially — exactly the kind of counterfactual listed in §6.</p>
+<h2>5. Complete Field Map Table</h2>
+<p>All offsets are absolute file offsets into <code>saves/cap-00-future-0.sav</code>. RAM mirror addresses are given only where a traced function actually dereferences that RAM address; <code>null</code> where no such function exists in this capture.</p>
+<table><thead><tr><th>Offset (hex)</th><th>Size</th><th>Type / Endianness</th><th>RAM Mirror Addr</th><th>Writers</th><th>Readers</th><th>Observed Values in .sav</th><th>Confidence</th><th>How Mapped &amp; Updated</th></tr></thead><tbody><tr><td>0x0000</td><td>1</td><td>u8 (unknown)</td><td>null</td><td>none traced</td><td>none traced</td><td><code>0xC0</code></td><td>UNKNOWN</td><td>Byte observed in file only; no function in <code>ghidra/decompiled.c</code> dereferences slot-0 offset 0 (the record reader starts at offset 1). No code evidence either way.</td></tr><tr><td>0x0001-0x0003</td><td>3</td><td>struct {u8 flag; u16 LE value}</td><td>out-struct <code>param_1+6</code> (flag), <code>param_1+4</code> (value), transient stack in <code>FUN_0806d71c</code>/callers</td><td>none traced (no writer in capture)</td><td><code>0x0806d824</code> → <code>0x0806d71c</code> → <code>0x08072a20</code> → <code>{0x08088e68, 0x08089044}</code></td><td>flag=<code>0x01</code>, value=<code>0x0006</code></td><td>CONFIRMED_VERIFIED</td><td>Decompiled <code>FUN_0806d824</code> computes this exact byte layout (slot0 base + record_index*3 + 1, record_index=0); Python read of the real file at this offset matches the structure exactly. Semantic meaning of value <code>6</code> is UNKNOWN.</td></tr><tr><td>0x0004-0x006F</td><td>108 (36 records × 3)</td><td>struct {u8 flag; u16 LE value}, repeated, record indices 1-36</td><td>same as above, per-index</td><td>none traced</td><td>same chain as above</td><td>uniformly flag=<code>0x00</code>, value=<code>0xFFFF</code></td><td>CONFIRMED_VERIFIED (structure) / HYPOTHESIS (semantics: &quot;empty/unset&quot; sentinel)</td><td>Same reader function, parameterized by record index 1..36; all 36 records independently confirmed identical in the raw file, consistent with an unused table.</td></tr><tr><td>0x0070-0x0074</td><td>5</td><td>bytes (unknown)</td><td>null</td><td>none traced</td><td>none traced</td><td><code>BA DB AF B9 34</code></td><td>UNKNOWN</td><td>Byte-only observation; no reading/writing function present in trace. Candidate magic/checksum header preceding the version string, unproven.</td></tr><tr><td>0x0075-0x007E</td><td>10</td><td>ASCII</td><td>null</td><td>none traced</td><td>none traced</td><td><code>ver0000006</code></td><td>HYPOTHESIS</td><td>ASCII string plausibly an SDK build/version marker correlating with the ROM&#x27;s own SDK tag <code>SRAM_F_V103@14961228</code>; no code in this capture reads/writes it.</td></tr><tr><td>0x007F</td><td>1</td><td>u8 (candidate checksum/status)</td><td>null</td><td>none traced</td><td>none traced</td><td><code>0x9E</code> (slot 0)</td><td>UNKNOWN</td><td>Trailer byte at end of slot 0&#x27;s 128-byte region; recurs at every 0x80 boundary across the file (see §4); no algorithm reproduced it from the single sample available.</td></tr><tr><td>0x0080-0x0085</td><td>6</td><td>bytes (unknown)</td><td>null</td><td>none traced</td><td>none traced</td><td><code>A0 00 00 00 00 1F</code></td><td>UNKNOWN</td><td>Slot 1 header-like bytes; slot index 1 is never passed to <code>FUN_0806db08</code> anywhere in the trace, so no code corroborates any interpretation.</td></tr><tr><td>0x0086-0x00FE</td><td>121</td><td>bytes</td><td>null</td><td>none traced</td><td>none traced</td><td>all <code>0x00</code></td><td>CONFIRMED_VERIFIED (raw bytes)</td><td>Direct read of file.</td></tr><tr><td>0x00FF</td><td>1</td><td>u8 (candidate checksum/status)</td><td>null</td><td>none traced</td><td>none traced</td><td><code>0xF6</code> (slot 1)</td><td>UNKNOWN</td><td>Trailer byte for slot 1; differs from both slot 0&#x27;s trailer and the 254-slot blank constant, so it is content-dependent, but the formula is unproven (see §4).</td></tr><tr><td>0x0100-0x7FFE (slots 2-255, each slot&#x27;s first 127 bytes)</td><td>254 × 127</td><td>bytes</td><td>null</td><td>none traced</td><td>none traced</td><td>all <code>0x00</code></td><td>CONFIRMED_VERIFIED (raw bytes)</td><td>Direct read of file; independently confirmed for all 254 slots.</td></tr><tr><td>every <code>0x80*n + 0x7F</code> for n=2..255</td><td>1 each (254 total)</td><td>u8 (slot-blank sentinel)</td><td>null</td><td>none traced</td><td>none traced</td><td><code>0x41</code> (constant, all 254)</td><td>CONFIRMED_VERIFIED (raw bytes; code confirms the 0x80-stride addressing that makes this offset meaningful)</td><td><code>FUN_0806db08</code>&#x27;s <code>index*0x80</code> arithmetic proves the slot stride; the raw file independently shows the identical sentinel byte recurring at exactly that stride across all unused slots. Meaning (&quot;blank slot marker&quot;) is HYPOTHESIS; the stride/position is CONFIRMED.</td></tr></tbody></table>
+<h2>6. Save Fuzzing &amp; Counterfactual Verification Plan</h2>
+<p>No paired <code>.ss</code> save states exist for this cohort (<code>states/</code> is empty, as stated in the packet). The following plan is therefore a set of concrete, falsifiable predictions to run once paired pre/post save-states become available, per the standing instructions requiring paired <code>.ss</code> capture for every future <code>.sav</code> snapshot.</p>
+<ol><li><strong>Record 0 flag mutation</strong> — flip offset <code>0x0001</code> from <code>01</code> → <code>00</code>.</li></ol>
+<ul><li>Requires checksum repair: <code>UNKNOWN</code> whether the trailer at <code>0x007F</code> must change (formula not proven in §4); run both with the original trailer and with several candidate trailers to probe acceptance.</li><li>Predicted effect: if <code>FUN_08072a20</code>&#x27;s consumer path (<code>FUN_08088e68</code>/<code>FUN_08089044</code>) runs on next boot/load, bit 7 of the in-RAM byte at struct offset <code>+0x1A0</code> (mirrored from <code>*_DAT_0808902c</code>) should flip state relative to an unmutated control, since <code>FUN_0806d71c(1)</code>&#x27;s comparison against <code>uRam0806d760</code> will change outcome. Observable via RAM-watch on that struct offset in a live emulator trace, or via any UI element (&quot;NEW&quot;/unlock-style indicator) gated on that bit.</li><li>Matched-duration control: run an identical boot sequence with the <em>unmutated</em> file to establish the baseline bit state first.</li></ul>
+<ol><li><strong>Record 0 value mutation</strong> — change offset <code>0x0002-0x0003</code> from <code>06 00</code> to <code>00 00</code> (making the value field exactly zero).</li></ol>
+<ul><li>Predicted effect: per <code>FUN_0806d71c</code>, the gating condition <code>sStack_12 != 0</code> becomes false, so the comparator short-circuits and always returns <code>0</code> (no mismatch) regardless of the flag byte — this is a sharp, falsifiable prediction distinguishing &quot;value acts as a presence gate&quot; from &quot;value is cosmetic.&quot;</li><li>Counterfactual: also test value <code>0x0001</code> (nonzero but different) to confirm the gate is a non-zero test, not an exact-match test.</li></ul>
+<ol><li><strong>Records 1/2 sentinel mutation</strong> — change offsets <code>0x0004</code> and <code>0x0007</code> (the two sentinel records <code>FUN_08072a20</code> actually consumes) from <code>00 FF FF</code> to <code>01 FF FF</code>.</li></ol>
+<ul><li>Predicted effect: <code>FUN_08072a20</code>&#x27;s returned mismatch count should increase by 1 or 2 (from the baseline of whatever it currently evaluates to, given <code>uRam0806d760</code>&#x27;s runtime value is unknown without a live trace) — run with RAM-watch on <code>uRam0806d760</code> and the function&#x27;s return value simultaneously to pin down its baseline.</li></ul>
+<ol><li><strong>Trailer byte mutation (checksum-repair negative control)</strong> — flip only <code>0x007F</code> (slot 0 trailer) while leaving the rest of slot 0 untouched, across several values including <code>0x00</code> and <code>0xFF</code>.</li></ol>
+<ul><li>Predicted effect: unknown by design — this is the counterfactual that will reveal whether <em>any</em> validator (necessarily untraced in this capture) rejects/corrects the save, which would prove a checksum exists even though its formula is not yet known. A fresh-boot (cold reload) vs. in-session reload comparison should be run as a matched pair, since SDK-level validators often only run at cold boot.</li></ul>
+<ol><li><strong>Slot 1 content mutation (open-question probe)</strong> — mutate offset <code>0x0080</code> (<code>A0</code> → <code>00</code> and → <code>FF</code>) and separately <code>0x0085</code> (<code>1F</code> → <code>00</code>).</li></ol>
+<ul><li>Predicted effect: unknown — no traced code reads slot 1 at all, so any observable effect here would itself be a discovery (it would prove an untraced function does read slot 1), while <em>no</em> observable effect would be consistent with slot 1 being dead/unused data from an earlier build or an unrelated subsystem.</li><li>Protocol negative: include an unmutated control run in the same batch to rule out unrelated non-determinism.</li></ul>
+<ol><li><strong>Fresh vs. restore repeat</strong> — for every mutation above, run both (a) a fresh game boot with the mutated <code>.sav</code> already present, and (b) a mid-session save-reload with the same mutated bytes, to separate cold-boot validation behavior from in-session read behavior, since <code>FUN_0806d71c</code>&#x27;s device-ready gate (<code>*_DAT_0806d75c &amp; 1</code>) suggests a hardware-status check that may behave differently across boot phases.</li></ol>
+<p>All mutation/observation pairs above must preserve the required <code>sav-XX-pre.ss</code> + <code>sav-XX-post.ss</code> + <code>.identity.json</code> sidecars, plus <code>gameplay.ss</code> and <code>final.ss</code>, per the standing per-<code>.sav</code> paired save-state requirement, and must stay within the bounded (≤8 screenshot / ≤4 save-state) capture retention policy.</p>
+<h2>Open Questions</h2>
+<ul><li>No save WRITE/flush/checksum-computation function exists anywhere in this 191-function trace; where is it, and does it live in a different code region not reached by the 2-hop/1-hop seed expansion?</li><li>What produces and writes slot 1 (<code>0x0080-0x00FF</code>)? No traced function ever calls the slot-address function with index <code>1</code>.</li><li>What is the trailer-byte algorithm (<code>0x9E</code>/<code>0xF6</code>/<code>0x41</code>)? Unconfirmed with a single sample; needs differential samples.</li><li>What does slot 0 offset <code>0x0000</code> (<code>0xC0</code>) mean? Never dereferenced by any traced function.</li><li>Is <code>ver0000006</code> at <code>0x0075-0x007E</code> genuinely an SDK version tag correlated with the ROM&#x27;s <code>SRAM_F_V103@14961228</code> tag, or coincidental? No code reads this span in the capture.</li><li>What is the real-world semantic meaning of record 0&#x27;s value field (<code>6</code>)? Structure is proven; meaning is not.</li><li>Does the 256-slot capacity ever get used beyond slots 0-1 in later-game saves (e.g., more save files, more unlocks)? Not observable from a single capture.</li></ul>
+</div>
+</main>
+  <footer>gbakit GBA Format Reference &middot; <a href="https://github.com/JidouGhost-TL/gbakit">GitHub: JidouGhost-TL/gbakit</a> &middot; Clean-room GBA binary format specs &amp; Rust toolkit.</footer>
+</body>
+</html>

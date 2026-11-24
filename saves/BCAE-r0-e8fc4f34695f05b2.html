@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Cars (USA, Europe) Save Format — gbakit GBA Reference</title>
+  <link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+  <header>
+    <div class="brand"><a href="../index.html" style="color:inherit">gbakit GBA Reference <span class="badge badge-emerald">v2.0</span></a></div>
+    <nav>
+      <a href="../index.html">Games</a>
+      <a href="../saves/index.html">Save Formats</a>
+      <a href="../patches/index.html">Debug Patches</a>
+      <a href="../debug-menus.html">Debug Gallery</a>
+      <a href="../non-retail-cartridges.html">Non-Retail</a>
+      <a href="../cartridge-hardware.html">Cartridge Hardware</a>
+      <a href="../link-multiplayer.html">Link &amp; Multiplayer</a>
+      <a href="../multiboot-museum.html">MultiBoot Museum</a>
+      <a href="../assets/index.html">Assets &amp; Audio</a>
+      <a href="../text-and-fonts.html">Text &amp; Fonts</a>
+      <a href="../engines/index.html">Engines &amp; Hardware</a>
+      <a href="../families/index.html">Families</a>
+      <a href="../gbakit/index.html">Using gbakit</a>
+    </nav>
+  </header>
+  <main>
+<p class="meta"><a href="index.html">&larr; Save Formats</a> &middot; <a href="../titles/BCAE-r0-e8fc4f34695f05b2.html">Cars (USA, Europe)</a></p>
+<h1>Cars (USA, Europe) — Save Format Specification</h1>
+<p><span class="badge badge-indigo">Confidence: MEDIUM</span> <span class="badge badge-blue">5 Fields</span> <span class="badge badge-emerald">1 Verified Checksum(s)</span> <span class='badge badge-emerald'>gbakit Built-In</span></p>
+<p><a class='btn' href='../assets/saves/BCAE-r0-e8fc4f34695f05b2/BCAE-r0-e8fc4f34695f05b2.sav' download>Download Sample .sav (512 B)</a><a class='btn btn-secondary' href='../assets/formats/BCAE-r0-e8fc4f34695f05b2/save-format.json' download>Download save-format.json</a><a class='btn btn-secondary' href='../titles/BCAE-r0-e8fc4f34695f05b2.html'>View Game Page</a></p>
+
+<div class="callout">
+  <strong>Use directly with <code>gbakit</code> (built-in definition <code>BCAE</code>):</strong>
+  <pre><code>gbakit save verify BCAE save.sav
+gbakit save decode BCAE save.sav
+gbakit save fix    BCAE damaged.sav -o repaired.sav</code></pre>
+</div>
+
+<div class='md-body'>
+<h2>Save Format Report — Cars (USA, Europe) [BCAE-r0-e8fc4f34695f05b2]</h2>
+<p>Clean-room derivation strictly from <code>saves/</code>, <code>ghidra/decompiled.c</code>, <code>ghidra/callgraph.json</code>, <code>ghidra/save_related_functions.c</code>, and generic GBA hardware specs (EEPROM bus at <code>0x0D000000</code> via DMA3, EWRAM <code>0x02000000</code>, IWRAM <code>0x03000000</code>). No third-party game-specific research was consulted.</p>
+<h2>1. Executive Summary &amp; Overall Confidence</h2>
+<p><strong>Overall confidence: MEDIUM.</strong></p>
+<p>Proven (<code>CONFIRMED_STATIC</code>, backed by decompiled code and/or exact byte matches against the real <code>.sav</code>):</p>
+<ul><li>The save medium is GBA <strong>EEPROM, 512 bytes</strong> (4Kbit), accessed through the standard</li></ul>
+<p>DMA3 serial bitstream protocol at <code>0x0D000000</code>.</p>
+<ul><li>A complete, 4-layer I/O stack was traced end-to-end: low-level DMA3 bit transceiver →</li></ul>
+<p>low-level EEPROM sector read/write → verify-after-write helper → mid-level multi-sector <code>EepromRead</code>/<code>EepromWrite</code> → slot-level load/save entry points.</p>
+<ul><li>A 200-byte payload region (offsets <code>0x00</code>-<code>0xC7</code>) is checksummed with a simple unsigned</li></ul>
+<p>byte-sum, and that payload ends in a 4-byte ASCII magic trailer, <strong><code>CARS</code></strong>, at offset <code>0xC4</code>-<code>0xC7</code> — this magic is byte-for-byte present in the real <code>.sav</code>.</p>
+<ul><li>A 148-byte block (offsets <code>0x00</code>-<code>0x93</code>, 37 little-endian dwords) consists entirely of</li></ul>
+<p><code>0</code>/<code>1</code> values, consistent with a boolean unlock/progress flag array.</p>
+<p>Open / not fully reconciled (<code>HYPOTHESIS</code>):</p>
+<ul><li>The exact on-disk <strong>storage offset</strong> of the 2-byte checksum. The traced write call site</li></ul>
+<p>computes a target EEPROM sector of <code>slot*0x1b + 0x1a</code> (byte offset <code>0xD0</code>-<code>0xD1</code> for slot 0), but a byte-sum of the first 200 bytes (<code>0x0150</code>) matches, big-endian, bytes found at offset <code>0xD6</code>-<code>0xD7</code> in the real sample instead. The algorithm is proven; its persisted location is only a verified numeric coincidence pending a second sample.</p>
+<ul><li>The semantics of a 12-dword structured block at offsets <code>0x94</code>-<code>0xC3</code> (candidate</li></ul>
+<p>time/score records) — no code in the traced function set individually writes these sub-fields.</p>
+<ul><li>Whether a second save slot and/or a global-config tail region genuinely exist in the</li></ul>
+<p>remaining 296 bytes of the 512-byte EEPROM (only slot 0 is non-blank in the single available sample).</p>
+<ul><li>The function that actually assembles the in-RAM 200-byte payload (including writing the</li></ul>
+<p>literal <code>CARS</code> bytes) is <strong>not</strong> among the 321 functions captured in <code>ghidra/decompiled.c</code> — only its downstream write (<code>FUN_08016198</code> → <code>FUN_0802ad98</code> → EEPROM) was traced.</p>
+<p>Only one <code>.sav</code> file (<code>cap-00-future-0.sav</code>, 512 bytes) was available in <code>saves/</code>, and it has only one non-blank region. All cross-sample claims are therefore necessarily limited; this is called out per-field in Section 5.</p>
+<h2>2. Physical Media, Slot Geometry &amp; Redundancy</h2>
+<table><thead><tr><th>Property</th><th>Value</th><th>Basis</th></tr></thead><tbody><tr><td>Media</td><td>EEPROM 4Kbit (512 bytes)</td><td>Packet metadata <code>EEPROM 4K</code>; file size 512 bytes; SDK tag <code>EEPROM_V124@6962676</code></td></tr><tr><td>EEPROM sector size</td><td>8 bytes (4× 16-bit words)</td><td><code>FUN_08037998</code>/<code>FUN_08037a5c</code> transfer exactly 4 words per sector call</td></tr><tr><td>Total sectors</td><td>64 (512 / 8)</td><td>Derived from total size</td></tr><tr><td>Slot stride</td><td>27 sectors = 216 bytes</td><td><code>sector_base = (slot_index &amp; 0xff) * 0x1b</code> in <code>FUN_08016198</code> (line ~576) and <code>FUN_080160b4</code> (line ~480)</td></tr><tr><td>Observed populated region</td><td>Bytes <code>0x00</code>-<code>0xD7</code> (216 bytes) = exactly 1 slot stride</td><td><code>saves/hexdump_and_diffs.txt</code> active range <code>0x0000..0x00d8</code></td></tr><tr><td>Slot 1 (hypothesis)</td><td>Bytes <code>0x00D8</code>-<code>0x01AF</code></td><td>Implied by stride arithmetic only; entirely <code>0xFF</code> in the sample; no <code>slot_index != 0</code> call site observed in the trace</td></tr><tr><td>Tail region (hypothesis)</td><td>Bytes <code>0x01B0</code>-<code>0x01FF</code> (80 bytes)</td><td>Remainder after 2× 216-byte slots; entirely <code>0xFF</code>; no code in the traced set references it</td></tr><tr><td>Redundancy / mirroring</td><td>None observed</td><td>Only one populated region exists; no second copy of the payload appears anywhere in the 512 bytes</td></tr><tr><td>Generation/sequence counter</td><td>None found</td><td>No incrementing counter field identified; only a RAM-side &quot;already cached&quot; marker comparison (<code>*(int*)(cache+0xc0) == _DAT_08016234</code>), which is a boot-session cache-validity flag, not an on-disk generation counter</td></tr><tr><td>Selection rule</td><td>Caller-supplied <code>slot_index</code> parameter (0-255, masked <code>&amp; 0xff</code>) selects the sector base; only <code>slot_index = 0</code> is exercised by any traced call site</td><td><code>FUN_08016198(param_1)</code>, <code>FUN_080160b4(param_1)</code> — both take the slot index as their sole parameter</td></tr></tbody></table>
+<h2>3. Save Writer, Reader &amp; Caller-Chain Architecture</h2>
+<p>All addresses are GBA ROM addresses (<code>0x08xxxxxx</code>), consistent with the packet&#x27;s game code <code>BCAE</code>.</p>
+<h3>3.1 Low-level hardware I/O driver (EEPROM serial DMA3 bitstream)</h3>
+<ul><li><strong><code>FUN_08037918</code></strong> (<code>ghidra/save_related_functions.c:9</code>) — shared DMA3 bit-serial</li></ul>
+<p>transceiver. Saves/restores an interrupt-related register (<code>*_DAT_08037978</code>), programs DMA source/dest/control (<code>*_DAT_08037988</code>, <code>*_DAT_0803798c</code>, <code>*_DAT_08037990</code> with the enable bit <code>0x80000000</code> set), then busy-waits on the DMA &quot;busy&quot; status bit (<code>uVar2 &amp; 0x8000</code>) until the transfer completes. This is the generic primitive used by both the sector reader and the sector writer; direction is determined purely by the caller&#x27;s buffer/bit-count arguments, not by anything internal to this function.</p>
+<p><strong>Callers:</strong> <code>0x08037998</code> (reader), <code>0x08037a5c</code> (writer) — confirmed via <code>ghidra/callgraph.json</code>.</p>
+<ul><li><strong><code>FUN_08037998</code></strong> (EEPROM sector <strong>READ</strong>, <code>ghidra/save_related_functions.c:40</code>) —</li></ul>
+<p>encodes a read command (<code>1,1</code> leading bits) + sector address bits into a local stack buffer, transmits it via <code>FUN_08037918</code>, then issues a second <code>FUN_08037918</code> call requesting <code>0x44</code> = 68 bits back (4 lead/dummy bits + 64 data bits), and decodes 4× 16-bit big-endian-ordered words from the received bitstream into the destination buffer (<code>param_2</code>). One call transfers exactly one 8-byte sector.</p>
+<p><strong>Callers:</strong> <code>0x08037bbc</code>, <code>0x0802ae48</code> (both confirmed via <code>ghidra/callgraph.json</code> and direct call-site grep of <code>ghidra/decompiled.c</code>).</p>
+<ul><li><strong><code>FUN_08037a5c</code></strong> (EEPROM sector <strong>WRITE</strong>, <code>ghidra/save_related_functions.c:98</code>) —</li></ul>
+<p>encodes a write command + sector address + the 64 data bits taken from the source buffer (<code>param_2</code>) into a stack bit-buffer, transmits it in a single <code>FUN_08037918</code> call, then busy-waits on a value read through <code>_DAT_08037b48</code> (almost certainly <code>REG_VCOUNT</code>, <code>0x04000006</code>, given the ~136-scanline delta threshold <code>0x88</code> used as the wait condition — this matches the well-known ~10 ms EEPROM internal write-commit latency) before returning. <code>param_3</code> selects &quot;retry forever&quot; vs. &quot;wait once.&quot;</p>
+<p><strong>Callers:</strong> <code>0x08037a48</code> only.</p>
+<ul><li><strong><code>FUN_08037a48</code></strong> — thin wrapper: <code>FUN_08037a5c(param_1, param_2, 1)</code>, forcing the</li></ul>
+<p>retry-forever wait variant. <strong>Callers:</strong> <code>0x0802ad98</code>.</p>
+<ul><li><strong><code>FUN_08037bbc</code></strong> (write-verification helper) — re-reads the sector just written via</li></ul>
+<p><code>FUN_08037998</code> into a local 8-byte buffer and compares it word-by-word against the caller-supplied buffer, returning <code>0</code> on match or <code>0x8000</code> on mismatch.</p>
+<p><strong>Callers:</strong> <code>0x0802ad98</code>, <code>0x0802ae48</code>.</p>
+<ul><li><strong><code>FUN_08037ea4</code></strong> (flagged as an MMIO seed by the extraction tool, <code>ghidra/save_related_functions.c:226</code>)</li></ul>
+<p>— on inspection this is a <strong>generic unsigned 32-bit division/remainder compiler runtime routine</strong> (classic shift-and-subtract long division with a <code>param_2==0</code> → divide-by-zero trap). It has no EEPROM/DMA I/O and no callers in the 321-function trace except a single arithmetic use at <code>ghidra/decompiled.c:9030</code>. <strong>This is a false-positive seed, not part of the save I/O chain</strong>, and is excluded from the rest of this report.</p>
+<h3>3.2 Mid-level sector-sequence I/O (serialization boundary)</h3>
+<ul><li><strong><code>FUN_0802ad98</code></strong> (<code>EepromWrite(sector, src_buf, byte_count)</code>,</li></ul>
+<p><code>ghidra/decompiled.c:4693</code>) — for every full 8-byte chunk of <code>byte_count</code>, writes directly via <code>FUN_08037a48</code> then verifies via <code>FUN_08037bbc</code>; for a trailing partial chunk, performs <strong>read-modify-write</strong>: reads the existing sector with <code>FUN_08037998</code>, overwrites only the first <em>N</em> remaining bytes with new data, writes the merged sector back via <code>FUN_08037a48</code>+<code>FUN_08037bbc</code>. This preserves any bytes in the tail sector that are not part of the requested write — directly explaining why a 2-byte write to a sector does not necessarily overwrite the other 6 bytes of that sector.</p>
+<p><strong>Callers:</strong> <code>0x08016198</code> only.</p>
+<ul><li><strong><code>FUN_0802ae48</code></strong> (<code>EepromRead(sector, dest_buf, byte_count)</code>,</li></ul>
+<p><code>ghidra/decompiled.c:4756</code>) — mirror of <code>FUN_0802ad98</code> for reads (direct full-sector reads via <code>FUN_08037998</code>+<code>FUN_08037bbc</code> verify; partial tail read into a temp buffer with the needed leading bytes copied to <code>dest_buf</code>). <strong>Callers:</strong> <code>0x080160b4</code> only.</p>
+<h3>3.3 Slot-level load/save entry points &amp; caller chains</h3>
+<ul><li><strong><code>FUN_080160b4</code></strong> (<strong>slot LOAD</strong>, <code>ghidra/decompiled.c:462</code>) — computes</li></ul>
+<p><code>sector_base = (slot &amp; 0xff) * 0x1b</code>, reads 200 bytes into a RAM buffer (<code>_DAT_08016144</code>) and a 2-byte trailer into a second RAM buffer (<code>_DAT_08016148</code>), both via <code>FUN_0802ae48</code> at <code>sector_base</code> and <code>sector_base + 0x1a</code> respectively. If either read fails or its internal verify (<code>FUN_08037bbc</code>, embedded inside <code>FUN_0802ae48</code>) fails, it falls back to calling <strong><code>FUN_08016198(slot)</code></strong> to rebuild/repair the slot. This function has <strong>no caller</strong> anywhere in the 321 traced functions — it is the top of the traced save call graph; the actual gameplay/menu event that triggers a load was not captured by this trace.</p>
+<ul><li><strong><code>FUN_08016198</code></strong> (<strong>slot WRITE / validate</strong>, <code>ghidra/decompiled.c:525</code>) — has two</li></ul>
+<p>branches:</p>
+<ol><li><strong>RAM-cache-valid branch:</strong> if a cache-validity marker matches</li></ol>
+<p>(<code>*(int*)(cache_base+0xc0) == _DAT_08016234</code>), it recomputes the 200-byte checksum straight from the already-resident RAM buffer, cross-checks it against a cached expected value (<code>*piRam080162ac</code>) <strong>and</strong> a structural sanity scan over 16 twelve-byte records (small-value range checks on bytes within each record), all with <strong>no EEPROM I/O</strong> — this is a fast re-validation path for data already loaded this session.</p>
+<ol><li><strong>Cold/uncached branch:</strong> rebuilds the slot payload in RAM then writes it to EEPROM:</li></ol>
+<p>200 bytes via <code>FUN_0802ad98(sector_base, buf, 200)</code>, and, if that succeeds, a 2-byte trailer via <code>FUN_0802ad98(sector_base + 0x1a, &amp;checksum, 2)</code>.</p>
+<p><strong>Callers:</strong> <code>FUN_080160b4</code> (line 495), invoked specifically when the load+verify in the cold branch of <code>FUN_080160b4</code> fails — i.e., this is the corruption-repair / first-boot format path, not a routine &quot;save game&quot; trigger reachable from this trace.</p>
+<p><strong>How each caller mutates the in-RAM struct:</strong> Only the <em>shape</em> of the mutation is provable from this trace — <code>FUN_08016198</code>&#x27;s cold branch populates the 200-byte RAM buffer (<code>_DAT_08016230</code>/<code>_DAT_08016144</code>) and the checksum variable (<code>*piRam080162ac</code>) before any EEPROM write, but the function(s) that set individual bits/fields inside that 200-byte buffer (e.g., which code sets an unlock flag to <code>1</code>, or writes the literal <code>CARS</code> bytes) are <strong>not present</strong> among the 321 functions in <code>ghidra/decompiled.c</code>. This is reported as an explicit evidentiary gap rather than guessed at.</p>
+<h2>4. Magic Signatures &amp; Checksum / Integrity Algorithm</h2>
+<h3>4.1 Magic signature</h3>
+<table><thead><tr><th>Offset</th><th>Bytes</th><th>ASCII</th><th>Verified in code</th><th>Verified in <code>.sav</code></th></tr></thead><tbody><tr><td><code>0xC4</code></td><td><code>43 41 52 53</code></td><td><code>CARS</code></td><td>No (writer not in traced set)</td><td><strong>Yes</strong></td></tr></tbody></table>
+<h3>4.2 Checksum algorithm</h3>
+<p><strong>Algorithm:</strong> unsigned byte-wise sum (<code>sum16</code>, no masking beyond natural 16-bit wrap), covering bytes <code>0x00</code>-<code>0xC7</code> (200 bytes) — proven directly in <code>FUN_08016198</code> (<code>ghidra/decompiled.c:548-551</code>):</p>
+<pre><code>uVar8 = 0;
+do {
+  iStack_20 = iStack_20 + (uint)*(byte *)(_DAT_08016230 + uVar8);
+  uVar8 = uVar8 + 1;
+} while (uVar8 &lt; 200);</code></pre>
+<p><strong>Covered range:</strong> <code>0x00</code>-<code>0xC7</code> inclusive (200 bytes), which includes the <code>CARS</code> magic trailer at its tail (<code>0xC4</code>-<code>0xC7</code>).</p>
+<p><strong>Stored offset (as implied by the traced EEPROM-write call site in <code>FUN_08016198</code>):</strong> <code>sector_base + 0x1a</code> = sector 26 for slot 0 = <strong>byte offset <code>0xD0</code>-<code>0xD1</code></strong> (2 bytes).</p>
+<p><strong>Python verification against <code>saves/cap-00-future-0.sav</code>:</strong></p>
+<pre><code>&gt;&gt;&gt; data = open(&#x27;saves/cap-00-future-0.sav&#x27;,&#x27;rb&#x27;).read()
+&gt;&gt;&gt; seg = data[0x00:0xc8]                      # 200 bytes
+&gt;&gt;&gt; computed = sum(seg) &amp; 0xffff
+&gt;&gt;&gt; hex(computed)
+&#x27;0x150&#x27;
+&gt;&gt;&gt; data[0xd0:0xd2].hex()                       # offset implied by the traced write call site
+&#x27;ffff&#x27;                                           # NOT a match — this region is blank in the sample
+&gt;&gt;&gt; data[0xd6:0xd8].hex()                        # offset where a non-blank value actually exists
+&#x27;0150&#x27;
+&gt;&gt;&gt; int.from_bytes(data[0xd6:0xd8], &#x27;big&#x27;) == computed
+True</code></pre>
+<p><strong>Interpretation (honest confidence call):</strong> the <strong>algorithm</strong> (byte-sum of the first 200 bytes) is <code>CONFIRMED_STATIC</code> — it is directly decompiled and matches an exact big-endian 16-bit value found elsewhere in the real save file. The <strong>storage offset</strong> is not reconciled: the traced write call site addresses <code>0xD0</code>-<code>0xD1</code>, which is blank/<code>0xFF</code> in the sample, while the exact numeric match sits at <code>0xD6</code>-<code>0xD7</code> instead. With only one non-blank sample available, this discrepancy cannot be resolved from static analysis alone — it is reported as <code>HYPOTHESIS</code> in <code>save-format.json</code>, not <code>CONFIRMED_VERIFIED</code>. A second sample (ideally with a deliberately mutated unlock flag, paired with pre/post <code>.ss</code> states) would let us confirm whether the checksum moves with the data at <code>0xD6</code>-<code>0xD7</code>, or whether this is a coincidental match and the true checksum/trailer field lives at <code>0xD0</code>-<code>0xD1</code> but was never populated in this particular capture.</p>
+<h2>5. Complete Field Map Table</h2>
+<table><thead><tr><th>Offset (hex)</th><th>Size</th><th>Type / Endianness</th><th>RAM Mirror Addr</th><th>Writers / Callers</th><th>Readers</th><th>Observed Values in <code>.sav</code></th><th>Confidence</th><th>How Mapped &amp; Updated</th></tr></thead><tbody><tr><td><code>0x00</code>-<code>0x93</code></td><td>148 B</td><td>37× <code>u32_le</code></td><td><code>_DAT_08016230</code>/<code>_DAT_08016144</code> (cache buffer; exact EWRAM address not resolved)</td><td><code>0x08016198</code> (cold branch, via <code>0x0802ad98</code>)</td><td><code>0x080160b4</code>, <code>0x08016198</code></td><td>All 37 dwords are exactly <code>0</code> or <code>1</code> (verified by Python <code>struct.unpack</code> over the full range)</td><td><code>CONFIRMED_STATIC</code></td><td>Falls inside the checksummed 200-byte region; confirmed boolean-only values byte-for-byte in the sample, but per-flag writer logic is outside the 321 traced functions</td></tr><tr><td><code>0x94</code>-<code>0xC3</code></td><td>48 B</td><td>bytes (12× 4-byte groups)</td><td>same cache buffer</td><td><code>0x08016198</code> (cold branch)</td><td><code>0x080160b4</code>, <code>0x08016198</code></td><td>e.g. <code>0x94</code>=<code>00 03 01 00</code>, <code>0x98</code>=<code>00 04 01 00</code>, <code>0xA4</code>=<code>01 00 00 00</code>, <code>0xA8</code>=<code>01 00 00 00</code>, <code>0xAC</code>=<code>05 02 01 00</code>, <code>0xB0</code>=<code>05 02 01 00</code>, <code>0xBC</code>=<code>01 00 00 00</code>, <code>0xC0</code>=<code>00 01 00 00</code></td><td><code>HYPOTHESIS</code></td><td>Small-value byte groups, some exactly duplicated in pairs (<code>0x94</code>≈<code>0x98</code>? actually distinct; <code>0xAC</code>==<code>0xB0</code>); no semantics assignable without more samples or RAM-watch tracing; also inside <code>FUN_08016198</code>&#x27;s 16×12-byte structural sanity scan range (byte[5]&lt;5, byte[0]/[2]/[1]/[3]&lt;10, byte[6]&gt;=0)</td></tr><tr><td><code>0xC4</code></td><td>4 B</td><td><code>ascii</code></td><td>same cache buffer</td><td><code>0x08016198</code> (cold branch)</td><td><code>0x080160b4</code>, <code>0x08016198</code></td><td><code>43 41 52 53</code> = <code>&quot;CARS&quot;</code></td><td><code>CONFIRMED_STATIC</code></td><td>Exact byte match in <code>.sav</code>; falls at the tail of the checksummed 200-byte region; the specific instruction writing this literal is not in the traced function set</td></tr><tr><td><code>0xC8</code>-<code>0xD5</code></td><td>14 B</td><td>bytes</td><td>n/a</td><td>none traced</td><td>none traced</td><td>all <code>0xFF</code></td><td><code>UNKNOWN</code></td><td>Blank/fill bytes within EEPROM sectors 25-26, outside the checksummed 200-byte payload and not addressed by any traced write call</td></tr><tr><td><code>0xD6</code>-<code>0xD7</code></td><td>2 B</td><td><code>u16</code> (candidate, BE)</td><td><code>*piRam080162ac</code> (cached expected checksum)</td><td><code>0x08016198</code> (algorithm only; storage-offset writer unresolved)</td><td><code>0x08016198</code></td><td><code>01 50</code> — matches <code>sum16(0x00..0xC7)</code> big-endian exactly</td><td><code>HYPOTHESIS</code></td><td>See Section 4.2 — algorithm proven, exact storage offset not reconciled with the traced write call site (<code>0xD0</code>-<code>0xD1</code>)</td></tr><tr><td><code>0xD8</code>-<code>0x1FF</code></td><td>296 B</td><td>bytes</td><td>n/a</td><td>none observed (slot 1 / tail region, hypothesis)</td><td>none observed</td><td>all <code>0xFF</code></td><td><code>UNKNOWN</code></td><td>Blank in the sole sample; consistent with either an unused second slot (per the <code>0x1b</code>-sector stride) or an unrelated global-config tail — not distinguishable from one sample</td></tr></tbody></table>
+<h2>6. Save Fuzzing &amp; Counterfactual Verification Plan</h2>
+<p>All mutations below should be performed on a copy of <code>saves/cap-00-future-0.sav</code>, loaded into the emulator from a paired pre-mutation <code>.ss</code> state at the save/load-slot screen, with a post-mutation <code>.ss</code> state captured immediately after the game attempts to read the slot.</p>
+<ol><li><strong>Magic corruption probe</strong> (falsifies magic&#x27;s role in validation)</li></ol>
+<ul><li>Mutation: flip offset <code>0xC4</code>-<code>0xC7</code> (<code>&quot;CARS&quot;</code> → e.g. <code>&quot;XARS&quot;</code>).</li><li>Requires checksum repair: yes (if <code>0xD6</code>-<code>0xD7</code> is the real checksum location, it must</li></ul>
+<p>be recomputed to reflect the new byte sum to isolate the magic&#x27;s own effect).</p>
+<ul><li>Predicted effect: game treats the slot as invalid and falls back to</li></ul>
+<p><code>FUN_08016198</code>&#x27;s default-write/repair path (observable as a reset/blank save or &quot;new game&quot; prompt rather than resumed progress).</p>
+<ol><li><strong>Checksum-location probe</strong> (resolves the Section 4.2 open question directly)</li></ol>
+<ul><li>Mutation A: flip <code>0xD6</code>-<code>0xD7</code> only, leave <code>0x00</code>-<code>0xC7</code> untouched.</li><li>Mutation B (separate test): flip <code>0xD0</code>-<code>0xD1</code> only (currently <code>0xFF 0xFF</code>), leave</li></ul>
+<p>everything else untouched.</p>
+<ul><li>Requires checksum repair: no (that is the point of this probe).</li><li>Predicted effect: whichever mutation causes the game to detect corruption and run the</li></ul>
+<p>repair path identifies the true checksum-storage offset; if neither triggers any observable change, the checksum validation for this title may only run from the RAM-cache path during the session and never re-validate against this on-disk trailer after a fresh cold load.</p>
+<ol><li><strong>Boolean flag toggling</strong> (maps individual unlock/progress bits)</li></ol>
+<ul><li>Mutation: flip one <code>u32</code> dword at a time across <code>0x00</code>-<code>0x93</code> (0↔1), with full</li></ul>
+<p>checksum repair at <code>0xD6</code>-<code>0xD7</code> (and/or <code>0xD0</code>-<code>0xD1</code>, per probe 2&#x27;s outcome) after each flip.</p>
+<ul><li>Predicted effect: each flip should toggle exactly one discrete unlock/progress</li></ul>
+<p>indicator in-game (car/track/mode availability) with no other visible change; a flip that crashes or corrupts unrelated UI would indicate the dword is not a simple boolean despite only ever observing <code>0</code>/<code>1</code> in this sample.</p>
+<ol><li><strong>Structured-record zeroing</strong> (tests <code>0x94</code>-<code>0xC3</code> hypothesis)</li></ol>
+<ul><li>Mutation: zero all 48 bytes at <code>0x94</code>-<code>0xC3</code>, with checksum repair.</li><li>Predicted effect: if these are time/score-style records, expect a reset-to-default</li></ul>
+<p>display (e.g., blank best times) rather than a crash; a crash or garbled display would indicate the block encodes indices/pointers rather than flat counters.</p>
+<ol><li><strong>Tail-region write probe</strong> (tests whether <code>0xD8</code>-<code>0x1FF</code> is truly unused)</li></ol>
+<ul><li>Mutation: write non-<code>0xFF</code> bytes into <code>0xD8</code>-<code>0x1FF</code> with no other changes, no</li></ul>
+<p>checksum repair (that region is outside the proven 200-byte checksum coverage).</p>
+<ul><li>Predicted effect: if genuinely unused by the game&#x27;s code, no behavior change should</li></ul>
+<p>be observed on load; any crash, UI corruption, or appearance of a &quot;second slot&quot; would indicate an untraced consumer of that region exists and should be captured in a future trace-guided decompilation pass.</p>
+<ol><li><strong>Fresh vs. restore repeat</strong> (matched-duration control, per standing experiment</li></ol>
+<p>guidance)</p>
+<ul><li>Run A: boot from a blank/erased EEPROM and capture the slot at the moment</li></ul>
+<p><code>FUN_08016198</code>&#x27;s cold branch first writes it.</p>
+<ul><li>Run B: boot from the existing <code>cap-00-future-0.sav</code> and let the RAM-cache-valid branch</li></ul>
+<p>run instead.</p>
+<ul><li>Predicted effect: Run A should show the checksum/trailer bytes being written for the</li></ul>
+<p>first time (directly confirming the true storage offset via a RAM/EEPROM write trace rather than static inference); Run B should show no EEPROM writes at all unless a flag is deliberately changed in-game, isolating when writes actually occur.</p>
+</div>
+</main>
+  <footer>gbakit GBA Format Reference &middot; <a href="https://github.com/JidouGhost-TL/gbakit">GitHub: JidouGhost-TL/gbakit</a> &middot; Clean-room GBA binary format specs &amp; Rust toolkit.</footer>
+</body>
+</html>

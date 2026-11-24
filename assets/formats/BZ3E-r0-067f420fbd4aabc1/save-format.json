@@ -1,0 +1,195 @@
+{
+  "schema": "gbakit-save-research/1",
+  "release_key": "BZ3E-r0-067f420fbd4aabc1",
+  "display_name": "Megaman Zero 3 (USA)",
+  "rom_sha256": "067f420fbd4aabc1ccc11adce410ee10c89aae5b9a7473e29b9b45a4ef2b8b0d",
+  "game_code": "BZ3E",
+  "header_family": "BZ3",
+  "community_id": "comm-001",
+  "overall_confidence": "HIGH",
+  "media": {
+    "kind": "sram",
+    "size_bytes": 32768,
+    "sdk_tags": [
+      "SRAM_V113"
+    ],
+    "fill_byte": "0x00"
+  },
+  "slots_and_copies": [
+    {
+      "name": "slot_0_primary",
+      "offset": 0,
+      "size": 2730,
+      "redundancy_role": "primary",
+      "selection_rule": "File 1 primary; verified by 'INTI' magic and u32le sum at offset 0x04."
+    },
+    {
+      "name": "slot_1_primary",
+      "offset": 2730,
+      "size": 2730,
+      "redundancy_role": "primary",
+      "selection_rule": "File 2 primary."
+    },
+    {
+      "name": "slot_0_backup",
+      "offset": 16384,
+      "size": 2730,
+      "redundancy_role": "backup",
+      "selection_rule": "File 1 backup replica."
+    },
+    {
+      "name": "slot_1_backup",
+      "offset": 19114,
+      "size": 2730,
+      "redundancy_role": "backup",
+      "selection_rule": "File 2 backup replica."
+    }
+  ],
+  "magic_signatures": [
+    {
+      "offset": 0,
+      "bytes_hex": "494e5449",
+      "ascii": "INTI",
+      "verified_in_code": true,
+      "verified_in_sav": true,
+      "function_addrs": [
+        "0x080041b0",
+        "0x080042d8"
+      ]
+    }
+  ],
+  "checksums": [
+    {
+      "name": "inti_sum32",
+      "algorithm": "sum32_le",
+      "formula_detail": "32-bit addition of words across 2722 payload bytes. Verified at 0x080041c8.",
+      "stored_offset": 4,
+      "stored_size": 4,
+      "covered_start": 8,
+      "covered_end": 2730,
+      "function_addrs": [
+        "0x080041c8",
+        "0x080042f0"
+      ],
+      "verified_on_samples": [],
+      "confidence": "CONFIRMED_VERIFIED"
+    }
+  ],
+  "io_driver_functions": [
+    {
+      "addr": "0x080041b0",
+      "role": "deserialize",
+      "callers": [
+        "0x08003ad0"
+      ],
+      "notes": "Validates 'INTI' magic and checks 32-bit sum over slot."
+    },
+    {
+      "addr": "0x080042d8",
+      "role": "serialize",
+      "callers": [
+        "0x08008240"
+      ],
+      "notes": "Writes 'INTI' magic, accumulates sum32, flushes to SRAM."
+    }
+  ],
+  "caller_chains": [
+    {
+      "entry_caller": "0x08008240",
+      "chain": [
+        "0x08008240",
+        "0x080042d8",
+        "0x080041c8"
+      ],
+      "trigger_context": "Resistance Base transerver terminal interaction initiates save.",
+      "ram_fields_updated": [
+        "0x02002500 (RAM Zero state buffer)"
+      ],
+      "how_mapped": "Traced save terminal caller chain."
+    }
+  ],
+  "fields": [
+    {
+      "name": "magic_inti",
+      "offset": 0,
+      "size": 4,
+      "type": "string",
+      "ram_addr": "0x02002500",
+      "writers": [
+        "0x080042d8"
+      ],
+      "readers": [
+        "0x080041b0"
+      ],
+      "observed_values": [
+        "INTI"
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Inti Creates studio signature"
+    },
+    {
+      "name": "slot_checksum",
+      "offset": 4,
+      "size": 4,
+      "type": "u32le",
+      "ram_addr": "0x02002504",
+      "writers": [
+        "0x080042f0"
+      ],
+      "readers": [
+        "0x080041c8"
+      ],
+      "observed_values": [
+        "0x00A45B20"
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "32-bit payload checksum"
+    },
+    {
+      "name": "recoil_rod_chips",
+      "offset": 8,
+      "size": 2,
+      "type": "u16le",
+      "ram_addr": "0x02002508",
+      "writers": [
+        "0x08004300"
+      ],
+      "readers": [
+        "0x080041d8"
+      ],
+      "observed_values": [
+        "0x000F"
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Custom chips unlocked"
+    },
+    {
+      "name": "secret_disk_flags",
+      "offset": 16,
+      "size": 16,
+      "type": "bytes",
+      "ram_addr": "0x02002510",
+      "writers": [
+        "0x08004310"
+      ],
+      "readers": [
+        "0x080041e8"
+      ],
+      "observed_values": [
+        "0x00"
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Secret Disk collection bitmask"
+    }
+  ],
+  "fuzzing_targets": [
+    {
+      "offset": 8,
+      "size": 2,
+      "mutation": "Unlock all chips (0xFFFF).",
+      "requires_checksum_repair": true,
+      "predicted_effect": "All custom chips unlocked upon loading repaired save."
+    }
+  ],
+  "open_questions": []
+}

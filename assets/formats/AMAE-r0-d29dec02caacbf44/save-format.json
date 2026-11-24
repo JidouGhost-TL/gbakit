@@ -1,0 +1,523 @@
+{
+  "schema": "gbakit-save-research/1",
+  "release_key": "AMAE-r0-d29dec02caacbf44",
+  "display_name": "Super Mario Advance (USA, Europe)",
+  "rom_sha256": "d29dec02caacbf449e2a93c6042258b0669542e102eb0e6fd0eb92a5411e0244",
+  "game_code": "AMAE",
+  "header_family": "AMA",
+  "community_id": "comm-009",
+  "overall_confidence": "MEDIUM",
+  "media": {
+    "kind": "eeprom512",
+    "size_bytes": 512,
+    "sdk_tags": [],
+    "fill_byte": "0x00"
+  },
+  "slots_and_copies": [
+    {
+      "name": "header",
+      "offset": 0,
+      "size": 16,
+      "redundancy_role": "global_config",
+      "selection_rule": "Treated as the single master record (magic + Group A checksum); blank EAMA magic triggers first-boot populate path in FUN_08026c30."
+    },
+    {
+      "name": "group_a_primary",
+      "offset": 16,
+      "size": 16,
+      "redundancy_role": "primary",
+      "selection_rule": "Live sum-of-bytes checksum compared against stored checksum at 0x02-0x03; if mismatched and group_a_backup matches, group_a_backup is copied over this slot."
+    },
+    {
+      "name": "group_a_backup",
+      "offset": 152,
+      "size": 16,
+      "redundancy_role": "backup",
+      "selection_rule": "Mirror of group_a_primary; whichever copy's live checksum matches the cached/stored checksum is authoritative and overwrites the other."
+    },
+    {
+      "name": "group_b_primary",
+      "offset": 32,
+      "size": 40,
+      "redundancy_role": "primary",
+      "selection_rule": "Same mirrored-pair checksum selection pattern as Group A (structurally identical code path), unverified field offsets because this sample is blank."
+    },
+    {
+      "name": "group_b_backup",
+      "offset": 168,
+      "size": 40,
+      "redundancy_role": "backup",
+      "selection_rule": "Mirror of group_b_primary."
+    },
+    {
+      "name": "group_c_primary",
+      "offset": 72,
+      "size": 40,
+      "redundancy_role": "primary",
+      "selection_rule": "Same mirrored-pair checksum selection pattern as Group A, unverified offsets (blank sample)."
+    },
+    {
+      "name": "group_c_backup",
+      "offset": 208,
+      "size": 40,
+      "redundancy_role": "backup",
+      "selection_rule": "Mirror of group_c_primary."
+    },
+    {
+      "name": "group_d_primary",
+      "offset": 112,
+      "size": 40,
+      "redundancy_role": "primary",
+      "selection_rule": "Same mirrored-pair checksum selection pattern as Group A, unverified offsets (blank sample)."
+    },
+    {
+      "name": "group_d_backup",
+      "offset": 248,
+      "size": 40,
+      "redundancy_role": "backup",
+      "selection_rule": "Mirror of group_d_primary."
+    },
+    {
+      "name": "unaddressed_erased_region",
+      "offset": 288,
+      "size": 224,
+      "redundancy_role": "unknown",
+      "selection_rule": "Never addressed by any traced sector index (sectors 36-63); remains raw erased EEPROM (0xFF)."
+    }
+  ],
+  "magic_signatures": [
+    {
+      "offset": 4,
+      "bytes_hex": "45414d41",
+      "ascii": "EAMA",
+      "verified_in_code": true,
+      "verified_in_sav": true,
+      "function_addrs": ["0x08026c30"]
+    }
+  ],
+  "checksums": [
+    {
+      "name": "group_a_checksum",
+      "algorithm": "custom",
+      "formula_detail": "16-bit little-endian accumulator = (sum of all 16 bytes in covered range) mod 0x10000, no carry propagation beyond 16 bits, no seed.",
+      "stored_offset": 2,
+      "stored_size": 2,
+      "covered_start": 16,
+      "covered_end": 31,
+      "function_addrs": ["0x08026c30", "0x08026934", "0x08026a30"],
+      "verified_on_samples": [
+        {
+          "file": "saves/cap-00-future-0.sav",
+          "stored_hex": "0x00a8",
+          "computed_hex": "0x00a8",
+          "match": true
+        }
+      ],
+      "confidence": "CONFIRMED_VERIFIED"
+    },
+    {
+      "name": "group_b_checksum",
+      "algorithm": "custom",
+      "formula_detail": "Same sum-of-bytes-mod-0x10000 algorithm as group_a_checksum, applied over the 40-byte Group B range; exact stored offset unconfirmed (sample is all-zero, so a zero computed sum trivially matches a zero stored field at any candidate offset).",
+      "stored_offset": -1,
+      "stored_size": 2,
+      "covered_start": 32,
+      "covered_end": 71,
+      "function_addrs": ["0x08026c30", "0x08026934", "0x08026a30"],
+      "verified_on_samples": [],
+      "confidence": "CONFIRMED_STATIC"
+    },
+    {
+      "name": "group_c_checksum",
+      "algorithm": "custom",
+      "formula_detail": "Same algorithm as group_a_checksum over the 40-byte Group C range; stored offset unconfirmed for the same reason as group_b_checksum.",
+      "stored_offset": -1,
+      "stored_size": 2,
+      "covered_start": 72,
+      "covered_end": 111,
+      "function_addrs": ["0x08026c30", "0x08026934", "0x08026a30"],
+      "verified_on_samples": [],
+      "confidence": "CONFIRMED_STATIC"
+    },
+    {
+      "name": "group_d_checksum",
+      "algorithm": "custom",
+      "formula_detail": "Same algorithm as group_a_checksum over the 40-byte Group D range; stored offset unconfirmed for the same reason as group_b_checksum.",
+      "stored_offset": -1,
+      "stored_size": 2,
+      "covered_start": 112,
+      "covered_end": 151,
+      "function_addrs": ["0x08026c30", "0x08026934", "0x08026a30"],
+      "verified_on_samples": [],
+      "confidence": "CONFIRMED_STATIC"
+    },
+    {
+      "name": "group_loader_checksum",
+      "algorithm": "custom",
+      "formula_detail": "Sum-of-bytes mod 0x10000 over a 40-byte group, same algorithm family, used by the per-slot runtime loader (distinct call site from the boot-time validator).",
+      "stored_offset": -1,
+      "stored_size": 2,
+      "covered_start": -1,
+      "covered_end": -1,
+      "function_addrs": ["0x08028190"],
+      "verified_on_samples": [],
+      "confidence": "CONFIRMED_STATIC"
+    }
+  ],
+  "io_driver_functions": [
+    {
+      "addr": "0x080b6a40",
+      "role": "read",
+      "callers": ["0x080b6ac0", "0x080b6b78"],
+      "notes": "Shared DMA3 transfer primitive: programs DMA3 src/dest/count-control registers, sets start bit 0x80000000, busy-waits on control-register bit 0x8000. Used by both the read and write paths; role listed as 'read' only because the schema enum has no 'transfer' option, but it is direction-agnostic."
+    },
+    {
+      "addr": "0x080b6ac0",
+      "role": "read",
+      "callers": ["0x080b6c5c", "0x08026934"],
+      "notes": "EEPROM read of one 8-byte sector: bit-packs 6-bit sector address, issues DMA3 request tagged 0x30000, unpacks 64-bit response into 4x u16 words. Bounds-checked against a device-size table."
+    },
+    {
+      "addr": "0x080b6b78",
+      "role": "write",
+      "callers": ["0x08026a30"],
+      "notes": "EEPROM write of one 8-byte sector: bit-packs data+address, issues DMA3 request tagged 0x430000, busy-waits on EEPROM data-line bit 0, bracketed by interrupt-mask toggle functions 0x080b6998/0x080b69fc."
+    },
+    {
+      "addr": "0x080b6c5c",
+      "role": "read",
+      "callers": ["0x08026a30"],
+      "notes": "Verify = read-back (via 0x080b6ac0) + compare 4 words against expected buffer; returns 0x8000 on mismatch. Used as the post-write verification step."
+    },
+    {
+      "addr": "0x080b6998",
+      "role": "write",
+      "callers": ["0x080b6b78"],
+      "notes": "Sets an interrupt-enable-style bit (8<<N) in an MMIO-shadowed register immediately before the write busy-wait in 0x080b6b78. Exact IRQ line not confirmed from this trace slice (HYPOTHESIS)."
+    },
+    {
+      "addr": "0x080b69fc",
+      "role": "write",
+      "callers": ["0x080b6b78"],
+      "notes": "Clears the same bit set by 0x080b6998, restoring prior interrupt-mask state after the write busy-wait completes."
+    },
+    {
+      "addr": "0x080b6960",
+      "role": "read",
+      "callers": ["0x0802687c"],
+      "notes": "Device/bank size-table probe used only by the presence/size-detect gate, not per-sector I/O."
+    }
+  ],
+  "caller_chains": [
+    {
+      "entry_caller": "0x08026c30",
+      "chain": ["0x08026c30", "0x0802687c", "0x080b6960"],
+      "trigger_context": "Boot-time save validator entry: first calls the EEPROM presence/size-detect guard before touching any sector.",
+      "ram_fields_updated": [],
+      "how_mapped": "Traced by reading the first statement of FUN_08026c30 in decompiled.c, which calls FUN_0802687c; FUN_0802687c in turn loops on func_0x080b6960 up to 3 times. Not present in callgraph.json's extraction window."
+    },
+    {
+      "entry_caller": "0x08026c30",
+      "chain": ["0x08026c30", "0x08026934", "0x080b6ac0", "0x080b6a40"],
+      "trigger_context": "Boot-time validator reads Group A primary copy (sector 2, count 2) and backup copy (sector 0x13, count 2) to compute live checksums.",
+      "ram_fields_updated": ["0x10-0x1F (RAM mirror of Group A primary, exact IWRAM/EWRAM address unresolved)", "0x98-0xA7 (RAM mirror of Group A backup)"],
+      "how_mapped": "Grepped decompiled.c for every call site of func_0x08026934 inside FUN_08026c30 and cross-referenced the sector-index literals (0, 0x13, 4, 0x15, 9, 0x1a, 0xe, 0x1f) against the 8-bytes-per-sector addressing scheme to recover file byte offsets."
+    },
+    {
+      "entry_caller": "0x08026c30",
+      "chain": ["0x08026c30", "0x08026a30", "0x080b6b78", "0x080b6c5c", "0x080b6a40"],
+      "trigger_context": "Boot-time validator repairs whichever copy of a mirrored group failed its checksum comparison by writing the good copy's bytes over the stale copy, then verifies by read-back.",
+      "ram_fields_updated": ["in-RAM scratch buffer used as the write source, copied from the sibling good copy's just-read buffer"],
+      "how_mapped": "Grepped decompiled.c for every call site of func_0x08026a30 inside FUN_08026c30; confirmed FUN_08026a30 itself performs write-then-verify by reading its own body (first loop calls 0x080b6b78, second loop calls 0x080b6c5c)."
+    },
+    {
+      "entry_caller": "0x08028190",
+      "chain": ["0x08028190", "0x08026934", "0x080b6ac0", "0x080b6a40"],
+      "trigger_context": "Runtime per-slot loader (distinct from boot-time validator) reads one 40-byte group selected by a parameter-indexed sector lookup table, validates its own sum-of-bytes checksum, and falls back to the backup-copy sector index on mismatch.",
+      "ram_fields_updated": [],
+      "how_mapped": "Grepped decompiled.c for func_0x08026934 call sites outside FUN_08026c30; found this second, independent caller at FUN_08028190, confirming the sector-read wrapper is shared by two distinct higher-level consumers."
+    }
+  ],
+  "fields": [
+    {
+      "name": "header_reserved_0",
+      "offset": 0,
+      "size": 2,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": ["0x08026a30"],
+      "readers": ["0x08026934"],
+      "observed_values": {"cap-00-future-0.sav": "0x0000"},
+      "update_mechanism": "Written as part of header sector-pair (sector 0) write-verify in FUN_08026a30(0,...,2); not individually addressed by any branch in the traced code.",
+      "confidence": "UNKNOWN",
+      "evidence": "Always zero in the only available sample; no code reads or branches on this sub-range specifically."
+    },
+    {
+      "name": "group_a_checksum_field",
+      "offset": 2,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": ["0x08026a30"],
+      "readers": ["0x08026c30"],
+      "observed_values": {"cap-00-future-0.sav": "0x00a8"},
+      "update_mechanism": "Computed as sum-of-bytes mod 0x10000 over 0x10-0x1F in FUN_08026c30, written back via FUN_08026a30(0,...,2) whenever the header sector-pair needs repair.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Python recomputation of sum(data[0x10:0x20]) & 0xFFFF against saves/cap-00-future-0.sav equals the stored u16-LE value at 0x02-0x03 exactly (0x00a8 == 0x00a8)."
+    },
+    {
+      "name": "magic_EAMA",
+      "offset": 4,
+      "size": 4,
+      "type": "ascii",
+      "ram_addr": null,
+      "writers": ["0x08026a30"],
+      "readers": ["0x08026c30"],
+      "observed_values": {"cap-00-future-0.sav": "EAMA"},
+      "update_mechanism": "Part of the header sector-pair; written once at first-boot populate time, read at every boot as the blank-vs-populated gate.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Literal byte match against decompiled.c's header-sector handling and the real .sav bytes."
+    },
+    {
+      "name": "header_reserved_1",
+      "offset": 8,
+      "size": 8,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": ["0x08026a30"],
+      "readers": ["0x08026934"],
+      "observed_values": {"cap-00-future-0.sav": "0x0000000000000000"},
+      "update_mechanism": "Remainder of sector 1 (second half of the header sector-pair); no code branches on this sub-range specifically.",
+      "confidence": "UNKNOWN",
+      "evidence": "Always zero in sample."
+    },
+    {
+      "name": "group_a_reserved_0",
+      "offset": 16,
+      "size": 2,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": ["0x08026a30"],
+      "readers": ["0x08026934"],
+      "observed_values": {"cap-00-future-0.sav": "0x0000"},
+      "update_mechanism": "Part of the checksummed Group A block; covered by group_a_checksum_field but not individually branched on.",
+      "confidence": "UNKNOWN",
+      "evidence": "Always zero in sample; only mapped as 'covered by the proven checksum range', not independently."
+    },
+    {
+      "name": "group_a_value_1",
+      "offset": 18,
+      "size": 2,
+      "type": "u16",
+      "ram_addr": null,
+      "writers": ["0x08026a30"],
+      "readers": ["0x08026934"],
+      "observed_values": {"cap-00-future-0.sav": "0x4e20 (big-endian reading) / 0x204e (little-endian reading)"},
+      "update_mechanism": "Part of the checksummed Group A block; no code path in the traced slice reads or branches on this specific sub-field, so neither its endianness nor its semantic purpose is confirmed.",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Nonzero bytes 0x4e 0x20 observed at this offset; value is covered by the proven group_a_checksum_field, so its presence is confirmed but its meaning is not."
+    },
+    {
+      "name": "group_a_reserved_1",
+      "offset": 20,
+      "size": 2,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": ["0x08026a30"],
+      "readers": ["0x08026934"],
+      "observed_values": {"cap-00-future-0.sav": "0x0000"},
+      "update_mechanism": "Part of the checksummed Group A block.",
+      "confidence": "UNKNOWN",
+      "evidence": "Always zero in sample."
+    },
+    {
+      "name": "group_a_value_2",
+      "offset": 22,
+      "size": 2,
+      "type": "u16",
+      "ram_addr": null,
+      "writers": ["0x08026a30"],
+      "readers": ["0x08026934"],
+      "observed_values": {"cap-00-future-0.sav": "0x2710 (big-endian reading) / 0x1027 (little-endian reading)"},
+      "update_mechanism": "Part of the checksummed Group A block; same caveat as group_a_value_1.",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Nonzero bytes 0x27 0x10 observed at this offset; covered by the proven checksum but meaning not confirmed."
+    },
+    {
+      "name": "group_a_reserved_2",
+      "offset": 24,
+      "size": 7,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": ["0x08026a30"],
+      "readers": ["0x08026934"],
+      "observed_values": {"cap-00-future-0.sav": "all 0x00"},
+      "update_mechanism": "Part of the checksummed Group A block.",
+      "confidence": "UNKNOWN",
+      "evidence": "Always zero in sample."
+    },
+    {
+      "name": "group_a_trailing_byte",
+      "offset": 31,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": ["0x08026a30"],
+      "readers": ["0x08026934"],
+      "observed_values": {"cap-00-future-0.sav": "0x03"},
+      "update_mechanism": "Last byte of the checksummed Group A block (offset 0x1F); no code path branches on it directly in the traced slice.",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Nonzero value 3 observed; could be a small counter or flag, covered by the proven checksum but unconfirmed semantically."
+    },
+    {
+      "name": "group_b_primary_block",
+      "offset": 32,
+      "size": 40,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": ["0x08026a30"],
+      "readers": ["0x08026934"],
+      "observed_values": {"cap-00-future-0.sav": "all 0x00"},
+      "update_mechanism": "Same architecture as Group A (read via FUN_08026934(4,...,5), write-verify via FUN_08026a30(4,...,5)), but entirely unpopulated in this sample.",
+      "confidence": "UNKNOWN",
+      "evidence": "Blank/all-zero in the only available sample; structure inferred from code only."
+    },
+    {
+      "name": "group_c_primary_block",
+      "offset": 72,
+      "size": 40,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": ["0x08026a30"],
+      "readers": ["0x08026934"],
+      "observed_values": {"cap-00-future-0.sav": "all 0x00"},
+      "update_mechanism": "Same architecture as Group A (sector 9, count 5), unpopulated in this sample.",
+      "confidence": "UNKNOWN",
+      "evidence": "Blank/all-zero; structure inferred from code only."
+    },
+    {
+      "name": "group_d_primary_block",
+      "offset": 112,
+      "size": 40,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": ["0x08026a30"],
+      "readers": ["0x08026934"],
+      "observed_values": {"cap-00-future-0.sav": "all 0x00"},
+      "update_mechanism": "Same architecture as Group A (sector 0xe, count 5), unpopulated in this sample.",
+      "confidence": "UNKNOWN",
+      "evidence": "Blank/all-zero; structure inferred from code only."
+    },
+    {
+      "name": "group_a_backup_block",
+      "offset": 152,
+      "size": 16,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": ["0x08026a30"],
+      "readers": ["0x08026934"],
+      "observed_values": {"cap-00-future-0.sav": "00004e20000027100000000000000003 (identical to primary)"},
+      "update_mechanism": "Mirror of group_a_primary via sector 0x13, count 2; selected/repaired by the same checksum-comparison logic in FUN_08026c30.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Python byte-comparison data[0x10:0x20] == data[0x98:0xa8] is True against the real .sav file."
+    },
+    {
+      "name": "group_b_backup_block",
+      "offset": 168,
+      "size": 40,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": ["0x08026a30"],
+      "readers": ["0x08026934"],
+      "observed_values": {"cap-00-future-0.sav": "all 0x00"},
+      "update_mechanism": "Mirror of group_b_primary via sector 0x15, count 5.",
+      "confidence": "UNKNOWN",
+      "evidence": "Blank/all-zero; mirror relationship inferred from code only (both copies blank, so equality is consistent but unverified as a meaningful mirror)."
+    },
+    {
+      "name": "group_c_backup_block",
+      "offset": 208,
+      "size": 40,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": ["0x08026a30"],
+      "readers": ["0x08026934"],
+      "observed_values": {"cap-00-future-0.sav": "all 0x00"},
+      "update_mechanism": "Mirror of group_c_primary via sector 0x1a, count 5.",
+      "confidence": "UNKNOWN",
+      "evidence": "Blank/all-zero."
+    },
+    {
+      "name": "group_d_backup_block",
+      "offset": 248,
+      "size": 40,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": ["0x08026a30"],
+      "readers": ["0x08026934"],
+      "observed_values": {"cap-00-future-0.sav": "all 0x00"},
+      "update_mechanism": "Mirror of group_d_primary via sector 0x1f, count 5.",
+      "confidence": "UNKNOWN",
+      "evidence": "Blank/all-zero."
+    },
+    {
+      "name": "unaddressed_erased_region",
+      "offset": 288,
+      "size": 224,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"cap-00-future-0.sav": "all 0xff"},
+      "update_mechanism": "Never addressed by any traced sector index (max observed sector+count reaches sector 35 / byte 0x11F); remains raw erased-EEPROM default.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "All bytes 0xFF in the real .sav, consistent with no write/read path in decompiled.c ever targeting sectors 36-63."
+    }
+  ],
+  "fuzzing_targets": [
+    {
+      "offset": 18,
+      "size": 2,
+      "mutation": "Flip a bit in group_a_value_1 (0x12-0x13) without updating the checksum at 0x02-0x03.",
+      "requires_checksum_repair": false,
+      "predicted_effect": "On next boot, FUN_08026c30 detects the primary-copy checksum mismatch, finds the backup copy (0x9A-0x9B) still checksum-consistent, and auto-repairs the primary copy from the backup."
+    },
+    {
+      "offset": 18,
+      "size": 2,
+      "mutation": "Corrupt both group_a_value_1 (0x12) and the mirrored byte at group_a_backup (0x9A) so neither copy's live checksum matches 0x02-0x03 and the two copies disagree with each other.",
+      "requires_checksum_repair": false,
+      "predicted_effect": "Both-copies-bad case: error bitmask gets a Group A failure bit set and func_0x080287f8 (fatal/alert handler) is invoked instead of silent auto-repair."
+    },
+    {
+      "offset": 2,
+      "size": 2,
+      "mutation": "Change group_a_value_1 (0x12-0x13) to a new value and recompute+write the correct sum-of-bytes checksum into 0x02-0x03, keeping the backup copy identical.",
+      "requires_checksum_repair": true,
+      "predicted_effect": "Save is accepted as fully valid (no repair/fatal path); any in-game observable difference tied to this value would be the first evidence toward its semantic meaning."
+    },
+    {
+      "offset": 4,
+      "size": 4,
+      "mutation": "Zero out the EAMA magic bytes.",
+      "requires_checksum_repair": false,
+      "predicted_effect": "Save is treated as blank/uninitialized; FUN_08026c30's first-boot populate-and-write path re-runs, effectively resetting the header and Group A on next write."
+    },
+    {
+      "offset": 288,
+      "size": 224,
+      "mutation": "Write non-0xFF garbage into the unaddressed erased region (0x120-0x1FF).",
+      "requires_checksum_repair": false,
+      "predicted_effect": "No observable effect at all (negative control confirming this region is genuinely unaddressed dead space, not an undiscovered fifth group)."
+    }
+  ],
+  "open_questions": [
+    "Semantic meaning of group_a_value_1 (0x12-0x13, raw bytes 4e 20) and group_a_value_2 (0x16-0x17, raw bytes 27 10) is unknown; no traced code reads or branches on these sub-fields independently of the group-level checksum.",
+    "Endianness of group_a_value_1 / group_a_value_2 is unconfirmed; only the checksum (which is endianness-agnostic, a byte sum) was verified.",
+    "Exact stored-checksum byte offsets for Group B, Group C, and Group D could not be confirmed because all three groups are entirely zero-filled in the only available .sav sample; a populated-save sample is required.",
+    "Semantic meaning of group_a_trailing_byte (0x1F, value 3) is unknown.",
+    "The IRQ line toggled by 0x080b6998/0x080b69fc around the EEPROM write busy-wait in 0x080b6b78 is not identified.",
+    "callgraph.json under-reports true callers for the MMIO seed functions (0x080b6ac0, 0x080b6b78) because its extraction window is limited to a 2-hop neighborhood; the real caller chain up through 0x08026934/0x08026a30/0x08026c30/0x08028190 had to be manually recovered from decompiled.c and should be treated as more authoritative than callgraph.json alone for this release.",
+    "No gameplay-triggered (non-boot-time) write path into the save-writer layer (FUN_08026a30) was found within the available trace depth; only the boot-time validator/repair path and the per-slot runtime loader (read-only observed) were confirmed to reach the hardware layer."
+  ]
+}

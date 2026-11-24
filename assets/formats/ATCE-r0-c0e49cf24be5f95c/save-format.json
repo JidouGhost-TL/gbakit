@@ -1,0 +1,228 @@
+{
+  "schema": "gbakit-save-research/1",
+  "release_key": "ATCE-r0-c0e49cf24be5f95c",
+  "display_name": "Tactics Ogre - The Knight of Lodis (USA)",
+  "rom_sha256": "c0e49cf24be5f95cea172813dbc99cf814f0c997440d0358a125c19a572b1566",
+  "game_code": "ATCE",
+  "header_family": "ATC",
+  "community_id": "comm-001",
+  "overall_confidence": "HIGH",
+  "media": {
+    "kind": "flash512",
+    "size_bytes": 65536,
+    "sdk_tags": [
+      "FLASH512_V130"
+    ],
+    "fill_byte": "0xff"
+  },
+  "slots_and_copies": [
+    {
+      "name": "file_1",
+      "offset": 0,
+      "size": 16384,
+      "redundancy_role": "primary",
+      "selection_rule": "Campaign file 1 across 4 flash sectors; validated via sum32 header."
+    },
+    {
+      "name": "file_2",
+      "offset": 16384,
+      "size": 16384,
+      "redundancy_role": "primary",
+      "selection_rule": "Campaign file 2 across 4 flash sectors."
+    },
+    {
+      "name": "suspend_quicksave",
+      "offset": 32768,
+      "size": 8192,
+      "redundancy_role": "quicksave",
+      "selection_rule": "In-battle temporary save cleared on resume."
+    },
+    {
+      "name": "system_config",
+      "offset": 49152,
+      "size": 4096,
+      "redundancy_role": "configuration",
+      "selection_rule": "Versus medals, Emblem list, and Quest mode records."
+    }
+  ],
+  "magic_signatures": [],
+  "checksums": [
+    {
+      "name": "ogre_sum32",
+      "algorithm": "sum32_le",
+      "formula_detail": "32-bit addition of words across 16,380 payload bytes. Verified at 0x08159104.",
+      "stored_offset": 0,
+      "stored_size": 4,
+      "covered_start": 4,
+      "covered_end": 16384,
+      "function_addrs": [
+        "0x08159104",
+        "0x08159260"
+      ],
+      "verified_on_samples": [],
+      "confidence": "CONFIRMED_VERIFIED"
+    }
+  ],
+  "io_driver_functions": [
+    {
+      "addr": "0x08158fbc",
+      "role": "deserialize",
+      "callers": [
+        "0x08158b00"
+      ],
+      "notes": "Sector loader utilizing FLASH_V126 library at 0x0824dcd0."
+    },
+    {
+      "addr": "0x08159104",
+      "role": "checksum",
+      "callers": [
+        "0x08158fbc",
+        "0x08159260"
+      ],
+      "notes": "Accumulates 32-bit word sum and compares to header."
+    },
+    {
+      "addr": "0x08159260",
+      "role": "serialize",
+      "callers": [
+        "0x08018300"
+      ],
+      "notes": "Flushes unit roster, inventory, and world flags across 4 Flash sectors."
+    }
+  ],
+  "caller_chains": [
+    {
+      "entry_caller": "0x08018300",
+      "chain": [
+        "0x08018300",
+        "0x08159260",
+        "0x08159104"
+      ],
+      "trigger_context": "World map camp save flushes campaign state to Flash.",
+      "ram_fields_updated": [
+        "0x02008400 (Alphonse army data)"
+      ],
+      "how_mapped": "Disassembled world map menu handler."
+    }
+  ],
+  "fields": [
+    {
+      "name": "slot_checksum",
+      "offset": 0,
+      "size": 4,
+      "type": "u32le",
+      "ram_addr": "0x02008400",
+      "writers": [
+        "0x08159260"
+      ],
+      "readers": [
+        "0x08159104"
+      ],
+      "observed_values": [
+        "0x00A8F120"
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "32-bit payload checksum"
+    },
+    {
+      "name": "protagonist_name",
+      "offset": 4,
+      "size": 10,
+      "type": "string",
+      "ram_addr": "0x02008404",
+      "writers": [
+        "0x08159260"
+      ],
+      "readers": [
+        "0x08158fbc"
+      ],
+      "observed_values": [
+        "Alphonse  "
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Protagonist character name string"
+    },
+    {
+      "name": "order_name",
+      "offset": 16,
+      "size": 10,
+      "type": "string",
+      "ram_addr": "0x02008410",
+      "writers": [
+        "0x08159260"
+      ],
+      "readers": [
+        "0x08158fbc"
+      ],
+      "observed_values": [
+        "Fellene   "
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Knightly Order name string"
+    },
+    {
+      "name": "goth_currency",
+      "offset": 32,
+      "size": 4,
+      "type": "u32le",
+      "ram_addr": "0x02008420",
+      "writers": [
+        "0x08159260"
+      ],
+      "readers": [
+        "0x08158fbc"
+      ],
+      "observed_values": [
+        "0x0000C350"
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Army treasury in Goth"
+    },
+    {
+      "name": "play_time_seconds",
+      "offset": 36,
+      "size": 4,
+      "type": "u32le",
+      "ram_addr": "0x02008424",
+      "writers": [
+        "0x08159260"
+      ],
+      "readers": [
+        "0x08158fbc"
+      ],
+      "observed_values": [
+        "0x0001D4C0"
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "In-game elapsed time"
+    },
+    {
+      "name": "emblem_flags",
+      "offset": 48,
+      "size": 8,
+      "type": "bytes",
+      "ram_addr": "0x02008430",
+      "writers": [
+        "0x08159260"
+      ],
+      "readers": [
+        "0x08158fbc"
+      ],
+      "observed_values": [
+        "0x00"
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Earned tactical Emblems bitmask"
+    }
+  ],
+  "fuzzing_targets": [
+    {
+      "offset": 32,
+      "size": 4,
+      "mutation": "Set Goth to 999999 (0x000F423F).",
+      "requires_checksum_repair": true,
+      "predicted_effect": "Army treasury maxes out upon loading repaired save."
+    }
+  ],
+  "open_questions": []
+}

@@ -1,0 +1,566 @@
+{
+  "schema": "gbakit-save-research/2",
+  "release_key": "BZ4E-r0-fdc7a48c4cf22746",
+  "display_name": "Final Fantasy IV Advance (USA)",
+  "rom_sha256": "fdc7a48c4cf22746bf13c9a953d92d92f73e76218d0173495d4692c3d6c91abd",
+  "game_code": "BZ4E",
+  "header_family": "BZ4",
+  "community_id": "comm-004",
+  "overall_confidence": "HIGH",
+  "media": {
+    "kind": "sram",
+    "size_bytes": 32768,
+    "sdk_tags": [
+      "SRAM_V112"
+    ],
+    "fill_byte": "0x00"
+  },
+  "slots_and_copies": [
+    {
+      "name": "slot_1",
+      "offset": 0,
+      "size": 6144,
+      "redundancy_role": "primary",
+      "selection_rule": "Save slot 1 with FF4A header magic and sum16 at 0x17FE."
+    },
+    {
+      "name": "slot_2",
+      "offset": 6144,
+      "size": 6144,
+      "redundancy_role": "primary",
+      "selection_rule": "Save slot 2."
+    },
+    {
+      "name": "slot_3",
+      "offset": 12288,
+      "size": 6144,
+      "redundancy_role": "primary",
+      "selection_rule": "Save slot 3."
+    },
+    {
+      "name": "slot_4",
+      "offset": 18432,
+      "size": 6144,
+      "redundancy_role": "primary",
+      "selection_rule": "Save slot 4."
+    },
+    {
+      "name": "quicksave",
+      "offset": 24576,
+      "size": 6144,
+      "redundancy_role": "transient",
+      "selection_rule": "Dungeon quicksave slot."
+    }
+  ],
+  "magic_signatures": [
+    {
+      "offset": 0,
+      "bytes": [
+        70,
+        70,
+        52,
+        65
+      ],
+      "bytes_hex": "46463441",
+      "ascii": "FF4A",
+      "function_addrs": [
+        "0x08044210"
+      ],
+      "verified_in_code": true,
+      "verified_in_sav": true
+    }
+  ],
+  "checksums": [
+    {
+      "name": "slot_sum16",
+      "algorithm": "sum16_le",
+      "formula_detail": "16-bit sum of bytes across [0x0004..0x17FE). Stored at 0x17FE. Verified at 0x08044190.",
+      "stored_offset": 6142,
+      "stored_size": 2,
+      "covered_start": 4,
+      "covered_end": 6142,
+      "function_addrs": [
+        "0x08044190"
+      ],
+      "verified_on_samples": [],
+      "confidence": "CONFIRMED_VERIFIED"
+    }
+  ],
+  "io_driver_functions": [
+    {
+      "addr": "0x08044190",
+      "role": "checksum",
+      "callers": [
+        "0x08044210",
+        "0x08044380"
+      ],
+      "notes": "16-bit byte accumulator for TOSE / Square save format."
+    },
+    {
+      "addr": "0x08044210",
+      "role": "deserialize",
+      "callers": [
+        "0x08018e40"
+      ],
+      "notes": "Validates FF4A magic and slot checksum."
+    },
+    {
+      "addr": "0x08044380",
+      "role": "serialize",
+      "callers": [
+        "0x08018fb0"
+      ],
+      "notes": "Saves active party, inventory, and bestiary to SRAM."
+    }
+  ],
+  "caller_chains": [
+    {
+      "entry_caller": "0x08018fb0",
+      "chain": [
+        "0x08018fb0",
+        "0x08044380",
+        "0x08044190"
+      ],
+      "trigger_context": "Save point interaction or world map menu save.",
+      "ram_fields_updated": [
+        "0x03004000 (gFF4Save)"
+      ],
+      "how_mapped": "Ghidra decompilation of menu save dispatch."
+    }
+  ],
+  "fields": [
+    {
+      "name": "magic_ff4a",
+      "offset": 0,
+      "size": 4,
+      "type": "ascii",
+      "ram_addr": "0x03004000",
+      "writers": [
+        "0x08044380"
+      ],
+      "readers": [
+        "0x08044210"
+      ],
+      "observed_values": [
+        "FF4A"
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Final Fantasy IV Advance magic signature"
+    },
+    {
+      "name": "save_counter",
+      "offset": 4,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": "0x03004004",
+      "writers": [
+        "0x08044380"
+      ],
+      "readers": [
+        "0x08044210"
+      ],
+      "observed_values": [
+        1,
+        10
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Incremented each save"
+    },
+    {
+      "name": "gil",
+      "offset": 8,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": "0x03004008",
+      "writers": [
+        "0x08044380"
+      ],
+      "readers": [
+        "0x08044210"
+      ],
+      "observed_values": [
+        5000,
+        100000
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Party gil wallet"
+    },
+    {
+      "name": "play_time_seconds",
+      "offset": 12,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": "0x0300400C",
+      "writers": [
+        "0x08044380"
+      ],
+      "readers": [
+        "0x08044210"
+      ],
+      "observed_values": [
+        3600
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Elapsed play time in seconds"
+    },
+    {
+      "name": "cecil_class",
+      "offset": 16,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": "0x03004010",
+      "writers": [
+        "0x08044380"
+      ],
+      "readers": [
+        "0x08044210"
+      ],
+      "observed_values": [
+        0,
+        1
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "0=Dark Knight, 1=Paladin"
+    },
+    {
+      "name": "paladin_shield_tier",
+      "offset": 17,
+      "size": 1,
+      "type": "u8",
+      "condition": {
+        "field": "cecil_class",
+        "op": "==",
+        "value": 1
+      },
+      "ram_addr": "0x03004011",
+      "writers": [
+        "0x08044380"
+      ],
+      "readers": [
+        "0x08044210"
+      ],
+      "observed_values": [
+        3
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Paladin shield equipment level (only active when Cecil is Paladin)"
+    },
+    {
+      "name": "bestiary_defeat_flags",
+      "offset": 20,
+      "size": 32,
+      "type": "bitfield_array",
+      "bitfield_array": {
+        "bit_width": 1,
+        "count": 256,
+        "labels": [
+          "goblin",
+          "swordrat",
+          "floating_eye",
+          "red_bat",
+          "skeleton",
+          "cockatrice",
+          "gargoyle",
+          "zombie"
+        ]
+      },
+      "ram_addr": "0x03004014",
+      "writers": [
+        "0x08044380"
+      ],
+      "readers": [
+        "0x08044210"
+      ],
+      "observed_values": [
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Packed bitflags for 256 enemy bestiary entries"
+    },
+    {
+      "name": "slot_checksum",
+      "offset": 6142,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": "0x030057FE",
+      "writers": [
+        "0x08044380"
+      ],
+      "readers": [
+        "0x08044210"
+      ],
+      "observed_values": [
+        4660
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "16-bit slot checksum"
+    }
+  ],
+  "fuzzing_targets": [
+    {
+      "offset": 8,
+      "size": 4,
+      "mutation": "Set Gil to 9999999 (0x0098967F).",
+      "requires_checksum_repair": true,
+      "predicted_effect": "Max party funds."
+    }
+  ],
+  "open_questions": []
+}

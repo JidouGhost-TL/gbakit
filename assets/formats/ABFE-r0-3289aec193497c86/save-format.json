@@ -1,0 +1,228 @@
+{
+  "schema": "gbakit-save-research/1",
+  "release_key": "ABFE-r0-3289aec193497c86",
+  "display_name": "Breath of Fire (USA)",
+  "rom_sha256": "3289aec193497c86c3c769b42c1024a1d491d48f15b90fcb58910dca0a79647a",
+  "game_code": "ABFE",
+  "header_family": "ABF",
+  "community_id": "comm-001",
+  "overall_confidence": "HIGH",
+  "media": {
+    "kind": "sram",
+    "size_bytes": 32768,
+    "sdk_tags": [
+      "SRAM_V112@998516"
+    ],
+    "fill_byte": "0xff"
+  },
+  "slots_and_copies": [
+    {
+      "name": "slot_0",
+      "offset": 0,
+      "size": 1280,
+      "redundancy_role": "primary",
+      "selection_rule": "Validated by 6-byte ASCII magic 'CAPCOM' at offset 0x29E and sum16_le checksum at 0x00."
+    },
+    {
+      "name": "slot_1",
+      "offset": 1280,
+      "size": 1280,
+      "redundancy_role": "primary",
+      "selection_rule": "Validated by 'CAPCOM' at offset 1280 + 0x29E and sum16_le at 1280."
+    },
+    {
+      "name": "slot_2",
+      "offset": 2560,
+      "size": 1280,
+      "redundancy_role": "primary",
+      "selection_rule": "Validated by 'CAPCOM' at offset 2560 + 0x29E and sum16_le at 2560."
+    },
+    {
+      "name": "slot_3",
+      "offset": 3840,
+      "size": 1280,
+      "redundancy_role": "primary",
+      "selection_rule": "Validated by 'CAPCOM' at offset 3840 + 0x29E and sum16_le at 3840."
+    }
+  ],
+  "magic_signatures": [
+    {
+      "offset": 670,
+      "bytes_hex": "434150434f4d",
+      "ascii": "CAPCOM",
+      "verified_in_code": true,
+      "verified_in_sav": false,
+      "function_addrs": [
+        "0x080440f8"
+      ]
+    }
+  ],
+  "checksums": [
+    {
+      "name": "slot_0_checksum",
+      "algorithm": "sum16_le",
+      "formula_detail": "16-bit sum of all bytes from byte offset 2 to 0x4FA (1273 bytes). Computed by loop at 0x08043af8-0x08043b10.",
+      "stored_offset": 0,
+      "stored_size": 2,
+      "covered_start": 2,
+      "covered_end": 1275,
+      "function_addrs": [
+        "0x08043af6",
+        "0x08043b12"
+      ],
+      "verified_on_samples": [],
+      "confidence": "CONFIRMED_STATIC"
+    }
+  ],
+  "io_driver_functions": [
+    {
+      "addr": "0x080040e4",
+      "role": "serialize",
+      "callers": [
+        "0x08043ae0",
+        "0x08043b3e"
+      ],
+      "notes": "SRAM slot transfer coordinator: converts slot index (r * 0x500 + 0x0E000000) and delegates to copy primitives."
+    },
+    {
+      "addr": "0x080a0664",
+      "role": "write",
+      "callers": [
+        "0x08004120"
+      ],
+      "notes": "Nintendo AGB SDK WriteSram primitive."
+    },
+    {
+      "addr": "0x080a06d4",
+      "role": "checksum",
+      "callers": [
+        "0x08004128"
+      ],
+      "notes": "Nintendo AGB SDK VerifySram primitive."
+    },
+    {
+      "addr": "0x080440f8",
+      "role": "deserialize",
+      "callers": [
+        "0x08043ae6"
+      ],
+      "notes": "Magic validation: compares 6 bytes at offset 0x29E against 'CAPCOM'."
+    },
+    {
+      "addr": "0x08043aa8",
+      "role": "deserialize",
+      "callers": [],
+      "notes": "Save slot loader: reads 1280 bytes, validates 'CAPCOM' magic at 0x29E, and checks sum16_le checksum against offset 0."
+    }
+  ],
+  "caller_chains": [
+    {
+      "entry_caller": "0x08043aa8",
+      "chain": [
+        "0x08043aa8",
+        "0x080040e4",
+        "0x080440f8"
+      ],
+      "trigger_context": "Inn / save point record book save event.",
+      "ram_fields_updated": [
+        "Ryu and party stats, gold, item bag, dragon transformations"
+      ],
+      "how_mapped": "Traced disassembly from 0x08043aa8 down to 0x080040e4 and 0x080440f8."
+    }
+  ],
+  "fields": [
+    {
+      "name": "slot_checksum",
+      "offset": 0,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": [
+        "0x080040e4"
+      ],
+      "readers": [
+        "0x08043b12"
+      ],
+      "observed_values": {
+        "sample": "0x0000"
+      },
+      "update_mechanism": "Computed via 16-bit sum of bytes 2..0x4FA before SRAM flush.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "Decompiled routine at 0x08043af6."
+    },
+    {
+      "name": "party_data_block_a",
+      "offset": 2,
+      "size": 668,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [
+        "0x080040e4"
+      ],
+      "readers": [
+        "0x08043afe"
+      ],
+      "observed_values": {
+        "sample": "Party stats, gold, equipment"
+      },
+      "update_mechanism": "Primary party state.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "Payload preceding magic."
+    },
+    {
+      "name": "magic_signature",
+      "offset": 670,
+      "size": 6,
+      "type": "ascii",
+      "ram_addr": null,
+      "writers": [
+        "0x080040e4"
+      ],
+      "readers": [
+        "0x080440f8"
+      ],
+      "observed_values": {
+        "sample": "CAPCOM"
+      },
+      "update_mechanism": "Static constant 'CAPCOM' at offset 0x29E.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "Literal string in ROM at 0x08044120 checked by 0x08044104."
+    },
+    {
+      "name": "party_data_block_b",
+      "offset": 676,
+      "size": 604,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [
+        "0x080040e4"
+      ],
+      "readers": [
+        "0x08043afe"
+      ],
+      "observed_values": {
+        "sample": "Storyline events, world map flags"
+      },
+      "update_mechanism": "Secondary game progression flags.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "Payload following magic up to byte 1280."
+    }
+  ],
+  "fuzzing_targets": [
+    {
+      "offset": 670,
+      "size": 6,
+      "mutation": "Corrupt 'CAPCOM' to 'XXXXXX'.",
+      "requires_checksum_repair": false,
+      "predicted_effect": "0x080440f8 check fails; slot rejected as empty."
+    },
+    {
+      "offset": 0,
+      "size": 2,
+      "mutation": "Invert checksum halfword.",
+      "requires_checksum_repair": false,
+      "predicted_effect": "0x08043b14 sum comparison fails; slot rejected as corrupted."
+    }
+  ],
+  "open_questions": []
+}

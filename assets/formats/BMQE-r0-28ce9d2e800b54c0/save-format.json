@@ -1,0 +1,187 @@
+{
+  "schema": "gbakit-save-research/1",
+  "release_key": "BMQE-r0-28ce9d2e800b54c0",
+  "display_name": "Magical Quest 3 Starring Mickey & Donald (USA) (En,Fr,De)",
+  "rom_sha256": "28ce9d2e800b54c0f6a580e2193c23f80b6e2567890bb9048901a3ff8f163d6c",
+  "game_code": "BMQE",
+  "header_family": "BMQ",
+  "community_id": "comm-040",
+  "overall_confidence": "LOW",
+  "media": {
+    "kind": "eeprom512",
+    "size_bytes": 512,
+    "sdk_tags": ["EEPROM_V124@2307368"],
+    "fill_byte": "0xff"
+  },
+  "slots_and_copies": [
+    {
+      "name": "eeprom_block_0x30",
+      "offset": 384,
+      "size": 8,
+      "redundancy_role": "unknown",
+      "selection_rule": "UNKNOWN - block address (0x30) is a caller-supplied parameter to FUN_08118e70/FUN_08118f34; no caller is traced in ghidra/decompiled.c (callgraph.json shows zero callers of FUN_081190ec and FUN_08118f34's only caller is the internal wrapper FUN_08118f20), so whether this address is hard-coded or dynamically chosen is unresolved"
+    },
+    {
+      "name": "eeprom_remaining_blocks",
+      "offset": 0,
+      "size": 384,
+      "redundancy_role": "unknown",
+      "selection_rule": "63 of 64 possible 8-byte EEPROM blocks (all except block 0x30) remain 0xFF (blank) in both available .sav samples; no code path in the 241-function decompiled corpus references any other block address"
+    }
+  ],
+  "magic_signatures": [],
+  "checksums": [],
+  "io_driver_functions": [
+    {
+      "addr": "0x08118df0",
+      "role": "serialize",
+      "callers": ["0x08118e70", "0x08118f34"],
+      "notes": "Raw DMA3 serial-bit transfer primitive over EEPROM bus 0x0D000000; writes src/dst/count|enable into DMA3-adjacent MMIO globals and busy-waits bit 15 of a status halfword before returning. Shared by both read and write paths; has no other callers in the 241-function corpus."
+    },
+    {
+      "addr": "0x08118e70",
+      "role": "read",
+      "callers": ["0x08119094"],
+      "notes": "EEPROM block READ. Bound-checks block address against max block count, clocks out a READ command + address bitstream via FUN_08118df0, clocks in 0x44 (68) response bits, unpacks into 4 big-endian u16 halfwords into caller-supplied buffer. Sole caller is the write-verify function FUN_08119094 (no separate 'load into game state' reader was found in this workspace)."
+    },
+    {
+      "addr": "0x08118f20",
+      "role": "write",
+      "callers": ["0x081190ec"],
+      "notes": "Thin wrapper: calls FUN_08118f34(param_1, param_2, 1) with the wait-for-ready flag fixed to 1."
+    },
+    {
+      "addr": "0x08118f34",
+      "role": "write",
+      "callers": ["0x08118f20"],
+      "notes": "EEPROM block WRITE (raw hardware). Packs 4x u16 payload + block address MSB-first into a serial bitstream, clocks it out via FUN_08118df0, then polls the EEPROM ready bit (uRam0d000000 & 1) in a timeout loop (threshold 0x88 ticks) before returning. No application-level checksum logic present; the poll loop is purely a hardware write-completion wait."
+    },
+    {
+      "addr": "0x08119094",
+      "role": "checksum",
+      "callers": ["0x081190ec"],
+      "notes": "Write-verify: reads back the just-written block via FUN_08118e70 and compares each of 4 halfwords against the original payload; returns 0 on match, 0x8000 on first mismatch. This is the ONLY integrity mechanism found in the traced corpus -- a hardware read-back-and-compare, not a stored/software checksum field. Labeled role=checksum here because it is the closest functional analogue present; there is no stored checksum byte range in the save file."
+    },
+    {
+      "addr": "0x081190ec",
+      "role": "write",
+      "callers": [],
+      "notes": "Top-level write/verify/retry entry point: loops up to 3x calling FUN_08118f20 (write) then FUN_08119094 (verify), breaking on clean verify. Confirmed via exhaustive scan of every function's callees list in ghidra/callgraph.json to have ZERO callers in the 241-function decompiled corpus. This is the highest save-writer function visible in this workspace; the game-logic call site that triggers it is outside the traced function set and is reported as UNKNOWN."
+    }
+  ],
+  "caller_chains": [
+    {
+      "entry_caller": "UNKNOWN",
+      "chain": ["UNKNOWN", "0x081190ec", "0x08118f20", "0x08118f34", "0x08118df0"],
+      "trigger_context": "UNKNOWN - no function in the 241-function decompiled corpus calls 0x081190ec or 0x08118f34; confirmed by exhaustive traversal of ghidra/callgraph.json's callees lists for every one of the 241 keyed functions",
+      "ram_fields_updated": [],
+      "how_mapped": "Traversed ghidra/callgraph.json looking for any function whose callees array contains 0x08118df0, 0x08118e70, 0x08118f20, 0x08118f34, 0x08119094, or 0x081190ec. Only internal edges within the 6-function driver cluster were found (0x08118e70->0x08118df0, 0x08118f34->0x08118df0, 0x08119094->0x08118e70, 0x081190ec->0x08119094, 0x081190ec->0x08118f20). No external caller exists in this workspace."
+    },
+    {
+      "entry_caller": "0x08119094",
+      "chain": ["0x08119094", "0x08118e70", "0x08118df0"],
+      "trigger_context": "Internal to the write-verify-retry sequence; not an independent application-level read trigger",
+      "ram_fields_updated": [],
+      "how_mapped": "Direct call-site inspection in ghidra/decompiled.c (FUN_08119094 body calls FUN_08118e70) plus confirmation in ghidra/callgraph.json"
+    }
+  ],
+  "fields": [
+    {
+      "name": "block_0x30_halfword_0_first",
+      "offset": 384,
+      "size": 2,
+      "type": "u16",
+      "ram_addr": null,
+      "writers": ["0x08118f34", "0x08118f20", "0x081190ec"],
+      "readers": ["0x08118e70", "0x08119094"],
+      "observed_values": {"cap-00-future-0.sav": "0xFFFF (blank/unwritten)", "cap-01-future-1.sav": "0x0002"},
+      "update_mechanism": "Written via the write/verify/retry chain FUN_081190ec -> FUN_08118f20 -> FUN_08118f34 -> FUN_08118df0 (DMA3 over EEPROM bus 0x0D000000); value/endianness inferred from the MSB-first 4x-u16 pack/unpack loops in FUN_08118e70/FUN_08118f34",
+      "confidence": "HYPOTHESIS",
+      "evidence": "saves/hexdump_and_diffs.txt localizes the only active 8-byte range in the 512-byte image; byte order and halfword boundary inferred from decompiled pack/unpack loops, not confirmed against a second differing sample"
+    },
+    {
+      "name": "block_0x30_middle_zero_field",
+      "offset": 386,
+      "size": 4,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": ["0x08118f34", "0x08118f20", "0x081190ec"],
+      "readers": ["0x08118e70", "0x08119094"],
+      "observed_values": {"cap-00-future-0.sav": "0xFFFFFFFF (blank/unwritten)", "cap-01-future-1.sav": "0x00000000"},
+      "update_mechanism": "Same write chain as block_0x30_halfword_0_first; always zero in the single non-blank sample observed, so purpose (reserved/padding vs. unexercised counter) is undetermined",
+      "confidence": "HYPOTHESIS",
+      "evidence": "saves/hexdump_and_diffs.txt; only one non-blank sample available, cannot determine if this field is ever non-zero"
+    },
+    {
+      "name": "block_0x30_halfword_3_last",
+      "offset": 390,
+      "size": 2,
+      "type": "u16",
+      "ram_addr": null,
+      "writers": ["0x08118f34", "0x08118f20", "0x081190ec"],
+      "readers": ["0x08118e70", "0x08119094"],
+      "observed_values": {"cap-00-future-0.sav": "0xFFFF (blank/unwritten)", "cap-01-future-1.sav": "0x0002"},
+      "update_mechanism": "Same write chain as block_0x30_halfword_0_first; identical value (0x0002) to the first halfword in the single non-blank sample, basis for the unconfirmed 'duplicate redundancy field' hypothesis",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Python verification: be16 = (2, 0, 0, 2) over saves/cap-01-future-1.sav[0x180:0x188]; halfword[0] == halfword[3]. XOR of the 8 raw bytes == 0. Only one non-blank sample exists so no formula can be confirmed from this alone."
+    },
+    {
+      "name": "eeprom_remaining_blocks_0x00_0x2F_and_0x31_0x3F",
+      "offset": 0,
+      "size": 504,
+      "type": "unknown",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"cap-00-future-0.sav": "0xFF fill", "cap-01-future-1.sav": "0xFF fill"},
+      "update_mechanism": "UNKNOWN - never observed non-blank in either available sample; no traced code references any block address other than 0x30",
+      "confidence": "UNKNOWN",
+      "evidence": "Full-file byte scan of both .sav files in saves/ confirms all bytes outside 0x180-0x187 are 0xFF in both samples"
+    }
+  ],
+  "fuzzing_targets": [
+    {
+      "offset": 384,
+      "size": 2,
+      "mutation": "Flip stored 0x0002 to 0x0000 at offset 0x180-0x181 while leaving 0x186-0x187 at 0x0002",
+      "requires_checksum_repair": false,
+      "predicted_effect": "If the two halfwords must match: save rejected/reset on load, or loader falls back to the 0x186 copy. If independent fields: no effect beyond whatever this specific field controls. Directly tests the duplicate-redundancy hypothesis in section 4 of the report."
+    },
+    {
+      "offset": 390,
+      "size": 2,
+      "mutation": "Flip stored 0x0002 to 0x0000 at offset 0x186-0x187, leave 0x180-0x181 intact",
+      "requires_checksum_repair": false,
+      "predicted_effect": "Mirror of the first mutation on the other half; a behavioral difference between the two mutations would indicate primary/backup semantics rather than symmetric redundancy."
+    },
+    {
+      "offset": 386,
+      "size": 4,
+      "mutation": "Write 0xDEADBEEF into the always-zero middle field",
+      "requires_checksum_repair": false,
+      "predicted_effect": "No effect if reserved/padding; a visible state change (menu/flag/HUD) if this is a live but unexercised field."
+    },
+    {
+      "offset": 0,
+      "size": 8,
+      "mutation": "Write a non-blank pattern into a currently-0xFF block (e.g. block 0x00) to test whether the game scans for the first non-blank block rather than reading a hard-coded address 0x30",
+      "requires_checksum_repair": false,
+      "predicted_effect": "No effect if block address 0x30 is hard-coded; changed boot/continue behavior if the game dynamically selects or scans slots."
+    },
+    {
+      "offset": 384,
+      "size": 8,
+      "mutation": "Revert block 0x30 fully to 0xFF (reproduce the blank cap-00-future-0.sav state from the written cap-01-future-1.sav state)",
+      "requires_checksum_repair": false,
+      "predicted_effect": "Should reproduce the exact cap-00 boot behavior reported by the packet's cold-reload probe (visual_delta_on_load true when toggling blank<->written), isolating this block as causally responsible for that already-observed delta."
+    }
+  ],
+  "open_questions": [
+    "What game-logic function calls FUN_081190ec / FUN_08118f20, and what EWRAM/IWRAM struct supplies its 4-halfword payload? Not present in this workspace's 241-function decompiled corpus.",
+    "Is EEPROM block address 0x30 hard-coded, or could other blocks serve as additional save slots never exercised in the two available captures?",
+    "Are the two matching 0x0002 halfwords (offsets 0x180 and 0x186) a redundancy pair, or two independently-valued fields that happen to coincide? Needs more non-blank samples with differing values to resolve.",
+    "Is there any integrity mechanism beyond the hardware write-verify-retry (FUN_08119094/FUN_081190ec), e.g. a checksum computed in RAM before the write, that is invisible to this driver-level static trace?",
+    "What does the value 2 represent semantically (counter, duplicated boolean flag, slot marker, version tag)? Cannot be determined without additional .sav samples spanning different in-game states or the untraced caller function.",
+    "No paired .ss save states exist for this release key in states/; all fuzzing_targets above are untested predictions pending a capture run that produces paired pre/post save states."
+  ]
+}

@@ -1,0 +1,340 @@
+{
+  "schema": "gbakit-save-research/1",
+  "release_key": "BIIE-r0-f03f192ea9ceb7dd",
+  "display_name": "Polarium Advance (USA)",
+  "rom_sha256": "f03f192ea9ceb7dd438b4cfda5b274ff9e057af12ebc1b4f597edd407330a0ca",
+  "game_code": "BIIE",
+  "header_family": "BII",
+  "community_id": "comm-002",
+  "overall_confidence": "LOW",
+  "media": {
+    "kind": "flash512",
+    "size_bytes": 65536,
+    "sdk_tags": [],
+    "fill_byte": "0xff"
+  },
+  "slots_and_copies": [
+    {
+      "name": "block_a_records",
+      "offset": 4096,
+      "size": 3640,
+      "redundancy_role": "unknown",
+      "selection_rule": "unknown; 35 x 104-byte records, all byte-identical to one default template in the only available sample"
+    },
+    {
+      "name": "block_b_records",
+      "offset": 8192,
+      "size": 3640,
+      "redundancy_role": "unknown",
+      "selection_rule": "unknown; byte-identical to block_a_records in the only available sample (cannot distinguish redundant copy from a distinct table with the same default template)"
+    },
+    {
+      "name": "block_c_records",
+      "offset": 12288,
+      "size": 3120,
+      "redundancy_role": "unknown",
+      "selection_rule": "unknown; 30 x 104-byte records (fewer than blocks A/B), all byte-identical to the same default template"
+    },
+    {
+      "name": "hag_tag_block",
+      "offset": 16276,
+      "size": 108,
+      "redundancy_role": "primary",
+      "selection_rule": "mirrored verbatim at hag_tag_block_mirror (+0x9000)"
+    },
+    {
+      "name": "hag_tag_block_mirror",
+      "offset": 53140,
+      "size": 108,
+      "redundancy_role": "backup",
+      "selection_rule": "byte-identical to hag_tag_block, verified by direct comparison"
+    },
+    {
+      "name": "sho_tag_block",
+      "offset": 28040,
+      "size": 628,
+      "redundancy_role": "primary",
+      "selection_rule": "mirrored verbatim at sho_tag_block_mirror (+0x9000)"
+    },
+    {
+      "name": "sho_tag_block_mirror",
+      "offset": 64904,
+      "size": 628,
+      "redundancy_role": "backup",
+      "selection_rule": "byte-identical to sho_tag_block, verified by direct comparison"
+    },
+    {
+      "name": "roy_tag_block",
+      "offset": 40360,
+      "size": 600,
+      "redundancy_role": "unknown",
+      "selection_rule": "no +0x9000 mirror exists (0x9DA8 + 0x9000 = 0x12DA8, outside the 64 KiB file); single copy only"
+    }
+  ],
+  "magic_signatures": [
+    {
+      "offset": 16276,
+      "bytes_hex": "00484147",
+      "ascii": "\u0000HAG",
+      "verified_in_code": false,
+      "verified_in_sav": true,
+      "function_addrs": []
+    },
+    {
+      "offset": 28040,
+      "bytes_hex": "0353484f",
+      "ascii": "\u0003SHO",
+      "verified_in_code": false,
+      "verified_in_sav": true,
+      "function_addrs": []
+    },
+    {
+      "offset": 40360,
+      "bytes_hex": "5c524f59",
+      "ascii": "\\ROY",
+      "verified_in_code": false,
+      "verified_in_sav": true,
+      "function_addrs": []
+    }
+  ],
+  "checksums": [],
+  "io_driver_functions": [
+    {
+      "addr": "0x0802e7d8",
+      "role": "serialize",
+      "callers": [],
+      "notes": "Chip-ID dispatch-table initializer: calls FUN_0802e2fc to probe ID, matches against a table at _DAT_0802e800, installs 6 function-pointer globals, tail-calls through an unrecovered jump table. No static caller found in the decompiled corpus."
+    },
+    {
+      "addr": "0x0802e2fc",
+      "role": "read",
+      "callers": ["0x0802e7d8"],
+      "notes": "Flash manufacturer/device ID probe: unlock handshake 0xAA/0x55 then 0x90 (autoselect), reads IDs via func_0x0802ec5c including a literal read at 0xE000000, then issues 0xAA/0x55/0xF0/0xF0 reset/exit."
+    },
+    {
+      "addr": "0x0802e4ec",
+      "role": "serialize",
+      "callers": ["0x0802e968"],
+      "notes": "Halfword block-copy scratch helper used by the sector-erase routine before issuing Flash commands."
+    },
+    {
+      "addr": "0x0802e968",
+      "role": "erase",
+      "callers": [],
+      "notes": "Sector erase: guarded to sector indices 0-15 (consistent with a 64 KiB chip as sixteen 4 KiB sectors). Issues 0x80/0xAA/0x55/<addr>:0x30 sector-erase command sequence, then polls completion via func_0x0802ec54. No static caller found."
+    },
+    {
+      "addr": "0x0802e550",
+      "role": "write",
+      "callers": [],
+      "notes": "Byte/word program primitive; optional bank-select via external func_0x0802e2d8 when detected chip size == 0x20000 (128 KiB); tail-calls func_0x0802ec54 with address (offset<<shift)+0xE000000."
+    },
+    {
+      "addr": "0x0802e61c",
+      "role": "write",
+      "callers": ["0x0802e74c"],
+      "notes": "Program primitive variant, same shape as 0x0802e550."
+    },
+    {
+      "addr": "0x0802e6b4",
+      "role": "write",
+      "callers": ["0x0802e790"],
+      "notes": "Program primitive variant, same shape as 0x0802e550/0x0802e61c."
+    },
+    {
+      "addr": "0x0802e74c",
+      "role": "write",
+      "callers": [],
+      "notes": "Write-with-retry wrapper (3 attempts) around func_0x0802ec50 + FUN_0802e61c. No static caller found in decompiled corpus."
+    },
+    {
+      "addr": "0x0802e790",
+      "role": "write",
+      "callers": [],
+      "notes": "Write-with-retry wrapper (3 attempts) around func_0x0802ec50 + FUN_0802e6b4. No static caller found in decompiled corpus."
+    },
+    {
+      "addr": "0x0802ed1c",
+      "role": "serialize",
+      "callers": [],
+      "notes": "NOT save-specific: generic unsigned-division-with-trap compiler runtime routine (calls func_0x0802ed18 on divide-by-zero). Included in the original MMIO-seed set due to address proximity only; flagged here to avoid misclassification as save logic."
+    }
+  ],
+  "caller_chains": [],
+  "fields": [
+    {
+      "name": "stage_record_template",
+      "offset": 4096,
+      "size": 104,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"hex": "005c01010300050002000000222e0000" , "note": "followed by 88 zero bytes; identical across all 100 records in blocks A/B/C"},
+      "update_mechanism": "unknown; no writer function reachable from the decompiled corpus",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "Byte pattern repeats every 104 bytes with zero variation across blocks A (35x), B (35x), and C (30x); regex scan over the raw .sav file in this session found exactly 100 occurrences, all identical."
+    },
+    {
+      "name": "record_field_0x00_flag",
+      "offset": 0,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"value": "0x00"},
+      "update_mechanism": "unknown",
+      "confidence": "HYPOTHESIS",
+      "evidence": "First byte of the 104-byte template; offset is relative to each record start; semantic guess (used/cleared flag) is unverified"
+    },
+    {
+      "name": "record_field_0x04_u16",
+      "offset": 4,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"value": "0x0003"},
+      "update_mechanism": "unknown",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Relative offset +0x04 in the 104-byte template; meaning unverified"
+    },
+    {
+      "name": "record_field_0x0a_score_or_time",
+      "offset": 10,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"value": "0x00000000"},
+      "update_mechanism": "unknown",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Relative offset +0x0A in the 104-byte template; currently zero/unset in the only available (unplayed) sample; candidate best-time/score field"
+    },
+    {
+      "name": "hag_tag",
+      "offset": 16276,
+      "size": 4,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"hex": "00484147"},
+      "update_mechanism": "unknown",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "Found via non-0xFF byte scan of the raw .sav file; byte-identical to the mirror at offset 0xCF94 (53140), verified by direct Python comparison"
+    },
+    {
+      "name": "sho_tag",
+      "offset": 28040,
+      "size": 4,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"hex": "0353484f"},
+      "update_mechanism": "unknown",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "Found via non-0xFF byte scan; byte-identical to mirror at offset 0xFD88 (64904), verified by direct Python comparison"
+    },
+    {
+      "name": "sho_block_counter_candidate",
+      "offset": 28056,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"value": "0x00000007"},
+      "update_mechanism": "unknown",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Located at 0x6D98, 16 bytes after the sho_tag; no code reference found to confirm as a counter versus a default parameter"
+    },
+    {
+      "name": "roy_tag",
+      "offset": 40360,
+      "size": 4,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"hex": "5c524f59"},
+      "update_mechanism": "unknown",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "Found via non-0xFF byte scan; this block has no +0x9000 mirror within the 64 KiB file (0x9DA8+0x9000 = 0x12DA8, out of range)"
+    },
+    {
+      "name": "roy_block_flag_array",
+      "offset": 40371,
+      "size": 20,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"note": "run of 0x00/0x01 byte flags, e.g. bytes at 0x9DB3-0x9DC6"},
+      "update_mechanism": "unknown",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Manual hex inspection of the 0x9DA8-0x9FFF block; candidate per-stage unlock flags, unverified"
+    },
+    {
+      "name": "roy_block_index_array",
+      "offset": 40420,
+      "size": 60,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"note": "15 x u32_le values starting at 0x9DE4: 3,4,5,6,7,5,6,7,8,9,2,3,4,5,6"},
+      "update_mechanism": "unknown",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Manual hex inspection; candidate per-level unlock/high-score index table, unverified against any reader function"
+    }
+  ],
+  "fuzzing_targets": [
+    {
+      "offset": 16276,
+      "size": 1,
+      "mutation": "flip the first byte of the hag_tag (0x3F94)",
+      "requires_checksum_repair": false,
+      "predicted_effect": "On next in-game save, observe whether the 0xCF94 mirror diverges (independent backup synced only on save) or both reset to default (cold-start sanitize pass)"
+    },
+    {
+      "offset": 4096,
+      "size": 1,
+      "mutation": "set record 0 field +0x00 to 0x01",
+      "requires_checksum_repair": false,
+      "predicted_effect": "Possible visible 'stage cleared' state change if this byte is a used/cleared flag; no observable effect if it is unused padding"
+    },
+    {
+      "offset": 4106,
+      "size": 4,
+      "mutation": "set record 0 field +0x0A to 0xFFFFFFFF",
+      "requires_checksum_repair": false,
+      "predicted_effect": "UI shows garbage score/time, or the save is sanitized back to default on load, if this is a score/time field"
+    },
+    {
+      "offset": 28056,
+      "size": 4,
+      "mutation": "increment the sho_block_counter_candidate by 1",
+      "requires_checksum_repair": false,
+      "predicted_effect": "No observable change if this is an inert default parameter; visible state change if it is a load-bearing counter"
+    },
+    {
+      "offset": 40420,
+      "size": 4,
+      "mutation": "set first roy_block_index_array entry to 0xFFFFFFFF",
+      "requires_checksum_repair": false,
+      "predicted_effect": "Crash or clamped read if the value is used as a bounded index; no effect if read as a raw/display-only value"
+    }
+  ],
+  "open_questions": [
+    "What routine outside the 133-function decompiled set assembles save records and invokes the traced Flash driver? It is only reachable via an unrecovered indirect jump table.",
+    "Is there any checksum/CRC in this title's save path, or does it rely solely on the chip-level write-verify-retry wrappers (0x0802e74c/0x0802e790) for integrity? No evidence found either way.",
+    "Do blocks A, B, C (offsets 0x1000/0x2000/0x3000) represent three redundant full copies, three difficulty/world-specific stage tables, or something else? Differing record counts (35/35/30) argue against simple full-copy redundancy but are not conclusive.",
+    "What do the HAG/SHO/ROY 3-letter tags mean, and why is ROY unmirrored while HAG/SHO are mirrored at +0x9000?",
+    "Is the 0x00000007 value at 0x6D98 a counter, a flag, or a default game parameter?"
+  ]
+}

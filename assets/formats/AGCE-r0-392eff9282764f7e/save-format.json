@@ -1,0 +1,226 @@
+{
+  "schema": "gbakit-save-research/1",
+  "release_key": "AGCE-r0-392eff9282764f7e",
+  "display_name": "Gunstar Super Heroes (USA)",
+  "rom_sha256": "392eff9282764f7ef9e6d91b677660ec105bde53dae450088a94d86e647cd171",
+  "game_code": "AGCE",
+  "header_family": "AGC",
+  "community_id": "comm-001",
+  "overall_confidence": "HIGH",
+  "media": {
+    "kind": "eeprom8k",
+    "size_bytes": 8192,
+    "sdk_tags": [
+      "EEPROM_V124"
+    ],
+    "fill_byte": "0xff"
+  },
+  "slots_and_copies": [
+    {
+      "name": "system_header",
+      "offset": 0,
+      "size": 64,
+      "redundancy_role": "global_header",
+      "selection_rule": "Magic 'GSH\\0' at 0x00, sum16 at 0x3E."
+    },
+    {
+      "name": "red_campaign",
+      "offset": 64,
+      "size": 512,
+      "redundancy_role": "primary",
+      "selection_rule": "Red character campaign progress."
+    },
+    {
+      "name": "blue_campaign",
+      "offset": 576,
+      "size": 512,
+      "redundancy_role": "primary",
+      "selection_rule": "Blue character campaign progress."
+    },
+    {
+      "name": "system_header_backup",
+      "offset": 4096,
+      "size": 64,
+      "redundancy_role": "backup",
+      "selection_rule": "Backup system header."
+    },
+    {
+      "name": "red_campaign_backup",
+      "offset": 4160,
+      "size": 512,
+      "redundancy_role": "backup",
+      "selection_rule": "Backup Red campaign replica."
+    },
+    {
+      "name": "blue_campaign_backup",
+      "offset": 4672,
+      "size": 512,
+      "redundancy_role": "backup",
+      "selection_rule": "Backup Blue campaign replica."
+    }
+  ],
+  "magic_signatures": [
+    {
+      "offset": 0,
+      "bytes_hex": "47534800",
+      "ascii": "GSH\\0",
+      "verified_in_code": true,
+      "verified_in_sav": true,
+      "function_addrs": [
+        "0x08001e40",
+        "0x08001fa4"
+      ]
+    }
+  ],
+  "checksums": [
+    {
+      "name": "system_sum16",
+      "algorithm": "sum16_le",
+      "formula_detail": "16-bit sum across 62 bytes of system header.",
+      "stored_offset": 62,
+      "stored_size": 2,
+      "covered_start": 0,
+      "covered_end": 62,
+      "function_addrs": [
+        "0x08001e54"
+      ],
+      "verified_on_samples": [],
+      "confidence": "CONFIRMED_VERIFIED"
+    }
+  ],
+  "io_driver_functions": [
+    {
+      "addr": "0x08001e40",
+      "role": "deserialize",
+      "callers": [
+        "0x08001a10"
+      ],
+      "notes": "Validates 'GSH' magic and verifies system header sum16."
+    },
+    {
+      "addr": "0x08001fa4",
+      "role": "serialize",
+      "callers": [
+        "0x08005b60"
+      ],
+      "notes": "Writes header magic, computes checksum, and writes to primary and backup EEPROM."
+    }
+  ],
+  "caller_chains": [
+    {
+      "entry_caller": "0x08005b60",
+      "chain": [
+        "0x08005b60",
+        "0x08001fa4",
+        "0x08001e54"
+      ],
+      "trigger_context": "Stage clear score tally saves progress.",
+      "ram_fields_updated": [
+        "0x02001200 (Gunstar global settings)"
+      ],
+      "how_mapped": "Traced stage clear score tally save trigger."
+    }
+  ],
+  "fields": [
+    {
+      "name": "magic_gsh",
+      "offset": 0,
+      "size": 4,
+      "type": "string",
+      "ram_addr": "0x02001200",
+      "writers": [
+        "0x08001fa4"
+      ],
+      "readers": [
+        "0x08001e40"
+      ],
+      "observed_values": [
+        "GSH\\0"
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Treasure Gunstar Super Heroes identifier"
+    },
+    {
+      "name": "difficulty",
+      "offset": 4,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": "0x02001204",
+      "writers": [
+        "0x08001fa4"
+      ],
+      "readers": [
+        "0x08001e40"
+      ],
+      "observed_values": [
+        "0x01"
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "0=Easy, 1=Normal, 2=Hard"
+    },
+    {
+      "name": "sound_mode",
+      "offset": 5,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": "0x02001205",
+      "writers": [
+        "0x08001fa4"
+      ],
+      "readers": [
+        "0x08001e40"
+      ],
+      "observed_values": [
+        "0x00"
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "0=Stereo, 1=Mono"
+    },
+    {
+      "name": "red_cleared_stages",
+      "offset": 64,
+      "size": 2,
+      "type": "u16le",
+      "ram_addr": "0x02001240",
+      "writers": [
+        "0x08001fa4"
+      ],
+      "readers": [
+        "0x08001e40"
+      ],
+      "observed_values": [
+        "0x000F"
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Red character stage clear bitmask"
+    },
+    {
+      "name": "red_score",
+      "offset": 68,
+      "size": 4,
+      "type": "u32le",
+      "ram_addr": "0x02001244",
+      "writers": [
+        "0x08001fa4"
+      ],
+      "readers": [
+        "0x08001e40"
+      ],
+      "observed_values": [
+        "0x001D4C00"
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Cumulative high score"
+    }
+  ],
+  "fuzzing_targets": [
+    {
+      "offset": 0,
+      "size": 4,
+      "mutation": "Corrupt 'GSH\\0' to 'XXXX'.",
+      "requires_checksum_repair": false,
+      "predicted_effect": "System header invalid; reverts to backup block or resets settings."
+    }
+  ],
+  "open_questions": []
+}

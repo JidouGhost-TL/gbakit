@@ -1,0 +1,250 @@
+{
+  "schema": "gbakit-save-research/1",
+  "release_key": "BJYE-r0-18d516cf91a90d18",
+  "display_name": "Adventures of Jimmy Neutron Boy Genius, The - Attack of the Twonkies (USA, Europe)",
+  "rom_sha256": "18d516cf91a90d182c27e0d8d1378e06083041275b80fbb703844d3241d36f2c",
+  "game_code": "BJYE",
+  "header_family": "BJY",
+  "community_id": "comm-023",
+  "overall_confidence": "MEDIUM",
+  "media": {
+    "kind": "eeprom512",
+    "size_bytes": 512,
+    "sdk_tags": ["EEPROM_V124@1365908"],
+    "fill_byte": "0xff"
+  },
+  "slots_and_copies": [
+    {
+      "name": "slot_record_0",
+      "offset": 0,
+      "size": 12,
+      "redundancy_role": "primary",
+      "selection_rule": "Single non-redundant table; FUN_08037f70 keeps or fully reinitializes the whole table based on checksum(record0)+seed vs stored value at 0x24. Record 0 is the only record covered by the checksum."
+    },
+    {
+      "name": "slot_record_1",
+      "offset": 12,
+      "size": 12,
+      "redundancy_role": "unknown",
+      "selection_rule": "Not individually selected; part of the same single table, not checksummed."
+    },
+    {
+      "name": "slot_record_2",
+      "offset": 24,
+      "size": 12,
+      "redundancy_role": "unknown",
+      "selection_rule": "Not individually selected; part of the same single table, not checksummed. This is the only record whose bytes actually differ between the two captured .sav samples."
+    },
+    {
+      "name": "generation_checksum_field",
+      "offset": 36,
+      "size": 4,
+      "redundancy_role": "global_config",
+      "selection_rule": "Integrity/generation marker for the whole table; compared on every boot by FUN_08037f70."
+    }
+  ],
+  "magic_signatures": [],
+  "checksums": [
+    {
+      "name": "table_generation_checksum",
+      "algorithm": "custom",
+      "formula_detail": "sum1 = (Sum of (1+byte) for byte in record0[0:12]) mod M; sum2 = (Sum of running sum1) mod M; checksum = (sum1 << 16) | sum2; stored_value = seed + checksum, where seed = atoi-style decimal parse (FUN_080100ac) of an unidentified ROM string constant, and M = data constant _DAT_0800acf0 (not present in this workspace). Structurally identical to the Fletcher-16/Adler-32 checksum family. The modulus operation was verified bit-exact against Python a%b (FUN_080115c4).",
+      "stored_offset": 36,
+      "stored_size": 4,
+      "covered_start": 0,
+      "covered_end": 12,
+      "function_addrs": ["0x0800acb0", "0x080100ac", "0x080115c4", "0x08037f70", "0x08038088"],
+      "verified_on_samples": [
+        {"file": "saves/cap-00-future-0.sav", "stored_hex": "00000000", "computed_hex": "unknown_modulus_m_not_available", "match": false},
+        {"file": "saves/cap-01-future-1.sav", "stored_hex": "00000000", "computed_hex": "unknown_modulus_m_not_available", "match": false}
+      ],
+      "confidence": "CONFIRMED_STATIC"
+    }
+  ],
+  "io_driver_functions": [
+    {"addr": "0x080115c4", "role": "checksum", "callers": [], "notes": "Generic unsigned 32-bit modulo (a % b), shift/subtract restoring division. Verified bit-exact in Python against 8 test vectors including divisor 65521 (Adler-32 modulus). Used by both the checksum routine and the generic atoi-style helper. Generic SDK/compiler runtime, not game-specific."},
+    {"addr": "0x0801581c", "role": "write", "callers": ["0x0801589c", "0x08015960"], "notes": "Raw DMA3 bit-stream transfer primitive used by both the EEPROM read and write paths; programs a DMA3 descriptor and busy-waits on the DMA status bit."},
+    {"addr": "0x0801589c", "role": "read", "callers": [], "notes": "EEPROM single-8-byte-sector READ: issues a read-request+address bitstream, then reads back 64 bits via DMA3, storing 4 reconstructed halfwords at decreasing buffer addresses (reverse halfword order). Confirmed caller in decompiled.c: FUN_0800ac50 (0x0800ac50)."},
+    {"addr": "0x08015960", "role": "write", "callers": [], "notes": "EEPROM single-8-byte-sector WRITE + busy-poll with timeout/tick accumulator. Call site found at decompiled.c:8000 but the calling function's address was outside the extracted seed window."},
+    {"addr": "0x0801594c", "role": "write", "callers": ["0x0800ac1c"], "notes": "Referenced but NOT decompiled in this workspace. Inferred by call-pattern symmetry with 0x0801589c to be the EEPROM single-sector write entry point analogous to the read entry point. UNKNOWN body."},
+    {"addr": "0x0800ac50", "role": "read", "callers": ["0x08037f3c"], "notes": "8-byte-chunk read loop wrapping FUN_0801589c over an arbitrary byte range."},
+    {"addr": "0x0800ac1c", "role": "write", "callers": ["0x08037eb8"], "notes": "8-byte-chunk write loop wrapping func_0x0801594c over an arbitrary byte range."},
+    {"addr": "0x0800abc8", "role": "read", "callers": ["0x08037eb8", "0x08037f3c"], "notes": "Bus-arbitration/IRQ+sound lock acquired before every EEPROM block transfer (disables 3 sound channel callbacks, snapshots a control word)."},
+    {"addr": "0x0800ac08", "role": "read", "callers": ["0x08037eb8", "0x08037f3c"], "notes": "Restores the control word saved by 0x0800abc8."},
+    {"addr": "0x08037f3c", "role": "deserialize", "callers": ["0x08037f70", "0x080391fc"], "notes": "ReadSaveBlock: full 512-byte EEPROM read into a RAM buffer, bracketed by the lock wrappers."},
+    {"addr": "0x08037eb8", "role": "serialize", "callers": ["0x08037f70", "0x08038088"], "notes": "WriteSaveBlock: full 512-byte EEPROM write from a RAM buffer, bracketed by the lock wrappers. Always rewrites the entire image; no partial-sector commit path found."},
+    {"addr": "0x0800acb0", "role": "checksum", "callers": ["0x08037f70", "0x08038088"], "notes": "Fletcher/Adler-style two-running-sum checksum over a caller-supplied length; called with length 0xC (12 bytes) covering record 0 only."},
+    {"addr": "0x080100ac", "role": "deserialize", "callers": ["0x08037f70", "0x08038088"], "notes": "Generic atoi/strtol-style decimal string-to-integer parser; used to turn a ROM string constant into the checksum's additive seed. Generic libc-style routine, not game-specific."}
+  ],
+  "caller_chains": [
+    {
+      "entry_caller": "0x08037f70",
+      "chain": ["0x08037f70", "0x08037f3c", "0x0800abc8", "0x0800ac50", "0x0801589c", "0x0801581c"],
+      "trigger_context": "Boot-time load of the single save table (no caller found inside the traced window; presumably invoked from title-screen/boot code outside this workspace's decompiled set).",
+      "ram_fields_updated": ["structBase+0x00..0x23 (3 slot records, zeroed on checksum mismatch)", "structBase+0x24 (checksum/generation, written on reinit)", "structBase+0x28 (flags, set to 7 on reinit)", "structBase+0x29..0xD8 (176-byte ascending fill, written on reinit)"],
+      "how_mapped": "Traced via ghidra/decompiled.c:10832-10892 and cross-checked against ghidra/callgraph.json edges for 0x08037f3c/0x0800ac50/0x0801589c/0x0801581c; the resulting cold-init byte pattern was verified byte-exact (176/184 bytes, with fully-explained boundary exceptions) against both .sav samples in saves/, which proves both samples went through exactly this chain."
+    },
+    {
+      "entry_caller": "0x08037f70",
+      "chain": ["0x08037f70", "0x08037eb8", "0x0800abc8", "0x0800ac1c", "0x0801594c"],
+      "trigger_context": "Commit of the freshly-reinitialized table back to EEPROM, immediately after the reinit branch above.",
+      "ram_fields_updated": [],
+      "how_mapped": "Traced via ghidra/decompiled.c:10882 call site; 0x0801594c itself is not decompiled in this workspace (address-only reference), so the final hardware-write step of this chain is inferred rather than directly proven."
+    },
+    {
+      "entry_caller": "0x08039760",
+      "chain": ["0x08039760", "0x08038088", "0x0800acb0", "0x080100ac", "0x08037eb8"],
+      "trigger_context": "Stage-transition/resume hook; conditionally finalizes (commits with checksum recompute) one slot record when resuming into a stage with certain RAM flags already set.",
+      "ram_fields_updated": ["structBase+<slotIndex*12>+4 (field A, copied from RAM counter +0x3c4)", "structBase+<slotIndex*12>+8 (field B, packed from 4 RAM byte/word counters)", "structBase+<slotIndex*12>+0 (status, set to 1)", "structBase+0x24 (checksum, only if finalize flag set)"],
+      "how_mapped": "Traced via ghidra/decompiled.c:10895-10962 (FUN_08038088 body) and :11544-11613 (FUN_08039760 caller), cross-checked against callgraph.json edge 0x08039760 -> 0x08038088 -> 0x0800acb0/0x080100ac/0x08037eb8. This is the only caller chain in-workspace that can set a non-zero checksum, but neither available .sav sample shows evidence of having gone through it."
+    }
+  ],
+  "fields": [
+    {
+      "name": "slot0_status",
+      "offset": 0,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": "0x02xxxxxx (structBase+0x00, exact RAM base not resolvable from this workspace)",
+      "writers": ["0x08037f70", "0x08038088"],
+      "readers": ["0x08037f70"],
+      "observed_values": {"cap-00-future-0.sav": "0x00", "cap-01-future-1.sav": "0x00"},
+      "update_mechanism": "Zeroed by FUN_08037f70's reset loop; set to 1 by FUN_08038088 when it finalizes that slot.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "ghidra/decompiled.c:10864-10880 (reset), :10924 (commit set to 1); both samples show the pre-commit 0x00 value."
+    },
+    {
+      "name": "slot0_fieldA",
+      "offset": 4,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": "structBase+0x3c4 (source counter, via FUN_08038088)",
+      "writers": ["0x08038088"],
+      "readers": ["0x0800acb0 (checksum input)"],
+      "observed_values": {"cap-00-future-0.sav": "0x00ffffff", "cap-01-future-1.sav": "0x00ffffff"},
+      "update_mechanism": "Copied verbatim from a RAM counter at caller offset +0x3c4 whenever FUN_08038088 commits this slot.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "ghidra/decompiled.c:10943; sentinel 0x00FFFFFF consistent with record never having been committed."
+    },
+    {
+      "name": "slot0_fieldB",
+      "offset": 8,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": "packed from structBase+0x3c0/_DAT_08038280/_DAT_0803827c/frame-index (via FUN_08038088)",
+      "writers": ["0x08038088"],
+      "readers": ["0x0800acb0 (checksum input)"],
+      "observed_values": {"cap-00-future-0.sav": "0x00ffffff", "cap-01-future-1.sav": "0x00ffffff"},
+      "update_mechanism": "Packed from 3 RAM byte counters (bits 0-23) plus a frame/tick index byte (bits 24-31) by FUN_08038088.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "ghidra/decompiled.c:10940-10942."
+    },
+    {
+      "name": "slot1_fieldA",
+      "offset": 16,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": "structBase+0x3c4 (shared RAM counter, slot-indexed via +0x2d0)",
+      "writers": ["0x08038088"],
+      "readers": [],
+      "observed_values": {"cap-00-future-0.sav": "0x00000000", "cap-01-future-1.sav": "0x00000000"},
+      "update_mechanism": "Same packing logic as slot0_fieldA, applied to slot index 1.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "ghidra/decompiled.c:10919-10943 (generic over *pbVar9 slot index)."
+    },
+    {
+      "name": "slot1_fieldB",
+      "offset": 20,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": "packed (shared logic, slot-indexed)",
+      "writers": ["0x08038088"],
+      "readers": [],
+      "observed_values": {"cap-00-future-0.sav": "0x00000000", "cap-01-future-1.sav": "0x00000000"},
+      "update_mechanism": "Same packing logic as slot0_fieldB, applied to slot index 1.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "ghidra/decompiled.c:10919-10943."
+    },
+    {
+      "name": "slot2_fieldA",
+      "offset": 28,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": "structBase+0x3c4 (shared RAM counter, slot-indexed via +0x2d0)",
+      "writers": ["0x08038088"],
+      "readers": [],
+      "observed_values": {"cap-00-future-0.sav": "0x00ffffff", "cap-01-future-1.sav": "0x00ffffff"},
+      "update_mechanism": "Same packing logic as slot0_fieldA, applied to slot index 2.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "ghidra/decompiled.c:10919-10943."
+    },
+    {
+      "name": "slot2_fieldB",
+      "offset": 32,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": "packed (shared logic, slot-indexed)",
+      "writers": ["0x08038088"],
+      "readers": [],
+      "observed_values": {"cap-00-future-0.sav": "0xe0fc000c", "cap-01-future-1.sav": "0x10cd0903"},
+      "update_mechanism": "Same packing logic as slot0_fieldB, applied to slot index 2. This is the only field whose value actually differs between the two captured samples.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "ghidra/decompiled.c:10940-10942; diff confirmed via saves/hexdump_and_diffs.txt (4-byte delta at file offset 0x20-0x23)."
+    },
+    {
+      "name": "table_checksum_generation",
+      "offset": 36,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": "structBase+0x24",
+      "writers": ["0x08037f70", "0x08038088"],
+      "readers": ["0x08037f70"],
+      "observed_values": {"cap-00-future-0.sav": "0x00000000", "cap-01-future-1.sav": "0x00000000"},
+      "update_mechanism": "seed(FUN_080100ac) + checksum(FUN_0800acb0 over record0, 12 bytes); written on cold-reset and on finalize commits.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "ghidra/decompiled.c:10853-10873, :10951-10954. Numeric verification blocked: both samples are pre-finalize (value never written to a real nonzero number); modulus/seed constants not present in this workspace."
+    },
+    {
+      "name": "table_flags",
+      "offset": 40,
+      "size": 1,
+      "type": "bitflags",
+      "ram_addr": "structBase+0x28",
+      "writers": ["0x08037f70"],
+      "readers": ["0x08038300"],
+      "observed_values": {"cap-00-future-0.sav": "0x06", "cap-01-future-1.sav": "0x06"},
+      "update_mechanism": "Set to 7 on cold-reset; FUN_08038300 unpacks bits 0-3 into 4 separate RAM flag bytes on every load.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "ghidra/decompiled.c:10874 (reset to 7), :10965-10996 (FUN_08038300 bit-unpack)."
+    },
+    {
+      "name": "calibration_fill_region",
+      "offset": 41,
+      "size": 176,
+      "type": "bytes",
+      "ram_addr": "structBase+0x29",
+      "writers": ["0x08037f70"],
+      "readers": [],
+      "observed_values": {"cap-00-future-0.sav": "ascending_0..175_permuted_by_eeprom_sector (see report §4.4)", "cap-01-future-1.sav": "identical to cap-00"},
+      "update_mechanism": "Written once by the cold-reset ascending-counter fill loop; no reader found in this workspace's decompiled code.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "ghidra/decompiled.c:10876-10880; Python permutation formula matched 176/184 bytes exactly against both saves/*.sav files, with the 8 mismatches fully explained as sector-boundary effects."
+    }
+  ],
+  "fuzzing_targets": [
+    {"offset": 36, "size": 4, "mutation": "flip any bit of the stored checksum/generation field (currently 0x00000000)", "requires_checksum_repair": false, "predicted_effect": "Forces the cold-reset branch of FUN_08037f70 on next load: all 3 slot records zeroed, flags set to 7, fill region rewritten. Observable via RAM/state diff immediately after the next save-table load."},
+    {"offset": 4, "size": 4, "mutation": "change slot0_fieldA from 0x00FFFFFF to 0x00000000", "requires_checksum_repair": true, "predicted_effect": "Changes FUN_0800acb0's checksum input for record 0; testable once a finalized (non-zero-checksum) sample is available to confirm the 12-byte coverage boundary."},
+    {"offset": 40, "size": 1, "mutation": "set table_flags bits 0x01/0x02/0x04/0x08 individually", "requires_checksum_repair": false, "predicted_effect": "Each bit should toggle exactly one of 4 independent RAM flag bytes written by FUN_08038300 on the next load; a cheap, falsifiable test of the bit-unpack mapping."},
+    {"offset": 32, "size": 4, "mutation": "zero slot2_fieldB, or set its top byte (bits 24-31) to 0xFF", "requires_checksum_repair": false, "predicted_effect": "Should be silently overwritten by the next FUN_08038088 commit (re-derived from live RAM counters) rather than causing corruption, since this field is outside the checksummed range and appears to be derived/transient state."},
+    {"offset": 41, "size": 176, "mutation": "overwrite the entire calibration_fill_region with 0xFF", "requires_checksum_repair": false, "predicted_effect": "Protocol negative: no reader of this region was found, so the prediction is NO observable gameplay/UI change on reload. Any observed change would falsify the 'dead calibration fill' hypothesis and indicate an untraced reader outside this workspace."}
+  ],
+  "open_questions": [
+    "Exact numeric value of the checksum modulus _DAT_0800acf0 and seed _DAT_0800acbc - not present in this workspace (no ROM/.gba binary or data-segment dump was provided, only decompiled C/callgraph/.sav files).",
+    "Exact ROM string constant parsed by FUN_080100ac to produce the checksum's additive seed.",
+    "Full body of func_0x0801594c (EEPROM single-sector write entry point) - referenced by address only in this workspace; inferred by symmetry with the read path (FUN_0801589c) but not directly decompiled here.",
+    "Real-world semantic meaning of slot2_fieldB's packed byte counters (offset 0x20-0x23) - mechanically proven packing formula, but no in-game correlation was attempted (out of scope for a clean-room, code-only pass) and would require correlated .ss save-state/RAM captures.",
+    "Whether the 176-byte calibration_fill_region (offset 0x29-0xD8) is ever overwritten with real gameplay data after a title's first real save, or remains dead for the life of the save file - both available samples are pre-finalize, so this cannot be determined from this workspace's two .sav files alone.",
+    "Who calls FUN_08037f70 (the top-level save-table boot entry point) - no caller was found inside the extracted ghidra/callgraph.json window, so the exact game-boot trigger (title screen vs. cart-insert vs. elsewhere) is unresolved.",
+    "Numeric checksum cross-check is entirely blocked until a .sav sample captured after a genuine in-game save (not just a cold-boot table reinit) becomes available, since both current samples have an all-zero, never-finalized checksum field."
+  ]
+}

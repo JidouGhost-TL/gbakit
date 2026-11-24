@@ -1,0 +1,181 @@
+{
+  "schema": "gbakit-save-research/1",
+  "release_key": "AVSE-r0-767d6139a8d5a9c7",
+  "display_name": "Sword of Mana (USA, Australia)",
+  "rom_sha256": "767d6139a8d5a9c79514384e77b6c651d31dc86036c6fee05b9ae64697c251b7",
+  "game_code": "AVSE",
+  "header_family": "AVS",
+  "community_id": "comm-009",
+  "overall_confidence": "HIGH",
+  "media": {
+    "kind": "flash512",
+    "size_bytes": 65536,
+    "sdk_tags": [
+      "FLASH512_V131@3611256"
+    ],
+    "fill_byte": "0xff"
+  },
+  "slots_and_copies": [
+    {
+      "name": "system_and_quicksave_region",
+      "offset": 0,
+      "size": 16384,
+      "redundancy_role": "global_config",
+      "selection_rule": "Sectors 0..3 (16KB). System configuration and temporary suspend state."
+    },
+    {
+      "name": "save_slot_1",
+      "offset": 16384,
+      "size": 16384,
+      "redundancy_role": "primary",
+      "selection_rule": "Sectors 4..7 (16KB). Hero diary progress slot 1."
+    },
+    {
+      "name": "save_slot_2",
+      "offset": 32768,
+      "size": 16384,
+      "redundancy_role": "primary",
+      "selection_rule": "Sectors 8..11 (16KB). Hero diary progress slot 2."
+    },
+    {
+      "name": "save_slot_3",
+      "offset": 49152,
+      "size": 16384,
+      "redundancy_role": "primary",
+      "selection_rule": "Sectors 12..15 (16KB). Hero diary progress slot 3."
+    }
+  ],
+  "magic_signatures": [
+    {
+      "offset": 16384,
+      "bytes_hex": "534f4d5f",
+      "ascii": "SOM_",
+      "verified_in_code": true,
+      "verified_in_sav": false,
+      "function_addrs": [
+        "0x08082240"
+      ]
+    }
+  ],
+  "checksums": [
+    {
+      "name": "slot_sector_checksum",
+      "algorithm": "sum16_le",
+      "formula_detail": "16-bit little-endian sum across 4096-byte sector bounds.",
+      "stored_offset": 16386,
+      "stored_size": 2,
+      "covered_start": 16388,
+      "covered_end": 20480,
+      "function_addrs": [
+        "0x08082240"
+      ],
+      "verified_on_samples": [],
+      "confidence": "CONFIRMED_STATIC"
+    }
+  ],
+  "io_driver_functions": [
+    {
+      "addr": "0x08367af0",
+      "role": "read",
+      "callers": [
+        "0x08367fcc"
+      ],
+      "notes": "Flash chip identification routine."
+    },
+    {
+      "addr": "0x08367fcc",
+      "role": "deserialize",
+      "callers": [
+        "0x0808222a"
+      ],
+      "notes": "Flash subsystem initialization."
+    },
+    {
+      "addr": "0x08367d44",
+      "role": "write",
+      "callers": [
+        "0x0808229a"
+      ],
+      "notes": "Flash sector write routine (4KB sector program)."
+    },
+    {
+      "addr": "0x08367e10",
+      "role": "read",
+      "callers": [
+        "0x080822a8"
+      ],
+      "notes": "Flash sector read and readback verify."
+    },
+    {
+      "addr": "0x08082240",
+      "role": "serialize",
+      "callers": [],
+      "notes": "Save slot manager: converts slot index to sector (r >> 14 + 4), writes 4KB sectors with 3x retry."
+    }
+  ],
+  "caller_chains": [
+    {
+      "entry_caller": "0x08082240",
+      "chain": [
+        "0x08082240",
+        "0x08367d44",
+        "0x08367e10"
+      ],
+      "trigger_context": "Goddess statue diary save event.",
+      "ram_fields_updated": [
+        "Hero level, weapon levels, spirit magic, quest log"
+      ],
+      "how_mapped": "Traced disassembly from 0x08082240 down to Flash drivers."
+    }
+  ],
+  "fields": [
+    {
+      "name": "system_config",
+      "offset": 0,
+      "size": 16384,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [
+        "0x08082240"
+      ],
+      "readers": [
+        "0x08082240"
+      ],
+      "observed_values": {
+        "cold": "all 0xFF"
+      },
+      "update_mechanism": "Audio/text configuration and quicksave suspend state.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "Sectors 0..3."
+    },
+    {
+      "name": "slot_1_hero_data",
+      "offset": 16384,
+      "size": 16384,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [
+        "0x08082240"
+      ],
+      "readers": [
+        "0x08082240"
+      ],
+      "observed_values": {
+        "cold": "all 0xFF"
+      },
+      "update_mechanism": "Hero stats, companion state, forged weapons, and story flags.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "Sectors 4..7."
+    }
+  ],
+  "fuzzing_targets": [
+    {
+      "offset": 16384,
+      "size": 4,
+      "mutation": "Invert first 4 bytes of slot 1.",
+      "requires_checksum_repair": false,
+      "predicted_effect": "Slot 1 recognized as corrupted/empty."
+    }
+  ],
+  "open_questions": []
+}

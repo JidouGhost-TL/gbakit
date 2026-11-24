@@ -13,7 +13,13 @@
       <a href="../index.html">Games</a>
       <a href="../saves/index.html">Save Formats</a>
       <a href="../patches/index.html">Debug Patches</a>
+      <a href="../debug-menus.html">Debug Gallery</a>
+      <a href="../non-retail-cartridges.html">Non-Retail</a>
+      <a href="../cartridge-hardware.html">Cartridge Hardware</a>
+      <a href="../link-multiplayer.html">Link &amp; Multiplayer</a>
+      <a href="../multiboot-museum.html">MultiBoot Museum</a>
       <a href="../assets/index.html">Assets &amp; Audio</a>
+      <a href="../text-and-fonts.html">Text &amp; Fonts</a>
       <a href="../engines/index.html">Engines &amp; Hardware</a>
       <a href="../families/index.html">Families</a>
       <a href="../gbakit/index.html">Using gbakit</a>
@@ -22,7 +28,7 @@
   <main>
 <p class="meta"><a href="../index.html">&larr; Games</a> &middot; Family <code>B2D</code></p>
 <h1>Donkey Kong Country 2 (USA)</h1>
-<p><span class='badge badge-slate'>EEPROM 64K</span></p>
+<p><span class='badge badge-slate'>EEPROM 64K</span> <span class='badge badge-emerald'>Save Format Spec</span> <span class='badge badge-emerald'>gbakit Built-In</span> <a href='../link-multiplayer.html#joybus'><span class='badge badge-purple'>📺 Joybus</span></a> <a href='../link-multiplayer.html#multiboot'><span class='badge badge-amber'>💾 MultiBoot</span></a> <a href='../link-multiplayer.html#sio-multi'><span class='badge badge-blue'>🎮 4P Link</span></a></p>
 
 <h2>Cartridge Identity</h2>
 <dl class="kv">
@@ -38,6 +44,30 @@
 
 
 
+
+<h2>Link Cable &amp; Multiplayer Communications</h2>
+<div class="callout">
+  This title contains detected communication capabilities: <a href='../link-multiplayer.html#joybus'><span class='badge badge-purple'>📺 Joybus</span></a> <a href='../link-multiplayer.html#multiboot'><span class='badge badge-amber'>💾 MultiBoot</span></a> <a href='../link-multiplayer.html#sio-multi'><span class='badge badge-blue'>🎮 4P Link</span></a>.
+  Detailed protocol specifications, SIO registers, Joybus commands, and MultiBoot sequences are documented in the <a href="../link-multiplayer.html"><strong>Link &amp; Multiplayer Reference</strong></a>.
+</div>
+<dl class="kv">
+  <dt>Multi-Player SIO (4P)</dt><dd>16-bit ring network &middot; SIOCNT (<code>0x04000128</code>) literals: <code>0x014564</code>, <code>0x014784</code>, <code>0x014c4c</code> &middot; SIODATA32/SIOMULTI0 (<code>0x04000120</code>) literals: <code>0x015e44</code></dd><dt>GameCube Joybus</dt><dd>Register literal <code>REG_JOYCNT</code> (<code>0x04000140</code>) at offset <code>0x143b30</code></dd><dt>GameCube Joybus</dt><dd>Register literal <code>REG_JOY_RECV</code> (<code>0x04000150</code>) at offset <code>0x039700</code></dd><dt>Single-Cart MultiBoot</dt><dd>Single-Cartridge MultiBoot (Download Play) client/server handler &middot; Thumb SWI 0x25 (<code>0xDF25</code>): <code>0x0f138c</code>, <code>0x0f28b4</code>, <code>0x1f04c4</code>, <code>0x210730</code></dd>
+</dl>
+
+
+<h2>Battery Save Format Specification</h2>
+<p><a class='btn' href='../saves/B2DE-r0-02d0756f7e95308a.html'>Open Full Save Format Spec</a><a class='btn btn-secondary' href='../assets/formats/B2DE-r0-02d0756f7e95308a/save-format.json' download>Download save-format.json</a></p>
+<p class='meta'>This specification also governs 2 regional editions &amp; revisions in Family <code>B2D</code>.</p>
+<dl class="kv">
+  <dt>Specification Coverage</dt><dd><strong>6</strong> mapped fields &middot; <strong>1</strong> verified checksum(s) &middot; Confidence: <span class="badge badge-indigo">HIGH</span></dd>
+  <dt>gbakit Built-In Support</dt><dd><span class="badge badge-emerald">Built-in (B2DE)</span></dd>
+  
+</dl>
+<pre><code>gbakit save verify B2DE save.sav
+gbakit save decode B2DE save.sav
+gbakit save fix    B2DE damaged.sav -o repaired.sav</code></pre>
+
+
 <h2>Observed Battery Save Layout</h2>
 <dl class="kv">
   <dt>Fill Byte &amp; Active Size</dt><dd><code>0xFF</code> fill &middot; 1,164–1,164 / 8,192 B active (entropy 1.79 bits/B)</dd>
@@ -49,6 +79,11 @@
 </dl>
 
 <h2>ROM Assets, Compression &amp; Audio</h2><dl class='kv'><dt>BIOS Compression</dt><dd>LZ77 (<code>0x10</code>): <strong>1,186</strong> streams &middot; RLE (<code>0x30</code>): <strong>798</strong> streams</dd><dt>ROM Pointer Tables</dt><dd>104 tables (0 pointing to validated compressed streams)</dd><dt>SDK Backup Tags</dt><dd><code>EEPROM_V124</code></dd></dl>
+
+<h2>Text, Fonts &amp; Scene Data</h2>
+<dl class="kv"><dt>Primary Text Encoding</dt><dd><strong>Plain ASCII (uncompressed)</strong> (<code>252</code> ASCII strings)</dd><dt>Font &amp; VWF Indicators</dt><dd><span class='badge badge-emerald'>VWF Width Table</span> <span class='badge badge-blue'>1bpp Font</span> &middot; BIOS SWIs: BitUnPack <code>0x10</code>: <code>15</code> &middot; LZ77 <code>0x11/12</code>: <code>21</code> &middot; Huffman <code>0x13</code>: <code>5</code> &middot; RLE <code>0x14/15</code>: <code>10</code></dd><dt>Scene &amp; Packaging</dt><dd><code>81</code> ROM pointer tables (&ge;32 entries, <code>5</code> &ge;200) &middot; <code>36</code> relative <code>u32</code> TOCs &middot; <code>122</code> OAM metasprite hits</dd></dl>
+
+
 <h2>Hardware MMIO Subsystems</h2><dl class='kv'><dt><code>ppu_display</code></dt><dd><code>0x800a1c4</code>, <code>0x800e338</code>, <code>0x8013870</code>, <code>0x8013ba0</code>, <code>0x8014594</code>, <code>0x8025ac0</code>, <code>0x8025e38</code>, <code>0x8026030</code></dd></dl>
 <h2>Regional Variants &amp; Revisions (Family <code>B2D</code>)</h2><ul><li><a href='B2DP-r0-b90dbd4543a56651.html'>Donkey Kong Country 2 (Europe) (En,Fr,De,Es,It)</a> (<code>B2DP</code>, 8 MiB)</li><li><a href='B2DJ-r0-a12dd5a0933e051a.html'>Super Donkey Kong 2 (Japan)</a> (<code>B2DJ</code>, 8 MiB)</li></ul>
 </main>

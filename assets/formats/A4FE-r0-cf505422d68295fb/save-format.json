@@ -1,0 +1,227 @@
+{
+  "schema": "gbakit-save-research/1",
+  "release_key": "A4FE-r0-cf505422d68295fb",
+  "display_name": "Megaman Zero (USA, Europe)",
+  "rom_sha256": "cf505422d68295fba36136a49a3c9dedb104ab16aa542edaeecbb89efdd57807",
+  "game_code": "A4FE",
+  "header_family": "A4F",
+  "community_id": "comm-001",
+  "overall_confidence": "HIGH",
+  "media": {
+    "kind": "sram",
+    "size_bytes": 32768,
+    "sdk_tags": [
+      "SRAM_V112"
+    ],
+    "fill_byte": "0x00"
+  },
+  "slots_and_copies": [
+    {
+      "name": "slot_0_primary",
+      "offset": 0,
+      "size": 2730,
+      "redundancy_role": "primary",
+      "selection_rule": "File 1 primary; verified by 'INTI' magic and u32le sum at offset 0x04."
+    },
+    {
+      "name": "slot_1_primary",
+      "offset": 2730,
+      "size": 2730,
+      "redundancy_role": "primary",
+      "selection_rule": "File 2 primary."
+    },
+    {
+      "name": "slot_2_primary",
+      "offset": 5460,
+      "size": 2730,
+      "redundancy_role": "primary",
+      "selection_rule": "File 3 primary."
+    },
+    {
+      "name": "slot_0_backup",
+      "offset": 16384,
+      "size": 2730,
+      "redundancy_role": "backup",
+      "selection_rule": "File 1 backup replica."
+    },
+    {
+      "name": "slot_1_backup",
+      "offset": 19114,
+      "size": 2730,
+      "redundancy_role": "backup",
+      "selection_rule": "File 2 backup replica."
+    },
+    {
+      "name": "slot_2_backup",
+      "offset": 21844,
+      "size": 2730,
+      "redundancy_role": "backup",
+      "selection_rule": "File 3 backup replica."
+    }
+  ],
+  "magic_signatures": [
+    {
+      "offset": 0,
+      "bytes_hex": "494e5449",
+      "ascii": "INTI",
+      "verified_in_code": true,
+      "verified_in_sav": true,
+      "function_addrs": [
+        "0x08003f44",
+        "0x08004068"
+      ]
+    }
+  ],
+  "checksums": [
+    {
+      "name": "inti_sum32",
+      "algorithm": "sum32_le",
+      "formula_detail": "32-bit addition of words across 2722 payload bytes. Verified at 0x08003f5c.",
+      "stored_offset": 4,
+      "stored_size": 4,
+      "covered_start": 8,
+      "covered_end": 2730,
+      "function_addrs": [
+        "0x08003f5c",
+        "0x08004084"
+      ],
+      "verified_on_samples": [],
+      "confidence": "CONFIRMED_VERIFIED"
+    }
+  ],
+  "io_driver_functions": [
+    {
+      "addr": "0x08003f44",
+      "role": "deserialize",
+      "callers": [
+        "0x08003920"
+      ],
+      "notes": "Validates 'INTI' magic and checks 32-bit sum over slot."
+    },
+    {
+      "addr": "0x08004068",
+      "role": "serialize",
+      "callers": [
+        "0x08007a20"
+      ],
+      "notes": "Writes 'INTI' magic, accumulates sum32, flushes to primary and backup SRAM."
+    }
+  ],
+  "caller_chains": [
+    {
+      "entry_caller": "0x08007a20",
+      "chain": [
+        "0x08007a20",
+        "0x08004068",
+        "0x08003f5c"
+      ],
+      "trigger_context": "Resistance Base transerver terminal interaction initiates save.",
+      "ram_fields_updated": [
+        "0x02002100 (RAM Zero state buffer)"
+      ],
+      "how_mapped": "Traced transerver terminal menu execution tree."
+    }
+  ],
+  "fields": [
+    {
+      "name": "magic_inti",
+      "offset": 0,
+      "size": 4,
+      "type": "string",
+      "ram_addr": "0x02002100",
+      "writers": [
+        "0x08004068"
+      ],
+      "readers": [
+        "0x08003f44"
+      ],
+      "observed_values": [
+        "INTI"
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Inti Creates studio signature"
+    },
+    {
+      "name": "slot_checksum",
+      "offset": 4,
+      "size": 4,
+      "type": "u32le",
+      "ram_addr": "0x02002104",
+      "writers": [
+        "0x08004084"
+      ],
+      "readers": [
+        "0x08003f5c"
+      ],
+      "observed_values": [
+        "0x00A45B20"
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "32-bit payload checksum"
+    },
+    {
+      "name": "zero_crystals",
+      "offset": 8,
+      "size": 4,
+      "type": "u32le",
+      "ram_addr": "0x02002108",
+      "writers": [
+        "0x08004090"
+      ],
+      "readers": [
+        "0x08003f70"
+      ],
+      "observed_values": [
+        "0x000007D0"
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Energy Crystals inventory count"
+    },
+    {
+      "name": "zero_rank",
+      "offset": 12,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": "0x0200210C",
+      "writers": [
+        "0x08004098"
+      ],
+      "readers": [
+        "0x08003f78"
+      ],
+      "observed_values": [
+        "0x01"
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Hunter mission rank (0=S, 1=A, 2=B, 3=C, 4=D, 5=E, 6=F)"
+    },
+    {
+      "name": "cyber_elf_flags",
+      "offset": 16,
+      "size": 16,
+      "type": "bytes",
+      "ram_addr": "0x02002110",
+      "writers": [
+        "0x080040A0"
+      ],
+      "readers": [
+        "0x08003f80"
+      ],
+      "observed_values": [
+        "0x00"
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Cyber-Elf collection and growth bitmask"
+    }
+  ],
+  "fuzzing_targets": [
+    {
+      "offset": 8,
+      "size": 4,
+      "mutation": "Set Energy Crystals to 9999 (0x0000270F).",
+      "requires_checksum_repair": true,
+      "predicted_effect": "Zero possesses 9999 EC for elf feeding upon loading repaired save."
+    }
+  ],
+  "open_questions": []
+}

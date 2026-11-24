@@ -13,7 +13,13 @@
       <a href="../index.html">Games</a>
       <a href="../saves/index.html">Save Formats</a>
       <a href="../patches/index.html">Debug Patches</a>
+      <a href="../debug-menus.html">Debug Gallery</a>
+      <a href="../non-retail-cartridges.html">Non-Retail</a>
+      <a href="../cartridge-hardware.html">Cartridge Hardware</a>
+      <a href="../link-multiplayer.html">Link &amp; Multiplayer</a>
+      <a href="../multiboot-museum.html">MultiBoot Museum</a>
       <a href="../assets/index.html">Assets &amp; Audio</a>
+      <a href="../text-and-fonts.html">Text &amp; Fonts</a>
       <a href="../engines/index.html">Engines &amp; Hardware</a>
       <a href="../families/index.html">Families</a>
       <a href="../gbakit/index.html">Using gbakit</a>
@@ -22,7 +28,7 @@
   <main>
 <p class="meta"><a href="../index.html">&larr; Games</a> &middot; Family <code>AS4</code></p>
 <h1>Shrek - Swamp Kart Speedway (USA) (En,Fr,De,Es,It,Nl) (Rev 1)</h1>
-<p><span class='badge badge-zinc'>Stateless / Passcode</span></p>
+<p><span class='badge badge-slate'>EEPROM 4K</span> <span class='badge badge-emerald'>Save Format Mapped (Family Spec)</span> <span class='badge badge-emerald'>gbakit Built-In</span> <a href='../link-multiplayer.html#joybus'><span class='badge badge-purple'>📺 Joybus</span></a> <a href='../link-multiplayer.html#multiboot'><span class='badge badge-amber'>💾 MultiBoot</span></a> <a href='../link-multiplayer.html#sio-multi'><span class='badge badge-blue'>🎮 4P Link</span></a></p>
 
 <h2>Cartridge Identity</h2>
 <dl class="kv">
@@ -30,18 +36,43 @@
   <dt>Header Title</dt><dd><code>SHREK KART</code></dd>
   <dt>Maker / Revision</dt><dd><code>6S</code> / rev <code>1</code></dd>
   <dt>ROM Size</dt><dd>8.0 MiB (8,388,608 B)</dd>
-  <dt>Save Media</dt><dd><code>None / Unknown</code></dd>
+  <dt>Save Media</dt><dd><code>EEPROM 4K</code></dd>
   <dt>SHA-256</dt><dd><code>f429b77fbbac75cab3ce68075546c05fb8e89d37f7fb218efa37c1d98411c777</code></dd>
   <dt>Engine / SDK Group</dt><dd><a href='../engines/index.html#comm-004'><code>comm-004</code></a> (98 families)</dd>
 </dl>
 
 
 
-<h2>Cartridge Storage Architecture: Stateless / Passcode</h2>
-<div class="callout">
-  <strong>Zero non-volatile battery hardware:</strong> This cartridge PCB contains ROM only (no SRAM, Flash, or EEPROM chips). Progression is preserved via on-screen passcodes or session-only gameplay. No <code>.sav</code> file is generated or required.
-</div>
 
+
+<h2>Link Cable &amp; Multiplayer Communications</h2>
+<div class="callout">
+  This title contains detected communication capabilities: <a href='../link-multiplayer.html#joybus'><span class='badge badge-purple'>📺 Joybus</span></a> <a href='../link-multiplayer.html#multiboot'><span class='badge badge-amber'>💾 MultiBoot</span></a> <a href='../link-multiplayer.html#sio-multi'><span class='badge badge-blue'>🎮 4P Link</span></a>.
+  Detailed protocol specifications, SIO registers, Joybus commands, and MultiBoot sequences are documented in the <a href="../link-multiplayer.html"><strong>Link &amp; Multiplayer Reference</strong></a>.
+</div>
+<dl class="kv">
+  <dt>Multi-Player SIO (4P)</dt><dd>16-bit ring network &middot; SIOCNT (<code>0x04000128</code>) literals: <code>0x000410</code>, <code>0x000474</code>, <code>0x00049c</code> &middot; SIODATA32/SIOMULTI0 (<code>0x04000120</code>) literals: <code>0x0007b0</code>, <code>0x00503c</code>, <code>0x005188</code></dd><dt>GameCube Joybus</dt><dd>Register literal <code>REG_JOYCNT</code> (<code>0x04000140</code>) at offset <code>0x005690</code></dd><dt>Single-Cart MultiBoot</dt><dd>Single-Cartridge MultiBoot (Download Play) client/server handler &middot; Thumb SWI 0x25 (<code>0xDF25</code>): <code>0x64f57c</code>, <code>0x6549d8</code>, <code>0x659b58</code>, <code>0x664128</code></dd>
+</dl>
+
+
+<h2>Battery Save Format Specification (Family Shared)</h2>
+<div class="callout">
+  This release shares its save architecture with canonical family reference <a href="../titles/AS4E-r0-29807b45c7faf85b.html"><strong>Shrek - Swamp Kart Speedway (USA, Europe) (En,Fr,De,Es,It,Nl)</strong></a> (Family <code>AS4</code>).
+</div>
+<p><a class='btn' href='../saves/AS4E-r0-29807b45c7faf85b.html'>Open Family Save Format Spec (AS4E)</a><a class='btn btn-secondary' href='../assets/formats/AS4E-r0-29807b45c7faf85b/save-format.json' download>Download save-format.json</a></p>
+<dl class="kv">
+  <dt>Canonical Specification</dt><dd><code>AS4E</code> &middot; <strong>4</strong> mapped fields &middot; <strong>0</strong> verified checksum(s) &middot; Confidence: <span class="badge badge-indigo">HIGH</span></dd>
+  <dt>gbakit Built-In Support</dt><dd><span class="badge badge-emerald">Built-in (AS4E)</span></dd>
+</dl>
+<pre><code>gbakit save verify AS4E save.sav
+gbakit save decode AS4E save.sav
+gbakit save fix    AS4E damaged.sav -o repaired.sav</code></pre>
+
+
+
+
+<h2>Text, Fonts &amp; Scene Data</h2>
+<dl class="kv"><dt>Primary Text Encoding</dt><dd><strong>Custom 16-bit Huffman</strong> (<code>126</code> ASCII strings &middot; <code>1</code> Shift-JIS runs)</dd><dt>Font &amp; VWF Indicators</dt><dd><span class='badge badge-emerald'>VWF Width Table</span> <span class='badge badge-blue'>1bpp Font</span> &middot; BIOS SWIs: BitUnPack <code>0x10</code>: <code>3</code> &middot; LZ77 <code>0x11/12</code>: <code>45</code> &middot; Huffman <code>0x13</code>: <code>11</code> &middot; RLE <code>0x14/15</code>: <code>12</code></dd><dt>Scene &amp; Packaging</dt><dd><code>30</code> ROM pointer tables (&ge;32 entries, <code>16</code> &ge;200) &middot; <code>9</code> relative <code>u32</code> TOCs &middot; <code>333</code> OAM metasprite hits</dd></dl>
 
 
 

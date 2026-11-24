@@ -13,7 +13,13 @@
       <a href="../index.html">Games</a>
       <a href="../saves/index.html">Save Formats</a>
       <a href="../patches/index.html">Debug Patches</a>
+      <a href="../debug-menus.html">Debug Gallery</a>
+      <a href="../non-retail-cartridges.html">Non-Retail</a>
+      <a href="../cartridge-hardware.html">Cartridge Hardware</a>
+      <a href="../link-multiplayer.html">Link &amp; Multiplayer</a>
+      <a href="../multiboot-museum.html">MultiBoot Museum</a>
       <a href="../assets/index.html">Assets &amp; Audio</a>
+      <a href="../text-and-fonts.html">Text &amp; Fonts</a>
       <a href="../engines/index.html">Engines &amp; Hardware</a>
       <a href="../families/index.html">Families</a>
       <a href="../gbakit/index.html">Using gbakit</a>
@@ -22,7 +28,7 @@
   <main>
 <p class="meta"><a href="../index.html">&larr; Games</a> &middot; Family <code>BPP</code></p>
 <h1>Pokemon Pinball - Ruby &amp; Sapphire (Europe) (En,Fr,De,Es,It)</h1>
-<p><span class='badge badge-zinc'>Stateless / Passcode</span></p>
+<p><span class='badge badge-slate'>SRAM 256K</span> <span class='badge badge-emerald'>Save Format Mapped (Family Spec)</span> <a href='../cartridge-hardware.html#rumble'><span class='badge badge-emerald'>📳 Rumble Motor</span></a> <a href='../link-multiplayer.html#multiboot'><span class='badge badge-amber'>💾 MultiBoot</span></a> <a href='../link-multiplayer.html#sio-multi'><span class='badge badge-blue'>🎮 4P Link</span></a></p>
 
 <h2>Cartridge Identity</h2>
 <dl class="kv">
@@ -30,18 +36,52 @@
   <dt>Header Title</dt><dd><code>POKEPIN R/S</code></dd>
   <dt>Maker / Revision</dt><dd><code>01</code> / rev <code>0</code></dd>
   <dt>ROM Size</dt><dd>16.0 MiB (16,777,216 B)</dd>
-  <dt>Save Media</dt><dd><code>None / Unknown</code></dd>
+  <dt>Save Media</dt><dd><code>SRAM 256K</code></dd>
   <dt>SHA-256</dt><dd><code>cd7efd3bde3e30f1e16c7a2dae4d5f2cdf8b57e34d6095547dca680be1de1180</code></dd>
   <dt>Engine / SDK Group</dt><dd><a href='../engines/index.html#comm-011'><code>comm-011</code></a> (32 families)</dd>
 </dl>
 
 
 
-<h2>Cartridge Storage Architecture: Stateless / Passcode</h2>
-<div class="callout">
-  <strong>Zero non-volatile battery hardware:</strong> This cartridge PCB contains ROM only (no SRAM, Flash, or EEPROM chips). Progression is preserved via on-screen passcodes or session-only gameplay. No <code>.sav</code> file is generated or required.
-</div>
 
+<h2>Cartridge Hardware &amp; Physical Peripherals</h2>
+<div class="callout">
+  This cartridge PCB features physical hardware peripherals: <a href='../cartridge-hardware.html#rumble'><span class='badge badge-emerald'>📳 Rumble Motor</span></a>.
+  Detailed register specifications, GPIO pinouts, and hardware architecture are available in the <a href="../cartridge-hardware.html"><strong>Cartridge Hardware Reference</strong></a>.
+</div>
+<dl class="kv">
+  <dt>Game Boy Player Rumble</dt><dd><code>gamecube_controller_rumble_via_joybus</code> via <code>0x04000134 (RCNT 0xC000 Joybus mode)</code></dd>
+</dl>
+
+
+<h2>Link Cable &amp; Multiplayer Communications</h2>
+<div class="callout">
+  This title contains detected communication capabilities: <a href='../link-multiplayer.html#multiboot'><span class='badge badge-amber'>💾 MultiBoot</span></a> <a href='../link-multiplayer.html#sio-multi'><span class='badge badge-blue'>🎮 4P Link</span></a>.
+  Detailed protocol specifications, SIO registers, Joybus commands, and MultiBoot sequences are documented in the <a href="../link-multiplayer.html"><strong>Link &amp; Multiplayer Reference</strong></a>.
+</div>
+<dl class="kv">
+  <dt>Multi-Player SIO (4P)</dt><dd>16-bit ring network &middot; SIOCNT (<code>0x04000128</code>) literals: <code>0x0013e0</code>, <code>0x001660</code>, <code>0x001958</code> &middot; SIODATA32/SIOMULTI0 (<code>0x04000120</code>) literals: <code>0x001438</code>, <code>0x0014b0</code>, <code>0x00151c</code></dd><dt>Single-Cart MultiBoot</dt><dd>Single-Cartridge MultiBoot (Download Play) client/server handler &middot; Thumb SWI 0x25 (<code>0xDF25</code>): <code>0x7da862</code>, <code>0x8bfdd4</code></dd>
+</dl>
+
+
+<h2>Battery Save Format Specification (Family Shared)</h2>
+<div class="callout">
+  This release shares its save architecture with canonical family reference <a href="../titles/BPPE-r0-1a2bbb845456873d.html"><strong>Pokemon Pinball: Ruby &amp; Sapphire (USA)</strong></a> (Family <code>BPP</code>).
+</div>
+<p><a class='btn' href='../saves/BPPE-r0-1a2bbb845456873d.html'>Open Family Save Format Spec (BPPE)</a><a class='btn btn-secondary' href='../assets/formats/BPPE-r0-1a2bbb845456873d/save-format.json' download>Download save-format.json</a></p>
+<dl class="kv">
+  <dt>Canonical Specification</dt><dd><code>BPPE</code> &middot; <strong>7</strong> mapped fields &middot; <strong>1</strong> verified checksum(s) &middot; Confidence: <span class="badge badge-indigo">HIGH</span></dd>
+  <dt>gbakit Built-In Support</dt><dd><span class="badge badge-emerald">Built-in (BPPE)</span></dd>
+</dl>
+<pre><code>gbakit save verify BPPE save.sav
+gbakit save decode BPPE save.sav
+gbakit save fix    BPPE damaged.sav -o repaired.sav</code></pre>
+
+
+
+
+<h2>Text, Fonts &amp; Scene Data</h2>
+<dl class="kv"><dt>Primary Text Encoding</dt><dd><strong>Minimal / tile-graphic UI text</strong> (<code>11</code> ASCII strings)</dd><dt>Font &amp; VWF Indicators</dt><dd><span class='badge badge-slate'>No VWF Table</span> <span class='badge badge-blue'>1bpp Font</span> &middot; BIOS SWIs: BitUnPack <code>0x10</code>: <code>0</code> &middot; LZ77 <code>0x11/12</code>: <code>4</code> &middot; Huffman <code>0x13</code>: <code>0</code> &middot; RLE <code>0x14/15</code>: <code>0</code></dd><dt>Scene &amp; Packaging</dt><dd><code>17</code> ROM pointer tables (&ge;32 entries, <code>1</code> &ge;200) &middot; <code>8</code> relative <code>u32</code> TOCs &middot; <code>228</code> OAM metasprite hits</dd></dl>
 
 
 

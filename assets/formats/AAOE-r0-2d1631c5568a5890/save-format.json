@@ -1,0 +1,150 @@
+{
+  "schema": "gbakit-save-research/1",
+  "release_key": "AAOE-r0-2d1631c5568a5890",
+  "display_name": "Aero the Acro-Bat (USA)",
+  "rom_sha256": "2d1631c5568a589092f9ed854255977623171ebf62d8eb0dd24e616499c0998e",
+  "game_code": "AAOE",
+  "header_family": "AAO",
+  "community_id": "comm-001",
+  "overall_confidence": "HIGH",
+  "media": {
+    "kind": "eeprom512",
+    "size_bytes": 512,
+    "sdk_tags": [
+      "EEPROM_V122@3471224"
+    ],
+    "fill_byte": "0x00"
+  },
+  "slots_and_copies": [
+    {
+      "name": "aero_save_record",
+      "offset": 0,
+      "size": 512,
+      "redundancy_role": "primary",
+      "selection_rule": "Validated by 8-byte magic '*#OREA#*' at offset 0x00."
+    }
+  ],
+  "magic_signatures": [
+    {
+      "offset": 0,
+      "bytes_hex": "2a234f524541232a",
+      "ascii": "*#OREA#*",
+      "verified_in_code": true,
+      "verified_in_sav": true,
+      "function_addrs": [
+        "0x08103148",
+        "0x081031f8"
+      ]
+    }
+  ],
+  "checksums": [
+    {
+      "name": "magic_signature_guard",
+      "algorithm": "unknown",
+      "formula_detail": "Header integrity is validated by 8-byte magic token check '*#OREA#*' (*#AERO#*).",
+      "stored_offset": 0,
+      "stored_size": 8,
+      "covered_start": 0,
+      "covered_end": 8,
+      "function_addrs": [
+        "0x08103148"
+      ],
+      "verified_on_samples": [
+        {
+          "file": "saves/cap-00-future-0.sav",
+          "stored_hex": "2a234f524541232a",
+          "computed_hex": "2a234f524541232a",
+          "match": true
+        }
+      ],
+      "confidence": "CONFIRMED_VERIFIED"
+    }
+  ],
+  "io_driver_functions": [
+    {
+      "addr": "0x08103148",
+      "role": "read",
+      "callers": [
+        "0x081032d4"
+      ],
+      "notes": "Low-level serial EEPROM read driver via DMA3 MMIO 0x040000D4."
+    },
+    {
+      "addr": "0x081031f8",
+      "role": "write",
+      "callers": [],
+      "notes": "Low-level serial EEPROM write driver via DMA3."
+    },
+    {
+      "addr": "0x081032d4",
+      "role": "checksum",
+      "callers": [],
+      "notes": "Low-level serial EEPROM verify driver."
+    }
+  ],
+  "caller_chains": [
+    {
+      "entry_caller": "0x081031f8",
+      "chain": [
+        "0x081031f8",
+        "0x081030c8",
+        "0x08102ffc"
+      ],
+      "trigger_context": "Stage clear / game options configuration update.",
+      "ram_fields_updated": [
+        "Level progression, options, life counts"
+      ],
+      "how_mapped": "Traced caller chain in ghidra/callgraph.json."
+    }
+  ],
+  "fields": [
+    {
+      "name": "magic_signature",
+      "offset": 0,
+      "size": 8,
+      "type": "ascii",
+      "ram_addr": null,
+      "writers": [
+        "0x081031f8"
+      ],
+      "readers": [
+        "0x08103148"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": "*#OREA#*"
+      },
+      "update_mechanism": "Static constant written to block 0.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Matches saves/cap-00-future-0.sav first 8 bytes."
+    },
+    {
+      "name": "game_options_and_progress",
+      "offset": 8,
+      "size": 504,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [
+        "0x081031f8"
+      ],
+      "readers": [
+        "0x08103148"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": "active values in 0x08-0x40 and 0x118-0x200"
+      },
+      "update_mechanism": "Holds stage progression, stars collected, and control configuration.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "Observed in active non-zero ranges in saves/cap-00-future-0.sav."
+    }
+  ],
+  "fuzzing_targets": [
+    {
+      "offset": 0,
+      "size": 8,
+      "mutation": "Invert magic bytes.",
+      "requires_checksum_repair": false,
+      "predicted_effect": "Save state recognized as invalid; game reverts to initial stage."
+    }
+  ],
+  "open_questions": []
+}

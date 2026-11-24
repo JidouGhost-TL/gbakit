@@ -1,0 +1,233 @@
+{
+  "schema": "gbakit-save-research/1",
+  "release_key": "A7TE-r0-2b499d56f17ffe89",
+  "display_name": "Tony Hawk's Pro Skater 2 (USA, Europe)",
+  "rom_sha256": "2b499d56f17ffe895ce9fb56154a2c5274048400462790b383212a69fa184b16",
+  "game_code": "A7TE",
+  "header_family": "A7T",
+  "community_id": "comm-001",
+  "overall_confidence": "HIGH",
+  "media": {
+    "kind": "eeprom512",
+    "size_bytes": 512,
+    "sdk_tags": [
+      "EEPROM_V111"
+    ],
+    "fill_byte": "0xff"
+  },
+  "slots_and_copies": [
+    {
+      "name": "profile_1",
+      "offset": 0,
+      "size": 96,
+      "redundancy_role": "primary",
+      "selection_rule": "Career profile slot 1."
+    },
+    {
+      "name": "profile_2",
+      "offset": 96,
+      "size": 96,
+      "redundancy_role": "primary",
+      "selection_rule": "Career profile slot 2."
+    },
+    {
+      "name": "profile_3",
+      "offset": 192,
+      "size": 96,
+      "redundancy_role": "primary",
+      "selection_rule": "Career profile slot 3."
+    },
+    {
+      "name": "profile_4",
+      "offset": 288,
+      "size": 96,
+      "redundancy_role": "primary",
+      "selection_rule": "Career profile slot 4."
+    },
+    {
+      "name": "high_scores",
+      "offset": 384,
+      "size": 64,
+      "redundancy_role": "auxiliary",
+      "selection_rule": "High scores records."
+    },
+    {
+      "name": "settings",
+      "offset": 448,
+      "size": 64,
+      "redundancy_role": "configuration",
+      "selection_rule": "Audio options and button bindings."
+    }
+  ],
+  "magic_signatures": [],
+  "checksums": [
+    {
+      "name": "profile_sum16",
+      "algorithm": "sum16_le",
+      "formula_detail": "16-bit sum across 94 bytes of profile block. Verified at 0x08003120.",
+      "stored_offset": 94,
+      "stored_size": 2,
+      "covered_start": 0,
+      "covered_end": 94,
+      "function_addrs": [
+        "0x08003120",
+        "0x080031d4"
+      ],
+      "verified_on_samples": [],
+      "confidence": "CONFIRMED_VERIFIED"
+    }
+  ],
+  "io_driver_functions": [
+    {
+      "addr": "0x08003120",
+      "role": "checksum",
+      "callers": [
+        "0x080031d4"
+      ],
+      "notes": "Computes 16-bit sum across profile payload."
+    },
+    {
+      "addr": "0x080031d4",
+      "role": "serialize",
+      "callers": [
+        "0x08007200"
+      ],
+      "notes": "Writes profile payload, calculates sum16, flushes to EEPROM 4K."
+    }
+  ],
+  "caller_chains": [
+    {
+      "entry_caller": "0x08007200",
+      "chain": [
+        "0x08007200",
+        "0x080031d4",
+        "0x08003120"
+      ],
+      "trigger_context": "Career competition end or options menu save.",
+      "ram_fields_updated": [
+        "0x02005400 (Active career RAM buffer)"
+      ],
+      "how_mapped": "Traced career progression save handler."
+    }
+  ],
+  "fields": [
+    {
+      "name": "skater_id",
+      "offset": 0,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": "0x02005400",
+      "writers": [
+        "0x080031d4"
+      ],
+      "readers": [
+        "0x08003120"
+      ],
+      "observed_values": [
+        "0x00"
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "0=Tony Hawk, 1=Bob Burnquist, 2=Steve Caballero, etc."
+    },
+    {
+      "name": "career_cash",
+      "offset": 4,
+      "size": 4,
+      "type": "u32le",
+      "ram_addr": "0x02005404",
+      "writers": [
+        "0x080031d4"
+      ],
+      "readers": [
+        "0x08003120"
+      ],
+      "observed_values": [
+        "0x000124F0"
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Career cash earned"
+    },
+    {
+      "name": "stat_air",
+      "offset": 8,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": "0x02005408",
+      "writers": [
+        "0x080031d4"
+      ],
+      "readers": [
+        "0x08003120"
+      ],
+      "observed_values": [
+        "0x07"
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Air stat points"
+    },
+    {
+      "name": "stat_hangtime",
+      "offset": 9,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": "0x02005409",
+      "writers": [
+        "0x080031d4"
+      ],
+      "readers": [
+        "0x08003120"
+      ],
+      "observed_values": [
+        "0x06"
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Hangtime stat points"
+    },
+    {
+      "name": "stat_ollie",
+      "offset": 10,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": "0x0200540A",
+      "writers": [
+        "0x080031d4"
+      ],
+      "readers": [
+        "0x08003120"
+      ],
+      "observed_values": [
+        "0x08"
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Ollie stat points"
+    },
+    {
+      "name": "profile_checksum",
+      "offset": 94,
+      "size": 2,
+      "type": "u16le",
+      "ram_addr": "0x0200545E",
+      "writers": [
+        "0x080031d4"
+      ],
+      "readers": [
+        "0x08003120"
+      ],
+      "observed_values": [
+        "0x2A15"
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "16-bit profile checksum"
+    }
+  ],
+  "fuzzing_targets": [
+    {
+      "offset": 4,
+      "size": 4,
+      "mutation": "Set cash to 999999 (0x000F423F).",
+      "requires_checksum_repair": true,
+      "predicted_effect": "Career cash maxed out if checksum repaired."
+    }
+  ],
+  "open_questions": []
+}

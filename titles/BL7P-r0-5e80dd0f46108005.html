@@ -13,7 +13,13 @@
       <a href="../index.html">Games</a>
       <a href="../saves/index.html">Save Formats</a>
       <a href="../patches/index.html">Debug Patches</a>
+      <a href="../debug-menus.html">Debug Gallery</a>
+      <a href="../non-retail-cartridges.html">Non-Retail</a>
+      <a href="../cartridge-hardware.html">Cartridge Hardware</a>
+      <a href="../link-multiplayer.html">Link &amp; Multiplayer</a>
+      <a href="../multiboot-museum.html">MultiBoot Museum</a>
       <a href="../assets/index.html">Assets &amp; Audio</a>
+      <a href="../text-and-fonts.html">Text &amp; Fonts</a>
       <a href="../engines/index.html">Engines &amp; Hardware</a>
       <a href="../families/index.html">Families</a>
       <a href="../gbakit/index.html">Using gbakit</a>
@@ -22,7 +28,7 @@
   <main>
 <p class="meta"><a href="../index.html">&larr; Games</a> &middot; Family <code>BL7</code></p>
 <h1>LEGO Star Wars II - The Original Trilogy (Europe) (En,Fr,De,Es,It,Da)</h1>
-<p><span class='badge badge-zinc'>Stateless / Passcode</span></p>
+<p><span class='badge badge-slate'>EEPROM 4K</span> <span class='badge badge-emerald'>Save Format Mapped (Family Spec)</span> <a href='../link-multiplayer.html#multiboot'><span class='badge badge-amber'>💾 MultiBoot</span></a></p>
 
 <h2>Cartridge Identity</h2>
 <dl class="kv">
@@ -30,18 +36,43 @@
   <dt>Header Title</dt><dd><code>LSW2GBA</code></dd>
   <dt>Maker / Revision</dt><dd><code>64</code> / rev <code>0</code></dd>
   <dt>ROM Size</dt><dd>16.0 MiB (16,777,216 B)</dd>
-  <dt>Save Media</dt><dd><code>None / Unknown</code></dd>
+  <dt>Save Media</dt><dd><code>EEPROM 4K</code></dd>
   <dt>SHA-256</dt><dd><code>5e80dd0f46108005556e513ff2934714ebcb862d75592a2a16f62b725ea05c45</code></dd>
   <dt>Engine / SDK Group</dt><dd><a href='../engines/index.html#comm-006'><code>comm-006</code></a> (66 families)</dd>
 </dl>
 
 
 
-<h2>Cartridge Storage Architecture: Stateless / Passcode</h2>
-<div class="callout">
-  <strong>Zero non-volatile battery hardware:</strong> This cartridge PCB contains ROM only (no SRAM, Flash, or EEPROM chips). Progression is preserved via on-screen passcodes or session-only gameplay. No <code>.sav</code> file is generated or required.
-</div>
 
+
+<h2>Link Cable &amp; Multiplayer Communications</h2>
+<div class="callout">
+  This title contains detected communication capabilities: <a href='../link-multiplayer.html#multiboot'><span class='badge badge-amber'>💾 MultiBoot</span></a>.
+  Detailed protocol specifications, SIO registers, Joybus commands, and MultiBoot sequences are documented in the <a href="../link-multiplayer.html"><strong>Link &amp; Multiplayer Reference</strong></a>.
+</div>
+<dl class="kv">
+  <dt>Single-Cart MultiBoot</dt><dd>Single-Cartridge MultiBoot (Download Play) client/server handler &middot; Thumb SWI 0x25 (<code>0xDF25</code>): <code>0x0deaf8</code>, <code>0x0f1c3a</code>, <code>0x0f1ce6</code>, <code>0x128966</code></dd>
+</dl>
+
+
+<h2>Battery Save Format Specification (Family Shared)</h2>
+<div class="callout">
+  This release shares its save architecture with canonical family reference <a href="../titles/BL7E-r0-74b44acfe3b55d4f.html"><strong>LEGO Star Wars II - The Original Trilogy (USA)</strong></a> (Family <code>BL7</code>).
+</div>
+<p><a class='btn' href='../saves/BL7E-r0-74b44acfe3b55d4f.html'>Open Family Save Format Spec (BL7E)</a><a class='btn btn-secondary' href='../assets/formats/BL7E-r0-74b44acfe3b55d4f/save-format.json' download>Download save-format.json</a></p>
+<dl class="kv">
+  <dt>Canonical Specification</dt><dd><code>BL7E</code> &middot; <strong>4</strong> mapped fields &middot; <strong>0</strong> verified checksum(s) &middot; Confidence: <span class="badge badge-indigo">HIGH</span></dd>
+  <dt>gbakit Built-In Support</dt><dd><span class="badge badge-emerald">Built-in (BL7E)</span></dd>
+</dl>
+<pre><code>gbakit save verify BL7E save.sav
+gbakit save decode BL7E save.sav
+gbakit save fix    BL7E damaged.sav -o repaired.sav</code></pre>
+
+
+
+
+<h2>Text, Fonts &amp; Scene Data</h2>
+<dl class="kv"><dt>Primary Text Encoding</dt><dd><strong>Plain ASCII (uncompressed)</strong> (<code>250</code> ASCII strings &middot; <code>1</code> Shift-JIS runs)</dd><dt>Font &amp; VWF Indicators</dt><dd><span class='badge badge-emerald'>VWF Width Table</span> <span class='badge badge-blue'>1bpp Font</span> &middot; BIOS SWIs: BitUnPack <code>0x10</code>: <code>10</code> &middot; LZ77 <code>0x11/12</code>: <code>11</code> &middot; Huffman <code>0x13</code>: <code>6</code> &middot; RLE <code>0x14/15</code>: <code>10</code></dd><dt>Scene &amp; Packaging</dt><dd><code>29</code> ROM pointer tables (&ge;32 entries, <code>2</code> &ge;200) &middot; <code>22</code> relative <code>u32</code> TOCs &middot; <code>138</code> OAM metasprite hits</dd></dl>
 
 
 <h2>Hardware MMIO Subsystems</h2><dl class='kv'><dt><code>ppu_display</code></dt><dd><code>0x80001d8</code>, <code>0x8001a34</code>, <code>0x8002dac</code>, <code>0x80030d4</code>, <code>0x80039f0</code>, <code>0x800ac8c</code>, <code>0x800cde0</code>, <code>0x8011d4c</code>, <code>0x801212c</code>, <code>0x80128f0</code> (+1 more)</dd></dl>

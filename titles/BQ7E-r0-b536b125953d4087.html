@@ -13,7 +13,13 @@
       <a href="../index.html">Games</a>
       <a href="../saves/index.html">Save Formats</a>
       <a href="../patches/index.html">Debug Patches</a>
+      <a href="../debug-menus.html">Debug Gallery</a>
+      <a href="../non-retail-cartridges.html">Non-Retail</a>
+      <a href="../cartridge-hardware.html">Cartridge Hardware</a>
+      <a href="../link-multiplayer.html">Link &amp; Multiplayer</a>
+      <a href="../multiboot-museum.html">MultiBoot Museum</a>
       <a href="../assets/index.html">Assets &amp; Audio</a>
+      <a href="../text-and-fonts.html">Text &amp; Fonts</a>
       <a href="../engines/index.html">Engines &amp; Hardware</a>
       <a href="../families/index.html">Families</a>
       <a href="../gbakit/index.html">Using gbakit</a>
@@ -22,7 +28,7 @@
   <main>
 <p class="meta"><a href="../index.html">&larr; Games</a> &middot; Family <code>BQ7</code></p>
 <h1>Monster House (USA) (En,Fr)</h1>
-<p><span class='badge badge-zinc'>Stateless / Passcode</span></p>
+<p><span class='badge badge-slate'>EEPROM 4K</span> <span class='badge badge-emerald'>Save Format Mapped (Family Spec)</span> <a href='../link-multiplayer.html#joybus'><span class='badge badge-purple'>📺 Joybus</span></a> <a href='../link-multiplayer.html#multiboot'><span class='badge badge-amber'>💾 MultiBoot</span></a> <a href='../link-multiplayer.html#sio-multi'><span class='badge badge-blue'>🎮 4P Link</span></a></p>
 
 <h2>Cartridge Identity</h2>
 <dl class="kv">
@@ -30,20 +36,45 @@
   <dt>Header Title</dt><dd><code>MONSTERHOUSE</code></dd>
   <dt>Maker / Revision</dt><dd><code>78</code> / rev <code>0</code></dd>
   <dt>ROM Size</dt><dd>8.0 MiB (8,388,608 B)</dd>
-  <dt>Save Media</dt><dd><code>None / Unknown</code></dd>
+  <dt>Save Media</dt><dd><code>EEPROM 4K</code></dd>
   <dt>SHA-256</dt><dd><code>b536b125953d408782006598c89b385503de05fa4c6146f7633186cc1965f506</code></dd>
   <dt>Engine / SDK Group</dt><dd><a href='../engines/index.html#comm-015'><code>comm-015</code></a> (23 families)</dd>
 </dl>
 
 
 
-<h2>Cartridge Storage Architecture: Stateless / Passcode</h2>
+
+
+<h2>Link Cable &amp; Multiplayer Communications</h2>
 <div class="callout">
-  <strong>Zero non-volatile battery hardware:</strong> This cartridge PCB contains ROM only (no SRAM, Flash, or EEPROM chips). Progression is preserved via on-screen passcodes or session-only gameplay. No <code>.sav</code> file is generated or required.
+  This title contains detected communication capabilities: <a href='../link-multiplayer.html#joybus'><span class='badge badge-purple'>📺 Joybus</span></a> <a href='../link-multiplayer.html#multiboot'><span class='badge badge-amber'>💾 MultiBoot</span></a> <a href='../link-multiplayer.html#sio-multi'><span class='badge badge-blue'>🎮 4P Link</span></a>.
+  Detailed protocol specifications, SIO registers, Joybus commands, and MultiBoot sequences are documented in the <a href="../link-multiplayer.html"><strong>Link &amp; Multiplayer Reference</strong></a>.
 </div>
+<dl class="kv">
+  <dt>Multi-Player SIO (4P)</dt><dd>16-bit ring network &middot; SIOCNT (<code>0x04000128</code>) literals: <code>0x033234</code>, <code>0x033364</code>, <code>0x037a1c</code> &middot; SIODATA32/SIOMULTI0 (<code>0x04000120</code>) literals: <code>0x037b38</code>, <code>0x037b9c</code>, <code>0x037c08</code></dd><dt>GameCube Joybus</dt><dd>Register literal <code>REG_JOYCNT</code> (<code>0x04000140</code>) at offset <code>0x0327fc</code></dd><dt>GameCube Joybus</dt><dd>Register literal <code>REG_JOYCNT</code> (<code>0x04000140</code>) at offset <code>0x7f858c</code></dd><dt>GameCube Joybus</dt><dd>Register literal <code>REG_JOY_RECV</code> (<code>0x04000150</code>) at offset <code>0x0327c4</code></dd><dt>GameCube Joybus</dt><dd>Register literal <code>REG_JOY_RECV</code> (<code>0x04000150</code>) at offset <code>0x7f8594</code></dd><dt>GameCube Joybus</dt><dd>Register literal <code>REG_JOY_TRANS</code> (<code>0x04000154</code>) at offset <code>0x7f8598</code></dd><dt>GameCube Joybus</dt><dd>Register literal <code>REG_JOYSTAT</code> (<code>0x04000158</code>) at offset <code>0x7f8588</code></dd><dt>Single-Cart MultiBoot</dt><dd>Single-Cartridge MultiBoot (Download Play) client/server handler &middot; Thumb SWI 0x25 (<code>0xDF25</code>): <code>0x049aee</code>, <code>0x49ce94</code>, <code>0x49d054</code>, <code>0x49d754</code></dd>
+</dl>
+
+
+<h2>Battery Save Format Specification (Family Shared)</h2>
+<div class="callout">
+  This release shares its save architecture with canonical family reference <a href="../titles/BQ7P-r0-8110f704ea9727f4.html"><strong>Monster House (Europe)</strong></a> (Family <code>BQ7</code>).
+</div>
+<p><a class='btn' href='../saves/BQ7P-r0-8110f704ea9727f4.html'>Open Family Save Format Spec (BQ7P)</a><a class='btn btn-secondary' href='../assets/formats/BQ7P-r0-8110f704ea9727f4/save-format.json' download>Download save-format.json</a></p>
+<dl class="kv">
+  <dt>Canonical Specification</dt><dd><code>BQ7P</code> &middot; <strong>3</strong> mapped fields &middot; <strong>0</strong> verified checksum(s) &middot; Confidence: <span class="badge badge-indigo">HIGH</span></dd>
+  <dt>gbakit Built-In Support</dt><dd><span class="badge badge-emerald">Built-in (BQ7P)</span></dd>
+</dl>
+<pre><code>gbakit save verify BQ7P save.sav
+gbakit save decode BQ7P save.sav
+gbakit save fix    BQ7P damaged.sav -o repaired.sav</code></pre>
 
 
 <h2>ROM Assets, Compression &amp; Audio</h2><dl class='kv'><dt>BIOS Compression</dt><dd>LZ77 (<code>0x10</code>): <strong>1</strong> streams &middot; RLE (<code>0x30</code>): <strong>0</strong> streams</dd><dt>ROM Pointer Tables</dt><dd>180 tables (0 pointing to validated compressed streams)</dd><dt>SDK Backup Tags</dt><dd><code>EEPROM_V124</code></dd></dl>
+
+<h2>Text, Fonts &amp; Scene Data</h2>
+<dl class="kv"><dt>Primary Text Encoding</dt><dd><strong>Compressed / custom-encoded text</strong> (<code>75</code> ASCII strings)</dd><dt>Font &amp; VWF Indicators</dt><dd><span class='badge badge-emerald'>VWF Width Table</span> <span class='badge badge-blue'>1bpp Font</span> &middot; BIOS SWIs: BitUnPack <code>0x10</code>: <code>0</code> &middot; LZ77 <code>0x11/12</code>: <code>0</code> &middot; Huffman <code>0x13</code>: <code>1</code> &middot; RLE <code>0x14/15</code>: <code>1</code></dd><dt>Scene &amp; Packaging</dt><dd><code>67</code> ROM pointer tables (&ge;32 entries, <code>1</code> &ge;200) &middot; <code>138</code> relative <code>u32</code> TOCs &middot; <code>255</code> OAM metasprite hits &middot; FourCC: <code>GAX2</code></dd></dl>
+
+
 
 <h2>Regional Variants &amp; Revisions (Family <code>BQ7</code>)</h2><ul><li><a href='BQ7P-r0-8110f704ea9727f4.html'>Monster House (Europe)</a> (<code>BQ7P</code>, 8 MiB)</li><li><a href='BQ7X-r0-ff1a8f57761b12c1.html'>Monster House (Europe) (En,Fr,De,Es)</a> (<code>BQ7X</code>, 8 MiB)</li></ul>
 </main>

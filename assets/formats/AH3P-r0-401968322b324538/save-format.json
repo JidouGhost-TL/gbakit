@@ -1,0 +1,336 @@
+{
+  "schema": "gbakit-save-research/1",
+  "release_key": "AH3P-r0-401968322b324538",
+  "display_name": "Hamtaro - Ham-Ham Heartbreak (Europe) (En,Fr,De,Es,It)",
+  "rom_sha256": "401968322b3245381da64dab35bdaacb3f82a404425c584867f00c45e469ffd8",
+  "game_code": "AH3P",
+  "header_family": "AH3",
+  "community_id": "",
+  "overall_confidence": "MEDIUM",
+  "media": {
+    "kind": "sram",
+    "size_bytes": 32768,
+    "sdk_tags": [],
+    "fill_byte": "0x00"
+  },
+  "slots_and_copies": [
+    {
+      "name": "slot_primary",
+      "offset": 0,
+      "size": 16384,
+      "redundancy_role": "primary",
+      "selection_rule": "Game logic addresses only this 0x0000-0x3FFF window; it is kept byte-identical to slot_mirror by construction (every store in FUN_0800078c's copy loops writes to addr and addr+0x4000 in the same step), not selected by a generation counter."
+    },
+    {
+      "name": "slot_mirror",
+      "offset": 16384,
+      "size": 16384,
+      "redundancy_role": "backup",
+      "selection_rule": "Byte-exact duplicate of slot_primary at all times in both sample .sav files; no counter/flag was found distinguishing it from slot_primary, and no code path was identified that prefers one half over the other."
+    }
+  ],
+  "magic_signatures": [
+    {
+      "offset": 0,
+      "bytes_hex": "48414d55544152 4f330000004148 3350",
+      "ascii": "HAMUTARO3\u0000\u0000\u0000AH3P",
+      "verified_in_code": false,
+      "verified_in_sav": true,
+      "function_addrs": []
+    },
+    {
+      "offset": 16,
+      "bytes_hex": "41707220313620323030333139 3a32303a3038",
+      "ascii": "Apr 16 200319:20:08",
+      "verified_in_code": false,
+      "verified_in_sav": true,
+      "function_addrs": []
+    },
+    {
+      "offset": 9,
+      "bytes_hex": "436c72",
+      "ascii": "Clr",
+      "verified_in_code": true,
+      "verified_in_sav": false,
+      "function_addrs": ["0x0800078c"]
+    }
+  ],
+  "checksums": [
+    {
+      "name": "roster_record_checksum",
+      "algorithm": "custom",
+      "formula_detail": "Sum the 136-byte record (8-byte header with the 2-byte checksum field at +6 zeroed, plus 128-byte payload) as little-endian u16 words; if an odd trailing byte remains, add it as a plain byte; fold the 32-bit accumulator's carry into bits 0-15 twice (u = (u & 0xffff) + (u >> 16), applied twice); return the bitwise one's-complement of the result masked to 16 bits (~u & 0xffff). Implemented by FUN_0800044c.",
+      "stored_offset": 6,
+      "stored_size": 2,
+      "covered_start": 0,
+      "covered_end": 135,
+      "function_addrs": ["0x0800044c", "0x08000ff4"],
+      "verified_on_samples": [
+        {"file": "saves/cap-00-future-0.sav", "stored_hex": "0x6dca", "computed_hex": "0x6dca", "match": true},
+        {"file": "saves/cap-00-future-0.sav", "stored_hex": "0xf575", "computed_hex": "0xf575", "match": true},
+        {"file": "saves/cap-00-future-0.sav", "stored_hex": "0xcd7a", "computed_hex": "0xcd7a", "match": true},
+        {"file": "saves/cap-01-future-1.sav", "stored_hex": "0x6dca", "computed_hex": "0x6dca", "match": true},
+        {"file": "saves/cap-01-future-1.sav", "stored_hex": "0xf575", "computed_hex": "0xf575", "match": true},
+        {"file": "saves/cap-01-future-1.sav", "stored_hex": "0xcd7a", "computed_hex": "0xcd7a", "match": true}
+      ],
+      "confidence": "CONFIRMED_VERIFIED"
+    }
+  ],
+  "io_driver_functions": [
+    {
+      "addr": "0x080ec144",
+      "role": "write",
+      "callers": ["0x080ec26c"],
+      "notes": "Raw interrupt-masked single-byte copy loop (disables IRQs via a bitmask OR'd with 3 before copying). Matches GBA SRAM's 8-bit-only bus requirement; only invoked from the FUN_0800078c save-flush path, not generic gameplay code."
+    },
+    {
+      "addr": "0x080ec26c",
+      "role": "read",
+      "callers": ["0x0800078c", "0x08000ff4"],
+      "notes": "Not decompiled (external/runtime helper). Used exclusively as an equality test (callers check return == 0 for 'match'), matching a memcmp(dst, src, len) signature. Also used as a write-verify-retry gate: a full staged buffer is compared against the real SRAM base 0xE000000, and the enclosing loop repeats while the comparison fails."
+    },
+    {
+      "addr": "0x080ec2b8",
+      "role": "read",
+      "callers": ["0x0800078c", "0x080011b4"],
+      "notes": "Not decompiled. 4-argument equality/compare primitive (dst, src, len, extra); used to pick between two backup candidates before accepting a save as valid."
+    },
+    {
+      "addr": "0x0800044c",
+      "role": "checksum",
+      "callers": ["0x08000ff4", "0x080011b4"],
+      "notes": "One's-complement 16-bit sum checksum. See checksums[0] for full formula and verification."
+    },
+    {
+      "addr": "0x08000ff4",
+      "role": "serialize",
+      "callers": ["0x0800078c"],
+      "notes": "Builds an 8-byte record header (length, table id, index, checksum) plus 128-byte payload in a scratch buffer, computes the checksum, then writes the record to two mirrored destinations via 0x080ec26c. Verified writer of the 51-entry roster table at 0x142C."
+    },
+    {
+      "addr": "0x080011b4",
+      "role": "serialize",
+      "callers": ["0x08000744"],
+      "notes": "Structurally similar record writer (compares two backup candidates via 0x080ec2b8/0x0800044c, copies the winner via 0x080ec2b4). Never references the literal SRAM base 0xE000000 internally, so whether it writes into the .sav file at all, versus an EWRAM/IWRAM-only shadow structure, is unresolved (open question)."
+    },
+    {
+      "addr": "0x0800078c",
+      "role": "write",
+      "callers": ["0x08000984"],
+      "notes": "Top-level save flush / corruption-recovery routine. Normal path: writes 3 singleton records (table ids 1-3) and a 51-record roster array (table id 4) to both mirrored halves. Fallback path (not observed in either sample file): stages a freshly-built blank template stamped with ASCII 'Clr' at offset +9/+0x4009, flushes it via 0x080ec144, and verify-retries against SRAM via 0x080ec26c."
+    },
+    {
+      "addr": "0x08000984",
+      "role": "write",
+      "callers": [],
+      "notes": "Save subsystem entry point; gated by an SWI/BIOS-flag test (FUN_08001458(5)). Calls FUN_0800060c (control-block reinit) then FUN_0800078c (save flush)."
+    }
+  ],
+  "caller_chains": [
+    {
+      "entry_caller": "0x08000984",
+      "chain": ["0x08000984", "0x0800060c", "0x0800078c", "0x08000ff4", "0x0800044c", "0x080ec26c"],
+      "trigger_context": "Save subsystem bring-up, gated by bit-flag test FUN_08001458(5)",
+      "ram_fields_updated": ["record scratch buffer from func_0x0800ae6c()", "mirrored destination tables at offsets 0x142C and 0x542C (and unresolved table-id 1-3 destinations)"],
+      "how_mapped": "Traced edges in ghidra/callgraph.json, cross-checked against the literal call sites and control flow in ghidra/decompiled.c; final record contents and checksum independently re-derived in Python against both real .sav files."
+    },
+    {
+      "entry_caller": "0x08000744",
+      "chain": ["0x08000744", "0x0800060c", "0x0800078c", "0x080011b4"],
+      "trigger_context": "Alternate save-related entry point; calls the same control-block reinit (0x0800060c) and save flush (0x0800078c, invoked as a function pointer at record+8), then two singleton writes via 0x080011b4(2) and 0x080011b4(3)",
+      "ram_fields_updated": ["unresolved destination tables indexed by table id 2 and 3 inside 0x080011b4"],
+      "how_mapped": "ghidra/callgraph.json edge 0800060c <- callers [08000744, 08000984]; manual read of ghidra/decompiled.c:180-203. Destination offsets not independently located in sample .sav bytes, so this chain is CONFIRMED_STATIC, not CONFIRMED_VERIFIED."
+    }
+  ],
+  "fields": [
+    {
+      "name": "title_tag",
+      "offset": 0,
+      "size": 9,
+      "type": "ascii",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"cap-00-future-0.sav": "HAMUTARO3", "cap-01-future-1.sav": "HAMUTARO3"},
+      "update_mechanism": "Inferred memcpy of a ROM-resident default/blank save template; no byte-level writer isolated among the 126 decompiled functions.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Identical bytes 0x00-0x08 in both real .sav files."
+    },
+    {
+      "name": "clr_recovery_tag",
+      "offset": 9,
+      "size": 3,
+      "type": "ascii",
+      "ram_addr": null,
+      "writers": ["0x0800078c"],
+      "readers": [],
+      "observed_values": {"cap-00-future-0.sav": "\u0000\u0000\u0000", "cap-01-future-1.sav": "\u0000\u0000\u0000"},
+      "update_mechanism": "Stamped as ASCII 'Clr' only on the blank-format fallback branch of FUN_0800078c; both real samples took the normal (non-fallback) path, so these bytes remain the default null padding after title_tag.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "ghidra/decompiled.c:264-269 shows the literal byte stores 0x43/0x6c/0x72 at this offset; real .sav bytes are 00 00 00 in both samples, confirming the branch was not taken."
+    },
+    {
+      "name": "header_game_code",
+      "offset": 12,
+      "size": 4,
+      "type": "ascii",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"cap-00-future-0.sav": "AH3P", "cap-01-future-1.sav": "AH3P"},
+      "update_mechanism": "Same inferred template copy as title_tag.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Identical bytes 0x0C-0x0F in both real .sav files; matches ROM header game code AH3P."
+    },
+    {
+      "name": "build_timestamp",
+      "offset": 16,
+      "size": 20,
+      "type": "ascii",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"cap-00-future-0.sav": "Apr 16 200319:20:08", "cap-01-future-1.sav": "Apr 16 200319:20:08"},
+      "update_mechanism": "Same inferred template copy as title_tag.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Identical bytes 0x10-0x23 in both real .sav files."
+    },
+    {
+      "name": "unmapped_counter_0x6be",
+      "offset": 1726,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"cap-00-future-0.sav": "0xf7", "cap-01-future-1.sav": "0xf6"},
+      "update_mechanism": "Unknown; one of only 4 raw bytes (2 unique offsets, mirrored) that differ between the two sample captures, delta -1.",
+      "confidence": "HYPOTHESIS",
+      "evidence": "saves/hexdump_and_diffs.txt diff section; packet's own cold-reload mutation probe at this exact offset recorded reverted_to_blank_on_mutation=false, consistent with this not being checksum-protected."
+    },
+    {
+      "name": "unmapped_counter_0xb84",
+      "offset": 2948,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"cap-00-future-0.sav": "0x00", "cap-01-future-1.sav": "0x01"},
+      "update_mechanism": "Unknown; the other of the only 4 raw bytes that differ between captures, delta +1.",
+      "confidence": "HYPOTHESIS",
+      "evidence": "saves/hexdump_and_diffs.txt diff section."
+    },
+    {
+      "name": "roster_record_length",
+      "offset": 5164,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": ["0x08000ff4"],
+      "readers": [],
+      "observed_values": {"all_51_records_both_files": 128},
+      "update_mechanism": "Set to the return value of the payload-copy call (func_0x080ec2b4) inside FUN_08000ff4; constant 128 because every roster record copies a fixed-size struct.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "ghidra/decompiled.c:697-704; verified equal to 128 at record offset +0x00 for all 51 records in both real .sav files."
+    },
+    {
+      "name": "roster_record_table_id",
+      "offset": 5168,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": ["0x08000ff4"],
+      "readers": [],
+      "observed_values": {"all_51_records_both_files": 4},
+      "update_mechanism": "Set to FUN_08000ff4's param_1, which is fixed at 4 for the 51-entry roster loop.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "ghidra/decompiled.c:705; verified equal to 4 at record offset +0x04 for all 51 records in both real .sav files."
+    },
+    {
+      "name": "roster_record_index",
+      "offset": 5169,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": ["0x08000ff4"],
+      "readers": [],
+      "observed_values": {"record_0": 0, "record_1": 1, "record_50": 50},
+      "update_mechanism": "Set to FUN_08000ff4's param_2, the loop index 0..50.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "ghidra/decompiled.c:706; verified equal to (offset - 0x142C) / 0xDC for every one of the 51 records in both real .sav files."
+    },
+    {
+      "name": "roster_record_checksum_field",
+      "offset": 5170,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": ["0x0800044c", "0x08000ff4"],
+      "readers": [],
+      "observed_values": {"record_0": "0x6dca", "record_1": "0xf575", "record_49": "0xc275", "record_50": "0xcd7a"},
+      "update_mechanism": "Zeroed, then set to FUN_0800044c's checksum of the full 136-byte record.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "See checksums[0].verified_on_samples; 102/102 records matched across both files."
+    },
+    {
+      "name": "roster_record_payload",
+      "offset": 5172,
+      "size": 128,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": ["0x08000ff4"],
+      "readers": [],
+      "observed_values": {"byte_0_all_records": "0x80 constant"},
+      "update_mechanism": "Copied via func_0x080ec2b4 from a per-character source structure (table indexed by table id/record index); internal sub-field layout not decoded in this pass.",
+      "confidence": "HYPOTHESIS",
+      "evidence": "ghidra/decompiled.c:697-701; byte-level content observed but not semantically mapped."
+    }
+  ],
+  "fuzzing_targets": [
+    {
+      "offset": 5172,
+      "size": 1,
+      "mutation": "Flip record 0's payload byte at +0x08 (absolute 0x1434) while leaving its checksum at +0x06 (absolute 0x1432) unchanged.",
+      "requires_checksum_repair": false,
+      "predicted_effect": "If load-side checksum validation exists (not yet observed), the record should be reset/ignored; if not, the mutated byte should persist and surface as an incorrect in-game stat for the corresponding roster entry."
+    },
+    {
+      "offset": 5172,
+      "size": 1,
+      "mutation": "Same mutation as above, but recompute and store the correct FUN_0800044c checksum at +0x06 afterward (and mirror both at offset and offset+0x4000).",
+      "requires_checksum_repair": true,
+      "predicted_effect": "The mutated byte should be accepted without any corruption-recovery behavior, isolating whether the checksum is actually enforced on load versus write-only."
+    },
+    {
+      "offset": 5172,
+      "size": 1,
+      "mutation": "Desynchronize the mirror: mutate absolute offset 0x1434 only, leave 0x5434 (the +0x4000 mirror) untouched.",
+      "requires_checksum_repair": false,
+      "predicted_effect": "Resolves whether any code path detects and repairs a primary/mirror mismatch, or whether the mismatch is silently ignored until the next save-and-mirror cycle."
+    },
+    {
+      "offset": 1726,
+      "size": 1,
+      "mutation": "Change unmapped_counter_0x6be and unmapped_counter_0xb84 independently (not in the observed -1/+1 lockstep) and reload.",
+      "requires_checksum_repair": false,
+      "predicted_effect": "If these are a visible day/step/energy counter, the in-game display should change proportionally, confirming semantics currently only hypothesized."
+    },
+    {
+      "offset": 0,
+      "size": 36,
+      "mutation": "Zero bytes 0x0000-0x0023 in both the 0x0000 and 0x4000 mirror copies, forcing all three save-validity candidates to fail comparison.",
+      "requires_checksum_repair": false,
+      "predicted_effect": "Should force FUN_0800078c down its never-observed blank-format branch, producing the ASCII 'Clr' tag at offset 0x0009-0x000B in the freshly rebuilt save and directly confirming or refuting the CONFIRMED_STATIC-only finding in report section 3.4."
+    }
+  ],
+  "open_questions": [
+    "Exact destination offsets inside the real .sav for the table-id 1/2/3 singleton records written by FUN_08000ff4(1,0)/(2,0)/(3,0) inside FUN_0800078c could not be independently located, due to unresolved _DAT_* symbol addresses in this workspace.",
+    "Whether FUN_080011b4 (called from FUN_08000744 for table ids 2 and 3) writes into the .sav file at all, or into an EWRAM/IWRAM-only shadow structure outside the save image -- it never references the literal SRAM base 0xE000000.",
+    "Whether the game actually validates the roster record checksum on load (only the write side was observed/verified); no load-time checksum-check call site was isolated among the 126 decompiled functions.",
+    "Semantic meaning of unmapped_counter_0x6be and unmapped_counter_0xb84 (the only two bytes that changed between the two sample captures).",
+    "Semantic meaning of the 0x0DEB-0x0EC5 bitflags-shaped region and the 0x040E-0x042D 0xFF-filled span.",
+    "Internal sub-field layout of the 128-byte roster record payload (only the 8-byte envelope was mapped).",
+    "Identity/location of the ROM-resident default/blank save template that presumably contains the title_tag/header_game_code/build_timestamp bytes; no byte-level writer for these fields was isolated in the extracted function set."
+  ]
+}

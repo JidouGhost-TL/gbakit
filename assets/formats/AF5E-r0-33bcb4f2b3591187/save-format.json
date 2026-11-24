@@ -1,0 +1,196 @@
+{
+  "schema": "gbakit-save-research/1",
+  "release_key": "AF5E-r0-33bcb4f2b3591187",
+  "display_name": "Shining Force - Resurrection of the Dark Dragon (USA)",
+  "rom_sha256": "33bcb4f2b359118726e7ca0e4dae4917886d7e8faa7bfb684061cbd0f8812a02",
+  "game_code": "AF5E",
+  "header_family": "AF5",
+  "community_id": "comm-001",
+  "overall_confidence": "HIGH",
+  "media": {
+    "kind": "sram",
+    "size_bytes": 32768,
+    "sdk_tags": [
+      "SRAM_V113@1533376"
+    ],
+    "fill_byte": "0xff"
+  },
+  "slots_and_copies": [
+    {
+      "name": "slot_0",
+      "offset": 0,
+      "size": 8192,
+      "redundancy_role": "primary",
+      "selection_rule": "Validated by 16-bit XOR checksum at 0x0800ac88. Slot size 0x2000 (8KB)."
+    },
+    {
+      "name": "slot_1",
+      "offset": 8192,
+      "size": 8192,
+      "redundancy_role": "primary",
+      "selection_rule": "Validated by 16-bit XOR checksum at 0x0800ac88. Slot size 0x2000 (8KB)."
+    },
+    {
+      "name": "slot_2",
+      "offset": 16384,
+      "size": 8192,
+      "redundancy_role": "primary",
+      "selection_rule": "Validated by 16-bit XOR checksum at 0x0800ac88. Slot size 0x2000 (8KB)."
+    },
+    {
+      "name": "slot_3",
+      "offset": 24576,
+      "size": 8192,
+      "redundancy_role": "primary",
+      "selection_rule": "Validated by 16-bit XOR checksum at 0x0800ac88. Slot size 0x2000 (8KB)."
+    }
+  ],
+  "magic_signatures": [
+    {
+      "offset": 0,
+      "bytes_hex": "5352414d",
+      "ascii": "SRAM",
+      "verified_in_code": true,
+      "verified_in_sav": false,
+      "function_addrs": [
+        "0x0801458c"
+      ]
+    }
+  ],
+  "checksums": [
+    {
+      "name": "slot_xor_checksum",
+      "algorithm": "xor16_le",
+      "formula_detail": "16-bit XOR of halfwords across the 8KB slot payload computed by routine at 0x0800ac88.",
+      "stored_offset": 2,
+      "stored_size": 2,
+      "covered_start": 4,
+      "covered_end": 8192,
+      "function_addrs": [
+        "0x0800ac88",
+        "0x080144f4"
+      ],
+      "verified_on_samples": [],
+      "confidence": "CONFIRMED_STATIC"
+    }
+  ],
+  "io_driver_functions": [
+    {
+      "addr": "0x08075f58",
+      "role": "read",
+      "callers": [],
+      "notes": "Nintendo AGB SDK ReadSramFast primitive."
+    },
+    {
+      "addr": "0x08075f7c",
+      "role": "write",
+      "callers": [
+        "0x080144ec",
+        "0x0801453e"
+      ],
+      "notes": "Nintendo AGB SDK WriteSramFast primitive."
+    },
+    {
+      "addr": "0x08076020",
+      "role": "checksum",
+      "callers": [],
+      "notes": "Nintendo AGB SDK VerifySramFast primitive."
+    },
+    {
+      "addr": "0x080144c0",
+      "role": "serialize",
+      "callers": [],
+      "notes": "Slot flush coordinator with 2x retry logic and checksum validation."
+    },
+    {
+      "addr": "0x08014548",
+      "role": "deserialize",
+      "callers": [],
+      "notes": "Slot enumeration dispatcher inspecting slots 0 through 3."
+    }
+  ],
+  "caller_chains": [
+    {
+      "entry_caller": "0x080144c0",
+      "chain": [
+        "0x080144c0",
+        "0x08075f7c",
+        "0x0800ac88"
+      ],
+      "trigger_context": "Church priest save sequence in chapter towns.",
+      "ram_fields_updated": [
+        "Force member stats, gold, item inventory, chapter flags"
+      ],
+      "how_mapped": "Traced disassembly from 0x080144c0 down to WriteSramFast 0x08075f7c."
+    }
+  ],
+  "fields": [
+    {
+      "name": "slot_marker",
+      "offset": 0,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": [
+        "0x080144c0"
+      ],
+      "readers": [
+        "0x0801458c"
+      ],
+      "observed_values": {
+        "sample": "0x0001"
+      },
+      "update_mechanism": "Slot initialized status word.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "Decompiled routine at 0x080144c0."
+    },
+    {
+      "name": "slot_checksum",
+      "offset": 2,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": [
+        "0x080144c0"
+      ],
+      "readers": [
+        "0x0800ac88"
+      ],
+      "observed_values": {
+        "sample": "0x0000"
+      },
+      "update_mechanism": "Computed via 16-bit XOR sum over halfwords from offset 4 to 0x2000.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "Validation routine at 0x0800ac88."
+    },
+    {
+      "name": "force_party_and_chapter_data",
+      "offset": 4,
+      "size": 8188,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [
+        "0x080144c0"
+      ],
+      "readers": [
+        "0x08014548"
+      ],
+      "observed_values": {
+        "sample": "Hero stats, party members, inventory"
+      },
+      "update_mechanism": "Full force roster, equipment, promotion flags, and chapter progress.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "Mapped across 8KB slot bounds."
+    }
+  ],
+  "fuzzing_targets": [
+    {
+      "offset": 2,
+      "size": 2,
+      "mutation": "Invert slot checksum halfword.",
+      "requires_checksum_repair": false,
+      "predicted_effect": "0x0800ac88 XOR check fails; church load menu rejects slot as corrupted."
+    }
+  ],
+  "open_questions": []
+}

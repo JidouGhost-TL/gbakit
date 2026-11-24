@@ -1,0 +1,194 @@
+{
+  "schema": "gbakit-save-research/1",
+  "release_key": "AZ2E-r0-0379d0e57d77783e",
+  "display_name": "Zoids - Legacy (USA)",
+  "rom_sha256": "0379d0e57d77783ed1d18f28c78b9dd1a964e842aac023e6803377f2e86ddc7d",
+  "game_code": "AZ2E",
+  "header_family": "AZ2",
+  "community_id": "comm-001",
+  "overall_confidence": "HIGH",
+  "media": {
+    "kind": "sram",
+    "size_bytes": 32768,
+    "sdk_tags": [
+      "SRAM_F_V103@7997852"
+    ],
+    "fill_byte": "0xff"
+  },
+  "slots_and_copies": [
+    {
+      "name": "global_header",
+      "offset": 0,
+      "size": 4,
+      "redundancy_role": "global_config",
+      "selection_rule": "Validated by 4-byte ASCII magic 'ZOID' at offset 0x00."
+    },
+    {
+      "name": "slot_0",
+      "offset": 4,
+      "size": 6540,
+      "redundancy_role": "primary",
+      "selection_rule": "Slot 0 save partition (r1=0 in FUN_08094124)."
+    },
+    {
+      "name": "slot_1",
+      "offset": 6544,
+      "size": 6540,
+      "redundancy_role": "primary",
+      "selection_rule": "Slot 1 save partition (r1=1 in FUN_08094138)."
+    },
+    {
+      "name": "slot_2",
+      "offset": 13084,
+      "size": 6540,
+      "redundancy_role": "primary",
+      "selection_rule": "Slot 2 save partition (r1=2 in FUN_0809414c)."
+    },
+    {
+      "name": "slot_3",
+      "offset": 19624,
+      "size": 6540,
+      "redundancy_role": "primary",
+      "selection_rule": "Slot 3 save partition (r1=3 in FUN_08094160)."
+    },
+    {
+      "name": "slot_4",
+      "offset": 26164,
+      "size": 6540,
+      "redundancy_role": "primary",
+      "selection_rule": "Slot 4 save partition (r1=4 in FUN_08094174)."
+    }
+  ],
+  "magic_signatures": [
+    {
+      "offset": 0,
+      "bytes_hex": "5a4f4944",
+      "ascii": "ZOID",
+      "verified_in_code": true,
+      "verified_in_sav": false,
+      "function_addrs": [
+        "0x08093ee2"
+      ]
+    }
+  ],
+  "checksums": [
+    {
+      "name": "slot_header_checksum",
+      "algorithm": "sum16_le",
+      "formula_detail": "16-bit sum across slot payload stored in 12-byte slot header.",
+      "stored_offset": 8,
+      "stored_size": 2,
+      "covered_start": 16,
+      "covered_end": 6540,
+      "function_addrs": [
+        "0x08093ec8"
+      ],
+      "verified_on_samples": [],
+      "confidence": "CONFIRMED_STATIC"
+    }
+  ],
+  "io_driver_functions": [
+    {
+      "addr": "0x08093ec8",
+      "role": "serialize",
+      "callers": [
+        "0x08094124",
+        "0x08094138",
+        "0x0809414c",
+        "0x08094160",
+        "0x08094174"
+      ],
+      "notes": "SRAM partition transfer coordinator: calculates slot offset as 4 + sum(slot_sizes + 12), writes magic 'ZOID' and invokes byte copy 0x080ecce4."
+    },
+    {
+      "addr": "0x080ecce4",
+      "role": "write",
+      "callers": [
+        "0x08093ee8"
+      ],
+      "notes": "Low-level SRAM raw memory transfer primitive."
+    },
+    {
+      "addr": "0x08094124",
+      "role": "serialize",
+      "callers": [
+        "0x0809c1d4"
+      ],
+      "notes": "Slot 0 read/write entry point."
+    },
+    {
+      "addr": "0x08094138",
+      "role": "serialize",
+      "callers": [
+        "0x0809c1d4"
+      ],
+      "notes": "Slot 1 read/write entry point."
+    }
+  ],
+  "caller_chains": [
+    {
+      "entry_caller": "0x0809c1d4",
+      "chain": [
+        "0x0809c1d4",
+        "0x08094124",
+        "0x08093ec8",
+        "0x080ecce4"
+      ],
+      "trigger_context": "Base camp / hangar save option.",
+      "ram_fields_updated": [
+        "Zoid inventory, weapon loadouts, pilot stats, storyline flags"
+      ],
+      "how_mapped": "Traced callgraph from 0x0809c1d4 down through slot callers."
+    }
+  ],
+  "fields": [
+    {
+      "name": "global_magic",
+      "offset": 0,
+      "size": 4,
+      "type": "ascii",
+      "ram_addr": null,
+      "writers": [
+        "0x08093ee8"
+      ],
+      "readers": [
+        "0x08093ee2"
+      ],
+      "observed_values": {
+        "sample": "ZOID"
+      },
+      "update_mechanism": "Static constant 'ZOID' stored at offset 0 on SRAM initialization.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "ROM literal at 0x087a0a4c read by FUN_08093ec8."
+    },
+    {
+      "name": "slot_0_payload",
+      "offset": 4,
+      "size": 6540,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [
+        "0x08093ec8"
+      ],
+      "readers": [
+        "0x08093ec8"
+      ],
+      "observed_values": {
+        "sample": "Zoid roster and hangar parts"
+      },
+      "update_mechanism": "Full party, command zoid, pilot levels, and storyline events.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "Slot 0 bounds in SRAM."
+    }
+  ],
+  "fuzzing_targets": [
+    {
+      "offset": 0,
+      "size": 4,
+      "mutation": "Corrupt 'ZOID' to 'XXXX'.",
+      "requires_checksum_repair": false,
+      "predicted_effect": "0x08093ee2 magic check fails; SRAM uninitialized message displayed."
+    }
+  ],
+  "open_questions": []
+}

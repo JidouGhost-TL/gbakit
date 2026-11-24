@@ -1,0 +1,245 @@
+{
+  "schema": "gbakit-save-research/1",
+  "release_key": "B3AE-r0-721d5d0339f4c97a",
+  "display_name": "Lord of the Rings, The - The Third Age (USA, Europe) (En,Fr,De,Es,It)",
+  "rom_sha256": "721d5d0339f4c97abcfafd1cf5886b955aee3927cd6700c85a20815f93463923",
+  "game_code": "B3AE",
+  "header_family": "B3A",
+  "community_id": "comm-006",
+  "overall_confidence": "LOW",
+  "media": {
+    "kind": "eeprom512",
+    "size_bytes": 512,
+    "sdk_tags": ["EEPROM_V124@10527748"],
+    "fill_byte": "0xff"
+  },
+  "slots_and_copies": [
+    {
+      "name": "slot_0_header_block",
+      "offset": 0,
+      "size": 32,
+      "redundancy_role": "unknown",
+      "selection_rule": "unknown - no reader code traced; this is the only densely-populated region (EEPROM lines 0-3) in the 512-byte device"
+    },
+    {
+      "name": "line_28_isolated_marker",
+      "offset": 224,
+      "size": 8,
+      "redundancy_role": "unknown",
+      "selection_rule": "unknown - single 8-byte line at offset 0xE0 byte-for-byte identical to the sentinel pattern at 0x18; could be a second slot/record header or an unrelated marker"
+    }
+  ],
+  "magic_signatures": [
+    {
+      "offset": 0,
+      "bytes_hex": "3331303045413342",
+      "ascii": "3100EA3B",
+      "verified_in_code": false,
+      "verified_in_sav": true,
+      "function_addrs": []
+    }
+  ],
+  "checksums": [
+    {
+      "name": "unresolved_candidate_scan",
+      "algorithm": "unknown",
+      "formula_detail": "Brute-force sum8/xor8 scan over all byte positions in the populated region (offsets 0x00-0x1F and 0xE0-0xE7) against all contiguous sub-ranges produced 1888 coincidental matches on the single available .sav sample. With n=1 sample the search space is underdetermined; no specific formula/offset pairing could be distinguished from coincidence. No checksum/CRC function exists in the traced decompiled code (ghidra/decompiled.c, ghidra/save_related_functions.c report 0 save-I/O seeds).",
+      "stored_offset": 0,
+      "stored_size": 0,
+      "covered_start": 0,
+      "covered_end": 0,
+      "function_addrs": [],
+      "verified_on_samples": [
+        {"file": "saves/cap-00-future-0.sav", "stored_hex": "", "computed_hex": "", "match": false}
+      ],
+      "confidence": "UNKNOWN"
+    }
+  ],
+  "io_driver_functions": [],
+  "caller_chains": [],
+  "fields": [
+    {
+      "name": "identity_tag_reversed",
+      "offset": 0,
+      "size": 8,
+      "type": "ascii",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"saves/cap-00-future-0.sav": "3100EA3B (raw) / B3AE0013 (byte-reversed)"},
+      "update_mechanism": "unknown - no writer function traced",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Raw bytes 33 31 30 30 45 41 33 42 byte-reverse to ASCII 'B3AE0013', which is this release's game code (B3AE) plus literal digits '0013'. Interpretation as a deliberate identity/version stamp vs. a byte-order artifact of the capture tool's EEPROM-line serialization cannot be adjudicated without decompiled writer code or a second sample."
+    },
+    {
+      "name": "candidate_counter_or_flags_u32",
+      "offset": 8,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"saves/cap-00-future-0.sav": "0x00000400"},
+      "update_mechanism": "unknown - no writer function traced",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Only non-zero, non-magic 32-bit value in the populated block; no corroborating code or second sample to confirm role."
+    },
+    {
+      "name": "candidate_u16_field_a",
+      "offset": 12,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"saves/cap-00-future-0.sav": "0x0001"},
+      "update_mechanism": "unknown - no writer function traced",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Isolated small integer value adjacent to the counter candidate at offset 0x08; no structure proof available."
+    },
+    {
+      "name": "candidate_packed_flag_u16_a",
+      "offset": 14,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"saves/cap-00-future-0.sav": "0x8099"},
+      "update_mechanism": "unknown - no writer function traced",
+      "confidence": "HYPOTHESIS",
+      "evidence": "High bit (0x8000) set, consistent with a common GBA packed valid/enabled-flag-plus-value convention, but unconfirmed by code."
+    },
+    {
+      "name": "candidate_packed_flag_u16_b",
+      "offset": 16,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"saves/cap-00-future-0.sav": "0x9889"},
+      "update_mechanism": "unknown - no writer function traced",
+      "confidence": "HYPOTHESIS",
+      "evidence": "High bit (0x8000) set, same pattern as offset 0x0E; relationship between the two u16 values not resolved (byte-swap/arithmetic checks did not cleanly match)."
+    },
+    {
+      "name": "zero_padding_block",
+      "offset": 18,
+      "size": 6,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"saves/cap-00-future-0.sav": "00 00 00 00 00 00"},
+      "update_mechanism": "unknown",
+      "confidence": "UNKNOWN",
+      "evidence": "All-zero region with no visible structure; could be reserved/padding."
+    },
+    {
+      "name": "sentinel_pattern_primary",
+      "offset": 24,
+      "size": 8,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"saves/cap-00-future-0.sav": "FF 00 00 00 00 00 00 00"},
+      "update_mechanism": "unknown - no writer function traced",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Identical to the pattern at offset 0xE0 (line 28); candidate terminator/sentinel or secondary-record header."
+    },
+    {
+      "name": "erased_region_main",
+      "offset": 32,
+      "size": 192,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"saves/cap-00-future-0.sav": "all 0xFF"},
+      "update_mechanism": "n/a - never written (EEPROM erased default)",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Direct byte-level observation of the .sav file; standard EEPROM erased-cell fill value."
+    },
+    {
+      "name": "sentinel_pattern_isolated",
+      "offset": 224,
+      "size": 8,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"saves/cap-00-future-0.sav": "FF 00 00 00 00 00 00 00"},
+      "update_mechanism": "unknown - no writer function traced",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Byte-for-byte identical to sentinel_pattern_primary (offset 0x18); isolated inside an otherwise fully-erased span, suggesting deliberate placement rather than noise."
+    },
+    {
+      "name": "erased_region_tail",
+      "offset": 232,
+      "size": 280,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"saves/cap-00-future-0.sav": "all 0xFF"},
+      "update_mechanism": "n/a - never written (EEPROM erased default)",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Direct byte-level observation of the .sav file; standard EEPROM erased-cell fill value."
+    }
+  ],
+  "fuzzing_targets": [
+    {
+      "offset": 0,
+      "size": 8,
+      "mutation": "flip one byte of the reversed 'B3AE0013' identity tag (e.g. byte at 0x00 from 0x33 to 0xAA)",
+      "requires_checksum_repair": false,
+      "predicted_effect": "if a genuine identity/version check, game should reject/reset the save; if a dump-tooling artifact only, no gameplay effect"
+    },
+    {
+      "offset": 8,
+      "size": 4,
+      "mutation": "increment u32_le candidate counter from 0x00000400 to 0x00000401",
+      "requires_checksum_repair": false,
+      "predicted_effect": "no visible change if a free-running counter; save rejection or auto-repair if actually a checksum"
+    },
+    {
+      "offset": 14,
+      "size": 4,
+      "mutation": "clear high bit of both candidate packed-flag u16 values (0x8099->0x0099, 0x9889->0x1889)",
+      "requires_checksum_repair": false,
+      "predicted_effect": "if high bit is a valid/enabled flag, associated feature/slot should appear disabled or reset after reload"
+    },
+    {
+      "offset": 24,
+      "size": 8,
+      "mutation": "zero out sentinel pattern at 0x18 (FF 00x7 -> 00 00x8)",
+      "requires_checksum_repair": false,
+      "predicted_effect": "if a terminator, reader may begin treating subsequent blank lines as valid data or exhibit boundary errors"
+    },
+    {
+      "offset": 224,
+      "size": 8,
+      "mutation": "zero out isolated sentinel pattern at 0xE0",
+      "requires_checksum_repair": false,
+      "predicted_effect": "if an independent second-slot header, that slot should appear empty/unused; if unrelated padding, no effect"
+    },
+    {
+      "offset": 32,
+      "size": 8,
+      "mutation": "write non-0xFF filler (0x00 x8) into a currently-blank line (first line of the erased main region)",
+      "requires_checksum_repair": false,
+      "predicted_effect": "reveals whether the reader scans the full 512 bytes or only fixed line ranges, clarifying actual slot/record geometry"
+    }
+  ],
+  "open_questions": [
+    "Is the media truly eeprom512, or could the 512-byte capture reflect only a partial/initial write of a larger SRAM/Flash device? (No driver code traced to confirm access method.)",
+    "Is the byte-reversed 'B3AE0013' string a deliberate game-written identity/version stamp, or an artifact of how the capture tool serialized the 8-byte EEPROM line?",
+    "What do the u32 field at 0x08 and the two u16 fields at 0x0E/0x10 actually represent (counter, flags, checksum, or gameplay data)?",
+    "Are the two identical 'FF 00x7' sentinel patterns at offsets 0x18 and 0xE0 functionally linked (e.g., slot headers), or coincidental?",
+    "What is the true slot/record geometry across the 64 EEPROM lines, given only 2 of 64 lines are populated in this single sample?",
+    "No checksum/CRC algorithm could be identified; resolving this requires either decompiled save-I/O code (trace must cover ROM address 0x08A0A404, the EEPROM_V124 tag site) or multiple independent .sav samples for cross-sample differencing.",
+    "Zero paired .ss save states exist for this release, so none of the fuzzing_targets mutations above have been (or currently can be) replayed/observed in a live emulator session."
+  ]
+}

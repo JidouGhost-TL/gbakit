@@ -13,7 +13,13 @@
       <a href="../index.html">Games</a>
       <a href="../saves/index.html">Save Formats</a>
       <a href="../patches/index.html">Debug Patches</a>
+      <a href="../debug-menus.html">Debug Gallery</a>
+      <a href="../non-retail-cartridges.html">Non-Retail</a>
+      <a href="../cartridge-hardware.html">Cartridge Hardware</a>
+      <a href="../link-multiplayer.html">Link &amp; Multiplayer</a>
+      <a href="../multiboot-museum.html">MultiBoot Museum</a>
       <a href="../assets/index.html">Assets &amp; Audio</a>
+      <a href="../text-and-fonts.html">Text &amp; Fonts</a>
       <a href="../engines/index.html">Engines &amp; Hardware</a>
       <a href="../families/index.html">Families</a>
       <a href="../gbakit/index.html">Using gbakit</a>
@@ -22,7 +28,7 @@
   <main>
 <p class="meta"><a href="../index.html">&larr; Games</a> &middot; Family <code>AC2</code></p>
 <h1>J.League Pro Soccer Club o Tsukurou! Advance (Japan)</h1>
-<p><span class='badge badge-slate'>SRAM 256K</span></p>
+<p><span class='badge badge-slate'>SRAM 256K</span> <span class='badge badge-emerald'>gbakit Built-In</span> <span class='badge badge-amber'>Debug Menu Patch</span> <a href='../link-multiplayer.html#multiboot'><span class='badge badge-amber'>💾 MultiBoot</span></a> <a href='../link-multiplayer.html#sio-multi'><span class='badge badge-blue'>🎮 4P Link</span></a></p>
 
 <h2>Cartridge Identity</h2>
 <dl class="kv">
@@ -36,9 +42,41 @@
 </dl>
 <h2>Screenshots</h2><div class='gallery'><figure><img src='../assets/thumbs/AC2J-r0-bede08138e841421-boot.png' alt='Boot Screen' loading='lazy'><figcaption>Boot Screen</figcaption></figure><figure><img src='../assets/thumbs/AC2J-r0-bede08138e841421-after.png' alt='In-Game' loading='lazy'><figcaption>In-Game</figcaption></figure></div>
 
+<h2>Debug Menu Re-Enablement Patch (<code>.ips</code>)</h2>
+<p><a class="btn" href="../assets/patches/AC2J-r0-bede08138e841421/AC2J-debug.ips" download>Download AC2J-debug.ips (17 B IPS / 4 B delta)</a></p>
+<dl class="kv">
+  <dt>Hook Mechanism</dt><dd><code>thumb_bl_redirect</code> &middot; Redirect boot initializer call at 0x003aa8 (bl 0x08014acc -&gt; bl 0x080026ec) to launch S29 AGB Developer Test Menu (Test menu / Scene Viewer / sound test / Score Anim / montage / Tobi menu2 / sgame test)</dd>
+  <dt>IPS SHA-256</dt><dd><code>7662f1f7737af538e5608affef4d0b721c9b6ba5bfacb79ee27321dac50d3a60</code></dd>
+</dl>
+<pre><code>gbakit patch apply AC2J-debug.ips original.gba patched-debug.gba</code></pre>
+<div class='gallery'><figure><img src='../assets/patches/AC2J-r0-bede08138e841421/boot-patched.png' alt='Re-enabled debug menu' loading='lazy'><figcaption>Re-Enabled Debug Menu</figcaption></figure><figure><img src='../assets/patches/AC2J-r0-bede08138e841421/after-input.png' alt='Interactive debug menu navigation' loading='lazy'><figcaption>After D-Pad / A Input</figcaption></figure></div>
+
+
+
+
+<h2>Link Cable &amp; Multiplayer Communications</h2>
+<div class="callout">
+  This title contains detected communication capabilities: <a href='../link-multiplayer.html#multiboot'><span class='badge badge-amber'>💾 MultiBoot</span></a> <a href='../link-multiplayer.html#sio-multi'><span class='badge badge-blue'>🎮 4P Link</span></a>.
+  Detailed protocol specifications, SIO registers, Joybus commands, and MultiBoot sequences are documented in the <a href="../link-multiplayer.html"><strong>Link &amp; Multiplayer Reference</strong></a>.
+</div>
+<dl class="kv">
+  <dt>Multi-Player SIO (4P)</dt><dd>16-bit ring network &middot; SIOCNT (<code>0x04000128</code>) literals: <code>0x0003ac</code>, <code>0x000450</code>, <code>0x000b24</code> &middot; SIODATA32/SIOMULTI0 (<code>0x04000120</code>) literals: <code>0x000520</code>, <code>0x00059c</code>, <code>0x0006e4</code></dd><dt>Single-Cart MultiBoot</dt><dd>Single-Cartridge MultiBoot (Download Play) client/server handler &middot; Thumb SWI 0x25 (<code>0xDF25</code>): <code>0x0221f6</code>, <code>0x106abe</code>, <code>0x122efa</code>, <code>0x1cc1a2</code></dd>
+</dl>
+
+
+<h2>Battery Save Support in <code>gbakit</code></h2>
+<p><span class="badge badge-emerald">Built-in definition (AC2J)</span></p>
+<pre><code>gbakit save verify AC2J save.sav
+gbakit save decode AC2J save.sav
+gbakit save fix    AC2J damaged.sav -o repaired.sav</code></pre>
 
 
 <h2>ROM Assets, Compression &amp; Audio</h2><dl class='kv'><dt>BIOS Compression</dt><dd>LZ77 (<code>0x10</code>): <strong>2,297</strong> streams &middot; RLE (<code>0x30</code>): <strong>0</strong> streams</dd><dt>ROM Pointer Tables</dt><dd>426 tables (0 pointing to validated compressed streams)</dd><dt>SDK Backup Tags</dt><dd><code>SRAM_V112</code></dd></dl>
+
+<h2>Text, Fonts &amp; Scene Data</h2>
+<dl class="kv"><dt>Primary Text Encoding</dt><dd><strong>LZ77-compressed ASCII</strong> (<code>32</code> ASCII strings &middot; <code>200</code> Shift-JIS runs &middot; <code>2</code> LZ77 ASCII blocks)</dd><dt>Font &amp; VWF Indicators</dt><dd><span class='badge badge-emerald'>VWF Width Table</span> <span class='badge badge-blue'>1bpp Font</span> &middot; BIOS SWIs: BitUnPack <code>0x10</code>: <code>10</code> &middot; LZ77 <code>0x11/12</code>: <code>21</code> &middot; Huffman <code>0x13</code>: <code>15</code> &middot; RLE <code>0x14/15</code>: <code>16</code></dd><dt>Scene &amp; Packaging</dt><dd><code>102</code> ROM pointer tables (&ge;32 entries, <code>2</code> &ge;200) &middot; <code>5</code> relative <code>u32</code> TOCs &middot; <code>176</code> OAM metasprite hits</dd></dl>
+
+
 <h2>Hardware MMIO Subsystems</h2><dl class='kv'><dt><code>ppu_display</code></dt><dd><code>0x800399c</code>, <code>0x8004368</code>, <code>0x800b198</code>, <code>0x800b224</code></dd><dt><code>save_bus_sram_flash</code></dt><dd><code>0x8002494</code></dd></dl>
 
 </main>

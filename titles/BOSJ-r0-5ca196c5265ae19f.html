@@ -13,7 +13,13 @@
       <a href="../index.html">Games</a>
       <a href="../saves/index.html">Save Formats</a>
       <a href="../patches/index.html">Debug Patches</a>
+      <a href="../debug-menus.html">Debug Gallery</a>
+      <a href="../non-retail-cartridges.html">Non-Retail</a>
+      <a href="../cartridge-hardware.html">Cartridge Hardware</a>
+      <a href="../link-multiplayer.html">Link &amp; Multiplayer</a>
+      <a href="../multiboot-museum.html">MultiBoot Museum</a>
       <a href="../assets/index.html">Assets &amp; Audio</a>
+      <a href="../text-and-fonts.html">Text &amp; Fonts</a>
       <a href="../engines/index.html">Engines &amp; Hardware</a>
       <a href="../families/index.html">Families</a>
       <a href="../gbakit/index.html">Using gbakit</a>
@@ -22,7 +28,7 @@
   <main>
 <p class="meta"><a href="../index.html">&larr; Games</a> &middot; Family <code>BOS</code></p>
 <h1>Boboboubo Boubobo - Bakutou Hajike Taisen (Japan)</h1>
-<p><span class='badge badge-zinc'>Stateless / Passcode</span></p>
+<p><span class='badge badge-zinc'>Stateless / Passcode</span> <span class='badge badge-amber'>Debug Menu Patch</span> <a href='../link-multiplayer.html#joybus'><span class='badge badge-purple'>📺 Joybus</span></a> <a href='../link-multiplayer.html#multiboot'><span class='badge badge-amber'>💾 MultiBoot</span></a> <a href='../link-multiplayer.html#sio-multi'><span class='badge badge-blue'>🎮 4P Link</span></a></p>
 
 <h2>Cartridge Identity</h2>
 <dl class="kv">
@@ -36,6 +42,27 @@
 </dl>
 <h2>Screenshots</h2><div class='gallery'><figure><img src='../assets/thumbs/BOSJ-r0-5ca196c5265ae19f-boot.png' alt='Boot Screen' loading='lazy'><figcaption>Boot Screen</figcaption></figure><figure><img src='../assets/thumbs/BOSJ-r0-5ca196c5265ae19f-after.png' alt='In-Game' loading='lazy'><figcaption>In-Game</figcaption></figure></div>
 
+<h2>Debug Menu Re-Enablement Patch (<code>.ips</code>)</h2>
+<p><a class="btn" href="../assets/patches/BOSJ-r0-5ca196c5265ae19f/BOSJ-debug.ips" download>Download BOSJ-debug.ips (15 B IPS / 2 B delta)</a></p>
+<dl class="kv">
+  <dt>Hook Mechanism</dt><dd><code>thumb_imm_scene_override</code> &middot; Patch main scene dispatcher at 0x08001904 (ldrb r1,[r5] -&gt; movs r1,#4) to select scene table slot 4 (0x080216f1 -&gt; developer character select / debug menu)</dd>
+  <dt>IPS SHA-256</dt><dd><code>fc022c45898aa764255a28521291010eca8fee54ed55b4ce50a07e1cc8eeec87</code></dd>
+</dl>
+<pre><code>gbakit patch apply BOSJ-debug.ips original.gba patched-debug.gba</code></pre>
+
+
+
+
+
+<h2>Link Cable &amp; Multiplayer Communications</h2>
+<div class="callout">
+  This title contains detected communication capabilities: <a href='../link-multiplayer.html#joybus'><span class='badge badge-purple'>📺 Joybus</span></a> <a href='../link-multiplayer.html#multiboot'><span class='badge badge-amber'>💾 MultiBoot</span></a> <a href='../link-multiplayer.html#sio-multi'><span class='badge badge-blue'>🎮 4P Link</span></a>.
+  Detailed protocol specifications, SIO registers, Joybus commands, and MultiBoot sequences are documented in the <a href="../link-multiplayer.html"><strong>Link &amp; Multiplayer Reference</strong></a>.
+</div>
+<dl class="kv">
+  <dt>Multi-Player SIO (4P)</dt><dd>16-bit ring network &middot; SIOCNT (<code>0x04000128</code>) literals: <code>0x003d30</code>, <code>0x003db0</code>, <code>0x003ddc</code> &middot; SIODATA32/SIOMULTI0 (<code>0x04000120</code>) literals: <code>0x00414c</code>, <code>0x043ffc</code>, <code>0x044518</code></dd><dt>GameCube Joybus</dt><dd>Register literal <code>REG_JOYCNT</code> (<code>0x04000140</code>) at offset <code>0x051e74</code></dd><dt>GameCube Joybus</dt><dd>Register literal <code>REG_JOY_RECV</code> (<code>0x04000150</code>) at offset <code>0x051e0c</code></dd><dt>GameCube Joybus</dt><dd>Register literal <code>REG_JOY_RECV</code> (<code>0x04000150</code>) at offset <code>0x051e78</code></dd><dt>GameCube Joybus</dt><dd>Register literal <code>REG_JOY_TRANS</code> (<code>0x04000154</code>) at offset <code>0x051ad0</code></dd><dt>GameCube Joybus</dt><dd>Register literal <code>REG_JOY_TRANS</code> (<code>0x04000154</code>) at offset <code>0x051ae8</code></dd><dt>GameCube Joybus</dt><dd>Register literal <code>REG_JOYSTAT</code> (<code>0x04000158</code>) at offset <code>0x051ab4</code></dd><dt>GameCube Joybus</dt><dd>Register literal <code>REG_JOYSTAT</code> (<code>0x04000158</code>) at offset <code>0x051e7c</code></dd><dt>Single-Cart MultiBoot</dt><dd>Single-Cartridge MultiBoot (Download Play) client/server handler &middot; Thumb SWI 0x25 (<code>0xDF25</code>): <code>0x18b138</code>, <code>0x5a080e</code>, <code>0x5b81f6</code>, <code>0x5d11b6</code></dd>
+</dl>
+
 
 <h2>Cartridge Storage Architecture: Stateless / Passcode</h2>
 <div class="callout">
@@ -44,6 +71,11 @@
 
 
 <h2>ROM Assets, Compression &amp; Audio</h2><dl class='kv'><dt>BIOS Compression</dt><dd>LZ77 (<code>0x10</code>): <strong>2,229</strong> streams &middot; RLE (<code>0x30</code>): <strong>1</strong> streams</dd><dt>ROM Pointer Tables</dt><dd>112 tables (8 pointing to validated compressed streams)</dd><dt>SDK Backup Tags</dt><dd><code>SRAM_V113</code></dd></dl>
+
+<h2>Text, Fonts &amp; Scene Data</h2>
+<dl class="kv"><dt>Primary Text Encoding</dt><dd><strong>16-bit / UTF-16LE text</strong> (<code>79</code> ASCII strings &middot; <code>5</code> Shift-JIS runs)</dd><dt>Font &amp; VWF Indicators</dt><dd><span class='badge badge-emerald'>VWF Width Table</span> <span class='badge badge-blue'>1bpp Font</span> &middot; BIOS SWIs: BitUnPack <code>0x10</code>: <code>0</code> &middot; LZ77 <code>0x11/12</code>: <code>26</code> &middot; Huffman <code>0x13</code>: <code>2</code> &middot; RLE <code>0x14/15</code>: <code>3</code></dd><dt>Scene &amp; Packaging</dt><dd><code>22</code> ROM pointer tables (&ge;32 entries, <code>6</code> &ge;200) &middot; <code>49</code> relative <code>u32</code> TOCs &middot; <code>311</code> OAM metasprite hits</dd></dl>
+
+
 <h2>Hardware MMIO Subsystems</h2><dl class='kv'><dt><code>ppu_display</code></dt><dd><code>0x8002108</code></dd><dt><code>save_bus_sram_flash</code></dt><dd><code>0x8002514</code>, <code>0x800276c</code></dd></dl>
 
 </main>

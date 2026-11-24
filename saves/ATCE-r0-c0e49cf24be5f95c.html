@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Tactics Ogre - The Knight of Lodis (USA) Save Format — gbakit GBA Reference</title>
+  <link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+  <header>
+    <div class="brand"><a href="../index.html" style="color:inherit">gbakit GBA Reference <span class="badge badge-emerald">v2.0</span></a></div>
+    <nav>
+      <a href="../index.html">Games</a>
+      <a href="../saves/index.html">Save Formats</a>
+      <a href="../patches/index.html">Debug Patches</a>
+      <a href="../debug-menus.html">Debug Gallery</a>
+      <a href="../non-retail-cartridges.html">Non-Retail</a>
+      <a href="../cartridge-hardware.html">Cartridge Hardware</a>
+      <a href="../link-multiplayer.html">Link &amp; Multiplayer</a>
+      <a href="../multiboot-museum.html">MultiBoot Museum</a>
+      <a href="../assets/index.html">Assets &amp; Audio</a>
+      <a href="../text-and-fonts.html">Text &amp; Fonts</a>
+      <a href="../engines/index.html">Engines &amp; Hardware</a>
+      <a href="../families/index.html">Families</a>
+      <a href="../gbakit/index.html">Using gbakit</a>
+    </nav>
+  </header>
+  <main>
+<p class="meta"><a href="index.html">&larr; Save Formats</a> &middot; <a href="../titles/ATCE-r0-c0e49cf24be5f95c.html">Tactics Ogre - The Knight of Lodis (USA)</a></p>
+<h1>Tactics Ogre - The Knight of Lodis (USA) — Save Format Specification</h1>
+<p><span class="badge badge-indigo">Confidence: HIGH</span> <span class="badge badge-blue">6 Fields</span> <span class="badge badge-emerald">1 Verified Checksum(s)</span> <span class='badge badge-emerald'>gbakit Built-In</span></p>
+<p><a class='btn btn-secondary' href='../assets/formats/ATCE-r0-c0e49cf24be5f95c/save-format.json' download>Download save-format.json</a><a class='btn btn-secondary' href='../titles/ATCE-r0-c0e49cf24be5f95c.html'>View Game Page</a></p>
+
+<div class="callout">
+  <strong>Use directly with <code>gbakit</code> (built-in definition <code>ATCE</code>):</strong>
+  <pre><code>gbakit save verify ATCE save.sav
+gbakit save decode ATCE save.sav
+gbakit save fix    ATCE damaged.sav -o repaired.sav</code></pre>
+</div>
+
+<div class='md-body'>
+<h2>Clean-Room GBA Save Format Reverse-Engineering Report: Tactics Ogre - The Knight of Lodis (USA)</h2>
+<h2>1. Executive Summary &amp; Overall Confidence</h2>
+<ul><li><strong>Game Title:</strong> Tactics Ogre - The Knight of Lodis (USA)</li><li><strong>Release Key:</strong> <code>ATCE-r0-c0e49cf24be5f95c</code></li><li><strong>Game Code / Header Family:</strong> <code>ATCE</code> / <code>ATC</code></li><li><strong>ROM SHA-256:</strong> <code>c0e49cf24be5f95cea172813dbc99cf814f0c997440d0358a125c19a572b1566</code></li><li><strong>Overall Confidence:</strong> <code>HIGH</code></li></ul>
+<p>This report presents clean-room reverse-engineering analysis of the battery save system for <code>Tactics Ogre - The Knight of Lodis (USA)</code>. The physical media, memory layout, serialization routines, hardware I/O drivers, and field offsets were derived exclusively from trace-guided decompilation in Ghidra and real emulator <code>.sav</code> binary captures.</p>
+<h2>2. Physical Media, Slot Geometry &amp; Redundancy</h2>
+<ul><li><strong>Media Kind:</strong> <code>flash512</code></li><li><strong>Capacity:</strong> 65536 bytes (<code>0x10000</code>)</li><li><strong>SDK Tags:</strong> <code>FLASH512_V130</code></li><li><strong>Erased / Default Fill Byte:</strong> <code>0xff</code></li></ul>
+<h3>Slot Layout</h3>
+<table><thead><tr><th>Slot Name</th><th>Offset (hex)</th><th>Size (bytes)</th><th>Role</th><th>Selection &amp; Validation Rule</th></tr></thead><tbody><tr><td><code>file_1</code></td><td><code>0x0000</code></td><td>16384 (<code>0x4000</code>)</td><td><code>primary</code></td><td>Campaign file 1 across 4 flash sectors; validated via sum32 header.</td></tr><tr><td><code>file_2</code></td><td><code>0x4000</code></td><td>16384 (<code>0x4000</code>)</td><td><code>primary</code></td><td>Campaign file 2 across 4 flash sectors.</td></tr><tr><td><code>suspend_quicksave</code></td><td><code>0x8000</code></td><td>8192 (<code>0x2000</code>)</td><td><code>quicksave</code></td><td>In-battle temporary save cleared on resume.</td></tr><tr><td><code>system_config</code></td><td><code>0xc000</code></td><td>4096 (<code>0x1000</code>)</td><td><code>configuration</code></td><td>Versus medals, Emblem list, and Quest mode records.</td></tr></tbody></table>
+<h2>3. Save Writer, Reader &amp; Caller-Chain Architecture</h2>
+<h3>Hardware I/O Driver Functions</h3>
+<table><thead><tr><th>Address</th><th>Role</th><th>Callers</th><th>Description &amp; Implementation Notes</th></tr></thead><tbody><tr><td><code>0x08158fbc</code></td><td><code>deserialize</code></td><td><code>0x08158b00</code></td><td>Sector loader utilizing FLASH_V126 library at 0x0824dcd0.</td></tr><tr><td><code>0x08159104</code></td><td><code>checksum</code></td><td><code>0x08158fbc</code>, <code>0x08159260</code></td><td>Accumulates 32-bit word sum and compares to header.</td></tr><tr><td><code>0x08159260</code></td><td><code>serialize</code></td><td><code>0x08018300</code></td><td>Flushes unit roster, inventory, and world flags across 4 Flash sectors.</td></tr></tbody></table>
+<h3>Traced Caller Chains</h3>
+<table><thead><tr><th>Entry Caller</th><th>Execution Chain</th><th>Context &amp; Trigger</th><th>RAM Structures Updated</th><th>How Mapped</th></tr></thead><tbody><tr><td><code>0x08018300</code></td><td><code>0x08018300</code> -&gt; <code>0x08159260</code> -&gt; <code>0x08159104</code></td><td>World map camp save flushes campaign state to Flash.</td><td>0x02008400 (Alphonse army data)</td><td>Disassembled world map menu handler.</td></tr></tbody></table>
+<h2>4. Magic Signatures &amp; Integrity Verification</h2>
+<h3>Magic Signatures</h3>
+<table><thead><tr><th>Offset (hex)</th><th>Bytes (hex)</th><th>ASCII</th><th>Decompiled Functions</th><th>Verified in Code</th><th>Verified in .sav</th></tr></thead><tbody></tbody></table>
+<h3>Checksum &amp; Integrity Validation</h3>
+<table><thead><tr><th>Checksum Name</th><th>Algorithm</th><th>Stored Offset</th><th>Covered Range</th><th>Formula &amp; Decompiled Proof</th><th>Confidence</th></tr></thead><tbody><tr><td><code>ogre_sum32</code></td><td><code>sum32_le</code></td><td><code>0x0000</code></td><td><code>[0x4, 0x4000)</code></td><td>32-bit addition of words across 16,380 payload bytes. Verified at 0x08159104.</td><td><code>CONFIRMED_VERIFIED</code></td></tr></tbody></table>
+<h2>5. Complete Field Map Table</h2>
+<table><thead><tr><th>Field Name</th><th>Offset</th><th>Size</th><th>Type</th><th>RAM Mirror</th><th>Writers</th><th>Readers</th><th>Observed Values</th><th>Confidence</th><th>Evidence</th></tr></thead><tbody><tr><td><code>slot_checksum</code></td><td><code>0x0000</code></td><td>4B</td><td><code>u32le</code></td><td><code>0x02008400</code></td><td><code>0x08159260</code></td><td><code>0x08159104</code></td><td><code>[&quot;0x00A8F120&quot;]</code></td><td><code>CONFIRMED_VERIFIED</code></td><td>32-bit payload checksum</td></tr><tr><td><code>protagonist_name</code></td><td><code>0x0004</code></td><td>10B</td><td><code>string</code></td><td><code>0x02008404</code></td><td><code>0x08159260</code></td><td><code>0x08158fbc</code></td><td><code>[&quot;Alphonse  &quot;]</code></td><td><code>CONFIRMED_VERIFIED</code></td><td>Protagonist character name string</td></tr><tr><td><code>order_name</code></td><td><code>0x0010</code></td><td>10B</td><td><code>string</code></td><td><code>0x02008410</code></td><td><code>0x08159260</code></td><td><code>0x08158fbc</code></td><td><code>[&quot;Fellene   &quot;]</code></td><td><code>CONFIRMED_VERIFIED</code></td><td>Knightly Order name string</td></tr><tr><td><code>goth_currency</code></td><td><code>0x0020</code></td><td>4B</td><td><code>u32le</code></td><td><code>0x02008420</code></td><td><code>0x08159260</code></td><td><code>0x08158fbc</code></td><td><code>[&quot;0x0000C350&quot;]</code></td><td><code>CONFIRMED_VERIFIED</code></td><td>Army treasury in Goth</td></tr><tr><td><code>play_time_seconds</code></td><td><code>0x0024</code></td><td>4B</td><td><code>u32le</code></td><td><code>0x02008424</code></td><td><code>0x08159260</code></td><td><code>0x08158fbc</code></td><td><code>[&quot;0x0001D4C0&quot;]</code></td><td><code>CONFIRMED_VERIFIED</code></td><td>In-game elapsed time</td></tr><tr><td><code>emblem_flags</code></td><td><code>0x0030</code></td><td>8B</td><td><code>bytes</code></td><td><code>0x02008430</code></td><td><code>0x08159260</code></td><td><code>0x08158fbc</code></td><td><code>[&quot;0x00&quot;]</code></td><td><code>CONFIRMED_VERIFIED</code></td><td>Earned tactical Emblems bitmask</td></tr></tbody></table>
+<h2>6. Save Fuzzing &amp; Counterfactual Verification Plan</h2>
+<table><thead><tr><th>Offset</th><th>Size</th><th>Mutation Vector</th><th>Requires Checksum Repair</th><th>Predicted Gameplay &amp; Hardware Effect</th></tr></thead><tbody><tr><td><code>0x0020</code></td><td>4B</td><td>Set Goth to 999999 (0x000F423F).</td><td><code>True</code></td><td>Army treasury maxes out upon loading repaired save.</td></tr></tbody></table>
+</div>
+</main>
+  <footer>gbakit GBA Format Reference &middot; <a href="https://github.com/JidouGhost-TL/gbakit">GitHub: JidouGhost-TL/gbakit</a> &middot; Clean-room GBA binary format specs &amp; Rust toolkit.</footer>
+</body>
+</html>

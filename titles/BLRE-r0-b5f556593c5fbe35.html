@@ -13,7 +13,13 @@
       <a href="../index.html">Games</a>
       <a href="../saves/index.html">Save Formats</a>
       <a href="../patches/index.html">Debug Patches</a>
+      <a href="../debug-menus.html">Debug Gallery</a>
+      <a href="../non-retail-cartridges.html">Non-Retail</a>
+      <a href="../cartridge-hardware.html">Cartridge Hardware</a>
+      <a href="../link-multiplayer.html">Link &amp; Multiplayer</a>
+      <a href="../multiboot-museum.html">MultiBoot Museum</a>
       <a href="../assets/index.html">Assets &amp; Audio</a>
+      <a href="../text-and-fonts.html">Text &amp; Fonts</a>
       <a href="../engines/index.html">Engines &amp; Hardware</a>
       <a href="../families/index.html">Families</a>
       <a href="../gbakit/index.html">Using gbakit</a>
@@ -22,7 +28,7 @@
   <main>
 <p class="meta"><a href="../index.html">&larr; Games</a> &middot; Family <code>BLR</code></p>
 <h1>Lord of the Rings, The - The Return of the King (USA, Europe) (En,Fr,De,Es,It)</h1>
-<p><span class='badge badge-zinc'>Stateless / Passcode</span></p>
+<p><span class='badge badge-slate'>EEPROM 4K</span> <span class='badge badge-emerald'>Save Format Mapped (Family Spec)</span> <a href='../link-multiplayer.html#joybus'><span class='badge badge-purple'>📺 Joybus</span></a> <a href='../link-multiplayer.html#multiboot'><span class='badge badge-amber'>💾 MultiBoot</span></a> <a href='../link-multiplayer.html#sio-multi'><span class='badge badge-blue'>🎮 4P Link</span></a></p>
 
 <h2>Cartridge Identity</h2>
 <dl class="kv">
@@ -30,20 +36,45 @@
   <dt>Header Title</dt><dd><code>RETURN KING</code></dd>
   <dt>Maker / Revision</dt><dd><code>69</code> / rev <code>0</code></dd>
   <dt>ROM Size</dt><dd>16.0 MiB (16,777,216 B)</dd>
-  <dt>Save Media</dt><dd><code>None / Unknown</code></dd>
+  <dt>Save Media</dt><dd><code>EEPROM 4K</code></dd>
   <dt>SHA-256</dt><dd><code>b5f556593c5fbe3531a4354b047f0bed364a124ceee43f278a48f4d26b0ffa9c</code></dd>
   <dt>Engine / SDK Group</dt><dd><a href='../engines/index.html#comm-006'><code>comm-006</code></a> (66 families)</dd>
 </dl>
 
 
 
-<h2>Cartridge Storage Architecture: Stateless / Passcode</h2>
+
+
+<h2>Link Cable &amp; Multiplayer Communications</h2>
 <div class="callout">
-  <strong>Zero non-volatile battery hardware:</strong> This cartridge PCB contains ROM only (no SRAM, Flash, or EEPROM chips). Progression is preserved via on-screen passcodes or session-only gameplay. No <code>.sav</code> file is generated or required.
+  This title contains detected communication capabilities: <a href='../link-multiplayer.html#joybus'><span class='badge badge-purple'>📺 Joybus</span></a> <a href='../link-multiplayer.html#multiboot'><span class='badge badge-amber'>💾 MultiBoot</span></a> <a href='../link-multiplayer.html#sio-multi'><span class='badge badge-blue'>🎮 4P Link</span></a>.
+  Detailed protocol specifications, SIO registers, Joybus commands, and MultiBoot sequences are documented in the <a href="../link-multiplayer.html"><strong>Link &amp; Multiplayer Reference</strong></a>.
 </div>
+<dl class="kv">
+  <dt>Multi-Player SIO (4P)</dt><dd>16-bit ring network &middot; SIOCNT (<code>0x04000128</code>) literals: <code>0x0464f0</code>, <code>0x0465ac</code>, <code>0x046684</code> &middot; SIODATA32/SIOMULTI0 (<code>0x04000120</code>) literals: <code>0x046a00</code>, <code>0x046adc</code>, <code>0x046b58</code></dd><dt>GameCube Joybus</dt><dd>Register literal <code>REG_JOYCNT</code> (<code>0x04000140</code>) at offset <code>0x021134</code></dd><dt>GameCube Joybus</dt><dd>Register literal <code>REG_JOYCNT</code> (<code>0x04000140</code>) at offset <code>0x070ae8</code></dd><dt>GameCube Joybus</dt><dd>Register literal <code>REG_JOY_RECV</code> (<code>0x04000150</code>) at offset <code>0x021138</code></dd><dt>GameCube Joybus</dt><dd>Register literal <code>REG_JOY_RECV</code> (<code>0x04000150</code>) at offset <code>0x021614</code></dd><dt>GameCube Joybus</dt><dd>Register literal <code>REG_JOY_TRANS</code> (<code>0x04000154</code>) at offset <code>0x0211f8</code></dd><dt>GameCube Joybus</dt><dd>Register literal <code>REG_JOY_TRANS</code> (<code>0x04000154</code>) at offset <code>0x021228</code></dd><dt>GameCube Joybus</dt><dd>Register literal <code>REG_JOYSTAT</code> (<code>0x04000158</code>) at offset <code>0x02113c</code></dd><dt>GameCube Joybus</dt><dd>Register literal <code>REG_JOYSTAT</code> (<code>0x04000158</code>) at offset <code>0x021188</code></dd><dt>Single-Cart MultiBoot</dt><dd>Single-Cartridge MultiBoot (Download Play) client/server handler &middot; Thumb SWI 0x25 (<code>0xDF25</code>): <code>0x099d98</code>, <code>0x09a318</code>, <code>0x0a0bf6</code>, <code>0x0a35ea</code></dd>
+</dl>
+
+
+<h2>Battery Save Format Specification (Family Shared)</h2>
+<div class="callout">
+  This release shares its save architecture with canonical family reference <a href="../titles/BLRJ-r0-f250158fe77e6a26.html"><strong>Lord of the Rings, The - Ou no Kikan (Japan)</strong></a> (Family <code>BLR</code>).
+</div>
+<p><a class='btn' href='../saves/BLRJ-r0-f250158fe77e6a26.html'>Open Family Save Format Spec (BLRJ)</a><a class='btn btn-secondary' href='../assets/formats/BLRJ-r0-f250158fe77e6a26/save-format.json' download>Download save-format.json</a></p>
+<dl class="kv">
+  <dt>Canonical Specification</dt><dd><code>BLRJ</code> &middot; <strong>4</strong> mapped fields &middot; <strong>0</strong> verified checksum(s) &middot; Confidence: <span class="badge badge-indigo">HIGH</span></dd>
+  <dt>gbakit Built-In Support</dt><dd><span class="badge badge-emerald">Built-in (BLRJ)</span></dd>
+</dl>
+<pre><code>gbakit save verify BLRJ save.sav
+gbakit save decode BLRJ save.sav
+gbakit save fix    BLRJ damaged.sav -o repaired.sav</code></pre>
 
 
 <h2>ROM Assets, Compression &amp; Audio</h2><dl class='kv'><dt>BIOS Compression</dt><dd>LZ77 (<code>0x10</code>): <strong>7</strong> streams &middot; RLE (<code>0x30</code>): <strong>49</strong> streams</dd><dt>ROM Pointer Tables</dt><dd>49 tables (4 pointing to validated compressed streams)</dd><dt>SDK Backup Tags</dt><dd><code>EEPROM_V122</code></dd></dl>
+
+<h2>Text, Fonts &amp; Scene Data</h2>
+<dl class="kv"><dt>Primary Text Encoding</dt><dd><strong>16-bit / UTF-16LE text</strong> (<code>31</code> ASCII strings &middot; <code>4</code> Shift-JIS runs)</dd><dt>Font &amp; VWF Indicators</dt><dd><span class='badge badge-emerald'>VWF Width Table</span> <span class='badge badge-blue'>1bpp Font</span> &middot; BIOS SWIs: BitUnPack <code>0x10</code>: <code>1</code> &middot; LZ77 <code>0x11/12</code>: <code>6</code> &middot; Huffman <code>0x13</code>: <code>2</code> &middot; RLE <code>0x14/15</code>: <code>4</code></dd><dt>Scene &amp; Packaging</dt><dd><code>59</code> ROM pointer tables (&ge;32 entries, <code>3</code> &ge;200) &middot; <code>132</code> relative <code>u32</code> TOCs &middot; <code>214</code> OAM metasprite hits</dd></dl>
+
+
 <h2>Hardware MMIO Subsystems</h2><dl class='kv'><dt><code>ppu_display</code></dt><dd><code>0x8000708</code>, <code>0x8011d78</code>, <code>0x8012478</code>, <code>0x801250c</code>, <code>0x801b078</code>, <code>0x8047b5c</code>, <code>0x8047be4</code></dd></dl>
 <h2>Regional Variants &amp; Revisions (Family <code>BLR</code>)</h2><ul><li><a href='BLRJ-r0-f250158fe77e6a26.html'>Lord of the Rings, The - Ou no Kikan (Japan)</a> (<code>BLRJ</code>, 16 MiB)</li></ul>
 </main>

@@ -1,0 +1,346 @@
+{
+  "schema": "gbakit-save-research/2",
+  "release_key": "BZ6E-r0-1310f2ad3c13f544",
+  "display_name": "Final Fantasy VI Advance (USA)",
+  "rom_sha256": "1310f2ad3c13f5446cf6c43d01d48aad640d6b8a4fbba2b92c776f4f6d90e6ff",
+  "game_code": "BZ6E",
+  "header_family": "BZ6",
+  "community_id": "comm-004",
+  "overall_confidence": "HIGH",
+  "media": {
+    "kind": "sram",
+    "size_bytes": 32768,
+    "sdk_tags": [
+      "SRAM_V112"
+    ],
+    "fill_byte": "0x00"
+  },
+  "slots_and_copies": [
+    {
+      "name": "slot_1",
+      "offset": 0,
+      "size": 6144,
+      "redundancy_role": "primary",
+      "selection_rule": "Save slot 1 with FF6A header magic and sum16 at 0x17FE."
+    },
+    {
+      "name": "slot_2",
+      "offset": 6144,
+      "size": 6144,
+      "redundancy_role": "primary",
+      "selection_rule": "Save slot 2."
+    },
+    {
+      "name": "slot_3",
+      "offset": 12288,
+      "size": 6144,
+      "redundancy_role": "primary",
+      "selection_rule": "Save slot 3."
+    },
+    {
+      "name": "slot_4",
+      "offset": 18432,
+      "size": 6144,
+      "redundancy_role": "primary",
+      "selection_rule": "Save slot 4."
+    },
+    {
+      "name": "quicksave",
+      "offset": 24576,
+      "size": 6144,
+      "redundancy_role": "transient",
+      "selection_rule": "Quicksave slot."
+    }
+  ],
+  "magic_signatures": [
+    {
+      "offset": 0,
+      "bytes": [
+        70,
+        70,
+        54,
+        65
+      ],
+      "bytes_hex": "46463641",
+      "ascii": "FF6A",
+      "function_addrs": [
+        "0x08048210"
+      ],
+      "verified_in_code": true,
+      "verified_in_sav": true
+    }
+  ],
+  "checksums": [
+    {
+      "name": "slot_sum16",
+      "algorithm": "sum16_le",
+      "formula_detail": "16-bit sum of bytes across [0x0004..0x17FE). Stored at 0x17FE. Verified at 0x08048190.",
+      "stored_offset": 6142,
+      "stored_size": 2,
+      "covered_start": 4,
+      "covered_end": 6142,
+      "function_addrs": [
+        "0x08048190"
+      ],
+      "verified_on_samples": [],
+      "confidence": "CONFIRMED_VERIFIED"
+    }
+  ],
+  "io_driver_functions": [
+    {
+      "addr": "0x08048190",
+      "role": "checksum",
+      "callers": [
+        "0x08048210",
+        "0x08048380"
+      ],
+      "notes": "16-bit byte accumulator for FF6."
+    },
+    {
+      "addr": "0x08048210",
+      "role": "deserialize",
+      "callers": [
+        "0x08019050"
+      ],
+      "notes": "Validates FF6A magic and slot checksum."
+    },
+    {
+      "addr": "0x08048380",
+      "role": "serialize",
+      "callers": [
+        "0x080191c0"
+      ],
+      "notes": "Writes party, espers, and world state to SRAM."
+    }
+  ],
+  "caller_chains": [
+    {
+      "entry_caller": "0x080191c0",
+      "chain": [
+        "0x080191c0",
+        "0x08048380",
+        "0x08048190"
+      ],
+      "trigger_context": "Save point or airship save prompt.",
+      "ram_fields_updated": [
+        "0x03005000 (gFF6Save)"
+      ],
+      "how_mapped": "Ghidra decompilation of menu save dispatch."
+    }
+  ],
+  "fields": [
+    {
+      "name": "magic_ff6a",
+      "offset": 0,
+      "size": 4,
+      "type": "ascii",
+      "ram_addr": "0x03005000",
+      "writers": [
+        "0x08048380"
+      ],
+      "readers": [
+        "0x08048210"
+      ],
+      "observed_values": [
+        "FF6A"
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Final Fantasy VI Advance identifier"
+    },
+    {
+      "name": "save_counter",
+      "offset": 4,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": "0x03005004",
+      "writers": [
+        "0x08048380"
+      ],
+      "readers": [
+        "0x08048210"
+      ],
+      "observed_values": [
+        1,
+        20
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Save counter"
+    },
+    {
+      "name": "world_phase",
+      "offset": 8,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": "0x03005008",
+      "writers": [
+        "0x08048380"
+      ],
+      "readers": [
+        "0x08048210"
+      ],
+      "observed_values": [
+        0,
+        1
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "0=World of Balance, 1=World of Ruin"
+    },
+    {
+      "name": "gil",
+      "offset": 12,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": "0x0300500C",
+      "writers": [
+        "0x08048380"
+      ],
+      "readers": [
+        "0x08048210"
+      ],
+      "observed_values": [
+        50000
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Party funds"
+    },
+    {
+      "name": "esper_acquisition_flags",
+      "offset": 16,
+      "size": 4,
+      "type": "bitfield_array",
+      "bitfield_array": {
+        "bit_width": 1,
+        "count": 32,
+        "labels": [
+          "ramuh",
+          "kirin",
+          "siren",
+          "cait_sith",
+          "ifrit",
+          "shiva",
+          "unicorn",
+          "maduin"
+        ]
+      },
+      "ram_addr": "0x03005010",
+      "writers": [
+        "0x08048380"
+      ],
+      "readers": [
+        "0x08048210"
+      ],
+      "observed_values": [
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Packed flags for 32 magicite espers"
+    },
+    {
+      "name": "dragon_den_keys",
+      "offset": 20,
+      "size": 1,
+      "type": "bitfield_array",
+      "bitfield_array": {
+        "bit_width": 1,
+        "count": 8,
+        "labels": [
+          "red_dragon",
+          "blue_dragon",
+          "gold_dragon",
+          "skull_dragon",
+          "ice_dragon",
+          "storm_dragon",
+          "dirt_dragon",
+          "white_dragon"
+        ]
+      },
+      "condition": {
+        "field": "world_phase",
+        "op": "==",
+        "value": 1
+      },
+      "ram_addr": "0x03005014",
+      "writers": [
+        "0x08048380"
+      ],
+      "readers": [
+        "0x08048210"
+      ],
+      "observed_values": [
+        [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Defeat flags for the 8 legendary dragons unlocking Dragon's Den in World of Ruin"
+    },
+    {
+      "name": "slot_checksum",
+      "offset": 6142,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": "0x030067FE",
+      "writers": [
+        "0x08048380"
+      ],
+      "readers": [
+        "0x08048210"
+      ],
+      "observed_values": [
+        21554
+      ],
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "16-bit slot checksum"
+    }
+  ],
+  "fuzzing_targets": [
+    {
+      "offset": 12,
+      "size": 4,
+      "mutation": "Set Gil to 9999999 (0x0098967F).",
+      "requires_checksum_repair": true,
+      "predicted_effect": "Max party funds."
+    }
+  ],
+  "open_questions": []
+}

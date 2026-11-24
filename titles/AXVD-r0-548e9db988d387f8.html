@@ -13,7 +13,13 @@
       <a href="../index.html">Games</a>
       <a href="../saves/index.html">Save Formats</a>
       <a href="../patches/index.html">Debug Patches</a>
+      <a href="../debug-menus.html">Debug Gallery</a>
+      <a href="../non-retail-cartridges.html">Non-Retail</a>
+      <a href="../cartridge-hardware.html">Cartridge Hardware</a>
+      <a href="../link-multiplayer.html">Link &amp; Multiplayer</a>
+      <a href="../multiboot-museum.html">MultiBoot Museum</a>
       <a href="../assets/index.html">Assets &amp; Audio</a>
+      <a href="../text-and-fonts.html">Text &amp; Fonts</a>
       <a href="../engines/index.html">Engines &amp; Hardware</a>
       <a href="../families/index.html">Families</a>
       <a href="../gbakit/index.html">Using gbakit</a>
@@ -22,7 +28,7 @@
   <main>
 <p class="meta"><a href="../index.html">&larr; Games</a> &middot; Family <code>AXV</code></p>
 <h1>Pokemon - Rubin-Edition (Germany) (Debug Version)</h1>
-<p><span class='badge badge-zinc'>Stateless / Passcode</span></p>
+<p><span class='badge badge-slate'>Battery Save</span> <span class='badge badge-emerald'>Save Format Mapped (Family Spec)</span> <a href='../cartridge-hardware.html#rtc'><span class='badge badge-blue'>⏰ Real-Time Clock (RTC)</span></a> <a href='../link-multiplayer.html#joybus'><span class='badge badge-purple'>📺 Joybus</span></a> <a href='../link-multiplayer.html#multiboot'><span class='badge badge-amber'>💾 MultiBoot</span></a> <a href='../link-multiplayer.html#sio-multi'><span class='badge badge-blue'>🎮 4P Link</span></a></p>
 
 <h2>Cartridge Identity</h2>
 <dl class="kv">
@@ -37,10 +43,40 @@
 
 
 
-<h2>Cartridge Storage Architecture: Stateless / Passcode</h2>
+
+<h2>Cartridge Hardware &amp; Physical Peripherals</h2>
 <div class="callout">
-  <strong>Zero non-volatile battery hardware:</strong> This cartridge PCB contains ROM only (no SRAM, Flash, or EEPROM chips). Progression is preserved via on-screen passcodes or session-only gameplay. No <code>.sav</code> file is generated or required.
+  This cartridge PCB features physical hardware peripherals: <a href='../cartridge-hardware.html#rtc'><span class='badge badge-blue'>⏰ Real-Time Clock (RTC)</span></a>.
+  Detailed register specifications, GPIO pinouts, and hardware architecture are available in the <a href="../cartridge-hardware.html"><strong>Cartridge Hardware Reference</strong></a>.
 </div>
+<dl class="kv">
+  <dt>RTC SDK Signature</dt><dd><code>SIIRTC_V001</code> at offset <code>0x6df718</code></dd><dt>Cartridge GPIO Port</dt><dd><code>0x080000C4</code> (<code>GPIO_PORT_DIRECTION</code>) &middot; 4 load instruction references in code</dd><dt>Cartridge GPIO Port</dt><dd><code>0x080000C6</code> (<code>GPIO_PORT_DATA</code>) &middot; 4 load instruction references in code</dd><dt>Cartridge GPIO Port</dt><dd><code>0x080000C8</code> (<code>GPIO_PORT_CONTROL</code>) &middot; 2 load instruction references in code</dd>
+</dl>
+
+
+<h2>Link Cable &amp; Multiplayer Communications</h2>
+<div class="callout">
+  This title contains detected communication capabilities: <a href='../link-multiplayer.html#joybus'><span class='badge badge-purple'>📺 Joybus</span></a> <a href='../link-multiplayer.html#multiboot'><span class='badge badge-amber'>💾 MultiBoot</span></a> <a href='../link-multiplayer.html#sio-multi'><span class='badge badge-blue'>🎮 4P Link</span></a>.
+  Detailed protocol specifications, SIO registers, Joybus commands, and MultiBoot sequences are documented in the <a href="../link-multiplayer.html"><strong>Link &amp; Multiplayer Reference</strong></a>.
+</div>
+<dl class="kv">
+  <dt>Multi-Player SIO (4P)</dt><dd>16-bit ring network &middot; SIOCNT (<code>0x04000128</code>) literals: <code>0x0077d8</code>, <code>0x008054</code>, <code>0x008a10</code> &middot; SIODATA32/SIOMULTI0 (<code>0x04000120</code>) literals: <code>0x0090dc</code>, <code>0x0091a0</code>, <code>0x202ac4</code></dd><dt>GameCube Joybus</dt><dd>Register literal <code>REG_JOYCNT</code> (<code>0x04000140</code>) at offset <code>0x16ea54</code></dd><dt>GameCube Joybus</dt><dd>Register literal <code>REG_JOYCNT</code> (<code>0x04000140</code>) at offset <code>0x177e9c</code></dd><dt>GameCube Joybus</dt><dd>Register literal <code>REG_JOY_TRANS</code> (<code>0x04000154</code>) at offset <code>0xd24c74</code></dd><dt>Single-Cart MultiBoot</dt><dd>Single-Cartridge MultiBoot (Download Play) client/server handler &middot; Thumb SWI 0x25 (<code>0xDF25</code>): <code>0x221218</code>, <code>0x24ce2c</code>, <code>0x25babc</code>, <code>0x49d2be</code></dd>
+</dl>
+
+
+<h2>Battery Save Format Specification (Family Shared)</h2>
+<div class="callout">
+  This release shares its save architecture with canonical family reference <a href="../titles/AXVE-r0-53d591215de2cab8.html"><strong>Pokemon - Ruby Version (USA, Europe)</strong></a> (Family <code>AXV</code>).
+</div>
+<p><a class='btn' href='../saves/AXVE-r0-53d591215de2cab8.html'>Open Family Save Format Spec (AXVE)</a><a class='btn btn-secondary' href='../assets/formats/AXVE-r0-53d591215de2cab8/save-format.json' download>Download save-format.json</a></p>
+<dl class="kv">
+  <dt>Canonical Specification</dt><dd><code>AXVE</code> &middot; <strong>2</strong> mapped fields &middot; <strong>1</strong> verified checksum(s) &middot; Confidence: <span class="badge badge-indigo">HIGH</span></dd>
+  <dt>gbakit Built-In Support</dt><dd><span class="badge badge-emerald">Built-in (AXVE)</span></dd>
+</dl>
+<pre><code>gbakit save verify AXVE save.sav
+gbakit save decode AXVE save.sav
+gbakit save fix    AXVE damaged.sav -o repaired.sav</code></pre>
+
 
 
 
