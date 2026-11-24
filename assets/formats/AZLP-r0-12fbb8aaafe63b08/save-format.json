@@ -1,0 +1,428 @@
+{
+  "schema": "gbakit-save-research/1",
+  "release_key": "AZLP-r0-12fbb8aaafe63b08",
+  "display_name": "Legend of Zelda, The - A Link to the Past & Four Swords (Europe) (En,Fr,De,Es,It)",
+  "rom_sha256": "12fbb8aaafe63b0822c49bc776c097e40c211cd3b7f918a3e30ab08140e37b3c",
+  "game_code": "AZLP",
+  "header_family": "AZL",
+  "community_id": "comm-001",
+  "overall_confidence": "MEDIUM",
+  "media": {
+    "kind": "eeprom8k",
+    "size_bytes": 8192,
+    "sdk_tags": [],
+    "fill_byte": "0xff"
+  },
+  "slots_and_copies": [
+    {
+      "name": "half_primary",
+      "offset": 0,
+      "size": 4096,
+      "redundancy_role": "primary",
+      "selection_rule": "Tried first by FUN_08068784/FUN_08068884; used unless checksum/compare fails"
+    },
+    {
+      "name": "half_backup",
+      "offset": 4096,
+      "size": 4096,
+      "redundancy_role": "backup",
+      "selection_rule": "Fallback half, byte-identical to primary in this sample; read/verified only when primary half fails"
+    },
+    {
+      "name": "slot_0_player_file_1",
+      "offset": 64,
+      "size": 16,
+      "redundancy_role": "unknown",
+      "selection_rule": "Validated at boot by FUN_0801180c(0) via FUN_080685cc/FUN_080685f8; repaired by FUN_08068730(0) on failure"
+    },
+    {
+      "name": "slot_1_player_file_2",
+      "offset": 80,
+      "size": 16,
+      "redundancy_role": "unknown",
+      "selection_rule": "Validated at boot by FUN_0801180c(1); repaired by FUN_08068730(1) on failure"
+    },
+    {
+      "name": "slot_2_player_file_3",
+      "offset": 96,
+      "size": 16,
+      "redundancy_role": "unknown",
+      "selection_rule": "Validated at boot by FUN_0801180c(2); repaired by FUN_08068730(2) on failure"
+    },
+    {
+      "name": "slot_3_global_config",
+      "offset": 112,
+      "size": 32,
+      "redundancy_role": "global_config",
+      "selection_rule": "Validated independently by FUN_080686a8 (table row 3); if BOTH halves fail, cascades repair to slots 0,1,2 before repairing itself"
+    },
+    {
+      "name": "slot_unidentified_4",
+      "offset": 144,
+      "size": 32,
+      "redundancy_role": "unknown",
+      "selection_rule": "Sentinel present; no individually traced validator function"
+    },
+    {
+      "name": "slot_unidentified_5",
+      "offset": 176,
+      "size": 48,
+      "redundancy_role": "unknown",
+      "selection_rule": "Sentinel present; no individually traced validator function"
+    }
+  ],
+  "magic_signatures": [
+    {
+      "offset": 64,
+      "bytes_hex": "54494e49",
+      "ascii": "TINI",
+      "verified_in_code": false,
+      "verified_in_sav": true,
+      "function_addrs": []
+    },
+    {
+      "offset": 80,
+      "bytes_hex": "54494e49",
+      "ascii": "TINI",
+      "verified_in_code": false,
+      "verified_in_sav": true,
+      "function_addrs": []
+    },
+    {
+      "offset": 96,
+      "bytes_hex": "54494e49",
+      "ascii": "TINI",
+      "verified_in_code": false,
+      "verified_in_sav": true,
+      "function_addrs": []
+    },
+    {
+      "offset": 112,
+      "bytes_hex": "54494e49",
+      "ascii": "TINI",
+      "verified_in_code": true,
+      "verified_in_sav": true,
+      "function_addrs": ["0x080686a8"]
+    },
+    {
+      "offset": 144,
+      "bytes_hex": "54494e49",
+      "ascii": "TINI",
+      "verified_in_code": false,
+      "verified_in_sav": true,
+      "function_addrs": []
+    },
+    {
+      "offset": 176,
+      "bytes_hex": "54494e49",
+      "ascii": "TINI",
+      "verified_in_code": false,
+      "verified_in_sav": true,
+      "function_addrs": []
+    },
+    {
+      "offset": 0,
+      "bytes_hex": "54204b4e494c20414150204548542004",
+      "ascii": "T KNIL AAP EHT O ",
+      "verified_in_code": false,
+      "verified_in_sav": true,
+      "function_addrs": []
+    }
+  ],
+  "checksums": [
+    {
+      "name": "fun_08068af0_twos_complement_pair",
+      "algorithm": "custom",
+      "formula_detail": "u16[0] + u16[1] == 0x10000 (value + two's-complement negation), gated by a 32-bit tag field at offset+4 matching unresolved ROM constant _DAT_08068b04; alternate branch does (u16[1] & u16[0]) == unresolved constant _DAT_08068b40",
+      "stored_offset": 0,
+      "stored_size": 0,
+      "covered_start": 0,
+      "covered_end": 0,
+      "function_addrs": ["0x08068af0"],
+      "verified_on_samples": [
+        {"file": "saves/cap-00-future-0.sav", "stored_hex": "unknown", "computed_hex": "unknown", "match": false}
+      ],
+      "confidence": "CONFIRMED_STATIC"
+    },
+    {
+      "name": "fun_08068578_running_sum",
+      "algorithm": "unknown",
+      "formula_detail": "FUN_08068578(buffer,len) accumulated over a 4-byte constant block plus the payload buffer inside FUN_08068784; result and its negation (sStack_1c / sStack_1a) both computed but FUN_08068578's internal algorithm is not in the provided decompiled excerpt",
+      "stored_offset": 0,
+      "stored_size": 0,
+      "covered_start": 0,
+      "covered_end": 0,
+      "function_addrs": ["0x08068578", "0x08068784"],
+      "verified_on_samples": [],
+      "confidence": "UNKNOWN"
+    }
+  ],
+  "io_driver_functions": [
+    {"addr": "0x0813700c", "role": "read", "callers": ["0x0813708c", "0x0813713c"], "notes": "Raw DMA3 bit-serial transfer primitive (src/dst/count+enable), used for both EEPROM read and write bitstreams"},
+    {"addr": "0x0813708c", "role": "read", "callers": ["0x08137218"], "notes": "EEPROM READ of one 8-byte block via DMA3 bitstream (MMIO-SEED)"},
+    {"addr": "0x0813713c", "role": "write", "callers": ["0x08137270"], "notes": "EEPROM WRITE of one 8-byte block + busy-bit poll (MMIO-SEED)"},
+    {"addr": "0x08137218", "role": "read", "callers": ["0x08137270"], "notes": "Read-back-and-compare verify step after a write"},
+    {"addr": "0x08137270", "role": "write", "callers": [], "notes": "Top-level write-with-verify-and-retry (3 attempts); reached via func_0x08137270 text references from FUN_08068c3c, not captured as a static caller edge"},
+    {"addr": "0x08136f40", "role": "write", "callers": ["0x0813713c"], "notes": "Pre-write setup helper invoked before the EEPROM busy-wait; exact role HYPOTHESIS"},
+    {"addr": "0x08136fc8", "role": "write", "callers": ["0x0813713c"], "notes": "Post-write cleanup/re-arm helper, mirror of 0x08136f40"},
+    {"addr": "0x08068bf8", "role": "read", "callers": ["0x08068a30", "0x08068884"], "notes": "Loops FUN_0813708c over N 8-byte blocks, read-only"},
+    {"addr": "0x08068c3c", "role": "write", "callers": ["0x08068b4c"], "notes": "Loops FUN_08137270 over N 8-byte blocks with one corrective retry on block failure"},
+    {"addr": "0x08068c8c", "role": "checksum", "callers": ["0x080686a8"], "notes": "Loops FUN_08137218 over N 8-byte blocks, verify-only, no writes"},
+    {"addr": "0x08068af0", "role": "checksum", "callers": ["0x08068a30"], "notes": "Two-branch complement/bitmask validity check on a table-row-sized field"}
+  ],
+  "caller_chains": [
+    {
+      "entry_caller": "0x08011294",
+      "chain": ["0x08011294", "0x08068610", "0x08068784", "0x08068c3c", "0x08137270", "0x0813713c", "0x0813700c"],
+      "trigger_context": "IWRAM option byte cRam03000005 (clamped to range 2-6) changes value",
+      "ram_fields_updated": ["0x03000000 (global options byte, size unknown)"],
+      "how_mapped": "Direct text match of func_0x08068610(0x3000000) call site at line ~2558 of ghidra/decompiled.c, followed statically through FUN_08068610 -> func_0x08068784 -> func_0x08068c3c -> func_0x08137270 -> FUN_0813713c -> FUN_0813700c"
+    },
+    {
+      "entry_caller": "0x0801180c",
+      "chain": ["0x0801180c", "0x080685cc", "0x08068884", "0x08068bf8", "0x0813708c", "0x0813700c"],
+      "trigger_context": "Boot-time validation loop over player save slots 0,1,2 (caller at FUN_0801180c(0),(1),(2) in a bootstrap routine)",
+      "ram_fields_updated": ["Slot RAM struct at (slot&7)*0x40 + _DAT_08011894 and (slot&7)*0x10 + _DAT_08011898 (status flag bytes at +0x3f/+0xf)"],
+      "how_mapped": "Traced FUN_0801180c body in ghidra/decompiled.c lines ~2804-2842; confirms both half-check wrappers and the repair/reformat branches"
+    },
+    {
+      "entry_caller": "0x0801180c",
+      "chain": ["0x0801180c", "0x08068730", "0x08068bdc", "0x08068b4c", "0x08068c3c", "0x08137270"],
+      "trigger_context": "Boot-time validation determines a slot's EEPROM halves are both invalid (status -1)",
+      "ram_fields_updated": ["EEPROM halves at table-row address and +0x1000, rewritten from whatever is currently in the fixed RAM source _DAT_08068780"],
+      "how_mapped": "FUN_0801180c branch 'if (cVar3 == -1) func_0x08068730(param_1)', then static trace of FUN_08068730's body"
+    },
+    {
+      "entry_caller": "0x080686a8",
+      "chain": ["0x080686a8", "0x08068bdc", "0x08068c8c", "0x08137218", "0x0813708c", "0x08068730", "0x08068c3c"],
+      "trigger_context": "Independent global/options-slot (table row 3) consistency check, not tied to the per-save-file boot loop",
+      "ram_fields_updated": ["If both halves of slot 3 fail verification: slots 0,1,2 are blindly re-flushed via FUN_08068730, then slot 3 itself is rewritten via FUN_08068c3c on both halves"],
+      "how_mapped": "Full trace of FUN_080686a8 body in ghidra/decompiled.c lines ~3568-3602; the explicit func_0x08068bdc(3) call is the key evidence tying this function to the global slot"
+    }
+  ],
+  "fields": [
+    {
+      "name": "header_text_block",
+      "offset": 0,
+      "size": 38,
+      "type": "ascii",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"cap-00-future-0.sav": "54204b4e494c20414150204548542004342026205453...3525"},
+      "update_mechanism": "unknown - no individual caller isolated for this exact byte range",
+      "confidence": "HYPOTHESIS",
+      "evidence": "saves/hexdump_and_diffs.txt; byte-identical in both EEPROM halves; substrings KNIL/EHT/SDROW reverse to LINK/THE/WORDS but no consistent whole-string decode rule found"
+    },
+    {
+      "name": "header_tail_value",
+      "offset": 38,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"cap-00-future-0.sav": "0xdbac"},
+      "update_mechanism": "unknown",
+      "confidence": "UNKNOWN",
+      "evidence": "Trailing non-0xFF bytes after header_text_block; scanned against FUN_08068af0's u16+u16==0x10000 formula with no matching neighbor found"
+    },
+    {
+      "name": "slot_0_init_magic",
+      "offset": 64,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": ["0x08068610", "0x08068784", "0x08068c3c"],
+      "readers": ["0x0801180c", "0x080685cc", "0x080685f8", "0x08068884"],
+      "observed_values": {"cap-00-future-0.sav": "0x494e4954"},
+      "update_mechanism": "Written by the generic slot-commit path (FUN_08068784) and validated/repaired by the boot loop FUN_0801180c(0)",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Byte value 0x494e4954 ('INIT' big-endian-read) confirmed in both halves; writer/reader function identity inferred from table-row-stride position, not individually isolated per-slot in code"
+    },
+    {
+      "name": "slot_1_init_magic",
+      "offset": 80,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": ["0x08068610", "0x08068784", "0x08068c3c"],
+      "readers": ["0x0801180c", "0x080685cc", "0x080685f8", "0x08068884"],
+      "observed_values": {"cap-00-future-0.sav": "0x494e4954"},
+      "update_mechanism": "Same pattern as slot 0, table row index 1",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Byte-identical to slot 0 pattern, offset matches expected stride"
+    },
+    {
+      "name": "slot_2_init_magic",
+      "offset": 96,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": ["0x08068610", "0x08068784", "0x08068c3c"],
+      "readers": ["0x0801180c", "0x080685cc", "0x080685f8", "0x08068884"],
+      "observed_values": {"cap-00-future-0.sav": "0x494e4954"},
+      "update_mechanism": "Same pattern as slot 0, table row index 2",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Byte-identical to slot 0 pattern, offset matches expected stride"
+    },
+    {
+      "name": "slot_3_global_config_init_magic",
+      "offset": 112,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": ["0x08068730", "0x08068c3c"],
+      "readers": ["0x080686a8", "0x08068c8c"],
+      "observed_values": {"cap-00-future-0.sav": "0x494e4954"},
+      "update_mechanism": "Validated independently by FUN_080686a8 which explicitly fetches table row 3 via FUN_08068bdc(3)",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Explicit func_0x08068bdc(3) call in FUN_080686a8 ties this offset's slot index directly to code, unlike slots 0-2 which are inferred by stride only"
+    },
+    {
+      "name": "slot_unidentified_4_init_magic",
+      "offset": 144,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"cap-00-future-0.sav": "0x494e4954"},
+      "update_mechanism": "unknown",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Byte pattern confirmed; no individual function call isolated for this table index"
+    },
+    {
+      "name": "slot_unidentified_5_init_magic",
+      "offset": 176,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"cap-00-future-0.sav": "0x494e4954"},
+      "update_mechanism": "unknown",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Byte pattern confirmed; no individual function call isolated for this table index"
+    },
+    {
+      "name": "slot3_format_flag_byte_0",
+      "offset": 224,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": "0x03000024 (struct-relative +0x24, base address unresolved)",
+      "writers": ["0x0801164c"],
+      "readers": [],
+      "observed_values": {"cap-00-future-0.sav": "0x01"},
+      "update_mechanism": "FUN_0801164c sets *(u8*)(base+0x24)=1 when formatting a freshly-blank slot struct in RAM before the first flush",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "Offset and value (1) match FUN_0801164c's literal store exactly; base-address resolution to this exact file offset is inferred from relative position, not a directly observed pointer"
+    },
+    {
+      "name": "slot3_format_flag_byte_1",
+      "offset": 225,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": "0x03000025 (struct-relative +0x25, base address unresolved)",
+      "writers": ["0x0801164c"],
+      "readers": [],
+      "observed_values": {"cap-00-future-0.sav": "0x01"},
+      "update_mechanism": "Same as slot3_format_flag_byte_0, adjacent byte",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "Same reasoning as slot3_format_flag_byte_0"
+    },
+    {
+      "name": "table_block_u16_e2",
+      "offset": 226,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"cap-00-future-0.sav": "0x0002"},
+      "update_mechanism": "unknown",
+      "confidence": "UNKNOWN",
+      "evidence": "No code reference isolated for this exact offset"
+    },
+    {
+      "name": "mode_tag_tf4s",
+      "offset": 228,
+      "size": 4,
+      "type": "ascii",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"cap-00-future-0.sav": "TF4S"},
+      "update_mechanism": "unknown",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Forward-readable 4-char tag, not reversed like KNIL; plausibly a game-mode/variant identifier abbreviation, unconfirmed against code"
+    },
+    {
+      "name": "table_block_u16_e8",
+      "offset": 232,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"cap-00-future-0.sav": "0x0000"},
+      "update_mechanism": "unknown",
+      "confidence": "UNKNOWN",
+      "evidence": "No code reference isolated for this exact offset"
+    },
+    {
+      "name": "reversed_link_tag",
+      "offset": 234,
+      "size": 4,
+      "type": "ascii",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"cap-00-future-0.sav": "KNIL"},
+      "update_mechanism": "unknown",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Byte-reversed ASCII for 'LINK', same reversal pattern observed in the header_text_block field"
+    },
+    {
+      "name": "table_block_u16_ee",
+      "offset": 238,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"cap-00-future-0.sav": "0x0004"},
+      "update_mechanism": "unknown",
+      "confidence": "UNKNOWN",
+      "evidence": "No code reference isolated for this exact offset"
+    },
+    {
+      "name": "backup_half_mirror",
+      "offset": 4096,
+      "size": 4096,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": ["0x08068b4c (bit 1 path)", "0x08068c3c"],
+      "readers": ["0x08068bf8", "0x08068c8c", "0x08068884"],
+      "observed_values": {"cap-00-future-0.sav": "byte-identical to offset 0-4095"},
+      "update_mechanism": "Second EEPROM half, written/verified as a fallback/mirror by the same dual-copy logic in FUN_08068b4c",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Python comparison: data[0:0x1000] == data[0x1000:0x2000] -> True"
+    }
+  ],
+  "fuzzing_targets": [
+    {"offset": 64, "size": 1, "mutation": "flip one byte of slot-0 INIT magic in primary half only (0x40), leave backup half (0x1040) intact", "requires_checksum_repair": false, "predicted_effect": "FUN_0801180c(0) detects half-A invalid, half-B valid; FUN_08068730(0) should self-heal 0x40 back to 0x494e4954 on next boot save-check pass"},
+    {"offset": 64, "size": 1, "mutation": "flip the same byte in both 0x40 and 0x1040 (both halves corrupted)", "requires_checksum_repair": false, "predicted_effect": "Both halves invalid -> status -1 -> FUN_08068730(0) rewrites both halves from current RAM default/zeroed struct; likely produces a blank/new-file slot 0 rather than recovering prior state"},
+    {"offset": 112, "size": 1, "mutation": "corrupt slot-3 (global config) INIT magic in both 0x70 and 0x1070", "requires_checksum_repair": false, "predicted_effect": "FUN_080686a8 detects both-halves failure on slot 3 and cascades FUN_08068730(2), FUN_08068730(1), FUN_08068730(0) in addition to repairing slot 3 itself - all three player slots get rewritten as a side effect of corrupting only the global slot"},
+    {"offset": 38, "size": 2, "mutation": "change trailing tail value AC DB -> 00 00 in both halves", "requires_checksum_repair": true, "predicted_effect": "If consumed by an untraced checksum consumer, expect a load failure or forced repair of the header_text_block region; if inert, expect no observable change - this experiment doubles as a checksum-location probe since no matching complement pair was found in-file"},
+    {"offset": 228, "size": 4, "mutation": "swap the 4-byte TF4S tag (0xE4) with the 4-byte KNIL tag (0xEA)", "requires_checksum_repair": false, "predicted_effect": "If independently consumed, no crash but possibly a different reported mode on boot; if checked as a validated pair, expect FUN_08068af0-style validation failure and a forced repair"}
+  ],
+  "open_questions": [
+    "Exact algorithm of FUN_08068578 (running sum used in FUN_08068784) is not present in the provided decompiled excerpt.",
+    "ROM-resident constants _DAT_08068b04, _DAT_08068b14, uRam08068b08, _DAT_08068b40 consumed by FUN_08068af0 are unresolved - their numeric values are needed to know which table-row tag values are considered 'valid'.",
+    "The header_text_block at offset 0 does not decode to one consistent English phrase under any single whole-string or per-word byte-reversal rule tried; individual substrings (KNIL/EHT/SDROW) strongly suggest a scrambled title/build tag but the exact scrambling rule is unresolved.",
+    "No sample with actual gameplay progress (a played, saved file) is available yet; all fields beyond the six INIT sentinels and the one populated 16-byte table block at offset 0xE0 are completely unverified (all 0xFF in this capture).",
+    "Exact byte sizes of the two unidentified table slots at offsets 0x90 and 0xB0 are inferred only from gaps between sentinels, not from an explicit size field read in code.",
+    "func_0x080689e0 (integrity check called from FUN_08068884 during load) is referenced but not included in the provided save_related_functions.c seed set, so its role is only inferred from call position."
+  ]
+}

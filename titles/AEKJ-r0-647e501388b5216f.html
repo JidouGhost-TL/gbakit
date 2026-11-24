@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Elemix! (Japan) — gbakit GBA Reference</title>
+  <link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+  <header>
+    <div class="brand"><a href="../index.html" style="color:inherit">gbakit GBA Reference <span class="badge badge-emerald">v2.0</span></a></div>
+    <nav>
+      <a href="../index.html">Games</a>
+      <a href="../saves/index.html">Save Formats</a>
+      <a href="../patches/index.html">Debug Patches</a>
+      <a href="../assets/index.html">Assets &amp; Audio</a>
+      <a href="../engines/index.html">Engines &amp; Hardware</a>
+      <a href="../families/index.html">Families</a>
+      <a href="../gbakit/index.html">Using gbakit</a>
+    </nav>
+  </header>
+  <main>
+<p class="meta"><a href="../index.html">&larr; Games</a> &middot; Family <code>AEK</code></p>
+<h1>Elemix! (Japan)</h1>
+<p><span class='badge badge-slate'>EEPROM 4K</span> <span class='badge badge-amber'>Debug Menu Patch</span></p>
+
+<h2>Cartridge Identity</h2>
+<dl class="kv">
+  <dt>Game Code</dt><dd><code>AEKJ</code> (Family <code>AEK</code>)</dd>
+  <dt>Header Title</dt><dd><code>ELEMIX!</code></dd>
+  <dt>Maker / Revision</dt><dd><code>G6</code> / rev <code>0</code></dd>
+  <dt>ROM Size</dt><dd>4.0 MiB (4,194,304 B)</dd>
+  <dt>Save Media</dt><dd><code>EEPROM 4K</code></dd>
+  <dt>SHA-256</dt><dd><code>647e501388b5216f197de1d6522f6cc6f0d4bd627fdd64f5bd3da6602f194919</code></dd>
+  
+</dl>
+<h2>Screenshots</h2><div class='gallery'><figure><img src='../assets/thumbs/AEKJ-r0-647e501388b5216f-boot.png' alt='Boot Screen' loading='lazy'><figcaption>Boot Screen</figcaption></figure><figure><img src='../assets/thumbs/AEKJ-r0-647e501388b5216f-loaded.png' alt='Loaded Save' loading='lazy'><figcaption>Loaded Save</figcaption></figure></div>
+
+<h2>Debug Menu Re-Enablement Patch (<code>.ips</code>)</h2>
+<p><a class="btn" href="../assets/patches/AEKJ-r0-647e501388b5216f/AEKJ-debug.ips" download>Download AEKJ-debug.ips (15 B IPS / 2 B delta)</a></p>
+<dl class="kv">
+  <dt>Hook Mechanism</dt><dd><code>thumb_imm_scene_override</code> &middot; Patch scene dispatcher at 0x080004ca (movs r0, #12 -&gt; movs r0, #16) to select AGB SYSTEM DEBUG MENU</dd>
+  <dt>IPS SHA-256</dt><dd><code>63387dad8c63a2d57342e4e660df9cfa7e5ecb3735d4a7e0a9cd4df027eae7b9</code></dd>
+</dl>
+<pre><code>gbakit patch apply AEKJ-debug.ips original.gba patched-debug.gba</code></pre>
+<div class='gallery'><figure><img src='../assets/patches/AEKJ-r0-647e501388b5216f/boot-patched.png' alt='Re-enabled debug menu' loading='lazy'><figcaption>Re-Enabled Debug Menu</figcaption></figure><figure><img src='../assets/patches/AEKJ-r0-647e501388b5216f/after-input.png' alt='Interactive debug menu navigation' loading='lazy'><figcaption>After D-Pad / A Input</figcaption></figure></div>
+
+
+
+<h2>Observed Battery Save Layout</h2>
+<dl class="kv">
+  <dt>Fill Byte &amp; Active Size</dt><dd><code>0xFF</code> fill &middot; 191–191 / 512 B active (entropy 2.71 bits/B)</dd>
+  <dt>Active Offset Ranges</dt><dd><code>0x0–0xF</code>, <code>0x14–0xB0</code>, <code>0xB2–0xBF</code>, <code>0xC4–0xC7</code> (4 total)</dd>
+  <dt>ASCII Magic / Headers</dt><dd><code>EXIMELE</code></dd>
+  <dt>Observed Variable Regions</dt><dd>0 bytes across 0 spans: None</dd>
+  <dt>Candidate Checksum/Counter Spans</dt><dd>None</dd>
+  
+</dl>
+
+
+<h2>Hardware MMIO Subsystems</h2><dl class='kv'><dt><code>ppu_display</code></dt><dd><code>0x8001ef8</code>, <code>0x8001f04</code>, <code>0x8001f28</code></dd></dl>
+
+</main>
+  <footer>gbakit GBA Format Reference &middot; <a href="https://github.com/JidouGhost-TL/gbakit">GitHub: JidouGhost-TL/gbakit</a> &middot; Clean-room GBA binary format specs &amp; Rust toolkit.</footer>
+</body>
+</html>

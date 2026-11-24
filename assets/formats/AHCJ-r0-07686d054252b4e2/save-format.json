@@ -1,0 +1,213 @@
+{
+  "schema": "gbakit-save-research/1",
+  "release_key": "AHCJ-r0-07686d054252b4e2",
+  "display_name": "Mini Moni. - Mika no Happy Morning Chatty (Japan)",
+  "rom_sha256": "07686d054252b4e2744806968690c95681a57b87dd3192be19edd3b36d4088e0",
+  "game_code": "AHCJ",
+  "header_family": "AHC",
+  "community_id": "comm-011",
+  "overall_confidence": "MEDIUM",
+  "media": {
+    "kind": "sram",
+    "size_bytes": 32768,
+    "sdk_tags": ["SRAM_V112"],
+    "fill_byte": "0xff"
+  },
+  "slots_and_copies": [
+    {
+      "name": "slot_0",
+      "offset": 0,
+      "size": 32768,
+      "redundancy_role": "primary",
+      "selection_rule": "Single flat image covering all of SRAM (transfer base 0x0E000000, size 0x8000 in FUN_08010968 call from FUN_0801cf54). Load accepts the image iff the NUL-terminated string at offset 0x00 equals MINIMONI_V1009 (strcmp via FUN_0801bf30 in FUN_08010968); otherwise the first-boot init branch rewrites the magic in RAM, zeroes descriptor bytes +0xA8/+0x138/+0x139, clears 6 u16 slots via FUN_08010b10, and sets descriptor flag +0x0C=1. No second slot, backup copy, mirroring, or generation/sequence counter was found in the 152 traced functions or in either .sav sample."
+    }
+  ],
+  "magic_signatures": [
+    {
+      "offset": 0,
+      "bytes_hex": "4d494e494d4f4e495f5631303039",
+      "ascii": "MINIMONI_V1009",
+      "verified_in_code": true,
+      "verified_in_sav": true,
+      "function_addrs": ["0x08010968", "0x0801bf30", "0x0801befc"]
+    }
+  ],
+  "checksums": [],
+  "io_driver_functions": [
+    {
+      "addr": "0x08040cf8",
+      "role": "read",
+      "callers": ["0x08010a94"],
+      "notes": "SRAM->RAM transfer (sram_src, ram_dst, size). Sets WAITCNT-class register via unresolved _DAT pointer, copies a ROM code blob to the stack, and dispatches to RAM-resident engine 0x08040e74. Direction inferred from caller argument order (descriptor *desc=0x0E000000 first, RAM buffer second) plus the (src,dst) convention of the fully-decompiled byte-copy 0x08040d5c; engine body at 0x08040e74 is an unrecovered jump table. CONFIRMED_STATIC."
+    },
+    {
+      "addr": "0x08040d5c",
+      "role": "write",
+      "callers": ["0x08010a1c"],
+      "notes": "Byte-copy engine (src, dst, size): sets WAITCNT-class register then while(size-- != -1) *dst++ = *src++. Byte-wise because SRAM has an 8-bit bus. In FUN_08010a1c it is called as (RAM buffer, SRAM 0x0E000000, size), i.e. unambiguously RAM->SRAM. This is the only fully visible copy loop and anchors direction inference for 0x08040cf8/0x08040dcc."
+    },
+    {
+      "addr": "0x08040dcc",
+      "role": "checksum",
+      "callers": ["0x08010a94", "0x08010a1c"],
+      "notes": "Verify-compare (VerifySram-class): WAITCNT setup + code-to-stack copy + dispatch to 0x08040e74. Byte-compares RAM mirror against SRAM after each transfer; result used only as a branch condition (if != 0, wrappers store result and strcpy an error/status string to piRam+8). Stores nothing in the save image, so it is an integrity check, not a stored checksum. Exact return semantics (mismatch offset vs boolean) UNKNOWN because 0x08040e74 was not decompiled. Role string 'checksum' denotes integrity verification; see report section 4.2."
+    },
+    {
+      "addr": "0x08010a94",
+      "role": "deserialize",
+      "callers": ["0x08010968"],
+      "notes": "Load wrapper: func_0x08040cf8(*desc, desc[1], desc[2]) then verify func_0x08040dcc(desc[1], *desc, size). Descriptor triple read via _DAT_08010ac4. On verify failure stores result to piRam08010acc and strcpys a string to piRam+8 (error reporting, semantics UNKNOWN). Caller edge proven by decompilation text; callgraph.json omits func_-style edges."
+    },
+    {
+      "addr": "0x08010a1c",
+      "role": "serialize",
+      "callers": [],
+      "notes": "Store wrapper: func_0x08040d5c(desc[1]=RAM, *desc=SRAM, desc[2]=size) then verify func_0x08040dcc(desc[1], *desc, size). NO caller exists in ghidra/decompiled.c or ghidra/callgraph.json (orphan). The flush that produced cap-01-future-1.sav must reach this function (or an untraced equivalent) through an UNRECOVERED_JUMPTABLE dispatch. See report section 3.4."
+    },
+    {
+      "addr": "0x08010968",
+      "role": "deserialize",
+      "callers": ["0x0801cf54"],
+      "notes": "Save manager / load-validate-init: binds descriptor (sram=param1, ram=param2, size=param3) via _DAT_08010a08, calls load wrapper 0x08010a94, strcmp-validates magic at descriptor+0x10 via 0x0801bf30, on mismatch strcpys magic via 0x0801befc, zeroes descriptor +0xA8/+0x138/+0x139, clears 6 u16 entries via 0x08010b10, then unconditionally sets u16 flag at descriptor+0x0C to 1. Ends in unrecovered jump-table dispatch. Role covers load+init; the matching store half is 0x08010a1c."
+    }
+  ],
+  "caller_chains": [
+    {
+      "entry_caller": "0x08000248",
+      "chain": ["0x08000248", "0x0801cf54", "0x08010968", "0x08010a94", "0x08040cf8", "0x08040dcc"],
+      "trigger_context": "Boot/entry (FUN_08000248 callers: none in corpus) performs system init (SWI wrappers, task registrations via FUN_080002ec, func_0x08001960) then calls FUN_0801cf54 (game/system init), which after display/state setup calls FUN_08010968(0x0E000000, _DAT_0801d130, 0x8000) to load and validate the SRAM image. This is the only SRAM-touching chain reachable at boot.",
+      "ram_fields_updated": ["descriptor+0x00 sram_addr = 0x0E000000", "descriptor+0x04 ram_buffer = _DAT_0801d130 (absolute value unresolved)", "descriptor+0x08 size = 0x8000", "descriptor+0x0C u16 flag = 1 (unconditional)", "descriptor+0x10 string = MINIMONI_V1009 (only on first-boot/mismatch branch)", "descriptor+0xA8 u8 = 0 (mismatch branch only)", "descriptor+0x138 u8 = 0 (mismatch branch only)", "descriptor+0x139 u8 = 0 (mismatch branch only)", "6x u16 array via FUN_08010b10 = 0 (mismatch branch only)"],
+      "how_mapped": "Merged evidence: ghidra/callgraph.json confirms FUN_-edges 0801cf54->{08010968,08002a80,08011b94,08011d94,0801be5c,0801befc,0801c75c,0801cf00} and 08011b94->{08002894,08010b9c}; decompilation text adds func_-style SDK edges (08010968->08010a94, 08010a94->08040cf8/08040dcc) that callgraph.json omits (it lists callees:[] for 0x08010968). RAM updates read directly from FUN_08010968 body in ghidra/decompiled.c and ghidra/save_related_functions.c. Other FUN_0801cf54 callees (FUN_0801cf00, FUN_0801c75c, FUN_08002a80, FUN_08011b94, FUN_08011d94, string-table strcpys) mutate separate game/display structs (_DAT_0801d10c family), not the SRAM descriptor; descriptor literals _DAT_08010a08 family appear only in 0x08010968/0x08010a94/0x08010a1c (verified by full-text search)."
+    },
+    {
+      "entry_caller": "0x08010a1c",
+      "chain": ["0x08010a1c", "0x08040d5c", "0x08040dcc"],
+      "trigger_context": "ORPHAN in traced corpus: no caller in decompiled.c or callgraph.json. Presumed gameplay save/flush reached via an UNRECOVERED_JUMPTABLE state dispatch (nearly every function in this ROM ends in one). The initialized cap-01-future-1.sav proves a flush occurred at runtime; its trigger event is unknown.",
+      "ram_fields_updated": [],
+      "how_mapped": "Function body read in ghidra/decompiled.c: func_0x08040d5c(desc[1], *desc, desc[2]) with the visible *dst=*src loop proves RAM->SRAM direction; verify call identical to load wrapper. Caller absence proven by full-text search (only header+definition mention 08010a1c) and callgraph.json. ram_fields_updated is empty because no caller (hence no pre-flush RAM mutation) could be traced; pre-flush mutations, if any, are an open question."
+    }
+  ],
+  "fields": [
+    {
+      "name": "magic_MINIMONI_V1009",
+      "offset": 0,
+      "size": 14,
+      "type": "ascii",
+      "ram_addr": null,
+      "writers": ["0x08010968", "0x0801befc"],
+      "readers": ["0x08010968", "0x0801bf30"],
+      "observed_values": {"cap-00-future-0.sav": "ff ff ff ff ff ff ff ff ff ff ff ff ff ff (absent, erased)", "cap-01-future-1.sav": "4d 49 4e 49 4d 4f 4e 49 5f 56 31 30 30 39 = MINIMONI_V1009"},
+      "update_mechanism": "Compared with ROM expected string via strcmp (FUN_0801bf30) after SRAM->RAM load; on mismatch, written in RAM via strcpy (FUN_0801befc, which does not append a terminator) by the FUN_08010968 first-boot branch and persisted by the untraced flush (FUN_08010a1c chain). RAM mirror absolute address unresolved: mirror base is the value of _DAT_0801d130 passed from FUN_0801cf54; descriptor-relative offset is +0x10.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Bytes present verbatim at file offset 0 in cap-01-future-1.sav and absent (0xFF) in blank cap-00-future-0.sav; FUN_08010968 strcmp gate + strcpy write in ghidra/decompiled.c. Load wrapper FUN_08010a94 performs the SRAM->RAM transfer before the compare."
+    },
+    {
+      "name": "string_terminator_pad",
+      "offset": 14,
+      "size": 2,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"cap-00-future-0.sav": "ff ff", "cap-01-future-1.sav": "00 00"},
+      "update_mechanism": "Zero bytes following the magic. FUN_0801befc (strcpy) does not write a terminator, so the 0x00 at offset 0x0E comes from prior zeroing of the RAM mirror / flush image. No code explicitly reads these bytes; strcmp stops at the NUL. Not a checksum (proven in report section 4.3: sum16[0:14]=0x03DF, CRC32[0:14]=0x4868C2FF, etc. all differ from 0x0000).",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Observed bytes in both samples; strcpy body in FUN_0801befc shows no terminator store; Python checksum verification shows no standard algorithm yields 0x0000 over the magic."
+    },
+    {
+      "name": "payload_unmapped",
+      "offset": 16,
+      "size": 32752,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": ["0x08010a94"],
+      "observed_values": {"cap-00-future-0.sav": "all 0xFF (32752 bytes)", "cap-01-future-1.sav": "all 0x00 (32752 bytes); no non-fill byte ever observed"},
+      "update_mechanism": "Transferred wholesale by the 0x8000-byte SRAM<->RAM copy (FUN_08010a94 load / FUN_08010a1c store). No field-level writer or reader was found: full-text search shows descriptor/mirror literals referenced only by the init/load/store path, and both samples contain no populated data. Internal layout is completely unmapped; subdividing it would be fabrication.",
+      "confidence": "UNKNOWN",
+      "evidence": "Byte histograms: cap-01 has 32754 zero bytes + 14 magic bytes; cap-00 is uniformly 0xFF. 152 decompiled functions searched for field accessors outside init; none found. Requires a populated gameplay save capture to map."
+    },
+    {
+      "name": "ram_descriptor_flag_valid",
+      "offset": 12,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": ["0x08010968"],
+      "readers": [],
+      "observed_values": {},
+      "update_mechanism": "RAM-ONLY field (descriptor-relative offset +0x0C; *(u16*)(desc+3)=1 set unconditionally by FUN_08010968 after load-or-init). Offset value here is DESCRIPTOR-RELATIVE, not a proven file offset: under the unproven mirror model (mirror == descriptor+0x10) this field would sit before the file image and never be stored. Do not treat offset 12 as a file offset without reading evidence.",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Store visible in FUN_08010968 body (ghidra/decompiled.c). No reader found; file storage unproven. Absolute RAM address unresolved (descriptor base is value of _DAT_08010a08)."
+    },
+    {
+      "name": "ram_descriptor_clear_A8",
+      "offset": 168,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": ["0x08010968"],
+      "readers": [],
+      "observed_values": {},
+      "update_mechanism": "RAM-ONLY field (descriptor-relative offset +0xA8 = 168, stored as *(u8*)(puVar1+0x2A words)=0 in the FUN_08010968 mismatch/init branch only). Offset is descriptor-relative, NOT a proven file offset; mirror-model file offset would be 0x98. Meaning unknown.",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Byte store in FUN_08010968 init branch. Cleared together with magic write; no reader, no populated sample to correlate."
+    },
+    {
+      "name": "ram_descriptor_clear_138",
+      "offset": 312,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": ["0x08010968"],
+      "readers": [],
+      "observed_values": {},
+      "update_mechanism": "RAM-ONLY field (descriptor-relative offset +0x138 = 312, stored as *(u8*)(puVar1+0x4E words)=0 in the FUN_08010968 init branch). Possibly the low byte of a 2-byte field with offset 313 (cleared by two separate byte stores in code, so recorded as two u8 fields). Offset is descriptor-relative, NOT a proven file offset; mirror-model file offset would be 0x128.",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Byte store in FUN_08010968 init branch (ghidra/decompiled.c / save_related_functions.c). No reader; semantics unknown."
+    },
+    {
+      "name": "ram_descriptor_clear_139",
+      "offset": 313,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": ["0x08010968"],
+      "readers": [],
+      "observed_values": {},
+      "update_mechanism": "RAM-ONLY field (descriptor-relative offset +0x139 = 313, byte store =0 in the FUN_08010968 init branch). See ram_descriptor_clear_138. Offset is descriptor-relative, NOT a proven file offset; mirror-model file offset would be 0x129.",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Byte store *(undefined1*)((int)puVar1+0x139)=0 in FUN_08010968. No reader; semantics unknown."
+    },
+    {
+      "name": "ram_cleared_u16_array_6",
+      "offset": 0,
+      "size": 12,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": ["0x08010968", "0x08010b10"],
+      "readers": [],
+      "observed_values": {},
+      "update_mechanism": "RAM-ONLY array: 6 u16 entries cleared via FUN_08010b10(idx,0) for idx 0..5 in the FUN_08010968 init branch; FUN_08010b10 writes *(u16*)((idx&0xff)*2 + _DAT_08010b24 + 0x102). Offset 0 here is a placeholder (schema requires a number): the array base is an unresolved literal-pool value, so NO file offset and no absolute RAM offset can be stated. Six jointly-cleared slots suggest per-record defaults, but that is structural speculation. Size 12 = 6*2 bytes; type bytes because element semantics are unknown (u16_le element access is proven by the writer, file type is not).",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Loop do{FUN_08010b10(i,0)}while(i<6) in FUN_08010968; FUN_08010b10 body shows u16 indexed store. Base address and any file mapping unknown."
+    }
+  ],
+  "fuzzing_targets": [
+    {"offset": 0, "size": 1, "mutation": "Change 'M' (0x4D) to 'X' (0x58), keep remaining magic intact; cold reload (F-01).", "requires_checksum_repair": false, "predicted_effect": "Save rejected as invalid: FUN_08010968 init branch rewrites RAM magic to MINIMONI_V1009, zeroes descriptor +0xA8/+0x138/+0x139, clears 6 u16 slots, sets flag +0x0C=1; any payload-dependent progress resets to defaults. No checksum repair exists or is needed; revert by restoring magic bytes."},
+    {"offset": 0, "size": 14, "mutation": "Overwrite full magic with 14x 0xFF on an initialized image; cold reload (F-02).", "requires_checksum_repair": false, "predicted_effect": "Same init-branch behavior as F-01, proving validation is full NUL-terminated string equality (FUN_0801bf30), not a single-byte sentinel."},
+    {"offset": 13, "size": 1, "mutation": "Change last magic char '9' (0x39) to '8' (0x38) (MINIMONI_V1008); cold reload (F-03).", "requires_checksum_repair": false, "predicted_effect": "Init branch reruns (suffix compared literally, not parsed as a number). Acceptance would falsify the strcmp reading of FUN_0801bf30."},
+    {"offset": 14, "size": 1, "mutation": "Change terminator byte 0x00 to 0x41 ('A'); cold reload (F-04).", "requires_checksum_repair": false, "predicted_effect": "Pre-registered decisive test: FUN_0801bf30 requires both strings to hit NUL together, so RAM string MINIMONI_V1009A != MINIMONI_V1009 and the save is re-initialized. If the game instead loads normally, compare is prefix-based and the decompilation reading must be revised."},
+    {"offset": 16, "size": 1, "mutation": "Payload probes (run separately at file offsets 0x10, 0x100, 0x1000, 0x4000, 0x7FFF / SRAM 0x0E000010 etc.): 0x00 -> 0x01 with magic intact; cold reload + normal save/load cycle (F-05).", "requires_checksum_repair": false, "predicted_effect": "Load succeeds (no stored checksum to fail). Each byte either shows no visible effect (unused/reserved) or changes a specific gameplay value (first payload field discovery). Rejection of a header-valid payload mutation would falsify the no-checksum conclusion in report section 4 and require re-derivation. No checksum repair step exists."},
+    {"offset": 16, "size": 32752, "mutation": "Fill entire payload 0x10-0x7FFF with 0xAA, magic intact; cold reload from a save state (F-07, run only after F-05).", "requires_checksum_repair": false, "predicted_effect": "Load accepted (magic ok, no checksum); game either misbehaves/crashes on trusted payload values (bisect the 0xAA range by halves to localize the first field) or sanitizes them (range checks exist). High information, crash risk: use emulator save states."}
+  ],
+  "open_questions": [
+    "Which untraced caller invokes the store wrapper FUN_08010a1c (0x08010a1c) to flush the RAM mirror to SRAM, and what gameplay event triggers it? No caller exists in ghidra/decompiled.c or ghidra/callgraph.json; the path likely goes through an UNRECOVERED_JUMPTABLE state dispatch. (Report 3.4; fuzzing F-06.)",
+    "What are the absolute RAM addresses behind the literal-pool values _DAT_0801d130 (RAM mirror base), _DAT_08010a08 (SRAM descriptor), _DAT_08010a0c (expected magic ROM string), and _DAT_08010b24 (u16 array base)? Requires the ROM binary or a RAM dump; all ram_addr fields are therefore null. checksums is intentionally []: no stored checksum exists (report 4.2/4.3) and an empty list is the honest encoding.",
+    "Does the RAM mirror base equal descriptor+0x10 (so file offset = descriptor offset - 0x10), or is the mirror a separate buffer? This decides whether RAM fields at descriptor +0xA8/+0x138/+0x139 have file offsets 0x98/0x128/0x129. (Report 5.1; fuzzing F-09.)",
+    "What is the internal layout of payload bytes 0x10-0x7FFF (32752 bytes)? Both available samples are blank/initialized-only (all 0xFF / magic+zeros), so no gameplay field could be mapped. Requires a populated save captured after real gameplay.",
+    "What does verify routine FUN_08040dcc return on mismatch (failing offset vs boolean), and what consumes the error/status strings the wrappers copy to piRam+8 on verify failure? Engine FUN_08040e74 was not decompiled (jump-table stub).",
+    "Is the 0x00 background of cap-01-future-1.sav the result of a full 32 KiB flush of a zeroed mirror, or emulator zero-fill plus a header-only write? Discriminated by fuzzing F-06/F-06b (pre-fill SRAM with 0xAA, boot, inspect).",
+    "Corpus provenance: PACKET.md section 1 claims total_sav_files=6, dominant_fill_byte=0x00, non_fill_bytes_max=32768, while the workspace contains exactly 2 .sav files (one all-0xFF, one with 14 non-zero bytes) and states/ is empty. Byte/code findings use disk truth; the discrepancy does not affect them but should be fixed upstream."
+  ]
+}

@@ -1,0 +1,285 @@
+{
+  "schema": "gbakit-save-research/1",
+  "release_key": "A53J-r0-dc4910c1b755827b",
+  "display_name": "Koukou Juken Advance Series Eijukugo Hen - 650 Phrases Shuuroku (Japan)",
+  "rom_sha256": "dc4910c1b755827be175ec81ec8c90aaed5c55e787099eb4af607ae1804a8067",
+  "game_code": "A53J",
+  "header_family": "A53",
+  "community_id": "comm-011",
+  "overall_confidence": "LOW",
+  "media": {
+    "kind": "sram",
+    "size_bytes": 32768,
+    "sdk_tags": [
+      "SRAM_V112@2491540"
+    ],
+    "fill_byte": "0xff"
+  },
+  "slots_and_copies": [
+    {
+      "name": "slot_0_main",
+      "offset": 0,
+      "size": 5992,
+      "redundancy_role": "primary",
+      "selection_rule": "Unknown: only one populated copy observed in 32768B image; no backup/mirror copy, generation counter, or dual-slot selection code recovered in the 58 decompiled functions. Bytes 0x1768-0x7FFF are 0xFF except 0x180C-0x1817."
+    },
+    {
+      "name": "secondary_span_0x180C",
+      "offset": 6156,
+      "size": 12,
+      "redundancy_role": "unknown",
+      "selection_rule": "Unknown: isolated 12 zero bytes at 0x180C-0x1817 separated by 164B 0xFF gap (0x1768-0x180B); may be a second small struct, tail of a 0x1818-length write with unwritten gap, or separate field - not proven to be a backup slot."
+    }
+  ],
+  "magic_signatures": [
+    {
+      "offset": 0,
+      "bytes_hex": "63c8d01a",
+      "ascii": "",
+      "verified_in_code": false,
+      "verified_in_sav": true,
+      "function_addrs": [
+        "0x08000588"
+      ]
+    }
+  ],
+  "checksums": [
+    {
+      "name": "candidate_header_word_0x0000",
+      "algorithm": "unknown",
+      "formula_detail": "No checksum routine (sum/XOR/CRC loop) exists in ghidra/decompiled.c (58 functions). Only integrity gate is FUN_08000588 first-dword compare *piVar1 != _DAT_08000664 (literal-pool value unresolved). Python tests on cap-01: sum8/sum16/sum32/xor8/crc32/crc16-Modbus over [0,0x1768),[4,0x1768),[4,0x1818) all != 0x1ad0c863 and != its halves; payload after offset 4 is all 0x00 so any plain sum/XOR over payload = 0x0. Header is therefore more likely a magic/ID word than a payload checksum, but equality to the code constant cannot be proven without literal-pool values.",
+      "stored_offset": 0,
+      "stored_size": 4,
+      "covered_start": 4,
+      "covered_end": 5992,
+      "function_addrs": [
+        "0x08000588"
+      ],
+      "verified_on_samples": [
+        {
+          "file": "cap-01-future-1.sav",
+          "stored_hex": "0x1ad0c863",
+          "computed_hex": "sum32[4:0x1768]=0x00000000 crc32=0xa14a6883 xor8=0x00 crc16modbus=0x3a00",
+          "match": false
+        },
+        {
+          "file": "cap-00-future-0.sav",
+          "stored_hex": "0xffffffff (blank)",
+          "computed_hex": "n/a blank",
+          "match": false
+        }
+      ],
+      "confidence": "UNKNOWN"
+    }
+  ],
+  "io_driver_functions": [
+    {
+      "addr": "0x08000488",
+      "role": "write",
+      "callers": [],
+      "notes": "SRAM writer/verify entry (MMIO seed, no recovered callers, jumptable dispatch). Calls FUN_08016078, func_0x08016eb4(RAM_base,0x0E000000,len from _DAT_08000584), func_0x08016f24(RAM_base,0x0E000000,len) verify, FUN_080160c4. Pre-write struct field stores at offsets derived from literal pool incl +0x3C/+0x10C relative fields."
+    },
+    {
+      "addr": "0x08000588",
+      "role": "read",
+      "callers": [],
+      "notes": "SRAM reader/validator entry. func_0x08016e50(0x0E000000,RAM_base,len) reads SRAM to RAM; then if *RAM_base != _DAT_08000664, ORs a mask over 0x29 halfwords at two offsets (+_DAT_08000674/+_DAT_08000678) - invalid-save sanitisation. No recovered callers."
+    },
+    {
+      "addr": "0x08016eb4",
+      "role": "write",
+      "callers": [
+        "0x08000488"
+      ],
+      "notes": "Byte-copy SRAM write loop: while(len-- != -1) *dst++=*src++; sets WAITCNT-related *_DAT_08016eec & mask |3 before copy. Direct SRAM at 0x0E000000, no Flash 0x5555/0x2AAA sequence, no EEPROM DMA3 0x040000D4."
+    },
+    {
+      "addr": "0x08016e50",
+      "role": "read",
+      "callers": [
+        "0x08000588"
+      ],
+      "notes": "Wrapper: stack-canary/copy guard then func_0x08016fcc(SRAM,RAM,len,guard) - Nintendo-style SRAM read/verify helper (body of 0x08016fcc not recovered, jumptable only)."
+    },
+    {
+      "addr": "0x08016f24",
+      "role": "read",
+      "callers": [
+        "0x08000488"
+      ],
+      "notes": "Same shape as 0x08016e50; used after write in 0x08000488 as verify/read-back via func_0x08016fcc."
+    },
+    {
+      "addr": "0x08016fcc",
+      "role": "deserialize",
+      "callers": [
+        "0x08016e50",
+        "0x08016f24"
+      ],
+      "notes": "Unrecovered jumptable stub in decompilation; inferred common SRAM transfer core from call sites only - CONFIRMED_STATIC for existence, HYPOTHESIS for exact semantics."
+    }
+  ],
+  "caller_chains": [
+    {
+      "entry_caller": "0x08000488",
+      "chain": [
+        "0x08000488",
+        "0x08016eb4",
+        "0x08016f24",
+        "0x08016fcc"
+      ],
+      "trigger_context": "Unknown - no callers in callgraph.json (all save seeds have callers:[]; dispatch via UNRECOVERED_JUMPTABLE). Statically it initialises RAM struct fields then flushes RAM->SRAM 0x0E000000 and verifies.",
+      "ram_fields_updated": [
+        "RAM struct base _DAT_08000538 (literal-pool pointer, numeric address unresolved): fields at +_DAT_0800053c, +_DAT_08000544, repeated 3-word records via puVar2, +0x3C and +0x10C relative fields - offsets are literal-pool values not recovered, so byte-level RAM offsets cannot be honestly named"
+      ],
+      "how_mapped": "MMIO seed extraction in save_related_functions.c (2 seeds) + literal 0x0E000000 argument to 0x08016eb4/0x08016f24 in decompiled.c; callgraph confirms no static callers."
+    },
+    {
+      "entry_caller": "0x08000588",
+      "chain": [
+        "0x08000588",
+        "0x08016e50",
+        "0x08016fcc"
+      ],
+      "trigger_context": "Boot/load path inferred (not proven): reads SRAM->RAM, validates first dword, sanitises on mismatch. No callers in callgraph.",
+      "ram_fields_updated": [
+        "On invalid header: OR mask _DAT_08000670 over 0x29 (41, loop iVar6=0x28 do-while inclusive) halfwords at RAM+_DAT_08000674 and RAM+_DAT_08000678; on any path copies fields at +_DAT_08000680/-4 etc into globals"
+      ],
+      "how_mapped": "Same MMIO seed + 0x0E000000 first argument to 0x08016e50 and first-dword compare in decompiled.c."
+    }
+  ],
+  "fields": [
+    {
+      "name": "header_word_candidate_magic",
+      "offset": 0,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": [
+        "0x08000488"
+      ],
+      "readers": [
+        "0x08000588"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": "0xffffffff (blank)",
+        "cap-01-future-1.sav": "0x1ad0c863 (63 c8 d0 1a)"
+      },
+      "update_mechanism": "Written as part of RAM->SRAM flush by 0x08000488/0x08016eb4; compared on load by 0x08000588 against unresolved literal _DAT_08000664. Only non-zero bytes in entire populated save.",
+      "confidence": "HYPOTHESIS",
+      "evidence": ".sav bytes verified by Python (only nonzero bytes in file); code compare verified statically; equality header==code constant NOT verified (literal pool unresolved) and checksum hypotheses rejected (see checksums)."
+    },
+    {
+      "name": "main_zero_payload_0x0004_0x1767",
+      "offset": 4,
+      "size": 5988,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [
+        "0x08000488"
+      ],
+      "readers": [
+        "0x08000588"
+      ],
+      "observed_values": {
+        "cap-01-future-1.sav": "all 0x00 (5988 bytes)",
+        "cap-00-future-0.sav": "all 0xff (blank)"
+      },
+      "update_mechanism": "Zero-initialised struct flushed en bloc; in this corpus no phrase-progress (650 phrases), scores, or settings have been set, so per-field subdivision is impossible from bytes alone. Any subdivision would be fabrication.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Python: Counter over [0,0x1768) = {0x00:5988, plus 4 header bytes}; diff cap00->cap01 = 6004 bytes."
+    },
+    {
+      "name": "unused_gap_0x1768_0x180B",
+      "offset": 5992,
+      "size": 164,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {
+        "cap-01-future-1.sav": "all 0xff"
+      },
+      "update_mechanism": "Never written in observed saves; bounds the main write length to <=0x1768 or shows inter-struct gap.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Python active-range scan."
+    },
+    {
+      "name": "secondary_zero_span_0x180C_0x1817",
+      "offset": 6156,
+      "size": 12,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [
+        "0x08000488"
+      ],
+      "readers": [],
+      "observed_values": {
+        "cap-01-future-1.sav": "all 0x00 (12 bytes)"
+      },
+      "update_mechanism": "Unknown; isolated zero span after 164B gap. Writer attribution is hypothesis only (same flush could cover it if length=0x1818 with gap unexplained, or a second flush).",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Python active-range scan [(0,0x1768),(0x180C,0x1818)]; no code constant 0x180C/0x1818 recovered."
+    },
+    {
+      "name": "unused_tail_0x1818_0x7FFF",
+      "offset": 6168,
+      "size": 26600,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {
+        "cap-01-future-1.sav": "all 0xff"
+      },
+      "update_mechanism": "Unwritten SRAM space.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Python scan; total 32768B."
+    }
+  ],
+  "fuzzing_targets": [
+    {
+      "offset": 0,
+      "size": 4,
+      "mutation": "Flip one byte of header word (e.g. 0x63->0x62)",
+      "requires_checksum_repair": false,
+      "predicted_effect": "If header is the magic checked by 0x08000588, save rejected/sanitised (0x29-halfword OR-mask path) - game boots as new/blank or clears progress. If no effect, header is not (sole) validity gate."
+    },
+    {
+      "offset": 4,
+      "size": 1,
+      "mutation": "Set first payload byte to 0x01, one offset at a time sweeping 4..0x1767",
+      "requires_checksum_repair": false,
+      "predicted_effect": "No checksum repair known/needed (no checksum proven); observe which phrase/score/setting changes in UI/RAM to subdivide the zero payload. Rejection on load would reveal a hidden checksum - then locate it."
+    },
+    {
+      "offset": 6156,
+      "size": 12,
+      "mutation": "Set 0x180C-0x1817 to 0xFF (erase secondary span) and separately to incrementing pattern",
+      "requires_checksum_repair": false,
+      "predicted_effect": "Distinguishes secondary struct vs tail: loss of a specific setting/progress implicates this span; no effect suggests padding/unused."
+    },
+    {
+      "offset": 5992,
+      "size": 164,
+      "mutation": "Fill gap 0x1768-0x180B with 0x00",
+      "requires_checksum_repair": false,
+      "predicted_effect": "No gameplay change expected if gap is unwritten; a change would show the reader consumes a longer contiguous struct than the writer normally flushes."
+    },
+    {
+      "offset": 0,
+      "size": 5992,
+      "mutation": "Copy whole main block over itself after corrupting payload mid-range (e.g. 0x800=0xFF)",
+      "requires_checksum_repair": false,
+      "predicted_effect": "Tests for hidden integrity beyond header: silent acceptance = no payload checksum; rejection = search decompiled code for a checksum missed due to jumptable stubs (0x08016fcc)."
+    }
+  ],
+  "open_questions": [
+    "Literal-pool values (_DAT_08000538 base, _DAT_08000584 length, _DAT_08000664 expected header, all field offsets) are unresolved in the trace-guided decompilation, so RAM mirror addresses, exact write length(s), and header==magic equality cannot be proven from this workspace.",
+    "No checksum algorithm was found and all standard checksums were rejected against the samples; is there integrity inside the unrecovered 0x08016fcc jumptable stub, or is the first-dword compare the only gate?",
+    "What is the 12-byte span at 0x180C-0x1817 and the 164-byte gap before it - second struct, second slot, or sparse fields of one struct?",
+    "How is the 5988-byte zero payload subdivided (650 phrase states, scores, settings)? Requires a progressed (non-zero) save or the fuzzing sweep; both corpus saves are blank/initialised only.",
+    "Who calls 0x08000488/0x08000588? Callgraph shows no callers (jumptable/indirect dispatch); trigger contexts (boot, phrase completion, settings change) are unknown.",
+    "Only 2 of the 6 corpus files described in PACKET.md metadata are present in saves/ (2 .sav on disk); additional progressed states would raise confidence."
+  ]
+}

@@ -1,0 +1,887 @@
+{
+  "schema": "gbakit-save-research/1",
+  "release_key": "BRYP-r0-7669b9f2630d5eca",
+  "display_name": "Rayman - Hoodlums' Revenge (Europe) (En,Fr,De,Es,It,Nl)",
+  "rom_sha256": "7669b9f2630d5eca543be5bc29ea0e2c81fd0557a1231079978854d432eeb95a",
+  "game_code": "BRYP",
+  "header_family": "BRY",
+  "community_id": "comm-004",
+  "overall_confidence": "MEDIUM",
+  "media": {
+    "kind": "eeprom512",
+    "size_bytes": 512,
+    "sdk_tags": [],
+    "fill_byte": "0x00"
+  },
+  "slots_and_copies": [
+    {
+      "name": "global_config",
+      "offset": 0,
+      "size": 104,
+      "redundancy_role": "global_config",
+      "selection_rule": "Validated first on load (FUN_08025dd8): magic 'G' at +2 and u16 sum over bytes 2..103 must match; on failure FUN_08025cc4 reinitializes the entire image (global + all 4 slots). Single copy, no backup."
+    },
+    {
+      "name": "slot_0",
+      "offset": 104,
+      "size": 100,
+      "redundancy_role": "primary",
+      "selection_rule": "Validated independently on load (FUN_08025dd8): magic 'G' at +2 and u16 sum over bytes 2..99 must match; on failure only this slot is reinitialized via FUN_08025d64. Single copy, no backup, no generation counter."
+    },
+    {
+      "name": "slot_1",
+      "offset": 204,
+      "size": 100,
+      "redundancy_role": "primary",
+      "selection_rule": "Validated independently on load (FUN_08025dd8): magic 'G' at +2 and u16 sum over bytes 2..99 must match; on failure only this slot is reinitialized via FUN_08025d64. Single copy, no backup, no generation counter."
+    },
+    {
+      "name": "slot_2",
+      "offset": 304,
+      "size": 100,
+      "redundancy_role": "primary",
+      "selection_rule": "Validated independently on load (FUN_08025dd8): magic 'G' at +2 and u16 sum over bytes 2..99 must match; on failure only this slot is reinitialized via FUN_08025d64. Single copy, no backup, no generation counter."
+    },
+    {
+      "name": "slot_3",
+      "offset": 404,
+      "size": 100,
+      "redundancy_role": "primary",
+      "selection_rule": "Validated independently on load (FUN_08025dd8): magic 'G' at +2 and u16 sum over bytes 2..99 must match; on failure only this slot is reinitialized via FUN_08025d64. Single copy, no backup, no generation counter."
+    },
+    {
+      "name": "unused_tail",
+      "offset": 504,
+      "size": 8,
+      "redundancy_role": "unknown",
+      "selection_rule": "Never accessed; outside the 504-byte load/flush range. 0xFF erased residue."
+    }
+  ],
+  "magic_signatures": [
+    {
+      "offset": 2,
+      "bytes_hex": "47",
+      "ascii": "G",
+      "verified_in_code": true,
+      "verified_in_sav": true,
+      "function_addrs": [
+        "0x08025cc4",
+        "0x08025dd8"
+      ]
+    },
+    {
+      "offset": 106,
+      "bytes_hex": "47",
+      "ascii": "G",
+      "verified_in_code": true,
+      "verified_in_sav": true,
+      "function_addrs": [
+        "0x08025d64",
+        "0x08025e74",
+        "0x08025dd8"
+      ]
+    },
+    {
+      "offset": 206,
+      "bytes_hex": "47",
+      "ascii": "G",
+      "verified_in_code": true,
+      "verified_in_sav": true,
+      "function_addrs": [
+        "0x08025d64",
+        "0x08025dd8"
+      ]
+    },
+    {
+      "offset": 306,
+      "bytes_hex": "47",
+      "ascii": "G",
+      "verified_in_code": true,
+      "verified_in_sav": true,
+      "function_addrs": [
+        "0x08025d64",
+        "0x08025dd8"
+      ]
+    },
+    {
+      "offset": 406,
+      "bytes_hex": "47",
+      "ascii": "G",
+      "verified_in_code": true,
+      "verified_in_sav": true,
+      "function_addrs": [
+        "0x08025d64",
+        "0x08025dd8"
+      ]
+    }
+  ],
+  "checksums": [
+    {
+      "name": "global_sum16",
+      "algorithm": "sum16_le",
+      "formula_detail": "stored u16_le at record+0 = (sum of unsigned bytes at logical offsets 2..103 inclusive) & 0xFFFF. FUN_080388cc accumulates bytes in int; store truncates to u16_le. Includes magic byte at +2. Physical sav bytes obtained by reversing each aligned 8-byte block.",
+      "stored_offset": 0,
+      "stored_size": 2,
+      "covered_start": 2,
+      "covered_end": 103,
+      "function_addrs": [
+        "0x080388cc",
+        "0x08025e50",
+        "0x08025dd8"
+      ],
+      "verified_on_samples": [
+        {
+          "file": "cap-00-future-0.sav",
+          "stored_hex": "0x01cb",
+          "computed_hex": "0x01cb",
+          "match": true
+        },
+        {
+          "file": "cap-01-future-1.sav",
+          "stored_hex": "0x01c6",
+          "computed_hex": "0x01c6",
+          "match": true
+        }
+      ],
+      "confidence": "CONFIRMED_VERIFIED"
+    },
+    {
+      "name": "slot_sum16",
+      "algorithm": "sum16_le",
+      "formula_detail": "Per slot: stored u16_le at slot+0 = (sum of unsigned bytes at slot offsets 2..99 inclusive) & 0xFFFF. Same FUN_080388cc. Empty slot sums to 0x0047 (magic only). Slot EEPROM offsets 104,204,304,404.",
+      "stored_offset": 104,
+      "stored_size": 2,
+      "covered_start": 106,
+      "covered_end": 203,
+      "function_addrs": [
+        "0x080388cc",
+        "0x08025e74",
+        "0x08025dd8"
+      ],
+      "verified_on_samples": [
+        {
+          "file": "cap-00-future-0.sav",
+          "stored_hex": "0x0047 (all 4 slots)",
+          "computed_hex": "0x0047 (all 4 slots)",
+          "match": true
+        },
+        {
+          "file": "cap-01-future-1.sav",
+          "stored_hex": "0x0047 (all 4 slots)",
+          "computed_hex": "0x0047 (all 4 slots)",
+          "match": true
+        }
+      ],
+      "confidence": "CONFIRMED_VERIFIED"
+    }
+  ],
+  "io_driver_functions": [
+    {
+      "addr": "0x0803c52c",
+      "role": "write",
+      "callers": [
+        "0x0803c5ac",
+        "0x0803c670"
+      ],
+      "notes": "DMA3 primitive: programs DMA3 src/dst/control (enable bit 0x80000000), waits busy bit 0x8000, saves/restores interrupt global. Used for EEPROM transfers to/from 0x0D000000."
+    },
+    {
+      "addr": "0x0803c5ac",
+      "role": "read",
+      "callers": [
+        "0x0803c7d0",
+        "0x08034b90"
+      ],
+      "notes": "Read one 8-byte EEPROM block: builds read command+address bitstream MSB-first (two leading 1 bits), DMA to 0x0D000000, reads 0x44 halfwords, reconstructs 4 u16 MSB-first into descending slots (origin of per-block byte reversal in .sav)."
+    },
+    {
+      "addr": "0x0803c670",
+      "role": "write",
+      "callers": [
+        "0x0803c65c"
+      ],
+      "notes": "Write one 8-byte EEPROM block: expands 4 u16 MSB-first, appends address, write opcode bits, DMA addr_bits+0x43 halfwords to 0x0D000000, polls EEPROM ready bit with timer timeout."
+    },
+    {
+      "addr": "0x0803c65c",
+      "role": "write",
+      "callers": [
+        "0x0803c828"
+      ],
+      "notes": "Wrapper: FUN_0803c670(block, data, wait=1)."
+    },
+    {
+      "addr": "0x0803c7d0",
+      "role": "read",
+      "callers": [
+        "0x0803c828",
+        "0x08034b90",
+        "0x08034cd4"
+      ],
+      "notes": "Verify block: read via FUN_0803c5ac and compare 4 u16; returns 0 ok / 0x8000 mismatch."
+    },
+    {
+      "addr": "0x0803c828",
+      "role": "write",
+      "callers": [
+        "0x08034cd4"
+      ],
+      "notes": "Write block with up to 3 write+verify (FUN_0803c65c+FUN_0803c7d0) retries."
+    },
+    {
+      "addr": "0x0803c4e4",
+      "role": "serialize",
+      "callers": [
+        "0x08034e8c"
+      ],
+      "notes": "EEPROM type select: arg 4 selects 512-byte config (block count at config+4, address bits at config+8); 0x40 selects larger EEPROM."
+    },
+    {
+      "addr": "0x08034e8c",
+      "role": "serialize",
+      "callers": [],
+      "notes": "Save-bus init: calls FUN_0803c4e4(4), fixing 512-byte EEPROM geometry. Entry/init path, no traced callers."
+    },
+    {
+      "addr": "0x08034b90",
+      "role": "read",
+      "callers": [
+        "0x08034e98",
+        "0x08034cd4"
+      ],
+      "notes": "Read byte range (offset,length,dest): block conversion, unaligned head/tail handling, up to 8 read+verify attempts per block, returns bool."
+    },
+    {
+      "addr": "0x08034cd4",
+      "role": "write",
+      "callers": [
+        "0x08034eb4"
+      ],
+      "notes": "Write byte range (offset,length,src): block writes via FUN_0803c828, then full read-back via FUN_08034b90 + memcmp FUN_080446b0, returns bool."
+    },
+    {
+      "addr": "0x08034e98",
+      "role": "read",
+      "callers": [
+        "0x08025dd8"
+      ],
+      "notes": "Read wrapper with interrupt/DMA-state save-restore guard. Call site: FUN_08034e98(0,0x1F8,ram_buf,2)."
+    },
+    {
+      "addr": "0x08034eb4",
+      "role": "write",
+      "callers": [
+        "0x08025e50",
+        "0x08025e74"
+      ],
+      "notes": "Write wrapper with guard save/restore. Call sites: (0,0x68,buf,2) global, (0x68+slot*100,100,slot,2) slots."
+    },
+    {
+      "addr": "0x080388cc",
+      "role": "checksum",
+      "callers": [
+        "0x08025dd8",
+        "0x08025e50",
+        "0x08025e74"
+      ],
+      "notes": "Byte-sum: sum of u8 array in int accumulator; callers truncate to u16_le. Global len 0x66, slot len 0x62, both from record+2."
+    },
+    {
+      "addr": "0x080446b0",
+      "role": "deserialize",
+      "callers": [
+        "0x08034cd4"
+      ],
+      "notes": "memcmp (word+byte). Used only for post-write read-back verification."
+    },
+    {
+      "addr": "0x08025dd8",
+      "role": "deserialize",
+      "callers": [],
+      "notes": "Load+validate entry: read 504 bytes, check global magic/checksum then per-slot; reinit failures. No traced callers."
+    },
+    {
+      "addr": "0x08025cc4",
+      "role": "serialize",
+      "callers": [
+        "0x08025dd8"
+      ],
+      "notes": "Init whole image: zero 0x200 RAM, set global header (+2='G',+4=6,+5=0xFF,+6=0x7F), zero 6x16 entries, flush global + 4 slots."
+    },
+    {
+      "addr": "0x08025d64",
+      "role": "serialize",
+      "callers": [
+        "0x08025dd8",
+        "0x08025cc4"
+      ],
+      "notes": "Init one slot: zero 100 bytes, set +2='G', flush via FUN_08025e74."
+    },
+    {
+      "addr": "0x08025e50",
+      "role": "write",
+      "callers": [
+        "0x08025cc4"
+      ],
+      "notes": "Flush global: recompute checksum then FUN_08034eb4(0,0x68,buf,2). (Callgraph lists no callers; text call site in FUN_08025cc4.)"
+    },
+    {
+      "addr": "0x08025e74",
+      "role": "write",
+      "callers": [
+        "0x08025d64"
+      ],
+      "notes": "Flush slot: recompute checksum then FUN_08034eb4(0x68+slot*100,100,slot_ptr,2)."
+    },
+    {
+      "addr": "0x08025f08",
+      "role": "read",
+      "callers": [],
+      "notes": "Accessor reader: returns ~((global_byte3>>1)&1)&1. Only traced payload reader."
+    }
+  ],
+  "caller_chains": [
+    {
+      "entry_caller": "0x08025dd8",
+      "chain": [
+        "0x08025dd8",
+        "0x08034e98",
+        "0x08034b90",
+        "0x0803c5ac",
+        "0x0803c52c"
+      ],
+      "trigger_context": "Boot/load: read 504-byte image from EEPROM offset 0 into contiguous RAM buffer",
+      "ram_fields_updated": [],
+      "how_mapped": "Direct call site func_0x08034e98(0,0x1F8,_DAT_08025df4,2) in FUN_08025dd8 text; callgraph confirms 0x08034e98->0x08034b90 and 0x0803c5ac->0x0803c52c. FUN_08034b90 also calls FUN_0803c7d0 verify per block."
+    },
+    {
+      "entry_caller": "0x08025dd8",
+      "chain": [
+        "0x08025dd8",
+        "0x080388cc"
+      ],
+      "trigger_context": "Load validation: global checksum (len 0x66) + 'G' magic, then per-slot (len 0x62)",
+      "ram_fields_updated": [],
+      "how_mapped": "Call sites func_0x080388cc(puVar5+1,0x66) and (puVar5+1,0x62) with magic tests in FUN_08025dd8 text."
+    },
+    {
+      "entry_caller": "0x08025dd8",
+      "chain": [
+        "0x08025dd8",
+        "0x08025cc4",
+        "0x08025e50",
+        "0x08034eb4",
+        "0x08034cd4",
+        "0x0803c828",
+        "0x0803c65c",
+        "0x0803c670",
+        "0x0803c52c"
+      ],
+      "trigger_context": "Global validation failure at load: reinitialize entire image",
+      "ram_fields_updated": [
+        "global header +2='G',+3=0,+4=6,+5=0xFF,+6=0x7F",
+        "global entries 0x08..0x67 zeroed",
+        "all slots zeroed via FUN_08025d64"
+      ],
+      "how_mapped": "FUN_08025dd8 calls FUN_08025cc4 on global failure (callgraph + text); FUN_08025cc4 text calls FUN_08025e50 then FUN_08025d64 x4; flush chain from call sites FUN_08034eb4(0,0x68,buf,2)."
+    },
+    {
+      "entry_caller": "0x08025dd8",
+      "chain": [
+        "0x08025dd8",
+        "0x08025d64",
+        "0x08025e74",
+        "0x08034eb4",
+        "0x08034cd4"
+      ],
+      "trigger_context": "Single slot validation failure at load: reinitialize that slot only",
+      "ram_fields_updated": [
+        "slot bytes 0..99 zeroed, +2='G'"
+      ],
+      "how_mapped": "Per-slot loop in FUN_08025dd8 text calls FUN_08025d64(slot); FUN_08025d64 text calls FUN_08025e74(slot); call site FUN_08034eb4(0x68+slot*100,100,ptr,2)."
+    },
+    {
+      "entry_caller": "0x08034cd4",
+      "chain": [
+        "0x08034cd4",
+        "0x08034b90",
+        "0x080446b0"
+      ],
+      "trigger_context": "After every range write: read-back and memcmp verification",
+      "ram_fields_updated": [],
+      "how_mapped": "Text in FUN_08034cd4: cVar1=FUN_08034b90(...) then FUN_080446b0(src, readback, len)==0 required for success."
+    },
+    {
+      "entry_caller": "0x08034e8c",
+      "chain": [
+        "0x08034e8c",
+        "0x0803c4e4"
+      ],
+      "trigger_context": "Save-bus initialization: select 512-byte EEPROM",
+      "ram_fields_updated": [],
+      "how_mapped": "Single call func_0x0803c4e4(4) in FUN_08034e8c text."
+    }
+  ],
+  "fields": [
+    {
+      "name": "global_checksum",
+      "offset": 0,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": [
+        "0x08025e50"
+      ],
+      "readers": [
+        "0x08025dd8"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": "0x01cb",
+        "cap-01-future-1.sav": "0x01c6"
+      },
+      "update_mechanism": "Recomputed by FUN_08025e50 via FUN_080388cc on every global flush; stored at record+0",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Contiguous 504-byte RAM buffer (global at base, slots at base+0x68); numeric base held in unresolved literal pointers _DAT_08025df4/_DAT_08025d50/_DAT_08025ea0, not recoverable from workspace. Verified: sum(logical bytes 2..103)&0xFFFF matches stored in both saves after per-8-byte-block reversal. Physical low byte at sav 0x07."
+    },
+    {
+      "name": "global_magic_G",
+      "offset": 2,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": [
+        "0x08025cc4"
+      ],
+      "readers": [
+        "0x08025dd8"
+      ],
+      "observed_values": {
+        "both": "0x47 ('G')"
+      },
+      "update_mechanism": "Written 0x47 at init; tested =='G' on load; covered by checksum",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Init in FUN_08025cc4, test in FUN_08025dd8; physical sav offset 0x05."
+    },
+    {
+      "name": "global_flags_byte3",
+      "offset": 3,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": [
+        "0x08025cc4"
+      ],
+      "readers": [
+        "0x08025f08"
+      ],
+      "observed_values": {
+        "both": "0x00"
+      },
+      "update_mechanism": "Zeroed at init; bit1 read inverted by FUN_08025f08: return ~((b>>1)&1)&1",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "Reader FUN_08025f08 proven; semantics of bit1 unknown (HYPOTHESIS). Physical sav offset 0x04."
+    },
+    {
+      "name": "global_byte4_counter_or_setting",
+      "offset": 4,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": [
+        "0x08025cc4"
+      ],
+      "readers": [],
+      "observed_values": {
+        "cap-00-future-0.sav": "0x06",
+        "cap-01-future-1.sav": "0x01"
+      },
+      "update_mechanism": "Init value 6 written by FUN_08025cc4; thereafter mutated by untraced gameplay code and flushed; checksum follows exactly",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Only inter-file diff (delta -5) with checksum delta -5; PACKET mutation probe at physical 0x03 (=logical 4) forced reinit. Init/static writer CONFIRMED_STATIC, changing behaviour CONFIRMED_VERIFIED, semantics UNKNOWN. Physical sav offset 0x03."
+    },
+    {
+      "name": "global_byte5_init_ff",
+      "offset": 5,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": [
+        "0x08025cc4"
+      ],
+      "readers": [],
+      "observed_values": {
+        "both": "0xff"
+      },
+      "update_mechanism": "Written 0xFF at init, covered by checksum",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "FUN_08025cc4 init; physical sav offset 0x02."
+    },
+    {
+      "name": "global_byte6_init_7f",
+      "offset": 6,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": [
+        "0x08025cc4"
+      ],
+      "readers": [],
+      "observed_values": {
+        "both": "0x7f"
+      },
+      "update_mechanism": "Written 0x7F at init, covered by checksum",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "FUN_08025cc4 init; bitmask-like value unproven. Physical sav offset 0x01."
+    },
+    {
+      "name": "global_byte7_padding",
+      "offset": 7,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": [
+        "0x08025cc4"
+      ],
+      "readers": [],
+      "observed_values": {
+        "both": "0x00"
+      },
+      "update_mechanism": "Zeroed (memset 0x200) at init",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "Physical sav offset 0x00."
+    },
+    {
+      "name": "global_entries_6x16",
+      "offset": 8,
+      "size": 96,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [
+        "0x08025cc4"
+      ],
+      "readers": [],
+      "observed_values": {
+        "both": "all 0x00"
+      },
+      "update_mechanism": "Six 16-byte entries at +8 stride 0x10; per entry u32@+0, u16@+4, u8@+6 explicitly zeroed at init; no other traced writer",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "Structure from FUN_08025cc4 init loop; semantics UNKNOWN, never populated in samples."
+    },
+    {
+      "name": "slot0_checksum",
+      "offset": 104,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": [
+        "0x08025e74"
+      ],
+      "readers": [
+        "0x08025dd8"
+      ],
+      "observed_values": {
+        "both": "0x0047"
+      },
+      "update_mechanism": "Recomputed by FUN_08025e74 via FUN_080388cc on slot flush; EEPROM offset 0x68+0*100",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Contiguous 504-byte RAM buffer (global at base, slots at base+0x68); numeric base held in unresolved literal pointers _DAT_08025df4/_DAT_08025d50/_DAT_08025ea0, not recoverable from workspace. Sum(slot bytes 2..99)&0xFFFF = 0x0047 (empty slot) matches both saves. Checksum low byte physical sav offset 0x6f."
+    },
+    {
+      "name": "slot0_magic_G",
+      "offset": 106,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": [
+        "0x08025d64"
+      ],
+      "readers": [
+        "0x08025dd8"
+      ],
+      "observed_values": {
+        "both": "0x47 ('G')"
+      },
+      "update_mechanism": "Written 0x47 by FUN_08025d64(slot) at init; tested on load",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Physical sav offset 0x6d."
+    },
+    {
+      "name": "slot0_payload",
+      "offset": 107,
+      "size": 97,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [
+        "0x08025d64"
+      ],
+      "readers": [],
+      "observed_values": {
+        "both": "all 0x00"
+      },
+      "update_mechanism": "Zeroed by FUN_08025d64 at init; no other traced writer in corpus",
+      "confidence": "UNKNOWN",
+      "evidence": "Physical range via per-block reversal of logical 107..203. Never populated in samples; no subdivision honestly mappable."
+    },
+    {
+      "name": "slot1_checksum",
+      "offset": 204,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": [
+        "0x08025e74"
+      ],
+      "readers": [
+        "0x08025dd8"
+      ],
+      "observed_values": {
+        "both": "0x0047"
+      },
+      "update_mechanism": "Recomputed by FUN_08025e74 via FUN_080388cc on slot flush; EEPROM offset 0x68+1*100",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Contiguous 504-byte RAM buffer (global at base, slots at base+0x68); numeric base held in unresolved literal pointers _DAT_08025df4/_DAT_08025d50/_DAT_08025ea0, not recoverable from workspace. Sum(slot bytes 2..99)&0xFFFF = 0x0047 (empty slot) matches both saves. Checksum low byte physical sav offset 0xcb."
+    },
+    {
+      "name": "slot1_magic_G",
+      "offset": 206,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": [
+        "0x08025d64"
+      ],
+      "readers": [
+        "0x08025dd8"
+      ],
+      "observed_values": {
+        "both": "0x47 ('G')"
+      },
+      "update_mechanism": "Written 0x47 by FUN_08025d64(slot) at init; tested on load",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Physical sav offset 0xc9."
+    },
+    {
+      "name": "slot1_payload",
+      "offset": 207,
+      "size": 97,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [
+        "0x08025d64"
+      ],
+      "readers": [],
+      "observed_values": {
+        "both": "all 0x00"
+      },
+      "update_mechanism": "Zeroed by FUN_08025d64 at init; no other traced writer in corpus",
+      "confidence": "UNKNOWN",
+      "evidence": "Physical range via per-block reversal of logical 207..303. Never populated in samples; no subdivision honestly mappable."
+    },
+    {
+      "name": "slot2_checksum",
+      "offset": 304,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": [
+        "0x08025e74"
+      ],
+      "readers": [
+        "0x08025dd8"
+      ],
+      "observed_values": {
+        "both": "0x0047"
+      },
+      "update_mechanism": "Recomputed by FUN_08025e74 via FUN_080388cc on slot flush; EEPROM offset 0x68+2*100",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Contiguous 504-byte RAM buffer (global at base, slots at base+0x68); numeric base held in unresolved literal pointers _DAT_08025df4/_DAT_08025d50/_DAT_08025ea0, not recoverable from workspace. Sum(slot bytes 2..99)&0xFFFF = 0x0047 (empty slot) matches both saves. Checksum low byte physical sav offset 0x137."
+    },
+    {
+      "name": "slot2_magic_G",
+      "offset": 306,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": [
+        "0x08025d64"
+      ],
+      "readers": [
+        "0x08025dd8"
+      ],
+      "observed_values": {
+        "both": "0x47 ('G')"
+      },
+      "update_mechanism": "Written 0x47 by FUN_08025d64(slot) at init; tested on load",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Physical sav offset 0x135."
+    },
+    {
+      "name": "slot2_payload",
+      "offset": 307,
+      "size": 97,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [
+        "0x08025d64"
+      ],
+      "readers": [],
+      "observed_values": {
+        "both": "all 0x00"
+      },
+      "update_mechanism": "Zeroed by FUN_08025d64 at init; no other traced writer in corpus",
+      "confidence": "UNKNOWN",
+      "evidence": "Physical range via per-block reversal of logical 307..403. Never populated in samples; no subdivision honestly mappable."
+    },
+    {
+      "name": "slot3_checksum",
+      "offset": 404,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": [
+        "0x08025e74"
+      ],
+      "readers": [
+        "0x08025dd8"
+      ],
+      "observed_values": {
+        "both": "0x0047"
+      },
+      "update_mechanism": "Recomputed by FUN_08025e74 via FUN_080388cc on slot flush; EEPROM offset 0x68+3*100",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Contiguous 504-byte RAM buffer (global at base, slots at base+0x68); numeric base held in unresolved literal pointers _DAT_08025df4/_DAT_08025d50/_DAT_08025ea0, not recoverable from workspace. Sum(slot bytes 2..99)&0xFFFF = 0x0047 (empty slot) matches both saves. Checksum low byte physical sav offset 0x193."
+    },
+    {
+      "name": "slot3_magic_G",
+      "offset": 406,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": [
+        "0x08025d64"
+      ],
+      "readers": [
+        "0x08025dd8"
+      ],
+      "observed_values": {
+        "both": "0x47 ('G')"
+      },
+      "update_mechanism": "Written 0x47 by FUN_08025d64(slot) at init; tested on load",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Physical sav offset 0x191."
+    },
+    {
+      "name": "slot3_payload",
+      "offset": 407,
+      "size": 97,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [
+        "0x08025d64"
+      ],
+      "readers": [],
+      "observed_values": {
+        "both": "all 0x00"
+      },
+      "update_mechanism": "Zeroed by FUN_08025d64 at init; no other traced writer in corpus",
+      "confidence": "UNKNOWN",
+      "evidence": "Physical range via per-block reversal of logical 407..503. Never populated in samples; no subdivision honestly mappable."
+    },
+    {
+      "name": "unused_tail",
+      "offset": 504,
+      "size": 8,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {
+        "both": "0xff x8"
+      },
+      "update_mechanism": "Never read or written (outside 504-byte image)",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Invariant under block reversal; erased-state residue."
+    }
+  ],
+  "fuzzing_targets": [
+    {
+      "offset": 4,
+      "size": 1,
+      "mutation": "Set global logical byte +4 from 0x06 to 0x02 without checksum repair (physical sav offset 0x03)",
+      "requires_checksum_repair": false,
+      "predicted_effect": "Global checksum fails; FUN_08025dd8 reinitializes entire image on load (post-boot sav returns to init values). Reproduces PACKET probe."
+    },
+    {
+      "offset": 4,
+      "size": 1,
+      "mutation": "Set global +4 0x06->0x02 with global checksum recomputed (physical 0x03, checksum phys 0x07/0x06)",
+      "requires_checksum_repair": true,
+      "predicted_effect": "Save accepted; any UI/setting tied to +4 changes visibly, naming the field. Highest-value test."
+    },
+    {
+      "offset": 2,
+      "size": 1,
+      "mutation": "Change global magic 'G' (0x47->0x48) at logical +2 (physical 0x05), with and without checksum repair",
+      "requires_checksum_repair": true,
+      "predicted_effect": "Reinitialized on load in both variants, proving magic is an independent gate alongside checksum."
+    },
+    {
+      "offset": 106,
+      "size": 1,
+      "mutation": "Zero slot0 magic at logical 106 (physical 0x6D), no repair",
+      "requires_checksum_repair": false,
+      "predicted_effect": "Only slot 0 reinitialized by FUN_08025d64(0); global and slots 1-3 byte-identical after boot."
+    },
+    {
+      "offset": 307,
+      "size": 1,
+      "mutation": "Set slot2 first payload byte (logical 307) 0x00->0x01 with slot2 checksum repair",
+      "requires_checksum_repair": true,
+      "predicted_effect": "Accepted and persists after boot/save cycle, proving payload is pass-through storage."
+    },
+    {
+      "offset": 207,
+      "size": 97,
+      "mutation": "Flip any slot1 payload byte (logical 207..303) without repair",
+      "requires_checksum_repair": false,
+      "predicted_effect": "Only slot 1 blanked on load; all other records unchanged."
+    },
+    {
+      "offset": 3,
+      "size": 1,
+      "mutation": "Set global +3 bit1 (0x00->0x02, physical 0x04) with global checksum repair",
+      "requires_checksum_repair": true,
+      "predicted_effect": "FUN_08025f08 return flips 1->0; observe gated UI/gameplay toggle to name +3 bit1."
+    },
+    {
+      "offset": 5,
+      "size": 2,
+      "mutation": "Clear global +5 (0xFF->0x00) and separately +6 (0x7F->0x00), each with checksum repair",
+      "requires_checksum_repair": true,
+      "predicted_effect": "If live defaults bitmasks, option states change after load; otherwise inert constants."
+    },
+    {
+      "offset": 504,
+      "size": 8,
+      "mutation": "Fill unused tail 504..511 with 0x00/random",
+      "requires_checksum_repair": false,
+      "predicted_effect": "No effect; mutated tail persists byte-for-byte after boot, proving out-of-format."
+    },
+    {
+      "offset": 0,
+      "size": 2,
+      "mutation": "Increment stored global checksum low byte (physical 0x07) by 1, no other change",
+      "requires_checksum_repair": false,
+      "predicted_effect": "Full reinit on load, confirming stored checksum is compared."
+    }
+  ],
+  "open_questions": [
+    "Semantics of global byte +4 (init 6, observed 6->1): language, counter, volume, or progress value cannot be distinguished from empty saves; fuzzing target #2 and a populated-save capture are required.",
+    "Semantics of global +3 bit1 (only reader FUN_08025f08), +5=0xFF, +6=0x7F, and the six 16-byte global entries at +8..0x67: never populated in samples.",
+    "All slot payload bytes (+3..+99 x4 slots): both samples are freshly initialized empty slots; no populated save exists in the workspace to subdivide them.",
+    "Numeric RAM mirror base address: buffer proven contiguous (global + slots at +0x68) but base is in unresolved Ghidra literal pointers (_DAT_08025df4 etc.) and no ROM is in the workspace to read them.",
+    "Gameplay mutators/flush callers outside init/load: FUN_08025e50/0x08025e74/0x08025dd8 have no direct callers in callgraph.json and 0x47/FUN_080388cc appear nowhere else in 223 functions; likely indirect/jumptable calls or untraced code, unresolved.",
+    "Meaning of the constant trailing argument 2 at FUN_08034e98/FUN_08034eb4 call sites (ignored by 3-param decompiled range bodies; likely consumed by unrecovered tail code).",
+    "No paired .ss save states exist (states/ empty), so all fuzzing predictions are boot-diff predictions, not yet state-reload observations."
+  ]
+}

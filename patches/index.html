@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Debug Menu Patches — gbakit GBA Reference</title>
+  <link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+  <header>
+    <div class="brand"><a href="../index.html" style="color:inherit">gbakit GBA Reference <span class="badge badge-emerald">v2.0</span></a></div>
+    <nav>
+      <a href="../index.html">Games</a>
+      <a href="../saves/index.html">Save Formats</a>
+      <a href="../patches/index.html">Debug Patches</a>
+      <a href="../assets/index.html">Assets &amp; Audio</a>
+      <a href="../engines/index.html">Engines &amp; Hardware</a>
+      <a href="../families/index.html">Families</a>
+      <a href="../gbakit/index.html">Using gbakit</a>
+    </nav>
+  </header>
+  <main>
+<h1>Debug Menu Re-Enablement Patches (<code>.ips</code>)</h1>
+<p class="meta">Minimal clean-room <code>.ips</code> patches that re-enable dormant developer debug menus and test modes left in retail GBA ROMs. Every patch below has been verified live in mGBA for both clean boot rendering and interactive D-Pad/A navigation.</p>
+<div class="callout">
+  <strong>Apply any patch to your own ROM dump with <a href="../gbakit/index.html"><code>gbakit</code></a>:</strong>
+  <pre><code>gbakit patch apply AF5E-debug.ips original.gba patched-debug.gba</code></pre>
+</div>
+
+<div class="card" style="margin-bottom:1.25rem">
+  <h2 style="margin-top:0;border:none;padding:0"><a href="../titles/ABRE-r0-5d9a18f14392d823.html">Blender Bros. (USA)</a> <span class="badge badge-emerald">Interactive Verified</span></h2>
+  <p class="meta">Code: <code>ABRE</code> &middot; Delta: <strong>2 B</strong> (15 B <code>.ips</code>) &middot; Hook: <code>thumb_imm_scene_override</code></p>
+  <p>Patch scene dispatcher at 0x080048c2 (ldr r0,[r4] -&gt; movs r0,#44) after boot init to select jump-table index 43 (0x080049a4 -&gt; AGB SYSTEM DEBUG MENU 0x08008fd9)</p>
+  <p><a class="btn" href="../assets/patches/ABRE-r0-5d9a18f14392d823/ABRE-debug.ips" download>Download ABRE-debug.ips</a> <a class="btn btn-secondary" href="../titles/ABRE-r0-5d9a18f14392d823.html">View Game Page</a></p>
+  <pre><code>gbakit patch apply ABRE-debug.ips original.gba patched-debug.gba</code></pre>
+  <div class="gallery"><figure><img src='../assets/patches/ABRE-r0-5d9a18f14392d823/boot-patched.png' alt='Blender Bros. (USA) debug menu' loading='lazy'><figcaption>Re-Enabled Debug Menu</figcaption></figure><figure><img src='../assets/patches/ABRE-r0-5d9a18f14392d823/after-input.png' alt='Blender Bros. (USA) after input' loading='lazy'><figcaption>After D-Pad / A Input</figcaption></figure></div>
+</div>
+
+<div class="card" style="margin-bottom:1.25rem">
+  <h2 style="margin-top:0;border:none;padding:0"><a href="../titles/ACBE-r0-e9d2ea6862408043.html">Car Battler Joe (USA)</a> <span class="badge badge-emerald">Interactive Verified</span></h2>
+  <p class="meta">Code: <code>ACBE</code> &middot; Delta: <strong>12 B</strong> (25 B <code>.ips</code>) &middot; Hook: <code>func_ptr_table_triplet</code></p>
+  <p>Replace real scene descriptor table slot 0 (0x08375050, 12 bytes) with debug scene triplet {0x08039251, 0x080392d1, 0x080392e9}</p>
+  <p><a class="btn" href="../assets/patches/ACBE-r0-e9d2ea6862408043/ACBE-debug.ips" download>Download ACBE-debug.ips</a> <a class="btn btn-secondary" href="../titles/ACBE-r0-e9d2ea6862408043.html">View Game Page</a></p>
+  <pre><code>gbakit patch apply ACBE-debug.ips original.gba patched-debug.gba</code></pre>
+  <div class="gallery"><figure><img src='../assets/patches/ACBE-r0-e9d2ea6862408043/boot-patched.png' alt='Car Battler Joe (USA) debug menu' loading='lazy'><figcaption>Re-Enabled Debug Menu</figcaption></figure><figure><img src='../assets/patches/ACBE-r0-e9d2ea6862408043/after-input.png' alt='Car Battler Joe (USA) after input' loading='lazy'><figcaption>After D-Pad / A Input</figcaption></figure></div>
+</div>
+
+<div class="card" style="margin-bottom:1.25rem">
+  <h2 style="margin-top:0;border:none;padding:0"><a href="../titles/BPSJ-r0-9a677452e232f7e8.html">Cinnamoroll - Koko ni Iru yo (Japan)</a> <span class="badge badge-emerald">Interactive Verified</span></h2>
+  <p class="meta">Code: <code>BPSJ</code> &middot; Delta: <strong>2 B</strong> (15 B <code>.ips</code>) &middot; Hook: <code>thumb_imm_scene_override</code></p>
+  <p>Patch scene dispatcher at 0x08005e7a (ldr r0,[r4] -&gt; movs r0,#48) to select AGB SYSTEM DEBUG MENU</p>
+  <p><a class="btn" href="../assets/patches/BPSJ-r0-9a677452e232f7e8/BPSJ-debug.ips" download>Download BPSJ-debug.ips</a> <a class="btn btn-secondary" href="../titles/BPSJ-r0-9a677452e232f7e8.html">View Game Page</a></p>
+  <pre><code>gbakit patch apply BPSJ-debug.ips original.gba patched-debug.gba</code></pre>
+  <div class="gallery"><figure><img src='../assets/patches/BPSJ-r0-9a677452e232f7e8/boot-patched.png' alt='Cinnamoroll - Koko ni Iru yo (Japan) debug menu' loading='lazy'><figcaption>Re-Enabled Debug Menu</figcaption></figure><figure><img src='../assets/patches/BPSJ-r0-9a677452e232f7e8/after-input.png' alt='Cinnamoroll - Koko ni Iru yo (Japan) after input' loading='lazy'><figcaption>After D-Pad / A Input</figcaption></figure></div>
+</div>
+
+<div class="card" style="margin-bottom:1.25rem">
+  <h2 style="margin-top:0;border:none;padding:0"><a href="../titles/A8DJ-r0-756a546899a1fdf4.html">Doubutsu-jima no Chobigurumi (Japan)</a> <span class="badge badge-emerald">Interactive Verified</span></h2>
+  <p class="meta">Code: <code>A8DJ</code> &middot; Delta: <strong>2 B</strong> (15 B <code>.ips</code>) &middot; Hook: <code>thumb_imm_scene_override</code></p>
+  <p>Patch scene dispatcher at 0x0800599a (ldr r0,[r4] -&gt; movs r0,#49) to select AGB SYSTEM DEBUG MENU</p>
+  <p><a class="btn" href="../assets/patches/A8DJ-r0-756a546899a1fdf4/A8DJ-debug.ips" download>Download A8DJ-debug.ips</a> <a class="btn btn-secondary" href="../titles/A8DJ-r0-756a546899a1fdf4.html">View Game Page</a></p>
+  <pre><code>gbakit patch apply A8DJ-debug.ips original.gba patched-debug.gba</code></pre>
+  <div class="gallery"><figure><img src='../assets/patches/A8DJ-r0-756a546899a1fdf4/boot-patched.png' alt='Doubutsu-jima no Chobigurumi (Japan) debug menu' loading='lazy'><figcaption>Re-Enabled Debug Menu</figcaption></figure><figure><img src='../assets/patches/A8DJ-r0-756a546899a1fdf4/after-input.png' alt='Doubutsu-jima no Chobigurumi (Japan) after input' loading='lazy'><figcaption>After D-Pad / A Input</figcaption></figure></div>
+</div>
+
+<div class="card" style="margin-bottom:1.25rem">
+  <h2 style="margin-top:0;border:none;padding:0"><a href="../titles/AEKJ-r0-647e501388b5216f.html">Elemix! (Japan)</a> <span class="badge badge-emerald">Interactive Verified</span></h2>
+  <p class="meta">Code: <code>AEKJ</code> &middot; Delta: <strong>2 B</strong> (15 B <code>.ips</code>) &middot; Hook: <code>thumb_imm_scene_override</code></p>
+  <p>Patch scene dispatcher at 0x080004ca (movs r0, #12 -&gt; movs r0, #16) to select AGB SYSTEM DEBUG MENU</p>
+  <p><a class="btn" href="../assets/patches/AEKJ-r0-647e501388b5216f/AEKJ-debug.ips" download>Download AEKJ-debug.ips</a> <a class="btn btn-secondary" href="../titles/AEKJ-r0-647e501388b5216f.html">View Game Page</a></p>
+  <pre><code>gbakit patch apply AEKJ-debug.ips original.gba patched-debug.gba</code></pre>
+  <div class="gallery"><figure><img src='../assets/patches/AEKJ-r0-647e501388b5216f/boot-patched.png' alt='Elemix! (Japan) debug menu' loading='lazy'><figcaption>Re-Enabled Debug Menu</figcaption></figure><figure><img src='../assets/patches/AEKJ-r0-647e501388b5216f/after-input.png' alt='Elemix! (Japan) after input' loading='lazy'><figcaption>After D-Pad / A Input</figcaption></figure></div>
+</div>
+
+<div class="card" style="margin-bottom:1.25rem">
+  <h2 style="margin-top:0;border:none;padding:0"><a href="../titles/BFPJ-r0-d11a800f7730d559.html">Futari wa Pretty Cure - Arienaai! Yume no Sono wa Daimeikyuu (Japan)</a> <span class="badge badge-emerald">Interactive Verified</span></h2>
+  <p class="meta">Code: <code>BFPJ</code> &middot; Delta: <strong>4 B</strong> (17 B <code>.ips</code>) &middot; Hook: <code>scene_descriptor_ptr_redirect</code></p>
+  <p>Patch initial scene descriptor literal at 0x08003d70 (0x0802ac3c -&gt; 0x0802a714) to boot precure debug menu</p>
+  <p><a class="btn" href="../assets/patches/BFPJ-r0-d11a800f7730d559/BFPJ-debug.ips" download>Download BFPJ-debug.ips</a> <a class="btn btn-secondary" href="../titles/BFPJ-r0-d11a800f7730d559.html">View Game Page</a></p>
+  <pre><code>gbakit patch apply BFPJ-debug.ips original.gba patched-debug.gba</code></pre>
+  <div class="gallery"><figure><img src='../assets/patches/BFPJ-r0-d11a800f7730d559/boot-patched.png' alt='Futari wa Pretty Cure - Arienaai! Yume no Sono wa Daimeikyuu (Japan) debug menu' loading='lazy'><figcaption>Re-Enabled Debug Menu</figcaption></figure><figure><img src='../assets/patches/BFPJ-r0-d11a800f7730d559/after-input.png' alt='Futari wa Pretty Cure - Arienaai! Yume no Sono wa Daimeikyuu (Japan) after input' loading='lazy'><figcaption>After D-Pad / A Input</figcaption></figure></div>
+</div>
+
+<div class="card" style="margin-bottom:1.25rem">
+  <h2 style="margin-top:0;border:none;padding:0"><a href="../titles/BHRJ-r0-49df5e9e12830273.html">Hagane no Renkinjutsushi - Meisou no Rondo (Japan)</a> <span class="badge badge-emerald">Interactive Verified</span></h2>
+  <p class="meta">Code: <code>BHRJ</code> &middot; Delta: <strong>16 B</strong> (29 B <code>.ips</code>) &middot; Hook: <code>scene_descriptor_table_override</code></p>
+  <p>Patch scene table at 0x0817D8A8 (slot 1) with slot 0 debug menu descriptor [DEBUG MENU] (16 bytes)</p>
+  <p><a class="btn" href="../assets/patches/BHRJ-r0-49df5e9e12830273/BHRJ-debug.ips" download>Download BHRJ-debug.ips</a> <a class="btn btn-secondary" href="../titles/BHRJ-r0-49df5e9e12830273.html">View Game Page</a></p>
+  <pre><code>gbakit patch apply BHRJ-debug.ips original.gba patched-debug.gba</code></pre>
+  <div class="gallery"><figure><img src='../assets/patches/BHRJ-r0-49df5e9e12830273/boot-patched.png' alt='Hagane no Renkinjutsushi - Meisou no Rondo (Japan) debug menu' loading='lazy'><figcaption>Re-Enabled Debug Menu</figcaption></figure><figure><img src='../assets/patches/BHRJ-r0-49df5e9e12830273/after-input.png' alt='Hagane no Renkinjutsushi - Meisou no Rondo (Japan) after input' loading='lazy'><figcaption>After D-Pad / A Input</figcaption></figure></div>
+</div>
+
+<div class="card" style="margin-bottom:1.25rem">
+  <h2 style="margin-top:0;border:none;padding:0"><a href="../titles/BH2J-r0-f7eba3b4bbd6e0e3.html">Hagane no Renkinjutsushi - Omoide no Sonata (Japan)</a> <span class="badge badge-emerald">Interactive Verified</span></h2>
+  <p class="meta">Code: <code>BH2J</code> &middot; Delta: <strong>2 B</strong> (15 B <code>.ips</code>) &middot; Hook: <code>thumb_imm_scene_override</code></p>
+  <p>Patch boot scene selector at 0x0801d7d0 (movs r1, #68 -&gt; movs r1, #0) to boot into scene 0 [DEBUG MENU]</p>
+  <p><a class="btn" href="../assets/patches/BH2J-r0-f7eba3b4bbd6e0e3/BH2J-debug.ips" download>Download BH2J-debug.ips</a> <a class="btn btn-secondary" href="../titles/BH2J-r0-f7eba3b4bbd6e0e3.html">View Game Page</a></p>
+  <pre><code>gbakit patch apply BH2J-debug.ips original.gba patched-debug.gba</code></pre>
+  <div class="gallery"><figure><img src='../assets/patches/BH2J-r0-f7eba3b4bbd6e0e3/boot-patched.png' alt='Hagane no Renkinjutsushi - Omoide no Sonata (Japan) debug menu' loading='lazy'><figcaption>Re-Enabled Debug Menu</figcaption></figure><figure><img src='../assets/patches/BH2J-r0-f7eba3b4bbd6e0e3/after-input.png' alt='Hagane no Renkinjutsushi - Omoide no Sonata (Japan) after input' loading='lazy'><figcaption>After D-Pad / A Input</figcaption></figure></div>
+</div>
+
+<div class="card" style="margin-bottom:1.25rem">
+  <h2 style="margin-top:0;border:none;padding:0"><a href="../titles/BK6J-r0-44e5793ffd95dd17.html">Kouchuu Ouja Mushiking - Greatest Champion e no Michi (Japan)</a> <span class="badge badge-emerald">Interactive Verified</span></h2>
+  <p class="meta">Code: <code>BK6J</code> &middot; Delta: <strong>2 B</strong> (15 B <code>.ips</code>) &middot; Hook: <code>thumb_imm_task_override</code></p>
+  <p>Patch initial task spawn at 0x0800033a (movs r0, #21 -&gt; movs r0, #6) to spawn debug menu process</p>
+  <p><a class="btn" href="../assets/patches/BK6J-r0-44e5793ffd95dd17/BK6J-debug.ips" download>Download BK6J-debug.ips</a> <a class="btn btn-secondary" href="../titles/BK6J-r0-44e5793ffd95dd17.html">View Game Page</a></p>
+  <pre><code>gbakit patch apply BK6J-debug.ips original.gba patched-debug.gba</code></pre>
+  <div class="gallery"><figure><img src='../assets/patches/BK6J-r0-44e5793ffd95dd17/boot-patched.png' alt='Kouchuu Ouja Mushiking - Greatest Champion e no Michi (Japan) debug menu' loading='lazy'><figcaption>Re-Enabled Debug Menu</figcaption></figure><figure><img src='../assets/patches/BK6J-r0-44e5793ffd95dd17/after-input.png' alt='Kouchuu Ouja Mushiking - Greatest Champion e no Michi (Japan) after input' loading='lazy'><figcaption>After D-Pad / A Input</figcaption></figure></div>
+</div>
+
+<div class="card" style="margin-bottom:1.25rem">
+  <h2 style="margin-top:0;border:none;padding:0"><a href="../titles/AF5E-r0-33bcb4f2b3591187.html">Shining Force - Resurrection of the Dark Dragon (USA)</a> <span class="badge badge-emerald">Interactive Verified</span></h2>
+  <p class="meta">Code: <code>AF5E</code> &middot; Delta: <strong>8 B</strong> (26 B <code>.ips</code>) &middot; Hook: <code>state_jump_table_ptr</code></p>
+  <p>Replace scene-factory jump-table boot slots (0x0800b420 &amp; 0x0800b424 -&gt; bl 0x08002700) with DebugMenuScene constructor stub (0x0800b4cc -&gt; bl 0x08000778)</p>
+  <p><a class="btn" href="../assets/patches/AF5E-r0-33bcb4f2b3591187/AF5E-debug.ips" download>Download AF5E-debug.ips</a> <a class="btn btn-secondary" href="../titles/AF5E-r0-33bcb4f2b3591187.html">View Game Page</a></p>
+  <pre><code>gbakit patch apply AF5E-debug.ips original.gba patched-debug.gba</code></pre>
+  <div class="gallery"><figure><img src='../assets/patches/AF5E-r0-33bcb4f2b3591187/boot-patched.png' alt='Shining Force - Resurrection of the Dark Dragon (USA) debug menu' loading='lazy'><figcaption>Re-Enabled Debug Menu</figcaption></figure><figure><img src='../assets/patches/AF5E-r0-33bcb4f2b3591187/after-input.png' alt='Shining Force - Resurrection of the Dark Dragon (USA) after input' loading='lazy'><figcaption>After D-Pad / A Input</figcaption></figure></div>
+</div>
+
+<div class="card" style="margin-bottom:1.25rem">
+  <h2 style="margin-top:0;border:none;padding:0"><a href="../titles/ASRJ-r0-df99974c58a67ec2.html">Super Robot Taisen A (Japan)</a> <span class="badge badge-emerald">Interactive Verified</span></h2>
+  <p class="meta">Code: <code>ASRJ</code> &middot; Delta: <strong>2 B</strong> (15 B <code>.ips</code>) &middot; Hook: <code>thumb_imm_scene_override</code></p>
+  <p>Patch scene dispatcher at 0x08003832 (ldr r0,[r4] -&gt; movs r0,#40) after boot init to select jump-table index 39 (0x080038f8 -&gt; AGB SYSTEM DEBUG MENU 0x08006369)</p>
+  <p><a class="btn" href="../assets/patches/ASRJ-r0-df99974c58a67ec2/ASRJ-debug.ips" download>Download ASRJ-debug.ips</a> <a class="btn btn-secondary" href="../titles/ASRJ-r0-df99974c58a67ec2.html">View Game Page</a></p>
+  <pre><code>gbakit patch apply ASRJ-debug.ips original.gba patched-debug.gba</code></pre>
+  <div class="gallery"><figure><img src='../assets/patches/ASRJ-r0-df99974c58a67ec2/boot-patched.png' alt='Super Robot Taisen A (Japan) debug menu' loading='lazy'><figcaption>Re-Enabled Debug Menu</figcaption></figure><figure><img src='../assets/patches/ASRJ-r0-df99974c58a67ec2/after-input.png' alt='Super Robot Taisen A (Japan) after input' loading='lazy'><figcaption>After D-Pad / A Input</figcaption></figure></div>
+</div>
+
+<div class="card" style="margin-bottom:1.25rem">
+  <h2 style="margin-top:0;border:none;padding:0"><a href="../titles/A6SJ-r0-12b706b637a6504c.html">Super Robot Taisen D (Japan)</a> <span class="badge badge-emerald">Interactive Verified</span></h2>
+  <p class="meta">Code: <code>A6SJ</code> &middot; Delta: <strong>2 B</strong> (15 B <code>.ips</code>) &middot; Hook: <code>thumb_imm_scene_override</code></p>
+  <p>Patch scene dispatcher at 0x08004cfa (ldr r0,[r4] -&gt; movs r0,#49) to select jump-table index 48 (AGB SYSTEM DEBUG MENU at 0x08004d88)</p>
+  <p><a class="btn" href="../assets/patches/A6SJ-r0-12b706b637a6504c/A6SJ-debug.ips" download>Download A6SJ-debug.ips</a> <a class="btn btn-secondary" href="../titles/A6SJ-r0-12b706b637a6504c.html">View Game Page</a></p>
+  <pre><code>gbakit patch apply A6SJ-debug.ips original.gba patched-debug.gba</code></pre>
+  <div class="gallery"><figure><img src='../assets/patches/A6SJ-r0-12b706b637a6504c/boot-patched.png' alt='Super Robot Taisen D (Japan) debug menu' loading='lazy'><figcaption>Re-Enabled Debug Menu</figcaption></figure><figure><img src='../assets/patches/A6SJ-r0-12b706b637a6504c/after-input.png' alt='Super Robot Taisen D (Japan) after input' loading='lazy'><figcaption>After D-Pad / A Input</figcaption></figure></div>
+</div>
+
+<div class="card" style="margin-bottom:1.25rem">
+  <h2 style="margin-top:0;border:none;padding:0"><a href="../titles/AJ9J-r0-1a341f6f246ede62.html">Super Robot Taisen R (Japan)</a> <span class="badge badge-emerald">Interactive Verified</span></h2>
+  <p class="meta">Code: <code>AJ9J</code> &middot; Delta: <strong>2 B</strong> (15 B <code>.ips</code>) &middot; Hook: <code>thumb_imm_scene_override</code></p>
+  <p>Patch scene dispatcher at 0x08004d72 (ldr r0,[r4] -&gt; movs r0,#49) to select jump-table index 48 (AGB SYSTEM DEBUG MENU at 0x08004e60)</p>
+  <p><a class="btn" href="../assets/patches/AJ9J-r0-1a341f6f246ede62/AJ9J-debug.ips" download>Download AJ9J-debug.ips</a> <a class="btn btn-secondary" href="../titles/AJ9J-r0-1a341f6f246ede62.html">View Game Page</a></p>
+  <pre><code>gbakit patch apply AJ9J-debug.ips original.gba patched-debug.gba</code></pre>
+  <div class="gallery"><figure><img src='../assets/patches/AJ9J-r0-1a341f6f246ede62/boot-patched.png' alt='Super Robot Taisen R (Japan) debug menu' loading='lazy'><figcaption>Re-Enabled Debug Menu</figcaption></figure><figure><img src='../assets/patches/AJ9J-r0-1a341f6f246ede62/after-input.png' alt='Super Robot Taisen R (Japan) after input' loading='lazy'><figcaption>After D-Pad / A Input</figcaption></figure></div>
+</div>
+
+<div class="card" style="margin-bottom:1.25rem">
+  <h2 style="margin-top:0;border:none;padding:0"><a href="../titles/BUTJ-r0-0e291011ac3b60d2.html">Ultra Keibitai - Monster Attack (Japan)</a> <span class="badge badge-emerald">Interactive Verified</span></h2>
+  <p class="meta">Code: <code>BUTJ</code> &middot; Delta: <strong>2 B</strong> (15 B <code>.ips</code>) &middot; Hook: <code>thumb_imm_scene_override</code></p>
+  <p>Patch scene dispatcher at 0x08006bce (ldr r0,[r4] -&gt; movs r0,#48) to select AGB SYSTEM DEBUG MENU</p>
+  <p><a class="btn" href="../assets/patches/BUTJ-r0-0e291011ac3b60d2/BUTJ-debug.ips" download>Download BUTJ-debug.ips</a> <a class="btn btn-secondary" href="../titles/BUTJ-r0-0e291011ac3b60d2.html">View Game Page</a></p>
+  <pre><code>gbakit patch apply BUTJ-debug.ips original.gba patched-debug.gba</code></pre>
+  <div class="gallery"><figure><img src='../assets/patches/BUTJ-r0-0e291011ac3b60d2/boot-patched.png' alt='Ultra Keibitai - Monster Attack (Japan) debug menu' loading='lazy'><figcaption>Re-Enabled Debug Menu</figcaption></figure><figure><img src='../assets/patches/BUTJ-r0-0e291011ac3b60d2/after-input.png' alt='Ultra Keibitai - Monster Attack (Japan) after input' loading='lazy'><figcaption>After D-Pad / A Input</figcaption></figure></div>
+</div>
+
+<div class="card" style="margin-bottom:1.25rem">
+  <h2 style="margin-top:0;border:none;padding:0"><a href="../titles/BWXJ-r0-952fa87ed26a954a.html">Wanko Mix Chiwanko World (Japan)</a> <span class="badge badge-emerald">Interactive Verified</span></h2>
+  <p class="meta">Code: <code>BWXJ</code> &middot; Delta: <strong>16 B</strong> (29 B <code>.ips</code>) &middot; Hook: <code>scene_descriptor_table_override</code></p>
+  <p>Patch scene table at 0x082B5098 (slot 10 [LOGO]) with slot 0 debug menu descriptor [DEBUG MENU] (16 bytes)</p>
+  <p><a class="btn" href="../assets/patches/BWXJ-r0-952fa87ed26a954a/BWXJ-debug.ips" download>Download BWXJ-debug.ips</a> <a class="btn btn-secondary" href="../titles/BWXJ-r0-952fa87ed26a954a.html">View Game Page</a></p>
+  <pre><code>gbakit patch apply BWXJ-debug.ips original.gba patched-debug.gba</code></pre>
+  <div class="gallery"><figure><img src='../assets/patches/BWXJ-r0-952fa87ed26a954a/boot-patched.png' alt='Wanko Mix Chiwanko World (Japan) debug menu' loading='lazy'><figcaption>Re-Enabled Debug Menu</figcaption></figure><figure><img src='../assets/patches/BWXJ-r0-952fa87ed26a954a/after-input.png' alt='Wanko Mix Chiwanko World (Japan) after input' loading='lazy'><figcaption>After D-Pad / A Input</figcaption></figure></div>
+</div>
+
+</main>
+  <footer>gbakit GBA Format Reference &middot; <a href="https://github.com/JidouGhost-TL/gbakit">GitHub: JidouGhost-TL/gbakit</a> &middot; Clean-room GBA binary format specs &amp; Rust toolkit.</footer>
+</body>
+</html>

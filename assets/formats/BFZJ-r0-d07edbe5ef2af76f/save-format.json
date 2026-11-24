@@ -1,0 +1,482 @@
+{
+  "schema": "gbakit-save-research/1",
+  "release_key": "BFZJ-r0-d07edbe5ef2af76f",
+  "display_name": "F-Zero - Falcon Densetsu (Japan)",
+  "rom_sha256": "d07edbe5ef2af76fcea3e56ff735b6892ca8f0b0d6a0cde0e7cccd23821812bd",
+  "game_code": "BFZJ",
+  "header_family": "BFZ",
+  "community_id": "comm-011",
+  "overall_confidence": "MEDIUM",
+  "media": {
+    "kind": "sram",
+    "size_bytes": 32768,
+    "sdk_tags": [],
+    "fill_byte": "0x00"
+  },
+  "slots_and_copies": [
+    {
+      "name": "primary_bank",
+      "offset": 0,
+      "size": 16384,
+      "redundancy_role": "primary",
+      "selection_rule": "FUN_0803b040 reads this bank first and accepts it if its per-record checksum (FUN_0803afc0) matches."
+    },
+    {
+      "name": "backup_bank",
+      "offset": 16384,
+      "size": 16384,
+      "redundancy_role": "backup",
+      "selection_rule": "FUN_0803b040 falls back to primary_offset+0x4000 only when the primary copy's checksum fails; FUN_0803b0a4 always writes both banks on every save."
+    },
+    {
+      "name": "slot_0",
+      "offset": 2976,
+      "size": 176,
+      "redundancy_role": "unknown",
+      "selection_rule": "Car/profile slot index 0, explicit caller-supplied argument to FUN_0803b770/FUN_0803b830; no in-save active-slot selector field was identified."
+    },
+    {
+      "name": "slot_1",
+      "offset": 3152,
+      "size": 176,
+      "redundancy_role": "unknown",
+      "selection_rule": "Car/profile slot index 1, explicit caller-supplied argument to FUN_0803b770/FUN_0803b830; no in-save active-slot selector field was identified."
+    }
+  ],
+  "magic_signatures": [
+    {
+      "offset": 4,
+      "bytes_hex": "3d522f36",
+      "ascii": "",
+      "verified_in_code": true,
+      "verified_in_sav": true,
+      "function_addrs": ["0x0803b108", "0x0803b148"]
+    }
+  ],
+  "checksums": [
+    {
+      "name": "global_header_checksum",
+      "algorithm": "sum8",
+      "formula_detail": "u32 sum = 0; for i in [4,size): sum += buf[i]; stored little-endian at buf[0..3]. size=8 for this record.",
+      "stored_offset": 0,
+      "stored_size": 4,
+      "covered_start": 4,
+      "covered_end": 8,
+      "function_addrs": ["0x0803afc0", "0x0803b0a4", "0x0803b040", "0x0803b108", "0x0803b148"],
+      "verified_on_samples": [
+        {"file": "saves/cap-00-future-0.sav", "stored_hex": "000000f4", "computed_hex": "000000f4", "match": true}
+      ],
+      "confidence": "CONFIRMED_VERIFIED"
+    },
+    {
+      "name": "config2_checksum",
+      "algorithm": "sum8",
+      "formula_detail": "Same sum8 primitive, size=0x14 (20 bytes) for this record.",
+      "stored_offset": 8,
+      "stored_size": 4,
+      "covered_start": 12,
+      "covered_end": 28,
+      "function_addrs": ["0x0803afc0", "0x0803b0a4", "0x0803b2e4", "0x0803b250"],
+      "verified_on_samples": [
+        {"file": "saves/cap-00-future-0.sav", "stored_hex": "00000000", "computed_hex": "00000000", "match": true}
+      ],
+      "confidence": "CONFIRMED_VERIFIED"
+    },
+    {
+      "name": "ranking_table_checksum",
+      "algorithm": "sum8",
+      "formula_detail": "Same sum8 primitive, size=0xb84 (4-byte header + 46*0x40 payload).",
+      "stored_offset": 28,
+      "stored_size": 4,
+      "covered_start": 32,
+      "covered_end": 2980,
+      "function_addrs": ["0x0803afc0", "0x0803b0a4", "0x0803b488", "0x0803b364", "0x0803d7b0", "0x0803babc"],
+      "verified_on_samples": [
+        {"file": "saves/cap-00-future-0.sav", "stored_hex": "00034a02", "computed_hex": "00034a02", "match": true}
+      ],
+      "confidence": "CONFIRMED_VERIFIED"
+    },
+    {
+      "name": "slot0_checksum",
+      "algorithm": "sum8",
+      "formula_detail": "Same sum8 primitive, size=0xb0 (176 bytes).",
+      "stored_offset": 2976,
+      "stored_size": 4,
+      "covered_start": 2980,
+      "covered_end": 3152,
+      "function_addrs": ["0x0803afc0", "0x0803b0a4", "0x0803b770", "0x0803b634"],
+      "verified_on_samples": [
+        {"file": "saves/cap-00-future-0.sav", "stored_hex": "00000023", "computed_hex": "00000023", "match": true}
+      ],
+      "confidence": "CONFIRMED_VERIFIED"
+    },
+    {
+      "name": "slot1_checksum",
+      "algorithm": "sum8",
+      "formula_detail": "Same sum8 primitive, size=0xb0 (176 bytes).",
+      "stored_offset": 3152,
+      "stored_size": 4,
+      "covered_start": 3156,
+      "covered_end": 3328,
+      "function_addrs": ["0x0803afc0", "0x0803b0a4", "0x0803b770", "0x0803b634"],
+      "verified_on_samples": [
+        {"file": "saves/cap-00-future-0.sav", "stored_hex": "00000023", "computed_hex": "00000023", "match": true}
+      ],
+      "confidence": "CONFIRMED_VERIFIED"
+    },
+    {
+      "name": "misc_record_0xd00_checksum",
+      "algorithm": "sum8",
+      "formula_detail": "Same sum8 primitive; exact size (_DAT_0803b8d8) not resolved from the extracted code window, probed here at a minimum of 8 bytes.",
+      "stored_offset": 3328,
+      "stored_size": 4,
+      "covered_start": 3332,
+      "covered_end": null,
+      "function_addrs": ["0x0803afc0", "0x0803b0a4", "0x0803b8a8", "0x0803b868"],
+      "verified_on_samples": [
+        {"file": "saves/cap-00-future-0.sav", "stored_hex": "00000000", "computed_hex": "00000000", "match": true}
+      ],
+      "confidence": "HYPOTHESIS"
+    },
+    {
+      "name": "large_record_0x2400_checksum",
+      "algorithm": "sum8",
+      "formula_detail": "Same sum8 primitive, size=0x2400 (9216 bytes) per the literal argument to FUN_0803b0a4 inside FUN_0803b968. Base address not confirmed against the sample (brute-force checksum scan of the primary 16KiB bank found no unique non-trivial match).",
+      "stored_offset": null,
+      "stored_size": 4,
+      "covered_start": null,
+      "covered_end": null,
+      "function_addrs": ["0x0803afc0", "0x0803b0a4", "0x0803b968", "0x0803b938"],
+      "verified_on_samples": [],
+      "confidence": "UNKNOWN"
+    }
+  ],
+  "io_driver_functions": [
+    {"addr": "0x08066bd4", "role": "write", "callers": ["0x08066ca8"], "notes": "Raw byte-copy loop RAM->SRAM; toggles a 16-bit access-mode flag before copying (likely WAITCNT-adjacent, literal register address unresolved)."},
+    {"addr": "0x08066c44", "role": "write", "callers": ["0x08066ca8"], "notes": "Readback/verify pass after a write, via unresolved byte-compare helper func_0x08066cec."},
+    {"addr": "0x08066ca8", "role": "write", "callers": ["0x0803b0a4"], "notes": "Write-with-retry driver: write+verify loop, up to 3 attempts."},
+    {"addr": "0x08066b70", "role": "read", "callers": ["0x0803b040"], "notes": "Raw SRAM->RAM read, same access-mode toggle, delegates byte copy to func_0x08066cec."},
+    {"addr": "0x0803afc0", "role": "checksum", "callers": ["0x0803b040", "0x0803b0a4"], "notes": "sum8 over bytes [4,size) of a record."},
+    {"addr": "0x0803b040", "role": "deserialize", "callers": ["0x0803b108"], "notes": "Universal record reader with primary/backup (+0x4000) fallback and checksum verification."},
+    {"addr": "0x0803b0a4", "role": "serialize", "callers": ["0x0803b148", "0x0803b2e4", "0x0803b488", "0x0803b770", "0x0803b8a8", "0x0803b968"], "notes": "Universal record writer: computes checksum, writes primary and primary+0x4000 backup via FUN_08066ca8."},
+    {"addr": "0x0803b178", "role": "serialize", "callers": ["0x0803bd20", "0x0803d7b0"], "notes": "Plain unchecksummed byte-copy helper used for in-RAM field packing, not direct SRAM record I/O."}
+  ],
+  "caller_chains": [
+    {
+      "entry_caller": "0x0803ba34",
+      "chain": ["0x0803ba34", "0x0803b108", "0x0803b040", "0x0803afc0"],
+      "trigger_context": "Boot/reset-time save validation entry point (no static callers found; invoked via unresolved function pointer).",
+      "ram_fields_updated": [],
+      "how_mapped": "Followed callgraph.json callees list for 0x0803ba34 and matched each call against the decompiled body in decompiled.c."
+    },
+    {
+      "entry_caller": "0x0803ba34",
+      "chain": ["0x0803ba34", "0x0803ba04", "0x0803b148", "0x0803b0a4", "0x08066ca8"],
+      "trigger_context": "Full factory-reset path, taken when the global header record fails validation.",
+      "ram_fields_updated": ["global_header_payload@0x0004"],
+      "how_mapped": "Decompiled FUN_0803ba34 branches to FUN_0803ba04 when FUN_0803b108 returns non-zero; FUN_0803ba04's body literally calls all 7 record writers in sequence."
+    },
+    {
+      "entry_caller": "0x0803ba04",
+      "chain": ["0x0803ba04", "0x0803b34c", "0x0803b250", "0x0803b2e4", "0x0803b0a4"],
+      "trigger_context": "Full factory reset, config2 record.",
+      "ram_fields_updated": ["config2@0x000c-0x001b"],
+      "how_mapped": "FUN_0803b34c's body calls FUN_0803b250 (zero-init) then FUN_0803b2e4 (checksum+flush) unconditionally."
+    },
+    {
+      "entry_caller": "0x0803ba04",
+      "chain": ["0x0803ba04", "0x0803b4f8", "0x0803b364", "0x0803d7b0", "0x0803babc", "0x0803b488", "0x0803b0a4"],
+      "trigger_context": "Full factory reset, ranking/name table.",
+      "ram_fields_updated": ["ranking_table@0x001c-0x0b9f (46 entries)"],
+      "how_mapped": "FUN_0803b4f8 calls FUN_0803b364 (builds 46 entries via FUN_0803d7b0/FUN_0803babc) then FUN_0803b488 (checksum+flush); entry/table sizes cross-checked algebraically against the 0xba0 start address of the next record."
+    },
+    {
+      "entry_caller": "0x0803ba04",
+      "chain": ["0x0803ba04", "0x0803b830", "0x0803b634", "0x0803b770", "0x0803b0a4"],
+      "trigger_context": "Full factory reset, per-car-profile slot (idx=0 and idx=1).",
+      "ram_fields_updated": ["slot[idx]@0x0ba0+idx*0xb0 (flag byte +4/+5, arrays +0x20/+0x28/+0x30, +0xac..+0xae)"],
+      "how_mapped": "FUN_0803b830(idx) calls FUN_0803b634(idx) (field init, byte-exact-verified against the sample) then FUN_0803b770(idx) (checksum+flush)."
+    },
+    {
+      "entry_caller": "0x0803ba04",
+      "chain": ["0x0803ba04", "0x0803b9ec", "0x0803b938", "0x0803b968", "0x0803b0a4"],
+      "trigger_context": "Full factory reset, large 0x2400-byte record.",
+      "ram_fields_updated": ["unresolved_large_record+0x4 (zeroed 4 bytes)"],
+      "how_mapped": "FUN_0803b9ec calls FUN_0803b938 (zero-init) then FUN_0803b968 (checksum+flush); exact SRAM base address not resolved against the sample."
+    },
+    {
+      "entry_caller": "0x0803ba04",
+      "chain": ["0x0803ba04", "0x0803b920", "0x0803b868", "0x0803b8a8", "0x0803b0a4"],
+      "trigger_context": "Full factory reset, misc record at 0x0d00.",
+      "ram_fields_updated": ["misc_record_0xd00+0x4 (zeroed 1 byte)"],
+      "how_mapped": "FUN_0803b920 calls FUN_0803b868 (zero-init) then FUN_0803b8a8 (checksum+flush); exact record size not resolved."
+    }
+  ],
+  "fields": [
+    {
+      "name": "global_header_checksum",
+      "offset": 0,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": ["0x0803b148", "0x0803b0a4"],
+      "readers": ["0x0803b108", "0x0803b040"],
+      "observed_values": {"cap-00-future-0.sav": "0x000000f4"},
+      "update_mechanism": "Recomputed by FUN_0803afc0 (sum8 over bytes 4-7) on every save.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Python recomputation matches stored value exactly; code path traced end-to-end from FUN_0803b148 to FUN_08066ca8."
+    },
+    {
+      "name": "global_header_magic",
+      "offset": 4,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": ["0x0803b148"],
+      "readers": ["0x0803b108"],
+      "observed_values": {"cap-00-future-0.sav": "0x362f523d"},
+      "update_mechanism": "Written from a fixed constant (_DAT_0803b168) by FUN_0803b148; compared against another fixed constant (iRam0803b13c) by FUN_0803b108 to decide if the save needs a full reset.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "Comparison logic read directly from FUN_0803b108 decompilation; the specific in-ROM expected constant value was not resolved in this extraction."
+    },
+    {
+      "name": "config2_checksum",
+      "offset": 8,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": ["0x0803b2e4", "0x0803b0a4"],
+      "readers": ["0x0803afc0"],
+      "observed_values": {"cap-00-future-0.sav": "0x00000000"},
+      "update_mechanism": "Recomputed by FUN_0803afc0 on every save of this 20-byte record.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Python recomputation matches stored value (trivially, since payload is all-zero in this sample)."
+    },
+    {
+      "name": "config2_payload",
+      "offset": 12,
+      "size": 16,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": ["0x0803b250"],
+      "readers": [],
+      "observed_values": {"cap-00-future-0.sav": "00000000000000000000000000000000"},
+      "update_mechanism": "FUN_0803b250 zeroes 2 bytes at relative +0/+1 and 12 bytes at relative +2..+13 before the first flush; no gameplay writer for this payload was found in the extracted window.",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Zero-init pattern read directly from FUN_0803b250; semantic role unresolved."
+    },
+    {
+      "name": "ranking_table_checksum",
+      "offset": 28,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": ["0x0803b488", "0x0803b0a4"],
+      "readers": ["0x0803afc0"],
+      "observed_values": {"cap-00-future-0.sav": "0x00034a02"},
+      "update_mechanism": "Recomputed by FUN_0803afc0 over the full 0xb80-byte table on every save.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Python recomputation matches stored value exactly."
+    },
+    {
+      "name": "ranking_table_entry",
+      "offset": 32,
+      "size": 64,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": ["0x0803d7b0", "0x0803babc"],
+      "readers": ["0x0803bd20", "0x0803bc14"],
+      "observed_values": {"cap-00-future-0.sav": "entry 0 observed non-zero and structured; see hexdump 0x0020-0x005f"},
+      "update_mechanism": "Each 64-byte block = 5x12-byte inner entries (6-byte 6-bit-packed name + 2-byte field + 2 raw bytes + 2 zero bytes) + 2 trailing bytes + 2 zero padding; built by FUN_0803d7b0 for each of 46 outer indices.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "Loop bounds and byte offsets read directly from FUN_0803d7b0/FUN_0803babc; table size cross-confirmed because 0x1c+4+46*0x40 equals 0xba0, the next record's exact start."
+    },
+    {
+      "name": "slot0_checksum",
+      "offset": 2976,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": ["0x0803b770", "0x0803b0a4"],
+      "readers": ["0x0803afc0"],
+      "observed_values": {"cap-00-future-0.sav": "0x00000023"},
+      "update_mechanism": "Recomputed by FUN_0803afc0 over the 0xac-byte payload on every save.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Python recomputation matches stored value exactly."
+    },
+    {
+      "name": "slot0_flag_byte",
+      "offset": 2980,
+      "size": 1,
+      "type": "bitflags",
+      "ram_addr": null,
+      "writers": ["0x0803b634"],
+      "readers": [],
+      "observed_values": {},
+      "update_mechanism": "Three sequential masks: &=0xfe, &=0xf1, &=0x8f|0x10, then re-touched as part of a u16 with &=mask|0x100; clears bits 0-3 and 4-6, sets bit 4 and bit 8 (byte+1 bit0).",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Mask sequence read directly from FUN_0803b634; which bits are gameplay-live vs. always-forced-on-reset not determinable without a fuzzing pass (see report Section 6, test 3)."
+    },
+    {
+      "name": "slot0_mode_byte",
+      "offset": 2981,
+      "size": 1,
+      "type": "bitflags",
+      "ram_addr": null,
+      "writers": ["0x0803b634"],
+      "readers": [],
+      "observed_values": {},
+      "update_mechanism": "&=0xe3, |=0x0c; clears bits 2-4, sets bits 2-3.",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Mask sequence read directly from FUN_0803b634."
+    },
+    {
+      "name": "slot0_array1",
+      "offset": 2996,
+      "size": 8,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": ["0x0803b634"],
+      "readers": [],
+      "observed_values": {"cap-00-future-0.sav": "all zero in sample, except byte 0 = 0x01"},
+      "update_mechanism": "Zeroed by FUN_0803b634, then byte 0 (offset 2996) explicitly set to 1.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Literal 0x01 constant matched byte-for-byte at absolute offset 0x0bc0 against the real .sav file."
+    },
+    {
+      "name": "slot0_array2",
+      "offset": 3004,
+      "size": 8,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": ["0x0803b634"],
+      "readers": [],
+      "observed_values": {},
+      "update_mechanism": "Zeroed by FUN_0803b634.",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Zero-init pattern read directly from decompiled code; role unresolved."
+    },
+    {
+      "name": "slot0_array3",
+      "offset": 3012,
+      "size": 8,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": ["0x0803b634"],
+      "readers": [],
+      "observed_values": {},
+      "update_mechanism": "Zeroed by FUN_0803b634.",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Zero-init pattern read directly from decompiled code; role unresolved."
+    },
+    {
+      "name": "slot0_version_tag",
+      "offset": 3148,
+      "size": 3,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": ["0x0803b634"],
+      "readers": [],
+      "observed_values": {"cap-00-future-0.sav": "05 00 00"},
+      "update_mechanism": "FUN_0803b634 sets +0xac=5, +0xad=0, +0xae=0 unconditionally on every (re)init.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Literal constants matched byte-for-byte at absolute offset 0x0c4c against the real .sav file (slot1's equivalent byte at 0x0cfc also matched)."
+    },
+    {
+      "name": "slot1_checksum",
+      "offset": 3152,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": ["0x0803b770", "0x0803b0a4"],
+      "readers": ["0x0803afc0"],
+      "observed_values": {"cap-00-future-0.sav": "0x00000023"},
+      "update_mechanism": "Recomputed by FUN_0803afc0 over the 0xac-byte payload on every save; identical to slot0 because both slots share the same init code path FUN_0803b634.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Python recomputation matches stored value exactly."
+    },
+    {
+      "name": "slot1_array1_flag",
+      "offset": 3172,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": ["0x0803b634"],
+      "readers": [],
+      "observed_values": {"cap-00-future-0.sav": "0x01"},
+      "update_mechanism": "FUN_0803b634(1) sets slot1's +0x20 byte to 1.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Literal 0x01 constant matched byte-for-byte at absolute offset 0x0c70 against the real .sav file."
+    },
+    {
+      "name": "slot1_version_tag",
+      "offset": 3324,
+      "size": 3,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": ["0x0803b634"],
+      "readers": [],
+      "observed_values": {"cap-00-future-0.sav": "05 00 00"},
+      "update_mechanism": "FUN_0803b634(1) sets +0xac=5, +0xad=0, +0xae=0.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Literal 0x05 constant matched byte-for-byte at absolute offset 0x0cfc against the real .sav file."
+    },
+    {
+      "name": "misc_record_0xd00_checksum",
+      "offset": 3328,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": ["0x0803b8a8", "0x0803b0a4"],
+      "readers": ["0x0803afc0"],
+      "observed_values": {"cap-00-future-0.sav": "0x00000000"},
+      "update_mechanism": "Recomputed by FUN_0803afc0; exact record size (_DAT_0803b8d8) unresolved.",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Checksum math is trivially satisfied by the all-zero payload observed in this sample; size not independently confirmed."
+    },
+    {
+      "name": "misc_record_0xd00_flag",
+      "offset": 3332,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": ["0x0803b868"],
+      "readers": [],
+      "observed_values": {"cap-00-future-0.sav": "0x00"},
+      "update_mechanism": "FUN_0803b868 zeroes this byte before every flush.",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Zero-init pattern read directly from decompiled code; role unresolved."
+    },
+    {
+      "name": "large_record_0x2400",
+      "offset": null,
+      "size": 9216,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": ["0x0803b968", "0x0803b0a4"],
+      "readers": ["0x0803afc0"],
+      "observed_values": {"cap-00-future-0.sav": "non-zero tail observed at file offsets 0x361c-0x4008 (mirrored 0x761c-0x8000); remainder zero"},
+      "update_mechanism": "FUN_0803b938 zeroes 4 bytes at relative +4, then FUN_0803b968 flushes the full 0x2400-byte record via the universal writer.",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Size is CONFIRMED_STATIC from the literal argument in code; exact base offset could not be confirmed by checksum brute-force search against this sample (see report Section 4.5)."
+    }
+  ],
+  "fuzzing_targets": [
+    {"offset": 32, "size": 6, "mutation": "Overwrite ranking_table entry 0's packed-name field (0x0020-0x0025) with a different 6-bit-packed ASCII string, then repair the checksum at 0x001c.", "requires_checksum_repair": true, "predicted_effect": "If a UI reads this table for display, the displayed name/initials at this table position should change, confirming the ranking-table semantic hypothesis."},
+    {"offset": 28, "size": 4, "mutation": "Corrupt the ranking_table checksum at 0x001c without repairing it.", "requires_checksum_repair": false, "predicted_effect": "On next boot, the table should be detected invalid and reset to all-zero (blank) entries via FUN_0803b250-equivalent logic."},
+    {"offset": 2980, "size": 1, "mutation": "Toggle each bit of the slot0 flag byte at 0x0ba4 individually, repairing the slot0 checksum (0x0ba0) after each change.", "requires_checksum_repair": true, "predicted_effect": "Bits forced by FUN_0803b634's masks (0,1,2,3,4,5,6,8) should revert on the next re-init pass; any surviving bit is a live gameplay setting."},
+    {"offset": 3328, "size": 8, "mutation": "Write non-zero bytes at increasing offsets past 0x0d08 (0x0d20, 0x0d80, ...) with a correctly recomputed checksum at 0x0d00 for each candidate size.", "requires_checksum_repair": true, "predicted_effect": "Identifies the exact size boundary at which the game's reader (func_0x0803b8e4) stops accepting the record, resolving the open size question."},
+    {"offset": 7176, "size": 4, "mutation": "Write a recognizable 0xAA marker with a correct sum8 checksum at candidate base 0x1c08 for the 0x2400-byte record.", "requires_checksum_repair": true, "predicted_effect": "If the marker survives validation after reload, this confirms the base address of the large record; if rejected, rules out this candidate offset."},
+    {"offset": 0, "size": 32768, "mutation": "Truncate the .sav to only the primary 16KiB half (remove the 0x4000-0x7fff backup bank entirely).", "requires_checksum_repair": false, "predicted_effect": "Exercises FUN_0803b040's backup-fallback path under a worst-case missing-backup condition; expected to force a full FUN_0803ba04 reset since every record's backup read will also fail."}
+  ],
+  "open_questions": [
+    "Exact base SRAM address and checksum boundary of the 0x2400-byte record written by FUN_0803b968.",
+    "Exact size of the record at absolute offset 0x0d00 written by FUN_0803b8a8 (bounded only as >=8 bytes from the checksum header).",
+    "Bit-level meaning of the flag byte/word at slot offset +4/+5 within each car-profile slot (only the forced-reset bits are known from static analysis).",
+    "Semantic role of the 16-byte config2 payload at 0x000c-0x001b (all-zero in the only available sample).",
+    "Why FUN_0803b968's RAM-side argument is used undereferenced while every sibling writer dereferences its RAM pointer; could indicate a static buffer rather than pointer-to-pointer, unconfirmed.",
+    "The specific in-ROM constant that FUN_0803b108 compares the global-header magic payload against (iRam0803b13c) was not resolved in this extraction window.",
+    "Six external stub functions (func_0x0803b208, func_0x0803b318, func_0x0803b4c0, func_0x0803b7d0, func_0x0803b8e4, func_0x0803b9a4, func_0x0803bdf8) that appear to be per-record checksum-verify readers analogous to FUN_0803b108 were not decompiled in this packet's extraction window.",
+    "Only one .sav sample (saves/cap-00-future-0.sav) was present in this workspace despite the packet's own metadata listing 6 captures; cross-save diffing to disambiguate gameplay-mutable fields from reset-constants was not possible this round."
+  ]
+}

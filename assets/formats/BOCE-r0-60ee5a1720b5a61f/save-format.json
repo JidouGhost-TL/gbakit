@@ -1,0 +1,524 @@
+{
+  "schema": "gbakit-save-research/1",
+  "release_key": "BOCE-r0-60ee5a1720b5a61f",
+  "display_name": "Urbz, The - Sims in the City (USA, Europe) (En,Fr,De,Es,It,Nl)",
+  "rom_sha256": "60ee5a1720b5a61f62fb11e501b9e4f6596478469942be88b395ae0a76bf06dd",
+  "game_code": "BOCE",
+  "header_family": "BOC",
+  "community_id": "comm-006",
+  "overall_confidence": "MEDIUM",
+  "media": {
+    "kind": "flash512",
+    "size_bytes": 65536,
+    "sdk_tags": ["FLASH512_V131@21514580"],
+    "fill_byte": "0xff"
+  },
+  "slots_and_copies": [
+    {
+      "name": "slot_0",
+      "offset": 0,
+      "size": 4096,
+      "redundancy_role": "primary",
+      "selection_rule": "Global header + main save struct sector. Loaded first: 24-byte header at +0 must have magic URBZ0011 and u16_le word-sum over 0x00-0x17 == 0 (FUN_0804d694 via FUN_0804d6f0). If invalid, the whole used area is re-initialised blank (FUN_0804da48 + zeroed sector writes). No backup/mirror copy exists."
+    },
+    {
+      "name": "slot_1",
+      "offset": 4096,
+      "size": 4096,
+      "redundancy_role": "unknown",
+      "selection_rule": "Read by FUN_0804d9e4/FUN_0804d938 into the 0x1000 buffer; valid iff u16_le word-sum over the whole sector == 0 (FUN_0804d9b4/FUN_0804da24). Valid: deserialised into RAM entry 0 (0x2C bytes) by FUN_08023e3c. Invalid: entry zeroed. All-zero is a valid empty block. Structural label only; not proven to be a player-facing save slot."
+    },
+    {
+      "name": "slot_2",
+      "offset": 8192,
+      "size": 4096,
+      "redundancy_role": "unknown",
+      "selection_rule": "Same rule as slot_1, RAM entry 1 (FUN_0804d938 loop index 1)."
+    },
+    {
+      "name": "slot_3",
+      "offset": 12288,
+      "size": 4096,
+      "redundancy_role": "unknown",
+      "selection_rule": "Same rule as slot_1, RAM entry 2 (FUN_0804d938 loop index 2)."
+    },
+    {
+      "name": "slot_4",
+      "offset": 16384,
+      "size": 4096,
+      "redundancy_role": "unknown",
+      "selection_rule": "Same rule as slot_1, RAM entry 3 (FUN_0804d938 loop index 3)."
+    },
+    {
+      "name": "unused_flash",
+      "offset": 20480,
+      "size": 45056,
+      "redundancy_role": "unknown",
+      "selection_rule": "Erased 0xFF in both samples; no traced reader or writer touches offsets >= 0x5000."
+    }
+  ],
+  "magic_signatures": [
+    {
+      "offset": 0,
+      "bytes_hex": "5552425a30303131",
+      "ascii": "URBZ0011",
+      "verified_in_code": true,
+      "verified_in_sav": true,
+      "function_addrs": ["0x0804d694", "0x0804da48"]
+    }
+  ],
+  "checksums": [
+    {
+      "name": "header_sum16_zero",
+      "algorithm": "sum16_le",
+      "formula_detail": "s = sum of u16_le words over bytes 0x00-0x17 (12 words) modulo 65536 must equal 0. Stored word at 0x0E (word index 7) = (-sum of the other 11 words) modulo 65536; writers zero it, sum, then negate (FUN_0804da24 core).",
+      "stored_offset": 14,
+      "stored_size": 2,
+      "covered_start": 0,
+      "covered_end": 24,
+      "function_addrs": ["0x0804da24", "0x0804d624", "0x0804d694", "0x0804da48"],
+      "verified_on_samples": [
+        {"file": "saves/cap-00-future-0.sav", "stored_hex": "0xf289", "computed_hex": "0xf289", "match": true},
+        {"file": "saves/cap-01-future-1.sav", "stored_hex": "0xf189", "computed_hex": "0xf189", "match": true}
+      ],
+      "confidence": "CONFIRMED_VERIFIED"
+    },
+    {
+      "name": "sector1_4_sum16_zero",
+      "algorithm": "sum16_le",
+      "formula_detail": "Sum of u16_le words over the full 0x1000-byte sector must equal 0 (FUN_0804d9b4 requires FUN_0804da24(buffer, 0x1000) == 0). No distinct stored field located; an all-zero sector satisfies it trivially. Location of the compensating word in a non-empty sector is unknown because no writer was traced.",
+      "stored_offset": 0,
+      "stored_size": 0,
+      "covered_start": 4096,
+      "covered_end": 20480,
+      "function_addrs": ["0x0804da24", "0x0804d9b4", "0x0804d938"],
+      "verified_on_samples": [
+        {"file": "saves/cap-00-future-0.sav", "stored_hex": "0x0000", "computed_hex": "0x0000", "match": true},
+        {"file": "saves/cap-01-future-1.sav", "stored_hex": "0x0000", "computed_hex": "0x0000", "match": true}
+      ],
+      "confidence": "CONFIRMED_STATIC"
+    }
+  ],
+  "io_driver_functions": [
+    {"addr": "0x0806b3c8", "role": "read", "callers": ["0x0806b8a4"], "notes": "Flash identify: AA/55 unlock at 0x0E000000+0x5555/0x2AAA, command 0x90, reads ID bytes via IWRAM trampoline 0x0806bd28, reset 0xF0 x2; returns (manufacturer<<8)|device."},
+    {"addr": "0x0806b8a4", "role": "serialize", "callers": ["0x0800d7a4"], "notes": "Selects flash descriptor: calls identify 0x0806b3c8, walks descriptor table matching ID at entry+0x28, copies 5xu32 + pointer at +0x14 into globals; sets WAITCNT-style register |3."},
+    {"addr": "0x0806ba34", "role": "erase", "callers": [], "notes": "Sector erase (sector < 0x10): AA/55/80/AA/55/30 sequence to 0x0E000000+(sector<<shift from descriptor+8), poll via 0x0806bd20. No direct static caller; reached via IWRAM trampoline 0x0806bd1c."},
+    {"addr": "0x0806bad0", "role": "write", "callers": [], "notes": "Program single byte: AA/55/A0, *dest=*src, poll via 0x0806bd20. No direct static caller; IWRAM trampoline only."},
+    {"addr": "0x0806b61c", "role": "read", "callers": ["0x0800d7b4"], "notes": "Read flash bytes from 0x0E000000+(sector<<shift)+off via 0x0806bd20 copy trampoline; bank-switches via 0x0806b3a4 only when flash-size global == 0x20000 (Flash 1M path, not this title's 512K)."},
+    {"addr": "0x0806b5b8", "role": "serialize", "callers": ["0x0806b3c8", "0x0806ba34"], "notes": "Copies an SDK code range to a RAM/stack buffer so flash routines can run from RAM during programming."},
+    {"addr": "0x0800d7a4", "role": "read", "callers": ["0x0804d6f0"], "notes": "Identify/init flash wrapper around 0x0806b8a4."},
+    {"addr": "0x0800d878", "role": "serialize", "callers": ["0x0800d7b4", "0x0800d800"], "notes": "Begin flash access: saves wait-state registers, sets mode 2 via 0x0806b48c, returns success flag. Paired restore is 0x0800d8bc."},
+    {"addr": "0x0800d7b4", "role": "read", "callers": ["0x0804d624", "0x0804d694", "0x0804d9e4"], "notes": "Read len bytes at flash offset into RAM in 0x1000 chunks via 0x0806b61c (offset>>12 = sector)."},
+    {"addr": "0x0800d800", "role": "write", "callers": ["0x0804d624", "0x0804d6f0", "0x0804da48"], "notes": "Flash write wrapper ( distinct from game stream function at 0x0804d800): writes len>>12 whole sectors, up to 3 retries per sector via trampoline 0x0806bd1c, advancing source by 0x1000."},
+    {"addr": "0x0804da24", "role": "checksum", "callers": ["0x0804d624", "0x0804d9b4"], "notes": "sum16_le core: s16 sum of (len>>1) u16_le words from pointer, 16-bit wrap."},
+    {"addr": "0x0804d694", "role": "deserialize", "callers": ["0x0804d6f0"], "notes": "Verify header: read 0x18 bytes at flash 0, require 12-word sum == 0, then 8-byte URBZ0011 compare against template copy."},
+    {"addr": "0x0804da48", "role": "serialize", "callers": ["0x0804d6f0"], "notes": "Create header: memcpy 24-byte template (FUN_08033018), set u16[7] at 0x0E to negated word-sum, write sector 0 via flash 0x0800d800."},
+    {"addr": "0x0804d624", "role": "write", "callers": ["0x0802e5f8"], "notes": "Flush sector 0: read back on-flash header, recompute checksum at struct+0x0E (zero, FUN_0804da24, negate), compare RAM struct vs read-back, write whole 0x1000 sector if different. Exact compare extent is a decompiler artefact (0x400 iterations vs 0x18-byte stack buffer) - UNKNOWN."},
+    {"addr": "0x0804d9e4", "role": "read", "callers": ["0x0804d938"], "notes": "Read sector (slot+1)*0x1000, length 0x1000, into buffer pointer stored at struct+0x18."},
+    {"addr": "0x0804d9b4", "role": "checksum", "callers": ["0x0804d938"], "notes": "Set bool at struct+0xCC+slot = (FUN_0804da24(buffer,0x1000)==0)."},
+    {"addr": "0x08023e3c", "role": "deserialize", "callers": ["0x0804d938"], "notes": "Deserialise one 0x2C RAM entry from sector stream via game FUN_0804d800: 1B to global, 4B->+0x00, 6B->+0x04, 3B->+0x0C (bit23 sign-extended), 16B->+0x10, then FUN_08048d8c unpacks 5 packed bytes into 10 sub-fields at +0x20."},
+    {"addr": "0x0804d800", "role": "deserialize", "callers": ["0x08023e3c", "0x08048d8c"], "notes": "Game stream-copy (distinct from flash wrapper 0x0800d800): memcpy from cursor at struct+0xD4, cursor += n; if state at struct+0xD8 > 0, cursor skips 1 byte and state clears first."},
+    {"addr": "0x08048d8c", "role": "deserialize", "callers": ["0x08023e3c"], "notes": "Unpack 5 stream bytes into 10 bit-fields at entry+0x20 offsets {0,2,5,1,6,3,9,4,7,8} with widths 1/2/5, 3/5, 4/4, 3/5, 5."}
+  ],
+  "caller_chains": [
+    {
+      "entry_caller": "0x0804d6f0",
+      "chain": ["0x0804d6f0", "0x0800d7a4", "0x0806b8a4", "0x0806b3c8"],
+      "trigger_context": "Load/init: allocate 0x1000 buffer, identify flash chip. No static caller; reached via unrecovered jump-table/state dispatch.",
+      "ram_fields_updated": ["struct+0x18 (buffer pointer)"],
+      "how_mapped": "callgraph.json callee edge plus textual FUN_ scan in decompiled.c; each body read in full."
+    },
+    {
+      "entry_caller": "0x0804d6f0",
+      "chain": ["0x0804d6f0", "0x0804d694", "0x0800d7b4", "0x0806b61c"],
+      "trigger_context": "Load: verify 24-byte header (sum16 zero + URBZ0011 compare). On failure the chain below re-initialises the save blank, matching the PACKET mutation probe at 0x0B.",
+      "ram_fields_updated": [],
+      "how_mapped": "Textual call scan + body inspection; header layout corroborated by both .sav files and Python sum verification."
+    },
+    {
+      "entry_caller": "0x0804d6f0",
+      "chain": ["0x0804d6f0", "0x0804da48", "0x08033018", "0x0800d800"],
+      "trigger_context": "Blank re-initialisation after header validation failure: install template header, fix checksum word at 0x0E, write sector 0; then FUN_0804d764 zeroes the buffer and sectors 1-4 are written zeroed.",
+      "ram_fields_updated": ["struct+0x00..0x17 (template header incl. checksum at +0x0E)"],
+      "how_mapped": "Textual call scan (callgraph.json lists FUN_0804da48 callers as []); template contents corroborated by identical header bytes in both samples."
+    },
+    {
+      "entry_caller": "0x0804d6f0",
+      "chain": ["0x0804d6f0", "0x0804d938", "0x0804d9e4", "0x0804d9b4", "0x08023e3c", "0x08048d8c"],
+      "trigger_context": "Load sectors 1-4: read each 0x1000 sector, validate sum16 zero, deserialise valid blocks into 0x2C-byte RAM entries 0-3, zero invalid entries (FUN_08032fac memset).",
+      "ram_fields_updated": ["struct+0xCC..0xCF (per-sector valid flags)", "struct+0xD4 (stream cursor)", "struct+0xD8 (stream state)", "entries[0..3] (0x2C bytes each, external array)"],
+      "how_mapped": "callgraph.json + textual scan; flag offsets corroborated by file bytes at 0xCC (00x4 in cap-00, 01x4 in cap-01)."
+    },
+    {
+      "entry_caller": "0x0804d6f0",
+      "chain": ["0x0804d6f0", "0x08061a80"],
+      "trigger_context": "End of load: apply persisted language byte struct+0x0A through the 6-way locale dispatch (FUN_08061a80).",
+      "ram_fields_updated": ["language global (via FUN_08061a80 argument = byte at file offset 0x0A)"],
+      "how_mapped": "Body of FUN_0804d6f0 calls FUN_08061a80(*(u8*)(struct+10)); FUN_08061a80 guards argument < 6 and table-dispatches."
+    },
+    {
+      "entry_caller": "0x0802e5f8",
+      "chain": ["0x0802e5f8", "0x08061a80", "0x0804d74c", "0x0805ba4c", "0x0804d624", "0x0805ba58"],
+      "trigger_context": "Save flush trigger (no static caller; jump-table dispatched). Mutates header bytes, then flushes sector 0, bracketed by hooks FUN_08068398/FUN_08068368 via FUN_0805ba4c/FUN_0805ba58.",
+      "ram_fields_updated": ["struct+0x0A (= FUN_08061afc() current language)", "struct+0x0B (= 1 literal)", "struct+0x0E (recomputed checksum inside FUN_0804d624)"],
+      "how_mapped": "Textual call scan in decompiled.c (callgraph.json lists no caller for 0x0804d74c/0x0804d624 edges consistently); the mutated offsets are exactly the header bytes that differ between the two samples."
+    },
+    {
+      "entry_caller": "0x0804d624",
+      "chain": ["0x0804d624", "0x0800d7b4", "0x0804da24", "0x0800d800", "0x0806bd1c"],
+      "trigger_context": "Sector-0 flush: read back flash header, recompute checksum, compare, erase/program whole sector via IWRAM trampoline with up to 3 retries in the flash wrapper.",
+      "ram_fields_updated": ["struct+0x0E (checksum)"],
+      "how_mapped": "Body inspection of FUN_0804d624 and flash FUN_0800d800; trampoline target (erase/program in RAM) inferred from SDK structure, marked static-only."
+    }
+  ],
+  "fields": [
+    {
+      "name": "magic_urbz0011",
+      "offset": 0,
+      "size": 8,
+      "type": "ascii",
+      "ram_addr": null,
+      "writers": ["0x0804da48"],
+      "readers": ["0x0804d694"],
+      "observed_values": {"cap-00-future-0.sav": "URBZ0011", "cap-01-future-1.sav": "URBZ0011"},
+      "update_mechanism": "Installed from 24-byte ROM template memcpy at header creation; 8-byte compared on every load after header checksum passes.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "FUN_0804d694 8-byte compare loop; FUN_0804da48 template memcpy (FUN_08033018, 0x18 bytes); bytes present in both .sav files."
+    },
+    {
+      "name": "header_const_ff80",
+      "offset": 8,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": ["0x0804da48"],
+      "readers": [],
+      "observed_values": {"cap-00-future-0.sav": "0xff80", "cap-01-future-1.sav": "0xff80"},
+      "update_mechanism": "Template constant; only read as part of header checksum cover.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "Identical in both samples; inside FUN_0804d694/FUN_0804da48 24-byte header; semantics unknown."
+    },
+    {
+      "name": "language_id",
+      "offset": 10,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": ["0x0804d74c"],
+      "readers": ["0x0804d6f0", "0x08061a80"],
+      "observed_values": {"cap-00-future-0.sav": 0, "cap-01-future-1.sav": 0},
+      "update_mechanism": "FUN_0804d74c stores FUN_08061afc() (current language global) at struct+0x0A on every flush triggered by FUN_0802e5f8; FUN_0804d6f0 passes it to FUN_08061a80 (dispatch if < 6) on load.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "Struct-relative offsets +0x0A in FUN_0804d74c/FUN_0804d6f0; 6 locales match title languages (En,Fr,De,Es,It,Nl); exact index-to-language order beyond 0 is untested."
+    },
+    {
+      "name": "header_flag_0x0b",
+      "offset": 11,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": ["0x0804d74c"],
+      "readers": [],
+      "observed_values": {"cap-00-future-0.sav": 0, "cap-01-future-1.sav": 1},
+      "update_mechanism": "FUN_0804d74c stores literal 1 at struct+0x0B together with the language byte. Not an incrementing generation counter.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "Writer body sets =1; diff between samples is 0->1 with checksum compensating by -0x100; PACKET probe mutation at this offset is rejected via header checksum, not via a counter check."
+    },
+    {
+      "name": "header_reserved_0x0c",
+      "offset": 12,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": ["0x0804da48"],
+      "readers": [],
+      "observed_values": {"cap-00-future-0.sav": "0x0000", "cap-01-future-1.sav": "0x0000"},
+      "update_mechanism": "Template value; covered by header checksum.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "Inside 24-byte header in FUN_0804da48/FUN_0804d694."
+    },
+    {
+      "name": "header_checksum",
+      "offset": 14,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": ["0x0804da48", "0x0804d624"],
+      "readers": ["0x0804d694"],
+      "observed_values": {"cap-00-future-0.sav": "0xf289", "cap-01-future-1.sav": "0xf189"},
+      "update_mechanism": "Zero word, sum 12 u16_le words over 0x00-0x17 with FUN_0804da24, store negation; validator requires total sum == 0.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Python recomputation matches stored values on both samples exactly; decompiled writer/validator bodies read in full."
+    },
+    {
+      "name": "header_reserved_0x10",
+      "offset": 16,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": ["0x0804da48"],
+      "readers": [],
+      "observed_values": {"cap-00-future-0.sav": "0x0000", "cap-01-future-1.sav": "0x0000"},
+      "update_mechanism": "Template value; covered by header checksum.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "Inside 24-byte header."
+    },
+    {
+      "name": "header_sentinel_0x12",
+      "offset": 18,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": ["0x0804da48"],
+      "readers": [],
+      "observed_values": {"cap-00-future-0.sav": "0xffff", "cap-01-future-1.sav": "0xffff"},
+      "update_mechanism": "Template constant; covered by header checksum. Sentinel semantics unproven.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "Identical 0xFFFF in both samples inside the templated header."
+    },
+    {
+      "name": "header_reserved_0x14",
+      "offset": 20,
+      "size": 4,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": ["0x0804da48"],
+      "readers": [],
+      "observed_values": {"cap-00-future-0.sav": "00000000", "cap-01-future-1.sav": "00000000"},
+      "update_mechanism": "Template zeros; end of 24-byte header, covered by header checksum.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "Header length 0x18 used by FUN_0804d694/FUN_0804da48/FUN_0804d624."
+    },
+    {
+      "name": "sector0_buffer_pointer_persisted",
+      "offset": 24,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": "0x02002c30",
+      "writers": ["0x0804d6f0"],
+      "readers": ["0x0804d938", "0x0804d9e4"],
+      "observed_values": {"cap-00-future-0.sav": "0x02002c30", "cap-01-future-1.sav": "0x02002c30"},
+      "update_mechanism": "FUN_0804d6f0 stores the FUN_08032e48-allocated 0x1000 buffer pointer at struct+0x18; persisted verbatim because sector 0 is flushed as a raw struct dump (FUN_0804d624). Expected to be overwritten on load.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "Pointer value is an EWRAM address identical in both files; struct+0x18 dereferenced as buffer by FUN_0804d9e4/FUN_0804d938."
+    },
+    {
+      "name": "sector0_reserved_0x1c_0xcb",
+      "offset": 28,
+      "size": 176,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"cap-00-future-0.sav": "all 0x00", "cap-01-future-1.sav": "all 0x00"},
+      "update_mechanism": "No traced accessor; part of the raw sector-0 struct dump.",
+      "confidence": "UNKNOWN",
+      "evidence": "Zero in both samples; no decompiled function references struct offsets in this range."
+    },
+    {
+      "name": "sector_valid_flags",
+      "offset": 204,
+      "size": 4,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": ["0x0804d9b4"],
+      "readers": ["0x0804d938"],
+      "observed_values": {"cap-00-future-0.sav": "00 00 00 00", "cap-01-future-1.sav": "01 01 01 01"},
+      "update_mechanism": "FUN_0804d9b4 writes (FUN_0804da24(sector,0x1000)==0) at struct+0xCC+slot during FUN_0804d938 load; persisted by the next sector-0 flush. Treated as load outputs, not inputs (fuzzing target).",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "Exact struct offset +0xCC in two functions; file values change 00->01 per byte between captures in step with sector loading."
+    },
+    {
+      "name": "stream_cursor_persisted",
+      "offset": 212,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": "0x02002c53",
+      "writers": ["0x0804d938", "0x0804d800"],
+      "readers": ["0x0804d800"],
+      "observed_values": {"cap-00-future-0.sav": "0x00000000", "cap-01-future-1.sav": "0x02002c53"},
+      "update_mechanism": "FUN_0804d938 sets struct+0xD4 = sector buffer pointer and struct+0xD8 = 0 before FUN_08023e3c; game FUN_0804d800 advances the cursor per field read. Persisted verbatim in struct dump.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "Struct offsets +0xD4/+0xD8 in FUN_0804d938 and game FUN_0804d800; cap-01 value is an EWRAM pointer near the +0x18 buffer allocation."
+    },
+    {
+      "name": "stream_state",
+      "offset": 216,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": ["0x0804d938", "0x0804d800"],
+      "readers": ["0x0804d800"],
+      "observed_values": {"cap-00-future-0.sav": "0x00000000", "cap-01-future-1.sav": "0x00000000"},
+      "update_mechanism": "Reset to 0 per sector load; if > 0 at a stream read, cursor skips 1 byte and the state is cleared (alignment step).",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "FUN_0804d800 game stream body; FUN_0804d938 stores 0 at struct+0xD8."
+    },
+    {
+      "name": "sector0_payload_0x300_pointers",
+      "offset": 768,
+      "size": 24,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"cap-00-future-0.sav": "all zero", "cap-01-future-1.sav": "0x02013dc0, 0x02015dd0, 0x02018980, 0x02019990, 0x02017de0, 0x02018370"},
+      "update_mechanism": "Persisted verbatim by the sector-0 raw struct flush (FUN_0804d624); no traced per-field writer/reader.",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Six EWRAM-pointer-shaped u32 values appear only in cap-01; likely references to live RAM objects, targets not identifiable from the save alone."
+    },
+    {
+      "name": "sector0_flags_0x34a",
+      "offset": 842,
+      "size": 5,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"cap-00-future-0.sav": "00 00 00 00 00", "cap-01-future-1.sav": "01 01 01 01 01"},
+      "update_mechanism": "Set together between captures; persisted by sector-0 flush. No traced writer.",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Five boolean-like bytes change 0->1 as a group; semantics unknown."
+    },
+    {
+      "name": "sector0_payload_0x610_pointers",
+      "offset": 1552,
+      "size": 16,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"cap-00-future-0.sav": "all zero", "cap-01-future-1.sav": "0x02010c3c, 0x02011bec, 0x0200fcb0, 0x02010c60"},
+      "update_mechanism": "Persisted verbatim by sector-0 flush; no traced writer/reader.",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Four EWRAM-pointer-shaped values in cap-01 only."
+    },
+    {
+      "name": "sector0_payload_0x70c_pointers",
+      "offset": 1804,
+      "size": 28,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"cap-00-future-0.sav": "all zero", "cap-01-future-1.sav": "08 ff 00 00 | 0x0200e108, 0x0200dfc0, 0x0200de78, 0x0200dd30, 0x0200dbe8, 0x0200daa0 (u32_le, descending)"},
+      "update_mechanism": "Persisted verbatim by sector-0 flush; no traced writer/reader.",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Small header word followed by six descending EWRAM pointers in cap-01 only."
+    },
+    {
+      "name": "sector0_unclassified_0x730",
+      "offset": 1840,
+      "size": 200,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"cap-00-future-0.sav": "all zero", "cap-01-future-1.sav": "ARM-code-shaped bytes (e.g. 2d e9, a0 e1, a0 e3 sequences; ff 2f e1 at 0x7f0)"},
+      "update_mechanism": "Unknown; inside the raw sector-0 struct dump.",
+      "confidence": "UNKNOWN",
+      "evidence": "Byte patterns resemble ARM opcodes; no traced reader consumes file offsets 0x730-0x7f7. Not interpreted as gameplay fields."
+    },
+    {
+      "name": "sector0_descriptor_table_0x87c",
+      "offset": 2172,
+      "size": 32,
+      "type": "u32_le",
+      "ram_addr": "0x03007d65",
+      "writers": [],
+      "readers": [],
+      "observed_values": {"cap-00-future-0.sav": "0x03007d65, 0x0806b939, 0x0806bc69, 0x09484aa4, 0x00000774, 0x0806b9c1, 0x0806ba35, 0x09484a4c", "cap-01-future-1.sav": "0x03007d41, 0x0806b939, 0x0806bc69, 0x09484aa4, 0x00000774, 0x0806b9c1, 0x0806ba35, 0x09484a4c"},
+      "update_mechanism": "Static table persisted in the struct dump; only the IWRAM pointer at 0x87C differs between captures. ROM pointers neighbour the flash driver functions (0x0806b9xx-0x0806baxx).",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Identical except first word in both files; pointer classes (IWRAM trampoline + ROM flash-driver area) match FUN_0806b8a4 descriptor copying, but the exact writer was not traced."
+    },
+    {
+      "name": "sector1_block",
+      "offset": 4096,
+      "size": 4096,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": ["0x0804d9e4", "0x0804d9b4", "0x08023e3c"],
+      "observed_values": {"cap-00-future-0.sav": "all 0x00; sum16=0x0000", "cap-01-future-1.sav": "all 0x00; sum16=0x0000"},
+      "update_mechanism": "Loaded and sum-validated by FUN_0804d938; deserialised into 0x2C RAM entry 0 if valid. Non-empty writer not traced; initialised zeroed by FUN_0804d6f0 on blank re-init.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "Reader/checksum chain fully traced; sample content is empty so field-level layout inside a non-empty block is unknown."
+    },
+    {
+      "name": "sector2_block",
+      "offset": 8192,
+      "size": 4096,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": ["0x0804d9e4", "0x0804d9b4", "0x08023e3c"],
+      "observed_values": {"cap-00-future-0.sav": "all 0x00; sum16=0x0000", "cap-01-future-1.sav": "all 0x00; sum16=0x0000"},
+      "update_mechanism": "Same as sector1_block, RAM entry 1.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "FUN_0804d938 loop index 1."
+    },
+    {
+      "name": "sector3_block",
+      "offset": 12288,
+      "size": 4096,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": ["0x0804d9e4", "0x0804d9b4", "0x08023e3c"],
+      "observed_values": {"cap-00-future-0.sav": "all 0x00; sum16=0x0000", "cap-01-future-1.sav": "all 0x00; sum16=0x0000"},
+      "update_mechanism": "Same as sector1_block, RAM entry 2.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "FUN_0804d938 loop index 2."
+    },
+    {
+      "name": "sector4_block",
+      "offset": 16384,
+      "size": 4096,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": ["0x0804d9e4", "0x0804d9b4", "0x08023e3c"],
+      "observed_values": {"cap-00-future-0.sav": "all 0x00; sum16=0x0000", "cap-01-future-1.sav": "all 0x00; sum16=0x0000"},
+      "update_mechanism": "Same as sector1_block, RAM entry 3.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "FUN_0804d938 loop index 3."
+    },
+    {
+      "name": "unused_tail",
+      "offset": 20480,
+      "size": 45056,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"cap-00-future-0.sav": "all 0xff", "cap-01-future-1.sav": "all 0xff"},
+      "update_mechanism": "Erased flash; never written by traced code.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Uniform 0xFF in both 65536-byte files past 0x5000; no traced access to sectors >= 5."
+    }
+  ],
+  "fuzzing_targets": [
+    {"offset": 11, "size": 1, "mutation": "XOR 0x01 with no checksum repair (replicates PACKET probe)", "requires_checksum_repair": false, "predicted_effect": "Header sum16 != 0, FUN_0804d694 fails, save re-initialised blank and rewritten."},
+    {"offset": 11, "size": 1, "mutation": "XOR 0x01, then repair header checksum at 0x0E", "requires_checksum_repair": true, "predicted_effect": "Save loads; isolates whether byte 0x0B has semantics beyond the checksum gate."},
+    {"offset": 0, "size": 1, "mutation": "Change one magic byte (U->X), repair header checksum at 0x0E", "requires_checksum_repair": true, "predicted_effect": "Checksum passes but 8-byte magic compare in FUN_0804d694 fails; blank re-initialisation. Proves magic is an independent gate."},
+    {"offset": 10, "size": 1, "mutation": "Set language id to 1,2,3,4,5 in turn, repair header checksum each time", "requires_checksum_repair": true, "predicted_effect": "Boot/UI language changes via FUN_08061a80 6-way dispatch; observed language per value maps the index-to-language table. Value >= 6 tests the <6 guard (no dispatch predicted)."},
+    {"offset": 18, "size": 2, "mutation": "Change sentinel 0xFFFF to 0x0000, repair header checksum", "requires_checksum_repair": true, "predicted_effect": "If load behaviour is unchanged, 0x12 is a passive template constant; re-initialisation would reveal an un-traced reader."},
+    {"offset": 768, "size": 24, "mutation": "Zero the EWRAM pointer array at 0x300-0x317", "requires_checksum_repair": false, "predicted_effect": "Header checksum unaffected (outside cover 0x00-0x17). Predicted: save still loads, proving no integrity cover/read of sector-0 payload; a crash or lost progress would prove an un-traced payload reader."},
+    {"offset": 204, "size": 4, "mutation": "Clear sector-valid flags 01 01 01 01 to 00 00 00 00 in sector 0", "requires_checksum_repair": false, "predicted_effect": "No load effect predicted: flags are recomputed by FUN_0804d9b4 during load and rewritten on next flush. Persistence of cleared flags would refute the output-only model."},
+    {"offset": 4096, "size": 4096, "mutation": "In sector 1: set byte at 0x1000 to 0x01 and compensating u16 at 0x1FFE to 0xFFFF so sector sum16 stays 0; compare against uncompensated variant", "requires_checksum_repair": true, "predicted_effect": "Uncompensated: entry 0 zeroed by FUN_0804d938. Compensated: FUN_08023e3c deserialises entry 0 from near-zero data; tests whether the compensating word location is arbitrary and whether the stream deserialiser runs."},
+    {"offset": 1804, "size": 228, "mutation": "Zero 0x70C-0x7F7 (pointer table plus ARM-code-shaped region)", "requires_checksum_repair": false, "predicted_effect": "Predicted no effect if the region is dead weight in the struct dump; any behaviour change promotes it from UNKNOWN and demands a reader trace."},
+    {"offset": 2172, "size": 1, "mutation": "Flip one bit in the persisted IWRAM pointer at 0x87C", "requires_checksum_repair": false, "predicted_effect": "Predicted no effect because load overwrites struct pointers; a crash would show the dumped descriptor table is trusted on load."},
+    {"offset": 20480, "size": 4096, "mutation": "Write non-0xFF garbage at 0x5000-0x5FFF", "requires_checksum_repair": false, "predicted_effect": "No effect predicted; any effect proves an undiscovered second save area in sectors >= 5."}
+  ],
+  "open_questions": [
+    "Which function writes non-empty sectors 1-4, and where does the compensating sum16 word live inside such a block? No serialiser symmetric to FUN_08023e3c was found among the 278 decompiled functions.",
+    "What do the four 0x2C-byte records deserialised from sectors 1-4 represent semantically? Both samples have all four blocks empty (all-zero).",
+    "Semantics of sector-0 payload regions at 0x300 (EWRAM pointer array), 0x34A (five 0->1 flags), 0x610 and 0x70C (pointer tables), and 0x730-0x7F7 (ARM-code-shaped bytes), populated only in cap-01.",
+    "Exact compare extent in FUN_0804d624: the decompilation counts 0x400 compare iterations against a 0x18-byte stack buffer, so whether flushing is triggered by header-only or full-sector changes is unresolved.",
+    "Index-to-language mapping for byte 0x0A beyond the observed value 0; the order of the remaining five locales in FUN_08061a80's dispatch table is untested.",
+    "Meaning of header constants 0xFF80 at 0x08 and 0xFFFF at 0x12, and of the pre/post-flush hooks FUN_08068398 and FUN_08068368.",
+    "Absolute RAM base address (0x02xxxxxx) of the save struct: _DAT_ literal-pool targets are unrecovered in this decompilation, so only struct-relative offsets are proven.",
+    "Is there any integrity protection over the sector-0 payload (0x18-0xFFF)? None was found in code, and a Python counterfactual (mutating 0x300) leaves the header checksum at 0; runtime confirmation is fuzzing target at offset 768."
+  ]
+}

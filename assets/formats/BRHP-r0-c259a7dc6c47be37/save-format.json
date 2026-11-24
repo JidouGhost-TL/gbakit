@@ -1,0 +1,632 @@
+{
+  "schema": "gbakit-save-research/1",
+  "release_key": "BRHP-r0-c259a7dc6c47be37",
+  "display_name": "Meet the Robinsons (Europe) (En,Fr,De,Es,It,Nl)",
+  "rom_sha256": "c259a7dc6c47be3795428b2e5866de603e7c79bc28899a606663adfd65eedaf0",
+  "game_code": "BRHP",
+  "header_family": "BRH",
+  "community_id": "comm-001",
+  "overall_confidence": "MEDIUM",
+  "media": {
+    "kind": "eeprom512",
+    "size_bytes": 512,
+    "sdk_tags": [],
+    "fill_byte": "0xff"
+  },
+  "slots_and_copies": [
+    {
+      "name": "slot_0",
+      "offset": 80,
+      "size": 208,
+      "redundancy_role": "primary",
+      "selection_rule": "Single blob at EEPROM blocks 10-35 (file 0x50-0x11F); accepted iff XOR32 checksum at RAM +0 matches XOR(words1..51)^0xABCD1234 AND sentinel BE value at RAM +0x44 equals 0x0228; otherwise FUN_0801ce40 calls FUN_0801d08c to rebuild blank blob and FUN_0801cd98 to rewrite it. No backup/mirror/generation counter found."
+    }
+  ],
+  "magic_signatures": [
+    {
+      "offset": 146,
+      "bytes_hex": "2802",
+      "ascii": "",
+      "verified_in_code": true,
+      "verified_in_sav": true,
+      "function_addrs": [
+        "0x0801cd44",
+        "0x0801c7f0",
+        "0x0801ce40"
+      ]
+    },
+    {
+      "offset": 210,
+      "bytes_hex": "2802",
+      "ascii": "",
+      "verified_in_code": true,
+      "verified_in_sav": true,
+      "function_addrs": [
+        "0x0801cd44",
+        "0x0801c7f0"
+      ]
+    },
+    {
+      "offset": 274,
+      "bytes_hex": "2802",
+      "ascii": "",
+      "verified_in_code": true,
+      "verified_in_sav": true,
+      "function_addrs": [
+        "0x0801cd44",
+        "0x0801c7f0"
+      ]
+    }
+  ],
+  "checksums": [
+    {
+      "name": "xor32_key_abcd1234",
+      "algorithm": "custom",
+      "formula_detail": "On block-reversed RAM image (reverse each 8-byte file block at 0x50-0x11F): stored u32le at blob +0x00 = XOR(u32le words at +0x04..+0xCF, words 1..51) XOR 0xABCD1234. Stored file bytes are 0x54-0x57 reversed within block. Reader FUN_0801ce40 and writer FUN_0801cd98 both compute this loop; key recovered from both samples (identical implied constant).",
+      "stored_offset": 84,
+      "stored_size": 4,
+      "covered_start": 80,
+      "covered_end": 288,
+      "function_addrs": [
+        "0x0801cd98",
+        "0x0801ce40"
+      ],
+      "verified_on_samples": [
+        {
+          "file": "cap-00-future-0.sav",
+          "stored_hex": "0x54cc3b37",
+          "computed_hex": "0x54cc3b37",
+          "match": true
+        },
+        {
+          "file": "cap-01-future-1.sav",
+          "stored_hex": "0xabcc3b37",
+          "computed_hex": "0xabcc3b37",
+          "match": true
+        }
+      ],
+      "confidence": "CONFIRMED_VERIFIED"
+    }
+  ],
+  "io_driver_functions": [
+    {
+      "addr": "0x08063308",
+      "role": "write",
+      "callers": "0x08063388, 0x0806344c",
+      "notes": "DMA3 primitive: programs DMA3 src/dst/count|0x80000000 (0x040000D4 block), saves/restores IRQ enable, sets EEPROM timing from type descriptor, busy-waits DMA bit 0x8000. Used for both directions to/from 0x0D000000"
+    },
+    {
+      "addr": "0x080632c0",
+      "role": "serialize",
+      "callers": "0x0805c7ac",
+      "notes": "EEPROM identify/type-select: arg 4 selects 4Kbit descriptor (descriptor+4=max blocks, +8=address bits); arg 0x40 and default select other descriptors"
+    },
+    {
+      "addr": "0x08063388",
+      "role": "read",
+      "callers": "0x080635ac, 0x08069334, 0x0805c7d4",
+      "notes": "EEPROM read one 8-byte block: builds read-command bitstream (addr bits+3 via DMA), DMA-reads 0x44 halfwords from 0x0D000000, reassembles 4 u16 bit-by-bit into ptr+6 decrementing (origin of per-block byte reversal)"
+    },
+    {
+      "addr": "0x0806344c",
+      "role": "write",
+      "callers": "0x08063438",
+      "notes": "EEPROM write one 8-byte block: expands 4 u16 + address + start bits (addr bits+0x43 halfwords) via DMA to 0x0D000000, polls EEPROM busy (0x0D000000 &1) with timer timeout"
+    },
+    {
+      "addr": "0x08063438",
+      "role": "write",
+      "callers": "0x08063604",
+      "notes": "Thin wrapper: FUN_0806344c(block,ptr,1) write-with-wait"
+    },
+    {
+      "addr": "0x080635ac",
+      "role": "read",
+      "callers": "0x08063604",
+      "notes": "Verify one block: re-reads via FUN_08063388 and compares 4 i16 words, returns 0x8000 on mismatch"
+    },
+    {
+      "addr": "0x08063604",
+      "role": "write",
+      "callers": "0x0805c7c0",
+      "notes": "Write-and-verify: up to 3 attempts of FUN_08063438 then FUN_080635ac"
+    },
+    {
+      "addr": "0x0805c7ac",
+      "role": "serialize",
+      "callers": "0x0801cd44",
+      "notes": "SDK-style wrapper -> FUN_080632c0; called as func_0x0805c7ac(4) (identify EEPROM 4K). Edge recovered by decomp grep, absent from callgraph.json"
+    },
+    {
+      "addr": "0x0805c7c0",
+      "role": "write",
+      "callers": "0x0801cd98",
+      "notes": "SDK-style wrapper -> FUN_08063604(block,ptr); called per block in writer loop. Edge absent from callgraph.json"
+    },
+    {
+      "addr": "0x0805c7d4",
+      "role": "read",
+      "callers": "0x0801ce40",
+      "notes": "SDK-style wrapper -> FUN_08063388(block,ptr); called per block in reader loop. Edge absent from callgraph.json"
+    },
+    {
+      "addr": "0x0801cd98",
+      "role": "serialize",
+      "callers": "0x0801ce40, 0x0801d08c",
+      "notes": "High-level writer/flush: sync calls, FUN_0801c7f0 pack, XOR checksum store at blob+0, writes blocks 10..35 via FUN_0805c7c0 with FUN_0800ac34 between blocks, zeroes blob byte +0x35 in RAM afterwards"
+    },
+    {
+      "addr": "0x0801ce40",
+      "role": "deserialize",
+      "callers": "none recovered (unrecovered indirect dispatch; boot/title hypothesis)",
+      "notes": "High-level reader/load: reads blocks 10..35 via FUN_0805c7d4, forces blob +0x35=0, validates XOR checksum and sentinel 0x0228 at +0x44, on failure FUN_0801d08c + redundant second FUN_0801cd98, on success FUN_0801ca80 unpack"
+    },
+    {
+      "addr": "0x0801c7f0",
+      "role": "serialize",
+      "callers": "0x0801cd98",
+      "notes": "Pack: three 0x11C-byte records -> blob at stride 0x40 (4x24-bit fields, byte from +0x118, 2x12-byte MSB bit-packs, div-60 value via FUN_080637e8, 2x31-bit fields, sentinel per record at +0x44)"
+    },
+    {
+      "addr": "0x0801ca80",
+      "role": "deserialize",
+      "callers": "0x0801ce40",
+      "notes": "Unpack: exact inverse of FUN_0801c7f0, blob -> three 0x11C records (24-bit reassembly, bit expansion, *0x3C time rebuild)"
+    },
+    {
+      "addr": "0x0801cd44",
+      "role": "serialize",
+      "callers": "none recovered",
+      "notes": "Default init: memset 0x11C record and 208-byte blob, writes sentinel 0x0228 pairs at +0x44/+0x84/+0xC4, calls func_0x0805c7ac(4) identify EEPROM 4K"
+    },
+    {
+      "addr": "0x0801d08c",
+      "role": "write",
+      "callers": "0x0801ce40",
+      "notes": "Blank reset: zeroes blob and three 0x11C records (FUN_0806570c memset), sets blob +4..+7=01 01 01 FF, calls FUN_0801cd98 to flush"
+    },
+    {
+      "addr": "0x0806570c",
+      "role": "erase",
+      "callers": "0x0801cd44, 0x0801d08c",
+      "notes": "Memset (byte replicated to u32) used to clear blob and records; listed as erase role only in that clearing use"
+    }
+  ],
+  "caller_chains": [
+    {
+      "entry_caller": "0x0801ce40",
+      "chain": [
+        "0x0801ce40",
+        "0x0805c7d4",
+        "0x08063388",
+        "0x08063308"
+      ],
+      "trigger_context": "Load at boot/title (hypothesis; no recovered caller, entry via unrecovered indirect dispatch)",
+      "ram_fields_updated": [
+        "blob blocks 10-35 loaded into RAM blob",
+        "blob byte +0x35 forced 0 before checksum",
+        "on success FUN_0801ca80 unpacks blob into three 0x11C records"
+      ],
+      "how_mapped": "callgraph.json has no caller for 0x0801ce40; grep of decompiled.c shows func_0x0805c7d4(sVar4,puVar7) inside FUN_0801ce40 loop block=10 count 0x1a, and FUN_08063388->FUN_08063308 edge in both callgraph and save_related_functions.c"
+    },
+    {
+      "entry_caller": "0x0801cd98",
+      "chain": [
+        "0x0801cd98",
+        "0x0801c7f0",
+        "0x0805c7c0",
+        "0x08063604",
+        "0x08063438",
+        "0x0806344c",
+        "0x08063308"
+      ],
+      "trigger_context": "Flush/save; in traced code only reached from load-validation failure (0x0801ce40) and blank reset (0x0801d08c); gameplay trigger not recovered",
+      "ram_fields_updated": [
+        "FUN_0801c7f0 pack rewrites per record RAM R*0x40+0x08..+0x37 and +0x44 sentinel from three 0x11C records",
+        "checksum word at blob +0 recomputed",
+        "blob byte +0x35 zeroed in RAM after flush (not re-flushed)"
+      ],
+      "how_mapped": "callgraph.json: 0x0801cd98 callers 0x0801ce40,0x0801d08c and callee 0x0801c7f0; grep shows func_0x0805c7c0(sVar3,puVar7) in its block loop (edge missing from callgraph); driver chain from save_related_functions.c"
+    },
+    {
+      "entry_caller": "0x0801ce40",
+      "chain": [
+        "0x0801ce40",
+        "0x0801d08c",
+        "0x0801cd98",
+        "0x0801c7f0"
+      ],
+      "trigger_context": "Counterfactual: checksum or sentinel validation fails at load (includes packet mutation probe at file 0x50)",
+      "ram_fields_updated": [
+        "blob and three 0x11C records zeroed by FUN_0801d08c",
+        "blob +4..+7 set 01 01 01 FF",
+        "pack re-derives packed fields/sentinels, checksum recomputed, EEPROM rewritten; reader then calls FUN_0801cd98 a second time"
+      ],
+      "how_mapped": "grep decompiled.c line 2517-2518: func_0x0801d08c(); FUN_0801cd98(0); inside validation-failure branch of FUN_0801ce40; FUN_0801d08c itself calls FUN_0801cd98 (callgraph agrees)"
+    },
+    {
+      "entry_caller": "0x0801cd44",
+      "chain": [
+        "0x0801cd44",
+        "0x0806570c",
+        "0x0805c7ac",
+        "0x080632c0"
+      ],
+      "trigger_context": "Early/default init (hypothesis; no recovered caller)",
+      "ram_fields_updated": [
+        "blob memset 0 (208 bytes) and one 0x11C record memset 0",
+        "sentinels written at blob +0x44/+0x84/+0xC4 from single global (0x0228)",
+        "EEPROM 4K descriptor selected via arg 4"
+      ],
+      "how_mapped": "Read FUN_0801cd44 in full; func_0x0805c7ac(4) at its end (line 2400); no func_0x0801cd44 reference elsewhere and no callgraph caller"
+    },
+    {
+      "entry_caller": "0x08069334",
+      "chain": [
+        "0x08069334",
+        "0x08063388",
+        "0x08063308"
+      ],
+      "trigger_context": "Unknown; EEPROM-verify fragment spliced into a large graphics/tile function body (Ghidra function-boundary merge artefact)",
+      "ram_fields_updated": [],
+      "how_mapped": "callgraph.json lists 0x08069334 as caller of 0x08063388; tail of its decompiled body calls FUN_08063388 and compares 4 i16 like FUN_080635ac. Context not reliably attributable"
+    }
+  ],
+  "fields": [
+    {
+      "name": "checksum_xor32_keyed",
+      "offset": 84,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": [
+        "0x0801cd98"
+      ],
+      "readers": [
+        "0x0801ce40"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": "0x54cc3b37 (RAM domain; file bytes 54 cc 3b 37 at 0x54-0x57)",
+        "cap-01-future-1.sav": "0xabcc3b37 (RAM domain; file bytes ab cc 3b 37)"
+      },
+      "update_mechanism": "Recomputed on every flush by FUN_0801cd98 after pack: XOR of RAM u32le words 1..51 XOR 0xABCD1234, stored at blob word 0 (RAM +0x00; file block byte-reversed to 0x54-0x57)",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "FUN_0801cd98/FUN_0801ce40 loops in ghidra/decompiled.c; Python verification both files match (see SAVE-FORMAT-REPORT.md sec.4.3)"
+    },
+    {
+      "name": "header_bytes_plus4_to_plus7",
+      "offset": 80,
+      "size": 4,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [
+        "0x0801d08c"
+      ],
+      "readers": [
+        "0x0801ce40"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": "RAM 01 01 01 ff; file ff 01 01 01 at 0x50-0x53",
+        "cap-01-future-1.sav": "RAM 01 01 01 00; file 00 01 01 01"
+      },
+      "update_mechanism": "FUN_0801d08c sets bytes +4,+5,+6=1,+7=0xFF on blank reset; pack FUN_0801c7f0 does not touch +4..+7; unknown gameplay writer changes byte +7 (RAM) FF->00 between captures; covered by checksum (word 1)",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "FUN_0801d08c decompiled; only payload byte differing between captures; block-reversal mapping file 0x50 = RAM +7"
+    },
+    {
+      "name": "record_packed_24bit_fields_x4_per_record",
+      "offset": 88,
+      "size": 36,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [
+        "0x0801c7f0"
+      ],
+      "readers": [
+        "0x0801ca80"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": "all 0x00 (RAM domain)",
+        "cap-01-future-1.sav": "all 0x00"
+      },
+      "update_mechanism": "Per record R=0..2 at RAM R*0x40+0x08,+0x0B,+0x0E,+0x11: 24-bit BE-style extraction of source record (stride 0x11C) u32s at +4,+8,+0xC,+0x10 by FUN_0801c7f0; reassembled b0*0x10000+b1*0x100+b2 by FUN_0801ca80",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "FUN_0801c7f0 pack and FUN_0801ca80 unpack bodies; zero in both captures"
+    },
+    {
+      "name": "record_byte_from_src_plus0x118_per_record",
+      "offset": 99,
+      "size": 3,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": [
+        "0x0801c7f0"
+      ],
+      "readers": [
+        "0x0801ca80"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": "0x00",
+        "cap-01-future-1.sav": "0x00"
+      },
+      "update_mechanism": "Direct copy source record +0x118 <-> blob R*0x40+0x14 (file offset given for R=0; R=1,2 in subsequent 0x40 block spans)",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "FUN_0801c7f0/FUN_0801ca80"
+    },
+    {
+      "name": "record_bitpacked_array1_12bytes_per_record",
+      "offset": 98,
+      "size": 36,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [
+        "0x0801c7f0"
+      ],
+      "readers": [
+        "0x0801ca80"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": "all 0x00",
+        "cap-01-future-1.sav": "all 0x00"
+      },
+      "update_mechanism": "Per record at RAM R*0x40+0x15..+0x20: 12 bytes MSB-first bit-packed from 96 source bytes at record +0x14 (b0*-128+b1*64+...+b7); unpack expands >>7..&1",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "FUN_0801c7f0/FUN_0801ca80 loops over 0xc groups"
+    },
+    {
+      "name": "record_bitpacked_array2_12bytes_per_record",
+      "offset": 118,
+      "size": 36,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [
+        "0x0801c7f0"
+      ],
+      "readers": [
+        "0x0801ca80"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": "all 0x00",
+        "cap-01-future-1.sav": "all 0x00"
+      },
+      "update_mechanism": "Per record at RAM R*0x40+0x21..+0x2C: same MSB-first bit-packing from second 96-byte source array",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "FUN_0801c7f0/FUN_0801ca80 second 0xc-group loops"
+    },
+    {
+      "name": "record_div60_value_3bytes_per_record",
+      "offset": 122,
+      "size": 9,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [
+        "0x0801c7f0"
+      ],
+      "readers": [
+        "0x0801ca80"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": "all 0x00",
+        "cap-01-future-1.sav": "all 0x00"
+      },
+      "update_mechanism": "Per record at RAM R*0x40+0x2D..+0x2F: q=src_u32/60 via FUN_080637e8 stored q>>10,q>>2,low bits combined with 5 bits of another source byte; unpack rebuilds (b0*0x400+b1*4+(b2>>6))*0x3C. Play-time/minutes semantics is hypothesis only",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "FUN_0801c7f0 (func_0x080637e8(*src,0x3c)) and FUN_0801ca80 (*0x3C)"
+    },
+    {
+      "name": "record_bitfield31_a_per_record",
+      "offset": 135,
+      "size": 12,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": [
+        "0x0801c7f0"
+      ],
+      "readers": [
+        "0x0801ca80"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": "0x00000000",
+        "cap-01-future-1.sav": "0x00000000"
+      },
+      "update_mechanism": "Per record at RAM R*0x40+0x30: 31-bit field, bit n = source byte n &1 (n=0..30), stored u32le; unpack expands to 31 bytes",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "FUN_0801c7f0/FUN_0801ca80 0x1f-iteration bit loops"
+    },
+    {
+      "name": "record_bitfield31_b_per_record",
+      "offset": 131,
+      "size": 12,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": [
+        "0x0801c7f0"
+      ],
+      "readers": [
+        "0x0801ca80"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": "0x00000000",
+        "cap-01-future-1.sav": "0x00000000"
+      },
+      "update_mechanism": "Per record at RAM R*0x40+0x34: same 31-bit packing from second source array. Note byte +0x35 forced 0 by reader pre-checksum and writer post-flush (open anomaly)",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "FUN_0801c7f0/FUN_0801ca80; FUN_0801ce40/FUN_0801cd98 byte +0x35 stores"
+    },
+    {
+      "name": "sentinel_0228_copy1_validated",
+      "offset": 146,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": [
+        "0x0801cd44",
+        "0x0801c7f0"
+      ],
+      "readers": [
+        "0x0801ce40"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": "file 28 02 at 0x92-0x93 (RAM 02 28, BE value 0x0228)",
+        "cap-01-future-1.sav": "file 28 02 at 0x92-0x93 (RAM 02 28)"
+      },
+      "update_mechanism": "Written high-byte-first (02,28 in RAM) at blob +0x44 by FUN_0801cd44 and FUN_0801c7f0; reader FUN_0801ce40 compares byte(+0x44)*0x100+byte(+0x45) against expected 0x0228, rejects on mismatch. Type listed u16_le per schema enum constraint; actual assembly is big-endian as detailed here",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "FUN_0801cd44/FUN_0801c7f0 writers, FUN_0801ce40 compare (blob_word[0x11] byte *0x100 + blob[0x45]); both savs"
+    },
+    {
+      "name": "sentinel_0228_copy2",
+      "offset": 210,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": [
+        "0x0801cd44",
+        "0x0801c7f0"
+      ],
+      "readers": [
+        "0x0801ce40"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": "file 28 02 at 0xD2-0xD3 (RAM 02 28 at +0x84)",
+        "cap-01-future-1.sav": "file 28 02 at 0xD2-0xD3"
+      },
+      "update_mechanism": "Same sentinel at blob +0x84; not explicitly compared on load, protected only by XOR checksum. Big-endian assembly as copy1",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "FUN_0801cd44 writes +0x84/+0x85; both savs"
+    },
+    {
+      "name": "sentinel_0228_copy3",
+      "offset": 274,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": [
+        "0x0801cd44",
+        "0x0801c7f0"
+      ],
+      "readers": [
+        "0x0801ce40"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": "file 28 02 at 0x112-0x113 (RAM 02 28 at +0xC4)",
+        "cap-01-future-1.sav": "file 28 02 at 0x112-0x113"
+      },
+      "update_mechanism": "Same sentinel at blob +0xC4 (record2 R*0x40+0x44); checksum-only on load. Big-endian assembly as copy1",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "FUN_0801cd44 writes +0xC4/+0xC5; FUN_0801c7f0 per-record +0x44; both savs"
+    },
+    {
+      "name": "unused_reserved_gaps_in_blob",
+      "offset": 80,
+      "size": 208,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [
+        "0x0801cd44",
+        "0x0801d08c"
+      ],
+      "readers": [
+        "0x0801ce40"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": "0x00 in RAM domain outside named fields",
+        "cap-01-future-1.sav": "0x00"
+      },
+      "update_mechanism": "RAM R*0x40+0x00..0x07 (except header/sentinels), +0x38..0x43, tail +0xC6..+0xCF: memset only, never written by pack/unpack, still checksum-covered. Size field is blob span; this entry covers only the gap bytes within it",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "FUN_0801c7f0 writes only +0x08..0x37 and +0x44 per record; FUN_0801cd44/FUN_0801d08c memset"
+    },
+    {
+      "name": "erased_eeprom_outside_blob",
+      "offset": 0,
+      "size": 512,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {
+        "cap-00-future-0.sav": "0xFF at 0x00-0x4F and 0x120-0x1FF",
+        "cap-01-future-1.sav": "0xFF at 0x00-0x4F and 0x120-0x1FF"
+      },
+      "update_mechanism": "Never addressed: all traced EEPROM loops run blocks 10..35 only. Size is file size; this entry covers only bytes outside 0x50-0x11F",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Both .sav files; FUN_0801cd98/FUN_0801ce40 loops start block 10 count 0x1a"
+    }
+  ],
+  "fuzzing_targets": [
+    {
+      "offset": 80,
+      "size": 1,
+      "mutation": "RAM +7 byte (file 0x50) 0x00->0xFF without checksum repair",
+      "requires_checksum_repair": false,
+      "predicted_effect": "Rejected at load: XOR mismatch, blank rebuild, .sav rewritten (replicates packet probe)"
+    },
+    {
+      "offset": 80,
+      "size": 1,
+      "mutation": "RAM +7 byte 0x00->0xFF with checksum repair",
+      "requires_checksum_repair": true,
+      "predicted_effect": "Accepted; isolates the only observed variable byte - future-0/future-1 difference should flip"
+    },
+    {
+      "offset": 84,
+      "size": 1,
+      "mutation": "Flip one bit in stored checksum byte at file 0x54",
+      "requires_checksum_repair": false,
+      "predicted_effect": "Rejected: blank rebuild; confirms stored checksum is compared"
+    },
+    {
+      "offset": 146,
+      "size": 1,
+      "mutation": "Sentinel copy1 file 0x92: 0x28->0x29 with checksum repair",
+      "requires_checksum_repair": true,
+      "predicted_effect": "Rejected via sentinel compare 0x0229 != 0x0228 despite valid checksum"
+    },
+    {
+      "offset": 210,
+      "size": 1,
+      "mutation": "Sentinel copy2 file 0xD2: 0x28->0x29 with checksum repair",
+      "requires_checksum_repair": true,
+      "predicted_effect": "Accepted (predicted): copies 2-3 are checksum-only, not explicitly compared"
+    },
+    {
+      "offset": 88,
+      "size": 1,
+      "mutation": "Set RAM +0x08 packed byte to 0x01 (block-reversed write) with checksum repair",
+      "requires_checksum_repair": true,
+      "predicted_effect": "Accepted; record0 24-bit field (source +4) becomes non-zero - observe which counter/flag changes"
+    },
+    {
+      "offset": 152,
+      "size": 1,
+      "mutation": "Set RAM +0x35 to 0xFF, checksum computed (a) including it and (b) with it zeroed - two runs",
+      "requires_checksum_repair": true,
+      "predicted_effect": "Discriminates +0x35 anomaly: (a) rejected+(b) accepted proves reader zeroes +0x35 pre-checksum; (a) accepted proves different base pointer"
+    },
+    {
+      "offset": 136,
+      "size": 1,
+      "mutation": "Gap byte RAM +0x38 (file 0x88) 0x00->0x01, first without then with checksum repair",
+      "requires_checksum_repair": true,
+      "predicted_effect": "Without repair rejected (gaps are checksum-covered); with repair accepted with no visible change predicted"
+    },
+    {
+      "offset": 0,
+      "size": 1,
+      "mutation": "Erased byte outside blob 0xFF->0x00",
+      "requires_checksum_repair": false,
+      "predicted_effect": "No effect predicted; any change proves an un-traced second data area"
+    }
+  ],
+  "open_questions": [
+    "Absolute RAM address of the 208-byte blob and three 0x11C records: all base pointers are unresolved literal-pool _DAT_080... values in decompiled.c, so ram_addr is null throughout",
+    "Gameplay semantics of header byte RAM +7 (only observed variable), bytes +4..+6, four 24-bit record fields, two 96-byte bit arrays, two 31-bit fields, and the div-60 field (play-time hypothesis only)",
+    "Whether the three 0x11C records are player-facing slots/profiles or internal subsystems",
+    "Gameplay save trigger (menu/event): writer is reached in traced code only from load-validation failure and blank reset; normal trigger is outside the 167 traced functions or behind UNRECOVERED_JUMPTABLE indirect jumps",
+    "Byte +0x35 anomaly: reader forces it 0 before checksumming and writer forces it 0 after flushing; if pack ever emits non-zero there the reader would reject its own save (fuzzing target discriminates)",
+    "Identity/value provenance of sentinel expected-value pointer *piRam0801cf14 in FUN_0801ce40 (inferred 0x0228 from writers and sav bytes)",
+    "True context of EEPROM-verify fragment merged into FUN_08069334",
+    "EEPROM descriptor contents (max blocks at +4, address bits at +8) for the arg-4 type selected by FUN_080632c0; inferred 64 blocks / 6 address bits from 512-byte EEPROM 4K media"
+  ]
+}

@@ -1,0 +1,358 @@
+{
+  "schema": "gbakit-save-research/1",
+  "release_key": "A54J-r0-1748dfd31d20fd1b",
+  "display_name": "Koukou Juken Advance Series Eigo Koubun Hen - 26 Units Shuuroku (Japan)",
+  "rom_sha256": "1748dfd31d20fd1b2ee80f53355b890caa8e545f8b0760f9c3b9fae84a7fe86d",
+  "game_code": "A54J",
+  "header_family": "A54",
+  "community_id": "comm-011",
+  "overall_confidence": "MEDIUM",
+  "media": {
+    "kind": "sram",
+    "size_bytes": 32768,
+    "sdk_tags": [
+      "SRAM_V112"
+    ],
+    "fill_byte": "0xff"
+  },
+  "slots_and_copies": [
+    {
+      "name": "slot_0",
+      "offset": 0,
+      "size": 1752,
+      "redundancy_role": "primary",
+      "selection_rule": "Single record at SRAM 0x0; accepted iff u32_le at offset 0 == 0x89F066C6 (FUN_08000418 magic compare); no backup copy or fallback exists. Bytes 0x6D8..0x7FFF unused (0xFF)."
+    }
+  ],
+  "magic_signatures": [
+    {
+      "offset": 0,
+      "bytes_hex": "c666f089",
+      "ascii": "",
+      "verified_in_code": true,
+      "verified_in_sav": true,
+      "function_addrs": [
+        "0x0800036c",
+        "0x08000418"
+      ]
+    }
+  ],
+  "checksums": [
+    {
+      "name": "none_found_verify_after_write_only",
+      "algorithm": "unknown",
+      "formula_detail": "No arithmetic checksum exists: writer FUN_0800036c stores a constant magic and copies globals at 0x6D0/0x6D4 with no loop over the payload; driver FUN_08015174 is a pure byte copy. Integrity = magic equality on load (FUN_08000418) + verify-after-write byte compare via FUN_080151e4(RAM,0x0E000000,0x6D8) whose result is forwarded by FUN_0800036c. Falsified candidates on cap-01 payload [0x04:0x6D8] (all zero): sum8=0x00, sum16=0x0000, xor8=0x00, crc32=0xc1639373, crc32(zeroed magic)=0x05281c85, crc16-modbus=0x0b85; none matches stored u32_le@0 0x89f066c6 (the constant magic) and no non-zero stored checksum slot exists.",
+      "stored_offset": 0,
+      "stored_size": 0,
+      "covered_start": 0,
+      "covered_end": 0,
+      "function_addrs": [
+        "0x0800036c",
+        "0x080151e4"
+      ],
+      "verified_on_samples": [
+        {
+          "file": "cap-01-future-1.sav",
+          "stored_hex": "0x89f066c6 (magic, not a checksum)",
+          "computed_hex": "sum8=0x00 sum16=0x0000 xor8=0x00 crc32=0xc1639373 crc16modbus=0x0b85",
+          "match": false
+        },
+        {
+          "file": "cap-00-future-0.sav",
+          "stored_hex": "0xffffffff (blank)",
+          "computed_hex": "n/a (all 0xFF erased image)",
+          "match": false
+        }
+      ],
+      "confidence": "CONFIRMED_VERIFIED"
+    }
+  ],
+  "io_driver_functions": [
+    {
+      "addr": "0x08015174",
+      "role": "write",
+      "callers": [
+        "0x0800036c"
+      ],
+      "notes": "SRAM byte-copy write: WAITCNT-style preamble (*_DAT & mask | 3), then *dst++=*src++ loop. Call: FUN_08015174(RAM_struct,0x0E000000,0x6D8)."
+    },
+    {
+      "addr": "0x08015110",
+      "role": "read",
+      "callers": [
+        "0x08000418"
+      ],
+      "notes": "SRAM read via stack-copied SRAM_V112 routine tail-calling FUN_0801528c(src,dst,len,stack). Call: FUN_08015110(0x0E000000,RAM_struct,0x6D8)."
+    },
+    {
+      "addr": "0x080151e4",
+      "role": "checksum",
+      "callers": [
+        "0x0800036c"
+      ],
+      "notes": "Verify-after-write byte compare (not an arithmetic checksum): FUN_080151e4(RAM,0x0E000000,0x6D8); result uVar3 forwarded by writer to unrecovered jumptable continuation."
+    },
+    {
+      "addr": "0x0800036c",
+      "role": "serialize",
+      "callers": [],
+      "notes": "Save writer/serializer: lock FUN_08014338, store magic @0, global u32 @0x6D0, global byte @~0x6D4, flush via 0x08015174, verify via 0x080151e4, unlock FUN_08014384. No callers in callgraph; reached via unrecovered jumptable."
+    },
+    {
+      "addr": "0x08000418",
+      "role": "deserialize",
+      "callers": [],
+      "notes": "Save reader/deserializer: read via 0x08015110, magic gate at *piVar1, export u32 @0x6D0 and byte @0x6D4 to globals. No callers in callgraph; reached via unrecovered jumptable."
+    },
+    {
+      "addr": "0x08014338",
+      "role": "write",
+      "callers": [
+        "0x0800036c"
+      ],
+      "notes": "Lock/guard entry bracketing SRAM write (global +=10, SWI 0xB via FUN_080150e0); paired with unlock FUN_08014384 (global -=10). Textual func_ edge; absent from callgraph.json."
+    },
+    {
+      "addr": "0x08014384",
+      "role": "write",
+      "callers": [
+        "0x0800036c"
+      ],
+      "notes": "Unlock/guard exit bracketing SRAM write; paired with FUN_08014338."
+    },
+    {
+      "addr": "0x0801528c",
+      "role": "read",
+      "callers": [
+        "0x08015110",
+        "0x080151e4"
+      ],
+      "notes": "Unrecovered SRAM_V112 transfer trampoline invoked with (src,dst,len,stack_ptr); body not recoverable in this packet."
+    }
+  ],
+  "caller_chains": [
+    {
+      "entry_caller": "0x0800036c",
+      "chain": [
+        "0x0800036c",
+        "0x08014338",
+        "0x08015174",
+        "0x080151e4",
+        "0x08014384"
+      ],
+      "trigger_context": "Unknown: no callers in callgraph.json and function exits via unrecovered jumptable at 0x080003ea; presumably a save-state-machine dispatch target.",
+      "ram_fields_updated": [
+        "offset 0x00: magic u32 = constant (decompiled.c:25)",
+        "offset 0x6D0: u32 copied from global *_DAT_080003f0 (decompiled.c:16)",
+        "offset 0x6D4 (probable): byte copied from global *_DAT_080003f4 via unresolved offset _DAT_080003f8 (decompiled.c:17)"
+      ],
+      "how_mapped": "Textual func_0x08014338/08015174/080151e4/08014384 references in ghidra/decompiled.c lines 14,31-33; callgraph.json records no edges for this function, so mapping is by in-body call sites, cross-checked by the 0x0E000000/0x6D8 constants. No other function mutates the RAM save struct before the flush."
+    },
+    {
+      "entry_caller": "0x08000418",
+      "chain": [
+        "0x08000418",
+        "0x08015110"
+      ],
+      "trigger_context": "Unknown: no callers in callgraph.json and function exits via unrecovered jumptable at 0x08000498; presumably a load/boot dispatch target.",
+      "ram_fields_updated": [],
+      "how_mapped": "Textual func_0x08015110 reference at decompiled.c:54 with (0x0E000000,RAM,0x6D8); magic compare decompiled.c:56; tail exports decompiled.c:62-63. Reader mutates globals from the struct, not the struct itself (except unresolved pointer writes on magic failure)."
+    },
+    {
+      "entry_caller": "0x08011a64",
+      "chain": [
+        "0x08011a64",
+        "0x0800fb98",
+        "0x0800fc28"
+      ],
+      "trigger_context": "Graphics/BG setup (0x06000000 VRAM addresses); audited and excluded.",
+      "ram_fields_updated": [],
+      "how_mapped": "callgraph.json edges 0x08011a64->0x0800fb98,0x0800fc28; no SRAM constants in any of the three bodies."
+    },
+    {
+      "entry_caller": "0x08014438",
+      "chain": [
+        "0x08014438",
+        "0x0801399c",
+        "0x0801398c"
+      ],
+      "trigger_context": "Sprite/object management (0x50-byte stride objects); audited and excluded - largest non-save caller hub together with 0x080144ec/0x0801452c -> 0x0801399c and 0x0801424c -> 0x080141a8.",
+      "ram_fields_updated": [],
+      "how_mapped": "callgraph.json edges; bodies contain no 0x0E000000/0x6D8 and never reference the save struct base literals."
+    }
+  ],
+  "fields": [
+    {
+      "name": "magic",
+      "offset": 0,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": [
+        "0x0800036c"
+      ],
+      "readers": [
+        "0x08000418"
+      ],
+      "observed_values": {
+        "cap-01-future-1.sav": "0x89f066c6 (bytes c6 66 f0 89)",
+        "cap-00-future-0.sav": "0xffffffff (blank)"
+      },
+      "update_mechanism": "Writer stores constant *puVar1=_DAT_08000414 (decompiled.c:25) immediately before FUN_08015174 flush; reader gates on *piVar1!=_DAT_080004a0 (decompiled.c:56).",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "decompiled.c:25,56 + cap-01 bytes c666f089 at offset 0; Python-verified."
+    },
+    {
+      "name": "payload_unknown",
+      "offset": 4,
+      "size": 1740,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {
+        "cap-01-future-1.sav": "all 0x00 (1740 bytes)",
+        "cap-00-future-0.sav": "all 0xff (blank image)"
+      },
+      "update_mechanism": "Copied verbatim RAM<->SRAM by 0x08015174/0x08015110 within the 0x6D8 transfer; no decompiled function accesses any sub-offset and no caller in the corpus fills it before flush.",
+      "confidence": "UNKNOWN",
+      "evidence": "Only sample is a freshly initialised record (all zero); exhaustive search shows no payload sub-offset access in decompiled.c."
+    },
+    {
+      "name": "tail_u32_at_0x6d0",
+      "offset": 1744,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": [
+        "0x0800036c"
+      ],
+      "readers": [
+        "0x08000418"
+      ],
+      "observed_values": {
+        "cap-01-future-1.sav": "0x00000000"
+      },
+      "update_mechanism": "Writer: puVar1[0x1B4]=*_DAT_080003f0 global->struct (decompiled.c:16); Reader: *_DAT_080004ac=piVar1[0x1B4] struct->global (decompiled.c:62). 0x1B4*4=0x6D0=1752-24. Never incremented in visible code; semantics unknown (counter hypothesis unproven).",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "decompiled.c:16,62 index arithmetic; observed 0 in sav."
+    },
+    {
+      "name": "tail_byte_at_0x6d4",
+      "offset": 1748,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": [
+        "0x0800036c"
+      ],
+      "readers": [
+        "0x08000418"
+      ],
+      "observed_values": {
+        "cap-01-future-1.sav": "0x00"
+      },
+      "update_mechanism": "Reader: *_DAT_080004b0=(char)piVar1[0x1B5] (decompiled.c:63), 0x1B5*4=0x6D4 low byte. Writer byte store decompiled.c:17 uses unresolved offset literal _DAT_080003f8; identity with 0x6D4 inferred from mirrored reader.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "decompiled.c:17,63; observed 0 in sav."
+    },
+    {
+      "name": "tail_reserved_0x6d5_0x6d7",
+      "offset": 1749,
+      "size": 3,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {
+        "cap-01-future-1.sav": "00 00 00"
+      },
+      "update_mechanism": "Never separately accessed; flushed/loaded only as part of the 0x6D8 record. High bytes of the 0x6D4 word slot in Ghidra's int* model.",
+      "confidence": "HYPOTHESIS",
+      "evidence": "No access in decompiled.c; zero in sav."
+    },
+    {
+      "name": "unused_sram_beyond_record",
+      "offset": 1752,
+      "size": 31016,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {
+        "cap-01-future-1.sav": "all 0xff",
+        "cap-00-future-0.sav": "all 0xff"
+      },
+      "update_mechanism": "Outside the 0x6D8-length transfer of all three drivers; never written - proves no second slot/backup copy exists in this image.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Python check cap-01[0x6D8:]==0xFF*31016; driver length literal 0x6D8."
+    }
+  ],
+  "fuzzing_targets": [
+    {
+      "offset": 0,
+      "size": 4,
+      "mutation": "Flip one bit in magic (c6->c7)",
+      "requires_checksum_repair": false,
+      "predicted_effect": "FUN_08000418 magic compare fails, initialisation branch taken, boots as blank/new save. Proves magic is sole load gate."
+    },
+    {
+      "offset": 0,
+      "size": 4,
+      "mutation": "Set magic to FF FF FF FF (blank value)",
+      "requires_checksum_repair": false,
+      "predicted_effect": "Rejected like corrupt magic; any behavioural difference vs bit-flip localises blank-vs-corrupt handling in FUN_08000418:58-60."
+    },
+    {
+      "offset": 4,
+      "size": 1,
+      "mutation": "Set first payload byte to 0x01, magic intact; then sweep 0x04..0x6CF one byte at a time",
+      "requires_checksum_repair": false,
+      "predicted_effect": "Still loads (no checksum); RAM struct byte changes after FUN_08015110. UI change identifies live payload bytes; no change confirms a progressed baseline is required."
+    },
+    {
+      "offset": 1744,
+      "size": 4,
+      "mutation": "Set tail u32 at 0x6D0 to 01 00 00 00",
+      "requires_checksum_repair": false,
+      "predicted_effect": "Exported to global *_DAT_080004ac on load (FUN_08000418:62); watch that global/gameplay. On re-save writer overwrites struct 0x6D0 from the global (decompiled.c:16)."
+    },
+    {
+      "offset": 1748,
+      "size": 1,
+      "mutation": "Set tail byte at 0x6D4 to 0x01, separately 0xFF",
+      "requires_checksum_repair": false,
+      "predicted_effect": "Exported as byte to *_DAT_080004b0 on load (FUN_08000418:63); candidate flag/settings byte."
+    },
+    {
+      "offset": 1749,
+      "size": 3,
+      "mutation": "Set 0x6D5..0x6D7 to AA BB CC",
+      "requires_checksum_repair": false,
+      "predicted_effect": "Predicted no load effect (never read). Re-save preserves them only if writer's 0x6D4 byte store does not write the full word; falsifies/confirms padding hypothesis."
+    },
+    {
+      "offset": 1752,
+      "size": 16,
+      "mutation": "Write non-FF bytes at 0x6D8..0x6E7",
+      "requires_checksum_repair": false,
+      "predicted_effect": "Predicted no effect (outside 0x6D8 transfer); any effect falsifies single-record geometry / reveals a second region."
+    },
+    {
+      "offset": 4,
+      "size": 1740,
+      "mutation": "From a progressed save, keep magic and zero entire payload (synthetic cap-01 reproduction)",
+      "requires_checksum_repair": false,
+      "predicted_effect": "Valid-but-empty progress implies payload carries all progress; an error implies a payload validity flag - binary-search payload by halves."
+    }
+  ],
+  "open_questions": [
+    "Resolved values of _DAT_080003ec/_DAT_0800049c (RAM struct base), _DAT_08000414/_DAT_080004a0 (magic literal), _DAT_080003f0/_DAT_080003f4/_DAT_080003f8 (tail globals and writer byte offset) are not in this packet.",
+    "Which gameplay code outside the 57-function corpus fills payload 0x04..0x6CF before FUN_0800036c flushes it? A progressed non-zero-payload .sav is required to map sub-fields.",
+    "Semantics of tail u32 at 0x6D0 (counter vs settings vs id): copied, never incremented, in visible code; 0 in the fresh record.",
+    "Semantics of tail byte at 0x6D4 and whether 0x6D5..0x6D7 are truly unused.",
+    "Which dispatch states invoke FUN_0800036c/FUN_08000418 via the unrecovered jumptables at 0x080003ea/0x08000498, and what FUN_080151e4 verify result uVar3 selects on failure.",
+    "What the unresolved three-word pointer (DMA-like) writes in both seed functions configure, and whether the reader magic-failure branch erases or merely ignores SRAM.",
+    "No paired .ss save states exist in this packet (states/ empty), so all fuzzing predictions are untested against gameplay."
+  ]
+}

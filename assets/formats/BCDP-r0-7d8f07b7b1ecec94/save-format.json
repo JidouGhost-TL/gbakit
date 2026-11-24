@@ -1,0 +1,130 @@
+{
+  "schema": "gbakit-save-research/1",
+  "release_key": "BCDP-r0-7d8f07b7b1ecec94",
+  "display_name": "Cinderella - Magical Dreams (Europe) (En,Fr,De,Es,It)",
+  "rom_sha256": "7d8f07b7b1ecec94fff6f34c12b919520215f38dd3f3cd7d4bb7008e12bf3c02",
+  "game_code": "BCDP",
+  "header_family": "BCD",
+  "community_id": "comm-020",
+  "overall_confidence": "MEDIUM",
+  "media": {
+    "kind": "eeprom512",
+    "size_bytes": 512,
+    "sdk_tags": [],
+    "fill_byte": "0xff"
+  },
+  "slots_and_copies": [
+    {
+      "name": "slot_0",
+      "offset": 0,
+      "size": 72,
+      "redundancy_role": "primary",
+      "selection_rule": "Single image at EEPROM offset 0; no backup or generation counter. Validity is decided solely by the seeded byte-sum at image offset 0x44 (RAM domain); on mismatch the loader manufactures defaults in RAM without rewriting EEPROM."
+    }
+  ],
+  "magic_signatures": [],
+  "checksums": [
+    {
+      "name": "eeprom_image_sum32_seeded",
+      "algorithm": "sum32_le",
+      "formula_detail": "acc = 0x12345678 (seed, ROM cell _DAT_0801F0D4, recovered arithmetically); for i in 0..71: acc = (acc + image[i]) & 0xFFFFFFFF, with the 4 checksum bytes treated as 0. Stored as u32le at RAM image offset 0x44. FUN_0800AA6A mode 0. In the .sav file domain (per-8-byte-block byte reversal) the stored bytes appear at file offset 0x40 as 12 34 62 7B for the valid sample; the byte sum is identical in both domains.",
+      "stored_offset": 68,
+      "stored_size": 4,
+      "covered_start": 0,
+      "covered_end": 72,
+      "function_addrs": ["0x0800aa6a", "0x0801ee34", "0x0801ef34"],
+      "verified_on_samples": [
+        {"file": "cap-01-future-1.sav", "stored_hex": "0x1234627b", "computed_hex": "0x1234627b", "match": true},
+        {"file": "cap-00-future-0.sav", "stored_hex": "0xffffffff", "computed_hex": "0x12349a34", "match": false}
+      ],
+      "confidence": "CONFIRMED_VERIFIED"
+    }
+  ],
+  "io_driver_functions": [
+    {"addr": "0x080298e8", "role": "read", "callers": ["0x08029968", "0x08029a2c"], "notes": "DMA3 transfer engine: programs DMA source/dest/count (count | 0x80000000 enable) via pointer constants, spins on busy bit 0x8000. One endpoint is always EEPROM bus 0x0D000000. Used for both directions."},
+    {"addr": "0x08029968", "role": "read", "callers": ["0x08029b8c", "0x0802971a"], "notes": "EEPROM read one 8-byte block: MSB-first address bitstream, DMA 0x44 halfwords back from 0x0D000000, reconstructs 4 x u16 MSB-first. Block address range-checked vs device descriptor +4."},
+    {"addr": "0x08029a2c", "role": "write", "callers": ["0x08029a18"], "notes": "EEPROM write one 8-byte block: expands 64 data bits + address MSB-first, DMA addr_bits+0x43 halfwords to 0x0D000000, polls EEPROM busy bit with timer timeout 0x88."},
+    {"addr": "0x08029a18", "role": "write", "callers": ["0x08029be4"], "notes": "Write-block wrapper calling FUN_08029A2C with wait-for-ready flag 1."},
+    {"addr": "0x08029b8c", "role": "read", "callers": ["0x08029be4"], "notes": "Verify one 8-byte block: re-reads via FUN_08029968 and compares 4 x i16; returns 0 on match, 0x8000 on mismatch."},
+    {"addr": "0x08029be4", "role": "write", "callers": ["0x08029674"], "notes": "Write-with-verify: up to 3 write (FUN_08029A18) + verify (FUN_08029B8C) attempts per 8-byte block."},
+    {"addr": "0x080298a0", "role": "serialize", "callers": ["0x08029674", "0x0802971a"], "notes": "Select EEPROM device descriptor by argument 4 (type 0) vs 0x40 (type 1); descriptor gives block count (+4) and address-bit count (+8)."},
+    {"addr": "0x08005514", "role": "deserialize", "callers": ["0x08029674", "0x0802971a"], "notes": "EEPROM capacity query: type 0 -> 0x200 (512 bytes), type 1 -> 0x2000 (8192), else 0. Game always uses type 0."},
+    {"addr": "0x08029674", "role": "write", "callers": ["0x0801ef34"], "notes": "EEPROM write byte-range API (ctx, type, byte_offset, src, len): lock, select device, per-8-byte-block memcpy (FUN_0802A2E0) + FUN_08029BE4. Called textually as func_0x08029674; callgraph shows no callers (tail-call artefact)."},
+    {"addr": "0x0802971a", "role": "read", "callers": ["0x0801ee34"], "notes": "EEPROM read byte-range API: mirror of FUN_08029674 using FUN_08029968 per block. Called textually as func_0x0802971a; callgraph shows no callers (tail-call artefact)."},
+    {"addr": "0x0800aa6a", "role": "checksum", "callers": ["0x0801ee34", "0x0801ef34"], "notes": "Mode 0: seeded 32-bit byte sum. Mode 1 delegates to func_0x0800552c and is unused by the save path."},
+    {"addr": "0x0801ee34", "role": "deserialize", "callers": ["0x0801eeda"], "notes": "Load: read 72 bytes from EEPROM offset 0 into heap staging buffer, verify checksum at +0x44 (zeroed during compute), on mismatch zero + defaults (+0x30=7, +0x34=8, +0x40=0xFF, record first words 0xFFFFFFFF), then copy records/singles into the game object."},
+    {"addr": "0x0801ef34", "role": "serialize", "callers": ["0x080221cc"], "notes": "Save: copy game object singles/records into 72-byte staging buffer, compute checksum into +0x44 via FUN_0800AA6A, write via FUN_08029674 (type 0, offset 0, len 0x48), free buffer."}
+  ],
+  "caller_chains": [
+    {
+      "entry_caller": "0x08008274",
+      "chain": ["0x08008274", "0x0801eeda", "0x0801ee34", "0x0802971a", "0x08029968", "0x080298e8"],
+      "trigger_context": "Boot / game-object construction: EEPROM image read and deserialized (or defaults manufactured). No EEPROM write.",
+      "ram_fields_updated": ["obj+0x18..0x47 (3 records x 16 bytes)", "obj+0x5c", "obj+0x60", "obj+0x64", "obj+0x68", "obj+0x6c"],
+      "how_mapped": "Callgraph edge 0x0801eeda->0x0801ee34; textual func_0x0801eeda call in FUN_08008274; copy loops in FUN_0801EE34 (decompiled lines 4757-4777). FUN_0802971A reached textually as func_0x0802971a (line 4741) with (type=0, offset=0, len=0x48)."
+    },
+    {
+      "entry_caller": "0x080221cc",
+      "chain": ["0x080221cc", "0x0801ef34", "0x0800aa6a", "0x08029674", "0x08029be4", "0x08029a2c", "0x080298e8"],
+      "trigger_context": "First boot: obj+0x6C == 0xFF sentinel forced to 0, selection menu FUN_0801FE74 runs, then save (FUN_080221CC lines 5616-5627).",
+      "ram_fields_updated": ["obj+0x6c (0xFF -> 0 -> menu value 0-4)"],
+      "how_mapped": "Callgraph sole caller of 0x0801ef34 is 0x080221cc; call sites at decompiled lines 5625, 5661, 5668, 5709, 5756, 5782, 5788, 5794 share this downstream chain. Write side verified textually: func_0x08029674 line 4866, FUN_08029BE4 loop in FUN_08029674. Verify leg: 0x08029be4 -> 0x08029b8c -> 0x08029968 -> 0x080298e8."
+    },
+    {
+      "entry_caller": "0x080221cc",
+      "chain": ["0x080221cc", "0x0801ef34", "0x0800aa6a", "0x08029674", "0x08029be4", "0x08029a2c", "0x080298e8"],
+      "trigger_context": "State 4 sub-menu exit (line 5661, unconditional save); choice 2 opens selector FUN_0801FE74(obj, &obj+0x6C, 1), choice 3 calls unresolved func_0x0801fa78.",
+      "ram_fields_updated": ["obj+0x6c"],
+      "how_mapped": "Decompiled lines 5649-5661; sub-menu helper func_0x08020152 not in decompiled set (evidence gap noted)."
+    },
+    {
+      "entry_caller": "0x080221cc",
+      "chain": ["0x080221cc", "0x0801ef34", "0x0800aa6a", "0x08029674", "0x08029be4", "0x08029a2c", "0x080298e8"],
+      "trigger_context": "State 0xFF handler (line 5668): func_0x0801f512(obj, &obj+0x70); if bit 8 of obj+0x70 set, obj+0x58=1 and save. Also end-of-round (line 5709), unlock awards (lines 5756/5782), per-record progression (lines 5788/5794).",
+      "ram_fields_updated": ["obj+0x64 (|= 1, |= 1<<id)", "obj+0x18/0x28/0x38 record word0 (+1 / reset 0xFF / preset 0xD)", "obj+0x58 and obj+0x70 (runtime only, not persisted)"],
+      "how_mapped": "Decompiled lines 5663-5669, 5706-5709, 5752-5756, 5778-5794. Bitflag writes to obj+0x64 (= obj+100) are direct OR operations before each FUN_0801EF34 call."
+    }
+  ],
+  "fields": [
+    {"name": "record0_word0", "offset": 0, "size": 4, "type": "u32_le", "ram_addr": null, "writers": ["0x0801ef34", "0x080221cc"], "readers": ["0x0801ee34", "0x080221cc"], "observed_values": {"cap-01-future-1.sav": "0xffffffff (RAM domain)", "cap-00-future-0.sav": "0xffffffff (erased)"}, "update_mechanism": "Copied verbatim staging<->game object (obj+0x18); loader default 0xFFFFFFFF; FUN_080221CC increments it, resets to 0xFF above 0xC, presets 0xD from 0xFF. Offset is .sav/RAM image offset (identical for this block-aligned field set); RAM mirror is game-object-relative obj+0x18, absolute heap address unrecoverable.", "confidence": "CONFIRMED_STATIC", "evidence": "FUN_0801EE34 lines 4766-4777 record copy loop; FUN_0801EF34 lines 4851-4863; FUN_080221CC lines 5711-5720, 5784-5794. Meaning (progression counter) is HYPOTHESIS; u32-vs-0xFF width contradiction unresolved."},
+    {"name": "record0_word1", "offset": 4, "size": 4, "type": "u32_le", "ram_addr": null, "writers": ["0x0801ef34"], "readers": ["0x0801ee34"], "observed_values": {"cap-01-future-1.sav": "0x00000000"}, "update_mechanism": "Verbatim 16-byte record copy only (obj+0x1C).", "confidence": "UNKNOWN", "evidence": "Record copy loops in FUN_0801EE34/FUN_0801EF34; no other access in corpus."},
+    {"name": "record0_word2", "offset": 8, "size": 4, "type": "u32_le", "ram_addr": null, "writers": ["0x0801ef34"], "readers": ["0x0801ee34"], "observed_values": {"cap-01-future-1.sav": "0x00000000"}, "update_mechanism": "Verbatim 16-byte record copy only (obj+0x20).", "confidence": "UNKNOWN", "evidence": "Record copy loops only."},
+    {"name": "record0_word3", "offset": 12, "size": 4, "type": "u32_le", "ram_addr": null, "writers": ["0x0801ef34"], "readers": ["0x0801ee34"], "observed_values": {"cap-01-future-1.sav": "0x00000000"}, "update_mechanism": "Verbatim 16-byte record copy only (obj+0x24).", "confidence": "UNKNOWN", "evidence": "Record copy loops only."},
+    {"name": "record1_word0", "offset": 16, "size": 4, "type": "u32_le", "ram_addr": null, "writers": ["0x0801ef34", "0x080221cc"], "readers": ["0x0801ee34", "0x080221cc"], "observed_values": {"cap-01-future-1.sav": "0xffffffff (RAM domain)"}, "update_mechanism": "As record0_word0, record index 1 (obj+0x28).", "confidence": "CONFIRMED_STATIC", "evidence": "Record loops with rec*0x10 stride in FUN_0801EE34/FUN_0801EF34/FUN_080221CC."},
+    {"name": "record1_word1", "offset": 20, "size": 4, "type": "u32_le", "ram_addr": null, "writers": ["0x0801ef34"], "readers": ["0x0801ee34"], "observed_values": {"cap-01-future-1.sav": "0x00000000"}, "update_mechanism": "Verbatim record copy only (obj+0x2C).", "confidence": "UNKNOWN", "evidence": "Record copy loops only."},
+    {"name": "record1_word2", "offset": 24, "size": 4, "type": "u32_le", "ram_addr": null, "writers": ["0x0801ef34"], "readers": ["0x0801ee34"], "observed_values": {"cap-01-future-1.sav": "0x00000000"}, "update_mechanism": "Verbatim record copy only (object record space +0x30 within record area).", "confidence": "UNKNOWN", "evidence": "Record copy loops only."},
+    {"name": "record1_word3", "offset": 28, "size": 4, "type": "u32_le", "ram_addr": null, "writers": ["0x0801ef34"], "readers": ["0x0801ee34"], "observed_values": {"cap-01-future-1.sav": "0x00000000"}, "update_mechanism": "Verbatim record copy only.", "confidence": "UNKNOWN", "evidence": "Record copy loops only."},
+    {"name": "record2_word0", "offset": 32, "size": 4, "type": "u32_le", "ram_addr": null, "writers": ["0x0801ef34", "0x080221cc"], "readers": ["0x0801ee34", "0x080221cc"], "observed_values": {"cap-01-future-1.sav": "0xffffffff (RAM domain)"}, "update_mechanism": "As record0_word0, record index 2 (obj+0x38).", "confidence": "CONFIRMED_STATIC", "evidence": "Record loops with rec*0x10 stride."},
+    {"name": "record2_word1", "offset": 36, "size": 4, "type": "u32_le", "ram_addr": null, "writers": ["0x0801ef34"], "readers": ["0x0801ee34"], "observed_values": {"cap-01-future-1.sav": "0x00000000"}, "update_mechanism": "Verbatim record copy only.", "confidence": "UNKNOWN", "evidence": "Record copy loops only."},
+    {"name": "record2_word2", "offset": 40, "size": 4, "type": "u32_le", "ram_addr": null, "writers": ["0x0801ef34"], "readers": ["0x0801ee34"], "observed_values": {"cap-01-future-1.sav": "0x00000000"}, "update_mechanism": "Verbatim record copy only. NOTE: this RAM-image offset 0x28-0x2B region is unrelated to the .sav file bytes at 0x40; see checksum field for the file-domain note.", "confidence": "UNKNOWN", "evidence": "Record copy loops only."},
+    {"name": "record2_word3", "offset": 44, "size": 4, "type": "u32_le", "ram_addr": null, "writers": ["0x0801ef34"], "readers": ["0x0801ee34"], "observed_values": {"cap-01-future-1.sav": "0x00000000"}, "update_mechanism": "Verbatim record copy only.", "confidence": "UNKNOWN", "evidence": "Record copy loops only."},
+    {"name": "single_a", "offset": 48, "size": 4, "type": "u32_le", "ram_addr": null, "writers": ["0x0801ef34"], "readers": ["0x0801ee34"], "observed_values": {"cap-01-future-1.sav": "7 (RAM domain)"}, "update_mechanism": "Direct word copy buf+0x30 <-> obj+0x5C; loader default 7. Passed packed as obj+0x5C + obj+0x60*0x10000 to func_0x0800837a (FUN_080221CC line 5767); pointer also given to state-machine helpers.", "confidence": "CONFIRMED_STATIC", "evidence": "FUN_0801EE34 lines 4747, 4759; FUN_0801EF34 line 4845; FUN_080221CC lines 5635, 5766-5768. Gameplay name unknown."},
+    {"name": "single_b", "offset": 52, "size": 4, "type": "u32_le", "ram_addr": null, "writers": ["0x0801ef34"], "readers": ["0x0801ee34"], "observed_values": {"cap-01-future-1.sav": "8 (RAM domain)"}, "update_mechanism": "Direct word copy buf+0x34 <-> obj+0x60; loader default 8; high half of the packed pair above.", "confidence": "CONFIRMED_STATIC", "evidence": "FUN_0801EE34 lines 4748, 4760; FUN_0801EF34 line 4846. Gameplay name unknown."},
+    {"name": "unlock_bitflags", "offset": 56, "size": 4, "type": "bitflags", "ram_addr": null, "writers": ["0x0801ef34", "0x080221cc"], "readers": ["0x0801ee34"], "observed_values": {"cap-01-future-1.sav": "0x00000000"}, "update_mechanism": "Direct word copy buf+0x38 <-> obj+0x64 (obj+100); FUN_080221CC sets bits before saving: |= 1 (line 5708) and |= 1<<id (lines 5755, 5781).", "confidence": "CONFIRMED_STATIC", "evidence": "FUN_0801EE34 line 4761; FUN_0801EF34 line 4847; FUN_080221CC lines 5708, 5755, 5781. Individual bit meanings UNKNOWN."},
+    {"name": "single_d", "offset": 60, "size": 4, "type": "u32_le", "ram_addr": null, "writers": ["0x0801ef34"], "readers": ["0x0801ee34"], "observed_values": {"cap-01-future-1.sav": "0x00000000"}, "update_mechanism": "Direct word copy buf+0x3C <-> obj+0x68; pointer passed to func_0x08020716 in state 3 (FUN_080221CC line 5646).", "confidence": "CONFIRMED_STATIC", "evidence": "FUN_0801EE34 line 4763; FUN_0801EF34 line 4849. Meaning UNKNOWN."},
+    {"name": "selector_value", "offset": 64, "size": 4, "type": "u32_le", "ram_addr": null, "writers": ["0x0801ef34", "0x080221cc", "0x0801fe74"], "readers": ["0x0801ee34", "0x080221cc"], "observed_values": {"cap-01-future-1.sav": "0x00000000 (RAM domain)"}, "update_mechanism": "Direct word copy buf+0x40 <-> obj+0x6C; loader default 0x000000FF (unset sentinel); FUN_080221CC forces 0xFF->0 on first boot then saves; FUN_0801FE74 selector mutates it in place over range 0-4 with wraparound. RAM image offset 0x40; in .sav file domain these 4 bytes land reversed in file block 8 second half (file 0x44).", "confidence": "CONFIRMED_STATIC", "evidence": "FUN_0801EE34 lines 4749, 4762-4764; FUN_0801EF34 line 4850; FUN_080221CC lines 5592, 5616-5618; FUN_0801FE74 lines 5243-5258. Language/profile identification is HYPOTHESIS only."},
+    {"name": "checksum", "offset": 68, "size": 4, "type": "u32_le", "ram_addr": null, "writers": ["0x0801ef34"], "readers": ["0x0801ee34"], "observed_values": {"cap-01-future-1.sav": "0x1234627b (RAM domain; file bytes 12 34 62 7B at file offset 0x40)"}, "update_mechanism": "FUN_0800AA6A(0, buf, 0x48, seed=0x12345678) stored at RAM image +0x44 (= JSON offset 68). Loader zeroes the word, recomputes, compares. File-domain bytes appear at file offset 0x40 due to per-8-byte-block reversal.", "confidence": "CONFIRMED_VERIFIED", "evidence": "FUN_0800AA6A lines 3007-3015; FUN_0801EE34 lines 4742-4745; FUN_0801EF34 lines 4864-4866; Python verification: computed 0x1234627B == stored on cap-01-future-1.sav, mismatch on blank cap-00 as expected."}
+  ],
+  "fuzzing_targets": [
+    {"offset": 68, "size": 4, "mutation": "Increment stored checksum by 1 without repairing", "requires_checksum_repair": false, "predicted_effect": "Reload manufactures defaults (records 0xFFFFFFFF, singles 7/8, first-boot selector flow at FUN_080221CC), proving the integrity gate and absence of a backup copy."},
+    {"offset": 48, "size": 4, "mutation": "Set single_a (RAM +0x30) from 7 to 0, then to 255", "requires_checksum_repair": true, "predicted_effect": "Changed start value of the packed obj+0x5C/obj+0x60 pair consumed at FUN_080221CC line 5767; 255 probes range validation/clamping."},
+    {"offset": 52, "size": 4, "mutation": "Set single_b (RAM +0x34) from 8 to 0", "requires_checksum_repair": true, "predicted_effect": "Distinct effect from the single_a mutation, confirming the A + B*0x10000 packing."},
+    {"offset": 56, "size": 4, "mutation": "Set unlock_bitflags (RAM +0x38) to 0xFFFFFFFF, then to single bits 1<<0, 1<<1, 1<<5", "requires_checksum_repair": true, "predicted_effect": "All-bits run unlocks everything governed by obj+0x64; single-bit runs map bits to individual unlockables set by FUN_080221CC lines 5708/5755/5781."},
+    {"offset": 64, "size": 4, "mutation": "Set selector_value (RAM +0x40) to 4, then 5, then 0xFF", "requires_checksum_repair": true, "predicted_effect": "4 shows the 5th selector entry; 5 probes out-of-range handling; 0xFF triggers first-boot forced selection and immediate re-save."},
+    {"offset": 0, "size": 4, "mutation": "Set record0_word0 (RAM +0x00) from 0xFFFFFFFF to 0, 5, and 0xFF in separate runs", "requires_checksum_repair": true, "predicted_effect": "Resolves the field-width contradiction: small values act as progression, 0xFF acts as the sentinel preset to 0xD in FUN_080221CC; identical behaviour of 0xFF and 0xFFFFFFFF would prove byte-wide effect."},
+    {"offset": 16, "size": 4, "mutation": "Set record1_word0 / record2_word0 (RAM +0x10/+0x20) to 3 one at a time", "requires_checksum_repair": true, "predicted_effect": "Confirms the 3 records are independent progression entries and identifies their on-screen counterparts."},
+    {"offset": 4, "size": 12, "mutation": "Fill record word1-word3 with 0xDEADBEEF patterns", "requires_checksum_repair": true, "predicted_effect": "No gameplay change expected (verbatim-copied padding); any change promotes the word from UNKNOWN and localises an external reader."},
+    {"offset": 60, "size": 4, "mutation": "Set single_d (RAM +0x3C) to 1", "requires_checksum_repair": true, "predicted_effect": "State-3-specific UI/progress change via func_0x08020716 consuming obj+0x68; no change implies dormant field."},
+    {"offset": 72, "size": 1, "mutation": "Set first unused byte (file 0x48) from 0xFF to 0x00; separately write the checksum unreversed at file offset 0x44", "requires_checksum_repair": false, "predicted_effect": "0x48 mutation has zero effect (proves 72-byte geometry). Unreversed checksum placement fails integrity (defaults appear), proving the per-block reversal transform and stored location."}
+  ],
+  "open_questions": [
+    "Gameplay names for singles A-E, record word1-word3, and each bit of the unlock bitflags are unknown; the selector-as-language-index reading (5 values, 5 title languages) is a hypothesis.",
+    "Record word0 width contradiction: loader default stores 0xFFFFFFFF (u32) while FUN_080221CC compares/increments it with 0xFF-sentinel small-int semantics.",
+    "The .sav per-8-byte-block byte reversal vs RAM image is inferred jointly from code offsets, default constants (7/8) and checksum placement; the checksum sum itself is invariant under it.",
+    "Seed cell _DAT_0801F0D4 and all _DAT_ pointer contents are unresolved ROM constants; seed 0x12345678 was recovered arithmetically from the valid sample.",
+    "FUN_0801EF34 does not explicitly zero the checksum word before computing over the fresh heap buffer; correctness relies on allocator behaviour.",
+    "Helper bodies func_0x08020152, func_0x08020c70, func_0x0802148a, func_0x08020716, func_0x0801f512, func_0x0801fa78, func_0x08021080, func_0x08020a9a are absent from the 248-function decompiled set; their writes to persisted fields are mapped only by call-site context.",
+    "FUN_0800AA6A mode 1 (func_0x0800552c) and the 8192-byte EEPROM type-1 path are unused by this title in the available corpus.",
+    "Only one valid snapshot exists; value ranges, progression maxima (0xC/0xD clamps) and bit assignments need fuzzing or more captures. No paired .ss save states were available."
+  ]
+}

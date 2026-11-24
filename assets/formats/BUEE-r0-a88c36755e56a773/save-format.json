@@ -1,0 +1,553 @@
+{
+  "schema": "gbakit-save-research/1",
+  "release_key": "BUEE-r0-a88c36755e56a773",
+  "display_name": "Danny Phantom - The Ultimate Enemy (USA)",
+  "rom_sha256": "a88c36755e56a7732cde373d1f844fafad4b8fe2388218c3dc4e78c0557a2541",
+  "game_code": "BUEE",
+  "header_family": "BUE",
+  "community_id": "comm-001",
+  "overall_confidence": "MEDIUM",
+  "media": {
+    "kind": "eeprom512",
+    "size_bytes": 512,
+    "sdk_tags": [
+      "EEPROM_V124@1046920"
+    ],
+    "fill_byte": "0xff"
+  },
+  "slots_and_copies": [
+    {
+      "name": "slot_0",
+      "offset": 0,
+      "size": 371,
+      "redundancy_role": "primary",
+      "selection_rule": "Single record, no backup/mirror/generation counter. Valid iff logical byte 0x000=='W' (0x57), logical byte 0x171 (369)=='W' (0x57), and sum8 over logical 0x000..0x170 (369 bytes) equals stored byte at logical 0x172 (370). Loader sets RAM save-present boolean (struct+0x83) from the two magics and valid flag (struct+0x88) from the checksum; consumers' use of these flags is not in the corpus. Offsets are logical (RAM buffer) offsets: .sav file offset = (L & ~7) | (7 - (L & 7)) due to per-8-byte-block byte reversal in FUN_08049504. Bytes 0x173..0x1FF of the 512-byte image are a written-but-unused zero tail."
+    }
+  ],
+  "magic_signatures": [
+    {
+      "offset": 0,
+      "bytes_hex": "57",
+      "ascii": "W",
+      "verified_in_code": true,
+      "verified_in_sav": true,
+      "function_addrs": [
+        "0x080237a0",
+        "0x080235b4"
+      ]
+    },
+    {
+      "offset": 369,
+      "bytes_hex": "57",
+      "ascii": "W",
+      "verified_in_code": true,
+      "verified_in_sav": true,
+      "function_addrs": [
+        "0x080237a0",
+        "0x080235b4"
+      ]
+    }
+  ],
+  "checksums": [
+    {
+      "name": "save_record_sum8",
+      "algorithm": "sum8",
+      "formula_detail": "stored == (sum of logical bytes 0x000..0x170 inclusive, 369 bytes, including magic byte at 0x000 and all 368 payload bytes, excluding magic at 0x171 and the stored byte) & 0xFF. C accumulator is char (mod-256 addition, signedness irrelevant). File offset of stored byte is 0x175 (373) after per-block byte reversal; covered file bytes are the block-reversed equivalents. Decompiled proof: FUN_080237a0 loop 'cVar3 = param_1[uVar4] + cVar3' while index < 0x171, then 'if (param_1[0x172] == cVar3) struct+0x88 = 1'.",
+      "stored_offset": 370,
+      "stored_size": 1,
+      "covered_start": 0,
+      "covered_end": 369,
+      "function_addrs": [
+        "0x080237a0"
+      ],
+      "verified_on_samples": [
+        {
+          "file": "saves/sav-01-f1647.sav",
+          "stored_hex": "0x60",
+          "computed_hex": "0x60",
+          "match": true
+        },
+        {
+          "file": "saves/sav-00-f1613.sav",
+          "stored_hex": "0xff",
+          "computed_hex": "0x27",
+          "match": false
+        }
+      ],
+      "confidence": "CONFIRMED_VERIFIED"
+    }
+  ],
+  "io_driver_functions": [
+    {
+      "addr": "0x08049484",
+      "role": "write",
+      "callers": [
+        "0x08049504"
+      ],
+      "notes": "Synchronous DMA3 engine (SAD/DAD/CNT via literal-pool pointers to 0x040000D4 region, enable bit 0x80000000, busy-poll) with WAITCNT (0x04000204) timing setup; used in both directions between RAM and EEPROM window 0x0D000000 by the read routine. Role 'write' denotes DMA transfer; it is the shared transfer primitive, CONFIRMED_STATIC on register identity."
+    },
+    {
+      "addr": "0x08049504",
+      "role": "read",
+      "callers": [
+        "0x080235b4"
+      ],
+      "notes": "SDK EEPROM_V124 read of one 8-byte block: block-index < block-count at config+4 (64), address-bit count at config+8 (6 for 4Kbit); DMA-out command/address bitstream (halfword LSBs, two leading 1 bits), DMA-in 0x44 halfwords from 0x0D000000, packs 64 bits MSB-first into 4 u16s stored at dest+6,+4,+2,+0 (per-block byte reversal vs file image). Returns 0 on success."
+    },
+    {
+      "addr": "0x080235b4",
+      "role": "read",
+      "callers": [
+        "0x08023824"
+      ],
+      "notes": "Reads all 64 blocks (buf + block*8), aborts on first non-zero return, calls FUN_080237a0 to deserialize/validate, then booleanizes struct+0x83 to 1 iff it (after substitution) equals 'W'. Bracketed by guard pair FUN_080485d0/FUN_08048634 (role hypothesized DMA/audio quiesce). Vestigial args 0xff and 1 are ignored by callees."
+    },
+    {
+      "addr": "0x080237a0",
+      "role": "deserialize",
+      "callers": [
+        "0x080235b4"
+      ],
+      "notes": "Clears struct+0x88 (valid), copies buf[0] to struct+0x83, memcpy(payload_dst, buf+1, 0x170) via FUN_08049a9c, sums buf[0..0x170], substitutes buf[0x171] into struct+0x83 if it was 'W', sets struct+0x88=1 iff buf[0x172]==sum8. Payload is copied even when the checksum fails."
+    },
+    {
+      "addr": "0x080237a0",
+      "role": "checksum",
+      "callers": [
+        "0x080235b4"
+      ],
+      "notes": "Same function as above; hosts the only checksum computation in the corpus (sum8, see checksums array). Writer-side computation must be identical but lives in unrecovered 0x08023624."
+    },
+    {
+      "addr": "0x08023824",
+      "role": "deserialize",
+      "callers": [],
+      "notes": "Load-save entry: CpuSet (SWI 0x0B via 0x08049424) staging, clears struct+0x83/+0x84/+0x88, FUN_080235a4 EEPROM init (func_0x0804943c(4), hypothesized 4Kbit select), FUN_080235b4 read-all+validate, sets struct+0x84=1 on success. No caller recovered (jumptable/function-table dispatch; cf. FUN_08023a30 table dispatch)."
+    },
+    {
+      "addr": "0x0802388c",
+      "role": "serialize",
+      "callers": [],
+      "notes": "Deferred-save state machine on struct+0x8c: state 1 arms 0x7a (122) countdown and CpuSet-stages the image; state 2 calls serializer func_0x08023624(struct+0x82 byte, ...) and returns to state 0. Trigger (who sets state 1) not in corpus."
+    },
+    {
+      "addr": "0x08023624",
+      "role": "serialize",
+      "callers": [
+        "0x0802388c"
+      ],
+      "notes": "Serializer + EEPROM-write flush. NOT among the 162 decompiled functions (referenced only as func_0x08023624); the SDK EEPROM-write routine is likewise absent. Its net effects are verified from the completed .sav image: stamp 'W' at logical 0 and 369, sum8 at logical 370, full 512-byte image written block-ascending (proven by mid-write snapshot sav-00)."
+    },
+    {
+      "addr": "0x08049a9c",
+      "role": "deserialize",
+      "callers": [
+        "0x080237a0"
+      ],
+      "notes": "Word-optimized memcpy; used for the 368-byte payload copy on load (and unrelated copies elsewhere)."
+    }
+  ],
+  "caller_chains": [
+    {
+      "entry_caller": "0x08023824",
+      "chain": [
+        "0x08023824",
+        "0x080235a4",
+        "0x080235b4",
+        "0x08049504",
+        "0x08049484",
+        "0x080237a0"
+      ],
+      "trigger_context": "Boot/title save load; exact caller not recovered (no static callers in callgraph.json; binary dispatches heavily via unrecovered jumptables/function tables). FUN_080235a4 forwards to func_0x0804943c(4).",
+      "ram_fields_updated": [
+        "struct+0x83 = buf[0] or buf[0x171], booleanized to save-present 0/1 by 0x080235b4",
+        "struct+0x84 = load-completed flag (set on read success regardless of checksum)",
+        "struct+0x88 = valid flag (1 iff sum8 matches)",
+        "payload struct (memcpy dest _DAT_08023804, 368 bytes from logical image 0x001..0x170)"
+      ],
+      "how_mapped": "callgraph.json edges 0x08023824->{0x080235a4,0x080235b4} and 0x08049504->{0x08049484}, plus explicit func_0x08049504/func_0x080237a0 calls in FUN_080235b4 body in ghidra/decompiled.c (callgraph under-records jumptable tail-calls corpus-wide). Struct offsets read directly from decompiled stores; absolute RAM bases unresolvable (unresolved _DAT_ literals)."
+    },
+    {
+      "entry_caller": "0x0802388c",
+      "chain": [
+        "0x0802388c",
+        "0x08023624"
+      ],
+      "trigger_context": "Deferred save flush: an unknown trigger sets struct+0x8c=1; state 1 arms a 0x7a countdown and CpuSet-stages data; state 2 invokes the serializer/flush 0x08023624 with the struct+0x82 byte. 0x08023624 and the SDK EEPROM-write routine are not decompiled, so the chain is verified only to this boundary; block-ascending write order is proven by the sav-00 mid-write snapshot.",
+      "ram_fields_updated": [
+        "struct+0x8c state 1->2->0",
+        "512-byte EEPROM image: 'W' at logical 0 and 369, sum8 at logical 370, payload copied to logical 0x001..0x170, zeros at 0x173..0x1FF (net effects verified in sav-01)"
+      ],
+      "how_mapped": "FUN_0802388c body in ghidra/decompiled.c (sole reference to func_0x08023624 in the corpus; shared struct offsets +0x82/+0x8c with the load chain); serializer effects cross-verified byte-exactly against saves/sav-01-f1647.sav and the in-progress saves/sav-00-f1613.sav."
+    },
+    {
+      "entry_caller": "0x080234b0",
+      "chain": [
+        "0x080234b0"
+      ],
+      "trigger_context": "Hypothesized new-game/default initialization of the payload struct (writes u16 0x0032 at struct start matching payload bytes 0x32 0x00; iterates 3 entries of 0x54-byte stride with 0x15x3-byte arrays). No callers in callgraph; identity with the memcpy payload destination cannot be proven because _DAT_ bases are unresolved. FUN_08000638 is a sibling default initializer with a compatible footprint.",
+      "ram_fields_updated": [
+        "struct word0 = 0x0032",
+        "3 sub-records x 0x54 bytes: flag bytes set to 1 at entry offsets, 21x3-byte arrays zeroed",
+        "trailing 4-byte, 2-byte, 3xu32 and 30xu16 arrays zeroed"
+      ],
+      "how_mapped": "Structural comparison of FUN_080234b0/FUN_08000638 bodies in ghidra/decompiled.c against the observed payload byte pattern in the .sav images (0x32 header byte; three 0x01 flag pairs spaced exactly 0x54 apart at payload offsets 0x00C, 0x060, 0x0B4). Labelled HYPOTHESIS accordingly."
+    }
+  ],
+  "fields": [
+    {
+      "name": "magic_primary",
+      "offset": 0,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": [
+        "0x08023624"
+      ],
+      "readers": [
+        "0x080237a0",
+        "0x080235b4"
+      ],
+      "observed_values": {
+        "saves/sav-00-f1613.sav": "0x57 ('W') at file offset 0x007",
+        "saves/sav-01-f1647.sav": "0x57 ('W') at file offset 0x007"
+      },
+      "update_mechanism": "Stamped 'W' (0x57) by serializer 0x08023624 on save (code not recovered; effect verified). On load, copied to save-manager struct+0x83 by FUN_080237a0 and tested against 'W'.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "FUN_080237a0: '*(S+0x83) = *buf; if (*(S+0x83) == 'W') *(S+0x83) = buf[0x171]'; FUN_080235b4 booleanizes it. Logical offset 0 maps to file offset 0x007 under FUN_08049504's per-block byte reversal; both .sav files hold 0x57 there."
+    },
+    {
+      "name": "payload_first_byte_suspected_version",
+      "offset": 1,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": [
+        "0x08023624",
+        "0x080234b0"
+      ],
+      "readers": [],
+      "observed_values": {
+        "saves/sav-00-f1613.sav": "0x32 ('2') at file offset 0x006",
+        "saves/sav-01-f1647.sav": "0x32 ('2') at file offset 0x006"
+      },
+      "update_mechanism": "Part of the 368-byte payload memcpy'd verbatim (FUN_080237a0). FUN_080234b0 writes u16 0x0032 at its struct start, which would produce exactly the observed payload bytes 0x32 0x00 if that struct is the payload struct.",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Observed 0x32 in both saves; FUN_080234b0 '*puVar1 = 0x32' (u16) in ghidra/decompiled.c. No code in the corpus reads or compares this byte, so a checked version tag is unproven; a stat value of 50 is equally consistent."
+    },
+    {
+      "name": "payload_body_opaque",
+      "offset": 2,
+      "size": 366,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [
+        "0x08023624"
+      ],
+      "readers": [
+        "0x080237a0"
+      ],
+      "observed_values": {
+        "saves/sav-00-f1613.sav": "mostly 0x00; 0x01 at logical 0x005,0x00D,0x00E,0x061,0x062,0x0B5,0x0B6; 0xFF cluster near logical 0x003..0x008",
+        "saves/sav-01-f1647.sav": "identical to sav-00 over logical 0x000..0x170"
+      },
+      "update_mechanism": "Copied verbatim between EEPROM image (logical 0x001..0x170) and RAM payload struct by FUN_080237a0 memcpy (load) and serializer 0x08023624 (save). Interior mutations by gameplay code are outside the corpus.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "FUN_080237a0 'func_0x08049a9c(_DAT_08023804, param_1 + 1, 0x170)' in ghidra/decompiled.c; byte census computed from both .sav files after block-reversal transform. RAM destination literal unresolved, hence ram_addr null."
+    },
+    {
+      "name": "payload_flag_a",
+      "offset": 5,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": [
+        "0x08023624"
+      ],
+      "readers": [],
+      "observed_values": {
+        "saves/sav-00-f1613.sav": "0x01 (file offset 0x002)",
+        "saves/sav-01-f1647.sav": "0x01 (file offset 0x002)"
+      },
+      "update_mechanism": "Payload-struct offset 0x004; written as part of the verbatim payload image. No interpreter in corpus.",
+      "confidence": "HYPOTHESIS",
+      "evidence": "One of only seven non-0x00/0xFF payload bytes in either save (Python byte census); boolean-like value 0x01."
+    },
+    {
+      "name": "payload_flag_pair_b",
+      "offset": 13,
+      "size": 2,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [
+        "0x08023624"
+      ],
+      "readers": [],
+      "observed_values": {
+        "saves/sav-00-f1613.sav": "01 01 (file offsets 0x00A,0x009)",
+        "saves/sav-01-f1647.sav": "01 01 (file offsets 0x00A,0x009)"
+      },
+      "update_mechanism": "Payload-struct offsets 0x00C..0x00D; verbatim payload. Hypothesized same flag in sub-record 0 of three (0x54 stride, cf. FUN_080234b0).",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Adjacent 0x01 pair; payload-relative offset 0x00C, and the three pairs at payload offsets 0x00C/0x060/0x0B4 are exactly 0x54 apart, matching FUN_080234b0's 3-entry x 0x54-byte stride."
+    },
+    {
+      "name": "payload_flag_pair_c",
+      "offset": 97,
+      "size": 2,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [
+        "0x08023624"
+      ],
+      "readers": [],
+      "observed_values": {
+        "saves/sav-00-f1613.sav": "01 01 (file offsets 0x066,0x065)",
+        "saves/sav-01-f1647.sav": "01 01 (file offsets 0x066,0x065)"
+      },
+      "update_mechanism": "Payload-struct offsets 0x060..0x061; verbatim payload. Hypothesized same flag in sub-record 1 of three (0x54 stride).",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Adjacent 0x01 pair exactly 0x54 after payload_flag_pair_b; see FUN_080234b0 stride analysis."
+    },
+    {
+      "name": "payload_flag_pair_d",
+      "offset": 181,
+      "size": 2,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [
+        "0x08023624"
+      ],
+      "readers": [],
+      "observed_values": {
+        "saves/sav-00-f1613.sav": "01 01 (file offsets 0x0B2,0x0B1)",
+        "saves/sav-01-f1647.sav": "01 01 (file offsets 0x0B2,0x0B1)"
+      },
+      "update_mechanism": "Payload-struct offsets 0x0B4..0x0B5; verbatim payload. Hypothesized same flag in sub-record 2 of three (0x54 stride).",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Adjacent 0x01 pair exactly 0x54 after payload_flag_pair_c; see FUN_080234b0 stride analysis."
+    },
+    {
+      "name": "payload_erased_looking_region",
+      "offset": 336,
+      "size": 32,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [
+        "0x08023624"
+      ],
+      "readers": [
+        "0x080237a0"
+      ],
+      "observed_values": {
+        "saves/sav-00-f1613.sav": "0xFF x32",
+        "saves/sav-01-f1647.sav": "0xFF x32"
+      },
+      "update_mechanism": "Inside the checksummed payload (logical 0x150..0x16F); the RAM image itself holds 0xFF here in the completed, valid save. Never interpreted by corpus code (only summed).",
+      "confidence": "UNKNOWN",
+      "evidence": "Both .sav files hold 0xFF across logical 0x150..0x16F even though sav-01 is fully written and checksum-valid; therefore payload data (reserved space or 0xFF/-1 sentinel fields), not unwritten media."
+    },
+    {
+      "name": "magic_secondary",
+      "offset": 369,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": [
+        "0x08023624"
+      ],
+      "readers": [
+        "0x080237a0"
+      ],
+      "observed_values": {
+        "saves/sav-00-f1613.sav": "0xFF (erased, file offset 0x176) - write not yet complete",
+        "saves/sav-01-f1647.sav": "0x57 ('W') at file offset 0x176"
+      },
+      "update_mechanism": "Stamped 'W' by serializer near the end of the block-ascending flush (EEPROM block 46 of 64). On load, FUN_080237a0 substitutes it into struct+0x83 when magic_primary=='W', yielding a net double-'W' presence check booleanized by FUN_080235b4.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "FUN_080237a0 'if (*(char *)(_DAT_08023800 + 0x83) == 'W') *(char *)(_DAT_08023800 + 0x83) = param_1[0x171]'; sav-01 holds 0x57 at the transformed file offset, sav-00 still holds erased 0xFF."
+    },
+    {
+      "name": "checksum_sum8",
+      "offset": 370,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": [
+        "0x08023624"
+      ],
+      "readers": [
+        "0x080237a0"
+      ],
+      "observed_values": {
+        "saves/sav-00-f1613.sav": "stored 0xFF (erased, file offset 0x175); computed 0x27; loader would reject",
+        "saves/sav-01-f1647.sav": "stored 0x60 (file offset 0x175); computed 0x60; match"
+      },
+      "update_mechanism": "Computed by serializer over logical 0x000..0x170 on save (code not recovered); recomputed and compared by FUN_080237a0 on load, setting struct+0x88=1 on match.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "FUN_080237a0 sum loop + 'if (param_1[0x172] == cVar3)'; Python verification executed on both .sav files (see SAVE-FORMAT-REPORT.md section 4.3): sav-01 computed 0x60 == stored 0x60; naive file-order sum gives 0x61, independently confirming the block-reversal transform."
+    },
+    {
+      "name": "image_tail_zero_filled",
+      "offset": 371,
+      "size": 141,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [
+        "0x08023624"
+      ],
+      "readers": [],
+      "observed_values": {
+        "saves/sav-00-f1613.sav": "0xFF x141 (erased, not yet flushed)",
+        "saves/sav-01-f1647.sav": "0x00 x141 (fully flushed)"
+      },
+      "update_mechanism": "Remainder of the 512-byte EEPROM image beyond the single 371-byte record; written as zeros by a completed flush, never read/summed/validated by any corpus function.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Byte census of both .sav files; FUN_080237a0 reads at most logical 0x172 and FUN_080235b4 validates nothing beyond it. The sav-00->sav-01 0xFF->0x00 transition over this range is the clearest block-ascending write-progress marker."
+    },
+    {
+      "name": "ram_save_present_flag",
+      "offset": -1,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": [
+        "0x08023824",
+        "0x080237a0",
+        "0x080235b4"
+      ],
+      "readers": [],
+      "observed_values": {
+        "derived_sav-01": "1",
+        "derived_sav-00": "0"
+      },
+      "update_mechanism": "RAM-only field at save-manager struct+0x83 (absolute address unknown; offset -1 denotes not an EEPROM offset). Cleared by FUN_08023824, set from image bytes by FUN_080237a0, booleanized to 0/1 by FUN_080235b4. 1 iff both magics are 'W', independent of checksum.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "Decompiled stores at _DAT_08023800+0x83 / _DAT_08023608+0x83 in FUN_08023824/FUN_080237a0/FUN_080235b4 (two literals for the same struct; bases unresolved)."
+    },
+    {
+      "name": "ram_load_completed_flag",
+      "offset": -1,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": [
+        "0x08023824"
+      ],
+      "readers": [],
+      "observed_values": {
+        "derived": "1 after any successful EEPROM read, even checksum-failing"
+      },
+      "update_mechanism": "RAM-only field at struct+0x84. Cleared at load entry, set to 1 when FUN_080235a4 and FUN_080235b4 both return 0. Does NOT imply checksum validity.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "FUN_08023824: '*(iVar1 + 0x84) cleared; if ((sVar2 == 0) && (FUN_080235b4(...) == 0)) *puVar3 = 1' in ghidra/decompiled.c."
+    },
+    {
+      "name": "ram_save_valid_flag",
+      "offset": -1,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": [
+        "0x08023824",
+        "0x080237a0"
+      ],
+      "readers": [],
+      "observed_values": {
+        "derived_sav-01": "1",
+        "derived_sav-00": "0"
+      },
+      "update_mechanism": "RAM-only field at struct+0x88. Cleared by FUN_08023824 and at FUN_080237a0 entry; set to 1 iff sum8 over logical 0x000..0x170 equals stored byte at 0x172. The loader's only integrity verdict.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "FUN_080237a0 '*(undefined4 *)(_DAT_08023800 + 0x88) = 0; ... if (param_1[0x172] == cVar3) *(undefined4 *)(iVar1 + 0x88) = 1'; verdict reproduced in Python for both saves."
+    },
+    {
+      "name": "ram_save_state_and_serializer_arg",
+      "offset": -1,
+      "size": 2,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [
+        "0x0802388c"
+      ],
+      "readers": [
+        "0x0802388c",
+        "0x08023624"
+      ],
+      "observed_values": {
+        "derived": "state byte struct+0x8c cycles 1->2->0 during deferred save; struct+0x82 byte passed to serializer"
+      },
+      "update_mechanism": "RAM-only fields at struct+0x8c (deferred-save state machine state) and struct+0x82 (sole argument byte to serializer 0x08023624, meaning unknown - possibly slot index or dirty flag, but no slot mechanism exists in the verified format).",
+      "confidence": "UNKNOWN",
+      "evidence": "FUN_0802388c body in ghidra/decompiled.c: state 1 arms 0x7a countdown + CpuSet; state 2 'func_0x08023624(*(undefined1 *)(_DAT_080238bc + 0x82), uRam080238e8)'. Trigger and arg semantics unrecovered."
+    }
+  ],
+  "fuzzing_targets": [
+    {
+      "offset": 7,
+      "size": 1,
+      "mutation": "File offset 0x007 (logical 0x000, magic_primary): 0x57 -> 0x00 in sav-01, once without and once with checksum repair (recompute sum8 over logical 0x000..0x170, store at file 0x175)",
+      "requires_checksum_repair": false,
+      "predicted_effect": "Save treated as absent (RAM struct+0x83=0) in both variants, proving magic_primary gates presence independently of the checksum verdict (struct+0x88)."
+    },
+    {
+      "offset": 374,
+      "size": 1,
+      "mutation": "File offset 0x176 (logical 0x171=369, magic_secondary): 0x57 -> 0x00 in sav-01; no repair needed or possible (byte is outside the summed range)",
+      "requires_checksum_repair": false,
+      "predicted_effect": "Discriminator test: checksum stays valid (struct+0x88=1) but presence boolean struct+0x83 becomes 0. Reveals whether game consumers key on presence, validity, or both."
+    },
+    {
+      "offset": 373,
+      "size": 1,
+      "mutation": "File offset 0x175 (logical 0x172=370, stored checksum): 0x60 -> 0x61 in sav-01",
+      "requires_checksum_repair": false,
+      "predicted_effect": "struct+0x88=0 while struct+0x83 stays 1. If the game still loads the save, consumers ignore the checksum flag (robustness finding); if it rejects, the checksum is enforced."
+    },
+    {
+      "offset": 2,
+      "size": 1,
+      "mutation": "File offset 0x002 (logical 0x005, payload_flag_a): 0x01 -> 0x00 in sav-01, with checksum repair at file 0x175",
+      "requires_checksum_repair": true,
+      "predicted_effect": "Save still validates; exactly one gameplay/UI trait should differ after load. Repeat for file 0x00A/0x009 (logical 0x00D/0x00E), 0x066/0x065 (logical 0x061/0x062), 0x0B2/0x0B1 (logical 0x0B5/0x0B6) to map all four observed 0x01 flags; probe value 0x02/0xFF afterwards to distinguish boolean vs enum/counter."
+    },
+    {
+      "offset": 6,
+      "size": 1,
+      "mutation": "File offset 0x006 (logical 0x001, suspected version byte): 0x32 -> 0x33 in sav-01, with checksum repair at file 0x175",
+      "requires_checksum_repair": true,
+      "predicted_effect": "If the save still loads, 0x32 is unchecked payload data (e.g. a stat of 50); rejection despite valid magics+checksum would falsify the current reader model by revealing a version check outside FUN_080237a0."
+    },
+    {
+      "offset": 336,
+      "size": 32,
+      "mutation": "Logical 0x150..0x16F (payload_erased_looking_region; file blocks at 0x150,0x158,0x160,0x168 with per-block byte reversal): 0xFF x32 -> 0x00 x32 in sav-01, with checksum repair at file 0x175",
+      "requires_checksum_repair": true,
+      "predicted_effect": "No observable change if the region is reserved payload; changed gameplay state if it holds 0xFF/-1 sentinel fields. Start with one 8-byte block (logical 0x150..0x157, file 0x157..0x150) to localize."
+    },
+    {
+      "offset": 504,
+      "size": 1,
+      "mutation": "File offset 0x1F8 (tail, logical 0x17F area): 0x00 -> 0x42 in sav-01; tail is outside the summed range",
+      "requires_checksum_repair": false,
+      "predicted_effect": "Zero observable effect, confirming logical 0x173..0x1FF is dead image space. Any effect implies an undocumented second structure beyond the single record."
+    },
+    {
+      "offset": 0,
+      "size": 512,
+      "mutation": "Counterfactual control: boot with saves/sav-00-f1613.sav (genuine mid-write image: magic_primary present, magic_secondary and checksum still erased 0xFF) unmodified, ideally reloading from states/sav-01-pre.ss (frame 1613)",
+      "requires_checksum_repair": false,
+      "predicted_effect": "Treated as no valid save (struct+0x83=0, struct+0x88=0), confirming torn-write rejection and the total absence of backup/salvage logic."
+    }
+  ],
+  "open_questions": [
+    "Serializer/EEPROM-write path not in corpus: func_0x08023624 (invoked by FUN_0802388c state 2) and the SDK EEPROM_V124 write routine (expected near 0x08049504) were not trace-decompiled; writer internals, per-block write timing, and any write-verify step are unrecovered. Net writer effects are verified only from the .sav images.",
+    "Absolute RAM addresses are unknown for every struct: Ghidra left all _DAT_080xxxxx/puRam literals unresolved, so the save-manager struct (_DAT_08023800/_DAT_080238bc), payload destination (_DAT_08023804), and buffer addresses cannot be given as 0x02xxxxxx/0x03xxxxxx values, and it cannot be proven whether the payload destination equals the manager struct plus an offset.",
+    "Payload interior semantics (368 bytes) are unmapped: no corpus code interprets any payload byte. The three 0x01 flag pairs spaced exactly 0x54 apart (payload offsets 0x00C, 0x060, 0x0B4) and FUN_080234b0's 3x0x54-byte entry stride suggest three sub-records, but this is hypothesis only.",
+    "Whether FUN_08000638 and/or FUN_080234b0 initialize the actual save payload struct (vs an unrelated gameplay struct) cannot be proven from unresolved literals; FUN_080234b0 writing 0x0032 at its struct start matches payload bytes 0x32 0x00 but is not conclusive.",
+    "Save trigger unknown: who sets save-manager struct+0x8c=1, the meaning of the struct+0x82 byte passed to the serializer, the exact caller of load entry FUN_08023824, and the ignored 0xff / 1 arguments in the FUN_08023824 -> FUN_080235b4 -> FUN_080237a0 chain.",
+    "Role of the FUN_080485d0/FUN_08048634 guard pair bracketing EEPROM reads (hypothesis: DMA3/audio quiesce, +10/-10 counter and 0x400/0xb600 register pokes) and of func_0x0804943c(4) beyond EEPROM chip-type selection (argument 4 matches the 4Kbit part and the 512-byte images).",
+    "Whether gameplay consumers check the valid flag (struct+0x88), only the presence boolean (struct+0x83), or neither: the payload is memcpy'd into RAM before checksum validation, so a checksum-failing save's payload reaches RAM regardless. Fuzzing targets F2/F3 in SAVE-FORMAT-REPORT.md section 6 are designed to resolve this.",
+    "No second sample pair exists for a different gameplay state, so payload change-mapping (which bytes move with progress/time/party state) and any generation counter that only changes across distinct save events (rather than within one flush) cannot be ruled out from these two snapshots of a single write."
+  ]
+}

@@ -1,0 +1,337 @@
+{
+  "schema": "gbakit-save-research/1",
+  "release_key": "BBRE-r0-aebaac20a98b6ba8",
+  "display_name": "Brother Bear (USA)",
+  "rom_sha256": "aebaac20a98b6ba88b6e106c679bad587f2016da6055bd2201c357b4b1def06a",
+  "game_code": "BBRE",
+  "header_family": "BBR",
+  "community_id": "comm-005",
+  "overall_confidence": "LOW",
+  "media": {
+    "kind": "eeprom512",
+    "size_bytes": 512,
+    "sdk_tags": ["EEPROM_V122@4118844"],
+    "fill_byte": "0xff"
+  },
+  "slots_and_copies": [
+    {
+      "name": "slot_0",
+      "offset": 0,
+      "size": 512,
+      "redundancy_role": "primary",
+      "selection_rule": "Single slot/copy covering the whole 512-byte EEPROM; no A/B selection. Validity decided by single-dword test FUN_08019a6c (0x08019a6c): equal -> apply branch FUN_080123fc (0x080123fc), not equal -> defaults branch (0x080123e4, FUN_0801241c 0x0801241c, 0x080123f0, 0x08012358). Header dword duplicated at 0x04/0x0c is the only redundancy; no backup copy or generation counter observed."
+    }
+  ],
+  "magic_signatures": [
+    {
+      "offset": 4,
+      "bytes_hex": "600dd062",
+      "ascii": "",
+      "verified_in_code": false,
+      "verified_in_sav": true,
+      "function_addrs": ["0x08019a3c", "0x08019a6c", "0x08019a4c", "0x0801239c"]
+    },
+    {
+      "offset": 12,
+      "bytes_hex": "600dd062",
+      "ascii": "",
+      "verified_in_code": false,
+      "verified_in_sav": true,
+      "function_addrs": ["0x0802100c", "0x0802c87c"]
+    }
+  ],
+  "checksums": [
+    {
+      "name": "header_dword_equality (FUN_08019a6c) - candidate magic compare, not a checksum over payload",
+      "algorithm": "unknown",
+      "formula_detail": "valid iff (*_DAT_08019a7c XOR _DAT_08019a80)==0, computed branchlessly as (-(x^c)|(x^c))>>0x1f on one dword of the 8-byte header copy installed by FUN_08019a3c. Which header word is compared (file offset 0x00 value 0x00000000 vs offset 0x04 value 0x62d00d60) is unresolvable from corpus (literal-pool values absent). No sum/XOR/CRC over any payload range exists in the 225 decompiled functions.",
+      "stored_offset": 4,
+      "stored_size": 4,
+      "covered_start": 0,
+      "covered_end": 8,
+      "function_addrs": ["0x08019a6c", "0x08019a3c", "0x08019a4c", "0x0801239c", "0x0800c2ac"],
+      "verified_on_samples": [
+        {"file": "sav-00-f1024.sav", "stored_hex": "62d00d60", "computed_hex": "62d00d60", "match": true},
+        {"file": "sav-01-f1058.sav", "stored_hex": "62d00d60", "computed_hex": "62d00d60", "match": true}
+      ],
+      "confidence": "HYPOTHESIS"
+    },
+    {
+      "name": "no_payload_checksum_found (exhaustive negative result)",
+      "algorithm": "unknown",
+      "formula_detail": "Exhaustive Python sweep: all contiguous windows in 0x00-0x70 not overlapping header fields, under sum8/sum16/sum32 byte sums, LE/BE u16-word and u32-word sums, XOR-8/16/32, CRC32, Adler32, CRC16-CCITT-FALSE, FNV-1a-32, and per-8-byte-block reverse-bytes/reverse-u16/swap-u32 transforms. No non-self-referential match to stored 0x62d00d60. Example fixed ranges sav-00: 0x00-0x58 sum8=0x44 crc32=0x6dfe3116; 0x00-0x200 crc32=0xcb9e5aaf. Stored/computed below use CRC32 over 0x00-0x58 to document non-validation.",
+      "stored_offset": 4,
+      "stored_size": 4,
+      "covered_start": 0,
+      "covered_end": 512,
+      "function_addrs": [],
+      "verified_on_samples": [
+        {"file": "sav-00-f1024.sav", "stored_hex": "62d00d60", "computed_hex": "6dfe3116", "match": false},
+        {"file": "sav-01-f1058.sav", "stored_hex": "62d00d60", "computed_hex": "6dfe3116", "match": false}
+      ],
+      "confidence": "CONFIRMED_STATIC"
+    }
+  ],
+  "io_driver_functions": [
+    {"addr": "0x0802c7fc", "role": "write", "callers": ["0x0802c87c"], "notes": "Generic DMA3 transfer driver (only toucher of 0x0D000000): programs source/dest/count+enable (0x80000000), programs WAITCNT-style register from config+6, busy-polls control high halfword, saves/restores enable global. Direction-agnostic; used for both EEPROM request-out and data-in phases. Register absolute addresses inferred as DMA3 0x040000D4/D8/DC (literal values absent from corpus)."},
+    {"addr": "0x0802c87c", "role": "read", "callers": ["0x0802100c"], "notes": "EEPROM single-block (8-byte) serial read: bounds-checks block vs config ushort at +4, builds MSB-first request bitstream (address width = config byte at +8, two leading 1 bits), DMA-writes it to 0x0D000000 (len addr_bits+3), DMA-reads 0x44 halfwords back, unpacks 64 bits as 4x u16 stored to descending addresses at out+6..out+0. Returns 0 on success. Only caller of 0x0802c7fc; no write counterpart exists in corpus."},
+    {"addr": "0x0802100c", "role": "read", "callers": ["0x0801239c"], "notes": "Bulk reader: loops blocks 0..63 (breaks if index>0x3f), dest+=8 per FUN_0802c87c call, stops on first error, returns (last_status==0). Fills 512 bytes at save_obj+4. Edge missed by callgraph.json (func_ tail-call alias in decompiled.c:2656/1217)."},
+    {"addr": "0x0801239c", "role": "deserialize", "callers": ["0x0800c2ac"], "notes": "Loader/validator: fetch context id (0x0801d780), teardown (0x0801d9dc), bulk-read to param+4 (0x0802100c), conditional re-init (0x0801d69c), snapshot 8-byte header (0x08019a3c), on FUN_08019a6c failure install default header in validation global (0x08019a4c). Returns bulk-read success flag, not validity."},
+    {"addr": "0x0800c2ac", "role": "deserialize", "callers": ["0x080222f8"], "notes": "Constructor + top-level save consumer: initialises game object (sub-object via 0x0800dea0/0x0800d970, fields [0x29]=4 etc., zeroes +0x3e), stores back-pointer, then loads via 0x0801239c(global save obj); re-tests 0x08019a6c: valid -> 0x080123fc->0x08019a84 (empty stub), invalid -> 0x080123e4*, 0x0801241c, 0x080123f0*, 0x08012358* (*unrecovered entry points)."},
+    {"addr": "0x08019a6c", "role": "checksum", "callers": ["0x0801239c", "0x0800c2ac"], "notes": "One-dword validity test: (-(g^c)|(g^c))>>0x1f, 0 iff global dword equals ROM constant _DAT_08019a80. Only integrity check in corpus. Callers found via decompiled text (callgraph lists none)."},
+    {"addr": "0x08019a3c", "role": "serialize", "callers": ["0x0801239c", "0x08019a4c"], "notes": "Copies exactly 2 u32 (8-byte header) from argument to validation global _DAT_08019a48. Used to snapshot loaded header and to install default header."},
+    {"addr": "0x08019a4c", "role": "serialize", "callers": ["0x0801239c"], "notes": "Installs ROM default header dwords _DAT_08019a64/_DAT_08019a68 into validation global via 0x08019a3c when validity test fails. RAM-only; no EEPROM write-back in corpus."},
+    {"addr": "0x0801241c", "role": "serialize", "callers": ["0x0800c2ac"], "notes": "Defaults reset on invalid-save branch: writes ROM constant dword via 0x08019aac at *param, *param+100, *param+200, *param+300 (four fields 100 bytes apart). RAM-only in corpus."},
+    {"addr": "0x08019aac", "role": "serialize", "callers": ["0x0801241c"], "notes": "Single-dword store: *p = _DAT_08019ab4."},
+    {"addr": "0x080123fc", "role": "deserialize", "callers": ["0x0800c2ac"], "notes": "Valid-save apply stub: only calls 0x08019a84(param2), which is an empty return. Real field deserialization not in corpus (unrecovered jumptable or direct RAM-image reads)."},
+    {"addr": "0x0802103c", "role": "write", "callers": ["0x080222f8"], "notes": "EEPROM timing setup wrapper: func_0x0802c684(4). Called once in boot (0x080222f8) before save load."},
+    {"addr": "0x0802c684", "role": "write", "callers": ["0x0802103c"], "notes": "Timing/profile select: mode 4 stores _DAT_0802c69c to *_DAT_0802c698 (other modes write other globals). WAITCNT identity is hypothesis (literal values absent)."}
+  ],
+  "caller_chains": [
+    {
+      "entry_caller": "0x080222f8",
+      "chain": ["0x080222f8", "0x0802103c", "0x0802c684"],
+      "trigger_context": "Boot/main init (root, no callers): EEPROM timing profile select (mode 4) before any EEPROM access; then task/object registration and main loop.",
+      "ram_fields_updated": ["EEPROM timing/WAITCNT-style global via *_DAT_0802c698 (mode 4 store)"],
+      "how_mapped": "callgraph.json edge 0x080222f8->0x0802103c plus decompiled.c text func_0x0802c684(4) in FUN_0802103c; both sources agree 0x080222f8 is a root."
+    },
+    {
+      "entry_caller": "0x080222f8",
+      "chain": ["0x080222f8", "0x0800c2ac", "0x0801239c", "0x0802100c", "0x0802c87c", "0x0802c7fc"],
+      "trigger_context": "Boot: 0x080222f8 registers result of 0x0800c2ac via FUN_08015a24; constructor loads whole EEPROM into RAM save image (save_obj+4) once before main loop. Matches first .sav appearing between frames 990-1024.",
+      "ram_fields_updated": ["game object *param_1 (twice, ROM constants)", "sub-object param_1+1 via 0x0800dea0/0x0800d970 (incl. field=3, [8]=3 in 0x0800d970 object)", "*(u8)(param_1+0x27)=0", "param_1[0x29]=4, [0x2a]=[0x2b]=0", "2-byte field param_1+0x3e zeroed via 0x080120ac", "param_1[0x30]=0", "EEPROM image 512 bytes at save_obj+4 (offsets 0x00-0x1ff of .sav)", "8-byte header copy in validation global via 0x08019a3c"],
+      "how_mapped": "callgraph.json gives only 0x080222f8->0x0800c2ac and 0x0802c87c->0x0802c7fc; remaining edges (0x0800c2ac->0x0801239c decompiled.c:660, 0x0801239c->0x0802100c decompiled.c:1217, 0x0802100c->0x0802c87c decompiled.c:2656) recovered by regex-parsing all 225 decompiled bodies for (FUN_|func_0x)080... call sites, because Ghidra emitted them as unrecovered-jumptable tail calls absent from callgraph.json."
+    },
+    {
+      "entry_caller": "0x0800c2ac",
+      "chain": ["0x0800c2ac", "0x08019a6c", "0x080123fc", "0x08019a84"],
+      "trigger_context": "Valid-save branch: after successful bulk load, 0x08019a6c returns 0 -> apply loaded save to game object (puVar3=param_1+1). Apply function is an empty stub in corpus.",
+      "ram_fields_updated": ["none in traced code (0x08019a84 is return-only stub); real deserialization unrecovered or via direct RAM-image reads"],
+      "how_mapped": "Decompiled text of FUN_0800c2ac (decompiled.c:662-670) and bodies of FUN_080123fc/FUN_08019a84."
+    },
+    {
+      "entry_caller": "0x0800c2ac",
+      "chain": ["0x0800c2ac", "0x08019a6c", "0x0801241c", "0x08019aac"],
+      "trigger_context": "Invalid/corrupt/first-boot branch: 0x08019a6c non-zero -> 0x080123e4 (unrecovered), 0x0801241c, 0x080123f0 (unrecovered), 0x08012358 (unrecovered). RAM-only defaults; no EEPROM write-back in corpus, so persistence of defaults is by the missing writer.",
+      "ram_fields_updated": ["dword at *save_obj = _DAT_08019ab4 via 0x08019aac", "dword at *save_obj+100 = same constant", "dword at *save_obj+200 = same constant", "dword at *save_obj+300 = same constant", "validation-global header replaced by ROM dwords _DAT_08019a64/_DAT_08019a68 via 0x08019a4c in loader step"],
+      "how_mapped": "Decompiled text of FUN_0800c2ac branch and bodies of FUN_0801241c/FUN_08019aac/FUN_08019a4c; 0x080123e4/0x080123f0 lie inside FUN_0801239c address span and 0x08012358 in gap 0x080120b4-0x0801239c, no FUN_ bodies in corpus."
+    },
+    {
+      "entry_caller": "0x0801239c",
+      "chain": ["0x0801239c", "0x0801d780", "0x0801d9dc", "0x0801d69c"],
+      "trigger_context": "Loader pre-steps: fetch context id, teardown previous context if flagged, and if id != stored global *_DAT_080123e0 re-initialise context via 0x0801d69c (also called by 0x0800d7c4 with *_DAT_0800d808). Not a save-data writer; may mutate game state later serialized by missing writer (hypothesis).",
+      "ram_fields_updated": ["descriptor _DAT_0801d750 fields in 0x0801d69c: id at [0xc], ROM ptr at [0xb], zeroed u16 at byte 0x12, u16=2 field, state globals, 0x0801d820(0x100) on success"],
+      "how_mapped": "Decompiled text call sites in FUN_0801239c and FUN_0800d7c4; bodies of FUN_0801d780/FUN_0801d9dc/FUN_0801d69c."
+    }
+  ],
+  "fields": [
+    {
+      "name": "header_word0",
+      "offset": 0,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": [],
+      "readers": ["0x0802100c", "0x0802c87c", "0x08019a3c", "0x08019a6c"],
+      "observed_values": {"sav-00-f1024.sav": "0x00000000", "sav-01-f1058.sav": "0x00000000"},
+      "update_mechanism": "Loaded to save_obj+4+0x00 by bulk reader; copied to validation global by 0x08019a3c; possibly the dword compared by 0x08019a6c (Reading B). On-chip writer not in corpus; RAM default installed by 0x08019a4c on invalid.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Bytes 00 00 00 00 at 0x00 in both .sav (Python-verified); FUN_0801239c calls FUN_08019a3c(param_1+4) after FUN_0802100c(param_1+4). RAM absolute address unknown: save object base is _DAT_0800c330 literal, absent from corpus; image at base+4."
+    },
+    {
+      "name": "header_magic_or_id",
+      "offset": 4,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": [],
+      "readers": ["0x0802100c", "0x0802c87c", "0x08019a3c", "0x08019a6c"],
+      "observed_values": {"sav-00-f1024.sav": "0x62d00d60", "sav-01-f1058.sav": "0x62d00d60"},
+      "update_mechanism": "Candidate magic compared by 0x08019a6c against ROM constant _DAT_08019a80 (Reading A); duplicated at 0x0c. No change between snapshots. On-chip writer not in corpus.",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Bytes 60 0d d0 62 at 0x04 in both files, duplicated at 0x0c (Python-verified equal). Code-verification incomplete: 0x08019a6c compares one header dword but corpus lacks _DAT_08019a7c/_DAT_08019a80 values, so which word/constant cannot be proven. Non-ASCII binary value."
+    },
+    {
+      "name": "header_sentinel_reserved",
+      "offset": 8,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": [],
+      "readers": ["0x0802100c", "0x0802c87c"],
+      "observed_values": {"sav-00-f1024.sav": "0xffff", "sav-01-f1058.sav": "0xffff"},
+      "update_mechanism": "No traced consumer; equals erased fill byte pair, may be unwritten halfword inside written header block or explicit sentinel. Writer not in corpus.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Bytes ff ff at 0x08 in both files; no function in decompiled.c tests this offset individually (only bulk read)."
+    },
+    {
+      "name": "header_reserved_zero",
+      "offset": 10,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": [],
+      "readers": ["0x0802100c", "0x0802c87c"],
+      "observed_values": {"sav-00-f1024.sav": "0x0000", "sav-01-f1058.sav": "0x0000"},
+      "update_mechanism": "Unknown; zero in both snapshots. Writer not in corpus.",
+      "confidence": "UNKNOWN",
+      "evidence": "Bytes 00 00 at 0x0a in both files; no specific reader/writer in corpus beyond bulk read."
+    },
+    {
+      "name": "header_magic_copy",
+      "offset": 12,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": [],
+      "readers": ["0x0802100c", "0x0802c87c"],
+      "observed_values": {"sav-00-f1024.sav": "0x62d00d60", "sav-01-f1058.sav": "0x62d00d60"},
+      "update_mechanism": "Redundant copy of offset 0x04 dword; copy-agreement check, if any, is in unrecovered code. Writer not in corpus.",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Bytes identical to 0x04 in both files (Python-verified). No comparison of the two copies found in 225 decompiled functions."
+    },
+    {
+      "name": "block2_zero_field",
+      "offset": 16,
+      "size": 8,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": ["0x0802100c", "0x0802c87c"],
+      "observed_values": {"sav-00-f1024.sav": "0000000000000000", "sav-01-f1058.sav": "0000000000000000"},
+      "update_mechanism": "Unknown; entire EEPROM block 2 zero in both snapshots. Writer not in corpus.",
+      "confidence": "UNKNOWN",
+      "evidence": "8 zero bytes at 0x10-0x17 in both files."
+    },
+    {
+      "name": "payload_prefix_zero",
+      "offset": 24,
+      "size": 4,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": ["0x0802100c", "0x0802c87c"],
+      "observed_values": {"sav-00-f1024.sav": "00000000", "sav-01-f1058.sav": "00000000"},
+      "update_mechanism": "Unknown; zero padding before 0x1c counters. Writer not in corpus.",
+      "confidence": "UNKNOWN",
+      "evidence": "Bytes 00 00 00 00 at 0x18-0x1b in both files."
+    },
+    {
+      "name": "counter_or_setting_a",
+      "offset": 28,
+      "size": 2,
+      "type": "unknown",
+      "ram_addr": null,
+      "writers": [],
+      "readers": ["0x0802100c", "0x0802c87c"],
+      "observed_values": {"sav-00-f1024.sav": "bytes 00 03 (u16_be=3, u16_le=768, u8@0x1d=3)", "sav-01-f1058.sav": "bytes 00 03 (u16_be=3, u16_le=768, u8@0x1d=3)"},
+      "update_mechanism": "Unknown; unchanged f1024->f1058 (no gameplay between snapshots). BE/u8 reading gives plausible small value 3; per-block u16-reversal by reader (0x0802c87c descending stores) leaves RAM offset uncertain. Writer not in corpus.",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Only non-header nonzero payload bytes together with offset 0x1e; Python-verified. No traced function addresses this field individually."
+    },
+    {
+      "name": "counter_or_setting_b",
+      "offset": 30,
+      "size": 2,
+      "type": "unknown",
+      "ram_addr": null,
+      "writers": [],
+      "readers": ["0x0802100c", "0x0802c87c"],
+      "observed_values": {"sav-00-f1024.sav": "bytes 00 05 (u16_be=5, u16_le=1280, u8@0x1f=5)", "sav-01-f1058.sav": "bytes 00 05 (u16_be=5, u16_le=1280, u8@0x1f=5)"},
+      "update_mechanism": "Unknown; unchanged between snapshots. Paired with counter_or_setting_a as (3,5): two counters/settings or one packed field - unresolved. Writer not in corpus.",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Bytes 00 05 at 0x1e-0x1f in both files (Python-verified)."
+    },
+    {
+      "name": "zero_payload",
+      "offset": 32,
+      "size": 56,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": ["0x0802100c", "0x0802c87c"],
+      "observed_values": {"sav-00-f1024.sav": "00 x56", "sav-01-f1058.sav": "00 x56"},
+      "update_mechanism": "Unknown; blocks 4-10 all zero - zero-initialised payload (flags/counters at default) or reserved space; no observable subdivision from two identical samples. Writer not in corpus.",
+      "confidence": "UNKNOWN",
+      "evidence": "56 zero bytes at 0x20-0x57 in both files; no traced per-field access."
+    },
+    {
+      "name": "late_zero_block_58",
+      "offset": 88,
+      "size": 8,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": ["0x0802100c", "0x0802c87c"],
+      "observed_values": {"sav-00-f1024.sav": "ff x8 (unwritten)", "sav-01-f1058.sav": "00 x8"},
+      "update_mechanism": "Only directly observed update: FF->00 between frame 1024 and 1058 (8-byte block-aligned), i.e. first touched/zeroed in that window by missing writer or EEPROM initialisation. Lazily-initialised zero field/array element (hypothesis).",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Byte diff sav-00->sav-01: 0x58-0x5f all ff->00 (11-byte diff total, Python-verified)."
+    },
+    {
+      "name": "block60_head_erased",
+      "offset": 96,
+      "size": 5,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": ["0x0802100c", "0x0802c87c"],
+      "observed_values": {"sav-00-f1024.sav": "ff x5", "sav-01-f1058.sav": "ff x5"},
+      "update_mechanism": "Never written in samples.",
+      "confidence": "UNKNOWN",
+      "evidence": "Bytes ff at 0x60-0x64 in both files."
+    },
+    {
+      "name": "late_zero_field_65",
+      "offset": 101,
+      "size": 3,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": ["0x0802100c", "0x0802c87c"],
+      "observed_values": {"sav-00-f1024.sav": "ffffff", "sav-01-f1058.sav": "000000"},
+      "update_mechanism": "FF->00 between f1024 and f1058 inside block 12 (sub-block granularity at file level); candidate 3-byte field first zeroed in that window by missing writer. Proves file-level effect is not strictly whole-8-byte-block.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Byte diff 0x65-0x67 ff->00 (Python-verified); surrounding 0x60-0x64 remain ff."
+    },
+    {
+      "name": "unused_erased_tail",
+      "offset": 104,
+      "size": 408,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": ["0x0802100c", "0x0802c87c"],
+      "observed_values": {"sav-00-f1024.sav": "ff x408", "sav-01-f1058.sav": "ff x408"},
+      "update_mechanism": "Never written in samples (79.7% of chip); bulk reader still reads it each boot with no traced consumer. Reserved/unallocated at this game stage.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "All bytes 0x68-0x1ff are ff in both 512-byte files (Python scan, last non-FF index 0x57 / 0x67)."
+    }
+  ],
+  "fuzzing_targets": [
+    {"offset": 4, "size": 4, "mutation": "Set 60 0d d0 62 -> 00 00 00 00, leave copy at 0x0c intact", "requires_checksum_repair": false, "predicted_effect": "Reading A (0x04 is compared magic): invalid -> defaults branch in 0x0800c2ac, blank-boot-like UI. Reading B: no change. Discriminates which header word FUN_08019a6c compares. No checksum repair exists (no CRC); keep other header bytes as-is."},
+    {"offset": 0, "size": 4, "mutation": "Set 00 00 00 00 -> 01 00 00 00", "requires_checksum_repair": false, "predicted_effect": "Reading B (0x00 is compared word, expected 0): invalid -> defaults. Reading A: loads normally. Complement of offset-4 test."},
+    {"offset": 12, "size": 4, "mutation": "Desync copy: -> 00 00 00 00 while 0x04 stays 60 0d d0 62", "requires_checksum_repair": false, "predicted_effect": "Loads normally if only one dword is ever tested (traced code); resets if unrecovered code cross-checks the duplicated copies."},
+    {"offset": 8, "size": 2, "mutation": "ff ff -> 00 00", "requires_checksum_repair": false, "predicted_effect": "No observable change (no traced consumer); any rejection reveals an unrecovered header-field check. Keep 0x04==0x0c when repairing header."},
+    {"offset": 29, "size": 1, "mutation": "u8 at 0x1d: 03 -> 00, 04, ff (separate runs)", "requires_checksum_repair": false, "predicted_effect": "One discrete UI/gameplay value changes if counter/setting; ff may clamp/reset. No change marks field inert-at-boot or typing wrong (then try paired u16 mutations at 0x1c)."},
+    {"offset": 31, "size": 1, "mutation": "u8 at 0x1f: 05 -> 00, 06, ff (separate runs)", "requires_checksum_repair": false, "predicted_effect": "Independent single-observable change if value-5 field is independent of value-3 field; joint effect with 0x1d suggests one packed field."},
+    {"offset": 28, "size": 4, "mutation": "Swap halves: 00 03 00 05 -> 00 05 00 03", "requires_checksum_repair": false, "predicted_effect": "Observables of the (3,5) pair swap if distinct u16 fields; garbled/no effect suggests packed bitfields."},
+    {"offset": 32, "size": 56, "mutation": "Fill 0x20-0x57 with 01, then with ff (separate runs); bisect in 8-byte blocks if effect appears", "requires_checksum_repair": false, "predicted_effect": "01-fill flips zero-payload defaults en masse if semantically live; ff-fill tests erased-vs-zero distinction. Keep header 0x00-0x0f valid (0x04==0x0c)."},
+    {"offset": 88, "size": 19, "mutation": "Cross-patch the 11 diff bytes (0x58-0x5f, 0x65-0x67): restore ff in sav-01 file / zero them in sav-00 file", "requires_checksum_repair": false, "predicted_effect": "Patched files reproduce each other's snapshot behaviour exactly, since these are the only inter-snapshot differences; any boot delta localises the f1024->f1058 progression."},
+    {"offset": 100, "size": 4, "mutation": "Set dwords at 0x00, 0x64, 0xc8, 0x12c (one at a time; note 0x00 interacts with header test) to 01 00 00 00", "requires_checksum_repair": false, "predicted_effect": "Tests FUN_0801241c +0/+100/+200/+300 record-reset lead: effect at exactly these offsets but not neighbours supports four-record array from image-near base. Keep 0x04==0x0c except in the 0x00 run."},
+    {"offset": 0, "size": 512, "mutation": "Blank file (all ff), and header-only file (valid 0x00-0x0f, rest ff) as controls", "requires_checksum_repair": false, "predicted_effect": "Blank -> defaults branch (reference invalid behaviour; packet probe predicts visual delta vs valid save). Header-only loads-as-valid iff payload unvalidated and ff-payload treated as defaults."},
+    {"offset": 104, "size": 408, "mutation": "Fill 0x68-0x1ff with 00, then repeating a5 pattern", "requires_checksum_repair": false, "predicted_effect": "No effect if tail is unallocated (no traced consumer); any effect reveals extended/late-game fields beyond boot-active span. Keep header and 0x10-0x67 payload intact."}
+  ],
+  "open_questions": [
+    "Where is the EEPROM write (flush) driver and its callers? Absent from the 225-function corpus: only FUN_0802c87c calls the DMA3 driver FUN_0802c7fc, only for reads. Suspects: un-decompiled gap 0x080120b4-0x0801239c, unrecovered entry points 0x08012358/0x080123e4/0x080123f0, or code unexecuted during trace capture (no save action before frame 1058). Flush trigger, write granularity and header-rewrite behaviour unknown.",
+    "Which header dword does FUN_08019a6c (0x08019a6c) compare and what is ROM constant _DAT_08019a80: offset 0x04 value 0x62d00d60 (Reading A, candidate magic) or offset 0x00 value 0x00000000 (Reading B)? Literal-pool values (_DAT_08019a48/a64/a68/a7c/a80, _DAT_0800c330) are absent from decompiled.c; fuzz tests at offsets 0 and 4 discriminate behaviourally.",
+    "Absolute RAM address of the save object/image: proven only as save_obj+4 (image) with base from missing literal _DAT_0800c330. Blocks mapping FUN_0801241c +0/+100/+200/+300 dword resets to file offsets and any EWRAM (0x02xxxxxx) vs IWRAM (0x03xxxxxx) assignment.",
+    "Does any (unrecovered) code cross-check duplicated dwords at 0x04 vs 0x0c or test header halfwords at 0x08 (0xffff) / 0x0a? No such check in corpus.",
+    "Byte order: FUN_0802c87c stores each block's 4 unpacked u16s to descending RAM addresses - is .sav byte order equal to RAM order or per-block u16-reversed in RAM? Affects RAM-side offsets only; file offsets in this document are raw .sav offsets.",
+    "EEPROM config struct exact values: block-count ushort at +4 (>=64 proven by loop), address-width byte at +8 (expected 6 for 64 blocks), WAITCNT timing field at +6, error sentinel uRam0802c898, and FUN_0802c684 mode-4 stored value.",
+    "Semantics of (3,5) pair at 0x1c-0x1f (two u16_be-looking values / u8s at 0x1d,0x1f) and of zero payload 0x10-0x57; both snapshots predate gameplay divergence, later saves needed.",
+    "What wrote blocks 0x58-0x5f and bytes 0x65-0x67 (FF->00) between frames 1024-1058: game save-flush, EEPROM initialisation, or emulator backing-store behaviour? Sub-block change at 0x65 is not 8-byte aligned.",
+    "Is FUN_080123fc apply really a stub (FUN_08019a84 empty), with deserialization via direct RAM-image reads elsewhere (no traced per-field consumers beyond header), or hidden in unrecovered jumptable code?",
+    "Could a serializer exist among the 225 functions that only mutates the RAM image (save_obj+4) without touching 0x0D000000, indistinguishable from ordinary object code? FUN_0801241c/FUN_08019aac reset pattern is the only concrete lead; states/ contains only .ss.identity.json metadata, so paired-state reload verification was not possible in this workspace."
+  ]
+}

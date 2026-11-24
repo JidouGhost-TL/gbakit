@@ -1,0 +1,206 @@
+{
+  "schema": "gbakit-save-research/1",
+  "release_key": "A7KJ-r0-4d306911d2d7bad5",
+  "display_name": "Hoshi no Kirby - Yume no Izumi Deluxe (Japan)",
+  "rom_sha256": "4d306911d2d7bad548aaffe13b1d30670a3fd97f9f9d760c247cd2ae3c431c36",
+  "game_code": "A7KJ",
+  "header_family": "A7K",
+  "community_id": "",
+  "overall_confidence": "LOW",
+  "media": {
+    "kind": "sram",
+    "size_bytes": 32768,
+    "sdk_tags": [],
+    "fill_byte": "0xff"
+  },
+  "slots_and_copies": [
+    {
+      "name": "slot_0",
+      "offset": 512,
+      "size": 256,
+      "redundancy_role": "unknown",
+      "selection_rule": "UNKNOWN: no selection/voting routine was traced (0 save-related functions found); all 6 slots are byte-identical in the single available sample so primary/backup role cannot be distinguished from independent-record role."
+    },
+    {
+      "name": "slot_1",
+      "offset": 768,
+      "size": 256,
+      "redundancy_role": "unknown",
+      "selection_rule": "See slot_0."
+    },
+    {
+      "name": "slot_2",
+      "offset": 1024,
+      "size": 256,
+      "redundancy_role": "unknown",
+      "selection_rule": "See slot_0."
+    },
+    {
+      "name": "slot_3",
+      "offset": 1280,
+      "size": 256,
+      "redundancy_role": "unknown",
+      "selection_rule": "See slot_0."
+    },
+    {
+      "name": "slot_4",
+      "offset": 1536,
+      "size": 256,
+      "redundancy_role": "unknown",
+      "selection_rule": "See slot_0."
+    },
+    {
+      "name": "slot_5",
+      "offset": 1792,
+      "size": 256,
+      "redundancy_role": "unknown",
+      "selection_rule": "See slot_0."
+    }
+  ],
+  "magic_signatures": [
+    {
+      "offset": 624,
+      "bytes_hex": "65b986ca",
+      "ascii": "",
+      "verified_in_code": false,
+      "verified_in_sav": true,
+      "function_addrs": []
+    }
+  ],
+  "checksums": [
+    {
+      "name": "slot_trailer_candidate",
+      "algorithm": "unknown",
+      "formula_detail": "4-byte trailer 65 B9 86 CA at relative offset 0x70 of each 116-byte active block (absolute 0x0270, 0x0370, 0x0470, 0x0570, 0x0670, 0x0770). Tested sum8/sum16/sum32, word-wise XOR32, CRC16-CCITT (poly 0x1021), CRC32 (zlib standard poly), one's- and two's-complement sum32 over payload ranges [0x00:0x70], [0x08:0x70], [0x0C:0x70], [0x00:0x6C], [0x00:0x68], [0x00:0x60], in both little-endian and big-endian trailer interpretations, and against each individual trailer byte. No algorithm/range combination reproduced the stored value. Could be a fixed hardcoded magic constant rather than a computed checksum.",
+      "stored_offset": 624,
+      "stored_size": 4,
+      "covered_start": 512,
+      "covered_end": 624,
+      "function_addrs": [],
+      "verified_on_samples": [
+        {"file": "saves/cap-00-future-0.sav", "stored_hex": "65b986ca", "computed_hex": "unverified", "match": false}
+      ],
+      "confidence": "HYPOTHESIS"
+    }
+  ],
+  "io_driver_functions": [],
+  "caller_chains": [],
+  "fields": [
+    {
+      "name": "slot_header_filler",
+      "offset": 512,
+      "size": 8,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"saves/cap-00-future-0.sav": "9999999999999999"},
+      "update_mechanism": "UNKNOWN - no writer function traced. Identical across all 6 slot copies (offsets 0x200, 0x300, 0x400, 0x500, 0x600, 0x700).",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "Direct hexdump of saves/cap-00-future-0.sav; fixed 0x99 filler distinct from surrounding 0xFF blank-fill state, identical in all 6 slots."
+    },
+    {
+      "name": "slot_zero_field",
+      "offset": 520,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"saves/cap-00-future-0.sav": "00000000"},
+      "update_mechanism": "UNKNOWN - no writer function traced. Zero in all 6 slot copies; cannot distinguish unused/reserved from an unincremented counter with a single static sample.",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Direct hexdump of saves/cap-00-future-0.sav at offsets 0x208, 0x308, 0x408, 0x508, 0x608, 0x708 - all 00 00 00 00."
+    },
+    {
+      "name": "slot_body_filler",
+      "offset": 524,
+      "size": 100,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"saves/cap-00-future-0.sav": "99 repeated x100"},
+      "update_mechanism": "UNKNOWN - no writer function traced. Identical across all 6 slot copies.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "Direct hexdump of saves/cap-00-future-0.sav offsets 0x20C-0x26F (and +0x100*n); same 0x99 filler byte as slot_header_filler."
+    },
+    {
+      "name": "slot_trailer_magic_or_checksum",
+      "offset": 624,
+      "size": 4,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"saves/cap-00-future-0.sav": "65b986ca"},
+      "update_mechanism": "UNKNOWN - no writer/checksum function traced; no tested checksum algorithm reproduces this value from the preceding payload (see checksums[0]). Identical across all 6 slot copies, consistent with either a fixed magic constant or a checksum of an identical payload.",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Direct hexdump plus Python verification against sum8/16/32, xor32, crc16-ccitt, crc32 over multiple candidate payload ranges - no match found."
+    },
+    {
+      "name": "slot_tail_unused",
+      "offset": 628,
+      "size": 140,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"saves/cap-00-future-0.sav": "ff repeated x140"},
+      "update_mechanism": "UNKNOWN - no writer function traced. Blank fill in this sample.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "Direct hexdump of saves/cap-00-future-0.sav offsets 0x274-0x2FF (and +0x100*n)."
+    },
+    {
+      "name": "unused_header_region",
+      "offset": 0,
+      "size": 512,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"saves/cap-00-future-0.sav": "ff repeated x512"},
+      "update_mechanism": "UNKNOWN - no writer function traced. Blank fill in this sample; may be unused or an unwritten header/global-config area.",
+      "confidence": "UNKNOWN",
+      "evidence": "Byte-scan of saves/cap-00-future-0.sav offsets 0x0000-0x01FF, all 0xFF."
+    }
+  ],
+  "fuzzing_targets": [
+    {
+      "offset": 520,
+      "size": 4,
+      "mutation": "Change 00 00 00 00 to 01 00 00 00 in slot 0 only (offset 0x208), leaving other slots untouched",
+      "requires_checksum_repair": false,
+      "predicted_effect": "If read by the game as a flag/counter, expect a visible change in slot-select UI, continue-state, or (if checksum-validated) the slot being flagged corrupt on load. No observed change would suggest the field is reserved/unused."
+    },
+    {
+      "offset": 624,
+      "size": 4,
+      "mutation": "Zero out trailer 65 B9 86 CA to 00 00 00 00 in slot 0 only (offset 0x270), leaving payload bytes 0x200-0x26F unchanged",
+      "requires_checksum_repair": false,
+      "predicted_effect": "If the field is a validated magic/checksum, expect slot 0 to be treated as corrupt/reset to default on load while untouched slots 1-5 remain normal. If no effect, the field is likely unvalidated or unread."
+    },
+    {
+      "offset": 512,
+      "size": 100,
+      "mutation": "Flip individual bytes within the 0x99-filled body (offsets 0x200-0x207 and 0x20C-0x26F of slot 0) from 0x99 to 0x00, one at a time",
+      "requires_checksum_repair": false,
+      "predicted_effect": "If any byte is rendered as a name/score/progress value in-game, expect a visible proportional change, allowing the 100-byte blob to be subdivided into real sub-fields."
+    },
+    {
+      "offset": 1024,
+      "size": 4,
+      "mutation": "Mutate only slot 2's trailer (offset 0x470) so it differs from the other five identical slots",
+      "requires_checksum_repair": false,
+      "predicted_effect": "Tests the redundancy hypothesis: if slots are independent records, only slot 2's in-game state changes; if slots are redundant mirrors with majority-vote/first-valid-copy selection, the game may silently repair slot 2 or ignore the difference."
+    }
+  ],
+  "open_questions": [
+    "No save-related function (writer, reader, serializer, checksum, or hardware I/O driver) could be identified: ghidra/save_related_functions.c reports 0 MMIO seeds across all 98 traced functions, meaning the capture never executed any save I/O code path for this title. A re-trace capturing an actual in-game save action is required before any function-level claim can be made.",
+    "The 4-byte trailer 65 B9 86 CA at the end of each 116-byte active block does not match sum8/16/32, word-XOR32, CRC16-CCITT, or CRC32 over any tested payload range/endianness combination. It may be a fixed magic constant rather than a computed checksum; cannot be resolved without a second .sav sample where the payload differs.",
+    "Whether the six 256-byte-stride slots are six independent save records or six redundant mirrors of one logical record cannot be determined: all six are byte-identical in the only available sample, and no selection/voting code was traced.",
+    "The 4-byte zero field at relative offset 0x08 of each slot (absolute 0x208, 0x308, ...) could be a counter, flag, or reserved padding; indistinguishable with a single static sample showing it at its initial value in every slot.",
+    "The 512-byte region 0x0000-0x01FF is entirely blank (0xFF) in this sample; unknown whether it is unused or an unwritten global-config/header area.",
+    "No paired .ss save states are present in this packet (states/ is empty), so none of the fuzzing_targets mutations have yet been tested against live emulator reload behavior."
+  ]
+}

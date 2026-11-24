@@ -1,0 +1,305 @@
+{
+  "schema": "gbakit-save-research/1",
+  "release_key": "B3HP-r0-af16c5e72fbb47d2",
+  "display_name": "Shrek the Third (Europe) (En,Fr,De,Es,It,Nl)",
+  "rom_sha256": "af16c5e72fbb47d2439d1a8d42386f73051fc2e208f8e4b007c098c58e5a6dc8",
+  "game_code": "B3HP",
+  "header_family": "B3H",
+  "community_id": "comm-005",
+  "overall_confidence": "LOW",
+  "media": {
+    "kind": "eeprom512",
+    "size_bytes": 512,
+    "sdk_tags": [],
+    "fill_byte": "0xff"
+  },
+  "slots_and_copies": [
+    {
+      "name": "slot_0_header",
+      "offset": 0,
+      "size": 16,
+      "redundancy_role": "global_config",
+      "selection_rule": "unknown - no selector routine captured in trace; contains candidate magic C0DE600D at +0x04 and candidate counter 0001 at +0x02, distinct in format from slots 1-3"
+    },
+    {
+      "name": "slot_1",
+      "offset": 160,
+      "size": 16,
+      "redundancy_role": "primary",
+      "selection_rule": "unknown; byte-identical to slot_2 in the only non-blank sample"
+    },
+    {
+      "name": "slot_2",
+      "offset": 320,
+      "size": 16,
+      "redundancy_role": "backup",
+      "selection_rule": "unknown; byte-identical to slot_1, consistent with but not proof of a primary/backup mirror scheme"
+    },
+    {
+      "name": "slot_3",
+      "offset": 480,
+      "size": 16,
+      "redundancy_role": "unknown",
+      "selection_rule": "observed mid-write: first 8-byte block (offset 480) written, second 8-byte block (offset 488) still erased 0xFF - direct evidence of non-atomic, per-block EEPROM commits"
+    }
+  ],
+  "magic_signatures": [
+    {
+      "offset": 4,
+      "bytes_hex": "c0de600d",
+      "ascii": "",
+      "verified_in_code": false,
+      "verified_in_sav": true,
+      "function_addrs": []
+    }
+  ],
+  "checksums": [
+    {
+      "name": "slot_trailer_candidate",
+      "algorithm": "unknown",
+      "formula_detail": "4-byte value 9FC23F21 recurs byte-identically at offset +0x0C within slots 0, 1, and 2 despite differing preceding 12 bytes between slot 0 and slots 1-2. Brute-force tested against sum8, sum16_le, sum32_le, xor8/16/32, crc32 (zlib), and adler32 over multiple candidate covered ranges (preceding 4 and preceding 12 bytes of each record) - no algorithm/range combination reproduced this value from varying input, so it cannot be a conventional checksum of the observed preceding bytes. Most likely a fixed sentinel/version tag rather than a data-dependent checksum, but this is unverified.",
+      "stored_offset": 12,
+      "stored_size": 4,
+      "covered_start": 0,
+      "covered_end": 11,
+      "function_addrs": [],
+      "verified_on_samples": [
+        {"file": "cap-01-future-1.sav", "stored_hex": "9fc23f21", "computed_hex": "unknown - no matching algorithm found", "match": false}
+      ],
+      "confidence": "UNKNOWN"
+    }
+  ],
+  "io_driver_functions": [
+    {"addr": "0x0802f3a0", "role": "read", "callers": ["0x0802f420", "0x0802f4e4"], "notes": "Raw DMA3 bit-serial transfer primitive: programs DMA3 source/dest/control registers (length|0x80000000 enable bit) and busy-waits on the control-register enable/busy bit. Used for both directions (read and write) by its two callers. No game-specific logic; shared generic SDK primitive."},
+    {"addr": "0x0802f420", "role": "read", "callers": ["0x0802f644"], "notes": "EEPROM READ: serializes a read command+address bitstream, sends via FUN_0802f3a0, receives 68-bit response, unpacks to 4x16-bit (8-byte) output buffer. One EEPROM block (8 bytes) per call."},
+    {"addr": "0x0802f4e4", "role": "write", "callers": ["0x0802f4d0"], "notes": "EEPROM WRITE: serializes 64 data bits + address bits + framing into a write-command bitstream, sends via FUN_0802f3a0, then busy-waits a hardware timer/cycle-delta loop (threshold 0x88) for the EEPROM internal write cycle to finish if the wait flag is set. One 8-byte block per call."},
+    {"addr": "0x0802f4d0", "role": "write", "callers": ["0x0802f69c"], "notes": "Thin wrapper calling FUN_0802f4e4 with wait=1."},
+    {"addr": "0x0802f644", "role": "serialize", "callers": ["0x0802f69c"], "notes": "Write-verify: reads back the just-written block via FUN_0802f420 and compares against the intended data; returns 0x8000 on mismatch."},
+    {"addr": "0x0802f69c", "role": "write", "callers": [], "notes": "Top-level 'write one 8-byte block with up to 3 retries and read-back verify' entry point. Confirmed via ghidra/callgraph.json to have zero callers in the 224-function trace - the game-specific caller that decides when/what/where to write is outside the captured trace. This is the save subsystem's effective public API as far as this workspace can determine."}
+  ],
+  "caller_chains": [
+    {
+      "entry_caller": "0x0802f69c",
+      "chain": ["0x0802f69c", "0x0802f4d0", "0x0802f4e4", "0x0802f3a0"],
+      "trigger_context": "unknown - no traced caller of 0x0802f69c exists in the 224-function corpus (ghidra/callgraph.json: callers=[])",
+      "ram_fields_updated": [],
+      "how_mapped": "Traced forward from the two MMIO-seed functions (0x0802f420, 0x0802f4e4) tagged in ghidra/save_related_functions.c through ghidra/callgraph.json caller/callee edges to their full closure (0x0802f3a0, 0x0802f644, 0x0802f4d0, 0x0802f69c). No further callers exist outward from 0x0802f69c in the provided trace, so the chain terminates there; this was confirmed by grepping all 224 decompiled functions for callees intersecting the EEPROM-driver address set."
+    },
+    {
+      "entry_caller": "0x0802f644",
+      "chain": ["0x0802f644", "0x0802f420", "0x0802f3a0"],
+      "trigger_context": "invoked only as the verify step inside 0x0802f69c's write-retry loop",
+      "ram_fields_updated": [],
+      "how_mapped": "Direct callgraph.json edge 0x0802f69c -> 0x0802f644 -> 0x0802f420 -> 0x0802f3a0."
+    }
+  ],
+  "fields": [
+    {
+      "name": "slot0_header_word0",
+      "offset": 0,
+      "size": 2,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"cap-01-future-1.sav": "ffff"},
+      "update_mechanism": "unknown - no traced writer; observed only in .sav bytes",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Byte offset 0x000-0x001 of cap-01-future-1.sav; no corroborating second sample to confirm meaning."
+    },
+    {
+      "name": "slot0_counter_candidate",
+      "offset": 2,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"cap-01-future-1.sav": "0x0001"},
+      "update_mechanism": "unknown",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Byte offset 0x002-0x003; plausible generation/write counter, not confirmed to increment (only one sample)."
+    },
+    {
+      "name": "magic_c0de600d",
+      "offset": 4,
+      "size": 4,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"cap-01-future-1.sav": "c0de600d"},
+      "update_mechanism": "unknown - no decompiled instruction constructs or compares this literal in the provided trace",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Byte offset 0x004-0x007 of slot 0; recognizable hex-speak constant pattern (C0DE/600D) but not code-verified."
+    },
+    {
+      "name": "slot0_reserved",
+      "offset": 8,
+      "size": 4,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"cap-01-future-1.sav": "00000000"},
+      "update_mechanism": "unknown",
+      "confidence": "HYPOTHESIS",
+      "evidence": "All-zero in the only sample; could be reserved or legitimately zero at this game state."
+    },
+    {
+      "name": "slot0_trailer_candidate",
+      "offset": 12,
+      "size": 4,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"cap-01-future-1.sav": "9fc23f21"},
+      "update_mechanism": "unknown - ruled out as a simple checksum of preceding bytes by brute-force Python verification (see checksums[0])",
+      "confidence": "UNKNOWN",
+      "evidence": "Byte offset 0x00C-0x00F; identical value recurs at 0x0AC and 0x14C despite differing preceding content."
+    },
+    {
+      "name": "slot1_field_0",
+      "offset": 160,
+      "size": 2,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"cap-01-future-1.sav": "0000"},
+      "update_mechanism": "unknown",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Byte offset 0x0A0-0x0A1; differs in value from the equivalent slot-0 position (ffff vs 0000), suggesting header vs payload slot-type distinction."
+    },
+    {
+      "name": "slot1_field_1",
+      "offset": 162,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"cap-01-future-1.sav": "0x066e"},
+      "update_mechanism": "unknown",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Byte offset 0x0A2-0x0A3; constant between slot 1 and slot 2; no second distinct sample to determine if this varies with game state."
+    },
+    {
+      "name": "slot1_reserved",
+      "offset": 164,
+      "size": 8,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"cap-01-future-1.sav": "0000000000000000"},
+      "update_mechanism": "unknown",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Byte offset 0x0A4-0x0AB; all-zero in the only sample."
+    },
+    {
+      "name": "slot1_trailer_candidate",
+      "offset": 172,
+      "size": 4,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"cap-01-future-1.sav": "9fc23f21"},
+      "update_mechanism": "unknown - see checksums[0]",
+      "confidence": "UNKNOWN",
+      "evidence": "Byte offset 0x0AC-0x0AF; identical to slot0_trailer_candidate and slot2_trailer_candidate."
+    },
+    {
+      "name": "slot2_block",
+      "offset": 320,
+      "size": 16,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"cap-01-future-1.sav": "00006e0600000000000000009fc23f21"},
+      "update_mechanism": "unknown",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Byte-for-byte identical to slot 1 (offset 160-175); consistent with but not proof of a primary/backup mirror design."
+    },
+    {
+      "name": "slot3_block0",
+      "offset": 480,
+      "size": 8,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": ["0x0802f4d0"],
+      "readers": ["0x0802f420"],
+      "observed_values": {"cap-01-future-1.sav": "00006e0600000000"},
+      "update_mechanism": "Written by one FUN_0802f4d0/FUN_0802f4e4 call targeting EEPROM block 60; mechanism CONFIRMED_STATIC, semantic content HYPOTHESIS",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "Matches the slot1/slot2 payload pattern; block-write mechanism itself is proven by decompiled code, but the field's game meaning is not."
+    },
+    {
+      "name": "slot3_block1_unwritten",
+      "offset": 488,
+      "size": 24,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"cap-01-future-1.sav": "ffffffffffffffffffffffffffffffffffffffffffffffff"},
+      "update_mechanism": "Not yet written at capture time - block 61 (and spare blocks 62-63) remain hardware-erased",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Direct byte observation; central proof that slot writes are split into independent 8-byte EEPROM block commits (see FUN_0802f4d0/FUN_0802f4e4 in io_driver_functions)."
+    },
+    {
+      "name": "reserved_gap_bytes",
+      "offset": 16,
+      "size": 400,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"cap-01-future-1.sav": "all 0x00 across offsets 0x010-0x09F, 0x0B0-0x13F, 0x150-0x1DF"},
+      "update_mechanism": "unknown - zero-filled rather than hardware-erased (0xFF), implying some prior full-image zero pass distinct from the per-slot writes",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Raw byte-level fact confirmed in cap-01-future-1.sav; semantic purpose (reserved growth space vs. fixed padding) is UNKNOWN."
+    }
+  ],
+  "fuzzing_targets": [
+    {
+      "offset": 480,
+      "size": 8,
+      "mutation": "flip a single bit in slot 3 block 0 (offset 0x1E0) while leaving block 1 (0x1E8) erased",
+      "requires_checksum_repair": false,
+      "predicted_effect": "If block-level independence holds (per the driver's 8-byte-per-call write pattern), the game should load the mutated data without cross-checking the still-erased second block, unless an untraced higher-level consumer flags the slot invalid due to the missing trailer."
+    },
+    {
+      "offset": 172,
+      "size": 4,
+      "mutation": "corrupt the trailer candidate 9FC23F21 in slot 1 only, leaving its apparent duplicate slot 2 intact",
+      "requires_checksum_repair": false,
+      "predicted_effect": "If the trailer is a validity guard, expect the game to prefer slot 2 or flag slot 1 corrupted; if not load-bearing, expect no observable change, which would resolve the open checksum question in favor of 'fixed sentinel, not integrity check'."
+    },
+    {
+      "offset": 4,
+      "size": 4,
+      "mutation": "corrupt one byte of the C0DE600D magic candidate in slot 0",
+      "requires_checksum_repair": false,
+      "predicted_effect": "If this is a whole-image validity magic, expect the game to treat the save as blank/corrupt and start fresh, matching cap-00-future-0.sav behavior; if gameplay proceeds using slot 1/2 data regardless, the magic is scoped only to slot 0's header role."
+    },
+    {
+      "offset": 2,
+      "size": 2,
+      "mutation": "increment the slot-0 counter candidate from 0001 to 0002",
+      "requires_checksum_repair": false,
+      "predicted_effect": "If this is a generation/selection counter, forcing it out of sync with an alternate forged value elsewhere could change which backup slot the game treats as newest; if it is inert bookkeeping, no observable effect is expected."
+    }
+  ],
+  "open_questions": [
+    "What is the true algorithm (if any) behind the recurring 4-byte trailer 9FC23F21? Brute-force testing of common checksum algorithms over multiple candidate byte ranges found no match, and the value stays constant across slots with differing preceding content, which rules out a simple checksum of those preceding bytes.",
+    "What game-specific function calls FUN_0802f69c (the top-level EEPROM block write+verify entry point)? It has zero traced callers in the 224-function corpus, so the in-RAM save struct layout, the EWRAM/IWRAM mirror address, and the trigger conditions (checkpoint, level-complete, quit, etc.) for a save write are all unknown from this workspace.",
+    "Is slot 2 a deliberate backup mirror of slot 1, or merely two coincidentally identical game states? Only one non-blank sample is available, so this cannot be distinguished.",
+    "What is the actual EEPROM address bit-width constant used by the driver (referenced as *(byte*)(*_DAT_0802f4cc + 8) and *(byte*)(*_DAT_0802f5cc + 8))? Its value is inferred as 6 bits only indirectly from the 512-byte file size, not resolved from the static data in the trace.",
+    "Why is the inter-slot reserved space (144 of every 160 bytes per slot stride) zero-filled rather than left in the hardware-erased 0xFF state? This implies an untraced full-image zero/format pass whose trigger and scope are unknown.",
+    "What do the C0DE600D magic candidate and the 0x066E value in slots 1-2 actually represent in game terms (level ID, playtime, score, profile flags)? No second distinct non-blank sample exists to test whether these fields vary with game state."
+  ]
+}

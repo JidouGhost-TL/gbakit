@@ -1,0 +1,297 @@
+{
+  "schema": "gbakit-save-research/1",
+  "release_key": "AWRP-r0-9cc6db0832d7b725",
+  "display_name": "Advance Wars (Europe) (En,Fr,De,Es)",
+  "rom_sha256": "9cc6db0832d7b7251964cb02538df842f4e13f3f44071465dafa1d507ddf552b",
+  "game_code": "AWRP",
+  "header_family": "AWR",
+  "community_id": "comm-009",
+  "overall_confidence": "MEDIUM",
+  "media": {
+    "kind": "flash512",
+    "size_bytes": 65536,
+    "sdk_tags": [],
+    "fill_byte": "0xff"
+  },
+  "slots_and_copies": [
+    {
+      "name": "flash_object_store",
+      "offset": 0,
+      "size": 65536,
+      "redundancy_role": "unknown",
+      "selection_rule": "Wear-leveled object/sector allocator over 16 x 0x1000-byte sectors (confirmed via FUN_0801ab60/FUN_0801b150/FUN_0801b3a8 sector-count bounds of 0x10). No evidence of a fixed primary/backup whole-save mirror; redundancy, if any, is per-object relocation on write, not pinned down statically."
+    }
+  ],
+  "magic_signatures": [
+    {
+      "offset": 61440,
+      "bytes_hex": "77617273",
+      "ascii": "wars",
+      "verified_in_code": false,
+      "verified_in_sav": true,
+      "function_addrs": []
+    },
+    {
+      "offset": 62322,
+      "bytes_hex": "41647661 6e636500",
+      "ascii": "Advance",
+      "verified_in_code": false,
+      "verified_in_sav": true,
+      "function_addrs": []
+    },
+    {
+      "offset": 61445,
+      "bytes_hex": "09",
+      "ascii": "",
+      "verified_in_code": true,
+      "verified_in_sav": true,
+      "function_addrs": ["0x0801ab60"]
+    }
+  ],
+  "checksums": [
+    {
+      "name": "record_header_sum8_complement",
+      "algorithm": "sum8",
+      "formula_detail": "byte[+0x06] = (sum of bytes in [_DAT_0801aef8 .. _DAT_0801aef8+_DAT_0801aef4]) mod 256; byte[+0x07] = 0xFF - byte[+0x06] (ones'-complement guard). Covered byte range is runtime-resolved and could NOT be statically reproduced; only the mechanism and header offsets are confirmed.",
+      "stored_offset": 61446,
+      "stored_size": 2,
+      "covered_start": -1,
+      "covered_end": -1,
+      "function_addrs": ["0x0801ab60"],
+      "verified_on_samples": [
+        {"file": "saves/cap-00-future-0.sav", "stored_hex": "d9", "computed_hex": "unknown_range", "match": false}
+      ],
+      "confidence": "CONFIRMED_STATIC"
+    },
+    {
+      "name": "record_header_complement_guard_byte",
+      "algorithm": "xor8",
+      "formula_detail": "byte[+0x07] is the exact ones'-complement of byte[+0x06]: byte[+0x07] == 0xFF - byte[+0x06]. Independently verified against the real .sav file regardless of the unresolved checksum range.",
+      "stored_offset": 61447,
+      "stored_size": 1,
+      "covered_start": 61446,
+      "covered_end": 61446,
+      "function_addrs": ["0x0801ab60"],
+      "verified_on_samples": [
+        {"file": "saves/cap-00-future-0.sav", "stored_hex": "26", "computed_hex": "26", "match": true}
+      ],
+      "confidence": "CONFIRMED_VERIFIED"
+    }
+  ],
+  "io_driver_functions": [
+    {"addr": "0x0807a1c8", "role": "read", "callers": ["0x0807a2bc"], "notes": "Flash chip-ID read: AA/5555, 55/2AAA, 90/5555 ID-entry sequence, reads 2 ID bytes, then AA/55/F0 ID-exit/reset."},
+    {"addr": "0x0807a2bc", "role": "read", "callers": [], "notes": "Device-table lookup by chip ID; copies geometry/command descriptor fields out of the matched device-table entry."},
+    {"addr": "0x0807a534", "role": "read", "callers": ["0x0807a9dc"], "notes": "Generic byte-swap/copy staging helper used by the chip-ID and erase routines."},
+    {"addr": "0x0807a6a8", "role": "write", "callers": [], "notes": "Bank-addressed burst program path (no erase issued); forwards to unresolved func_0x0807bf1c."},
+    {"addr": "0x0807a808", "role": "read", "callers": [], "notes": "Bank-addressed read-back/verify path; forwards to unresolved func_0x0807bf1c and returns its result."},
+    {"addr": "0x0807a9dc", "role": "erase", "callers": [], "notes": "4KB sector erase: AA/55/80, AA/55, then 0x30 (SST-style Sector Erase) at bank-addressed target; bounded to 16 sectors (param_1 < 0x10)."},
+    {"addr": "0x0807c16c", "role": "serialize", "callers": [], "notes": "Generic unsigned 32-bit integer divide (math utility, not save-specific; used somewhere in save offset/size arithmetic)."}
+  ],
+  "caller_chains": [
+    {
+      "entry_caller": "0x08038b48",
+      "chain": ["0x08038b48", "0x0801ab24", "0x0801b384", "0x0807a2bc", "0x0807a1c8", "0x0801b674", "0x0801b150", "0x0801b3a8", "0x0801b42c", "0x0801b4ac"],
+      "trigger_context": "Boot-time save-system init, mode=2 (passed as the 4th literal argument to FUN_0801ab24 at ghidra/decompiled.c:5199).",
+      "ram_fields_updated": ["unresolved globals: _DAT_0801ab4c/50/54/58/5c device descriptor pointers"],
+      "how_mapped": "Direct call-site reads in ghidra/decompiled.c (lines 5173-5219, 2960-2977, 3368-3478, 3730+), cross-checked against ghidra/callgraph.json entries for 0x0801ab24 and 0x0801b674 (callgraph is sparse due to UNRECOVERED_JUMPTABLE indirect calls, so call sites were the primary evidence)."
+    },
+    {
+      "entry_caller": "0x0801b150",
+      "chain": ["0x0801b150", "0x0801ab60", "0x0801babc", "0x0801bb14", "0x0807a808", "0x0807a6a8"],
+      "trigger_context": "Object write/allocate path invoked during directory rebuild (ghidra/decompiled.c:3396); the higher-level gameplay trigger (menu save / autosave) that ultimately calls into this chain was not present in the 247-function extraction.",
+      "ram_fields_updated": ["record header staging buffer (puVar2): +0x05 const 9, +0x06 sum8, +0x07 complement, +0x08 object/session counter, +0x0c chunk-index byte, +0x0d mode byte, +0x0e chunk offset, +0x14 chunk length, +0x52.. payload"],
+      "how_mapped": "FUN_0801ab60 body read directly (ghidra/decompiled.c:2984-3253); FUN_0801babc/FUN_0801bb14 read directly (lines 3882-3942) showing the hardware-vs-RAM-shadow dispatch to FUN_0807a808/FUN_0807a6a8."
+    }
+  ],
+  "fields": [
+    {
+      "name": "record_tag_bytes_0_3",
+      "offset": 61440,
+      "size": 4,
+      "type": "ascii",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"cap-00-future-0.sav": "wars"},
+      "update_mechanism": "unresolved — no writer found in extracted sources",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Positioned immediately before the confirmed header fields at +5/+6/+7; no code path in ghidra/decompiled.c writes this specific ASCII content."
+    },
+    {
+      "name": "record_unknown_byte_4",
+      "offset": 61444,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"cap-00-future-0.sav": "0xaa"},
+      "update_mechanism": "unresolved",
+      "confidence": "UNKNOWN",
+      "evidence": "No matching offset in FUN_0801ab60's documented header fields (which start at +5)."
+    },
+    {
+      "name": "record_header_const_9",
+      "offset": 61445,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": ["0x0801ab60"],
+      "readers": [],
+      "observed_values": {"cap-00-future-0.sav": "0x09"},
+      "update_mechanism": "Hard-coded constant: *(undefined1*)(iVar15+5) = 9 in FUN_0801ab60.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "ghidra/decompiled.c:3138; byte-identical in saves/cap-00-future-0.sav at offset 0xF005."
+    },
+    {
+      "name": "record_checksum_sum8",
+      "offset": 61446,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": ["0x0801ab60"],
+      "readers": [],
+      "observed_values": {"cap-00-future-0.sav": "0xd9"},
+      "update_mechanism": "sum8 of bytes in a runtime-resolved range (_DAT_0801aef8/_DAT_0801aef4), per ghidra/decompiled.c:3199-3205.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "Mechanism proven in code; exact covered range not reproducible from static sources (brute-force search over the active save region found 1153 candidate ranges matching 0xd9, too many to disambiguate without a live trace or second sample)."
+    },
+    {
+      "name": "record_checksum_complement",
+      "offset": 61447,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": ["0x0801ab60"],
+      "readers": [],
+      "observed_values": {"cap-00-future-0.sav": "0x26"},
+      "update_mechanism": "record[+0x07] = ~sum8 (ones' complement of record[+0x06]).",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "ghidra/decompiled.c:3206; 0x26 == 0xFF - 0xd9 exactly, verified against saves/cap-00-future-0.sav."
+    },
+    {
+      "name": "record_object_session_counter",
+      "offset": 61448,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": ["0x0801ab60"],
+      "readers": [],
+      "observed_values": {"cap-00-future-0.sav": "0x00000000"},
+      "update_mechanism": "*(undefined4*)(iVar15+8) = *_DAT_0801ae20, a global counter whose semantic meaning is not resolved.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "ghidra/decompiled.c:3141; offset and write proven, semantic meaning and nonzero behavior not observed in this single sample."
+    },
+    {
+      "name": "secondary_ascii_tag_advance",
+      "offset": 62322,
+      "size": 7,
+      "type": "ascii",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"cap-00-future-0.sav": "Advance"},
+      "update_mechanism": "unresolved",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Second ASCII fragment at 0xF372; no writer identified, relationship to the 'wars' tag at 0xF000 not established."
+    },
+    {
+      "name": "small_int_field_f38a",
+      "offset": 62346,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"cap-00-future-0.sav": 9},
+      "update_mechanism": "unresolved",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Plausible length/version/slot integer near the 'Advance' tag; no writer function matched."
+    },
+    {
+      "name": "small_int_field_f38c",
+      "offset": 62348,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"cap-00-future-0.sav": 1},
+      "update_mechanism": "unresolved",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Same region as small_int_field_f38a; no writer function matched."
+    },
+    {
+      "name": "small_int_field_f390",
+      "offset": 62352,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"cap-00-future-0.sav": 12},
+      "update_mechanism": "unresolved",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Same region as the two preceding fields; no writer function matched."
+    },
+    {
+      "name": "sparse_stride_table",
+      "offset": 62496,
+      "size": 272,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"cap-00-future-0.sav": "repeating FF FF FF 00 stride pattern"},
+      "update_mechanism": "unresolved",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Matches the packet's own byte-level active-range scan (single non-FF byte every 4 bytes); consistent with a sparse object-handle/bitmap table but no writer function matched."
+    },
+    {
+      "name": "high_entropy_tail_block",
+      "offset": 62768,
+      "size": 59,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"cap-00-future-0.sav": "9c04c22492510 6d88408ad20f0..."},
+      "update_mechanism": "unresolved",
+      "confidence": "UNKNOWN",
+      "evidence": "Distinctly higher-entropy region than the rest of the active save area; could be a second checksummed block or RNG seed data, not mapped to any function."
+    },
+    {
+      "name": "end_of_chip_marker",
+      "offset": 65534,
+      "size": 2,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"cap-00-future-0.sav": "00 55"},
+      "update_mechanism": "unresolved",
+      "confidence": "UNKNOWN",
+      "evidence": "No code reference found; could be a sentinel or incidental leftover bytes."
+    }
+  ],
+  "fuzzing_targets": [
+    {"offset": 61516, "size": 1, "mutation": "increment byte 0x01->0x02 at 0xF04C without touching the checksum pair", "requires_checksum_repair": false, "predicted_effect": "If inside the checksum's covered range, save is flagged corrupt on reload; if outside, loads normally with the mutated byte's own (unknown) effect visible — used to binary-search the checksum's covered range."},
+    {"offset": 61446, "size": 2, "mutation": "recompute sum8+complement over each of the top candidate covered ranges and patch 0xF006/0xF007 accordingly after mutating a payload byte", "requires_checksum_repair": true, "predicted_effect": "Only the repair using the true covered range reloads cleanly; this is the decisive experiment to pin down checksum coverage."},
+    {"offset": 61445, "size": 1, "mutation": "change 0x09 to 0x00 or 0xFF, leave checksum pair untouched", "requires_checksum_repair": false, "predicted_effect": "If validated independently of the checksum, save is rejected/ignored despite an internally consistent sum/complement pair."},
+    {"offset": 61440, "size": 4, "mutation": "change ASCII 'wars' to another 4-byte tag", "requires_checksum_repair": true, "predicted_effect": "If a displayed label, visible change on load/select screen; if an internal format tag, save may be rejected."},
+    {"offset": 62499, "size": 1, "mutation": "flip one 0x00 byte to 0xFF inside the FF FF FF 00 stride pattern at 0xF420-0xF52F", "requires_checksum_repair": false, "predicted_effect": "If this is an allocated-object bitmap, a previously valid slot may disappear from an in-game list (e.g. mission/profile selection)."},
+    {"offset": 62768, "size": 59, "mutation": "zero the entire high-entropy tail block at 0xF530-0xF56A", "requires_checksum_repair": false, "predicted_effect": "If independently checksummed, expect a corruption/fallback response; if cosmetic, expect normal load with at most a visual anomaly."},
+    {"offset": 65534, "size": 2, "mutation": "overwrite 00 55 with FF FF at 0xFFFE-0xFFFF", "requires_checksum_repair": false, "predicted_effect": "If a real end-of-store sentinel, directory-scan behavior changes (store treated as freshly erased); if incidental, no change."}
+  ],
+  "open_questions": [
+    "Which gameplay code outside the 247-function extraction actually triggers FUN_0801ab60 (menu save vs. autosave vs. other events)?",
+    "What is the real covered byte range of the sum8 checksum computed in FUN_0801ab60?",
+    "What do the 'wars' (0xF000) and 'Advance' (0xF372) ASCII fragments encode?",
+    "What does the FF FF FF 00 striped region at 0xF420-0xF52F represent?",
+    "What is the high-entropy tail block at 0xF530-0xF56A, and is it itself checksummed?",
+    "Is the 00 55 pair at 0xFFFE-0xFFFF meaningful or incidental?",
+    "What are the concrete SWI numbers behind func_0x0807bf10/14/18/1c (believed to be BIOS CpuSet/CpuFastSet-family wrappers based on sibling functions in the same address range, but not directly observed)?",
+    "What does the selection rule for 'most recently written valid object wins' actually compare (opaque globals in FUN_0801b150/FUN_0801b3a8)?",
+    "Only one .sav sample was available; all range-narrowing experiments require additional samples or live .ss-based fuzzing to resolve."
+  ]
+}

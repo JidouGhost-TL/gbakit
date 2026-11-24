@@ -1,0 +1,319 @@
+{
+  "schema": "gbakit-save-research/1",
+  "release_key": "BFKP-r2-a34ed93e2c398c50",
+  "display_name": "Franklin the Turtle (Europe) (En,Fr,De,Es,It,Sv,No,Da,Fi) (Rev 2)",
+  "rom_sha256": "a34ed93e2c398c50ec68fe58dffab37a81fa8385da63d3a0a532a5b51cebc10d",
+  "game_code": "BFKP",
+  "header_family": "BFK",
+  "community_id": "comm-006",
+  "overall_confidence": "LOW",
+  "media": {
+    "kind": "eeprom512",
+    "size_bytes": 512,
+    "sdk_tags": [],
+    "fill_byte": "0xff"
+  },
+  "slots_and_copies": [
+    {
+      "name": "slot_0",
+      "offset": 0,
+      "size": 128,
+      "redundancy_role": "unknown",
+      "selection_rule": "UNKNOWN: hypothesis of 4x128B stride from repeated byte at +7 of each 128B region (0x00,0x80,0x100,0x180) in cap-01; no loader/selection code in traced set. Slot0 distinct (0xFC,0x08), slots1-3 identical sparse (0x01 at +7). No generation counter proven."
+    },
+    {
+      "name": "slot_1",
+      "offset": 128,
+      "size": 128,
+      "redundancy_role": "unknown",
+      "selection_rule": "UNKNOWN: see slot_0; byte+7=0x01 in cap-01, otherwise zero"
+    },
+    {
+      "name": "slot_2",
+      "offset": 256,
+      "size": 128,
+      "redundancy_role": "unknown",
+      "selection_rule": "UNKNOWN: see slot_0; byte+7=0x01 in cap-01, otherwise zero"
+    },
+    {
+      "name": "slot_3",
+      "offset": 384,
+      "size": 128,
+      "redundancy_role": "unknown",
+      "selection_rule": "UNKNOWN: see slot_0; byte+7=0x01 in cap-01, otherwise zero"
+    }
+  ],
+  "magic_signatures": [],
+  "checksums": [
+    {
+      "name": "none_identified",
+      "algorithm": "unknown",
+      "formula_detail": "No checksum/magic routine in 35 decompiled functions or 3 save-related functions; no sum/xor/crc loop feeding FUN_08036944/FUN_08036880. Candidate sums tested in Python (see verified_on_samples) do not consistently explain any stored byte across all 4 hypothesized slots: slot0 sum8_excl_byte7=0x08 equals byte14 only coincidentally (slots1-3 sum_excl=0x00 vs byte14=0x00 trivially zero, byte7=0x01 unexplained).",
+      "stored_offset": 0,
+      "stored_size": 0,
+      "covered_start": 0,
+      "covered_end": 0,
+      "function_addrs": [],
+      "verified_on_samples": [
+        {
+          "file": "cap-00-future-0.sav",
+          "stored_hex": "0xff (blank)",
+          "computed_hex": "sum8=0x00 sum16le=0xff00 xor8=0x00 crc32=0xbd7bc39f",
+          "match": false
+        },
+        {
+          "file": "cap-01-future-1.sav",
+          "stored_hex": "byte7(s0)=0xfc byte14(s0)=0x08 byte7(s1-3)=0x01",
+          "computed_hex": "sum8=0x07 sum16le=0xff08 xor8=0xf5 crc32=0xbe9dd84f; per-slot sum8=04,01,01,01",
+          "match": false
+        }
+      ],
+      "confidence": "UNKNOWN"
+    }
+  ],
+  "io_driver_functions": [
+    {
+      "addr": "0x08036800",
+      "role": "write",
+      "callers": [
+        "0x08036880",
+        "0x08036944"
+      ],
+      "notes": "DMA3 driver (generic DMA): param1->DMA SAD 0x040000D4, param2->DAD 0x040000D8, param3|0x80000000 ->CNT 0x040000DC, polls CNT bit31/busy, saves/restores interrupt state via DAT ptrs. Used both RAM->0x0D000000 and 0x0D000000->RAM. CONFIRMED_STATIC from save_related_functions.c:809-833."
+    },
+    {
+      "addr": "0x08036880",
+      "role": "read",
+      "callers": [],
+      "notes": "EEPROM Read: param1=block addr (<desc[+4]), param2=dest RAM (8B). Builds addr bitstream MSB-first per desc[+8] addr bits, sends '11' header (two 1 halfwords) via FUN_08036800(buf,0x0D000000,addrBits+3), reads 0x44=68 halfwords (64 data+4 dummy) via FUN_08036800(0x0D000000,buf,0x44), unpacks 64 bits MSB-first into 4x u16le at dest+6,4,2,0. No callers in callgraph.json (truncated/indirect)."
+    },
+    {
+      "addr": "0x08036944",
+      "role": "write",
+      "callers": [],
+      "notes": "EEPROM Write: param1=block addr, param2=src RAM (4x u16=8B), param3=wait/poll flag. Packs 64 data bits + addr bits MSB-first, header 0,1 ('10' write), DMA len addrBits+0x43 to 0x0D000000, then polls 0x0D000000 bit0 ready with timer DAT_08036a30 timeout 0x88 ticks (wrap 0xe4). No callers in callgraph.json."
+    }
+  ],
+  "caller_chains": [
+    {
+      "entry_caller": "0x08036880",
+      "chain": [
+        "0x08036880",
+        "0x08036800"
+      ],
+      "trigger_context": "EEPROM read of one 8-byte block; ultimate game caller NOT in trace-guided 35-function set (callgraph callers=[]; exit via UNRECOVERED_JUMPTABLE). How mapped: direct callee edge in callgraph.json + literal 0x0D000000 arg in decompiled.c:868-869.",
+      "ram_fields_updated": [],
+      "how_mapped": "callgraph.json callee edge 08036880->08036800; decompiled.c FUN_08036800 DMA regs. RAM dest is caller-supplied param2, address unknown without caller."
+    },
+    {
+      "entry_caller": "0x08036944",
+      "chain": [
+        "0x08036944",
+        "0x08036800"
+      ],
+      "trigger_context": "EEPROM write of one 8-byte block + busy poll; ultimate game caller NOT traced (callers=[]).",
+      "ram_fields_updated": [],
+      "how_mapped": "callgraph.json callee edge 08036944->08036800; decompiled.c:944 DMA to 0x0D000000 addrBits+0x43. RAM source is param2 pointer, unknown."
+    }
+  ],
+  "fields": [
+    {
+      "name": "eeprom_blank_fill",
+      "offset": 0,
+      "size": 512,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [
+        "0x08036944"
+      ],
+      "readers": [
+        "0x08036880"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": "all 0xFF (512B)",
+        "cap-01-future-1.sav": "all 0x00 except 5 bytes"
+      },
+      "update_mechanism": "cap-00 is erased/uninitialized EEPROM (reads 0xFF); cap-01 shows game/emulator initialized to 0x00 - writer of bulk zero unknown (could be 64x FUN_08036944 block writes by untraced caller).",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Python sha256 cap00=9f56cda75fefeab9... all-FF verified; cap01=7eb73968d59482c2... 507x 0x00."
+    },
+    {
+      "name": "slot0_byte7_flags_hypothesis",
+      "offset": 7,
+      "size": 1,
+      "type": "bitflags",
+      "ram_addr": null,
+      "writers": [
+        "0x08036944"
+      ],
+      "readers": [
+        "0x08036880"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": "0xff",
+        "cap-01-future-1.sav": "0xfc"
+      },
+      "update_mechanism": "Written as part of EEPROM block 0 (addr 0, bytes0-7) via FUN_08036944 8B write; in-RAM updater unknown (no caller traced). Bits 11111100: six high bits set - progress/valid flags hypothesis only.",
+      "confidence": "HYPOTHESIS",
+      "evidence": ".sav offset7=0xFC in cap01; driver writes in 8B blocks so offset7 is last byte of block0. No field-specific writer in decompiled.c."
+    },
+    {
+      "name": "slot0_byte14",
+      "offset": 14,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": [
+        "0x08036944"
+      ],
+      "readers": [
+        "0x08036880"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": "0xff",
+        "cap-01-future-1.sav": "0x08"
+      },
+      "update_mechanism": "Part of EEPROM block1 (bytes8-15) 8B write; updater unknown. Coincidentally equals slot0 sum8 excluding byte7 (0x08) - not proven checksum (see checksums).",
+      "confidence": "HYPOTHESIS",
+      "evidence": ".sav offset14=0x08 cap01; Python slot0 sum_excl7=0x08 but slots1-3 do not corroborate a checksum at +14 (all zero)."
+    },
+    {
+      "name": "region1_byte7_flag",
+      "offset": 135,
+      "size": 1,
+      "type": "bitflags",
+      "ram_addr": null,
+      "writers": [
+        "0x08036944"
+      ],
+      "readers": [
+        "0x08036880"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": "0xff",
+        "cap-01-future-1.sav": "0x01"
+      },
+      "update_mechanism": "Last byte of EEPROM block16 (0x80-0x87); if 128B slot hypothesis holds this is slot1+7. Updater unknown.",
+      "confidence": "HYPOTHESIS",
+      "evidence": "cap01 offset0x87=0x01; repeats at 0x107,0x187 every 0x80."
+    },
+    {
+      "name": "region2_byte7_flag",
+      "offset": 263,
+      "size": 1,
+      "type": "bitflags",
+      "ram_addr": null,
+      "writers": [
+        "0x08036944"
+      ],
+      "readers": [
+        "0x08036880"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": "0xff",
+        "cap-01-future-1.sav": "0x01"
+      },
+      "update_mechanism": "Last byte of block32 (0x100); slot2+7 under 128B hypothesis.",
+      "confidence": "HYPOTHESIS",
+      "evidence": "cap01 offset0x107=0x01."
+    },
+    {
+      "name": "region3_byte7_flag",
+      "offset": 391,
+      "size": 1,
+      "type": "bitflags",
+      "ram_addr": null,
+      "writers": [
+        "0x08036944"
+      ],
+      "readers": [
+        "0x08036880"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": "0xff",
+        "cap-01-future-1.sav": "0x01"
+      },
+      "update_mechanism": "Last byte of block48 (0x180); slot3+7 under 128B hypothesis.",
+      "confidence": "HYPOTHESIS",
+      "evidence": "cap01 offset0x187=0x01."
+    },
+    {
+      "name": "zero_payload_regions",
+      "offset": 0,
+      "size": 512,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [
+        "0x08036944"
+      ],
+      "readers": [
+        "0x08036880"
+      ],
+      "observed_values": {
+        "cap-01-future-1.sav": "507 bytes 0x00; only offsets 7,14,135,263,391 nonzero"
+      },
+      "update_mechanism": "All remaining bytes zero in initialized save - either empty progress fields or reserved padding; cannot distinguish without progressed save.",
+      "confidence": "UNKNOWN",
+      "evidence": "Python nonzero scan cap01: [(0x7,fc),(0xe,08),(0x87,01),(0x107,01),(0x187,01)]."
+    }
+  ],
+  "fuzzing_targets": [
+    {
+      "offset": 7,
+      "size": 1,
+      "mutation": "0xFC -> 0x00, 0xFF, each single bit flip",
+      "requires_checksum_repair": false,
+      "predicted_effect": "If valid/progress flags: save rejected/reinitialized or levels lock/unlock. No checksum repair known (none identified); if rejected, checksum hypothesis gains support."
+    },
+    {
+      "offset": 14,
+      "size": 1,
+      "mutation": "0x08 -> 0x00 / 0x09 / 0xFF",
+      "requires_checksum_repair": false,
+      "predicted_effect": "Distinguishes counter/flag vs checksum-byte: gameplay value change vs save-invalid."
+    },
+    {
+      "offset": 135,
+      "size": 1,
+      "mutation": "0x01 -> 0x00 / 0xFC",
+      "requires_checksum_repair": false,
+      "predicted_effect": "If slot1 valid flag: slot appears/disappears in load UI; if global flag replicated, all slots change behavior."
+    },
+    {
+      "offset": 263,
+      "size": 1,
+      "mutation": "0x01 -> 0x00",
+      "requires_checksum_repair": false,
+      "predicted_effect": "Same slot-valid test for region2."
+    },
+    {
+      "offset": 391,
+      "size": 1,
+      "mutation": "0x01 -> 0x00",
+      "requires_checksum_repair": false,
+      "predicted_effect": "Same slot-valid test for region3."
+    },
+    {
+      "offset": 0,
+      "size": 512,
+      "mutation": "Fill 0xFF (restore cap-00) and fill 0x00 all-zero",
+      "requires_checksum_repair": false,
+      "predicted_effect": "0xFF: blank-boot/reinit (PACKET cold-reload says cap-01 preserved, not reverted). All-zero: tests whether zero is accepted as valid empty save or reinitialized to cap-01 pattern (0xFC/0x08/0x01s rewritten)."
+    },
+    {
+      "offset": 8,
+      "size": 8,
+      "mutation": "Randomize block1 bytes8-15 except byte14",
+      "requires_checksum_repair": false,
+      "predicted_effect": "If no effect and no rejection, block is padding/unused at this progress state."
+    }
+  ],
+  "open_questions": [
+    "Ultimate callers of FUN_08036880/FUN_08036944 absent from trace-guided set (callgraph callers=[]) - in-RAM save struct address (EWRAM/IWRAM), slot selection, and serialization order unknown.",
+    "Is geometry 4x128B slots, 1 global 512B image, or 64 independent 8B blocks? Repeated +7 byte supports 128B stride but n=1 progressed sample cannot prove it.",
+    "No magic or checksum identified - either none exists (flags only), or serializer/checksum caller not decompiled. Need progressed saves with more nonzero bytes.",
+    "EEPROM descriptor values (desc+4 capacity, desc+8 address bits) not resolved from DAT constants in decompilation - 6-bit address inferred from 512B size, not read from ROM data.",
+    "Meaning of 0xFC at 0x07 and 0x08 at 0x0E: progress flags, counters, language/settings, or bit-packed data? Bit order of emulator .sav vs on-wire EEPROM bitstream assumed logical-byte order.",
+    "states/ is empty - no save-state RAM snapshot to correlate RAM mirror."
+  ]
+}

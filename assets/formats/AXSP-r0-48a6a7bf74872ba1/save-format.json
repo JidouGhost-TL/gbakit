@@ -1,0 +1,328 @@
+{
+  "schema": "gbakit-save-research/1",
+  "release_key": "AXSP-r0-48a6a7bf74872ba1",
+  "display_name": "ESPN X-Games Skateboarding (Europe) (En,Fr,De,Es,It)",
+  "rom_sha256": "48a6a7bf74872ba16439864dcfc6fee4a8ec774c677f260f4468656afc303688",
+  "game_code": "AXSP",
+  "header_family": "AXS",
+  "community_id": "comm-004",
+  "overall_confidence": "MEDIUM",
+  "media": {
+    "kind": "eeprom512",
+    "size_bytes": 512,
+    "sdk_tags": [],
+    "fill_byte": "0xff"
+  },
+  "slots_and_copies": [
+    {
+      "name": "primary_struct",
+      "offset": 0,
+      "size": 476,
+      "redundancy_role": "primary",
+      "selection_rule": "Single fixed EEPROM offset 0; no slot index parameter found in traced read (FUN_08018bd4) or write (FUN_08018c2c) paths. No mirror/backup copy observed."
+    },
+    {
+      "name": "unused_tail",
+      "offset": 476,
+      "size": 36,
+      "redundancy_role": "unknown",
+      "selection_rule": "Never read or written by any traced function; all 0xFF (EEPROM erased-state fill) in the sample."
+    }
+  ],
+  "magic_signatures": [
+    {
+      "offset": 0,
+      "bytes_hex": "0000696d616e6f4b",
+      "ascii": "\u0000\u0000imanoK",
+      "verified_in_code": true,
+      "verified_in_sav": true,
+      "function_addrs": ["0x08018b98", "0x08018bd4"]
+    }
+  ],
+  "checksums": [
+    {
+      "name": "content_version_stamp",
+      "algorithm": "sum32",
+      "formula_detail": "Sum of 116 (0x74) consecutive 4-byte signed integers from a fixed ROM table at _DAT_08018bd0 (FUN_08018bb4). Not a function of the save bytes; behaves as a build/version stamp rather than a per-save corruption checksum.",
+      "stored_offset": 8,
+      "stored_size": 4,
+      "covered_start": 0,
+      "covered_end": 0,
+      "function_addrs": ["0x08018bb4", "0x08018bd4", "0x08018c2c"],
+      "verified_on_samples": [
+        {"file": "cap-01-future-1.sav", "stored_hex": "01000000", "computed_hex": "unknown (ROM table not present in workspace)", "match": false}
+      ],
+      "confidence": "CONFIRMED_STATIC"
+    },
+    {
+      "name": "magic_strcmp",
+      "algorithm": "custom",
+      "formula_detail": "Plain strcmp-shaped byte compare (FUN_08018b98) between struct offset 0 and a ROM-resident expected string _DAT_08018c28. If the expected string also begins with 0x00, the loop short-circuits as a match on the first byte and never inspects bytes 2-7 ('imanoK'); this ambiguity could not be resolved without the ROM bytes behind _DAT_08018c28.",
+      "stored_offset": 0,
+      "stored_size": 8,
+      "covered_start": 0,
+      "covered_end": 8,
+      "function_addrs": ["0x08018b98", "0x08018bd4"],
+      "verified_on_samples": [
+        {"file": "cap-01-future-1.sav", "stored_hex": "0000696d616e6f4b", "computed_hex": "unknown (expected ROM string not present in workspace)", "match": false}
+      ],
+      "confidence": "HYPOTHESIS"
+    }
+  ],
+  "io_driver_functions": [
+    {"addr": "0x0803ab1c", "role": "read", "callers": ["0x0803acb8", "0x08002b7c"], "notes": "EEPROM single 8-byte-block read via DMA3 serial bitstream; opcode nibble 0x030000 (EEPROM read command)."},
+    {"addr": "0x0803abd4", "role": "write", "callers": ["0x08002be4"], "notes": "EEPROM single 8-byte-block write via DMA3 serial bitstream; opcode nibble 0x430000 (EEPROM write command); polls busy bit on 0x0D000000 for write-complete."},
+    {"addr": "0x0803acb8", "role": "checksum", "callers": ["0x08002be4"], "notes": "Write-verify: re-reads the just-written 8-byte block via FUN_0803ab1c and compares against expected data; returns 0x8000 on mismatch. Not a save-content checksum, an I/O robustness check."},
+    {"addr": "0x0803aa9c", "role": "write", "callers": ["0x0803ab1c", "0x0803abd4"], "notes": "DMA3 kickoff primitive targeting 0x0D000000 with busy-wait."},
+    {"addr": "0x0803a9f4", "role": "write", "callers": ["0x0803abd4"], "notes": "DMA control setup helper, write path only."},
+    {"addr": "0x0803aa58", "role": "write", "callers": ["0x0803abd4"], "notes": "DMA control teardown helper, write path only."},
+    {"addr": "0x08002b7c", "role": "read", "callers": ["0x08018bd4"], "notes": "Bulk reader: loops FUN_0803ab1c once per 8-byte block to cover an arbitrary [offset,len) range; bounds-checks against a device-descriptor size field."},
+    {"addr": "0x08002be4", "role": "write", "callers": ["0x08018c2c"], "notes": "Bulk writer: loops FUN_0803abd4 + FUN_0803acb8 (write-then-verify) once per 8-byte block."}
+  ],
+  "caller_chains": [
+    {
+      "entry_caller": "0x08018bd4",
+      "chain": ["0x08018bd4", "0x08002b7c", "0x0803ab1c", "0x0803aa9c"],
+      "trigger_context": "Unresolved - no static caller found in callgraph.json; FUN_08018bd4 is itself only reached via UNRECOVERED_JUMPTABLE indirect dispatch in this trace (consistent with every function in the traced set).",
+      "ram_fields_updated": ["struct+0x000..+0x1DB (entire 476-byte struct, via direct DMA read into the live struct address)"],
+      "how_mapped": "Walked callgraph.json edges from the four MMIO seed functions (0x0803a9f4, 0x0803aa58, 0x0803aa9c, 0x0803ab1c/0x0803abd4/0x0803acb8) outward to their sole statically-resolved callers 0x08002b7c/0x08002be4, then to those wrappers' sole callers 0x08018bd4/0x08018c2c; cross-checked by grepping decompiled.c for every literal/func_0x reference to each address."
+    },
+    {
+      "entry_caller": "0x08018c2c",
+      "chain": ["0x08018c2c", "0x08018908", "0x08018884", "0x08018bb4", "0x08002be4", "0x0803abd4", "0x0803acb8"],
+      "trigger_context": "Unresolved - no static caller found in callgraph.json; same indirect-dispatch pattern as the loader.",
+      "ram_fields_updated": [
+        "struct+0x10..+0x1C7 (10 records, stride 0x2C, rebuilt from ROM defaults/existing record values via FUN_08018908/FUN_08018884)",
+        "struct+0x000..+0x007 (header copy from _DAT_08018d0c-family pointer)",
+        "struct+0x008..+0x00B (content/version stamp = FUN_08018bb4())"
+      ],
+      "how_mapped": "Same callgraph walk as above, from the write-side MMIO seed 0x0803abd4/0x0803acb8 to 0x08002be4 to its sole caller 0x08018c2c; the per-record and header mutation sequence was read directly out of FUN_08018c2c's decompiled body (ghidra/decompiled.c lines ~3063-3134)."
+    },
+    {
+      "entry_caller": "0x08018ae0",
+      "chain": ["0x08018ae0", "0x08018908", "0x08018884", "0x080189b0"],
+      "trigger_context": "Called only from inside FUN_08018bd4 when the magic-compare or +0x08 stamp-compare fails on load.",
+      "ram_fields_updated": [
+        "struct+0x000..+0x1DB (memset 0 via func_0x08042b20)",
+        "struct+0x00C..+0x00F (flags, literal defaults 00 00 00 01)",
+        "struct+0x10..+0x1C7 (10 records rebuilt from ROM default triplets)",
+        "struct+0x1C8..+0x1DB (5 score slots seeded as running_total*10 + (i%10))"
+      ],
+      "how_mapped": "Direct callee of FUN_08018bd4 per callgraph.json; full body read from decompiled.c lines 2927-2975, which is the clearest literal-constant evidence for the record table geometry and the 5-slot table layout."
+    }
+  ],
+  "fields": [
+    {
+      "name": "header_lead_bytes",
+      "offset": 0,
+      "size": 2,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": ["0x08018ae0", "0x08018c2c"],
+      "readers": ["0x08018b98"],
+      "observed_values": {"cap-00-future-0.sav": "ffff", "cap-01-future-1.sav": "0000"},
+      "update_mechanism": "memset-to-0 on reset; reassigned by a 4-byte ROM/RAM copy in the writer's post-record-loop header assembly.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "FUN_08018ae0 memsets whole struct to 0; FUN_08018c2c line ~3123 `*puVar1 = *_DAT_08018d0c` overwrites offset 0-3 as a unit."
+    },
+    {
+      "name": "identity_string",
+      "offset": 2,
+      "size": 6,
+      "type": "ascii",
+      "ram_addr": null,
+      "writers": ["0x08018ae0", "0x08018c2c"],
+      "readers": ["0x08018b98 (ambiguous - see magic_strcmp checksum entry)"],
+      "observed_values": {"cap-01-future-1.sav": "imanoK"},
+      "update_mechanism": "Same header copy as header_lead_bytes.",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Bytes directly observed (69 6d 61 6e 6f 4b); whether FUN_08018b98 actually enforces this as a magic value depends on an unresolved strcmp base-pointer ambiguity (see magic_strcmp checksum entry)."
+    },
+    {
+      "name": "content_version_stamp",
+      "offset": 8,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": ["0x08018c2c"],
+      "readers": ["0x08018bd4"],
+      "observed_values": {"cap-01-future-1.sav": 1},
+      "update_mechanism": "Set to FUN_08018bb4()'s return (sum of a fixed 116-entry ROM table) on every write; compared against the same function's return on every load.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "ghidra/decompiled.c FUN_08018bb4 (lines 2999-3021), FUN_08018bd4 line 3045, FUN_08018c2c lines 3126-3127."
+    },
+    {
+      "name": "flag_byte_0xC",
+      "offset": 12,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": ["0x08018ae0"],
+      "readers": [],
+      "observed_values": {"cap-01-future-1.sav": "0xcd"},
+      "update_mechanism": "Reset routine sets to 0; no in-trace reader found.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "FUN_08018ae0 line 2943."
+    },
+    {
+      "name": "flag_byte_0xD",
+      "offset": 13,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": ["0x08018ae0"],
+      "readers": [],
+      "observed_values": {"cap-01-future-1.sav": "0xfb"},
+      "update_mechanism": "Reset routine sets to 0; no in-trace reader found.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "FUN_08018ae0 line 2942."
+    },
+    {
+      "name": "flag_byte_0xE",
+      "offset": 14,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": ["0x08018ae0"],
+      "readers": [],
+      "observed_values": {"cap-01-future-1.sav": "0x04"},
+      "update_mechanism": "Reset routine sets to 0; no in-trace reader found.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "FUN_08018ae0 line 2944."
+    },
+    {
+      "name": "flag_byte_0xF",
+      "offset": 15,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": ["0x08018ae0"],
+      "readers": [],
+      "observed_values": {"cap-01-future-1.sav": "0xba"},
+      "update_mechanism": "Reset routine sets to 1; no in-trace reader found. Observed value (0xba) differs from the default (1), proving this sample is not a freshly-reset save.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "FUN_08018ae0 line 2941."
+    },
+    {
+      "name": "record_table",
+      "offset": 16,
+      "size": 440,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": ["0x08018ae0", "0x08018c2c", "0x08018908", "0x08018884"],
+      "readers": ["0x08018950"],
+      "observed_values": {"note": "10 records x 0x2C(44) bytes; absolute file start offset unresolved, approximate per the sample's own periodic active-range scan (~0x02-0x1C8 span)."},
+      "update_mechanism": "Each record: a zeroed 4-byte sub-field at record+0x00, a 13-byte packed-2-bit array (52 slots, values 0-2) at record+0x10..+0x1C, and a single packed byte at record+0x1D encoding three 0-6 values as a+b*6+c*36 (clamped to 5 on overflow).",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "FUN_08018ae0 (reset, literal constants), FUN_08018908/FUN_08018884 (pack), FUN_08018950 (unpack/read), FUN_08018c2c (rebuild-on-save loop)."
+    },
+    {
+      "name": "score_slot_0",
+      "offset": 456,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": ["0x08018ae0 (FUN_080189b0, idx 0)"],
+      "readers": [],
+      "observed_values": {"cap-01-future-1.sav": "0x00061a81 (BE-decoded=400001)"},
+      "update_mechanism": "Reset routine seeds as running_total*10 + (idx % 10); no in-trace reader found.",
+      "confidence": "HYPOTHESIS",
+      "evidence": "FUN_080189b0 (lines 2906-2920); observed remainder digit (1) does not match the pure reset-seed prediction for idx=0 (expected remainder 0), indicating this sample's slot table was not populated purely by FUN_08018ae0."
+    },
+    {
+      "name": "score_slot_1",
+      "offset": 460,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": ["0x08018ae0 (FUN_080189b0, idx 1)"],
+      "readers": [],
+      "observed_values": {"cap-01-future-1.sav": "0x0007a120 (BE-decoded=500000)"},
+      "update_mechanism": "Same as score_slot_0.",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Same as score_slot_0."
+    },
+    {
+      "name": "score_slot_2",
+      "offset": 464,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": ["0x08018ae0 (FUN_080189b0, idx 2)"],
+      "readers": [],
+      "observed_values": {"cap-01-future-1.sav": "0x00030d43 (BE-decoded=200003)"},
+      "update_mechanism": "Same as score_slot_0.",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Same as score_slot_0."
+    },
+    {
+      "name": "score_slot_3",
+      "offset": 468,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": ["0x08018ae0 (FUN_080189b0, idx 3)"],
+      "readers": [],
+      "observed_values": {"cap-01-future-1.sav": "0x000493e2 (BE-decoded=300002)"},
+      "update_mechanism": "Same as score_slot_0.",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Same as score_slot_0."
+    },
+    {
+      "name": "score_slot_4",
+      "offset": 472,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": ["0x08018ae0 (FUN_080189b0, idx 4)"],
+      "readers": [],
+      "observed_values": {"cap-01-future-1.sav": "0xffffffff (sentinel/unset)"},
+      "update_mechanism": "Same as score_slot_0; 0xFFFFFFFF is consistent with an EEPROM-erased, never-written slot.",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Same as score_slot_0."
+    },
+    {
+      "name": "unchecked_trailer_span",
+      "offset": 476,
+      "size": 4,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"cap-01-future-1.sav": "0x000186a4 (BE-decoded=100004)"},
+      "update_mechanism": "None found - proven to lie outside the 0x1DC-byte range read by FUN_08018bd4 and written by FUN_08018c2c.",
+      "confidence": "UNKNOWN",
+      "evidence": "Literal 0x1DC length constant in both FUN_08018bd4 (line 3038) and FUN_08018c2c (line 3129) excludes offset 0x1DC-0x1DF; matches the packet's own mutation-probe result of no detected integrity failure and no rewrite at that offset."
+    },
+    {
+      "name": "unused_tail",
+      "offset": 480,
+      "size": 32,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"cap-01-future-1.sav": "all 0xff"},
+      "update_mechanism": "None found.",
+      "confidence": "UNKNOWN",
+      "evidence": "Outside the traced read/write range; all-0xFF matches EEPROM erased-state fill, consistent with never being written."
+    }
+  ],
+  "fuzzing_targets": [
+    {"offset": 2, "size": 6, "mutation": "flip one byte of the 'imanoK' identity string (e.g. offset 0x02)", "requires_checksum_repair": false, "predicted_effect": "No effect if the strcmp check short-circuits on offset-0 byte 0x00 (see magic_strcmp hypothesis); full struct reset via FUN_08018ae0 on next load if the check actually inspects this region."},
+    {"offset": 0, "size": 2, "mutation": "change leading 0x0000 to 0x0100", "requires_checksum_repair": false, "predicted_effect": "Could break the strcmp short-circuit and trigger a reset even though the 'imanoK' bytes are untouched - cross-checks the offset-2 experiment from the other direction."},
+    {"offset": 8, "size": 4, "mutation": "set content_version_stamp to 0xFFFFFFFF", "requires_checksum_repair": false, "predicted_effect": "Loader's stamp comparison should fail, triggering FUN_08018ae0 full reset on next load."},
+    {"offset": 12, "size": 4, "mutation": "set flag bytes 0x0C-0x0F to the documented reset default 00 00 00 01", "requires_checksum_repair": false, "predicted_effect": "No predicted visible change if these bytes have no in-trace reader; any observed effect would reveal an untraced consumer."},
+    {"offset": 472, "size": 4, "mutation": "overwrite score_slot_4 sentinel 0xFFFFFFFF with 0x00061a84 (BE=400004, matching the base*10+idx pattern)", "requires_checksum_repair": false, "predicted_effect": "No crash/rejection expected (no in-trace reader found); a new 5th score/record appearing in-game would reveal an untraced UI reader."},
+    {"offset": 476, "size": 4, "mutation": "invert all 4 bytes of the packet-flagged span 0x1DC-0x1DF", "requires_checksum_repair": false, "predicted_effect": "Zero observable effect predicted: no reset on load, and the value should survive unchanged through a save/reload cycle since neither traced path touches this offset."},
+    {"offset": 0, "size": 476, "mutation": "zero-fill the entire primary struct", "requires_checksum_repair": false, "predicted_effect": "Stamp check at offset 8 will almost certainly fail (sum of a 116-entry ROM table is essentially never 0), triggering FUN_08018ae0 full reset; resulting bytes should exactly match the reset routine's literal constants, including score slots populated in strict idx-ordered sequence (unlike the scrambled order in the current sample)."}
+  ],
+  "open_questions": [
+    "Does FUN_08018b98's strcmp-shaped check actually gate on the 'imanoK' bytes at offset 2-7, or does it short-circuit on the leading 0x0000 at offset 0-1 and never inspect the string?",
+    "What is the record table's absolute starting file offset? Stride (0x2C) and count (10) are confirmed from FUN_08018ae0's literal constants, but the base pointer is an unresolved RAM symbol in this trace.",
+    "Is the struct+0x08 content/version stamp a meaningful per-save corruption checksum, or a constant build stamp (since it sums a fixed ROM table rather than the save bytes)?",
+    "What, if anything, consumes bytes 0x1DC-0x1FF? Proven absent from both traced I/O paths; could be dead EEPROM space or read/written by code outside this 154-function trace.",
+    "What gameplay event(s) trigger FUN_08018bd4 (load) and FUN_08018c2c (save)? Both are reached only via unresolved indirect jump tables in this trace, with no statically-known caller.",
+    "What do the 10 records and 5 score slots mean in gameplay terms? No semantic label is derivable from this workspace, and both available .sav samples are classified multi_state_mutated_save rather than organic gameplay saves."
+  ]
+}

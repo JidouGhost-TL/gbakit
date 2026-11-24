@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Minna no Shiiku Series 1 - Boku no Kabutomushi (Japan) Save Format — gbakit GBA Reference</title>
+  <link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+  <header>
+    <div class="brand"><a href="../index.html" style="color:inherit">gbakit GBA Reference <span class="badge badge-emerald">v2.0</span></a></div>
+    <nav>
+      <a href="../index.html">Games</a>
+      <a href="../saves/index.html">Save Formats</a>
+      <a href="../patches/index.html">Debug Patches</a>
+      <a href="../assets/index.html">Assets &amp; Audio</a>
+      <a href="../engines/index.html">Engines &amp; Hardware</a>
+      <a href="../families/index.html">Families</a>
+      <a href="../gbakit/index.html">Using gbakit</a>
+    </nav>
+  </header>
+  <main>
+<p class="meta"><a href="index.html">&larr; Save Formats</a> &middot; <a href="../titles/AB7J-r0-995c6036a84841f7.html">Minna no Shiiku Series 1 - Boku no Kabutomushi (Japan)</a></p>
+<h1>Minna no Shiiku Series 1 - Boku no Kabutomushi (Japan) — Save Format Specification</h1>
+<p><span class="badge badge-indigo">Confidence: MEDIUM</span> <span class="badge badge-blue">5 Fields</span> <span class="badge badge-emerald">1 Verified Checksum(s)</span> <span class='badge badge-blue'>Repaired Save Accepted</span> <span class='badge badge-emerald'>gbakit Built-In</span></p>
+<p><a class='btn' href='../assets/saves/AB7J-r0-995c6036a84841f7/AB7J-r0-995c6036a84841f7.sav' download>Download Sample .sav (32,768 B)</a><a class='btn btn-secondary' href='../assets/formats/AB7J-r0-995c6036a84841f7/save-format.json' download>Download save-format.json</a><a class='btn btn-secondary' href='../titles/AB7J-r0-995c6036a84841f7.html'>View Game Page</a></p>
+
+<div class="callout">
+  <strong>Use directly with <code>gbakit</code> (built-in definition <code>AB7J</code>):</strong>
+  <pre><code>gbakit save verify AB7J save.sav
+gbakit save decode AB7J save.sav
+gbakit save fix    AB7J damaged.sav -o repaired.sav</code></pre>
+</div>
+
+<div class='md-body'>
+<h2>Clean-Room Save Format Report — Minna no Shiiku Series 1: Boku no Kabutomushi (Japan)</h2>
+<ul><li><strong>Release Key:</strong> <code>AB7J-r0-995c6036a84841f7</code></li><li><strong>Game Code:</strong> <code>AB7J</code> (header family <code>AB7</code>)</li><li><strong>ROM SHA-256:</strong> <code>995c6036a84841f792bf4c644789ea9dbdd3b6af25c436ab347b21823c43be9e</code></li><li><strong>Community:</strong> <code>comm-009</code></li><li><strong>Save Media:</strong> SRAM 256K (32,768 bytes), SDK tag <code>SRAM_V112@3579328</code> (<code>0x369dc0</code>)</li></ul>
+<p>All findings below are derived exclusively from <code>ghidra/decompiled.c</code>, <code>ghidra/callgraph.json</code>, <code>ghidra/save_related_functions.c</code>, and the two real <code>.sav</code> files in <code>saves/</code>. No third-party game-specific research was consulted.</p>
+<h2>1. Executive Summary &amp; Overall Confidence</h2>
+<p><strong>Overall confidence: MEDIUM.</strong></p>
+<p>What is <strong>proven</strong> (code + byte evidence agree):</p>
+<ul><li>The save medium is plain byte-addressable SRAM at <code>0x0E000000</code>, written with simple byte-copy</li></ul>
+<p>loops guarded by a SRAM wait-state register write (<code>*_DAT_0802cbe0 |= 3</code>). There is <strong>no</strong> Flash command sequence (<code>0x5555</code>/<code>0x2AAA</code>) and <strong>no</strong> EEPROM DMA3 bitstream (<code>0x040000D4</code>) anywhere in the 246-function decompiled corpus — this independently confirms the PACKET&#x27;s <code>SRAM 256K</code> media classification from the code side.</p>
+<ul><li>There are exactly two low-level &quot;record save&quot; primitives, <code>FUN_08022b24</code> (fire-and-forget,</li></ul>
+<p>unverified write) and <code>FUN_08022b88</code> (checksummed, write-with-verify-and-retry×3). Both funnel through a shared 8-bit additive checksum routine, <code>FUN_08022ae0</code>.</p>
+<ul><li>The one non-blank 110-byte record actually present in <code>saves/cap-01-future-1.sav</code></li></ul>
+<p>(offsets <code>0x301c</code>–<code>0x3089</code>) is a <code>FUN_08022b88</code>-style record: a 28-byte (<code>0x1c</code>) header immediately followed by an 82-byte (<code>0x52</code>) payload, and its stored checksum byte</p>
+<p><strong>verifies exactly</strong> against a from-scratch Python recomputation of the documented algorithm (see §4). This is the strongest result in this report.</p>
+<ul><li>The call site that produced this exact record, <code>FUN_0801df08</code>, is identified and traced:</li></ul>
+<p>it zero-fills an 82-byte RAM payload buffer, then calls <code>FUN_08022b88(slot=1, fresh=0, buf, 0x52)</code> — matching the observed header length, payload length, and all-zero payload bytes byte-for-byte.</p>
+<p>What remains <strong>open / unresolved</strong>:</p>
+<ul><li>Neither <code>FUN_08022b24</code> nor <code>FUN_08022b88</code> (nor their only identified callers, <code>FUN_08007ab4</code></li></ul>
+<p>and <code>FUN_0801df08</code>) has <strong>any</strong> caller in the static call graph (<code>callgraph.json</code> lists <code>&quot;callers&quot;: []</code> for all four). Every one of them is reached only through an &quot;<code>UNRECOVERED_JUMPTABLE</code>&quot;/indirect-call site that Ghidra could not statically resolve. This means we have <strong>not</strong> identified the in-game trigger (menu action, autosave timer, state-machine dispatch) that invokes a save. This is a real, acknowledged gap, not an oversight. from a fresh/default template buffer during normal gameplay.</p>
+<ul><li>We only have <strong>two</strong> <code>.sav</code> snapshots (one fully blank, one with a single populated record), so</li></ul>
+<p>slot/redundancy structure, the meaning of most header fields, and the behavior of the <code>param_2 != 0</code> (&quot;reuse existing record&quot;) code path in <code>FUN_08022b88</code> are all unverified by byte evidence — they are static-code-only or pure hypothesis, and are labeled as such below.</p>
+<ul><li>No ASCII magic string exists anywhere in either <code>.sav</code> file (confirmed by direct byte scan);</li></ul>
+<p>the PACKET&#x27;s <code>ascii_magic_strings: []</code> is independently confirmed.</p>
+<h2>2. Physical Media, Slot Geometry &amp; Redundancy</h2>
+<table><thead><tr><th>Property</th><th>Value</th><th>Confidence</th></tr></thead><tbody><tr><td>Media</td><td>SRAM, mapped at <code>0x0E000000</code>–<code>0x0E007FFF</code></td><td>CONFIRMED_VERIFIED (no Flash/EEPROM code paths exist anywhere in corpus)</td></tr><tr><td>Total size</td><td>32,768 bytes (256 Kbit)</td><td>CONFIRMED_VERIFIED (both <code>.sav</code> files are exactly this size)</td></tr><tr><td>Fill/blank byte</td><td><code>0xFF</code></td><td>CONFIRMED_VERIFIED (both files are 100% <code>0xFF</code> outside the one active window)</td></tr><tr><td>Observed active data</td><td>Exactly one contiguous window <code>0x301c</code>–<code>0x3089</code> (110 bytes) in <code>cap-01-future-1.sav</code>; <code>cap-00-future-0.sav</code> is <strong>entirely</strong> <code>0xFF</code> (no save ever written)</td><td>CONFIRMED_VERIFIED (full-file byte scan, not just the diff tool&#x27;s reported ranges)</td></tr><tr><td>Slot/record size (this record)</td><td>28-byte header + 82-byte payload = 110 bytes total</td><td>CONFIRMED_VERIFIED (matches <code>FUN_0801df08</code>&#x27;s literal <code>0x52</code> argument and the header length constant <code>0x1c</code> used by both writer primitives)</td></tr><tr><td>Slot table / multi-slot layout</td><td>A per-slot base-address lookup table exists in ROM data (<code>*(int*)((slot&amp;0xff)*4 + _DAT_08022bfc)</code> for the verified writer, and a separate table <code>_DAT_08022b70</code> for the unverified writer)</td><td>CONFIRMED_STATIC (table <em>mechanism</em> is proven by code; table <em>contents</em> for slots other than the one slot we observed (<code>slot=1</code> → base <code>0x301c</code>) are UNKNOWN — no byte evidence)</td></tr><tr><td>Redundancy / backup copy</td><td><strong>No evidence of a second/mirrored copy.</strong> The header contains a field whose value (<code>0x401c</code>) happens to equal <code>0x301c + 0x1000</code>, which superficially resembles a &quot;backup slot pointer,&quot; but a full-file byte scan shows <strong>no</strong> data anywhere near file offset <code>0x401c</code> — it is <code>0xFF</code> like the rest of the unused SRAM. This field is far more likely a coincidental ROM template constant than an active backup-slot pointer.</td><td>Downgraded from an earlier working hypothesis to <strong>UNKNOWN / likely not redundancy</strong> based on direct byte evidence</td></tr><tr><td>Generation/sequence counter</td><td>None identified</td><td>UNKNOWN</td></tr><tr><td>Selection rule (which slot is &quot;current&quot;)</td><td>None identified — only one slot (<code>id=1</code>) was ever observed being written</td><td>UNKNOWN</td></tr></tbody></table>
+<h2>3. Save Writer, Reader &amp; Caller-Chain Architecture</h2>
+<h3>3.1 Checksum primitive — <code>FUN_08022ae0</code> (0x08022ae0)</h3>
+<pre><code>void FUN_08022ae0(int param_1,int param_2,uint param_3)
+{
+  char cVar1 = &#x27;\0&#x27;;
+  uint uVar2 = 0;
+  do {                                   // sum first 0x1c (28) bytes of header @ param_1
+    cVar1 = cVar1 + *(char *)(param_1 + uVar2);
+    uVar2 = (uVar2 + 1) &amp; 0xffff;
+  } while (uVar2 &lt; 0x1c);
+  uVar2 = 0;
+  if ((param_3 &amp; 0xffff) != 0) {         // then sum param_3 bytes of payload @ param_2
+    do {
+      cVar1 = cVar1 + *(char *)(param_2 + uVar2);
+      uVar2 = (uVar2 + 1) &amp; 0xffff;
+    } while (uVar2 &lt; (param_3 &amp; 0xffff));
+  }
+  (*UNRECOVERED_JUMPTABLE)(cVar1);        // returns cVar1 (8-bit wraparound sum) via indirect return thunk
+}</code></pre>
+<p>Callers (from <code>callgraph.json</code>): <code>0x08022b24</code>, <code>0x08022b88</code> — the two writer primitives below. No other function calls this routine. Role: <strong>checksum</strong> (unsigned 8-bit additive sum, header then payload, wraparound on overflow).</p>
+<h3>3.2 Writer A (unverified, &quot;fast&quot;) — <code>FUN_08022b24</code> (0x08022b24)</h3>
+<pre><code>void FUN_08022b24(uint param_1,undefined4 param_2,undefined2 param_3)
+{
+  uVar1 = _DAT_08022b74;                                     // ROM/RAM header template pointer
+  iVar3 = *(int *)((param_1 &amp; 0xff) * 4 + _DAT_08022b70);    // slot-id -&gt; SRAM base offset
+  func_0x0802cb44(iVar3 + 0xe000000, _DAT_08022b74, 0x1c);   // raw-copy 28B header -&gt; SRAM[iVar3]
+  func_0x0802cb44(iVar3 + _DAT_08022b78, param_2, param_3);  // raw-copy payload -&gt; SRAM[iVar3+headerSize]
+  cVar2 = FUN_08022ae0(uVar1, param_2, param_3);             // checksum computed but NOT stored anywhere observed
+  (*UNRECOVERED_JUMPTABLE)(cVar2 == -1);                      // only used as a boolean &quot;all-0xFF?&quot; status flag
+}</code></pre>
+<ul><li><strong>Only identified caller:</strong> <code>FUN_08007ab4</code> (<code>0x08007ab4</code>), which calls</li></ul>
+<p><code>func_0x08022b24(0, 0x2000000, 0x3000)</code> — slot <code>0</code>, source = EWRAM <code>0x02000000</code>, size <code>0x3000</code> (12,288 bytes). This is a <strong>bulk raw mirror</strong> of a large EWRAM buffer straight into SRAM, with no checksum persisted.</p>
+<ul><li><strong>How mapped:</strong> found by <code>grep</code>-ing <code>decompiled.c</code> for literal references to</li></ul>
+<p><code>08022b24</code>/<code>08022b88</code> (the two save-write addresses); this was the only call site found for the first symbol.</p>
+<ul><li><strong>How it mutates RAM before flushing:</strong> <code>FUN_08007ab4</code> itself does no mutation — it is a thin</li></ul>
+<p>wrapper that only forwards a pre-existing EWRAM buffer. Nothing in the traced corpus shows who populates that EWRAM region; that producer is outside the 246-function trace set.</p>
+<ul><li><strong>Byte evidence:</strong> NONE. Neither <code>.sav</code> file shows any write consistent with a 12,288-byte</li></ul>
+<p>bulk SRAM write (the entire file outside the 110-byte window is untouched <code>0xFF</code>). This path is <strong>CONFIRMED_STATIC only</strong> — plausibly unexercised during the captured session, or its destination table entry (<code>_DAT_08022b70[0]</code>) points somewhere we have not sampled.</p>
+<ul><li><code>FUN_08007ab4</code> itself has <strong>no caller</strong> anywhere in <code>callgraph.json</code> — it is only reachable via</li></ul>
+<p>an unresolved indirect/jumptable dispatch.</p>
+<h3>3.3 Writer B (checksummed, verified, retried) — <code>FUN_08022b88</code> (0x08022b88)</h3>
+<pre><code>void FUN_08022b88(uint param_1,int param_2,undefined4 param_3,undefined2 param_4)
+{
+  puVar1 = _DAT_08022bf4;                 // fixed global 28-byte header staging buffer
+  *_DAT_08022bf4 = 0;                      // zero header bytes [0..3]
+  puVar1[0x17] = 0;                        // zero the checksum byte before computing it
+  if (param_2 == 0) {                      // &quot;fresh record&quot; flag
+    func_0x0802e77c(puVar1 + 1, _DAT_08022bf8, 0x16);   // memcpy 22B ROM default template -&gt; header[1..22]
+  }
+  bVar2 = FUN_08022ae0(puVar1, param_3, param_4);        // checksum(header[0..27] w/ byte23==0, payload)
+  puVar1[0x17] = ~bVar2;                                 // store ONE&#x27;S COMPLEMENT at header byte offset 0x17 (23)
+  iVar5 = *(int *)((param_1 &amp; 0xff) * 4 + _DAT_08022bfc); // slot-id -&gt; SRAM base offset (separate table from Writer A)
+  cVar3 = func_0x0802cc7c(puVar1, iVar5 + 0xe000000, 0x1c);                 // write+verify+retry(x3) header
+  if (cVar3 == 0 &amp;&amp; (cVar3 = func_0x0802cc7c(param_3, iVar5 + _DAT_08022c00, param_4), cVar3 == 0))
+    uVar4 = 1; else uVar4 = 0;             // uVar4 = overall success flag
+  (*UNRECOVERED_JUMPTABLE)(uVar4);
+}</code></pre>
+<ul><li><strong>Only identified caller:</strong> <code>FUN_0801df08</code> (<code>0x0801df08</code>):</li></ul>
+<pre><code>  void FUN_0801df08(void)
+  {
+    uVar1 = _DAT_0801df28;                       // RAM payload buffer pointer
+    func_0x0802e864(_DAT_0801df28, 0, 0x52);     // memset(buf, 0, 82) — zero-fill the payload
+    func_0x08022b88(1, 0, uVar1, 0x52);          // slot=1, fresh=0 (use template), payload=buf, size=82
+  }</code></pre>
+<ul><li><strong>How mapped:</strong> same literal-reference <code>grep</code> as above; this was the only call site found for</li></ul>
+<p><code>08022b88</code>.</p>
+<ul><li><strong>How it mutates RAM before flushing:</strong> <code>FUN_0801df08</code> zero-fills the 82-byte payload buffer</li></ul>
+<p>at <code>_DAT_0801df28</code> with <code>FUN_0802e864</code> (a <code>memset</code>-style primitive — word-at-a-time when 4-byte aligned, byte fallback otherwise) immediately before invoking the writer. It does not otherwise populate the buffer in this traced path, i.e. this call site always saves an</p>
+<p><strong>all-zero payload</strong> together with the <strong>ROM default template header</strong>.</p>
+<ul><li><strong>Byte evidence — exact match:</strong> this is the call that produced the real 110-byte record in</li></ul>
+<p><code>saves/cap-01-future-1.sav</code>. See §4 for the full verification. The payload bytes <code>0x3038</code>–<code>0x3089</code> are all <code>0x00</code>, matching the <code>memset(buf,0,0x52)</code> call exactly; the header length (28 bytes, <code>0x301c</code>–<code>0x3037</code>) matches the <code>0x1c</code> constant used by <code>FUN_08022b88</code>.</p>
+<ul><li><code>FUN_0801df08</code> itself has <strong>no caller</strong> in <code>callgraph.json</code> — same jumptable-dispatch gap as</li></ul>
+<p><code>FUN_08007ab4</code>.</p>
+<h3>3.4 Shared low-level I/O / support primitives</h3>
+<table><thead><tr><th>Addr</th><th>Name</th><th>Role</th><th>Notes</th></tr></thead><tbody><tr><td><code>0x0802cb44</code></td><td><code>FUN_0802cb44</code></td><td>write (raw copy, Writer A path)</td><td>Sets a SRAM/bus wait-state-looking control word, then calls <code>func_0x0802ccc0</code> to do the actual byte transfer. Used only by Writer A.</td></tr><tr><td><code>0x0802cba8</code></td><td><code>FUN_0802cba8</code></td><td>write (raw byte copy)</td><td><code>*_DAT_0802cbe0 = *_DAT_0802cbe0 &amp; mask \| 3;</code> (sets 2 wait-control bits to <code>3</code>, the slowest/safest SRAM timing) then a tight byte-copy loop <code>*dst++ = *src++</code>. Used by Writer B&#x27;s retry wrapper.</td></tr><tr><td><code>0x0802cc18</code></td><td><code>FUN_0802cc18</code></td><td>read / verify</td><td>Structurally parallel to <code>0x0802cb44</code> (same wait-control pattern) but used as the read-back half of the verify step.</td></tr><tr><td><code>0x0802cc7c</code></td><td><code>FUN_0802cc7c</code></td><td>write-with-retry wrapper</td><td><code>for (i=0;i&lt;3;i++) { write(0802cba8); verify(0802cc18); if (ok) break; }</code> — up to 3 write+verify attempts, returns last verify status. This is the &quot;verified write&quot; building block used twice per <code>FUN_08022b88</code> call (once for header, once for payload).</td></tr><tr><td><code>0x0802e77c</code></td><td><code>FUN_0802e77c</code></td><td>serialize (template copy)</td><td>Generic <code>memcpy</code>, word-at-a-time with alignment check, byte fallback. Used to seed the header&#x27;s 22 &quot;template&quot; bytes from a fixed ROM default when <code>fresh==0</code>.</td></tr><tr><td><code>0x0802e864</code></td><td><code>FUN_0802e864</code></td><td>serialize (buffer init)</td><td>Generic <code>memset</code>, word-at-a-time with alignment check, byte fallback. Used to zero the payload buffer before the one traced save call.</td></tr></tbody></table>
+<p><strong>Explicitly ruled out:</strong> <code>FUN_0802cf40</code> (<code>0x0802cf40</code>) was flagged by the trace heuristics as an &quot;MMIO-SEED&quot; candidate but decompiles to a pure unsigned-integer long-division routine with no memory, SRAM, or save-bus access whatsoever. It is <strong>not</strong> part of the save subsystem and is excluded from this report&#x27;s function map. This is called out explicitly per the clean-room rule of being honest about false positives in the seed set.</p>
+<h2>4. Magic Signatures &amp; Checksum / Integrity Algorithm — Python-Verified</h2>
+<p><strong>No ASCII/binary magic signature exists.</strong> A full-file byte scan of both <code>.sav</code> files found no fixed marker string; the only &quot;magic-like&quot; bytes are the checksum below and two template constants (<code>0x301c</code>, <code>0x401c</code>) that read back as little-endian <code>u16</code>s but are not validated as pointers against any other part of the file (see §2).</p>
+<p><strong>Algorithm: <code>sum8</code> with one&#x27;s-complement storage.</strong></p>
+<ul><li>Covered range: 28-byte header (with the checksum byte itself treated as <code>0</code> during the sum)</li></ul>
+<p><strong>plus</strong> the full variable-length payload that follows it.</p>
+<ul><li>Formula: <code>stored_byte = (~(sum(header_bytes_with_csum_byte_zeroed) + sum(payload_bytes))) &amp; 0xFF</code></li><li>Equivalently, as an integrity check on a loaded record: `(sum(header_bytes_as_stored) +</li></ul>
+<p>sum(payload_bytes)) &amp; 0xFF == 0xFF` for any valid record.</p>
+<ul><li>Stored offset: header-relative <code>0x17</code> (decimal 23), i.e. absolute file offset <code>record_base + 0x17</code>.</li><li>Endianness: not applicable (byte-wise sum, no multi-byte checksum field).</li><li>Decompiled-C proof: <code>FUN_08022ae0</code> (checksum computation, §3.1) + <code>puVar1[0x17] = ~bVar2;</code></li></ul>
+<p>in <code>FUN_08022b88</code> (storage, §3.3).</p>
+<p><strong>Python verification against the real <code>saves/cap-01-future-1.sav</code>:</strong></p>
+<pre><code>$ python3 - &lt;&lt;&#x27;EOF&#x27;
+data = open(&#x27;saves/cap-01-future-1.sav&#x27;,&#x27;rb&#x27;).read()
+base = 0x301c
+HEADER_LEN, PAYLOAD_LEN, CSUM_REL = 0x1c, 0x52, 0x17
+
+header  = bytearray(data[base:base+HEADER_LEN])
+payload = data[base+HEADER_LEN:base+HEADER_LEN+PAYLOAD_LEN]
+stored  = header[CSUM_REL]
+
+header[CSUM_REL] = 0
+computed_sum  = (sum(header) + sum(payload)) &amp; 0xff
+computed_csum = (~computed_sum) &amp; 0xff
+
+print(&quot;stored checksum byte  @0x3033:&quot;, hex(stored))          # -&gt; 0x15
+print(&quot;computed one&#x27;s-complement csum:&quot;, hex(computed_csum))  # -&gt; 0x15
+print(&quot;MATCH:&quot;, computed_csum == stored)                      # -&gt; True
+print(&quot;sanity total (incl. stored byte) mod 256:&quot;,
+      hex((sum(data[base:base+HEADER_LEN]) + sum(payload)) &amp; 0xff))  # -&gt; 0xff
+EOF
+stored checksum byte  @0x3033: 0x15
+computed one&#x27;s-complement csum: 0x15
+MATCH: True
+sanity total (incl. stored byte) mod 256: 0xff</code></pre>
+<p><strong>Result: CONFIRMED_VERIFIED.</strong> The checksum algorithm derived purely from the decompiled C (<code>FUN_08022ae0</code> + <code>FUN_08022b88</code>) exactly reproduces the stored byte in the real <code>.sav</code> file, and the &quot;total sum ≡ 0xFF&quot; invariant holds, which is the expected signature of a zero-the-checksum-byte / sum / one&#x27;s-complement scheme.</p>
+<h2>5. Complete Field Map Table</h2>
+<p>Record base (this sample): <code>0x301c</code> in <code>saves/cap-01-future-1.sav</code> (slot id <code>1</code>, per <code>FUN_0801df08</code> → <code>FUN_08022b88(1, ...)</code>). All offsets below are absolute file offsets for this record.</p>
+<table><thead><tr><th>Offset (hex)</th><th>Size</th><th>Type / Endianness</th><th>RAM Mirror Addr</th><th>Writers / Callers</th><th>Readers</th><th>Observed Values</th><th>Confidence</th><th>How Mapped &amp; Updated</th></tr></thead><tbody><tr><td><code>0x301c</code></td><td>1</td><td>u8</td><td><code>_DAT_08022bf4[0]</code> (global header staging buffer)</td><td><code>FUN_08022b88</code> (zeroed via <code>*_DAT_08022bf4=0</code>)</td><td>none traced</td><td><code>0x00</code></td><td>CONFIRMED_VERIFIED (write mechanism) / HYPOTHESIS (semantic meaning — likely a &quot;record version/type&quot; or flags byte, always 0 in this sample)</td><td><code>*_DAT_08022bf4 = 0;</code> zeros the first 4 bytes incl. this one; no other writer observed</td></tr><tr><td><code>0x301d</code>–<code>0x3032</code></td><td>22</td><td>bytes (ROM default template)</td><td><code>_DAT_08022bf4[1..22]</code></td><td><code>FUN_08022b88</code> → <code>FUN_0802e77c(hdr+1, _DAT_08022bf8, 0x16)</code></td><td>none traced</td><td><code>00 60 00 9a 00 6e 00 7b 00 66 fe ff 00 00 00 00 1c 30 00 00 1c 40</code></td><td>CONFIRMED_STATIC (these are a verbatim memcpy of a fixed ROM template, proven by code) / HYPOTHESIS for any game-specific meaning of individual bytes within this span</td><td>Template is only copied in when <code>param_2==0</code> (&quot;fresh&quot; flag); the <code>param_2!=0</code> reuse path is never exercised in our 2-sample evidence, so we cannot confirm these fields ever change</td></tr><tr><td><code>0x3033</code></td><td>1</td><td>u8 (one&#x27;s complement sum8)</td><td><code>_DAT_08022bf4[0x17]</code></td><td><code>FUN_08022b88</code>: <code>puVar1[0x17] = ~bVar2;</code></td><td>implicitly verified by <code>FUN_0802cc7c</code>&#x27;s read-back retry loop</td><td><code>0x15</code></td><td><strong>CONFIRMED_VERIFIED</strong> (Python-reproduced, §4)</td><td>Checksum byte; see §4 for full algorithm</td></tr><tr><td><code>0x3034</code>–<code>0x3037</code></td><td>4</td><td>bytes</td><td><code>_DAT_08022bf4[0x18..0x1b]</code></td><td>none observed to write a non-<code>0xFF</code> value</td><td>none traced</td><td><code>FF FF FF FF</code> (unchanged from blank fill)</td><td>UNKNOWN</td><td>These 4 bytes fall inside the 28-byte range passed to <code>func_0x0802cc7c(puVar1, ..., 0x1c)</code>, so they ARE written every save — their value in RAM at <code>_DAT_08022bf4[0x18..0x1b]</code> must independently equal <code>0xFF</code> at save time for this sample, since the written byte matches the pre-existing fill. Could not confirm whether this is intentional padding or residue from a prior SRAM read into the same global buffer</td></tr><tr><td><code>0x3038</code>–<code>0x3089</code></td><td>82 (<code>0x52</code>)</td><td>bytes (payload)</td><td><code>_DAT_0801df28</code> (RAM payload buffer)</td><td><code>FUN_0801df08</code> → <code>func_0x0802e864(buf, 0, 0x52)</code> (zero-fill) → <code>FUN_08022b88</code></td><td>none traced</td><td>all <code>0x00</code></td><td>CONFIRMED_VERIFIED (write path + exact length + exact all-zero content all match code)</td><td>Entire payload is memset to zero immediately before the save call in the only traced caller; no other producer of this buffer&#x27;s contents was found in the 246-function corpus</td></tr><tr><td>(all other file offsets)</td><td>32,658</td><td>—</td><td>—</td><td>—</td><td>—</td><td><code>0xFF</code></td><td>CONFIRMED_VERIFIED (direct full-file byte scan)</td><td>Untouched blank SRAM; no other slot/record has been exercised in the available evidence</td></tr></tbody></table>
+<h2>6. Save Fuzzing &amp; Counterfactual Verification Plan</h2>
+<p>All mutations below should be applied to a copy of <code>saves/cap-01-future-1.sav</code>, loaded from a paired <code>.ss</code> pre-save state captured at the moment immediately before the game&#x27;s save routine runs (none are currently available in <code>states/</code> for this release — this plan assumes future capture rounds will supply <code>sav-XX-pre.ss</code> / <code>sav-XX-post.ss</code> pairs per the standing retention requirement).</p>
+<table><thead><tr><th>#</th><th>Offset</th><th>Size</th><th>Mutation</th><th>Checksum repair required?</th><th>Predicted effect / observable</th></tr></thead><tbody><tr><td>1</td><td><code>0x3033</code></td><td>1</td><td>Flip one bit of the stored checksum byte (e.g. XOR <code>0x01</code>)</td><td>N/A (this IS the checksum)</td><td>If the game&#x27;s loader calls <code>FUN_0802cc18</code>/validates via <code>FUN_08022ae0</code> on load, a corrupted checksum should cause a visibly different load path (reset to defaults, error, or silently re-templated record) versus the unmutated file. This is the single highest-value falsification test for &quot;is this checksum actually checked on load,&quot; which our static trace could not confirm (no load-side caller was found).</td></tr><tr><td>2</td><td><code>0x301d</code>–<code>0x3032</code> (template bytes)</td><td>22</td><td>Change one byte, e.g. <code>0x301e</code> (<code>0x60</code>→<code>0x61</code>)</td><td>Yes — recompute per §4 and rewrite <code>0x3033</code></td><td>If this byte is genuinely read as a game stat/flag, expect a visible UI/stat difference (e.g. a different displayed value in a beetle-stats or save-select screen) after reload. If it is dead/unused padding, expect no observable change. This directly tests the HYPOTHESIS confidence fields in §5.</td></tr><tr><td>3</td><td><code>0x3038</code>–<code>0x3089</code> (payload)</td><td>82</td><td>Set all 82 bytes to <code>0xAB</code> instead of <code>0x00</code>, repair checksum</td><td>Yes</td><td>Tests whether the payload is actually read/interpreted anywhere, vs. being fully dead/reserved space in this build. Any crash, garbage display, or stat change confirms the payload is live data; no change at all would suggest this record/slot is not yet consumed by game logic as of this capture.</td></tr><tr><td>4</td><td><code>0x3034</code>–<code>0x3037</code> (unknown reserved bytes)</td><td>4</td><td>Set to <code>0x00</code> instead of leaving <code>0xFF</code>, repair checksum</td><td>Yes</td><td>Tests the UNKNOWN classification of these bytes — since they fall inside the checksummed+rewritten header range, a repair-and-reload test will show whether the game ever reads or re-validates them structurally (e.g. rejects the record if non-<code>0xFF</code>).</td></tr><tr><td>5</td><td>slot id <code>0</code> region</td><td>up to <code>0x3000</code> (<code>_DAT_08022b70[0]</code> target, address unknown)</td><td>Attempt to force/trigger whatever in-game action drives <code>FUN_08007ab4</code> (the only identified caller of the unverified Writer A), then re-diff the full <code>.sav</code></td><td>N/A (no checksum stored by Writer A)</td><td>This is a reachability test for the entirely unconfirmed <code>0x08007ab4</code>/Writer-A path — currently we have zero byte evidence it ever executes. A successful trigger would reveal the real slot-0 base offset and give us a second, independently-verifiable record to cross-check the slot table theory in §2.</td></tr><tr><td>6</td><td>fresh vs. reuse</td><td>—</td><td>Capture a <code>.sav</code> after a save made with the game in a state where <code>FUN_08022b88</code>&#x27;s <code>param_2</code> argument would plausibly be non-zero (i.e. not on a guaranteed &quot;fresh record&quot; path)</td><td>—</td><td>Currently 100% of our evidence is the <code>param_2==0</code> (&quot;use ROM template&quot;) branch. A reuse-path capture is required before any of the 22 template bytes in §5 can be reclassified from CONFIRMED_STATIC/HYPOTHESIS to CONFIRMED_VERIFIED as <em>live, mutable</em> game fields rather than static boilerplate.</td></tr></tbody></table>
+<h3>Open questions carried into <code>save-format.json</code></h3>
+<ol><li>What in-game action/dispatch path actually invokes <code>FUN_08007ab4</code> and <code>FUN_0801df08</code>? Both are</li></ol>
+<p>unreferenced in the static call graph.</p>
+<ol><li>What are the slot-table (<code>_DAT_08022b70</code>, <code>_DAT_08022bfc</code>) entries for slot IDs other than <code>1</code>?</li><li>Do the 22 &quot;template&quot; header bytes (<code>0x301d</code>–<code>0x3032</code>) ever differ from the ROM default — i.e.</li></ol>
+<p>what does the <code>param_2 != 0</code> reuse path actually write?</p>
+<ol><li>What is the semantic meaning (if any) of the per-byte values inside the template, and of the</li></ol>
+<p>82-byte payload region, in terms of actual game state (species/stats/currency/etc.)? No evidence currently supports any specific interpretation.</p>
+<ol><li>Are bytes <code>0x3034</code>–<code>0x3037</code> intentional reserved padding or incidental RAM residue?</li><li>Is the checksum actually validated on load, and if invalid, what is the game&#x27;s fallback</li></ol>
+<p>behavior (default record vs. refusal vs. crash)?</p>
+</div>
+</main>
+  <footer>gbakit GBA Format Reference &middot; <a href="https://github.com/JidouGhost-TL/gbakit">GitHub: JidouGhost-TL/gbakit</a> &middot; Clean-room GBA binary format specs &amp; Rust toolkit.</footer>
+</body>
+</html>

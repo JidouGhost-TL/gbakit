@@ -1,0 +1,718 @@
+{
+  "schema": "gbakit-save-research/1",
+  "release_key": "AZWP-r0-c298d2b040ad4f2c",
+  "display_name": "WarioWare, Inc. - Minigame Mania (Europe) (En,Fr,De,Es,It)",
+  "rom_sha256": "c298d2b040ad4f2c42b926f998214604472db4eb3bc2da6a1723670092e35f6d",
+  "game_code": "AZWP",
+  "header_family": "AZW",
+  "community_id": "",
+  "overall_confidence": "MEDIUM",
+  "media": {
+    "kind": "sram",
+    "size_bytes": 32768,
+    "sdk_tags": [],
+    "fill_byte": "0xff"
+  },
+  "slots_and_copies": [
+    {
+      "name": "slot_0",
+      "offset": 0,
+      "size": 1028,
+      "redundancy_role": "primary",
+      "selection_rule": "Validated first at boot (0x08000620->0x080005d4); if invalid but slot_1 valid, loaded from slot_1 and repaired by rewrite (0x08000678->0x08000648)"
+    },
+    {
+      "name": "slot_1",
+      "offset": 16384,
+      "size": 1028,
+      "redundancy_role": "backup",
+      "selection_rule": "Validated second at boot (0x08000634->0x080005d4); fallback source for repair; rewritten unconditionally every boot (0x0800068c->0x08000648). No generation counter; slot_0 wins when both valid"
+    }
+  ],
+  "magic_signatures": [
+    {
+      "offset": 0,
+      "bytes_hex": "4d495700",
+      "ascii": "MIW",
+      "verified_in_code": true,
+      "verified_in_sav": true,
+      "function_addrs": [
+        "0x08000528",
+        "0x080005d4",
+        "0x08007c2c",
+        "0x080f68b8"
+      ]
+    }
+  ],
+  "checksums": [
+    {
+      "name": "block_u32_sum",
+      "algorithm": "sum32_le",
+      "formula_detail": "sum (mod 2^32) of all 257 u32_le words of the 0x404 block with the stored word at +0x08 zeroed during computation; reader accepts iff sum_as_read == 2*stored",
+      "stored_offset": 8,
+      "stored_size": 4,
+      "covered_start": 0,
+      "covered_end": 1028,
+      "function_addrs": [
+        "0x080004f4",
+        "0x080005d4",
+        "0x08000648"
+      ],
+      "verified_on_samples": [
+        {
+          "file": "cap-00-future-0.sav@0x4000",
+          "stored_hex": "0x6bd24d53",
+          "computed_hex": "0x6bd24d53",
+          "match": true
+        },
+        {
+          "file": "cap-01-future-1.sav@0x0",
+          "stored_hex": "0x6bd24d53",
+          "computed_hex": "0x6bd24d53",
+          "match": true
+        },
+        {
+          "file": "cap-01-future-1.sav@0x4000",
+          "stored_hex": "0x6bd24d53",
+          "computed_hex": "0x6bd24d53",
+          "match": true
+        }
+      ],
+      "confidence": "CONFIRMED_VERIFIED"
+    }
+  ],
+  "io_driver_functions": [
+    {
+      "addr": "0x080eee4c",
+      "role": "read",
+      "callers": [
+        "0x080005d4"
+      ],
+      "notes": "SRAM->RAM; sets WAITCNT (|3), stages stack copy stub, delegates to external 0x080f49c8; called as func_0x so absent from callgraph callers"
+    },
+    {
+      "addr": "0x080eeeb0",
+      "role": "write",
+      "callers": [
+        "0x08000648"
+      ],
+      "notes": "RAM->SRAM byte-by-byte copy after WAITCNT (|3) setup; canonical SRAM writer"
+    },
+    {
+      "addr": "0x080004f4",
+      "role": "checksum",
+      "callers": [
+        "0x080005d4",
+        "0x08000648"
+      ],
+      "notes": "Sums len>>2 u32_le words, returns u32"
+    },
+    {
+      "addr": "0x080005d4",
+      "role": "deserialize",
+      "callers": [
+        "0x08000620",
+        "0x08000634"
+      ],
+      "notes": "Reads block to RAM mirror, checks MIW magic (0x08007c2c, 4 bytes), returns 0 valid / 1 bad magic / 2 bad checksum (total==2*stored)"
+    },
+    {
+      "addr": "0x08000648",
+      "role": "serialize",
+      "callers": [
+        "0x08000678",
+        "0x0800068c"
+      ],
+      "notes": "Zeroes +0x08, recomputes checksum via 0x080004f4, stores it, byte-copies RAM mirror to SRAM via 0x080eeeb0"
+    },
+    {
+      "addr": "0x08000528",
+      "role": "serialize",
+      "callers": [
+        "0x080001d4"
+      ],
+      "notes": "Default-save constructor: DMA-zeroes 0x404 RAM mirror, strcpy MIW, sets +0x04=0x404, +0x0c const, byte+0x20|=2, seeds records 15-22 via 0x08008aa8, sets byte+0x1ff=1"
+    },
+    {
+      "addr": "0x08008aa8",
+      "role": "serialize",
+      "callers": [
+        "0x08000528"
+      ],
+      "notes": "RAM-mirror score updater: record at mirror+idx*8+0x20 (idx<28); type1 descending top-3 u16 at +2/+4/+6, type2 u32 at +2; gameplay callers not in traced corpus"
+    }
+  ],
+  "caller_chains": [
+    {
+      "entry_caller": "0x080001d4",
+      "chain": [
+        "0x080001d4",
+        "0x08000620",
+        "0x080005d4",
+        "0x080eee4c",
+        "0x08007c2c",
+        "0x080004f4"
+      ],
+      "trigger_context": "Boot: validate slot_0 into RAM mirror",
+      "ram_fields_updated": [
+        "whole 0x404 RAM mirror (overwritten from SRAM)"
+      ],
+      "how_mapped": "Text call sites in FUN_080001d4 (func_0x forms) + callgraph edges 0x080005d4->0x080004f4; validator argument order gives SRAM->RAM direction"
+    },
+    {
+      "entry_caller": "0x080001d4",
+      "chain": [
+        "0x080001d4",
+        "0x08000634",
+        "0x080005d4",
+        "0x080eee4c"
+      ],
+      "trigger_context": "Boot fallback: slot_0 invalid, validate slot_1",
+      "ram_fields_updated": [
+        "whole 0x404 RAM mirror (overwritten from SRAM slot_1)"
+      ],
+      "how_mapped": "Text call site in FUN_080001d4 nested under slot_0 failure branch"
+    },
+    {
+      "entry_caller": "0x080001d4",
+      "chain": [
+        "0x080001d4",
+        "0x08000678",
+        "0x08000648",
+        "0x080004f4",
+        "0x080eeeb0"
+      ],
+      "trigger_context": "Boot repair: slot_1 valid, rewrite slot_0 from RAM mirror",
+      "ram_fields_updated": [
+        "checksum word +0x08 recomputed in RAM mirror before flush"
+      ],
+      "how_mapped": "Text call sites + callgraph 0x08000648 callees; explains cap-01 gaining slot_0 copy"
+    },
+    {
+      "entry_caller": "0x080001d4",
+      "chain": [
+        "0x080001d4",
+        "0x08000528",
+        "0x08008aa8"
+      ],
+      "trigger_context": "Boot: both copies invalid, build defaults in RAM mirror",
+      "ram_fields_updated": [
+        "magic +0x00",
+        "length +0x04",
+        "header const +0x0c",
+        "byte +0x20 bit1",
+        "score records 15-22 at +0x9a..+0xd2",
+        "flag byte +0x1ff=1"
+      ],
+      "how_mapped": "FUN_08000528 body; every seeded value verified at predicted offset in .sav"
+    },
+    {
+      "entry_caller": "0x080001d4",
+      "chain": [
+        "0x080001d4",
+        "0x0800068c",
+        "0x08000648",
+        "0x080004f4",
+        "0x080eeeb0"
+      ],
+      "trigger_context": "Boot: unconditional rewrite of slot_1 from RAM mirror",
+      "ram_fields_updated": [
+        "checksum word +0x08 recomputed in RAM mirror before flush"
+      ],
+      "how_mapped": "Text call site after the conditional branches in FUN_080001d4; explains cap-00 containing only the 0x4000 copy"
+    },
+    {
+      "entry_caller": "0x08008aa8",
+      "chain": [
+        "0x08008aa8"
+      ],
+      "trigger_context": "Gameplay score submission (caller not in 269-function traced corpus; only traced caller is the default constructor 0x08000528)",
+      "ram_fields_updated": [
+        "score record idx at mirror+idx*8+0x20: top-3 u16 insertion at +2/+4/+6 or u32 replacement at +2"
+      ],
+      "how_mapped": "FUN_08008aa8 body + exhaustive text search finding no other call sites in decompiled.c"
+    }
+  ],
+  "fields": [
+    {
+      "name": "magic_miw",
+      "offset": 0,
+      "size": 4,
+      "type": "ascii",
+      "ram_addr": null,
+      "writers": [
+        "0x08000528 via strcpy 0x080f68b8"
+      ],
+      "readers": [
+        "0x080005d4 via 0x08007c2c"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav@0x4000": "see SAVE-FORMAT-REPORT.md",
+        "cap-01-future-1.sav@0x0": "identical",
+        "cap-01-future-1.sav@0x4000": "identical"
+      },
+      "update_mechanism": "Written at default construction or by checksum flush; see report",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Constructor strcpy; validator compares 4 bytes; present in every valid block"
+    },
+    {
+      "name": "length_0x404",
+      "offset": 4,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": [
+        "0x08000528"
+      ],
+      "readers": [
+        "none traced"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav@0x4000": "see SAVE-FORMAT-REPORT.md",
+        "cap-01-future-1.sav@0x0": "identical",
+        "cap-01-future-1.sav@0x4000": "identical"
+      },
+      "update_mechanism": "Written at default construction or by checksum flush; see report",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Constructor stores 0x404; equals block/active-range size"
+    },
+    {
+      "name": "checksum_u32_sum",
+      "offset": 8,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": [
+        "0x08000648"
+      ],
+      "readers": [
+        "0x080005d4"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav@0x4000": "see SAVE-FORMAT-REPORT.md",
+        "cap-01-future-1.sav@0x0": "identical",
+        "cap-01-future-1.sav@0x4000": "identical"
+      },
+      "update_mechanism": "Written at default construction or by checksum flush; see report",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Writer zeroes, sums 257 u32_le, stores; Python computed==stored on all 3 valid blocks"
+    },
+    {
+      "name": "header_const_0x0c",
+      "offset": 12,
+      "size": 4,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [
+        "0x08000528"
+      ],
+      "readers": [
+        "none traced"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav@0x4000": "see SAVE-FORMAT-REPORT.md",
+        "cap-01-future-1.sav@0x0": "identical",
+        "cap-01-future-1.sav@0x4000": "identical"
+      },
+      "update_mechanism": "Written at default construction or by checksum flush; see report",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "Constant bytes 00 00 1f 31 stored by constructor; never compared in traced code; semantics unknown"
+    },
+    {
+      "name": "reserved_0x10",
+      "offset": 16,
+      "size": 16,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [
+        "0x08000528 (zero fill)"
+      ],
+      "readers": [
+        "0x080005d4 (checksum only)"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav@0x4000": "see SAVE-FORMAT-REPORT.md",
+        "cap-01-future-1.sav@0x0": "identical",
+        "cap-01-future-1.sav@0x4000": "identical"
+      },
+      "update_mechanism": "Written at default construction or by checksum flush; see report",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "Zero in defaults; no traced non-zero writer"
+    },
+    {
+      "name": "record_table_flags_or_rec0",
+      "offset": 32,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": [
+        "0x08000528 (byte |=2)"
+      ],
+      "readers": [
+        "none traced distinctly"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav@0x4000": "see SAVE-FORMAT-REPORT.md",
+        "cap-01-future-1.sav@0x0": "identical",
+        "cap-01-future-1.sav@0x4000": "identical"
+      },
+      "update_mechanism": "Mutated in RAM mirror, persisted by 0x08000648 checksum+byte-copy flush",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Byte 0x20 bit1 set by constructor; overlaps record 0 first word"
+    },
+    {
+      "name": "score_record_table",
+      "offset": 32,
+      "size": 224,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [
+        "0x08008aa8; seeded by 0x08000528"
+      ],
+      "readers": [
+        "0x08008aa8"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav@0x4000": "see SAVE-FORMAT-REPORT.md",
+        "cap-01-future-1.sav@0x0": "identical",
+        "cap-01-future-1.sav@0x4000": "identical"
+      },
+      "update_mechanism": "Mutated in RAM mirror, persisted by 0x08000648 checksum+byte-copy flush",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "28 records x 8 bytes at mirror+idx*8+0x20, idx<0x1c"
+    },
+    {
+      "name": "score_record_15_slot1",
+      "offset": 154,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": [
+        "0x08000528 -> 0x08008aa8(15,50000)"
+      ],
+      "readers": [
+        "0x08008aa8"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav@0x4000": "see SAVE-FORMAT-REPORT.md",
+        "cap-01-future-1.sav@0x0": "identical",
+        "cap-01-future-1.sav@0x4000": "identical"
+      },
+      "update_mechanism": "Mutated in RAM mirror, persisted by 0x08000648 checksum+byte-copy flush",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Record base 0x20+15*8=0x98; value at +2; exact value in both .sav samples"
+    },
+    {
+      "name": "score_record_16_slot1",
+      "offset": 162,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": [
+        "0x08000528 -> 0x08008aa8(16,10000)"
+      ],
+      "readers": [
+        "0x08008aa8"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav@0x4000": "see SAVE-FORMAT-REPORT.md",
+        "cap-01-future-1.sav@0x0": "identical",
+        "cap-01-future-1.sav@0x4000": "identical"
+      },
+      "update_mechanism": "Mutated in RAM mirror, persisted by 0x08000648 checksum+byte-copy flush",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Record base 0x20+16*8=0xa0; value at +2; exact value in both .sav samples"
+    },
+    {
+      "name": "score_record_17_slot1",
+      "offset": 170,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": [
+        "0x08000528 -> 0x08008aa8(17,100)"
+      ],
+      "readers": [
+        "0x08008aa8"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav@0x4000": "see SAVE-FORMAT-REPORT.md",
+        "cap-01-future-1.sav@0x0": "identical",
+        "cap-01-future-1.sav@0x4000": "identical"
+      },
+      "update_mechanism": "Mutated in RAM mirror, persisted by 0x08000648 checksum+byte-copy flush",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Record base 0x20+17*8=0xa8; value at +2; exact value in both .sav samples"
+    },
+    {
+      "name": "score_record_18_slot1",
+      "offset": 178,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": [
+        "0x08000528 -> 0x08008aa8(18,10000)"
+      ],
+      "readers": [
+        "0x08008aa8"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav@0x4000": "see SAVE-FORMAT-REPORT.md",
+        "cap-01-future-1.sav@0x0": "identical",
+        "cap-01-future-1.sav@0x4000": "identical"
+      },
+      "update_mechanism": "Mutated in RAM mirror, persisted by 0x08000648 checksum+byte-copy flush",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Record base 0x20+18*8=0xb0; value at +2; exact value in both .sav samples"
+    },
+    {
+      "name": "score_record_19_slot1",
+      "offset": 186,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": [
+        "0x08000528 -> 0x08008aa8(19,10000)"
+      ],
+      "readers": [
+        "0x08008aa8"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav@0x4000": "see SAVE-FORMAT-REPORT.md",
+        "cap-01-future-1.sav@0x0": "identical",
+        "cap-01-future-1.sav@0x4000": "identical"
+      },
+      "update_mechanism": "Mutated in RAM mirror, persisted by 0x08000648 checksum+byte-copy flush",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Record base 0x20+19*8=0xb8; value at +2; exact value in both .sav samples"
+    },
+    {
+      "name": "score_record_20_slot1",
+      "offset": 194,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": [
+        "0x08000528 -> 0x08008aa8(20,50)"
+      ],
+      "readers": [
+        "0x08008aa8"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav@0x4000": "see SAVE-FORMAT-REPORT.md",
+        "cap-01-future-1.sav@0x0": "identical",
+        "cap-01-future-1.sav@0x4000": "identical"
+      },
+      "update_mechanism": "Mutated in RAM mirror, persisted by 0x08000648 checksum+byte-copy flush",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Record base 0x20+20*8=0xc0; value at +2; exact value in both .sav samples"
+    },
+    {
+      "name": "score_record_21_slot1",
+      "offset": 202,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": [
+        "0x08000528 -> 0x08008aa8(21,30)"
+      ],
+      "readers": [
+        "0x08008aa8"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav@0x4000": "see SAVE-FORMAT-REPORT.md",
+        "cap-01-future-1.sav@0x0": "identical",
+        "cap-01-future-1.sav@0x4000": "identical"
+      },
+      "update_mechanism": "Mutated in RAM mirror, persisted by 0x08000648 checksum+byte-copy flush",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Record base 0x20+21*8=0xc8; value at +2; exact value in both .sav samples"
+    },
+    {
+      "name": "score_record_22_slot1",
+      "offset": 210,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": [
+        "0x08000528 -> 0x08008aa8(22,40)"
+      ],
+      "readers": [
+        "0x08008aa8"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav@0x4000": "see SAVE-FORMAT-REPORT.md",
+        "cap-01-future-1.sav@0x0": "identical",
+        "cap-01-future-1.sav@0x4000": "identical"
+      },
+      "update_mechanism": "Mutated in RAM mirror, persisted by 0x08000648 checksum+byte-copy flush",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Record base 0x20+22*8=0xd0; value at +2; exact value in both .sav samples"
+    },
+    {
+      "name": "score_records_unseeded_slots",
+      "offset": 34,
+      "size": 222,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [
+        "0x08000528 (zero); 0x08008aa8 in gameplay (untraced callers)"
+      ],
+      "readers": [
+        "0x08008aa8"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav@0x4000": "see SAVE-FORMAT-REPORT.md",
+        "cap-01-future-1.sav@0x0": "identical",
+        "cap-01-future-1.sav@0x4000": "identical"
+      },
+      "update_mechanism": "Mutated in RAM mirror, persisted by 0x08000648 checksum+byte-copy flush",
+      "confidence": "UNKNOWN",
+      "evidence": "All zero in default-only samples; per-record type from unread ROM table"
+    },
+    {
+      "name": "unknown_region_0x100",
+      "offset": 256,
+      "size": 255,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [
+        "0x08000528 (zero fill)"
+      ],
+      "readers": [
+        "0x080005d4 (checksum only)"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav@0x4000": "see SAVE-FORMAT-REPORT.md",
+        "cap-01-future-1.sav@0x0": "identical",
+        "cap-01-future-1.sav@0x4000": "identical"
+      },
+      "update_mechanism": "Written at default construction or by checksum flush; see report",
+      "confidence": "UNKNOWN",
+      "evidence": "No traced accessor"
+    },
+    {
+      "name": "flag_0x1ff",
+      "offset": 511,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": [
+        "0x08000528"
+      ],
+      "readers": [
+        "none traced"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav@0x4000": "see SAVE-FORMAT-REPORT.md",
+        "cap-01-future-1.sav@0x0": "identical",
+        "cap-01-future-1.sav@0x4000": "identical"
+      },
+      "update_mechanism": "Written at default construction or by checksum flush; see report",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Sole nonzero byte in 0x100-0x3ff; matches constructor final byte store (=1); semantics unknown"
+    },
+    {
+      "name": "unknown_region_0x200",
+      "offset": 512,
+      "size": 516,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [
+        "0x08000528 (zero fill)"
+      ],
+      "readers": [
+        "0x080005d4 (checksum only)"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav@0x4000": "see SAVE-FORMAT-REPORT.md",
+        "cap-01-future-1.sav@0x0": "identical",
+        "cap-01-future-1.sav@0x4000": "identical"
+      },
+      "update_mechanism": "Written at default construction or by checksum flush; see report",
+      "confidence": "UNKNOWN",
+      "evidence": "No traced accessor; 0x08008aa8 index==99 path uses a different unresolved base, not claimed here"
+    }
+  ],
+  "fuzzing_targets": [
+    {
+      "offset": 64,
+      "size": 1,
+      "mutation": "flip one byte in slot_0 only, no checksum repair",
+      "requires_checksum_repair": false,
+      "predicted_effect": "slot_0 rejected (bad checksum), slot_1 loaded, slot_0 repaired byte-identical after boot"
+    },
+    {
+      "offset": 64,
+      "size": 1,
+      "mutation": "flip one byte in slot_0 with checksum repair",
+      "requires_checksum_repair": true,
+      "predicted_effect": "accepted and persisted (slot_1 rewritten from RAM carries it)"
+    },
+    {
+      "offset": 0,
+      "size": 1,
+      "mutation": "corrupt MIW magic in slot_0 only",
+      "requires_checksum_repair": false,
+      "predicted_effect": "slot_0 rejected on magic before checksum; slot_1 loaded and slot_0 repaired"
+    },
+    {
+      "offset": 0,
+      "size": 1,
+      "mutation": "corrupt MIW magic in both copies",
+      "requires_checksum_repair": false,
+      "predicted_effect": "defaults rebuilt (seeded scores, flag 0x1ff=1); slot_1 rewritten, slot_0 repaired only on next boot"
+    },
+    {
+      "offset": 4,
+      "size": 4,
+      "mutation": "set length field to 0x400 with checksum repair",
+      "requires_checksum_repair": true,
+      "predicted_effect": "no effect predicted (fixed 0x404 length in traced code); rejection proves untraced use"
+    },
+    {
+      "offset": 12,
+      "size": 4,
+      "mutation": "zero header const 00 00 1f 31 with checksum repair",
+      "requires_checksum_repair": true,
+      "predicted_effect": "accepted silently predicted; rejection proves untraced consumer of +0x0c"
+    },
+    {
+      "offset": 154,
+      "size": 2,
+      "mutation": "set score record 15 slot1 (0x9a) to 60000 with checksum repair in both copies",
+      "requires_checksum_repair": true,
+      "predicted_effect": "record 15 top score displays 60000 if record mapping correct"
+    },
+    {
+      "offset": 511,
+      "size": 1,
+      "mutation": "set flag byte 0x1ff to 0 with checksum repair in both copies",
+      "requires_checksum_repair": true,
+      "predicted_effect": "accepted predicted; any behaviour change identifies flag semantics"
+    },
+    {
+      "offset": 336,
+      "size": 1,
+      "mutation": "set one byte at 0x150 with checksum repair",
+      "requires_checksum_repair": true,
+      "predicted_effect": "accepted predicted; menu/progress observation maps unknown 0x100-0x403 region"
+    },
+    {
+      "offset": 154,
+      "size": 2,
+      "mutation": "make copies differ (record15=11111 slot_0, 22222 slot_1), both checksums repaired",
+      "requires_checksum_repair": true,
+      "predicted_effect": "slot_0 value 11111 wins; if 22222 appears, hidden ordering field exists"
+    }
+  ],
+  "open_questions": [
+    "Exact EWRAM/IWRAM address of the RAM mirror: Ghidra export leaves all literal-pool pointers as unresolved _DAT_080xxxxx symbols, so ram_addr is null throughout",
+    "Semantics of header word +0x0c (bytes 00 00 1f 31), byte +0x20 bit1, and flag byte +0x1ff",
+    "Per-record type table for the 28 score records (type1 top-3 u16 vs type2 u32) and gameplay identities of records 0-14 and 23-27",
+    "Contents/semantics of zero regions 0x10-0x1f, 0x100-0x1fe, 0x200-0x403 (only exercised by gameplay not present in samples)",
+    "Gameplay caller chains into 0x08008aa8 and the save flush wrappers: no caller exists in the 269-function trace-guided corpus (unrecovered jumptables / untraced functions)",
+    "Read driver 0x080eee4c stack-stub mechanism and external helper 0x080f49c8 body, neither fully in corpus",
+    "Whether the length field +0x04 is ever read by untraced code"
+  ]
+}

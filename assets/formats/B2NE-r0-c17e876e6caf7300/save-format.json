@@ -1,0 +1,117 @@
+{
+  "schema": "gbakit-save-research/1",
+  "release_key": "B2NE-r0-c17e876e6caf7300",
+  "display_name": "Arthur and the Invisibles (USA) (En,Fr,Es)",
+  "rom_sha256": "c17e876e6caf7300b12607265ebd6f3ec4babc507dceae2e7c606cf732bfd9bb",
+  "game_code": "B2NE",
+  "header_family": "B2N",
+  "community_id": "comm-003",
+  "overall_confidence": "MEDIUM",
+  "media": {
+    "kind": "eeprom512",
+    "size_bytes": 512,
+    "sdk_tags": ["EEPROM_V124"],
+    "fill_byte": "0x00"
+  },
+  "slots_and_copies": [
+    {"name": "global_header", "offset": 0, "size": 8, "redundancy_role": "global_config", "selection_rule": "Always loaded first by FUN_080006f4 via FUN_080007bc; validated by checksum+marker 0x03, rebuilt by FUN_08000388+FUN_08000770 on failure. Not a profile slot."},
+    {"name": "slot_0", "offset": 8, "size": 128, "redundancy_role": "primary", "selection_rule": "Independent profile; loaded/repaired in order by FUN_080006f4 via FUN_08000240(0). Current-slot index is global G+6 (observed 0). No mirroring or newest-copy selection."},
+    {"name": "slot_1", "offset": 136, "size": 128, "redundancy_role": "primary", "selection_rule": "Independent profile; loaded/repaired by FUN_08000240(1). Identical to other slots in captures only because all are freshly initialized empty profiles."},
+    {"name": "slot_2", "offset": 264, "size": 128, "redundancy_role": "primary", "selection_rule": "Independent profile; loaded/repaired by FUN_08000240(2)."}
+  ],
+  "magic_signatures": [
+    {"offset": 0, "bytes_hex": "03", "ascii": "", "verified_in_code": true, "verified_in_sav": true, "function_addrs": ["0x080007bc", "0x08000388"]},
+    {"offset": 13, "bytes_hex": "01", "ascii": "", "verified_in_code": true, "verified_in_sav": true, "function_addrs": ["0x08000240", "0x0800030c"]}
+  ],
+  "checksums": [
+    {
+      "name": "global_header_sum8_complement",
+      "algorithm": "sum8",
+      "formula_detail": "CK = ~(sum of RAM G+1..G+7) & 0xFF, stored at RAM G+0 (file offset 7 due to per-word byte reversal). Equivalent invariant: sum(file bytes 0..7) == 0xFF. Computed by FUN_08000770, checked by FUN_080007bc.",
+      "stored_offset": 7,
+      "stored_size": 1,
+      "covered_start": 0,
+      "covered_end": 7,
+      "function_addrs": ["0x08000770", "0x080007bc"],
+      "verified_on_samples": [
+        {"file": "cap-00-future-0.sav", "stored_hex": "ab", "computed_hex": "ab", "match": true},
+        {"file": "cap-01-future-1.sav", "stored_hex": "aa", "computed_hex": "aa", "match": true}
+      ],
+      "confidence": "CONFIRMED_VERIFIED"
+    },
+    {
+      "name": "slot_sum8_complement",
+      "algorithm": "sum8",
+      "formula_detail": "CK = ~(sum of RAM S+1..S+127) & 0xFF, stored at RAM S+0. Per-slot file stored offsets: slot0=15, slot1=143, slot2=271 (word-reversed first word). Validity also requires RAM S+2==0x01. Computed/checked by FUN_08000240.",
+      "stored_offset": 15,
+      "stored_size": 1,
+      "covered_start": 8,
+      "covered_end": 135,
+      "function_addrs": ["0x08000240"],
+      "verified_on_samples": [
+        {"file": "cap-00-future-0.sav", "stored_hex": "fe", "computed_hex": "fe", "match": true},
+        {"file": "cap-01-future-1.sav", "stored_hex": "fe", "computed_hex": "fe", "match": true}
+      ],
+      "confidence": "CONFIRMED_VERIFIED"
+    }
+  ],
+  "io_driver_functions": [
+    {"addr": "0x0829a5c4", "role": "write", "callers": ["0x0829a644", "0x0829a708"], "notes": "DMA3 engine: programs DMA3 SAD/DAD/CNT (0x040000D4/D8/DC), count|0x80000000, polls CNT busy 0x8000. Used for both directions to 0x0D000000 (EEPROM)."},
+    {"addr": "0x0829a644", "role": "read", "callers": ["0x0828b180", "0x0829a868"], "notes": "EEPROM read one 64-bit word: address bitstream via DMA, then DMA back 0x44 halfwords, unpack 4x u16 MSB-first."},
+    {"addr": "0x0829a708", "role": "write", "callers": ["0x0829a6f4"], "notes": "EEPROM write one 64-bit word: packs 4x u16 + address MSB-first, DMA length addr_bits+0x43, busy-polls 0x0D000000 bit0."},
+    {"addr": "0x0829a6f4", "role": "write", "callers": ["0x0829a8c0"], "notes": "Write wrapper: FUN_0829a708(addr,buf,wait=1)."},
+    {"addr": "0x0829a868", "role": "checksum", "callers": ["0x0829a8c0"], "notes": "Verify: read-back via FUN_0829a644 and compare 4 halfwords; 0 ok / 0x8000 mismatch. Device-level verify, not the data checksum."},
+    {"addr": "0x0829a8c0", "role": "write", "callers": ["0x0828b1b8"], "notes": "Write+verify with up to 3 retries (FUN_0829a6f4 + FUN_0829a868)."},
+    {"addr": "0x0828b228", "role": "write", "callers": ["0x08000240"], "notes": "Set EEPROM word cursor: cursor = byte_offset >> 3."},
+    {"addr": "0x0828b180", "role": "read", "callers": ["0x08000240", "0x080007bc"], "notes": "Block read in 8-byte words via FUN_0829a644; returns 1 ok / 0 fail."},
+    {"addr": "0x0828b1b8", "role": "write", "callers": ["0x08000240", "0x08000770"], "notes": "Block write in 8-byte words via FUN_0829a8c0; returns 1 ok / 0 fail."},
+    {"addr": "0x08000770", "role": "serialize", "callers": ["0x080007bc"], "notes": "SaveGlobalHeader: CK=~sum(G+0..G+6), write 8 bytes. Checksum routine for global header."},
+    {"addr": "0x080007bc", "role": "deserialize", "callers": ["0x080006f4"], "notes": "LoadGlobalHeader: read 8, check CK + marker G+7==0x03, else init (FUN_08000388) + save (FUN_08000770)."},
+    {"addr": "0x08000240", "role": "deserialize", "callers": ["0x080006f4"], "notes": "LoadOrRepairSlot(slot): read 128 from slot*0x80+8, check CK + S+2==0x01, else FUN_0800030c init + recompute CK + write 128. Both reader and repair-writer."},
+    {"addr": "0x08000388", "role": "serialize", "callers": ["0x080007bc"], "notes": "InitGlobalHeader RAM defaults: G+1..G+7 = 00,00,20,30,01,00,03."},
+    {"addr": "0x0800030c", "role": "serialize", "callers": ["0x08000240"], "notes": "InitSlot RAM: zero-fill, S+1=0xFF, S+2=0x01, u32@S+8=1, mask 21 records."}
+  ],
+  "caller_chains": [
+    {"entry_caller": "0x080006f4", "chain": ["0x080006f4", "0x080007bc", "0x08000388", "0x08000770", "0x0828b1b8", "0x0829a8c0"], "trigger_context": "Boot/load-all: validate global header, rebuild+flush on failure. Entry caller itself has no caller in corpus (boot/main outside trace set).", "ram_fields_updated": ["G+1", "G+2", "G+3", "G+4", "G+5", "G+6", "G+7", "G+0 checksum"], "how_mapped": "Textual FUN_ call sites in ghidra/decompiled.c cross-checked against ghidra/callgraph.json (080007bc callees 08000388/08000770 listed there; entry edge 080006f4->080007bc is text-only)."},
+    {"entry_caller": "0x080006f4", "chain": ["0x080006f4", "0x08000240", "0x0800030c", "0x0828b180", "0x0829a644", "0x0829a5c4"], "trigger_context": "Boot/load-all per slot 0,1,2: read+validate slot, or init+recompute+flush via 0x0828b1b8/0x0829a8c0 on failure.", "ram_fields_updated": ["S+0 checksum", "S+1", "S+2 valid", "S+4 u32", "S+8 u32", "S+0x0C records"], "how_mapped": "callgraph.json lists 080006f4->08000240; inner edges (08000240->0800030c, ->0828b180/0828b1b8/0828b228) are textual-only and were read in the caller bodies."},
+    {"entry_caller": "0x08244d08", "chain": ["0x08244d08", "0x08000850", "0x08000874"], "trigger_context": "Selection screen with 3 entries: compares G+1 (FUN_08000850) to each index, then FUN_08000874(entry_byte) sets G+1=value, G+2=1. No flush in corpus; observed G+2 0->1 in cap-01 with checksum repaired.", "ram_fields_updated": ["G+1", "G+2"], "how_mapped": "Both textual call sites and callgraph.json (08244d08 callers of 08000850/0800085c/08000874). Bodies of setter/getters read directly."},
+    {"entry_caller": "0x080009c8", "chain": ["0x080009c8", "0x080008c0", "0x08000890", "0x080008a8"], "trigger_context": "Boot settings consumer: table[G+1] to FUN_08280044, G+5/G+3/G+4 passed r0-chained to FUN_0825b3f0/FUN_0828cc20/FUN_0828cf80. Mutates no save bytes.", "ram_fields_updated": [], "how_mapped": "Textual call sites; callgraph.json lists 080009c8->08000890/080008a8/080008c0."}
+  ],
+  "fields": [
+    {"name": "global_marker_version", "offset": 0, "size": 1, "type": "u8", "ram_addr": null, "writers": ["0x08000388"], "readers": ["0x080007bc"], "observed_values": {"cap-00-future-0.sav": "0x03", "cap-01-future-1.sav": "0x03"}, "update_mechanism": "Constant 0x03 written at RAM G+7 by InitGlobalHeader; file offset 0 via per-word byte reversal. Load rejects header unless RAM G+7==0x03.", "confidence": "CONFIRMED_VERIFIED", "evidence": "FUN_08000388 writes 3 at +7; FUN_080007bc checks [7]==3; both savs have 0x03 at file 0x00; RAM frame G+7=0x03 in verification output."},
+    {"name": "global_G6_current_slot", "offset": 1, "size": 1, "type": "u8", "ram_addr": null, "writers": ["0x08000388"], "readers": ["0x0800083c"], "observed_values": {"cap-00-future-0.sav": "0x00", "cap-01-future-1.sav": "0x00"}, "update_mechanism": "RAM G+6, init 0. FUN_0800083c uses it as slot index (slot*0x80+base+0x0C). RAM offset G+6; file offset 1 via reversal.", "confidence": "CONFIRMED_STATIC", "evidence": "FUN_08000388 +6=0; FUN_0800083c body; sav file[1]=0x00."},
+    {"name": "global_G5", "offset": 2, "size": 1, "type": "u8", "ram_addr": null, "writers": ["0x08000388"], "readers": ["0x080008c0", "0x080009c8"], "observed_values": {"cap-00-future-0.sav": "0x01", "cap-01-future-1.sav": "0x01"}, "update_mechanism": "RAM G+5, init 1. Getter FUN_080008c0 consumed by FUN_080009c8 (passed to FUN_0825b3f0). Semantics unknown.", "confidence": "CONFIRMED_STATIC", "evidence": "FUN_08000388 +5=1; FUN_080008c0 returns +5; sav file[2]=0x01."},
+    {"name": "global_G4_0x30", "offset": 3, "size": 1, "type": "u8", "ram_addr": null, "writers": ["0x08000388"], "readers": ["0x080008a8", "0x080009c8"], "observed_values": {"cap-00-future-0.sav": "0x30", "cap-01-future-1.sav": "0x30"}, "update_mechanism": "RAM G+4, init 0x30. Getter FUN_080008a8 consumed by FUN_080009c8 (passed to FUN_0828cf80). Semantics unknown.", "confidence": "CONFIRMED_STATIC", "evidence": "FUN_08000388 +4=0x30; FUN_080008a8 returns +4; sav file[3]=0x30."},
+    {"name": "global_G3_0x20", "offset": 4, "size": 1, "type": "u8", "ram_addr": null, "writers": ["0x08000388"], "readers": ["0x08000890", "0x080009c8"], "observed_values": {"cap-00-future-0.sav": "0x20", "cap-01-future-1.sav": "0x20"}, "update_mechanism": "RAM G+3, init 0x20. Getter FUN_08000890 consumed by FUN_080009c8 (passed to FUN_0828cc20). Semantics unknown.", "confidence": "CONFIRMED_STATIC", "evidence": "FUN_08000388 +3=0x20; FUN_08000890 returns +3; sav file[4]=0x20."},
+    {"name": "global_G2_flag", "offset": 5, "size": 1, "type": "u8", "ram_addr": null, "writers": ["0x08000388", "0x08000874"], "readers": ["0x08000884"], "observed_values": {"cap-00-future-0.sav": "0x00", "cap-01-future-1.sav": "0x01"}, "update_mechanism": "RAM G+2. Init 0; FUN_08000874 sets it to constant 1 whenever G+1 is written. Only byte that changed between captures (file 0x05, PACKET probe offset). Flag, not proven counter.", "confidence": "CONFIRMED_VERIFIED", "evidence": "FUN_08000874 sets +2=1; FUN_08000884 reads +2; sav diff 0x05: 00->01 with checksum 0xAB->0xAA; PACKET mutation probe at 0x5 reverted."},
+    {"name": "global_G1_selection", "offset": 6, "size": 1, "type": "u8", "ram_addr": null, "writers": ["0x08000388", "0x08000874"], "readers": ["0x08000850", "0x0800085c", "0x080009c8"], "observed_values": {"cap-00-future-0.sav": "0x00", "cap-01-future-1.sav": "0x00"}, "update_mechanism": "RAM G+1, init 0. FUN_08000874 stores selection value; FUN_08000850 reads it; FUN_080009c8 indexes pointer table by it; FUN_08244d08 compares it to 0..2. Selection index 0..2 (exact meaning, e.g. language/profile, unproven).", "confidence": "CONFIRMED_STATIC", "evidence": "FUN_08000874/FUN_08000850/FUN_080009c8/FUN_08244d08 bodies; sav file[6]=0x00 (RAM G+1 via reversal)."},
+    {"name": "global_checksum", "offset": 7, "size": 1, "type": "u8", "ram_addr": null, "writers": ["0x08000770"], "readers": ["0x080007bc"], "observed_values": {"cap-00-future-0.sav": "0xab", "cap-01-future-1.sav": "0xaa"}, "update_mechanism": "RAM G+0 = ~(sum G+1..G+7)&0xFF; recomputed on every header save. File offset 7 via reversal.", "confidence": "CONFIRMED_VERIFIED", "evidence": "FUN_08000770/FUN_080007bc code; Python: stored AB/AA == computed AB/AA on both files; sum(file0..7)=0xFF."},
+    {"name": "slot_checksum", "offset": 15, "size": 1, "type": "u8", "ram_addr": null, "writers": ["0x08000240"], "readers": ["0x08000240"], "observed_values": {"cap-00-future-0.sav": "0xfe (slots at file 15/143/271)", "cap-01-future-1.sav": "0xfe (slots at file 15/143/271)"}, "update_mechanism": "RAM S+0 = ~(sum S+1..S+127)&0xFF per slot (slot0/1/2 file offsets 15/143/271). Recomputed only on slot repair-write in corpus.", "confidence": "CONFIRMED_VERIFIED", "evidence": "FUN_08000240 code; Python: stored FE == computed FE for all 3 slots in both files (RAM frame)."},
+    {"name": "slot_S1_ff", "offset": 14, "size": 1, "type": "u8", "ram_addr": null, "writers": ["0x0800030c"], "readers": [], "observed_values": {"cap-00-future-0.sav": "0xff (all slots)", "cap-01-future-1.sav": "0xff (all slots)"}, "update_mechanism": "RAM S+1 set to 0xFF by InitSlot. Meaning unknown. File offset shown for slot0 (14); slot1/2 at 142/270.", "confidence": "CONFIRMED_STATIC", "evidence": "FUN_0800030c writes 0xFF at +1; RAM-frame slot byte S+1=0xFF in verification."},
+    {"name": "slot_valid_marker", "offset": 13, "size": 1, "type": "u8", "ram_addr": null, "writers": ["0x0800030c"], "readers": ["0x08000240"], "observed_values": {"cap-00-future-0.sav": "0x01 (all slots)", "cap-01-future-1.sav": "0x01 (all slots)"}, "update_mechanism": "RAM S+2 set to 0x01 by InitSlot; load requires S+2==0x01 else re-init. File offset shown for slot0 (13); slot1/2 at 141/269.", "confidence": "CONFIRMED_VERIFIED", "evidence": "FUN_0800030c +2=1; FUN_08000240 checks +2==1; RAM S+2=0x01 all slots both files."},
+    {"name": "slot_reserved_u32_S4", "offset": 16, "size": 4, "type": "u32_le", "ram_addr": null, "writers": ["0x0800030c"], "readers": [], "observed_values": {"cap-00-future-0.sav": "0x00000000", "cap-01-future-1.sav": "0x00000000"}, "update_mechanism": "RAM S+4 u32 zeroed by InitSlot. File offset approximate: RAM S+4..S+7 word-reverses to file slot0 offsets 16..19 reversed per word. Meaning unknown.", "confidence": "CONFIRMED_STATIC", "evidence": "FUN_0800030c u32@+4=0; sav slot words all zero there."},
+    {"name": "slot_u32_S8_one", "offset": 23, "size": 4, "type": "u32_le", "ram_addr": null, "writers": ["0x0800030c"], "readers": [], "observed_values": {"cap-00-future-0.sav": "0x00000001 (RAM frame, all slots)", "cap-01-future-1.sav": "0x00000001 (RAM frame, all slots)"}, "update_mechanism": "RAM S+8 u32 set to 1 by InitSlot (file: 0x01 at slot base+15, i.e. 23/151/279, due to reversal). Meaning unknown.", "confidence": "CONFIRMED_STATIC", "evidence": "FUN_0800030c u32@+8=1; verification u32@S+8=0x1 all slots."},
+    {"name": "slot_records_21x4", "offset": 19, "size": 84, "type": "bytes", "ram_addr": null, "writers": ["0x0800030c"], "readers": ["0x0800083c"], "observed_values": {"cap-00-future-0.sav": "all 0x00 (empty)", "cap-01-future-1.sav": "all 0x00 (empty)"}, "update_mechanism": "RAM S+0x0C..S+0x5F: 21 records x 4B. InitSlot masks rec bytes (&0xF0, &0x80). FUN_0800083c reads u32 at current slot S+0x0C. File offsets are word-permuted (record area starts near file slot0 offset 19). Semantics unknown; no gameplay writer in corpus.", "confidence": "HYPOTHESIS", "evidence": "FUN_0800030c masking loop (21 iterations, stride 4) and FUN_0800083c; sav records all zero so semantics unobservable."},
+    {"name": "slot_tail_S60", "offset": 104, "size": 32, "type": "bytes", "ram_addr": null, "writers": ["0x0800030c"], "readers": [], "observed_values": {"cap-00-future-0.sav": "all 0x00", "cap-01-future-1.sav": "all 0x00"}, "update_mechanism": "RAM S+0x60..S+0x7F zero-filled on init; covered by slot checksum; never written by traced code. File offset shown for slot0 start of this RAM range (word-permuted).", "confidence": "UNKNOWN", "evidence": "Zero in both savs; no code reference beyond zero-fill and checksum coverage."},
+    {"name": "erased_tail", "offset": 392, "size": 120, "type": "bytes", "ram_addr": null, "writers": [], "readers": [], "observed_values": {"cap-00-future-0.sav": "all 0xff", "cap-01-future-1.sav": "all 0xff"}, "update_mechanism": "Never written: EEPROM erased state. No code addresses bytes >= 0x188 (max is slot2 end 264+128=392).", "confidence": "CONFIRMED_VERIFIED", "evidence": "Both savs all-0xFF at 0x188..0x1FF; geometry 8+3*128=392 from FUN_08000240/FUN_0828b228."}
+  ],
+  "fuzzing_targets": [
+    {"offset": 5, "size": 1, "mutation": "Flip G+2 flag (file 0x05) without checksum repair", "requires_checksum_repair": true, "predicted_effect": "Global header checksum fails; FUN_080007bc rebuilds defaults and rewrites EEPROM. Matches PACKET cold-reload probe at 0x5 (reverted, save rewritten)."},
+    {"offset": 5, "size": 1, "mutation": "Set file 0x05 (G+2) to 0x02 and repair checksum at file 0x07 (CK -= delta, keep sum==0xFF)", "requires_checksum_repair": true, "predicted_effect": "Header stays valid if FUN_08000884 consumer only tests ==1 vs any-nonzero; compare boot behavior/RAM G+2 against value 0x01 case to distinguish flag from counter."},
+    {"offset": 0, "size": 1, "mutation": "Change marker file 0x00 (RAM G+7) from 0x03 to 0x04 with checksum repair at file 0x07", "requires_checksum_repair": true, "predicted_effect": "Header rejected despite valid checksum (marker check); defaults rebuilt. Proves marker is independently enforced."},
+    {"offset": 6, "size": 1, "mutation": "Set G+1 selection (file 0x06) to 0x01 then 0x02 with checksum repair", "requires_checksum_repair": true, "predicted_effect": "Different FUN_080009c8 table entry applied at boot (visible UI/language/settings change); FUN_08244d08 selection highlight follows. Identifies G+1 semantics."},
+    {"offset": 13, "size": 1, "mutation": "Clear slot0 valid marker (file 0x0D, RAM S+2) 0x01->0x00 with slot checksum repair at file 0x0F (recompute over reversed frame)", "requires_checksum_repair": true, "predicted_effect": "Slot0 re-initialized on load despite valid checksum, proving marker enforcement; other slots untouched."},
+    {"offset": 15, "size": 1, "mutation": "Corrupt slot1 checksum (file 0x8F) by +1 without repair", "requires_checksum_repair": false, "predicted_effect": "Only slot1 re-initialized on next load (FUN_08000240(1)); slots 0/2 and global header preserved. Proves per-slot independence, no backup fallback."},
+    {"offset": 23, "size": 1, "mutation": "Change slot0 RAM S+8 flag byte (file 0x17) 0x01->0x02 with slot checksum repair", "requires_checksum_repair": true, "predicted_effect": "If slot still loads, S+8 is data; if re-initialized or behavior changes, S+8 is structural. Watch RAM slot+8 after load."},
+    {"offset": 392, "size": 1, "mutation": "Write 0x00 at file 0x188 (erased tail) with no repair", "requires_checksum_repair": false, "predicted_effect": "No observable change predicted (region never read/written). Any change would falsify the 0x188 geometry."}
+  ],
+  "open_questions": [
+    "Gameplay progress writer: no RAM-slot-to-EEPROM flush outside init/repair exists in the 291-function corpus; which function writes progress records (S+0x0C) and when is it flushed?",
+    "Slot record semantics: 21x4B records at S+0x0C are all-zero in empty saves; need a progressed save (paired .ss state) to map them.",
+    "Global field semantics: G+3=0x20, G+4=0x30, G+5=1 (consumed by FUN_080009c8 chain) and G+1 selection meaning (language vs profile) unproven.",
+    "G+2: flag set to constant 1 by FUN_08000874 vs incrementing counter — only 0->1 observed; who flushes the header after FUN_08000874 mutates RAM, since FUN_08000770 is only called from FUN_080007bc in corpus?",
+    "Absolute RAM mirror addresses: all save-struct pointers are unresolved _DAT_ literal-pool entries in the decompilation; EWRAM base (expected 0x02xxxxxx) cannot be pinned from this corpus.",
+    "FUN_080006f4 (LoadAll) has no caller in corpus; boot entry path outside trace set.",
+    "EEPROM descriptor literals (word count at desc+4, address bits at desc+8) not recovered; 64-word/512B size inferred from image size and >>3 addressing."
+  ]
+}

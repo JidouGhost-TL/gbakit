@@ -1,0 +1,459 @@
+{
+  "schema": "gbakit-save-research/1",
+  "release_key": "BMXP-r0-5796183c3fba5860",
+  "display_name": "Metroid - Zero Mission (Europe) (En,Fr,De,Es,It) (Beta)",
+  "rom_sha256": "5796183c3fba58601505c7267a90c229f9645fe8ba1445d66b0f0f0980b442a7",
+  "game_code": "BMXP",
+  "header_family": "BMX",
+  "community_id": "comm-047",
+  "overall_confidence": "MEDIUM",
+  "media": {
+    "kind": "sram",
+    "size_bytes": 32768,
+    "sdk_tags": [],
+    "fill_byte": "0xff"
+  },
+  "slots_and_copies": [
+    {
+      "name": "global_header_primary",
+      "offset": 0,
+      "size": 64,
+      "redundancy_role": "primary",
+      "selection_rule": "FUN_08075c7c checks checksum+version-string+complement validity of up to 3 header candidates; FUN_08075b28 copies a valid candidate over an invalid one or rebuilds a default when all disagree."
+    },
+    {
+      "name": "global_header_mirror",
+      "offset": 27968,
+      "size": 64,
+      "redundancy_role": "backup",
+      "selection_rule": "Byte-identical to global_header_primary in both observed .sav samples; same voting/repair rule applies."
+    },
+    {
+      "name": "global_header_third_candidate",
+      "offset": null,
+      "size": 64,
+      "redundancy_role": "backup",
+      "selection_rule": "FUN_08075c7c(param_1==2) checks a third header candidate pointer; not located at a distinct SRAM offset in either provided .sav sample (may be RAM-only or an unexercised SRAM region)."
+    },
+    {
+      "name": "slot_select_label_block",
+      "offset": 27968,
+      "size": 103,
+      "redundancy_role": "unknown",
+      "selection_rule": "Observed only in capture 2 (0x6d40-0x6da7 active range); writer not located in available decompilation."
+    },
+    {
+      "name": "zeroed_reserved_block",
+      "offset": 28096,
+      "size": 128,
+      "redundancy_role": "unknown",
+      "selection_rule": "All-zero in both samples, distinct from 0xFF SRAM fill; no writer located."
+    },
+    {
+      "name": "zerosave_footer",
+      "offset": 32624,
+      "size": 16,
+      "redundancy_role": "global_config",
+      "selection_rule": "Observed only in capture 2; writer not located in available decompilation."
+    },
+    {
+      "name": "game_save_slot_0",
+      "offset": null,
+      "size": 4640,
+      "redundancy_role": "primary",
+      "selection_rule": "FUN_08076d18/FUN_08076dc8 compare copy A vs copy B validity per slot; FUN_08076b48 propagates the valid copy and/or rebuilds via FUN_08000e58(3)/(4). Absolute SRAM offset not resolvable - neither .sav sample has populated slot data."
+    },
+    {
+      "name": "game_save_slot_1",
+      "offset": null,
+      "size": 4640,
+      "redundancy_role": "primary",
+      "selection_rule": "Same scheme as game_save_slot_0; loop index 1 of 3."
+    },
+    {
+      "name": "game_save_slot_2",
+      "offset": null,
+      "size": 4640,
+      "redundancy_role": "primary",
+      "selection_rule": "Same scheme as game_save_slot_0; loop index 2 of 3."
+    }
+  ],
+  "magic_signatures": [
+    {
+      "offset": 28,
+      "bytes_hex": "5a65726f4d697373696f6e455552766572303035",
+      "ascii": "ZeroMissionEURver005",
+      "verified_in_code": true,
+      "verified_in_sav": true,
+      "function_addrs": ["0x08075a94", "0x08075c7c"]
+    },
+    {
+      "offset": 27996,
+      "bytes_hex": "5a65726f4d697373696f6e455552766572303035",
+      "ascii": "ZeroMissionEURver005",
+      "verified_in_code": true,
+      "verified_in_sav": true,
+      "function_addrs": ["0x08075a94", "0x08075c7c"]
+    },
+    {
+      "offset": 28038,
+      "bytes_hex": "53454c45435453415645 4e554d5f3030 00 454e44444154415f53454c5f53415645",
+      "ascii": "SELECTSAVENUM_00\u0000ENDDATA_SEL_SAVE",
+      "verified_in_code": false,
+      "verified_in_sav": true,
+      "function_addrs": []
+    },
+    {
+      "offset": 32624,
+      "bytes_hex": "5a45524f53415645",
+      "ascii": "ZEROSAVE",
+      "verified_in_code": false,
+      "verified_in_sav": true,
+      "function_addrs": []
+    }
+  ],
+  "checksums": [
+    {
+      "name": "global_header_checksum",
+      "algorithm": "custom",
+      "formula_detail": "16 little-endian u32 words (64-byte record). Before summing, word[0]:=0 and word[1]:=0xFFFFFFFF (placeholders). checksum = sum(word[0..15]) mod 2^32 = (sum(word[2..15]) - 1) mod 2^32. Stored word[0]=checksum, word[1]=bitwise NOT of checksum (one's complement).",
+      "stored_offset": 0,
+      "stored_size": 8,
+      "covered_start": 0,
+      "covered_end": 64,
+      "function_addrs": ["0x08075a94", "0x08075c7c"],
+      "verified_on_samples": [
+        {"file": "saves/cap-00-future-0.sav", "stored_hex": "c3f9f236", "computed_hex": "c3f9f236", "match": true},
+        {"file": "saves/cap-01-future-1.sav", "stored_hex": "c3f9f236", "computed_hex": "c3f9f236", "match": true}
+      ],
+      "confidence": "CONFIRMED_VERIFIED"
+    },
+    {
+      "name": "global_header_checksum_mirror",
+      "algorithm": "custom",
+      "formula_detail": "Identical formula and stored-field layout as global_header_checksum, applied to the mirrored record at absolute offset 0x6D40.",
+      "stored_offset": 27968,
+      "stored_size": 8,
+      "covered_start": 27968,
+      "covered_end": 28032,
+      "function_addrs": ["0x08075a94", "0x08075c7c"],
+      "verified_on_samples": [
+        {"file": "saves/cap-00-future-0.sav", "stored_hex": "c3f9f236", "computed_hex": "c3f9f236", "match": true},
+        {"file": "saves/cap-01-future-1.sav", "stored_hex": "c3f9f236", "computed_hex": "c3f9f236", "match": true}
+      ],
+      "confidence": "CONFIRMED_VERIFIED"
+    },
+    {
+      "name": "slot_select_label_leading_field",
+      "algorithm": "unknown",
+      "formula_detail": "u16 at 0x6d80 (0x001e in cap-01) followed by u32 at 0x6d82 (0x61299ed6 in cap-01). Brute-force tested against sum8/sum16/sum32/xor8/xor32/crc32 (standard and inverted) over every plausible byte range in the file; no algorithmic match found.",
+      "stored_offset": 27968,
+      "stored_size": 6,
+      "covered_start": null,
+      "covered_end": null,
+      "function_addrs": [],
+      "verified_on_samples": [],
+      "confidence": "UNKNOWN"
+    },
+    {
+      "name": "zerosave_footer_trailing_fields",
+      "algorithm": "unknown",
+      "formula_detail": "u32 at 0x7f78 (0x000042c0 in cap-01) and u32 at 0x7f7c (0x3bf20802 in cap-01). Same brute-force search as slot_select_label_leading_field; no match found.",
+      "stored_offset": 32632,
+      "stored_size": 8,
+      "covered_start": null,
+      "covered_end": null,
+      "function_addrs": [],
+      "verified_on_samples": [],
+      "confidence": "UNKNOWN"
+    }
+  ],
+  "io_driver_functions": [
+    {"addr": "0x0800546c", "role": "write", "callers": ["0x08005540"], "notes": "Raw byte-copy loop into SRAM destination, with WAITCNT-style mask applied first."},
+    {"addr": "0x080054dc", "role": "read", "callers": ["0x08005540"], "notes": "Re-applies the wait-state mask then calls an unresolved compare routine (func_0x08091358) to verify a just-written region."},
+    {"addr": "0x08005540", "role": "write", "callers": ["0x08076aa8", "0x08000e14"], "notes": "Write-verify-retry driver: up to 3 attempts of FUN_0800546c + FUN_080054dc."},
+    {"addr": "0x08000e14", "role": "write", "callers": ["0x08075b28"], "notes": "MMIO-seed. Stages the full 32KB save image via func_0x080034c4, then conditionally flushes it to SRAM base 0x0E000000 via FUN_08005540 with length 0x8000."},
+    {"addr": "0x08075a94", "role": "serialize", "callers": ["0x08075b28"], "notes": "Global-header writer/checksum routine."},
+    {"addr": "0x08075c7c", "role": "deserialize", "callers": [], "notes": "Global-header validator/checksum-verify routine for 1 of 3 candidate slots selected by param_1."},
+    {"addr": "0x08075b28", "role": "write", "callers": [], "notes": "Header reconciliation orchestrator; top of traced chain, no caller found in available callgraph."},
+    {"addr": "0x08000e58", "role": "write", "callers": ["0x08075a44", "0x08075a94", "0x08075b28", "0x08076b48", "0x08077188", "0x08077548", "0x080777b4", "0x08078a30"], "notes": "Generic save-commit task dispatcher (17-entry jump table by id, plus special-cased direct copies for id 0xE [32KB full mirror] and id 0xF [0x1220-byte slot-sized copy])."},
+    {"addr": "0x08076b48", "role": "write", "callers": [], "notes": "Game-save-slot (0x1220 bytes x3) reconciliation, analogous to FUN_08075b28 for the header."},
+    {"addr": "0x08076d18", "role": "checksum", "callers": ["0x08076b48"], "notes": "Sets per-slot status byte (0/1/2/3) from copy-A/copy-B validity."},
+    {"addr": "0x08076dc8", "role": "checksum", "callers": ["0x08076d18"], "notes": "Validity check for one of the two redundant copies of a game-save slot."}
+  ],
+  "caller_chains": [
+    {
+      "entry_caller": "0x08075a44",
+      "chain": ["0x08075a44", "0x08076aa8", "0x08000e58", "0x08075b28", "0x08075c7c", "0x08075a94", "0x08000e14", "0x08005540"],
+      "trigger_context": "Save-system boot/mount sequence: SRAM self-test, then header reconciliation, then slot reconciliation.",
+      "ram_fields_updated": ["global_header_primary", "global_header_mirror"],
+      "how_mapped": "Traced via ghidra/callgraph.json caller/callee edges plus manual reading of ghidra/decompiled.c for FUN_08075a44, FUN_08076aa8, FUN_08075b28, FUN_08075c7c, FUN_08075a94, FUN_08000e14, FUN_08005540."
+    },
+    {
+      "entry_caller": "0x08075b28",
+      "chain": ["0x08075b28", "0x08075c7c", "0x080033f4", "0x08000e58", "0x08000e14", "0x08075a94"],
+      "trigger_context": "Header repair: compares 3 candidate copies, propagates a valid one over an invalid one, flushes to SRAM, recomputes checksum.",
+      "ram_fields_updated": ["global_header_primary", "global_header_mirror", "global_header_third_candidate"],
+      "how_mapped": "ghidra/callgraph.json callees of 0x08075b28 cross-referenced with the branch structure in ghidra/decompiled.c lines ~17414-17487."
+    },
+    {
+      "entry_caller": "0x08076b48",
+      "chain": ["0x08076b48", "0x08076d18", "0x08076dc8", "0x080033f4", "0x080034c4", "0x08000e58"],
+      "trigger_context": "Game-save-slot repair across 3 slots of 0x1220 bytes each.",
+      "ram_fields_updated": ["game_save_slot_0", "game_save_slot_1", "game_save_slot_2"],
+      "how_mapped": "ghidra/decompiled.c lines ~17603-17736; FUN_08076d18/FUN_08076dc8 callgraph edges confirmed via ghidra/callgraph.json."
+    }
+  ],
+  "fields": [
+    {
+      "name": "header_checksum",
+      "offset": 0,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": ["0x08075a94"],
+      "readers": ["0x08075c7c"],
+      "observed_values": {"cap-00-future-0.sav": "0xc3f9f236", "cap-01-future-1.sav": "0xc3f9f236"},
+      "update_mechanism": "Recomputed by FUN_08075a94 on every header write (sum of 16 words with placeholders; see checksums[0])",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Code at ghidra/decompiled.c:17388-17401 plus Python verification against both .sav files (exact match)"
+    },
+    {
+      "name": "header_checksum_complement",
+      "offset": 4,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": ["0x08075a94"],
+      "readers": ["0x08075c7c"],
+      "observed_values": {"cap-00-future-0.sav": "0x3c060dc9", "cap-01-future-1.sav": "0x3c060dc9"},
+      "update_mechanism": "Written as bitwise NOT of header_checksum",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "ghidra/decompiled.c:17401 (puVar7[1] = ~uVar3) plus Python verification: stored == ~checksum in both files"
+    },
+    {
+      "name": "format_tag",
+      "offset": 8,
+      "size": 2,
+      "type": "ascii",
+      "ram_addr": null,
+      "writers": ["0x08075a94"],
+      "readers": [],
+      "observed_values": {"cap-00-future-0.sav": "30 31", "cap-01-future-1.sav": "30 31"},
+      "update_mechanism": "Hardcoded literal bytes 0x30 ('0') and 0x31 ('1') written by FUN_08075a94",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "ghidra/decompiled.c:17367-17368"
+    },
+    {
+      "name": "save_generation_counter",
+      "offset": 10,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": ["0x08075a94"],
+      "readers": [],
+      "observed_values": {"cap-00-future-0.sav": "0x0000", "cap-01-future-1.sav": "0x0000"},
+      "update_mechanism": "Incremented in place (+=1) by FUN_08075a94 on every header write",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "ghidra/decompiled.c:17369 (*(short*)(puVar7+10) += 1); both samples read 0, consistent with an early/pre-increment capture"
+    },
+    {
+      "name": "header_copied_u16_0x0c",
+      "offset": 12,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": ["0x08075a94"],
+      "readers": [],
+      "observed_values": {"cap-00-future-0.sav": "0x0000", "cap-01-future-1.sav": "0x0000"},
+      "update_mechanism": "Straight copy from an external source struct pointer (_DAT_08075b20)",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "ghidra/decompiled.c:17370-17371"
+    },
+    {
+      "name": "header_const_flag_0x0f",
+      "offset": 15,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": ["0x08075a94"],
+      "readers": [],
+      "observed_values": {"cap-00-future-0.sav": "0x01", "cap-01-future-1.sav": "0x01"},
+      "update_mechanism": "Hardcoded literal 1",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "ghidra/decompiled.c:17373"
+    },
+    {
+      "name": "header_const_0x10",
+      "offset": 16,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": ["0x08075a94"],
+      "readers": [],
+      "observed_values": {"cap-00-future-0.sav": "0x34", "cap-01-future-1.sav": "0x34"},
+      "update_mechanism": "Hardcoded literal 0x34",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "ghidra/decompiled.c:17374"
+    },
+    {
+      "name": "header_copied_u32_0x18",
+      "offset": 24,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": ["0x08075a94"],
+      "readers": [],
+      "observed_values": {"cap-00-future-0.sav": "0x00000000", "cap-01-future-1.sav": "0x00000000"},
+      "update_mechanism": "Straight copy from external source struct",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "ghidra/decompiled.c:17379"
+    },
+    {
+      "name": "version_string",
+      "offset": 28,
+      "size": 20,
+      "type": "ascii",
+      "ram_addr": null,
+      "writers": ["0x08075a94"],
+      "readers": ["0x08075c7c"],
+      "observed_values": {"cap-00-future-0.sav": "ZeroMissionEURver005", "cap-01-future-1.sav": "ZeroMissionEURver005"},
+      "update_mechanism": "Byte-loop copy of 0x14 bytes from a reference source buffer; verified byte-for-byte by FUN_08075c7c (sets error bit 1 on mismatch)",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "ghidra/decompiled.c:17380-17385 (writer), 17530-17536 (reader); matches both .sav files exactly"
+    },
+    {
+      "name": "header_trailing_fill",
+      "offset": 48,
+      "size": 16,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": ["0x08075c7c"],
+      "observed_values": {"cap-00-future-0.sav": "ff*16", "cap-01-future-1.sav": "ff*16"},
+      "update_mechanism": "Not written by any traced function; included in the checksum sum as literal 0xFFFFFFFF words",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Included in checksum verification range (0x00-0x3F); value never observed to differ from SRAM fill"
+    },
+    {
+      "name": "zeroed_reserved_block",
+      "offset": 28096,
+      "size": 128,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"cap-00-future-0.sav": "00*128", "cap-01-future-1.sav": "00*128"},
+      "update_mechanism": "unknown",
+      "confidence": "HYPOTHESIS",
+      "evidence": "All-zero in both samples, distinct from the dominant 0xFF SRAM fill; no writer located in available decompilation"
+    },
+    {
+      "name": "slot_select_label_leading_u16",
+      "offset": 27968,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"cap-00-future-0.sav": "0xffff(unwritten)", "cap-01-future-1.sav": "0x001e"},
+      "update_mechanism": "unknown",
+      "confidence": "UNKNOWN",
+      "evidence": "Changed only between the two captures alongside the slot_select_label_text and zerosave_footer fields; no writer or checksum algorithm identified"
+    },
+    {
+      "name": "slot_select_label_leading_u32",
+      "offset": 27970,
+      "size": 4,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"cap-00-future-0.sav": "0xffffffff(unwritten)", "cap-01-future-1.sav": "0x61299ed6"},
+      "update_mechanism": "unknown",
+      "confidence": "UNKNOWN",
+      "evidence": "Brute-force checksum search against all plausible ranges found no algorithmic match"
+    },
+    {
+      "name": "slot_select_label_text",
+      "offset": 27974,
+      "size": 34,
+      "type": "ascii",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"cap-00-future-0.sav": "unwritten(0xff)", "cap-01-future-1.sav": "SELECTSAVENUM_00\u0000ENDDATA_SEL_SAVE"},
+      "update_mechanism": "unknown",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "String content read directly from .sav bytes; no writer function located among the 339 decompiled functions"
+    },
+    {
+      "name": "zerosave_tag",
+      "offset": 32624,
+      "size": 8,
+      "type": "ascii",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"cap-00-future-0.sav": "unwritten(0xff)", "cap-01-future-1.sav": "ZEROSAVE"},
+      "update_mechanism": "unknown",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "String content read directly from .sav bytes; no writer function located among the 339 decompiled functions"
+    },
+    {
+      "name": "zerosave_footer_field_a",
+      "offset": 32632,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"cap-00-future-0.sav": "0xffffffff(unwritten)", "cap-01-future-1.sav": "0x000042c0"},
+      "update_mechanism": "unknown",
+      "confidence": "UNKNOWN",
+      "evidence": "Brute-force checksum search against all plausible ranges found no algorithmic match"
+    },
+    {
+      "name": "zerosave_footer_field_b",
+      "offset": 32636,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"cap-00-future-0.sav": "0xffffffff(unwritten)", "cap-01-future-1.sav": "0x3bf20802"},
+      "update_mechanism": "unknown",
+      "confidence": "UNKNOWN",
+      "evidence": "Brute-force checksum search against all plausible ranges found no algorithmic match"
+    },
+    {
+      "name": "game_save_slot_record",
+      "offset": null,
+      "size": 4640,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": ["0x08076b48"],
+      "readers": ["0x08076d18", "0x08076dc8"],
+      "observed_values": {},
+      "update_mechanism": "Not populated in either .sav sample; code-confirmed size (0x1220) and 3-slot, 2-copy redundancy scheme via FUN_08076b48/FUN_08076d18/FUN_08076dc8",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "ghidra/decompiled.c:17603-17736; constant 0x1220 used identically at 3 call sites inside a while(iVar8<3) loop"
+    }
+  ],
+  "fuzzing_targets": [
+    {"offset": 0, "size": 4, "mutation": "flip one bit in both header_checksum copies (0x0000 and 0x6d40) identically", "requires_checksum_repair": false, "predicted_effect": "Both header candidates fail checksum validation; FUN_08075b28 'all invalid' branch should rebuild a fresh default header rather than crash."},
+    {"offset": 0, "size": 64, "mutation": "zero the entire primary header record while leaving the 0x6d40 mirror intact", "requires_checksum_repair": false, "predicted_effect": "Next save-system mount should copy the intact mirror back over the corrupted primary, restoring the original bytes exactly."},
+    {"offset": 47, "size": 1, "mutation": "change one character of the version_string in both header copies, then write a correct checksum for the mutated record", "requires_checksum_repair": true, "predicted_effect": "FUN_08075c7c should still flag error bit 1 (version-string mismatch) despite a valid checksum, isolating whether the version check is actually enforced at runtime."},
+    {"offset": 10, "size": 2, "mutation": "set save_generation_counter to 0xFFFE in both header copies with a correctly recomputed checksum", "requires_checksum_repair": true, "predicted_effect": "After one more save event the field should read 0xFFFF, then wrap to 0x0000 on the following save, with no checksum failure."},
+    {"offset": 27974, "size": 34, "mutation": "revert slot_select_label_text and the preceding 6 bytes to the all-0xFF 'unwritten' state seen in cap-00", "requires_checksum_repair": false, "predicted_effect": "Unknown a priori - this test is designed specifically to determine whether these bytes are read live by the save-slot-select UI or are inert remnants."},
+    {"offset": 4096, "size": 16, "mutation": "corrupt bytes in an untouched 0xFF filler region far from any identified active range", "requires_checksum_repair": false, "predicted_effect": "No crash, no visible change, and bytes remain corrupted after a save/reload cycle - negative control confirming the region is unused padding rather than an undiscovered field."}
+  ],
+  "open_questions": [
+    "Writer function(s) for the 0x6D80-0x6DA6 slot-select-label block and the 0x7F70-0x7F7F ZEROSAVE footer block were not located among the 339 decompiled functions provided.",
+    "No checksum/sum/xor/CRC32 algorithm (over any tested byte range) matches the numeric fields at 0x6D82 and 0x7F78/0x7F7C; their true derivation is unknown.",
+    "Absolute SRAM offsets of the three 0x1220-byte game-save slots and their redundant copy regions are code-confirmed but could not be located in either provided .sav sample, since neither sample has a populated game-save slot.",
+    "The third header-redundancy candidate referenced by FUN_08075c7c(param_1==2) was not found at a distinct SRAM offset in either sample; it may be RAM-only or simply unexercised.",
+    "Semantics of the single copied byte/u16 header fields at offsets +0x0C, +0x0E, +0x11, +0x12, +0x13, +0x14, +0x18 are code-confirmed as copies from an external source struct, but all read as zero in both available samples.",
+    "PACKET.md's corpus metadata references 6 total captured .sav files and richer active-range data than the 2 files actually provided to this workspace; the slot-rotation/selection behavior across the full corpus is unverified here."
+  ]
+}

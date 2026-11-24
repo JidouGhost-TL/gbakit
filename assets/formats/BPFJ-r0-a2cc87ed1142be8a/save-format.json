@@ -1,0 +1,239 @@
+{
+  "schema": "gbakit-save-research/1",
+  "release_key": "BPFJ-r0-a2cc87ed1142be8a",
+  "display_name": "Puyo Puyo Fever (Japan) (En,Ja,Fr,De,Es,It)",
+  "rom_sha256": "a2cc87ed1142be8a534ea8b035969879c786f287d1a89cbc87f101e96b5a065d",
+  "game_code": "BPFJ",
+  "header_family": "BPF",
+  "community_id": "comm-001",
+  "overall_confidence": "MEDIUM",
+  "media": {
+    "kind": "eeprom512",
+    "size_bytes": 512,
+    "sdk_tags": [],
+    "fill_byte": "0xff"
+  },
+  "slots_and_copies": [
+    {
+      "name": "slot_0",
+      "offset": 0,
+      "size": 408,
+      "redundancy_role": "primary",
+      "selection_rule": "Single active region observed (0x000-0x197); no second/backup copy found anywhere in the 512-byte EEPROM image. Remaining 104 bytes (0x198-0x1FF) stay at the blank-EEPROM fill byte 0xFF in both samples."
+    }
+  ],
+  "magic_signatures": [
+    {
+      "offset": 0,
+      "bytes_hex": "004f00590055005000320030003000460000000200010100",
+      "ascii": "OYUP200F (one ASCII byte per big-endian u16 slot)",
+      "verified_in_code": false,
+      "verified_in_sav": true,
+      "function_addrs": []
+    }
+  ],
+  "checksums": [
+    {
+      "name": "header_chunk_table_checksum",
+      "algorithm": "sum16_be",
+      "formula_detail": "16-bit big-endian additive checksum: sum of all 16-bit big-endian words over bytes 0x02A-0x18F inclusive (358 bytes / 179 words), result taken mod 0x10000. Stored at 0x190-0x191 interpreted big-endian (byte 0x190 is the checksum's high byte). No decompiled checksum-computation function was located among the 109 traced functions; this formula was derived purely by brute-force Python search over all (start,end) windows in the populated .sav and is the unique window that matches the stored value exactly.",
+      "stored_offset": 400,
+      "stored_size": 2,
+      "covered_start": 42,
+      "covered_end": 400,
+      "function_addrs": [],
+      "verified_on_samples": [
+        {
+          "file": "saves/cap-01-future-1.sav",
+          "stored_hex": "5f1d",
+          "computed_hex": "5f1d",
+          "match": true
+        },
+        {
+          "file": "saves/cap-00-future-0.sav",
+          "stored_hex": "ffff",
+          "computed_hex": "n/a-blank-eeprom-no-active-payload",
+          "match": false
+        }
+      ],
+      "confidence": "HYPOTHESIS"
+    }
+  ],
+  "io_driver_functions": [
+    {
+      "addr": "0x08067630",
+      "role": "serialize",
+      "callers": ["0x080676b0", "0x08067774"],
+      "notes": "Generic DMA3-style transfer primitive: sets SAD=param_1, DAD=param_2, CNT=(param_3 & 0xffff) | 0x80000000 (enable bit), busy-waits on a status word, restores IME, then tail-calls via an unrecovered jump table. Used as the low-level bit-transfer helper by both the EEPROM read and write functions. Standard GBA hardware pattern, not game-specific."
+    },
+    {
+      "addr": "0x080676b0",
+      "role": "read",
+      "callers": ["0x080678d4"],
+      "notes": "EEPROM block READ: builds a 2-bit '11' READ header + up to 6 address bits, sends via FUN_08067630 to bus address 0xD000000, then pulls back 68 bits (4 dummy + 64 data) and unpacks MSB-first into 4x16-bit words."
+    },
+    {
+      "addr": "0x08067774",
+      "role": "write",
+      "callers": [],
+      "notes": "EEPROM block WRITE: builds a 2-bit '10' WRITE header + 6 address bits + 64 data bits in one bitstream, sends via FUN_08067630, then busy-waits on the EEPROM ready bit using a VCOUNT-style scanline counter (timeout ~136 scanlines, wraparound 228). callgraph.json lists zero callers among the 109 traced functions -- the game-specific caller is UNTRACED."
+    },
+    {
+      "addr": "0x08067760",
+      "role": "write",
+      "callers": ["0x0806792c"],
+      "notes": "Thin wrapper: calls FUN_08067774(param_1, param_2, 1), forcing the wait-for-ready flag on."
+    },
+    {
+      "addr": "0x080678d4",
+      "role": "read",
+      "callers": ["0x0806792c"],
+      "notes": "Write-verify: calls FUN_080676b0 (READ) to read back the just-written 8-byte block and compares all 4 words against the expected data; returns 0x8000 on mismatch, 0 on match."
+    },
+    {
+      "addr": "0x0806792c",
+      "role": "write",
+      "callers": [],
+      "notes": "Write-verify-retry orchestrator: up to 3 attempts of WRITE (FUN_08067760) then VERIFY (FUN_080678d4), breaking on first full success. This is the natural per-8-byte-block entry point for a game save routine, but callgraph.json lists zero callers among the 109 traced functions -- the game-specific caller is UNTRACED."
+    }
+  ],
+  "caller_chains": [
+    {
+      "entry_caller": "0x0806792c",
+      "chain": ["0x0806792c", "0x08067760", "0x08067774", "0x08067630"],
+      "trigger_context": "UNKNOWN - no caller into 0x0806792c was found in the 109 traced functions (ghidra/callgraph.json reports callers: [] for this address)",
+      "ram_fields_updated": [],
+      "how_mapped": "Traced downward from the MMIO-seed functions in ghidra/save_related_functions.c through ghidra/callgraph.json edges; the chain is closed on the hardware-driver side (0x0806792c -> 0x08067760 -> 0x08067774 -> 0x08067630, and the parallel verify branch 0x0806792c -> 0x080678d4 -> 0x080676b0 -> 0x08067630), but has no upstream (game-logic) caller in the available 109-function decompilation. A full-text search of ghidra/decompiled.c for FUN_08067774 and FUN_0806792c confirms no other function references them."
+    }
+  ],
+  "fields": [
+    {
+      "name": "header_string",
+      "offset": 0,
+      "size": 16,
+      "type": "ascii",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"cap-01-future-1.sav": "OYUP200F (one char per big-endian u16 slot)"},
+      "update_mechanism": "UNKNOWN - no serializer function traced",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Byte-exact in the one populated .sav (bytes 00 4f 00 59 00 55 00 50 00 32 00 30 00 30 00 46); absent (0xFF) in the blank cap-00-future-0.sav. 'CONFIRMED_VERIFIED' refers only to the bytes being present in the real .sav, not to any code-level proof of the generating function, which is unknown."
+    },
+    {
+      "name": "header_flags_block_1",
+      "offset": 16,
+      "size": 16,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"cap-01-future-1.sav": "00 00 00 02 00 01 01 00 00 00 00 00 00 00 00 00"},
+      "update_mechanism": "UNKNOWN",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Single-sample byte capture only; no code or second sample to establish field boundaries within this 16-byte span."
+    },
+    {
+      "name": "header_flags_block_2",
+      "offset": 32,
+      "size": 10,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"cap-01-future-1.sav": "01 03 00 00 00 00 00 00 00 00"},
+      "update_mechanism": "UNKNOWN",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Single-sample byte capture only."
+    },
+    {
+      "name": "tagged_chunk_table",
+      "offset": 42,
+      "size": 358,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"cap-01-future-1.sav": "see saves/hexdump_and_diffs.txt lines 9-31; repeating 1-byte-index + 3-byte-ASCII-tag records (OCA,RAT,DIR,POP,LRA,IMA,ARF,GLK,GND,BSO,FAR,HOH,INO,IRP,.UY), each tag appearing twice in two different orderings"},
+      "update_mechanism": "UNKNOWN - this is the byte range covered by the checksum at offset 400 (see checksums[0]); no serializer function was traced",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Structural pattern (length-prefixed tags) recognized from raw hex only; semantic meaning deliberately not guessed per clean-room rules since no decompiled code supports any specific interpretation."
+    },
+    {
+      "name": "chunk_table_checksum",
+      "offset": 400,
+      "size": 2,
+      "type": "u16_be",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"cap-01-future-1.sav": "0x5f1d"},
+      "update_mechanism": "Hypothesized sum16_be over offsets 42-399 (see checksums[0])",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Python-verified: sum of big-endian u16 words over bytes 0x02A-0x18F equals the stored big-endian value 0x5F1D exactly; confirmed as the unique matching window via brute-force search over all (start,end) pairs. Not code-verified (no checksum routine found in the 109 traced functions)."
+    },
+    {
+      "name": "reserved_tail",
+      "offset": 402,
+      "size": 6,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"cap-01-future-1.sav": "00 00 00 00 00 00"},
+      "update_mechanism": "UNKNOWN",
+      "confidence": "UNKNOWN",
+      "evidence": "Constant zero in the only populated sample; inside the declared 'active' 408-byte range but outside the verified checksum coverage (0x02A-0x18F)."
+    },
+    {
+      "name": "unused_eeprom_tail",
+      "offset": 408,
+      "size": 104,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"cap-00-future-0.sav": "0xFF x104", "cap-01-future-1.sav": "0xFF x104"},
+      "update_mechanism": "N/A - never written in either sample",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Both .sav files agree this region stays at the blank-EEPROM fill byte 0xFF."
+    }
+  ],
+  "fuzzing_targets": [
+    {
+      "offset": 42,
+      "size": 1,
+      "mutation": "Flip one byte inside the tagged chunk table (e.g. 0x30 -> 0x31 at offset 0x2B) without recomputing the checksum",
+      "requires_checksum_repair": false,
+      "predicted_effect": "If offset 0x190 is actually validated at load time, expect a reset-to-blank or error/retry state; if gameplay loads unaffected, 0x190 is likely not enforced as a load-time integrity gate."
+    },
+    {
+      "offset": 42,
+      "size": 1,
+      "mutation": "Flip the same byte as above, but recompute sum16_be over 0x02A-0x18F and write the corrected value (big-endian) at 0x190",
+      "requires_checksum_repair": true,
+      "predicted_effect": "Game should load normally; the mutated chunk-table entry's effect should become observable wherever that entry is actually consumed, helping to identify its semantics."
+    },
+    {
+      "offset": 402,
+      "size": 6,
+      "mutation": "Write non-zero bytes into the reserved tail (0x192-0x197), which is outside the verified checksum range",
+      "requires_checksum_repair": false,
+      "predicted_effect": "No observable effect if this is unused reserved space; a visible effect or corruption-handling behavior would indicate it is a secondary field not yet exercised by the one sample."
+    },
+    {
+      "offset": 408,
+      "size": 8,
+      "mutation": "Overwrite 0x198-0x19F from 0xFF to 0x00",
+      "requires_checksum_repair": false,
+      "predicted_effect": "No observable effect expected if this is genuinely unused EEPROM space; any effect would falsify the '408 bytes active' boundary."
+    }
+  ],
+  "open_questions": [
+    "No game-specific caller into the EEPROM write/verify driver (0x08067774 / 0x0806792c) was found in the 109 traced functions; callgraph.json reports callers: [] for both. The save-serialization function and any in-RAM (0x02xxxxxx/0x03xxxxxx) save struct address are UNKNOWN and require a re-seeded upward Ghidra trace.",
+    "The checksum algorithm (sum16_be over 0x02A-0x18F, stored big-endian at 0x190) is verified against the one populated .sav but not against decompiled code, and has not been cross-checked against a second independently-generated save sample.",
+    "The semantic meaning of the 358-byte tagged chunk table (0x02A-0x18F) is unknown; only its repeating structural shape (1-byte index + 3-byte ASCII tag + numeric fields, each tag appearing twice in two orderings) was identified.",
+    "The purpose of the 6-byte reserved/zero field at 0x192-0x197 (inside the declared active range but outside the verified checksum coverage) is unknown.",
+    "No second save slot, mirrored/backup copy, or generation counter was found; it is unknown whether the game relies on EEPROM's own wear-leveling or simply has no backup-slot design."
+  ]
+}

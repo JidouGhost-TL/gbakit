@@ -1,0 +1,1470 @@
+{
+  "schema": "gbakit-save-research/1",
+  "release_key": "AR6E-r0-4bc38c2edb9cae07",
+  "display_name": "Tom Clancy's Rainbow Six - Rogue Spear (USA) (En,Fr,De,Es,It)",
+  "rom_sha256": "4bc38c2edb9cae0797d88416da2ec213262d51af5619c7684ebdee24464e6b09",
+  "game_code": "AR6E",
+  "header_family": "AR6",
+  "community_id": "comm-007",
+  "overall_confidence": "HIGH",
+  "media": {
+    "kind": "eeprom512",
+    "size_bytes": 512,
+    "sdk_tags": [
+      "EEPROM_V122"
+    ],
+    "fill_byte": "0x00"
+  },
+  "slots_and_copies": [
+    {
+      "name": "magic_block",
+      "offset": 0,
+      "size": 8,
+      "redundancy_role": "global_config",
+      "selection_rule": "always at offset 0; validated by FUN_0800c33c, device zero-formatted on mismatch"
+    },
+    {
+      "name": "slot_0",
+      "offset": 8,
+      "size": 28,
+      "redundancy_role": "primary",
+      "selection_rule": "fixed offset 8+0*28; checksum-gated, defaults substituted in RAM on failure (FUN_08019d10); no backup copy"
+    },
+    {
+      "name": "slot_1",
+      "offset": 36,
+      "size": 28,
+      "redundancy_role": "primary",
+      "selection_rule": "fixed offset 8+1*28; checksum-gated, defaults substituted in RAM on failure (FUN_08019d10); no backup copy"
+    },
+    {
+      "name": "slot_2",
+      "offset": 64,
+      "size": 28,
+      "redundancy_role": "primary",
+      "selection_rule": "fixed offset 8+2*28; checksum-gated, defaults substituted in RAM on failure (FUN_08019d10); no backup copy"
+    },
+    {
+      "name": "slot_3",
+      "offset": 92,
+      "size": 28,
+      "redundancy_role": "primary",
+      "selection_rule": "fixed offset 8+3*28; checksum-gated, defaults substituted in RAM on failure (FUN_08019d10); no backup copy"
+    },
+    {
+      "name": "slot_4",
+      "offset": 120,
+      "size": 28,
+      "redundancy_role": "primary",
+      "selection_rule": "fixed offset 8+4*28; checksum-gated, defaults substituted in RAM on failure (FUN_08019d10); no backup copy"
+    },
+    {
+      "name": "global_config",
+      "offset": 148,
+      "size": 24,
+      "redundancy_role": "global_config",
+      "selection_rule": "fixed offset 0x94; zero at +0x00 or checksum mismatch triggers RAM defaults (FUN_0802e5e0); no backup copy"
+    },
+    {
+      "name": "unused_tail",
+      "offset": 172,
+      "size": 340,
+      "redundancy_role": "unknown",
+      "selection_rule": "unused; 0x1F8..0x1FF holds FFx8 erased sentinel"
+    }
+  ],
+  "magic_signatures": [
+    {
+      "offset": 0,
+      "bytes_hex": "524f475545533032",
+      "ascii": "ROGUES02",
+      "verified_in_code": true,
+      "verified_in_sav": true,
+      "function_addrs": [
+        "0x0800c33c",
+        "0x0803c55c"
+      ]
+    }
+  ],
+  "checksums": [
+    {
+      "name": "slot_sum16",
+      "algorithm": "sum16_le",
+      "formula_detail": "u16_le at slot+0x18 = (sum of unsigned bytes slot+0x00..slot+0x17) & 0xFFFF, computed by FUN_0803a2a0(len=0x18); sav dump stores each 8-byte block byte-reversed",
+      "stored_offset": 32,
+      "stored_size": 2,
+      "covered_start": 8,
+      "covered_end": 32,
+      "function_addrs": [
+        "0x0803a2a0",
+        "0x08019d6c",
+        "0x08019d10",
+        "0x08019e94"
+      ],
+      "verified_on_samples": [
+        {
+          "file": "cap-00-future-0.sav",
+          "stored_hex": "0x03ff",
+          "computed_hex": "0x03ff",
+          "match": true
+        },
+        {
+          "file": "cap-01-future-1.sav",
+          "stored_hex": "0x03ff",
+          "computed_hex": "0x03ff",
+          "match": true
+        }
+      ],
+      "confidence": "CONFIRMED_VERIFIED"
+    },
+    {
+      "name": "global_sum16",
+      "algorithm": "sum16_le",
+      "formula_detail": "u16_le at global+0x16 (logical 0xAA) = (sum of unsigned bytes global+0x00..global+0x15) & 0xFFFF, computed by FUN_0803a2a0(len=0x16); note stored_offset/covered range given for global record base 0x94: stored at 170, covers 148..170",
+      "stored_offset": 170,
+      "stored_size": 2,
+      "covered_start": 148,
+      "covered_end": 170,
+      "function_addrs": [
+        "0x0803a2a0",
+        "0x0802e678",
+        "0x0802e5e0"
+      ],
+      "verified_on_samples": [
+        {
+          "file": "cap-00-future-0.sav",
+          "stored_hex": "0x0000",
+          "computed_hex": "0x0000",
+          "match": true
+        },
+        {
+          "file": "cap-01-future-1.sav",
+          "stored_hex": "0x0002",
+          "computed_hex": "0x0002",
+          "match": true
+        }
+      ],
+      "confidence": "CONFIRMED_VERIFIED"
+    }
+  ],
+  "io_driver_functions": [
+    {
+      "addr": "0x0803a778",
+      "role": "write",
+      "callers": [
+        "0x0803a7f8",
+        "0x0803a8a8"
+      ],
+      "notes": "DMA3 program + busy-wait (count|0x80000000); EEPROM bus at 0x0D000000"
+    },
+    {
+      "addr": "0x0803a7f8",
+      "role": "read",
+      "callers": [
+        "0x0803a984",
+        "0x0800c3c4",
+        "0x0800c50c"
+      ],
+      "notes": "read one 8-byte EEPROM block, MSB-first bitstream, descending-pointer reassembly (origin of per-block byte reversal in dumps)"
+    },
+    {
+      "addr": "0x0803a8a8",
+      "role": "write",
+      "callers": [
+        "0x0803a9dc"
+      ],
+      "notes": "write one 8-byte EEPROM block + completion poll on 0x0D000000 bit0"
+    },
+    {
+      "addr": "0x0803a984",
+      "role": "read",
+      "callers": [
+        "0x0803a9dc"
+      ],
+      "notes": "verify: read-back and compare 4x s16, returns 0x8000 on mismatch"
+    },
+    {
+      "addr": "0x0803a9dc",
+      "role": "write",
+      "callers": [
+        "0x0800c3c4"
+      ],
+      "notes": "write+verify with up to 3 retries"
+    },
+    {
+      "addr": "0x0803a6ac",
+      "role": "write",
+      "callers": [
+        "0x0803a8a8"
+      ],
+      "notes": "EEPROM bus setup helper"
+    },
+    {
+      "addr": "0x0803a734",
+      "role": "write",
+      "callers": [
+        "0x0803a8a8"
+      ],
+      "notes": "EEPROM bus teardown helper"
+    },
+    {
+      "addr": "0x0800c50c",
+      "role": "read",
+      "callers": [
+        "0x0800c4ac",
+        "0x0800c33c"
+      ],
+      "notes": "ReadBytes: byte offset -> block>>3 / byte&7, cross-block copy"
+    },
+    {
+      "addr": "0x0800c3c4",
+      "role": "write",
+      "callers": [
+        "0x0800c4c4",
+        "0x0800c33c"
+      ],
+      "notes": "WriteBytes: per-block read-modify-write via FUN_0803a9dc"
+    },
+    {
+      "addr": "0x0800c4ac",
+      "role": "read",
+      "callers": [
+        "0x0803a1b8",
+        "0x0803a238"
+      ],
+      "notes": "read wrapper"
+    },
+    {
+      "addr": "0x0800c4c4",
+      "role": "write",
+      "callers": [
+        "0x0803a1f8",
+        "0x0803a26c",
+        "0x0800c33c"
+      ],
+      "notes": "write wrapper"
+    },
+    {
+      "addr": "0x0800c33c",
+      "role": "deserialize",
+      "callers": [],
+      "notes": "validate-or-format: memcmp magic at 0, zero-fill device + rewrite magic on mismatch; caller unrecovered (indirect)"
+    },
+    {
+      "addr": "0x0803a2a0",
+      "role": "checksum",
+      "callers": [
+        "0x08019d6c",
+        "0x08019e94",
+        "0x0802e5e0",
+        "0x0802e678"
+      ],
+      "notes": "s16 byte-sum over len bytes"
+    },
+    {
+      "addr": "0x0803a1b8",
+      "role": "read",
+      "callers": [
+        "0x08019d10"
+      ],
+      "notes": "read slot n (28B at 8+n*28)"
+    },
+    {
+      "addr": "0x0803a1f8",
+      "role": "write",
+      "callers": [
+        "0x08019d6c"
+      ],
+      "notes": "write slot n (28B at 8+n*28)"
+    },
+    {
+      "addr": "0x0803a238",
+      "role": "read",
+      "callers": [
+        "0x0802e5e0"
+      ],
+      "notes": "read global (24B at 0x94)"
+    },
+    {
+      "addr": "0x0803a26c",
+      "role": "write",
+      "callers": [
+        "0x0802e678"
+      ],
+      "notes": "write global (24B at 0x94)"
+    },
+    {
+      "addr": "0x08019d10",
+      "role": "deserialize",
+      "callers": [
+        "0x080198a8"
+      ],
+      "notes": "load slot, checksum-gated default substitution"
+    },
+    {
+      "addr": "0x08019d6c",
+      "role": "serialize",
+      "callers": [],
+      "notes": "store slot checksum + flush 28B; gameplay caller unrecovered"
+    },
+    {
+      "addr": "0x0802e5e0",
+      "role": "deserialize",
+      "callers": [],
+      "notes": "load global, defaults on zero/checksum failure; caller unrecovered"
+    },
+    {
+      "addr": "0x0802e678",
+      "role": "serialize",
+      "callers": [],
+      "notes": "zero global+0x04, store checksum, flush 24B; caller unrecovered"
+    }
+  ],
+  "caller_chains": [
+    {
+      "entry_caller": "0x080198a8",
+      "chain": [
+        "0x080198a8",
+        "0x08019d10",
+        "0x0803a1b8",
+        "0x0800c4ac",
+        "0x0800c50c",
+        "0x0803a7f8",
+        "0x0803a778"
+      ],
+      "trigger_context": "boot/profile init (inferred; entry caller unrecovered)",
+      "ram_fields_updated": [
+        "slot[n]+0x00..+0x1B (defaults on checksum/read failure)",
+        "derived +0x8C..+0xA3 via 0x08019dd8"
+      ],
+      "how_mapped": "callgraph edges plus textual func_0x references in decompiled.c; loop n<5 and RAM stride +7 u32 read in FUN_080198a8 body"
+    },
+    {
+      "entry_caller": "0x08019d6c",
+      "chain": [
+        "0x08019d6c",
+        "0x0803a1f8",
+        "0x0800c4c4",
+        "0x0800c3c4",
+        "0x0803a9dc",
+        "0x0803a8a8",
+        "0x0803a778"
+      ],
+      "trigger_context": "profile save (gameplay caller unrecovered)",
+      "ram_fields_updated": [
+        "slot[n]+0x18 checksum (via 0x0803a2a0 len 0x18)"
+      ],
+      "how_mapped": "textual func_0x references; offset formula (n*0x1C0000+0x80000)>>16 = 8+n*28 in FUN_0803a1f8"
+    },
+    {
+      "entry_caller": "0x0802e5e0",
+      "chain": [
+        "0x0802e5e0",
+        "0x0803a238",
+        "0x0800c4ac",
+        "0x0800c50c",
+        "0x0803a7f8",
+        "0x0803a778"
+      ],
+      "trigger_context": "global config load (caller unrecovered)",
+      "ram_fields_updated": [
+        "global+0x00..+0x17 (defaults on zero/checksum failure)"
+      ],
+      "how_mapped": "textual func_0x references; FUN_0803a238 reads 0x18 bytes at 0x94"
+    },
+    {
+      "entry_caller": "0x0802e678",
+      "chain": [
+        "0x0802e678",
+        "0x0803a26c",
+        "0x0800c4c4",
+        "0x0800c3c4",
+        "0x0803a9dc",
+        "0x0803a8a8",
+        "0x0803a778"
+      ],
+      "trigger_context": "global config save, presumably options exit (caller unrecovered)",
+      "ram_fields_updated": [
+        "global+0x04 zeroed before flush",
+        "global+0x16 checksum (via 0x0803a2a0 len 0x16)"
+      ],
+      "how_mapped": "textual func_0x references in FUN_0802e678 body"
+    },
+    {
+      "entry_caller": "0x0800c33c",
+      "chain": [
+        "0x0800c33c",
+        "0x0800c50c",
+        "0x0803c55c",
+        "0x0800c4c4",
+        "0x0800c3c4"
+      ],
+      "trigger_context": "first-boot / corrupted-save format (caller unrecovered, SDK glue)",
+      "ram_fields_updated": [],
+      "how_mapped": "function body read directly; no caller in callgraph.json or decompiled.c text"
+    }
+  ],
+  "fields": [
+    {
+      "name": "magic_ROGUES02",
+      "offset": 0,
+      "size": 8,
+      "type": "ascii",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [
+        "0x0800c33c"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": "ROGUES02 (raw 20SEUGOR)",
+        "cap-01-future-1.sav": "ROGUES02 (raw 20SEUGOR)"
+      },
+      "update_mechanism": "written once by format path FUN_0800c33c on magic mismatch; never rewritten by game saves",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "sav bytes after per-8-byte-block reversal + FUN_0800c33c memcmp vs caller string via FUN_0803c55c"
+    },
+    {
+      "name": "slot0_field_00",
+      "offset": 8,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": [
+        "0x08019d98",
+        "0x08019d6c"
+      ],
+      "readers": [
+        "0x08019d10"
+      ],
+      "observed_values": {
+        "cap-00": "{val}",
+        "cap-01": "{val}"
+      },
+      "update_mechanism": "mutated in RAM slot struct (28B stride), flushed whole-record by FUN_08019d6c via FUN_0803a1f8",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "defaults from FUN_08019d98; OR-reduction in FUN_08019dd8 for +0x10/+0x14; sav bytes verified"
+    },
+    {
+      "name": "slot0_field_04",
+      "offset": 12,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": [
+        "0x08019d98",
+        "0x08019d6c"
+      ],
+      "readers": [
+        "0x08019d10"
+      ],
+      "observed_values": {
+        "cap-00": "{val}",
+        "cap-01": "{val}"
+      },
+      "update_mechanism": "mutated in RAM slot struct (28B stride), flushed whole-record by FUN_08019d6c via FUN_0803a1f8",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "defaults from FUN_08019d98; OR-reduction in FUN_08019dd8 for +0x10/+0x14; sav bytes verified"
+    },
+    {
+      "name": "slot0_field_08",
+      "offset": 16,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": [
+        "0x08019d98",
+        "0x08019d6c"
+      ],
+      "readers": [
+        "0x08019d10"
+      ],
+      "observed_values": {
+        "cap-00": "{val}",
+        "cap-01": "{val}"
+      },
+      "update_mechanism": "mutated in RAM slot struct (28B stride), flushed whole-record by FUN_08019d6c via FUN_0803a1f8",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "defaults from FUN_08019d98; OR-reduction in FUN_08019dd8 for +0x10/+0x14; sav bytes verified"
+    },
+    {
+      "name": "slot0_field_0C_sentinel",
+      "offset": 20,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": [
+        "0x08019d98",
+        "0x08019d6c"
+      ],
+      "readers": [
+        "0x08019d10"
+      ],
+      "observed_values": {
+        "cap-00": "{val}",
+        "cap-01": "{val}"
+      },
+      "update_mechanism": "mutated in RAM slot struct (28B stride), flushed whole-record by FUN_08019d6c via FUN_0803a1f8",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "defaults from FUN_08019d98; OR-reduction in FUN_08019dd8 for +0x10/+0x14; sav bytes verified"
+    },
+    {
+      "name": "slot0_flags_10",
+      "offset": 24,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": [
+        "0x08019d98",
+        "0x08019d6c"
+      ],
+      "readers": [
+        "0x08019dd8"
+      ],
+      "observed_values": {
+        "cap-00": "{val}",
+        "cap-01": "{val}"
+      },
+      "update_mechanism": "mutated in RAM slot struct (28B stride), flushed whole-record by FUN_08019d6c via FUN_0803a1f8",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "defaults from FUN_08019d98; OR-reduction in FUN_08019dd8 for +0x10/+0x14; sav bytes verified"
+    },
+    {
+      "name": "slot0_flags_14",
+      "offset": 28,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": [
+        "0x08019d98",
+        "0x08019d6c"
+      ],
+      "readers": [
+        "0x08019dd8"
+      ],
+      "observed_values": {
+        "cap-00": "{val}",
+        "cap-01": "{val}"
+      },
+      "update_mechanism": "mutated in RAM slot struct (28B stride), flushed whole-record by FUN_08019d6c via FUN_0803a1f8",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "defaults from FUN_08019d98; OR-reduction in FUN_08019dd8 for +0x10/+0x14; sav bytes verified"
+    },
+    {
+      "name": "slot0_checksum",
+      "offset": 32,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": [
+        "0x08019d6c"
+      ],
+      "readers": [
+        "0x08019d10",
+        "0x08019e94"
+      ],
+      "observed_values": {
+        "cap-00": "0x03ff",
+        "cap-01": "0x03ff"
+      },
+      "update_mechanism": "recomputed on every save: sum8 of slot bytes +0x00..+0x17 via FUN_0803a2a0 len 0x18",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "python sum matches stored on both files"
+    },
+    {
+      "name": "slot0_padding_1A",
+      "offset": 34,
+      "size": 2,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {
+        "cap-00": "0000",
+        "cap-01": "0000"
+      },
+      "update_mechanism": "carried in 28-byte write; never referenced",
+      "confidence": "UNKNOWN",
+      "evidence": "zero in both savs; no traced reader/writer"
+    },
+    {
+      "name": "slot1_field_00",
+      "offset": 36,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": [
+        "0x08019d98",
+        "0x08019d6c"
+      ],
+      "readers": [
+        "0x08019d10"
+      ],
+      "observed_values": {
+        "cap-00": "{val}",
+        "cap-01": "{val}"
+      },
+      "update_mechanism": "mutated in RAM slot struct (28B stride), flushed whole-record by FUN_08019d6c via FUN_0803a1f8",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "defaults from FUN_08019d98; OR-reduction in FUN_08019dd8 for +0x10/+0x14; sav bytes verified"
+    },
+    {
+      "name": "slot1_field_04",
+      "offset": 40,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": [
+        "0x08019d98",
+        "0x08019d6c"
+      ],
+      "readers": [
+        "0x08019d10"
+      ],
+      "observed_values": {
+        "cap-00": "{val}",
+        "cap-01": "{val}"
+      },
+      "update_mechanism": "mutated in RAM slot struct (28B stride), flushed whole-record by FUN_08019d6c via FUN_0803a1f8",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "defaults from FUN_08019d98; OR-reduction in FUN_08019dd8 for +0x10/+0x14; sav bytes verified"
+    },
+    {
+      "name": "slot1_field_08",
+      "offset": 44,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": [
+        "0x08019d98",
+        "0x08019d6c"
+      ],
+      "readers": [
+        "0x08019d10"
+      ],
+      "observed_values": {
+        "cap-00": "{val}",
+        "cap-01": "{val}"
+      },
+      "update_mechanism": "mutated in RAM slot struct (28B stride), flushed whole-record by FUN_08019d6c via FUN_0803a1f8",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "defaults from FUN_08019d98; OR-reduction in FUN_08019dd8 for +0x10/+0x14; sav bytes verified"
+    },
+    {
+      "name": "slot1_field_0C_sentinel",
+      "offset": 48,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": [
+        "0x08019d98",
+        "0x08019d6c"
+      ],
+      "readers": [
+        "0x08019d10"
+      ],
+      "observed_values": {
+        "cap-00": "{val}",
+        "cap-01": "{val}"
+      },
+      "update_mechanism": "mutated in RAM slot struct (28B stride), flushed whole-record by FUN_08019d6c via FUN_0803a1f8",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "defaults from FUN_08019d98; OR-reduction in FUN_08019dd8 for +0x10/+0x14; sav bytes verified"
+    },
+    {
+      "name": "slot1_flags_10",
+      "offset": 52,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": [
+        "0x08019d98",
+        "0x08019d6c"
+      ],
+      "readers": [
+        "0x08019dd8"
+      ],
+      "observed_values": {
+        "cap-00": "{val}",
+        "cap-01": "{val}"
+      },
+      "update_mechanism": "mutated in RAM slot struct (28B stride), flushed whole-record by FUN_08019d6c via FUN_0803a1f8",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "defaults from FUN_08019d98; OR-reduction in FUN_08019dd8 for +0x10/+0x14; sav bytes verified"
+    },
+    {
+      "name": "slot1_flags_14",
+      "offset": 56,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": [
+        "0x08019d98",
+        "0x08019d6c"
+      ],
+      "readers": [
+        "0x08019dd8"
+      ],
+      "observed_values": {
+        "cap-00": "{val}",
+        "cap-01": "{val}"
+      },
+      "update_mechanism": "mutated in RAM slot struct (28B stride), flushed whole-record by FUN_08019d6c via FUN_0803a1f8",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "defaults from FUN_08019d98; OR-reduction in FUN_08019dd8 for +0x10/+0x14; sav bytes verified"
+    },
+    {
+      "name": "slot1_checksum",
+      "offset": 60,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": [
+        "0x08019d6c"
+      ],
+      "readers": [
+        "0x08019d10",
+        "0x08019e94"
+      ],
+      "observed_values": {
+        "cap-00": "0x03ff",
+        "cap-01": "0x03ff"
+      },
+      "update_mechanism": "recomputed on every save: sum8 of slot bytes +0x00..+0x17 via FUN_0803a2a0 len 0x18",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "python sum matches stored on both files"
+    },
+    {
+      "name": "slot1_padding_1A",
+      "offset": 62,
+      "size": 2,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {
+        "cap-00": "0000",
+        "cap-01": "0000"
+      },
+      "update_mechanism": "carried in 28-byte write; never referenced",
+      "confidence": "UNKNOWN",
+      "evidence": "zero in both savs; no traced reader/writer"
+    },
+    {
+      "name": "slot2_field_00",
+      "offset": 64,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": [
+        "0x08019d98",
+        "0x08019d6c"
+      ],
+      "readers": [
+        "0x08019d10"
+      ],
+      "observed_values": {
+        "cap-00": "{val}",
+        "cap-01": "{val}"
+      },
+      "update_mechanism": "mutated in RAM slot struct (28B stride), flushed whole-record by FUN_08019d6c via FUN_0803a1f8",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "defaults from FUN_08019d98; OR-reduction in FUN_08019dd8 for +0x10/+0x14; sav bytes verified"
+    },
+    {
+      "name": "slot2_field_04",
+      "offset": 68,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": [
+        "0x08019d98",
+        "0x08019d6c"
+      ],
+      "readers": [
+        "0x08019d10"
+      ],
+      "observed_values": {
+        "cap-00": "{val}",
+        "cap-01": "{val}"
+      },
+      "update_mechanism": "mutated in RAM slot struct (28B stride), flushed whole-record by FUN_08019d6c via FUN_0803a1f8",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "defaults from FUN_08019d98; OR-reduction in FUN_08019dd8 for +0x10/+0x14; sav bytes verified"
+    },
+    {
+      "name": "slot2_field_08",
+      "offset": 72,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": [
+        "0x08019d98",
+        "0x08019d6c"
+      ],
+      "readers": [
+        "0x08019d10"
+      ],
+      "observed_values": {
+        "cap-00": "{val}",
+        "cap-01": "{val}"
+      },
+      "update_mechanism": "mutated in RAM slot struct (28B stride), flushed whole-record by FUN_08019d6c via FUN_0803a1f8",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "defaults from FUN_08019d98; OR-reduction in FUN_08019dd8 for +0x10/+0x14; sav bytes verified"
+    },
+    {
+      "name": "slot2_field_0C_sentinel",
+      "offset": 76,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": [
+        "0x08019d98",
+        "0x08019d6c"
+      ],
+      "readers": [
+        "0x08019d10"
+      ],
+      "observed_values": {
+        "cap-00": "{val}",
+        "cap-01": "{val}"
+      },
+      "update_mechanism": "mutated in RAM slot struct (28B stride), flushed whole-record by FUN_08019d6c via FUN_0803a1f8",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "defaults from FUN_08019d98; OR-reduction in FUN_08019dd8 for +0x10/+0x14; sav bytes verified"
+    },
+    {
+      "name": "slot2_flags_10",
+      "offset": 80,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": [
+        "0x08019d98",
+        "0x08019d6c"
+      ],
+      "readers": [
+        "0x08019dd8"
+      ],
+      "observed_values": {
+        "cap-00": "{val}",
+        "cap-01": "{val}"
+      },
+      "update_mechanism": "mutated in RAM slot struct (28B stride), flushed whole-record by FUN_08019d6c via FUN_0803a1f8",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "defaults from FUN_08019d98; OR-reduction in FUN_08019dd8 for +0x10/+0x14; sav bytes verified"
+    },
+    {
+      "name": "slot2_flags_14",
+      "offset": 84,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": [
+        "0x08019d98",
+        "0x08019d6c"
+      ],
+      "readers": [
+        "0x08019dd8"
+      ],
+      "observed_values": {
+        "cap-00": "{val}",
+        "cap-01": "{val}"
+      },
+      "update_mechanism": "mutated in RAM slot struct (28B stride), flushed whole-record by FUN_08019d6c via FUN_0803a1f8",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "defaults from FUN_08019d98; OR-reduction in FUN_08019dd8 for +0x10/+0x14; sav bytes verified"
+    },
+    {
+      "name": "slot2_checksum",
+      "offset": 88,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": [
+        "0x08019d6c"
+      ],
+      "readers": [
+        "0x08019d10",
+        "0x08019e94"
+      ],
+      "observed_values": {
+        "cap-00": "0x03ff",
+        "cap-01": "0x03ff"
+      },
+      "update_mechanism": "recomputed on every save: sum8 of slot bytes +0x00..+0x17 via FUN_0803a2a0 len 0x18",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "python sum matches stored on both files"
+    },
+    {
+      "name": "slot2_padding_1A",
+      "offset": 90,
+      "size": 2,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {
+        "cap-00": "0000",
+        "cap-01": "0000"
+      },
+      "update_mechanism": "carried in 28-byte write; never referenced",
+      "confidence": "UNKNOWN",
+      "evidence": "zero in both savs; no traced reader/writer"
+    },
+    {
+      "name": "slot3_field_00",
+      "offset": 92,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": [
+        "0x08019d98",
+        "0x08019d6c"
+      ],
+      "readers": [
+        "0x08019d10"
+      ],
+      "observed_values": {
+        "cap-00": "{val}",
+        "cap-01": "{val}"
+      },
+      "update_mechanism": "mutated in RAM slot struct (28B stride), flushed whole-record by FUN_08019d6c via FUN_0803a1f8",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "defaults from FUN_08019d98; OR-reduction in FUN_08019dd8 for +0x10/+0x14; sav bytes verified"
+    },
+    {
+      "name": "slot3_field_04",
+      "offset": 96,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": [
+        "0x08019d98",
+        "0x08019d6c"
+      ],
+      "readers": [
+        "0x08019d10"
+      ],
+      "observed_values": {
+        "cap-00": "{val}",
+        "cap-01": "{val}"
+      },
+      "update_mechanism": "mutated in RAM slot struct (28B stride), flushed whole-record by FUN_08019d6c via FUN_0803a1f8",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "defaults from FUN_08019d98; OR-reduction in FUN_08019dd8 for +0x10/+0x14; sav bytes verified"
+    },
+    {
+      "name": "slot3_field_08",
+      "offset": 100,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": [
+        "0x08019d98",
+        "0x08019d6c"
+      ],
+      "readers": [
+        "0x08019d10"
+      ],
+      "observed_values": {
+        "cap-00": "{val}",
+        "cap-01": "{val}"
+      },
+      "update_mechanism": "mutated in RAM slot struct (28B stride), flushed whole-record by FUN_08019d6c via FUN_0803a1f8",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "defaults from FUN_08019d98; OR-reduction in FUN_08019dd8 for +0x10/+0x14; sav bytes verified"
+    },
+    {
+      "name": "slot3_field_0C_sentinel",
+      "offset": 104,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": [
+        "0x08019d98",
+        "0x08019d6c"
+      ],
+      "readers": [
+        "0x08019d10"
+      ],
+      "observed_values": {
+        "cap-00": "{val}",
+        "cap-01": "{val}"
+      },
+      "update_mechanism": "mutated in RAM slot struct (28B stride), flushed whole-record by FUN_08019d6c via FUN_0803a1f8",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "defaults from FUN_08019d98; OR-reduction in FUN_08019dd8 for +0x10/+0x14; sav bytes verified"
+    },
+    {
+      "name": "slot3_flags_10",
+      "offset": 108,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": [
+        "0x08019d98",
+        "0x08019d6c"
+      ],
+      "readers": [
+        "0x08019dd8"
+      ],
+      "observed_values": {
+        "cap-00": "{val}",
+        "cap-01": "{val}"
+      },
+      "update_mechanism": "mutated in RAM slot struct (28B stride), flushed whole-record by FUN_08019d6c via FUN_0803a1f8",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "defaults from FUN_08019d98; OR-reduction in FUN_08019dd8 for +0x10/+0x14; sav bytes verified"
+    },
+    {
+      "name": "slot3_flags_14",
+      "offset": 112,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": [
+        "0x08019d98",
+        "0x08019d6c"
+      ],
+      "readers": [
+        "0x08019dd8"
+      ],
+      "observed_values": {
+        "cap-00": "{val}",
+        "cap-01": "{val}"
+      },
+      "update_mechanism": "mutated in RAM slot struct (28B stride), flushed whole-record by FUN_08019d6c via FUN_0803a1f8",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "defaults from FUN_08019d98; OR-reduction in FUN_08019dd8 for +0x10/+0x14; sav bytes verified"
+    },
+    {
+      "name": "slot3_checksum",
+      "offset": 116,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": [
+        "0x08019d6c"
+      ],
+      "readers": [
+        "0x08019d10",
+        "0x08019e94"
+      ],
+      "observed_values": {
+        "cap-00": "0x03ff",
+        "cap-01": "0x03ff"
+      },
+      "update_mechanism": "recomputed on every save: sum8 of slot bytes +0x00..+0x17 via FUN_0803a2a0 len 0x18",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "python sum matches stored on both files"
+    },
+    {
+      "name": "slot3_padding_1A",
+      "offset": 118,
+      "size": 2,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {
+        "cap-00": "0000",
+        "cap-01": "0000"
+      },
+      "update_mechanism": "carried in 28-byte write; never referenced",
+      "confidence": "UNKNOWN",
+      "evidence": "zero in both savs; no traced reader/writer"
+    },
+    {
+      "name": "slot4_field_00",
+      "offset": 120,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": [
+        "0x08019d98",
+        "0x08019d6c"
+      ],
+      "readers": [
+        "0x08019d10"
+      ],
+      "observed_values": {
+        "cap-00": "{val}",
+        "cap-01": "{val}"
+      },
+      "update_mechanism": "mutated in RAM slot struct (28B stride), flushed whole-record by FUN_08019d6c via FUN_0803a1f8",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "defaults from FUN_08019d98; OR-reduction in FUN_08019dd8 for +0x10/+0x14; sav bytes verified"
+    },
+    {
+      "name": "slot4_field_04",
+      "offset": 124,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": [
+        "0x08019d98",
+        "0x08019d6c"
+      ],
+      "readers": [
+        "0x08019d10"
+      ],
+      "observed_values": {
+        "cap-00": "{val}",
+        "cap-01": "{val}"
+      },
+      "update_mechanism": "mutated in RAM slot struct (28B stride), flushed whole-record by FUN_08019d6c via FUN_0803a1f8",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "defaults from FUN_08019d98; OR-reduction in FUN_08019dd8 for +0x10/+0x14; sav bytes verified"
+    },
+    {
+      "name": "slot4_field_08",
+      "offset": 128,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": [
+        "0x08019d98",
+        "0x08019d6c"
+      ],
+      "readers": [
+        "0x08019d10"
+      ],
+      "observed_values": {
+        "cap-00": "{val}",
+        "cap-01": "{val}"
+      },
+      "update_mechanism": "mutated in RAM slot struct (28B stride), flushed whole-record by FUN_08019d6c via FUN_0803a1f8",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "defaults from FUN_08019d98; OR-reduction in FUN_08019dd8 for +0x10/+0x14; sav bytes verified"
+    },
+    {
+      "name": "slot4_field_0C_sentinel",
+      "offset": 132,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": [
+        "0x08019d98",
+        "0x08019d6c"
+      ],
+      "readers": [
+        "0x08019d10"
+      ],
+      "observed_values": {
+        "cap-00": "{val}",
+        "cap-01": "{val}"
+      },
+      "update_mechanism": "mutated in RAM slot struct (28B stride), flushed whole-record by FUN_08019d6c via FUN_0803a1f8",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "defaults from FUN_08019d98; OR-reduction in FUN_08019dd8 for +0x10/+0x14; sav bytes verified"
+    },
+    {
+      "name": "slot4_flags_10",
+      "offset": 136,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": [
+        "0x08019d98",
+        "0x08019d6c"
+      ],
+      "readers": [
+        "0x08019dd8"
+      ],
+      "observed_values": {
+        "cap-00": "{val}",
+        "cap-01": "{val}"
+      },
+      "update_mechanism": "mutated in RAM slot struct (28B stride), flushed whole-record by FUN_08019d6c via FUN_0803a1f8",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "defaults from FUN_08019d98; OR-reduction in FUN_08019dd8 for +0x10/+0x14; sav bytes verified"
+    },
+    {
+      "name": "slot4_flags_14",
+      "offset": 140,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": [
+        "0x08019d98",
+        "0x08019d6c"
+      ],
+      "readers": [
+        "0x08019dd8"
+      ],
+      "observed_values": {
+        "cap-00": "{val}",
+        "cap-01": "{val}"
+      },
+      "update_mechanism": "mutated in RAM slot struct (28B stride), flushed whole-record by FUN_08019d6c via FUN_0803a1f8",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "defaults from FUN_08019d98; OR-reduction in FUN_08019dd8 for +0x10/+0x14; sav bytes verified"
+    },
+    {
+      "name": "slot4_checksum",
+      "offset": 144,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": [
+        "0x08019d6c"
+      ],
+      "readers": [
+        "0x08019d10",
+        "0x08019e94"
+      ],
+      "observed_values": {
+        "cap-00": "0x03ff",
+        "cap-01": "0x03ff"
+      },
+      "update_mechanism": "recomputed on every save: sum8 of slot bytes +0x00..+0x17 via FUN_0803a2a0 len 0x18",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "python sum matches stored on both files"
+    },
+    {
+      "name": "slot4_padding_1A",
+      "offset": 146,
+      "size": 2,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {
+        "cap-00": "0000",
+        "cap-01": "0000"
+      },
+      "update_mechanism": "carried in 28-byte write; never referenced",
+      "confidence": "UNKNOWN",
+      "evidence": "zero in both savs; no traced reader/writer"
+    },
+    {
+      "name": "global_field_00",
+      "offset": 148,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": [
+        "0x0802e678"
+      ],
+      "readers": [
+        "0x0802e5e0"
+      ],
+      "observed_values": {
+        "cap-00": "0",
+        "cap-01": "1"
+      },
+      "update_mechanism": "mutated in RAM, flushed by FUN_0802e678 via FUN_0803a26c; +0x04 zeroed before each save; zero at +0x00 triggers defaults in FUN_0802e5e0",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "sav verified; FUN_0802e5e0 defaults and FUN_0802e678 zeroing read in decompiled.c"
+    },
+    {
+      "name": "global_field_04_transient",
+      "offset": 152,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": [
+        "0x0802e678"
+      ],
+      "readers": [
+        "0x0802e5e0"
+      ],
+      "observed_values": {
+        "cap-00": "0",
+        "cap-01": "0"
+      },
+      "update_mechanism": "mutated in RAM, flushed by FUN_0802e678 via FUN_0803a26c; +0x04 zeroed before each save; zero at +0x00 triggers defaults in FUN_0802e5e0",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "sav verified; FUN_0802e5e0 defaults and FUN_0802e678 zeroing read in decompiled.c"
+    },
+    {
+      "name": "global_field_08",
+      "offset": 156,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": [
+        "0x0802e678"
+      ],
+      "readers": [
+        "0x0802e5e0"
+      ],
+      "observed_values": {
+        "cap-00": "0",
+        "cap-01": "1"
+      },
+      "update_mechanism": "mutated in RAM, flushed by FUN_0802e678 via FUN_0803a26c; +0x04 zeroed before each save; zero at +0x00 triggers defaults in FUN_0802e5e0",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "sav verified; FUN_0802e5e0 defaults and FUN_0802e678 zeroing read in decompiled.c"
+    },
+    {
+      "name": "global_field_0C",
+      "offset": 160,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": [
+        "0x0802e678"
+      ],
+      "readers": [
+        "0x0802e5e0"
+      ],
+      "observed_values": {
+        "cap-00": "0",
+        "cap-01": "0"
+      },
+      "update_mechanism": "mutated in RAM, flushed by FUN_0802e678 via FUN_0803a26c; +0x04 zeroed before each save; zero at +0x00 triggers defaults in FUN_0802e5e0",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "sav verified; FUN_0802e5e0 defaults and FUN_0802e678 zeroing read in decompiled.c"
+    },
+    {
+      "name": "global_field_10",
+      "offset": 164,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": [
+        "0x0802e678"
+      ],
+      "readers": [
+        "0x0802e5e0"
+      ],
+      "observed_values": {
+        "cap-00": "0",
+        "cap-01": "0"
+      },
+      "update_mechanism": "mutated in RAM, flushed by FUN_0802e678 via FUN_0803a26c; +0x04 zeroed before each save; zero at +0x00 triggers defaults in FUN_0802e5e0",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "sav verified; FUN_0802e5e0 defaults and FUN_0802e678 zeroing read in decompiled.c"
+    },
+    {
+      "name": "global_field_14_u16",
+      "offset": 168,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": [
+        "0x0802e5e0"
+      ],
+      "readers": [],
+      "observed_values": {
+        "cap-00": "0x0000",
+        "cap-01": "0x0000"
+      },
+      "update_mechanism": "default 0 on invalid load; carried in 24-byte record",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "sav bytes; FUN_0802e5e0 writes *(u16*)(base+5)=0"
+    },
+    {
+      "name": "global_checksum",
+      "offset": 170,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": [
+        "0x0802e678"
+      ],
+      "readers": [
+        "0x0802e5e0"
+      ],
+      "observed_values": {
+        "cap-00": "0x0000",
+        "cap-01": "0x0002"
+      },
+      "update_mechanism": "recomputed on every save: sum8 of global bytes +0x00..+0x15 via FUN_0803a2a0 len 0x16",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "python sum matches stored on both files; raw diff 0xAD maps here"
+    },
+    {
+      "name": "unused_tail",
+      "offset": 172,
+      "size": 332,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {
+        "cap-00": "all 0x00",
+        "cap-01": "all 0x00"
+      },
+      "update_mechanism": "never written",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "sav bytes; no traced function addresses this range"
+    },
+    {
+      "name": "last_block_erased_sentinel",
+      "offset": 504,
+      "size": 8,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {
+        "cap-00": "ffffffffffffffff",
+        "cap-01": "ffffffffffffffff"
+      },
+      "update_mechanism": "never written",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "sav bytes"
+    }
+  ],
+  "fuzzing_targets": [
+    {
+      "offset": 148,
+      "size": 4,
+      "mutation": "set global +0x00 to 0 (logical), repair global checksum",
+      "requires_checksum_repair": true,
+      "predicted_effect": "FUN_0802e5e0 loads RAM defaults on boot; EEPROM unchanged until next global save"
+    },
+    {
+      "offset": 24,
+      "size": 4,
+      "mutation": "set slot0 +0x10 flag bit 0, repair slot0 checksum",
+      "requires_checksum_repair": true,
+      "predicted_effect": "slot loads; FUN_08019dd8 aggregate gains bit; observe profile-1 unlock/menu change"
+    },
+    {
+      "offset": 20,
+      "size": 4,
+      "mutation": "slot0 +0x0C 0xFFFFFFFF -> 0, repair slot0 checksum",
+      "requires_checksum_repair": true,
+      "predicted_effect": "changed default selection/highlight for profile 1 if -1 is unset sentinel; no load failure"
+    },
+    {
+      "offset": 52,
+      "size": 1,
+      "mutation": "flip one slot1 data byte without checksum repair",
+      "requires_checksum_repair": false,
+      "predicted_effect": "FUN_08019d10 silently substitutes defaults for slot1 in RAM; no error screen, no backup fallback"
+    },
+    {
+      "offset": 0,
+      "size": 1,
+      "mutation": "corrupt magic first byte R->X (logical)",
+      "requires_checksum_repair": false,
+      "predicted_effect": "FUN_0800c33c zero-formats whole EEPROM and rewrites ROGUES02 on next boot; all profiles lost"
+    },
+    {
+      "offset": 152,
+      "size": 4,
+      "mutation": "persist global +0x04 as 0xDEADBEEF, repair global checksum",
+      "requires_checksum_repair": true,
+      "predicted_effect": "loads, but next global save stores 0 again (FUN_0802e678 zeroes it)"
+    },
+    {
+      "offset": 172,
+      "size": 16,
+      "mutation": "write garbage into unused logical 0xAC.. area",
+      "requires_checksum_repair": false,
+      "predicted_effect": "no effect predicted; any effect falsifies layout"
+    }
+  ],
+  "open_questions": [
+    "Gameplay semantics of slot fields +0x00..+0x0C and global +0x08/+0x0C/+0x14 (both captures are factory defaults)",
+    "Absolute RAM base addresses: _DAT_080xxxxx literal-pool values not present in workspace decompilation",
+    "Indirect/boot callers of 0x080198a8, 0x0802e5e0, 0x0802e678, 0x0800c33c (unrecovered jumptables / function-pointer tables)",
+    "Purpose of slot padding bytes +0x1A..+0x1B",
+    "EEPROM config struct values at +4 (block count) and +8 (address bits); consistent with 64 blocks/512B statically"
+  ]
+}

@@ -1,0 +1,93 @@
+{
+  "schema": "gbakit-save-research/1",
+  "release_key": "AHRE-r0-9532eeccbeeb09e3",
+  "display_name": "Harry Potter and the Sorcerer's Stone (USA, Europe) (En,Fr,De,Es,It,Nl,Pt,Sv,No,Da)",
+  "rom_sha256": "9532eeccbeeb09e36706b53a362239f9db59935799b62d089e93f9d5381058d8",
+  "game_code": "AHRE",
+  "header_family": "AHR",
+  "community_id": "comm-004",
+  "overall_confidence": "MEDIUM",
+  "media": {
+    "kind": "eeprom512",
+    "size_bytes": 512,
+    "sdk_tags": ["EEPROM_V122"],
+    "fill_byte": "0x00"
+  },
+  "slots_and_copies": [
+    {
+      "name": "slot_0",
+      "offset": 0,
+      "size": 512,
+      "redundancy_role": "primary",
+      "selection_rule": "Only one header copy observed in the 512-byte image (signature at 0x00, no mirrored copy in 0x10-0x1FF). No backup selection rule is reconstructable; on integrity failure at offset 0x08 the probe reverted to a blank save and rewrote it, so failure handling is reject-and-reinitialize."
+    }
+  ],
+  "magic_signatures": [
+    {
+      "offset": 0,
+      "bytes_hex": "5130304142475048",
+      "ascii": "Q00ABGPH",
+      "verified_in_code": false,
+      "verified_in_sav": true,
+      "function_addrs": []
+    }
+  ],
+  "checksums": [
+    {
+      "name": "header_sum8_complement",
+      "algorithm": "sum8",
+      "formula_detail": "stored = (~(sum of covered bytes)) & 0xFF = 0xFF - (sum & 0xFF); equivalently (sum + stored) & 0xFF == 0xFF. Minimal proven cover is 0x00-0x0F excluding the stored byte at 0x08 (byte 0x0E is proven covered by the cap-00 -> cap-01 differential: 0x0E +1 drives stored 0xEC -> 0xEB). A whole-image cover 0x00-0x1FF excluding 0x08 yields identical values because 0x10-0x1FF is 0x00 fill and cannot be excluded. Ruled out on both samples: negation -sum8 (0xED/0xEC), xor8 (0x0D/0x0C), CRC-16/MODBUS (0x5D48/0xCD49). Implementing routine not present in the 201 decompiled functions.",
+      "stored_offset": 8,
+      "stored_size": 1,
+      "covered_start": 0,
+      "covered_end": 16,
+      "function_addrs": [],
+      "verified_on_samples": [
+        {"file": "cap-00-future-0.sav", "stored_hex": "0xec", "computed_hex": "0xec", "match": true},
+        {"file": "cap-01-future-1.sav", "stored_hex": "0xeb", "computed_hex": "0xeb", "match": true}
+      ],
+      "confidence": "CONFIRMED_VERIFIED"
+    }
+  ],
+  "io_driver_functions": [
+    {"addr": "0x080375c0", "role": "read", "callers": [], "notes": "EEPROM block read: builds MSB-first read bitstream (address bits + opcode 11), DMA3 via 0x08037540 to/from 0x0D000000 (addr_bits+3 then 0x44 halfwords), repacks 64 bits into 4x u16 at param_2+6..+0. One 8-byte block per call. Address rejected unless < *(u16 *)(cfg+4); address-bit count from *(u8 *)(cfg+8). No callers in callgraph (indirect tails unrecovered)."},
+    {"addr": "0x08037670", "role": "write", "callers": [], "notes": "EEPROM block write: serializes 4x u16 (64 bits) + address bits + start/opcode 01, DMA3 via 0x08037540 to 0x0D000000 (addr_bits+0x43 halfwords), then 0x08037474, busy-polls EEPROM line uRam0d000000 bit0 and status byte until write cycle ends, then 0x080374fc. One 8-byte block per call. No callers in callgraph (indirect tails unrecovered)."},
+    {"addr": "0x08037540", "role": "read", "callers": ["0x080375c0", "0x08037670"], "notes": "DMA3 transfer primitive used for both directions: programs source/destination shadow registers and control word param_3 & 0xFFFF | 0x80000000, polls CNT high halfword bit15 until clear. Register layout matches DMA3 (0x040000D4 base) by order; literal addresses unresolved in export."},
+    {"addr": "0x08037474", "role": "serialize", "callers": ["0x08037670"], "notes": "Interrupt/DMA channel setup helper called by the EEPROM write path before the busy-poll: sets channel mask (8 << channel), stores 3 halfwords from argument into a shadow struct, sets active flag. Transport support only; touches no save-image fields."},
+    {"addr": "0x080374fc", "role": "serialize", "callers": ["0x08037670"], "notes": "Interrupt/DMA teardown helper called at the end of the EEPROM write path: clears the halfword pair set up by 0x08037474, clears channel bit, restores saved handler word. Transport support only."}
+  ],
+  "caller_chains": [
+    {"entry_caller": "0x08037670", "chain": ["0x08037670", "0x08037540"], "trigger_context": "Unknown: no caller of the EEPROM block-write exists in callgraph.json (158/201 functions have no recorded caller; 254 UNRECOVERED_JUMPTABLE indirect tails in decompiled.c). The whole-image serializer and its gameplay trigger are outside the traced set.", "ram_fields_updated": [], "how_mapped": "Callgraph callees of 0x08037670 cross-checked against FUN_ call sites in ghidra/save_related_functions.c and ghidra/decompiled.c. Only direct edges were promoted to callers."},
+    {"entry_caller": "0x08037670", "chain": ["0x08037670", "0x08037474"], "trigger_context": "Write-cycle setup inside the EEPROM block write; external trigger unknown (no caller in callgraph).", "ram_fields_updated": [], "how_mapped": "Callgraph callees of 0x08037670 cross-checked against FUN_ call sites in ghidra/save_related_functions.c."},
+    {"entry_caller": "0x08037670", "chain": ["0x08037670", "0x080374fc"], "trigger_context": "Write-cycle teardown inside the EEPROM block write; external trigger unknown (no caller in callgraph).", "ram_fields_updated": [], "how_mapped": "Callgraph callees of 0x08037670 cross-checked against FUN_ call sites in ghidra/save_related_functions.c."},
+    {"entry_caller": "0x080375c0", "chain": ["0x080375c0", "0x08037540"], "trigger_context": "Unknown: no caller of the EEPROM block-read exists in callgraph.json. The load/verify routine that would compare Q00ABGPH and the offset-0x08 checksum is outside the traced set.", "ram_fields_updated": [], "how_mapped": "Callgraph callees of 0x080375c0 cross-checked against FUN_ call sites in ghidra/save_related_functions.c and ghidra/decompiled.c."}
+  ],
+  "fields": [
+    {"name": "magic_signature", "offset": 0, "size": 8, "type": "ascii", "ram_addr": null, "writers": [], "readers": [], "observed_values": {"cap-00-future-0.sav": "Q00ABGPH (51 30 30 41 42 47 50 48)", "cap-01-future-1.sav": "Q00ABGPH (51 30 30 41 42 47 50 48)"}, "update_mechanism": "Occupies EEPROM block 0; transported as one 8-byte block by 0x08037670 (write) / 0x080375c0 (read). The routine that writes/compares the literal was not found in the 201 decompiled functions (zero hits for Q00ABGPH/Q00/0x51).", "confidence": "HYPOTHESIS", "evidence": "Byte-identical in both real .sav captures; load-time comparison unproven in code. Mutation tests 2-3 in the report isolate whether it is checked."},
+    {"name": "header_checksum", "offset": 8, "size": 1, "type": "u8", "ram_addr": null, "writers": [], "readers": [], "observed_values": {"cap-00-future-0.sav": "0xec", "cap-01-future-1.sav": "0xeb"}, "update_mechanism": "Recomputed as (~sum8 of covered bytes) & 0xFF whenever a covered byte changes (cap-00 -> cap-01: byte 0x0E +1, checksum -1). Byte 0 of EEPROM block 1, transported by 0x08037670/0x080375c0. Computing routine not in corpus.", "confidence": "CONFIRMED_VERIFIED", "evidence": "Matches ~sum8 on both captures under minimal cover [0,16) excl 8 (0xEC, 0xEB) and under whole-image cover; -sum8, xor8 and CRC-16/MODBUS ruled out. Cold-reload probe: mutating offset 0x08 reverted the save to blank and rewrote it (integrity_check_confirmed)."},
+    {"name": "header_pad_09_0d", "offset": 9, "size": 5, "type": "bytes", "ram_addr": null, "writers": [], "readers": [], "observed_values": {"cap-00-future-0.sav": "00 00 00 00 00", "cap-01-future-1.sav": "00 00 00 00 00"}, "update_mechanism": "Inside the proven checksum cover and EEPROM block 1; always zero in this corpus. Possibly reserved header bytes or high bytes of wider fields.", "confidence": "UNKNOWN", "evidence": "Zero in both captures; no code reference located."},
+    {"name": "counter_u16_at_0e", "offset": 14, "size": 2, "type": "u16_le", "ram_addr": null, "writers": [], "readers": [], "observed_values": {"cap-00-future-0.sav": "0x0000", "cap-01-future-1.sav": "0x0001"}, "update_mechanism": "Incremented by 1 between the two captures, driving the offset-0x08 checksum down by 1. Semantics unknown: write counter, sequence counter, or progress flag. A u8 counter at 0x0E plus a zero byte at 0x0F is equally consistent with observations.", "confidence": "HYPOTHESIS", "evidence": "Only non-checksum byte that changed (0x00 -> 0x01 at 0x0E, 0x0F stays 0x00); inside the proven checksum cover. No writer located in code."},
+    {"name": "tail_fill_10_1ff", "offset": 16, "size": 496, "type": "bytes", "ram_addr": null, "writers": [], "readers": [], "observed_values": {"cap-00-future-0.sav": "all 0x00 (496 bytes)", "cap-01-future-1.sav": "all 0x00 (496 bytes)"}, "update_mechanism": "Never written in either capture. Either unused EEPROM space or payload blocks this capture scenario never reached. Whole-image checksum cover cannot be excluded while this region is fill.", "confidence": "UNKNOWN", "evidence": "Direct byte scan of both 512-byte files: no non-zero byte at or above 0x10. No second signature or backup copy exists here."}
+  ],
+  "fuzzing_targets": [
+    {"offset": 8, "size": 1, "mutation": "Flip stored checksum 0xEC -> 0xED with no repair", "requires_checksum_repair": false, "predicted_effect": "Save rejected on cold reload; game boots as blank/new save and rewrites the save (replicates the recorded probe behavior)."},
+    {"offset": 0, "size": 1, "mutation": "Change 'Q' 0x51 -> 0x52 and repair checksum at 0x08", "requires_checksum_repair": true, "predicted_effect": "If the Q00ABGPH signature is compared on load, the save is rejected despite a valid checksum; if it loads, the signature is decorative or unchecked."},
+    {"offset": 7, "size": 1, "mutation": "Change 'H' 0x48 -> 0x49 and repair checksum at 0x08", "requires_checksum_repair": true, "predicted_effect": "Rejection implies all 8 signature bytes are compared; acceptance localizes the compared prefix to fewer than 8 bytes."},
+    {"offset": 14, "size": 2, "mutation": "Set u16_le 0x0001 -> 0x0002 and repair checksum (0xEB -> 0xEA)", "requires_checksum_repair": true, "predicted_effect": "A changed continue state, counter, or progression indicates the field's semantics; no visible change indicates a pure write/sequence counter."},
+    {"offset": 14, "size": 2, "mutation": "Set u16_le 0x0001 -> 0x00FF and repair checksum", "requires_checksum_repair": true, "predicted_effect": "Clamp, wrap, or reject behavior distinguishes a counter from bitflags at 0x0E."},
+    {"offset": 9, "size": 1, "mutation": "Set 0x00 -> 0x01 and repair checksum", "requires_checksum_repair": true, "predicted_effect": "Any UI/progress change promotes offset 0x09 from zero pad to a live header field; no change keeps it reserved."},
+    {"offset": 16, "size": 1, "mutation": "Set 0x00 -> 0x01; try whole-image checksum repair, then [0,16)-only repair", "requires_checksum_repair": true, "predicted_effect": "Discriminates the checksum cover: whole-image repair loading while 16-byte repair is rejected proves the cover extends past 0x0F; both loading means the byte is uncovered or unread."},
+    {"offset": 256, "size": 1, "mutation": "Set 0x00 -> 0x01 with whole-image checksum repair", "requires_checksum_repair": true, "predicted_effect": "Acceptance with no gameplay change supports an unused EEPROM tail; rejection would prove the upper half is checksummed/read."},
+    {"offset": 0, "size": 512, "mutation": "Zero the entire image (blank EEPROM baseline)", "requires_checksum_repair": false, "predicted_effect": "Game boots as a new save; on first save it rewrites at least blocks 0-1. Diffing the rewritten image against cap-00-future-0.sav reveals the true initialized header."},
+    {"offset": 14, "size": 1, "mutation": "Reset 0x0E 0x01 -> 0x00 while keeping cap-01 checksum 0xEB, no repair", "requires_checksum_repair": false, "predicted_effect": "Rejection confirms byte 0x0E is inside the checksum cover on the load path, not only on the write path."}
+  ],
+  "open_questions": [
+    "Which routine computes the ~sum8 checksum and compares Q00ABGPH, and which gameplay callers invoke the EEPROM block read/write wrappers (0x080375c0/0x08037670)? Neither exists among the 201 decompiled functions and callgraph indirect tails (254 UNRECOVERED_JUMPTABLE) are unrecovered.",
+    "What is the RAM base address (0x02xxxxxx/0x03xxxxxx) and layout of the save struct the block drivers copy to/from? All _DAT_ literals in the export are unresolved and no 0x020/0x030 literal appears in decompiled.c.",
+    "Does the checksum cover stop at 0x0F or run over the whole 512-byte image? Indistinguishable while 0x10-0x1FF is 0x00 fill; fuzzing targets at 0x10 and 0x100 discriminate.",
+    "What does the u16_le candidate at 0x0E count (write counter, sequence, progress), and what are bytes 0x09-0x0D and 0x0F for?",
+    "Are EEPROM blocks at 0x10-0x1FF ever written in longer play, and what fields would they hold?",
+    "What are the literal EEPROM config values (block count at cfg+4, address-bit count at cfg+8) stripped with the _DAT_ literal pool? 64 blocks / 6 address bits is inferred from the 512-byte image, not read from code.",
+    "Is there any slot/backup redundancy in longer play, or is the single header at block 0-1 the only copy?"
+  ]
+}

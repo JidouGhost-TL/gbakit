@@ -1,0 +1,405 @@
+{
+  "schema": "gbakit-save-research/1",
+  "release_key": "A8SP-r0-2bd62ed8e9a35a42",
+  "display_name": "Digimon - Battle Spirit (Europe) (En,Fr,De,Es,It)",
+  "rom_sha256": "2bd62ed8e9a35a4295966f38146bf580bb93c980c62f2541f6aff6cb13d2471b",
+  "game_code": "A8SP",
+  "header_family": "A8S",
+  "community_id": "comm-011",
+  "overall_confidence": "MEDIUM",
+  "media": {
+    "kind": "eeprom512",
+    "size_bytes": 512,
+    "sdk_tags": [],
+    "fill_byte": "0xff"
+  },
+  "slots_and_copies": [
+    {
+      "name": "slot_0",
+      "offset": 0,
+      "size": 208,
+      "redundancy_role": "primary",
+      "selection_rule": "Single slot, no backup or mirroring. Load accepted only if EEPROM read of blocks 0..25 succeeds, first 8 header bytes match ROM template at 0x0802A220, and trailer integrity check passes; otherwise defaults are rebuilt in RAM and flushed back to the same slot."
+    }
+  ],
+  "magic_signatures": [
+    {
+      "offset": 0,
+      "bytes_hex": "65 56 20 53 50 4d 49 44",
+      "ascii": "eV SPMID",
+      "verified_in_code": true,
+      "verified_in_sav": true,
+      "function_addrs": ["0x0802a084"]
+    },
+    {
+      "offset": 0,
+      "bytes_hex": "65 56 20 53 50 4d 49 44 20 20 20 32 37 2e 30 72",
+      "ascii": "eV SPMID   27.0r",
+      "verified_in_code": true,
+      "verified_in_sav": true,
+      "function_addrs": ["0x0802a084"]
+    },
+    {
+      "offset": 16,
+      "bytes_hex": "45 4b",
+      "ascii": "EK",
+      "verified_in_code": false,
+      "verified_in_sav": true,
+      "function_addrs": []
+    }
+  ],
+  "checksums": [
+    {
+      "name": "save_sum8",
+      "algorithm": "sum8",
+      "formula_detail": "checksum = (sum of file bytes 0..199 inclusive) mod 256; stored as a single byte at offset 207 (0xCF), the last byte of the 8-byte trailer block (200..207). The 200-byte covered core is exactly the region zeroed on rebuild by 0x0802A084 and cleared on load failure by 0x0802A41C. The computing function was not isolated in the decompiled corpus (likely inside the indirect EEPROM block thunks 0x083ABAA0/0x083ABAAC or the unrecovered register path in 0x0802A4A8); the formula itself is verified on both samples and by the +1/+1 delta at offsets 0xC5/0xCF between samples.",
+      "stored_offset": 207,
+      "stored_size": 1,
+      "covered_start": 0,
+      "covered_end": 200,
+      "function_addrs": ["0x0802a084"],
+      "verified_on_samples": [
+        {"file": "cap-00-future-0.sav", "stored_hex": "0x23", "computed_hex": "0x23", "match": true},
+        {"file": "cap-01-future-1.sav", "stored_hex": "0x24", "computed_hex": "0x24", "match": true}
+      ],
+      "confidence": "CONFIRMED_VERIFIED"
+    }
+  ],
+  "io_driver_functions": [
+    {"addr": "0x083ab6b0", "role": "write", "callers": ["0x083ab730", "0x083ab7e0"], "notes": "DMA3 transfer primitive for the EEPROM serial bus: programs DMA source/destination/count with enable bit 0x80000000 and busy-waits on the DMA busy halfword. One endpoint is the constant 0x0D000000 (EEPROM)."},
+    {"addr": "0x083ab730", "role": "read", "callers": ["0x083ab8bc"], "notes": "EEPROM read of one 8-byte block: builds address+start-bit command, DMAs it to 0x0D000000 (length = address bits + 3), DMAs 0x44 halfword-bits back, unpacks 64 bits MSB-first into four u16 words. Game-level read thunk 0x083ABAAC is expected to reach it indirectly (target unrecovered)."},
+    {"addr": "0x083ab7e0", "role": "write", "callers": [], "notes": "EEPROM write of one 8-byte block: packs four u16 words plus block address and start/stop bits, DMAs to 0x0D000000 (length = address bits + 0x43), arms DMA interrupt helper 0x083AB5E4, polls EEPROM busy (0x0D000000 & 1), tears down via 0x083AB66C. Reached indirectly through game-level write thunk 0x083ABAA0 (target unrecovered)."},
+    {"addr": "0x083ab8bc", "role": "read", "callers": [], "notes": "EEPROM verify of one 8-byte block: reads via 0x083AB730 and compares four u16 words, returns 0 on match and 0x8000 on mismatch. Whether the game thunks use verify-after-write is unknown."},
+    {"addr": "0x083ab5e4", "role": "write", "callers": ["0x083ab7e0"], "notes": "DMA interrupt arm helper for EEPROM write: activates the pending DMA request and stores the first data words. Does not touch save fields directly."},
+    {"addr": "0x083ab66c", "role": "write", "callers": ["0x083ab7e0"], "notes": "DMA interrupt disarm/teardown helper for EEPROM write."},
+    {"addr": "0x083abaa0", "role": "write", "callers": ["0x0802a4a8"], "notes": "Game-level per-block EEPROM write thunk (single indirect jump, target unrecovered). Called once per block index 0..25 by the flush function; aborts flush on first non-zero return. May also perform record byte rotation and/or sum8 computation (unverified)."},
+    {"addr": "0x083abaac", "role": "read", "callers": ["0x0802a4f4"], "notes": "Game-level per-block EEPROM read thunk (single indirect jump, target unrecovered). Called once per block index 0..25 by the load function; aborts load on first non-zero return."},
+    {"addr": "0x0802a4a8", "role": "write", "callers": ["0x0802a41c"], "notes": "Flush: calls delay 0x0802A558, stores unrecovered dword (unaff_r9) at save RAM+200 (file offset 0xC8, 0xFFFFFFFF in samples), then writes EEPROM blocks 0..25 via 0x083ABAA0."},
+    {"addr": "0x0802a4f4", "role": "read", "callers": ["0x0802a41c"], "notes": "Load: reads EEPROM blocks 0..25 via 0x083ABAAC into the save RAM mirror, then calls delay 0x0802A558."},
+    {"addr": "0x0802a41c", "role": "deserialize", "callers": ["0x0802a084"], "notes": "Load/flush dispatcher: optionally copies mirror+0x1C to mirror+0x10, runs sanitiser 0x0802A2E4, calls auxiliary DMA walker 0x080E8428, then branches to load (0x0802A4F4, clearing the 200-byte core on failure) or flush (0x0802A4A8). Also serves as the serialize entry via its write branch."},
+    {"addr": "0x0802a2e4", "role": "serialize", "callers": ["0x0802a41c"], "notes": "Sanitiser run before every dispatch: masks u16 at RAM+0x10 (low 14 bits), RAM+0x12 (&0x1F), RAM+0x64 (&0x1F); per record (10x8 at RAM+0x14) masks flag at +0, clamps id at +1 to 0..12, validates name bytes at +2..+4 to 0x20..0x82 (replacing with ROM defaults at 0x0802A40C-E and zeroing +5 on failure), clamps score u16 at +6 to a ROM maximum or sets it to 200 if bit 15 is set."},
+    {"addr": "0x0802a084", "role": "deserialize", "callers": ["0x080158f8"], "notes": "Load-or-initialise: preserves u16 at RAM+0xC0 (or 1), calls dispatcher to load, compares 8-byte magic against ROM 0x0802A220 and checks trailer integrity at RAM+200; on any failure rebuilds defaults (zero 200 bytes, copy 16-byte header, copy 3 default records + replicate 7 at +0x14, store u16 at +0xC0 and boolean at +0xC2) and flushes via the dispatcher. Exact compared width/offset of the +200 integrity check is mis-recovered in the decompilation (see report)."},
+    {"addr": "0x0802a558", "role": "checksum", "callers": ["0x0802a084", "0x0802a4a8", "0x0802a4f4"], "notes": "Not a checksum: 200-iteration busy delay used as a timing guard around EEPROM operations. Listed to prevent misattribution."}
+  ],
+  "caller_chains": [
+    {
+      "entry_caller": "0x080158f8",
+      "chain": ["0x08000420", "0x080158f8", "0x0802a084", "0x0802a41c", "0x0802a4f4", "0x083abaac", "0x083ab730", "0x083ab6b0"],
+      "trigger_context": "Boot / game init: 0x08000420 calls the game-init function 0x080158F8, which calls load-or-initialise. The read branch loads EEPROM blocks 0..25 into the RAM mirror (last two hops via the indirect read thunk; 0x083AB730/0x083AB6B0 are the recovered library implementation).",
+      "ram_fields_updated": ["sanitiser clamps: u16 at +0x10, +0x12, +0x64 and all 10 records (flag/id/name/score) via 0x0802A2E4 before transfer", "on read failure: 200-byte core zeroed by 0x0802A41C"],
+      "how_mapped": "Direct func_ calls in decompiled.c plus callgraph.json edges (0x0802A41C -> 0x0802A2E4); EEPROM hops mapped by the constant 0x0D000000 endpoint in 0x083AB730/0x083AB7E0 and the 26-iteration block loops in 0x0802A4F4/0x0802A4A8. The thunk-to-library hop is indirect (unrecovered jumptable) and is not claimed as a direct edge."
+    },
+    {
+      "entry_caller": "0x0802a084",
+      "chain": ["0x0802a084", "0x0802a41c", "0x0802a4a8", "0x083abaa0", "0x083ab7e0", "0x083ab6b0"],
+      "trigger_context": "Default rebuild flush: first boot with blank/corrupt EEPROM, or any load failing magic/integrity validation (confirmed by the PACKET mutation probe at 0xC5, which reverted the save to blank and rewrote it).",
+      "ram_fields_updated": ["200-byte core zeroed", "16-byte header copied from ROM 0x0802A220 to offset 0", "3 default records copied and 7 records replicated at +0x14", "u16 at +0xC0 restored (preserved value or 1)", "u16 at +0xC2 set to (arg5 == 1)", "dword at +200 stored by 0x0802A4A8 before block writes"],
+      "how_mapped": "Rebuild block LAB_0802A110 and second dispatcher call in FUN_0802A084 in decompiled.c; flush loop (0x1A iterations) in FUN_0802A4A8; EEPROM write hop via indirect thunk 0x083ABAA0 to the recovered write driver 0x083AB7E0 (inferred, target unrecovered)."
+    },
+    {
+      "entry_caller": "0x080158f8",
+      "chain": ["0x080158f8"],
+      "trigger_context": "Game-init consumption immediately after load/init on every boot. This caller does not write the save; it copies save fields into the game-state struct.",
+      "ram_fields_updated": [],
+      "how_mapped": "Direct reads in FUN_080158F8 after its func_0x0802A084 call: game-state u16 at +0x1C <- save u16 at +0x10; game-state byte at +0x19 <- save u16 at +0x12 (low byte); game-state byte at +0x24 <- save u16 at +0xC0 clamped to 1 if 0 or >5."
+    }
+  ],
+  "fields": [
+    {
+      "name": "header_magic_8",
+      "offset": 0,
+      "size": 8,
+      "type": "ascii",
+      "ram_addr": null,
+      "writers": ["0x0802a084"],
+      "readers": ["0x0802a084"],
+      "observed_values": {"cap-00-future-0.sav": "eV SPMID", "cap-01-future-1.sav": "eV SPMID"},
+      "update_mechanism": "Copied as part of the 16-byte header from ROM template 0x0802A220 on default rebuild; compared byte-for-byte against that template on every load. Mismatch forces rebuild+rewrite.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "FUN_0802A084 8-byte compare loop and 16-byte copy in decompiled.c; bytes present in both .sav files (Python-verified)."
+    },
+    {
+      "name": "header_full_16",
+      "offset": 0,
+      "size": 16,
+      "type": "ascii",
+      "ram_addr": null,
+      "writers": ["0x0802a084"],
+      "readers": ["0x0802a084"],
+      "observed_values": {"cap-00-future-0.sav": "eV SPMID   27.0r", "cap-01-future-1.sav": "eV SPMID   27.0r"},
+      "update_mechanism": "Copied verbatim from ROM template 0x0802A220 when defaults are built; otherwise preserved from EEPROM. Only the first 8 bytes are compared on load.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "FUN_0802A084 copy loop (0x10 iterations) in decompiled.c; bytes present in both .sav files."
+    },
+    {
+      "name": "header_tail_ek",
+      "offset": 16,
+      "size": 2,
+      "type": "ascii",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"cap-00-future-0.sav": "EK (45 4b)", "cap-01-future-1.sav": "EK (45 4b)"},
+      "update_mechanism": "Unknown. Not covered by the 16-byte copy or the 8-byte compare as decompiled; completes the 18-byte ASCII string reported in PACKET (eV SPMID   27.0rEK).",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Observed bytes in both .sav files; no individual code accessor found."
+    },
+    {
+      "name": "field_0x12",
+      "offset": 18,
+      "size": 2,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": ["0x0802a084"],
+      "readers": [],
+      "observed_values": {"cap-00-future-0.sav": "00 00", "cap-01-future-1.sav": "00 00"},
+      "update_mechanism": "Zeroed with the 200-byte core on rebuild; otherwise preserved. The sanitiser masks a RAM u16 at +0x12 with 0x1F, but the RAM/file record byte rotation prevents equating that field with these file bytes.",
+      "confidence": "HYPOTHESIS",
+      "evidence": "FUN_0802A084 zero loop; FUN_0802A2E4 mask at +0x12 (RAM layout); observed zero bytes in both samples."
+    },
+    {
+      "name": "record_table",
+      "offset": 20,
+      "size": 80,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": ["0x0802a084", "0x0802a4a8"],
+      "readers": ["0x0802a4f4", "0x0802a2e4"],
+      "observed_values": {"cap-00-future-0.sav": "10 records x 8 bytes at 0x14..0x63; see record_score/record_name/record_field6 sub-fields", "cap-01-future-1.sav": "identical to cap-00"},
+      "update_mechanism": "Geometry: 3 ROM default records copied + 7 records replicated from a single template on rebuild (FUN_0802A084, destination +0x14, stride 8); sanitised in RAM form by 0x0802A2E4 (10 records at RAM+0x14) before flush; transferred as EEPROM blocks via 0x0802A4A8/0x0802A4F4.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "FUN_0802A084 copy/replicate loops and FUN_0802A2E4 10x8 loop in decompiled.c; table bytes identical in both samples."
+    },
+    {
+      "name": "record_flag_byte",
+      "offset": 20,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": ["0x0802a084"],
+      "readers": ["0x0802a4f4"],
+      "observed_values": {"cap-00-future-0.sav": "0x00 in all 10 records (record-relative +0, table at 0x14)", "cap-01-future-1.sav": "0x00 in all 10 records"},
+      "update_mechanism": "Zero in every observed record. Corresponds (after the suspected 1-byte RAM/file rotation) to the sanitiser flag byte at RAM record+0, which is AND-masked before flush.",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Observed bytes; FUN_0802A2E4 flag mask at record+0 (RAM layout)."
+    },
+    {
+      "name": "record_score",
+      "offset": 21,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": ["0x0802a084"],
+      "readers": ["0x0802a4f4"],
+      "observed_values": {"cap-00-future-0.sav": "record-relative +1: r0=0, r1=250, r2=200, r3=150, r4..r9=0", "cap-01-future-1.sav": "identical"},
+      "update_mechanism": "Set by gameplay (outside the traced corpus), then clamped in RAM by 0x0802A2E4 (score at RAM record+6: clamped to a ROM maximum, or set to 200 if bit 15 is set) before flush via 0x0802A41C/0x0802A4A8. Defaults on rebuild: 250/200/150 for the first three named records, 0 thereafter (observed). File position is authoritative for editing; RAM position differs by the suspected rotation.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Descending values 250/200/150 at record+1 in both .sav files (Python-parsed); FUN_0802A2E4 score clamp with default 200 in decompiled.c."
+    },
+    {
+      "name": "record_name",
+      "offset": 23,
+      "size": 3,
+      "type": "ascii",
+      "ram_addr": null,
+      "writers": ["0x0802a084"],
+      "readers": ["0x0802a4f4"],
+      "observed_values": {"cap-00-future-0.sav": "record-relative +3: r0=\\x00YR, r1=NEL, r2=OMD, r3=EMD, r4..r8=PMD, r9=P\\x00\\x00", "cap-01-future-1.sav": "identical"},
+      "update_mechanism": "Set by gameplay/defaults, then validated in RAM by 0x0802A2E4 (name bytes at RAM record+2..+4 must be 0x20..0x82; invalid names are replaced with ROM defaults at 0x0802A40C-E and terminated at RAM+5) before flush. Records 0 and 9 are anomalous (partially zero names); see open questions.",
+      "confidence": "HYPOTHESIS",
+      "evidence": "ASCII names at record+3 in both .sav files (Python-parsed); FUN_0802A2E4 name validation in decompiled.c (RAM layout shifted by one byte relative to the file)."
+    },
+    {
+      "name": "record_field6",
+      "offset": 26,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": ["0x0802a084"],
+      "readers": ["0x0802a4f4"],
+      "observed_values": {"cap-00-future-0.sav": "record-relative +6: r0=257 (01 01), r1=2, r2..r9=0", "cap-01-future-1.sav": "identical"},
+      "update_mechanism": "Written from the ROM template (first u16) for replicated records on rebuild. In the RAM layout this file position corresponds to the sanitiser id byte pair (id at RAM+1 clamped to 0..12); candidate meanings include character/Digimon id, rank, or flag pair. Not determinable from two near-identical samples.",
+      "confidence": "UNKNOWN",
+      "evidence": "Observed values in both samples; FUN_0802A084 replication (u16 at +6 from template) and FUN_0802A2E4 id clamp at RAM+1."
+    },
+    {
+      "name": "reserved_0x64_0xbf",
+      "offset": 100,
+      "size": 92,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": ["0x0802a084"],
+      "readers": ["0x0802a4f4"],
+      "observed_values": {"cap-00-future-0.sav": "all 0x00 (0x64..0xBF)", "cap-01-future-1.sav": "all 0x00 (0x64..0xBF)"},
+      "update_mechanism": "Zeroed with the 200-byte core on rebuild; inside the flushed image and the checksum range, but no individual field accessor found except the sanitiser mask of a RAM u16 at +0x64 (&0x1F), whose file counterpart cannot be pinpointed due to the RAM/file rotation.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "FUN_0802A084 zero loop (200 bytes); observed zeros in both samples; FUN_0802A2E4 mask at +100."
+    },
+    {
+      "name": "field_0xc0_u16",
+      "offset": 192,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": ["0x0802a084"],
+      "readers": ["0x0802a084", "0x080158f8"],
+      "observed_values": {"cap-00-future-0.sav": 0, "cap-01-future-1.sav": 0},
+      "update_mechanism": "Preserved across default rebuilds by 0x0802A084 (restores the pre-load value, or 1 if not in mode 1). Copied to game state by 0x080158F8 with clamping: 0 or >5 becomes 1. Stored file value is not rewritten by the load path.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "FUN_0802A084 preservation/store at +0xC0 and FUN_080158F8 clamp (0 or >5 -> 1) in decompiled.c; value 0 in both samples. Semantics (5-valued, e.g. language) are HYPOTHESIS-level and are not encoded in this field's confidence."
+    },
+    {
+      "name": "field_0xc2_u16",
+      "offset": 194,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": ["0x0802a084"],
+      "readers": [],
+      "observed_values": {"cap-00-future-0.sav": 0, "cap-01-future-1.sav": 0},
+      "update_mechanism": "Stored by 0x0802A084 on default rebuild as (arg5 == 1), a boolean-like value. No reader found in the corpus.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "FUN_0802A084 store at +0xC2 in decompiled.c; value 0 in both samples."
+    },
+    {
+      "name": "field_0xc4_u8",
+      "offset": 196,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"cap-00-future-0.sav": 0, "cap-01-future-1.sav": 0},
+      "update_mechanism": "Unknown; inside the flushed, checksummed core with no isolated accessor.",
+      "confidence": "UNKNOWN",
+      "evidence": "Observed byte in both samples only."
+    },
+    {
+      "name": "counter_0xc5",
+      "offset": 197,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": [],
+      "readers": ["0x0802a084"],
+      "observed_values": {"cap-00-future-0.sav": 0, "cap-01-future-1.sav": 1},
+      "update_mechanism": "Changed by gameplay between the two captures (+1); read on load only as part of the checksummed core (its mutation in the PACKET probe reverted the save via checksum failure at 0xCF, not necessarily via a dedicated check). Candidate meanings: play/session counter, unlock progress, or options byte.",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Sole payload diff between samples (Python-verified) with checksum following +1; PACKET mutation probe at 0xC5 (reverted to blank, save rewritten)."
+    },
+    {
+      "name": "field_0xc6_u8",
+      "offset": 198,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"cap-00-future-0.sav": 0, "cap-01-future-1.sav": 0},
+      "update_mechanism": "Unknown; inside the flushed, checksummed core with no isolated accessor.",
+      "confidence": "UNKNOWN",
+      "evidence": "Observed byte in both samples only."
+    },
+    {
+      "name": "field_0xc7_u8",
+      "offset": 199,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"cap-00-future-0.sav": 1, "cap-01-future-1.sav": 1},
+      "update_mechanism": "Unknown; last byte of the checksummed core. Constant 1 in both samples (flag-like candidate).",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Observed byte in both samples only."
+    },
+    {
+      "name": "trailer_dword_0xc8",
+      "offset": 200,
+      "size": 4,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": ["0x0802a4a8"],
+      "readers": ["0x0802a084"],
+      "observed_values": {"cap-00-future-0.sav": "ff ff ff ff", "cap-01-future-1.sav": "ff ff ff ff"},
+      "update_mechanism": "Stored by the flush function 0x0802A4A8 (unrecovered dword value unaff_r9) at RAM+200 before any block is written, so it is part of block 25. The load acceptance check in 0x0802A084 covers the RAM+200 trailer region, but its exact compared width/offset is mis-recovered in the decompilation. All-ones in both samples suggests an unset/validity marker. It is not the checksum.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "FUN_0802A4A8 store at +200 and FUN_0802A084 trailer check in decompiled.c; observed 0xFFFFFFFF in both samples. Meaning is UNKNOWN (see open questions)."
+    },
+    {
+      "name": "trailer_0xcc_u16",
+      "offset": 204,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": ["0x0802a4a8"],
+      "readers": ["0x0802a4f4"],
+      "observed_values": {"cap-00-future-0.sav": 0, "cap-01-future-1.sav": 0},
+      "update_mechanism": "Transferred as part of trailer block 25 (offsets 200..207); no isolated accessor found.",
+      "confidence": "UNKNOWN",
+      "evidence": "Observed bytes in both samples; block geometry (26 blocks) from FUN_0802A4A8/FUN_0802A4F4."
+    },
+    {
+      "name": "trailer_0xce_u8",
+      "offset": 206,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": ["0x0802a4a8"],
+      "readers": ["0x0802a4f4"],
+      "observed_values": {"cap-00-future-0.sav": 15, "cap-01-future-1.sav": 15},
+      "update_mechanism": "Transferred as part of trailer block 25; outside the verified checksum covered range (0..199), so edits here should not require checksum repair (falsifiable, see fuzzing targets). Candidates: bitmask (four low bits set), count (15), or high byte of a wider trailer value.",
+      "confidence": "UNKNOWN",
+      "evidence": "Observed byte 0x0F in both samples; checksum range verified without it in Python."
+    },
+    {
+      "name": "checksum_0xcf",
+      "offset": 207,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": ["0x0802a4a8"],
+      "readers": ["0x0802a084"],
+      "observed_values": {"cap-00-future-0.sav": "0x23", "cap-01-future-1.sav": "0x24"},
+      "update_mechanism": "sum8 over file bytes 0..199, recomputed on flush (computing function not isolated; likely in the indirect block thunks or the unrecovered flush path). Any payload edit (offset < 200) must repair this byte or the load path rebuilds defaults and rewrites the save.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Python verification on both samples (computed 0x23/0x24 == stored); +1 delta tracking the 0xC5 mutation; PACKET integrity probe; load-rebuild structure in FUN_0802A084. Writer attribution to the flush path is structural (block 25 is written by 0x0802A4A8); the exact computing instruction is unrecovered."
+    },
+    {
+      "name": "unused_0xd0_0x1ff",
+      "offset": 208,
+      "size": 304,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"cap-00-future-0.sav": "all 0xff (0xD0..0x1FF)", "cap-01-future-1.sav": "all 0xff (0xD0..0x1FF)"},
+      "update_mechanism": "Never transferred (only EEPROM blocks 0..25 are read/written). Erased EEPROM space beyond the save image.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Python-verified all-0xFF in both samples; 26-iteration loops in FUN_0802A4A8/FUN_0802A4F4."
+    }
+  ],
+  "fuzzing_targets": [
+    {"offset": 0, "size": 1, "mutation": "Change magic byte 0x65 to 0x66 and repair checksum at 207", "requires_checksum_repair": true, "predicted_effect": "Save still rejected on load (magic compare in 0x0802A084 fails independently of checksum): defaults rebuilt and EEPROM rewritten. Separates the magic check from the checksum check."},
+    {"offset": 197, "size": 1, "mutation": "Change counter byte 0x00 to 0x02 and repair checksum at 207", "requires_checksum_repair": true, "predicted_effect": "Save accepted (replicates the PACKET probe with repair). If 0xC5 is a counter/progress byte, the corresponding UI/progress advances; a revert would imply a dedicated validity check on this byte."},
+    {"offset": 197, "size": 1, "mutation": "Change counter byte without repairing checksum at 207", "requires_checksum_repair": false, "predicted_effect": "Replicates the PACKET probe: save reverts to blank/defaults and is rewritten after mutation, with a visual delta on boot."},
+    {"offset": 29, "size": 1, "mutation": "Change record 1 score low byte (file 0x1D, record-relative +1) from 0xFA (250) to 0x64 (100) and repair checksum", "requires_checksum_repair": true, "predicted_effect": "High-score entry NEL shows 100 instead of 250 (or re-sorts on load). No display change would falsify the file record layout / rotation model."},
+    {"offset": 31, "size": 3, "mutation": "Change record 1 name (file 0x1F..0x21) from NEL to AAA, then repeat with one byte set to 0x10 and repair checksum each time", "requires_checksum_repair": true, "predicted_effect": "Name displays as AAA. With a byte below 0x20, the sanitiser 0x0802A2E4 should replace the whole name with the ROM defaults at 0x0802A40C-E on the next flush cycle, also revealing those default bytes."},
+    {"offset": 192, "size": 2, "mutation": "Set u16_le from 0 to 3, then to 6, repairing checksum each time", "requires_checksum_repair": true, "predicted_effect": "Boot copy in 0x080158F8 accepts 1..5 and maps 0 or >5 to 1. If this is the language selector, 3 shows the third language and 6 boots in the default language while the file still stores 6. No language change refutes the language hypothesis."},
+    {"offset": 206, "size": 1, "mutation": "Change trailer byte 0x0F to 0x00 without touching checksum at 207", "requires_checksum_repair": false, "predicted_effect": "Save loads normally with no visible change if 0xCE is outside the integrity scope (as reported). A revert would falsify the checksum covered range (0..199)."},
+    {"offset": 200, "size": 4, "mutation": "Change trailer dword FF FF FF FF to 00 00 00 00 without touching checksum at 207", "requires_checksum_repair": false, "predicted_effect": "Tests the dword stored by 0x0802A4A8 and the load acceptance check at RAM+200. Accepted with no change: write-only marker. Revert: the +200 check compares this dword and its expected value must be read from the rewritten image."},
+    {"offset": 207, "size": 1, "mutation": "Flip one bit of the stored checksum only", "requires_checksum_repair": false, "predicted_effect": "Defaults rebuilt and save rewritten (integrity failure with all payload bytes valid), isolating the stored checksum byte itself."},
+    {"offset": 208, "size": 1, "mutation": "Change unused-region byte at 0xD0 (and repeat at 0x1FF) from 0xFF to 0x00 without checksum repair", "requires_checksum_repair": false, "predicted_effect": "No observable change and no game-initiated repair, because only blocks 0..25 are transferred. Any gameplay effect falsifies the 26-block geometry."}
+  ],
+  "open_questions": [
+    "Exact EWRAM address of the save RAM mirror: the decompiled C references it only through ROM literal-pool pointers (e.g. pointer stored at ROM 0x0802A254, also 0x0802A258/0x0802A414/0x0802A4A4/0x0802A4F0), whose values are not present in the corpus, so ram_addr is null for every field.",
+    "Targets of the indirect EEPROM block thunks 0x083ABAA0 (write) and 0x083ABAAC (read): do they call 0x083AB7E0/0x083AB730 directly, use verify (0x083AB8BC), perform the suspected one-byte record byte rotation between the RAM layout (sanitiser) and the file layout, and/or compute the sum8 checksum?",
+    "Which code computes the sum8 stored at offset 207, and what value does 0x0802A4A8 store at RAM+200 (unaff_r9, 0xFFFFFFFF in samples)? What does the load acceptance check in 0x0802A084 actually compare at RAM+200, given that the decompiled transcription (dword == 8th magic byte) cannot hold for the observed valid saves?",
+    "Semantics of offsets 0xC4, 0xC5 (counter/progress candidate), 0xC6, 0xC7 (constant 1), 0xCC, and 0xCE (constant 0x0F), and of the record u16 at file record+6 (values 257, 2, 0).",
+    "Whether the u16 at 0xC0 is the language selector (clamped to 1..5 by 0x080158F8, matching the 5-language European release) or another 5-valued option; both samples store 0.",
+    "Record table anomaly: record 0 name reads \\x00YR and record 9 reads P\\x00\\x00 versus clean records 1..8 (NEL/OMD/EMD/PMD). Are 0 and 9 special/empty entries, or does the table start at 0x1C with a separate 8-byte field at 0x14?",
+    "Which gameplay/options/high-score functions outside the 104-function trace corpus mutate the mirror and invoke the write branch of 0x0802A41C mid-game? Only the boot/game-init caller 0x080158F8 was found in the corpus.",
+    "Purpose of 0x080E8428 in the dispatcher 0x0802A41C (auxiliary DMA queue walker) and of the dispatcher's first step copying mirror+0x1C to mirror+0x10 when its 6th argument is 1.",
+    "No paired .ss save-states were available (states/ is empty), so all fuzzing predictions in this file are for .sav mutation plus cold reload, not for state-based RAM observation."
+  ]
+}

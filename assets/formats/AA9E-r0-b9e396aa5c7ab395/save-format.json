@@ -1,0 +1,709 @@
+{
+  "schema": "gbakit-save-research/1",
+  "release_key": "AA9E-r0-b9e396aa5c7ab395",
+  "display_name": "Duel Masters - Sempai Legends (USA)",
+  "rom_sha256": "b9e396aa5c7ab395066c7242747085a9bec2b789d43b49c7e4ae96ddd1e47661",
+  "game_code": "AA9E",
+  "header_family": "AA9",
+  "community_id": "comm-003",
+  "overall_confidence": "MEDIUM",
+  "media": {
+    "kind": "eeprom512",
+    "size_bytes": 512,
+    "sdk_tags": [
+      "EEPROM_V124@2128932"
+    ],
+    "fill_byte": "0xff"
+  },
+  "slots_and_copies": [
+    {
+      "name": "slot_0",
+      "offset": 0,
+      "size": 424,
+      "redundancy_role": "primary",
+      "selection_rule": "Sole image at EEPROM block 0; FUN_080ce3cc (0x080ce3cc) reads 0x1A8 bytes via FUN_080e7654, validates complement-sum8 at byte 0x00 over 0x01..0x1A7; on read failure or checksum mismatch it installs RAM defaults and clears *_DAT_080ce560, on match it sets *puRam080ce574=1. No backup copy, mirroring, or generation counter exists in the 512-byte image; bytes 0x1A8..0x1FF are unused 0xFF."
+    }
+  ],
+  "magic_signatures": [
+    {
+      "offset": 136,
+      "bytes_hex": "414d4f54",
+      "ascii": "AMOT",
+      "verified_in_code": false,
+      "verified_in_sav": true,
+      "function_addrs": []
+    },
+    {
+      "offset": 148,
+      "bytes_hex": "49494141",
+      "ascii": "IIAA",
+      "verified_in_code": false,
+      "verified_in_sav": true,
+      "function_addrs": []
+    }
+  ],
+  "checksums": [
+    {
+      "name": "eeprom_image_sum8_complement",
+      "algorithm": "custom",
+      "formula_detail": "stored byte[0x00] == (~(sum of bytes[0x01..0x1A7] mod 256)) & 0xFF; ones-complement of an 8-bit additive sum, seed 0, no XOR/CRC. Decompiled validator: FUN_080ce3cc adds each byte from buffer+1 into byte accumulator bVar2 and tests (byte)*_DAT_080ce548 == (byte)~bVar2; loop bound _DAT_080ce544 is DAT-unresolved, covered end 0x1A7 pinned by loader length 0x1A8 (FUN_080e7654 call in FUN_080ce3cc) plus byte verification.",
+      "stored_offset": 0,
+      "stored_size": 1,
+      "covered_start": 1,
+      "covered_end": 424,
+      "function_addrs": [
+        "0x080ce3cc"
+      ],
+      "verified_on_samples": [
+        {
+          "file": "sav-01-f1828.sav",
+          "stored_hex": "0x00",
+          "computed_hex": "0x00",
+          "match": true
+        },
+        {
+          "file": "sav-00-f1723.sav",
+          "stored_hex": "0x00",
+          "computed_hex": "0xbd",
+          "match": false
+        }
+      ],
+      "confidence": "CONFIRMED_VERIFIED"
+    }
+  ],
+  "io_driver_functions": [
+    {
+      "addr": "0x080e8408",
+      "role": "read",
+      "callers": [
+        "0x080e8488"
+      ],
+      "notes": "DMA3 transfer primitive (FUN_080e8408): writes src/dst/count|0x80000000 to DAT-unresolved registers matching DMA3SAD/DAD/CNT at 0x040000D4..0x040000DC by pattern, spins on busy bit 0x8000. Used for both EEPROM command and data phases; role at this level is bus transfer, direction set by caller."
+    },
+    {
+      "addr": "0x080e8488",
+      "role": "read",
+      "callers": [
+        "0x080e7654"
+      ],
+      "notes": "EEPROM 8-byte block read (sole MMIO seed): builds start+read-opcode+address bitstream on stack, DMAs address_bits+3 halfwords to 0x0D000000, DMAs 0x44 halfwords back, repacks 64 bits into dest[0..7] in reverse halfword order. Caller edge is textual (func_0x080e8488 at decompiled.c line 8042); callgraph.json lists no callers. No EEPROM write/program counterpart exists in the corpus."
+    },
+    {
+      "addr": "0x080e7654",
+      "role": "read",
+      "callers": [
+        "0x080ce3cc"
+      ],
+      "notes": "Sequential EEPROM reader: loops FUN_080e8488 over consecutive blocks (RAM block counter via _DAT_080e7670, dest += 8, length -= 8), returns 1 on completion / 0 on failure. Called with length 0x1A8 at decompiled.c line 292."
+    },
+    {
+      "addr": "0x080ce3cc",
+      "role": "checksum",
+      "callers": [],
+      "notes": "Load/validate/default-initialise entry (no caller in corpus): calls FUN_080e7290, FUN_080e7654(save_buffer,0x1A8); on read failure or checksum mismatch installs defaults (offsets in report Section 3.5) and calls FUN_080ce710/FUN_080ce8d0; on match sets valid flag. Also the checksum routine for this format."
+    },
+    {
+      "addr": "0x080ce8d0",
+      "role": "deserialize",
+      "callers": [
+        "0x080ce3cc"
+      ],
+      "notes": "Deserialiser into working RAM: 16 records x 8B from src+0x0C (0xFF sentinel -> -1 else <<11), verbatim bulk copies of 9/180/40/40 bytes between DAT-unresolved pointers, header bit-fields from src[7..11], trailer u16@0x19A/0x19C and u32@0x1A0/0x1A4 (swapped). Caller textual from FUN_080ce3cc branches."
+    },
+    {
+      "addr": "0x080ce710",
+      "role": "deserialize",
+      "callers": [
+        "0x080ce3cc"
+      ],
+      "notes": "Bit-field unpacker for packed header bytes 0x00..0x05 into a separate RAM struct. Caller textual from FUN_080ce3cc."
+    },
+    {
+      "addr": "0x080e8380",
+      "role": "serialize",
+      "callers": [
+        "0x080ce3cc"
+      ],
+      "notes": "BIOS CpuSet SWI 0x0B wrapper (FUN_080e8380), used by FUN_080ce3cc to copy default blocks into the RAM save buffer. Not an EEPROM writer; included because it is the only copy primitive on the default path. Role label serialize is approximate: RAM-to-RAM copy only."
+    }
+  ],
+  "caller_chains": [
+    {
+      "entry_caller": "0x080ce3cc",
+      "chain": [
+        "0x080ce3cc",
+        "0x080e7654",
+        "0x080e8488",
+        "0x080e8408"
+      ],
+      "trigger_context": "Boot/save-load: FUN_080ce3cc has no caller in callgraph.json or as a textual func_ call site; presumed reached from boot code outside the 221 traced functions. It first calls FUN_080e7290 (system init), then reads the EEPROM.",
+      "ram_fields_updated": [
+        "save buffer (424 B read into DAT-unresolved RAM base _DAT_080ce474)",
+        "RAM block counter cell pointed to by _DAT_080e7670 (incremented per 8-byte block)"
+      ],
+      "how_mapped": "callgraph.json gives only 0x080e8488->0x080e8408; remaining edges recovered from textual func_0x call sites in ghidra/decompiled.c: line 292 func_0x080e7654(buffer,0x1A8), line 8042 func_0x080e8488(*counter,dest), lines 8575-8576 FUN_080e8408(...,0xd000000,...)"
+    },
+    {
+      "entry_caller": "0x080ce3cc",
+      "chain": [
+        "0x080ce3cc",
+        "0x080ce710"
+      ],
+      "trigger_context": "EEPROM read failure or checksum mismatch in FUN_080ce3cc: defaults copied via FUN_080e8380 (SWI 0x0B), default field writes applied, then header unpacked.",
+      "ram_fields_updated": [
+        "header bytes 0x01 (mask|0x01), 0x06 (mask|0x20), u16@0x02 (|0x0200), u32@0x00 (|0x20000), byte@0x0C=0x10, bytes 0x0D-0x10=0xFF, byte@0x14=0x11, bytes 0x15-0x18=0xFF, u32@0x08 (|0x8000), u32@0x8C and byte@0x90 copied from an external source"
+      ],
+      "how_mapped": "Textual func_0x080ce710 call sites within FUN_080ce3cc in ghidra/decompiled.c; callgraph.json has no edges for 0x080ce710"
+    },
+    {
+      "entry_caller": "0x080ce3cc",
+      "chain": [
+        "0x080ce3cc",
+        "0x080ce8d0"
+      ],
+      "trigger_context": "Same failure/default paths as the FUN_080ce710 chain; also the general deserialisation of a loaded/defaulted buffer into working RAM.",
+      "ram_fields_updated": [
+        "16-entry record arrays (stride 0x1C) from save 0x0C..0x8B",
+        "verbatim regions of 9, 180, 40, 40 bytes (absolute RAM targets DAT-unresolved)",
+        "flag bytes and u16 at dst+0x2CC from save bytes 0x07..0x0B",
+        "dst u16[0x1D8]=save u16@0x19A, u16[0x1DA]=save u16@0x19C, u32[0x1D4]=save u32@0x1A0, u32[0x1D0]=save u32@0x1A4"
+      ],
+      "how_mapped": "Textual func_0x080ce8d0 call sites (twice) within FUN_080ce3cc in ghidra/decompiled.c; callgraph.json has no edges for 0x080ce8d0"
+    }
+  ],
+  "fields": [
+    {
+      "name": "checksum_sum8_complement",
+      "offset": 0,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [
+        "0x080ce3cc"
+      ],
+      "observed_values": {
+        "sav-00-f1723.sav": "0x00 (computed 0xbd, mismatch)",
+        "sav-01-f1828.sav": "0x00 (computed 0x00, match)"
+      },
+      "update_mechanism": "Stored byte must equal (~sum8 of bytes 0x01..0x1A7)&0xFF; repair by recomputing after any covered mutation",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "FUN_080ce3cc read-success branch: byte accumulator bVar2 over buffer+1..bound, test (byte)*_DAT_080ce548 == (byte)~bVar2; Python verification on both samples in SAVE-FORMAT-REPORT.md Section 4.2"
+    },
+    {
+      "name": "header_byte_0x01",
+      "offset": 1,
+      "size": 1,
+      "type": "bitflags",
+      "ram_addr": null,
+      "writers": [
+        "0x080ce3cc"
+      ],
+      "readers": [
+        "0x080ce710",
+        "0x080ce3cc"
+      ],
+      "observed_values": {
+        "both": "0x20"
+      },
+      "update_mechanism": "Default-init in RAM: byte = byte & 0xFC | 0x01 (FUN_080ce3cc); EEPROM writer absent",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "FUN_080ce3cc default writes; FUN_080ce710 extracts byte[1]&3 and shifted fields; observed 0x20 does not match default-init result"
+    },
+    {
+      "name": "header_u16_0x02",
+      "offset": 2,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": [
+        "0x080ce3cc"
+      ],
+      "readers": [
+        "0x080ce710"
+      ],
+      "observed_values": {
+        "both": "0x0000"
+      },
+      "update_mechanism": "Default-init in RAM: u16 = (mask & u16) | 0x0200; EEPROM writer absent",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "FUN_080ce710 extracts (u32[0]&0x3FFFF)>>10 and (u16[2]&0x3FF)>>2, proving packed bit-fields"
+    },
+    {
+      "name": "header_bytes_0x04",
+      "offset": 4,
+      "size": 2,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [
+        "0x080ce710"
+      ],
+      "observed_values": {
+        "both": "0e 02"
+      },
+      "update_mechanism": "EEPROM writer absent",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "FUN_080ce710 consumes u16[4]&0x1FFF and (u32[4]&0x1FFFFF)>>13 as part of 6-byte packed header"
+    },
+    {
+      "name": "header_byte_0x06",
+      "offset": 6,
+      "size": 1,
+      "type": "bitflags",
+      "ram_addr": null,
+      "writers": [
+        "0x080ce3cc"
+      ],
+      "readers": [
+        "0x080ce3cc"
+      ],
+      "observed_values": {
+        "both": "0x01"
+      },
+      "update_mechanism": "Default-init in RAM: byte = byte & 0x1F | 0x20; EEPROM writer absent",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "FUN_080ce3cc default writes; observed value differs from default result, semantics unknown"
+    },
+    {
+      "name": "header_byte_0x07",
+      "offset": 7,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [
+        "0x080ce8d0"
+      ],
+      "observed_values": {
+        "sav-00-f1723.sav": "0x67",
+        "sav-01-f1828.sav": "0xa7"
+      },
+      "update_mechanism": "Changed between samples (+0x40, cancelled by offset 0x0E); EEPROM writer absent",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "FUN_080ce8d0 fans bits of src[7] into flag bytes and a *0x1C record-table index"
+    },
+    {
+      "name": "header_bytes_0x08_0x0b",
+      "offset": 8,
+      "size": 4,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [
+        "0x080ce3cc"
+      ],
+      "readers": [
+        "0x080ce8d0"
+      ],
+      "observed_values": {
+        "both": "ff ff ff 10"
+      },
+      "update_mechanism": "Default-init in RAM: u32 at 0x08 = (mask & u32) | 0x8000; EEPROM writer absent",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "FUN_080ce8d0 disassembles src[8..11] bit-by-bit (src[8]&0x7F, >>7, (u32&0x7FFFF)>>15)"
+    },
+    {
+      "name": "records_16x8_from_0x0c",
+      "offset": 12,
+      "size": 128,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [
+        "0x080ce8d0"
+      ],
+      "observed_values": {
+        "sav-01 record0": "00 01 80 00 ff ff ff 11 (sav-00: byte 0x0E=0xc0)"
+      },
+      "update_mechanism": "16 records x 8B; per record +0 u8 zero-extended, +1..+4 i8 (0xFF sentinel -> -1, else value<<11), +5..+7 not consumed by FUN_080ce8d0; EEPROM writer absent",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "FUN_080ce8d0 record loop: src[0x0C+8i], signed bytes <<11 or -1, destination stride 0x1C"
+    },
+    {
+      "name": "ascii_AMOT_0x88",
+      "offset": 136,
+      "size": 4,
+      "type": "ascii",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {
+        "both": "AMOT"
+      },
+      "update_mechanism": "EEPROM writer absent",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Byte-verified ASCII at fixed offset in both samples; no code compares it; overlaps record-15 byte +4 under FUN_080ce8d0 stride, conflicting reading noted in report"
+    },
+    {
+      "name": "field_u32_0x8c",
+      "offset": 140,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": [
+        "0x080ce3cc"
+      ],
+      "readers": [
+        "0x080ce3cc"
+      ],
+      "observed_values": {
+        "both": "0x00000000"
+      },
+      "update_mechanism": "Default copy puVar1[0x23]=*source in FUN_080ce3cc; EEPROM writer absent",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "Default copy targets exactly buffer offset 0x8C, proving a field boundary there"
+    },
+    {
+      "name": "field_byte_0x90",
+      "offset": 144,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": [
+        "0x080ce3cc"
+      ],
+      "readers": [
+        "0x080ce3cc"
+      ],
+      "observed_values": {
+        "both": "0x00"
+      },
+      "update_mechanism": "Default copy byte[0x90]=(byte)source[1] in FUN_080ce3cc; EEPROM writer absent",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "Same default copy as offset 0x8C field"
+    },
+    {
+      "name": "unknown_bytes_0x91",
+      "offset": 145,
+      "size": 3,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {
+        "both": "02 00 00"
+      },
+      "update_mechanism": "no EEPROM writer in corpus; see open_questions",
+      "confidence": "UNKNOWN",
+      "evidence": "Constant in both samples; no recoverable code reference"
+    },
+    {
+      "name": "ascii_IIAA_0x94",
+      "offset": 148,
+      "size": 4,
+      "type": "ascii",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {
+        "both": "IIAA"
+      },
+      "update_mechanism": "EEPROM writer absent",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Byte-verified ASCII at fixed offset in both samples; no code compares it"
+    },
+    {
+      "name": "unknown_region_0x98",
+      "offset": 152,
+      "size": 32,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {
+        "both": "small values 0x00..0x04; 03 01 01 04 04 01 02 00 ... 01 at 0xAF"
+      },
+      "update_mechanism": "Possibly inside one of FUN_080ce8d0 verbatim bulk copies (9/180/40/40 B) whose offsets are DAT-unresolved; EEPROM writer absent",
+      "confidence": "UNKNOWN",
+      "evidence": "Dense identical region in both samples inside checksummed span"
+    },
+    {
+      "name": "region_0xb8_only_in_sav01",
+      "offset": 184,
+      "size": 8,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {
+        "sav-00-f1723.sav": "ff (erased)",
+        "sav-01-f1828.sav": "00 00 00 00 00 00 00 00"
+      },
+      "update_mechanism": "Presumed written by absent EEPROM writer between frame 1723 and 1828",
+      "confidence": "HYPOTHESIS",
+      "evidence": "First range present only in later sample; its absence contributes to sav-00 checksum failure"
+    },
+    {
+      "name": "sparse_region_0xc0",
+      "offset": 192,
+      "size": 32,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {
+        "sav-00-f1723.sav": "ff (erased)",
+        "sav-01-f1828.sav": "02 00 01 00 ... 01 02 00 01 01 01 01 00 01 ... 01"
+      },
+      "update_mechanism": "no EEPROM writer in corpus; see open_questions",
+      "confidence": "UNKNOWN",
+      "evidence": "Only in sav-01; candidate progress flags, unproven"
+    },
+    {
+      "name": "zero_region_0xe0",
+      "offset": 224,
+      "size": 104,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {
+        "sav-00-f1723.sav": "ff (erased)",
+        "sav-01-f1828.sav": "00 x104"
+      },
+      "update_mechanism": "no EEPROM writer in corpus; see open_questions",
+      "confidence": "UNKNOWN",
+      "evidence": "Zero-filled span in complete image, inside checksum"
+    },
+    {
+      "name": "dense_region_0x148",
+      "offset": 328,
+      "size": 48,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {
+        "sav-00-f1723.sav": "ff (erased)",
+        "sav-01-f1828.sav": "01 0c 0a 05 01 0c 09 00 06 08 04 0c ... 32 35 38 39 (2589) ... 34 41 38 36 3d 33 32 30 (4A86=320)"
+      },
+      "update_mechanism": "EEPROM writer absent",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Densest late region; ASCII-like digit/letter bytes suggest text/code data, custom charset not excluded; no string reader in corpus"
+    },
+    {
+      "name": "zero_region_0x178",
+      "offset": 376,
+      "size": 34,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {
+        "sav-00-f1723.sav": "ff (erased)",
+        "sav-01-f1828.sav": "00 x34"
+      },
+      "update_mechanism": "no EEPROM writer in corpus; see open_questions",
+      "confidence": "UNKNOWN",
+      "evidence": "Zero span preceding code-proven trailer"
+    },
+    {
+      "name": "trailer_u16_0x19a",
+      "offset": 410,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [
+        "0x080ce8d0"
+      ],
+      "observed_values": {
+        "sav-00-f1723.sav": "0xffff (erased)",
+        "sav-01-f1828.sav": "0x0000"
+      },
+      "update_mechanism": "EEPROM writer absent",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "FUN_080ce8d0: u16 dst[0x1D8] = u16 src[0x19A]"
+    },
+    {
+      "name": "trailer_u16_0x19c",
+      "offset": 412,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [
+        "0x080ce8d0"
+      ],
+      "observed_values": {
+        "sav-00-f1723.sav": "0xffff (erased)",
+        "sav-01-f1828.sav": "0x0000"
+      },
+      "update_mechanism": "EEPROM writer absent",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "FUN_080ce8d0: u16 dst[0x1DA] = u16 src[0x19C]"
+    },
+    {
+      "name": "unknown_bytes_0x19e",
+      "offset": 414,
+      "size": 2,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {
+        "sav-01-f1828.sav": "00 00"
+      },
+      "update_mechanism": "no EEPROM writer in corpus; see open_questions",
+      "confidence": "UNKNOWN",
+      "evidence": "Skipped between proven trailer reads at 0x19C and 0x1A0"
+    },
+    {
+      "name": "trailer_u32_0x1a0",
+      "offset": 416,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [
+        "0x080ce8d0"
+      ],
+      "observed_values": {
+        "sav-00-f1723.sav": "0xffffffff (erased)",
+        "sav-01-f1828.sav": "0x00000000"
+      },
+      "update_mechanism": "EEPROM writer absent",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "FUN_080ce8d0: u32 dst[0x1D4] = u32 src[0x1A0] (swapped pair order)"
+    },
+    {
+      "name": "trailer_u32_0x1a4",
+      "offset": 420,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [
+        "0x080ce8d0"
+      ],
+      "observed_values": {
+        "sav-00-f1723.sav": "0xffffffff (erased)",
+        "sav-01-f1828.sav": "0x07000000 (bytes 00 00 00 07)"
+      },
+      "update_mechanism": "EEPROM writer absent",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "FUN_080ce8d0: u32 dst[0x1D0] = u32 src[0x1A4]; last checksummed field"
+    },
+    {
+      "name": "unused_tail_0x1a8",
+      "offset": 424,
+      "size": 88,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {
+        "both": "0xff x88 (erased)"
+      },
+      "update_mechanism": "Never written in either sample; loader stops at 0x1A8",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Byte-verified 0xFF in both files; outside checksum coverage"
+    }
+  ],
+  "fuzzing_targets": [
+    {
+      "offset": 0,
+      "size": 1,
+      "mutation": "XOR stored checksum with 0xFF, do not repair",
+      "requires_checksum_repair": false,
+      "predicted_effect": "FUN_080ce3cc checksum mismatch: defaults installed, prior progress discarded/defaulted (control C1)"
+    },
+    {
+      "offset": 256,
+      "size": 1,
+      "mutation": "Flip one bit at 0x100, do not repair",
+      "requires_checksum_repair": false,
+      "predicted_effect": "Checksum mismatch and defaulting, proving covered range includes 0x100 (control C2)"
+    },
+    {
+      "offset": 424,
+      "size": 88,
+      "mutation": "Write 0x00 over unused tail 0x1A8..0x1FF",
+      "requires_checksum_repair": false,
+      "predicted_effect": "No observable change and no rejection; loader never reads past 0x1A8 and checksum excludes tail (control C3)"
+    },
+    {
+      "offset": 1,
+      "size": 6,
+      "mutation": "Single-bit flips in header bytes 0x01, 0x02, 0x06 one at a time",
+      "requires_checksum_repair": true,
+      "predicted_effect": "Exactly one packed-header attribute (profile/options state fed by FUN_080ce710) changes; maps header bits counterfactually (test F1)"
+    },
+    {
+      "offset": 7,
+      "size": 1,
+      "mutation": "Set 0x07 from 0xA7 back to sav-00 value 0x67 (also revert 0x0E 0x80->0xC0)",
+      "requires_checksum_repair": true,
+      "predicted_effect": "Flag bytes / *0x1C record-table index derived in FUN_080ce8d0 change; should reproduce frame-1723 state if these are progress fields (test F2)"
+    },
+    {
+      "offset": 13,
+      "size": 1,
+      "mutation": "Set record-0 byte +1 (0x0D) to 0xFF, then to 0x02",
+      "requires_checksum_repair": true,
+      "predicted_effect": "0xFF makes the deserialised slot -1 (absent); 0x02 stores 0x1000 in RAM; a visible first entry disappears/changes, confirming sentinel rule (test F3)"
+    },
+    {
+      "offset": 12,
+      "size": 1,
+      "mutation": "Increment record-0 byte +0 (0x0C)",
+      "requires_checksum_repair": true,
+      "predicted_effect": "Only entry 0 changes (zero-extended byte in FUN_080ce8d0), confirming 8-byte record stride (test F4)"
+    },
+    {
+      "offset": 136,
+      "size": 4,
+      "mutation": "Change AMOT to BMOT; separately erase 0x88..0x8B to 0xFF",
+      "requires_checksum_repair": true,
+      "predicted_effect": "Text/acceptance change implies name-or-signature; record-15 behaviour change (<<11 component) implies record data; blank/default text on erase implies name field (test F5)"
+    },
+    {
+      "offset": 148,
+      "size": 4,
+      "mutation": "Change one letter of IIAA",
+      "requires_checksum_repair": true,
+      "predicted_effect": "Independent behavioural/text change promotes IIAA above HYPOTHESIS; no change leaves it cosmetic text data (test F6)"
+    },
+    {
+      "offset": 328,
+      "size": 48,
+      "mutation": "Zero 0x148..0x177; separately mutate single bytes at 0x160 and 0x148",
+      "requires_checksum_repair": true,
+      "predicted_effect": "Altered displayed characters/rejected code implies text/code data; a counter/stat change implies packed numeric data (test F7)"
+    },
+    {
+      "offset": 410,
+      "size": 2,
+      "mutation": "Set u16_le at 0x19A to 0x0001",
+      "requires_checksum_repair": true,
+      "predicted_effect": "Working-RAM word dst+0x1D8 changes on load (FUN_080ce8d0); whichever persistent attribute follows identifies the field (test F8)"
+    },
+    {
+      "offset": 423,
+      "size": 1,
+      "mutation": "Set byte 0x1A7 from 0x07 to 0x00",
+      "requires_checksum_repair": true,
+      "predicted_effect": "dst u32 from save 0x1A4 changes; identifies trailer attribute and resolves 0x07-as-MSB versus scalar reading (test F8)"
+    },
+    {
+      "offset": 0,
+      "size": 1,
+      "mutation": "On sav-00-f1723.sav only: repair checksum to its computed 0xBD, change nothing else",
+      "requires_checksum_repair": true,
+      "predicted_effect": "Acceptance implies checksum was sole blocker; acceptance-with-defaults implies erased 0xB8..0x1A7 region is load-critical; continued rejection implies a second validator outside traced code (test F9)"
+    }
+  ],
+  "open_questions": [
+    "No EEPROM write/program driver exists among the 221 traced functions: every .sav writer attribution, the save trigger, and any per-save generation counter are unattributed. The writer must be located in untraced ROM code (packet cold-reload probe proves saves persist at runtime).",
+    "sav-00-f1723.sav fails the verified checksum (stored 0x00, computed 0xBD) because bytes 0xB8..0x1A7 are still 0xFF: incomplete/intermediate capture versus an image the boot validator would reject is undecided (fuzz test F9).",
+    "All RAM mirror addresses are unknown: relevant pointers are unresolved _DAT_080xxxxx literal-pool symbols (_DAT_080ce474, _DAT_080e7670, _DAT_080e8534, etc.) whose values are not in the corpus, so fields are located only relative to the save-buffer base.",
+    "Checksum loop bound _DAT_080ce544 is DAT-unresolved; covered end 0x1A7 is inferred from loader length 0x1A8 plus verification on sav-01 (and failure on sav-00), not read as a literal.",
+    "Initial value of the EEPROM block counter (_DAT_080e7670 target) is not in the corpus; block 0 start is inferred from the checksum covering file byte 0x00.",
+    "Default-init writes in FUN_080ce3cc do not byte-match the observed .sav header (e.g. byte 0x01 observed 0x20 vs default mask|0x01): an absent serialiser/bit-packer transform, or a working-struct base that is not byte-identical to the EEPROM image, must intervene.",
+    "AMOT (0x88) and IIAA (0x94) are byte-verified ASCII but never compared in code; AMOT also conflicts with the record-15 +4 byte under the FUN_080ce8d0 record stride. Name/signature versus record data is undecided (fuzz tests F5/F6).",
+    "Semantics of the 16 records at 0x0C (what an entry represents), header bytes 0x01..0x0B, regions 0x98..0x199, and trailer fields 0x19A..0x1A7 are code-located but game-meaning unknown.",
+    "Offsets of FUN_080ce8d0 verbatim bulk copies (9, 180, 40, 40 bytes) within the save image are unrecoverable from DAT-unresolved pointers; the UNKNOWN regions 0x98..0x199 are only candidates.",
+    "FUN_080ce3cc has no caller in the corpus and its checksum-success branch does not call the unpackers in the traced code; the boot entry point and any post-validation unpack step are outside the traced functions.",
+    "EEPROM block-count limit *(ushort *)(_DAT_080e84a0+4) and address-bit count byte *_DAT_080e8534+8 are DAT-unresolved; 53-block usage is proven by the loader call, total device geometry (64 blocks) by file size."
+  ]
+}

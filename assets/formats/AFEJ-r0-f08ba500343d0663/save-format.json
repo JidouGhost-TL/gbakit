@@ -1,0 +1,1066 @@
+{
+  "schema": "gbakit-save-research/1",
+  "release_key": "AFEJ-r0-f08ba500343d0663",
+  "display_name": "Fire Emblem - Rekka no Ken (Japan) (Beta) (2003-02-19)",
+  "rom_sha256": "f08ba500343d0663525d5e8b9c739047f7646108e746fcb35c15d58faa19b1ea",
+  "game_code": "AFEJ",
+  "header_family": "AFE",
+  "community_id": "comm-009",
+  "overall_confidence": "MEDIUM",
+  "media": {
+    "kind": "sram",
+    "size_bytes": 32768,
+    "sdk_tags": [],
+    "fill_byte": "0xff"
+  },
+  "slots_and_copies": [
+    {
+      "name": "slot_0",
+      "offset": 0,
+      "size": 100,
+      "redundancy_role": "primary",
+      "selection_rule": "Header block A. Validated at boot by FUN_080a1370 (magic + u32@+8 + u16@+0xC + checksum); recreated in place by FUN_080a142c/FUN_080a13f0 if invalid. No backup copy exists (AGB-FE7 occurs only at 0x0). CONFIRMED_VERIFIED."
+    },
+    {
+      "name": "slot_1",
+      "offset": 28728,
+      "size": 100,
+      "redundancy_role": "unknown",
+      "selection_rule": "Proposed second 100-byte block B (validator FUN_080a1f28, writer FUN_080a1f84) at 0x7038. HYPOTHESIS: size-fit (100+36=136-byte span at 0x7038) only; B/C order within the span could be swapped. Independently validated/recreated at boot by FUN_08000a20; no redundancy."
+    },
+    {
+      "name": "slot_2",
+      "offset": 28828,
+      "size": 36,
+      "redundancy_role": "unknown",
+      "selection_rule": "Proposed 36-byte block C (validator FUN_080a1e50, writer FUN_080a1ea8) at 0x709C=0x7038+100. HYPOTHESIS (see slot_1). Independently validated/recreated at boot; no redundancy."
+    },
+    {
+      "name": "slot_3",
+      "offset": 28920,
+      "size": 20,
+      "redundancy_role": "unknown",
+      "selection_rule": "20-byte bit-array block at 0x70F8 (one of FUN_080a23fc/FUN_080a2454 or FUN_080a2520/FUN_080a2578; which pair is HYPOTHESIS). Checksum CONFIRMED_VERIFIED at this offset. Independently validated/recreated at boot; set-bit updates via FUN_080a24b8 (traced for the FUN_080a2454 family)."
+    },
+    {
+      "name": "slot_4",
+      "offset": 28940,
+      "size": 20,
+      "redundancy_role": "unknown",
+      "selection_rule": "Second 20-byte bit-array block at 0x710C=0x70F8+20 (the other validator/writer pair from slot_3). HYPOTHESIS for D/E order. Independently validated/recreated at boot; no traced bit-setter."
+    }
+  ],
+  "magic_signatures": [
+    {
+      "offset": 0,
+      "bytes_hex": "4147422d46453700",
+      "ascii": "AGB-FE7",
+      "verified_in_code": true,
+      "verified_in_sav": true,
+      "function_addrs": [
+        "0x080a1370",
+        "0x080a142c"
+      ]
+    }
+  ],
+  "checksums": [
+    {
+      "name": "header_block_A_checksum",
+      "algorithm": "custom",
+      "formula_detail": "FUN_080a1344: over u16_le words w of covered range, sum=(sum+w)&0xFFFF and xor^=w per word; stored=(sum+xor)&0xFFFF, u16_le. Covered [block+0x00, block+0x50); bytes +0x50..+0x5F and tail +0x62..+0x63 are outside the covered range. Length 0x50 is CONFIRMED_STATIC (decompiled constant in FUN_080a1370/FUN_080a13f0); samples cannot distinguish lengths 0x14..0x60 because bytes +0x14..+0x5F are zero.",
+      "stored_offset": 96,
+      "stored_size": 2,
+      "covered_start": 0,
+      "covered_end": 80,
+      "function_addrs": [
+        "0x080a1344",
+        "0x080a1370",
+        "0x080a13f0"
+      ],
+      "verified_on_samples": [
+        {
+          "file": "cap-00-future-0.sav",
+          "stored_hex": "0xa990",
+          "computed_hex": "0xa990",
+          "match": true
+        },
+        {
+          "file": "cap-01-future-1.sav",
+          "stored_hex": "0xa990",
+          "computed_hex": "0xa990",
+          "match": true
+        }
+      ],
+      "confidence": "CONFIRMED_VERIFIED"
+    },
+    {
+      "name": "data100_block_B_checksum",
+      "algorithm": "custom",
+      "formula_detail": "Same FUN_080a1344 (sum16+xor16)&0xFFFF over [block+0x00, block+0x60); stored u16_le at +0x60; tail +0x62..+0x63 outside. File offset 0x7038 is HYPOTHESIS; verification is trivial (all-zero block).",
+      "stored_offset": 28824,
+      "stored_size": 2,
+      "covered_start": 28728,
+      "covered_end": 28824,
+      "function_addrs": [
+        "0x080a1344",
+        "0x080a1f28",
+        "0x080a1f84"
+      ],
+      "verified_on_samples": [
+        {
+          "file": "cap-00-future-0.sav",
+          "stored_hex": "0x0000",
+          "computed_hex": "0x0000",
+          "match": true
+        },
+        {
+          "file": "cap-01-future-1.sav",
+          "stored_hex": "0x0000",
+          "computed_hex": "0x0000",
+          "match": true
+        }
+      ],
+      "confidence": "CONFIRMED_STATIC"
+    },
+    {
+      "name": "data36_block_C_checksum",
+      "algorithm": "custom",
+      "formula_detail": "Same FUN_080a1344 per code, but validator FUN_080a1e50 and writer FUN_080a1ea8 both pass length 0x24 while storing at +0x22, so as decompiled the stored word is inside the covered range [block+0x00, block+0x24) - an anomaly that cannot validate general non-zero payloads and is likely a mis-recovered constant (true length probably 0x22) or a vestigial check. All-zero sample satisfies 0x20/0x22/0x24 lengths alike. File offset 0x709C is HYPOTHESIS.",
+      "stored_offset": 28862,
+      "stored_size": 2,
+      "covered_start": 28828,
+      "covered_end": 28864,
+      "function_addrs": [
+        "0x080a1344",
+        "0x080a1e50",
+        "0x080a1ea8"
+      ],
+      "verified_on_samples": [
+        {
+          "file": "cap-00-future-0.sav",
+          "stored_hex": "0x0000",
+          "computed_hex": "0x0000",
+          "match": true
+        },
+        {
+          "file": "cap-01-future-1.sav",
+          "stored_hex": "0x0000",
+          "computed_hex": "0x0000",
+          "match": true
+        }
+      ],
+      "confidence": "HYPOTHESIS"
+    },
+    {
+      "name": "bits20_blocks_DE_checksum",
+      "algorithm": "custom",
+      "formula_detail": "Same FUN_080a1344 (sum16+xor16)&0xFFFF over [block+0x00, block+0x10) (16-byte bit-array payload); stored u16_le at +0x10; tail +0x12..+0x13 outside. Verified non-trivially at file 0x70F8: single payload word 0x0400 gives 0x0400+0x0400=0x0800. Stored offsets below are for the 0x70F8 block; the 0x710C block stores at 28956 (0x711C) and is all-zero in both samples.",
+      "stored_offset": 28936,
+      "stored_size": 2,
+      "covered_start": 28920,
+      "covered_end": 28936,
+      "function_addrs": [
+        "0x080a1344",
+        "0x080a23fc",
+        "0x080a2454",
+        "0x080a2520",
+        "0x080a2578"
+      ],
+      "verified_on_samples": [
+        {
+          "file": "cap-00-future-0.sav",
+          "stored_hex": "0x0000",
+          "computed_hex": "0x0000",
+          "match": true
+        },
+        {
+          "file": "cap-01-future-1.sav",
+          "stored_hex": "0x0800",
+          "computed_hex": "0x0800",
+          "match": true
+        }
+      ],
+      "confidence": "CONFIRMED_VERIFIED"
+    }
+  ],
+  "io_driver_functions": [
+    {
+      "addr": "0x080c1000",
+      "role": "write",
+      "callers": [
+        "0x080c1124",
+        "0x080a121c"
+      ],
+      "notes": "Byte-copy primitive *dst++=*src++; first sets *_DAT_080c1038 |= 3 (candidate WAITCNT 0x04000204 SRAM wait-state select, HYPOTHESIS - _DAT_ values unresolved). Used for both SRAM write and the 4-byte probe write; direction is caller-determined."
+    },
+    {
+      "addr": "0x080c1124",
+      "role": "write",
+      "callers": [
+        "0x080a12a0"
+      ],
+      "notes": "Write-with-verify: up to 3 iterations of FUN_080c1000 then func_0x080c11a4 verify; breaks when verify returns 0. CONFIRMED_STATIC."
+    },
+    {
+      "addr": "0x080c11a4",
+      "role": "read",
+      "callers": [
+        "0x080a1370",
+        "0x080a1558",
+        "0x080a1e50",
+        "0x080a1f28",
+        "0x080a23fc",
+        "0x080a2520",
+        "0x080a121c",
+        "0x080a01f0",
+        "0x080c1124"
+      ],
+      "notes": "Unrecovered 4-byte trampoline (slots 0x080c1198-0x080c11b0); body not in decompiled.c. Role inferred from call sites: fills fresh stack buffers that validators then strcmp/checksum (FUN_080a1370 etc.), read-back compare in SRAM probe FUN_080a121c, non-zero return drives write retries in FUN_080c1124 (AgbBackup-style ReadSram/VerifySram). Exact return semantics UNKNOWN."
+    },
+    {
+      "addr": "0x080a12a0",
+      "role": "write",
+      "callers": [
+        "0x080a1308",
+        "0x080a13f0",
+        "0x080a1ea8",
+        "0x080a1f84",
+        "0x080a2454",
+        "0x080a2578"
+      ],
+      "notes": "Game-level checked write wrapper: calls FUN_080c1124, logs via FUN_08004f38 on failure. All block writers flush through it. Callee list in callgraph.json shows only 0x08004f38 (text search shows FUN_080c1124 call); text was trusted."
+    },
+    {
+      "addr": "0x080a1308",
+      "role": "erase",
+      "callers": [
+        "0x080a142c",
+        "0x080a01f0"
+      ],
+      "notes": "Writes a 64-byte 0xFF-filled stack buffer in 0x40-byte chunks via FUN_080a12a0 to *piVar1 + i*0x40 for i=0.._DAT_080a1340; base and count unresolved, erased span UNKNOWN."
+    },
+    {
+      "addr": "0x080a1344",
+      "role": "checksum",
+      "callers": [
+        "0x080a1370",
+        "0x080a13f0",
+        "0x080a1e50",
+        "0x080a1ea8",
+        "0x080a1f28",
+        "0x080a1f84",
+        "0x080a23fc",
+        "0x080a2454",
+        "0x080a2520",
+        "0x080a2578"
+      ],
+      "notes": "(sum16 + xor16) & 0xFFFF over u16_le words; see checksums. The jumptable tail is its return."
+    },
+    {
+      "addr": "0x080a121c",
+      "role": "read",
+      "callers": [
+        "0x080a01f0"
+      ],
+      "notes": "SRAM presence/writability probe: setup via func_0x080c108c, *_DAT_080a127c |= 0x2000, writes 4-byte ROM constant via FUN_080c1000, reads back via func_0x080c11a4, stores bool *_DAT_080a128c = (readback == written). Also self-called textually in FUN_080a01f0 branches per C text."
+    },
+    {
+      "addr": "0x080a1370",
+      "role": "deserialize",
+      "callers": [
+        "0x08000a20",
+        "0x080a0fe8",
+        "0x080a2f50"
+      ],
+      "notes": "Validate header block A (100 B): SRAM-present gate FUN_080a1290, read via func_0x080c11a4, strcmp magic via FUN_08012cdc, u32@+8 and u16@+0xC compares, checksum over 0x50 stored at +0x60. Callers found by text search; callgraph.json lists only 0x080a2f50."
+    },
+    {
+      "addr": "0x080a13f0",
+      "role": "serialize",
+      "callers": [
+        "0x080a142c"
+      ],
+      "notes": "Write header block A: store FUN_080a1344(buf,0x50) at +0x60, FUN_080a12a0(buf, *_DAT_080a1414, 100)."
+    },
+    {
+      "addr": "0x080a1f28",
+      "role": "deserialize",
+      "callers": [
+        "0x08000a20"
+      ],
+      "notes": "Validate 100-byte block B: checksum over 0x60 stored at +0x60. Caller by text search only."
+    },
+    {
+      "addr": "0x080a1f84",
+      "role": "serialize",
+      "callers": [
+        "0x080a1fb4"
+      ],
+      "notes": "Write block B: checksum at +0x60, FUN_080a12a0(buf, *_DAT_080a1fac + _DAT_080a1fb0, 100)."
+    },
+    {
+      "addr": "0x080a1e50",
+      "role": "deserialize",
+      "callers": [
+        "0x08000a20"
+      ],
+      "notes": "Validate 36-byte block C: checksum (length 0x24 as decompiled) stored at +0x22. See anomaly in checksums."
+    },
+    {
+      "addr": "0x080a1ea8",
+      "role": "serialize",
+      "callers": [
+        "0x080a1508"
+      ],
+      "notes": "Write block C: checksum at +0x22, FUN_080a12a0(buf, *_DAT_080a1ecc + _DAT_080a1ed0, 0x24)."
+    },
+    {
+      "addr": "0x080a23fc",
+      "role": "deserialize",
+      "callers": [
+        "0x08000a20",
+        "0x080a24b8"
+      ],
+      "notes": "Validate 20-byte bit-array block D: checksum over 0x10 stored at +0x10."
+    },
+    {
+      "addr": "0x080a2454",
+      "role": "serialize",
+      "callers": [
+        "0x080a23d0",
+        "0x080a24b8"
+      ],
+      "notes": "Write block D: checksum at +0x10, FUN_080a12a0(buf, *_DAT_080a2478 + _DAT_080a247c, 0x14)."
+    },
+    {
+      "addr": "0x080a2520",
+      "role": "deserialize",
+      "callers": [
+        "0x08000a20"
+      ],
+      "notes": "Validate second 20-byte bit-array block E: checksum over 0x10 stored at +0x10."
+    },
+    {
+      "addr": "0x080a2578",
+      "role": "serialize",
+      "callers": [
+        "0x080a24f4"
+      ],
+      "notes": "Write block E: checksum at +0x10, FUN_080a12a0(buf, *_DAT_080a259c + _DAT_080a25a0, 0x14)."
+    },
+    {
+      "addr": "0x080a1558",
+      "role": "read",
+      "callers": [
+        "0x080a0fe8",
+        "0x080a34ac",
+        "0x080a3dd0"
+      ],
+      "notes": "Read one of 7 sub-records (16 B) at *_DAT_080a1598 + idx*0x10 + 100 via func_0x080c11a4; if u16@record+4 == _DAT_080a159c and idx<7, dispatch via 7-entry handler table at iRam080a15a0. File placement UNKNOWN."
+    },
+    {
+      "addr": "0x080c0f5c",
+      "role": "write",
+      "callers": [
+        "0x080a1508",
+        "0x080a1fb4",
+        "0x080a23d0",
+        "0x080a24f4"
+      ],
+      "notes": "BIOS CpuFastSet SWI 0x0B thunk (software_interrupt(0xb)); used to zero-fill stack buffers in creators. Not save-media I/O. Sibling 0x080c0f58 is CpuSet SWI 0x0C."
+    },
+    {
+      "addr": "0x080c126c",
+      "role": "checksum",
+      "callers": [],
+      "notes": "NOT a save function: signed divide/remainder library routine falsely seeded as MMIO in ghidra/save_related_functions.c (shift-subtract loop, func_0x080c1268 trap on divisor 0, no MMIO). Role value is a placeholder; see open_questions. Same for twin 0x080c1424."
+    }
+  ],
+  "caller_chains": [
+    {
+      "entry_caller": "0x08000a20",
+      "chain": [
+        "0x08000a20",
+        "0x080a1370",
+        "0x080a142c",
+        "0x080a13f0",
+        "0x080a12a0",
+        "0x080c1124"
+      ],
+      "trigger_context": "Boot/init validation and auto-repair of all five blocks in order A (0x080a1370, recreate 0x080a142c), C (0x080a1e50, recreate 0x080a1508), B (0x080a1f28, recreate 0x080a1fb4), D (0x080a23fc, recreate 0x080a23d0), E (0x080a2520, recreate 0x080a24f4). Each validator gates on FUN_080a1290 (SRAM-present flag from 0x080a121c). Explains observed .sav initialisation and the PACKET.md mutation probe at 0x7103 (block rewritten, save not blanked).",
+      "ram_fields_updated": [
+        "stack buffer for block A (header template from 0x080a142c)",
+        "stack buffers for blocks B/C/D/E (zero-filled)",
+        "checksum words at block+0x60 (A,B), +0x22 (C), +0x10 (D,E) stamped by writers"
+      ],
+      "how_mapped": "Direct C text of FUN_08000a20 (five validate-or-recreate pairs in sequence). callgraph.json lacks these edges (FUN_08000a20 callees empty there); text search for func_0x080a1370/1e50/1f28/23fc/2520 and the creator calls was used and cross-checked against each validator/creator body."
+    },
+    {
+      "entry_caller": "0x08003804",
+      "chain": [
+        "0x08003804",
+        "0x0800375c",
+        "0x080036f0",
+        "0x08003e04",
+        "0x080a24b8",
+        "0x080a2454",
+        "0x080a12a0",
+        "0x080c1124"
+      ],
+      "trigger_context": "In-game flag set: FUN_08003e04 requires idx<0x80, runs sound side-path FUN_08003e88 (special idx 0x5a/0x5c/0x5f), then FUN_080a24b8 sets one bit and rewrites the 20-byte block. This chain produced the only inter-sample diff (bit 90 at file 0x7103, checksum byte at 0x7109).",
+      "ram_fields_updated": [
+        "bit-array payload word (idx>>5), bit (idx&0x1f) set via *(u32*)(buf+((idx>>5)*4)) |= 1<<(idx&0x1f) in FUN_080a24b8",
+        "checksum u16 at block+0x10 restamped by FUN_080a2454",
+        "unrelated RAM object at _DAT_08003750 bytes +6/+7 and short +4 set by FUN_080036f0 (not a save field)"
+      ],
+      "how_mapped": "C text chain FUN_08003804->FUN_0800375c->FUN_080036f0->func_0x08003e04->func_0x080a24b8, plus FUN_080a24b8 body. callgraph.json corroborates FUN_080a24b8 callees (0x080a23fc, 0x080a2454) but lists no caller for 0x08003e04; sample diff (bit 90, checksum 0x0800) independently confirms the mechanism at file offset 0x70F8."
+    },
+    {
+      "entry_caller": "0x080a0fe8",
+      "chain": [
+        "0x080a0fe8",
+        "0x080a1370",
+        "0x080a1558",
+        "0x080a2f50",
+        "0x080a1370"
+      ],
+      "trigger_context": "Read-only status/debug display (heavy FUN_08004f38 text output): validates header A, formats its u32@+8 with FUN_080a0f9c, loops FUN_080a1558 over 7 sub-records with fallback text, prints FUN_080a2f50 result and four values from untraced helpers. Mutates no save struct.",
+      "ram_fields_updated": [],
+      "how_mapped": "C text of FUN_080a0fe8; auStack_84 buffer filled by FUN_080a1370, uStack_7c is that buffer's +8 word (stack-offset arithmetic). String contents and printed meanings UNKNOWN (unresolved _DAT_ pointers)."
+    },
+    {
+      "entry_caller": "0x08012438",
+      "chain": [
+        "0x08012438",
+        "0x080a2f50",
+        "0x080a1370",
+        "0x080a2f34"
+      ],
+      "trigger_context": "Read-only rank/grade computation: FUN_080a2f50 validates header A and returns FUN_080a2f34's count (0-12) of non-zero bytes in header +0x14..+0x1F; FUN_08012438 combines it with FUN_080123e8's result into a 0-10 value (branches at count<2, then thresholds 4/10/0x13/0x1b).",
+      "ram_fields_updated": [],
+      "how_mapped": "C text of FUN_08012438, FUN_080a2f50 (auStack_68 filled by FUN_080a1370 then passed to FUN_080a2f34), and FUN_080a2f34 loop over param_1+0x14 for 0xc bytes. Pins header +0x14 as a counted 12-byte array."
+    },
+    {
+      "entry_caller": "0x080123e8",
+      "chain": [
+        "0x080123e8",
+        "0x080a34ac",
+        "0x080a1558"
+      ],
+      "trigger_context": "Read-only sub-record scan: loops idx 0..2 through FUN_080a34ac (SRAM-present gate FUN_080a1290 then FUN_080a1558(0,idx)), reads a byte at a record-derived +0x52 via untraced func_0x080a34d0 and func_0x08032c2c, returns index of the maximum. Twin FUN_080a3dd0 has no traced caller. In both samples the candidate record bytes are 0xFF, so the invalid path is taken.",
+      "ram_fields_updated": [],
+      "how_mapped": "C text of FUN_080123e8 and FUN_080a34ac/FUN_080a3dd0; FUN_080a1558 record formula *_DAT_080a1598 + idx*0x10 + 100 with u16 ID check at record+4. Physical record location UNKNOWN."
+    },
+    {
+      "entry_caller": "0x080a01f0",
+      "chain": [
+        "0x080a01f0",
+        "0x080c11a4",
+        "0x080a1308",
+        "0x080a121c"
+      ],
+      "trigger_context": "Ambiguous save-adjacent loader (no traced caller): reads 100 B, branches on five values of u32@buf+8, each branch re-reads 0x8000 bytes from the same source, erases via FUN_080a1308, re-probes SRAM via FUN_080a121c, then calls untraced 0x0809fxxx/0x080a0xxx helpers absent from decompiled.c. NOT counted as a save writer; purpose UNKNOWN.",
+      "ram_fields_updated": [
+        "100-byte then 0x8000-byte buffer at unresolved _DAT_080a0324 (stored to *_DAT_080a0330)"
+      ],
+      "how_mapped": "C text of FUN_080a01f0. The +8 branch field coincides with header A's identity field, but source/destination _DAT_ values and all branch callees are unresolved/untraced, so no file offset is claimed."
+    }
+  ],
+  "fields": [
+    {
+      "name": "header_magic_agb_fe7",
+      "offset": 0,
+      "size": 8,
+      "type": "ascii",
+      "ram_addr": null,
+      "writers": [
+        "0x080a142c",
+        "0x080a13f0"
+      ],
+      "readers": [
+        "0x080a1370"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": "4147422d46453700 (AGB-FE7\\0)",
+        "cap-01-future-1.sav": "4147422d46453700 (AGB-FE7\\0)"
+      },
+      "update_mechanism": "Creator FUN_080a142c strcpy's a ROM string (_DAT_080a14f4, literal not in decompiled C) into stack buffer +0; writer FUN_080a13f0 flushes 100 B via FUN_080a12a0. Set once at creation; validator FUN_080a1370 string-compares via FUN_08012cdc and recreates the block on mismatch.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Bytes at file 0x0 in both samples (only AGB-FE7 occurrence in each 32768-byte image, Python search); FUN_080a1370/FUN_080a142c structure in ghidra/decompiled.c."
+    },
+    {
+      "name": "header_id_u32_at_8",
+      "offset": 8,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": [
+        "0x080a142c"
+      ],
+      "readers": [
+        "0x080a1370",
+        "0x080a0fe8",
+        "0x080a01f0"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": "0x00030115",
+        "cap-01-future-1.sav": "0x00030115"
+      },
+      "update_mechanism": "Creator sets uStack_64 = _DAT_080a14f8 (stack offset +8) once; validator compares *(int*)(buf+8) == _DAT_080a13dc; FUN_080a0fe8 formats it with FUN_080a0f9c; FUN_080a01f0 branches on five other values of this field (untraced callees). Constant across samples, so an identity/version gate, not a counter.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "u32_le at file 0x8 in both samples; compare and assignment in FUN_080a1370/FUN_080a142c decompiled C. ROM constant values themselves are unresolved _DAT_ contents, so the numeric value comes from the .sav bytes."
+    },
+    {
+      "name": "header_id_u16_at_c",
+      "offset": 12,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": [
+        "0x080a142c"
+      ],
+      "readers": [
+        "0x080a1370"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": "0x200a",
+        "cap-01-future-1.sav": "0x200a"
+      },
+      "update_mechanism": "Creator sets uStack_60 = (undefined2)_DAT_080a14fc (stack offset +0xC); validator compares *(ushort*)(buf+0xC) == _DAT_080a13e0. Set once at creation; meaning unknown.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "u16_le at file 0xC in both samples; compare/assignment in decompiled C (value from .sav, ROM constant unresolved)."
+    },
+    {
+      "name": "header_zero_bytes_at_e",
+      "offset": 14,
+      "size": 2,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [
+        "0x080a142c"
+      ],
+      "readers": [
+        "0x080a1370"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": "0000",
+        "cap-01-future-1.sav": "0000"
+      },
+      "update_mechanism": "Creator sets uStack_5e=0 and uStack_5d=0 (offsets +0xE/+0xF). Inside checksum covered range [0,0x50); no traced semantic reader. Padding or two flag bytes.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "Assignments in FUN_080a142c; zero bytes in both samples."
+    },
+    {
+      "name": "header_flags_u32_at_10",
+      "offset": 16,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": [
+        "0x080a142c"
+      ],
+      "readers": [
+        "0x080a1370"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": "0xe0000000",
+        "cap-01-future-1.sav": "0xe0000000"
+      },
+      "update_mechanism": "Creator builds it by masking: uStack_5c &= 0xffffff00; uStack_5c &= _DAT_080a1500 & 0xe0ffffff (offset +0x10). Only the top byte's low 3 bits may survive the second mask, matching observed 0xE0 top byte. No traced updater; bit meanings unknown; inside checksum range.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "Masking code in FUN_080a142c and observed 0xe0000000 in both samples."
+    },
+    {
+      "name": "header_counted_array_at_14",
+      "offset": 20,
+      "size": 12,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [
+        "0x080a142c"
+      ],
+      "readers": [
+        "0x080a2f34",
+        "0x080a2f50"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": "all 0x00 (count 0)",
+        "cap-01-future-1.sav": "all 0x00 (count 0)"
+      },
+      "update_mechanism": "Zeroed by creator's 12-byte loop (offset +0x14). FUN_080a2f34 counts non-zero bytes over +0x14..+0x1F (12 entries, boolean-per-byte) for the rank computation in FUN_08012438. No traced writer ever sets an entry in this build's traced set; what sets entries is unknown. Inside checksum range.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "FUN_080a2f34 loop (param_1+0x14, i<0xc) and FUN_080a142c zero loop; all-zero in both samples."
+    },
+    {
+      "name": "header_bytes_at_20",
+      "offset": 32,
+      "size": 32,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [
+        "0x080a142c"
+      ],
+      "readers": [
+        "0x080a1370"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": "all 0x00",
+        "cap-01-future-1.sav": "all 0x00"
+      },
+      "update_mechanism": "Zeroed by creator's 32-byte loop at offset +0x20. Inside checksum covered range [0,0x50); no traced semantic reader or post-creation writer.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "FUN_080a142c stack layout (auStack_4c at +0x20, 32-byte zero loop); zero in both samples."
+    },
+    {
+      "name": "header_bytes_at_40_checksummed_part",
+      "offset": 64,
+      "size": 16,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [
+        "0x080a142c"
+      ],
+      "readers": [
+        "0x080a1370"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": "all 0x00",
+        "cap-01-future-1.sav": "all 0x00"
+      },
+      "update_mechanism": "First half of creator's 32-byte zero loop at +0x40. Bytes +0x40..+0x4F are the last 16 bytes of the checksum covered range [0,0x50).",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "FUN_080a142c auStack_2c at +0x40; FUN_080a1344 length 0x50 in FUN_080a1370/FUN_080a13f0."
+    },
+    {
+      "name": "header_bytes_at_50_unchecksummed",
+      "offset": 80,
+      "size": 16,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [
+        "0x080a142c",
+        "0x080a13f0"
+      ],
+      "readers": [],
+      "observed_values": {
+        "cap-00-future-0.sav": "all 0x00",
+        "cap-01-future-1.sav": "all 0x00"
+      },
+      "update_mechanism": "Second half of creator's +0x40 zero loop; written as part of the 100-byte block but outside the checksum covered range [0,0x50). No traced reader. Fuzzing target: mutating it should not trigger recreation if the 0x50 length is correct.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "Covered length 0x50 vs block size 100 in FUN_080a13f0; zero in both samples."
+    },
+    {
+      "name": "header_checksum_at_60",
+      "offset": 96,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": [
+        "0x080a13f0"
+      ],
+      "readers": [
+        "0x080a1370"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": "0xa990",
+        "cap-01-future-1.sav": "0xa990"
+      },
+      "update_mechanism": "Writer FUN_080a13f0 stores FUN_080a1344(buf,0x50) at +0x60 before every flush through FUN_080a12a0; validator FUN_080a1370 recomputes and compares *(short*)(buf+0x60).",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Python: computed (sum16+xor16)&0xFFFF over file [0,0x50) = 0xa990 (sum=0xbb22 xor=0xee6e) = stored in both samples; negative control flipping byte 0x10 gives 0xa992."
+    },
+    {
+      "name": "header_tail_at_62",
+      "offset": 98,
+      "size": 2,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [
+        "0x080a142c"
+      ],
+      "readers": [],
+      "observed_values": {
+        "cap-00-future-0.sav": "0000",
+        "cap-01-future-1.sav": "0000"
+      },
+      "update_mechanism": "Creator zeroes tail bytes (uStack_a/uStack_9 at +0x62/+0x63, after the checksum word). Part of the 100-byte write, outside checksum range, no traced reader.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "FUN_080a142c tail assignments; zero in both samples."
+    },
+    {
+      "name": "erased_gap_0064_7037_and_candidate_subrecords",
+      "offset": 100,
+      "size": 28628,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [
+        "0x080a1308"
+      ],
+      "readers": [
+        "0x080a1558"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": "all 0xff",
+        "cap-01-future-1.sav": "all 0xff"
+      },
+      "update_mechanism": "Never written in these samples. FUN_080a1308's 0xFF erase may span part of this range (base/count unresolved). FUN_080a1558 would read 16-byte records at base+100+idx*16 (idx<7, u16 ID at +4) - if its base is the SRAM base these records sit at file 0x64.. and their 0xFFFF ID fails validation here. Record base is unresolved, so placement is UNKNOWN.",
+      "confidence": "UNKNOWN",
+      "evidence": "All-0xFF in both samples; FUN_080a1558 address formula in decompiled C."
+    },
+    {
+      "name": "data100_block_B_payload",
+      "offset": 28728,
+      "size": 96,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [
+        "0x080a1fb4",
+        "0x080a1f84"
+      ],
+      "readers": [
+        "0x080a1f28"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": "all 0x00",
+        "cap-01-future-1.sav": "all 0x00"
+      },
+      "update_mechanism": "Creator FUN_080a1fb4 CpuFastSet-zero-fills 100 B; writer FUN_080a1f84 stamps checksum and flushes 100 B. No traced post-creation writer. Covered range [0,0x60) for its checksum.",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Block shape CONFIRMED_STATIC from FUN_080a1f28/FUN_080a1f84/FUN_080a1fb4; file offset 0x7038 inferred only from the 136-byte all-zero span size fit (100+36) - B/C order could be swapped and zero payload gives no discrimination."
+    },
+    {
+      "name": "data100_block_B_checksum",
+      "offset": 28824,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": [
+        "0x080a1f84"
+      ],
+      "readers": [
+        "0x080a1f28"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": "0x0000",
+        "cap-01-future-1.sav": "0x0000"
+      },
+      "update_mechanism": "FUN_080a1f84 stores FUN_080a1344(buf,0x60) at +0x60 before flushing; FUN_080a1f28 recomputes/compares.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "Writer/validator pair in decompiled C; at the proposed offset the computed and stored values are both 0x0000 (trivial all-zero match)."
+    },
+    {
+      "name": "data100_block_B_tail",
+      "offset": 28826,
+      "size": 2,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [
+        "0x080a1f84"
+      ],
+      "readers": [],
+      "observed_values": {
+        "cap-00-future-0.sav": "0000",
+        "cap-01-future-1.sav": "0000"
+      },
+      "update_mechanism": "Last 2 bytes of the 100-byte write, outside the [0,0x60) checksum range; no traced reader.",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Block size 100 vs covered 0x60 in FUN_080a1f84; offset follows the HYPOTHESIS B placement."
+    },
+    {
+      "name": "data36_block_C_payload",
+      "offset": 28828,
+      "size": 34,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [
+        "0x080a1508",
+        "0x080a1ea8"
+      ],
+      "readers": [
+        "0x080a1e50"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": "all 0x00",
+        "cap-01-future-1.sav": "all 0x00"
+      },
+      "update_mechanism": "Creator FUN_080a1508 CpuFastSet-zero-fills 36 B via FUN_080a1ea8; no traced post-creation writer.",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Block shape CONFIRMED_STATIC from FUN_080a1e50/FUN_080a1ea8/FUN_080a1508; file offset 0x709C inferred from size fit after proposed B (order could be swapped)."
+    },
+    {
+      "name": "data36_block_C_checksum",
+      "offset": 28862,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": [
+        "0x080a1ea8"
+      ],
+      "readers": [
+        "0x080a1e50"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": "0x0000",
+        "cap-01-future-1.sav": "0x0000"
+      },
+      "update_mechanism": "FUN_080a1ea8 stores FUN_080a1344(buf,0x24) at +0x22 as decompiled (stored word inside the summed range - anomaly, see checksums); FUN_080a1e50 recomputes over 0x24 and compares at +0x22. True covered length may be 0x22.",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Writer/validator constants in decompiled C; all-zero sample matches lengths 0x20/0x22/0x24 trivially, so no sample discrimination."
+    },
+    {
+      "name": "erased_gap_70c0_70f7",
+      "offset": 28864,
+      "size": 56,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {
+        "cap-00-future-0.sav": "all 0xff",
+        "cap-01-future-1.sav": "all 0xff"
+      },
+      "update_mechanism": "No traced block maps here; gap between the 136-byte and 40-byte active spans.",
+      "confidence": "UNKNOWN",
+      "evidence": "All-0xFF in both samples; no writer/validator size places a block here."
+    },
+    {
+      "name": "bits20_block_at_70f8_payload",
+      "offset": 28920,
+      "size": 16,
+      "type": "bitflags",
+      "ram_addr": null,
+      "writers": [
+        "0x080a24b8",
+        "0x080a2454"
+      ],
+      "readers": [
+        "0x080a23fc"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": "u32le words [0,0,0,0], no bits set",
+        "cap-01-future-1.sav": "u32le words [0,0,0x04000000,0], bit 90 set"
+      },
+      "update_mechanism": "128-bit array (4 x u32_le). FUN_080a24b8(buf,idx): if buf is NULL it first validates the block into a stack buffer, then *(u32*)(buf+((idx>>5)*4)) |= 1<<(idx&0x1f), then the writer restamps the checksum and flushes 20 B. Traced entry: FUN_08003e04 (idx<0x80) from FUN_080036f0/FUN_0800375c/FUN_08003804. Which of the two 20-byte writer pairs owns file 0x70F8 is HYPOTHESIS (FUN_080a2454 shown; may be FUN_080a2578).",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Inter-sample diff is exactly this block: byte 0x7103 0x00->0x04 = bit 90 (word 2 bit 26, 1<<2 in byte +0x0B) and checksum byte 0x7109; FUN_080a24b8 bit-set formula in decompiled C."
+    },
+    {
+      "name": "bits20_block_at_70f8_checksum",
+      "offset": 28936,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": [
+        "0x080a2454"
+      ],
+      "readers": [
+        "0x080a23fc"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": "0x0000",
+        "cap-01-future-1.sav": "0x0800"
+      },
+      "update_mechanism": "Writer stores FUN_080a1344(buf,0x10) at +0x10 on every flush; validator recomputes over [0,0x10) and compares.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Python: cap-01 covered words contain single word 0x0400, (0x0400 sum + 0x0400 xor)&0xFFFF = 0x0800 = stored; cap-00 0x0000=0x0000. Writer addr may be 0x080a2578 if D/E assignment is swapped (HYPOTHESIS for identity only)."
+    },
+    {
+      "name": "bits20_block_at_70f8_tail",
+      "offset": 28938,
+      "size": 2,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [
+        "0x080a2454"
+      ],
+      "readers": [],
+      "observed_values": {
+        "cap-00-future-0.sav": "0000",
+        "cap-01-future-1.sav": "0000"
+      },
+      "update_mechanism": "Last 2 bytes of the 20-byte write, outside the [0,0x10) checksum range; no traced reader.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "Block size 0x14 vs covered 0x10 in FUN_080a2454/FUN_080a2578."
+    },
+    {
+      "name": "bits20_block_at_710c_payload",
+      "offset": 28940,
+      "size": 16,
+      "type": "bitflags",
+      "ram_addr": null,
+      "writers": [
+        "0x080a2578"
+      ],
+      "readers": [
+        "0x080a2520"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": "all 0x00, no bits set",
+        "cap-01-future-1.sav": "all 0x00, no bits set"
+      },
+      "update_mechanism": "Same 128-bit array shape and writer pattern as the 0x70F8 block, but no traced bit-setter (FUN_080a24b8 is traced only for the FUN_080a23fc family). Writer addr may be 0x080a2454 if D/E assignment is swapped.",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Second 20-byte validator/writer pair in decompiled C; all-zero 20 bytes at file 0x710C in both samples complete the 40-byte span (20+20)."
+    },
+    {
+      "name": "bits20_block_at_710c_checksum",
+      "offset": 28956,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": [
+        "0x080a2578"
+      ],
+      "readers": [
+        "0x080a2520"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": "0x0000",
+        "cap-01-future-1.sav": "0x0000"
+      },
+      "update_mechanism": "Writer stores FUN_080a1344(buf,0x10) at +0x10; validator recomputes/compares.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "Writer/validator pair in decompiled C; computed=stored=0x0000 at the proposed offset (trivial)."
+    },
+    {
+      "name": "bits20_block_at_710c_tail",
+      "offset": 28958,
+      "size": 2,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [
+        "0x080a2578"
+      ],
+      "readers": [],
+      "observed_values": {
+        "cap-00-future-0.sav": "0000",
+        "cap-01-future-1.sav": "0000"
+      },
+      "update_mechanism": "Last 2 bytes of the 20-byte write, outside checksum range; no traced reader.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "Block size 0x14 vs covered 0x10."
+    },
+    {
+      "name": "erased_tail_7120_7fff",
+      "offset": 28960,
+      "size": 3808,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {
+        "cap-00-future-0.sav": "all 0xff",
+        "cap-01-future-1.sav": "all 0xff"
+      },
+      "update_mechanism": "Never written in these samples (3808 bytes from 0x7120 to the end of the 32768-byte image).",
+      "confidence": "UNKNOWN",
+      "evidence": "All-0xFF in both samples. Note: report text rounds the remaining erased regions; exact tail from 0x7120 is 3808 bytes including the 32 bytes 0x7120..0x713F - see open_questions for the arithmetic note."
+    },
+    {
+      "name": "subrecord_16b_via_FUN_080a1558 (unplaced)",
+      "offset": 100,
+      "size": 16,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [
+        "0x080a1558",
+        "0x080a34ac",
+        "0x080a3dd0"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": "0xff at file 0x64+idx*16 if base is SRAM base (invalid)",
+        "cap-01-future-1.sav": "0xff at file 0x64+idx*16 if base is SRAM base (invalid)"
+      },
+      "update_mechanism": "FUN_080a1558 reads 16 B at *_DAT_080a1598 + idx*0x10 + 100 (idx<7) via func_0x080c11a4; validates u16 at record+4 against _DAT_080a159c, then dispatches via a 7-entry table. Record +0 holds a u32 formatted by FUN_080a0f9c in FUN_080a0fe8. Offset field here records the +100 formula constant, NOT a proven file offset; no writer traced.",
+      "confidence": "UNKNOWN",
+      "evidence": "Address formula and ID check in FUN_080a1558 decompiled C; base _DAT_ value unresolved and candidate bytes are 0xFF."
+    }
+  ],
+  "fuzzing_targets": [
+    {
+      "offset": 28931,
+      "size": 1,
+      "mutation": "In cap-01 copy, revert payload byte 0x7103 from 0x04 to 0x00 (clear bit 90) without checksum repair",
+      "requires_checksum_repair": false,
+      "predicted_effect": "Owning 20-byte validator computes 0x0000 != stored 0x0800, boot chain (FUN_08000a20) recreates the block to 20 zero bytes; bit-90 gameplay/UI effect disappears and .sav is rewritten after boot (reproduces PACKET.md probe at 0x7103). If the block survives, the 0x70F8 assignment is wrong."
+    },
+    {
+      "offset": 28931,
+      "size": 1,
+      "mutation": "Clear bit 90 at 0x7103 AND repair checksum at 0x7108 (recompute FUN_080a1344 over [0x70F8,0x7108), store u16_le at 0x7108, giving 0x0000)",
+      "requires_checksum_repair": true,
+      "predicted_effect": "Block validates and persists byte-identical after boot; only the bit-90 effect is removed, isolating its semantics from checksum failure handling."
+    },
+    {
+      "offset": 28920,
+      "size": 16,
+      "mutation": "Set a different single bit in the 0x70F8 bit array (e.g. bit 0: byte 0x70F8 |= 0x01; also test bits 91/92 as controls for special ids 0x5a/0x5c/0x5f) and repair checksum at 0x7108",
+      "requires_checksum_repair": true,
+      "predicted_effect": "Block persists; whichever flag/UI element changes maps bit indices (idx = u32 word*32 + bit, per FUN_080a24b8). Bits 90/92/95 are predicted special via FUN_08003e88."
+    },
+    {
+      "offset": 0,
+      "size": 8,
+      "mutation": "Corrupt one magic byte (0x0000: 'A'->'B') with no other change",
+      "requires_checksum_repair": false,
+      "predicted_effect": "FUN_080a1370 strcmp fails; FUN_080a142c recreates header: 0x0000..0x0063 returns to template (AGB-FE7, 0x00030115, 0x200A, 0xE0000000, checksum 0xA990) and FUN_080a1308 erase runs first - observe whether the 0xFF region grows (measures unknown erase span). Other blocks untouched."
+    },
+    {
+      "offset": 20,
+      "size": 12,
+      "mutation": "Set header counted-array entries at 0x0014 (first one byte to 0x01; in a second run set all 12) and repair header checksum at 0x0060 over [0,0x50)",
+      "requires_checksum_repair": true,
+      "predicted_effect": "Header persists; FUN_080a2f50 count rises from 0 to 1 (or 12), moving FUN_08012438 rank from the count==0 branch to count==1 (or >=2, rank 10) - observable as a rank/grade change; all-12 predicts the top branch."
+    },
+    {
+      "offset": 28828,
+      "size": 36,
+      "mutation": "At proposed 36-byte block (0x709C): set byte +0 to 0x01 and repair AS IF covered length were 0x22 (store FUN_080a1344 over [base,base+0x22) at base+0x22); on a fresh copy repeat with 0x24-length repair semantics",
+      "requires_checksum_repair": true,
+      "predicted_effect": "Resolves the checksum-length anomaly: the variant whose repair survives boot (block not recreated to zeros) reveals the true covered length; if neither survives, the block is not at 0x709C (B/C order swap) - repeat at 0x7038."
+    },
+    {
+      "offset": 28728,
+      "size": 136,
+      "mutation": "Plant non-zero payloads (with per-block checksum repair) in both candidate sub-blocks of the 0x7038 span, then corrupt one payload byte without repair and boot",
+      "requires_checksum_repair": false,
+      "predicted_effect": "The recreated (zeroed) region's offset and size (100 vs 36 bytes) reveal whether the span is [100@0x7038 + 36@0x709C] or [36@0x7038 + 100@0x705C], settling B/C order. Debugger watchpoint on FUN_080a12a0 args gives the same answer in one boot."
+    },
+    {
+      "offset": 80,
+      "size": 16,
+      "mutation": "Fill header bytes 0x0050..0x005F with 0xAA, no checksum repair; separately set tail 0x0062..0x0063 to 0xFFFF",
+      "requires_checksum_repair": false,
+      "predicted_effect": "If covered length 0x50 is correct, header still validates and bytes persist with no recreation; any recreation falsifies 0x50 in favour of 0x60. Persistence plus a visible change would reveal an untraced reader of the unchecksummed tail."
+    },
+    {
+      "offset": 8,
+      "size": 4,
+      "mutation": "Change header u32@+8 from 0x00030115 to 0x00030116 WITH header checksum repair at 0x0060",
+      "requires_checksum_repair": true,
+      "predicted_effect": "FUN_080a1370 still rejects (the +8 compare is independent of checksum) and the header is recreated to the original template - proving +8 is an identity gate, not data, and confirming ROM template values without reading _DAT_ tables. Same method applies to u16@+0xC at offset 12."
+    },
+    {
+      "offset": 0,
+      "size": 32768,
+      "mutation": "Boot with an all-0xFF 32768-byte image (counterfactual whole-image test)",
+      "requires_checksum_repair": false,
+      "predicted_effect": "Boot chain prediction: SRAM probe succeeds, all five validators fail, all five creators run, producing exactly the observed layout (header template at 0x0 with checksum 0xA990, zero blocks at the proposed offsets, 0xFF elsewhere). Any additional written region reveals a block missed by the traced set."
+    }
+  ],
+  "open_questions": [
+    "Exact SRAM file offsets of blocks B (100 B), C (36 B), and the D/E order at 0x70F8/0x710C: all destinations are *_DAT_ + _DAT_ expressions whose values are not in the workspace. Proposed layout (B@0x7038, C@0x709C, D@0x70F8, E@0x710C) rests on size fits 100+36=136 and 20+20=40 plus creator zero-fill; B/C and D/E orders are interchangeable on current evidence. A single runtime watchpoint on FUN_080a12a0 (address+length args) or fuzzing target 7 settles it.",
+    "36-byte block checksum anomaly: FUN_080a1e50/FUN_080a1ea8 pass length 0x24 to FUN_080a1344 while storing at +0x22, putting the stored word inside the summed range as decompiled. True length is probably 0x22 (decompiler constant error) or the check is vestigial for the only-ever-zero payload; all-zero samples cannot discriminate. Fuzzing target 6 settles it.",
+    "No fixed EWRAM/IWRAM (0x02xxxxxx/0x03xxxxxx) mirror can be named for any field: all traced save buffers are stack buffers and every _DAT_ pointer value is unresolved in ghidra/decompiled.c. Whether a persistent RAM mirror exists outside the traced functions is unknown.",
+    "func_0x080c11a4 (and neighbours 0x080c1198-0x080c11b0) are unrecovered 4-byte trampolines: read role is inferred from call sites, but its exact prototype, 4th argument, and return semantics (0 = success in FUN_080c1124; ignored by validators) are UNKNOWN. Likewise FUN_080c1000's *_DAT_080c1038 |= 3 register (candidate WAITCNT 0x04000204) and FUN_080a121c's *_DAT_080a127c |= 0x2000 register are unidentified.",
+    "FUN_080a1558's seven 16-byte records (base + 100 + idx*16, u16 ID at +4, 7-entry dispatch table): base unresolved, no writer traced, candidate file bytes (0x64+) are 0xFF in both samples. Are these save records at all, and if so where do they live? A watchpoint on its func_0x080c11a4 call (fuzzing target in report section 6, #10) settles it.",
+    "FUN_080a01f0: five branch constants for u32@buf+8, the 0x8000-byte second read's source/destination, and all 0x0809fxxx branch callees are outside the traced evidence. Its erase (FUN_080a1308) + SRAM re-probe (FUN_080a121c) calls make it save-adjacent, but its purpose (import/transfer/factory path?) is UNKNOWN.",
+    "FUN_080a1308 erase span: base (*piVar1) and chunk count (_DAT_080a1340) unresolved, so which part of the 0xFF regions it can clear is UNKNOWN. Fuzzing target 4 (magic corruption) observes it indirectly.",
+    "Semantics of almost every payload field are unknown within clean-room rules: header u16@+0xC (0x200A), flags u32@+0x10 (0xE0000000, only top-byte bits survive masking), the 12 counted bytes at +0x14 (what sets them - no traced writer sets them non-zero), both bit arrays' bit meanings (only bit 90 is observed set, via idx<0x80 setter FUN_08003e04), and blocks B/C payloads (never non-zero in this cohort).",
+    "Post-creation writers for blocks A, B, C, E were not found in the 291 traced functions (only creators, plus FUN_080a24b8 for one bits20 block). Either updates live in untraced code or these blocks are write-once in this beta; the trace-guided corpus cannot distinguish these.",
+    "The two save_related_functions.c seeds (0x080c126c, 0x080c1424) are signed divide/remainder routines, not save/MMIO functions; why the seed extractor flagged them, and whether a true Flash/EEPROM driver exists in untraced ROM code (none is in the traced set - zero hits for 0x5555/0x2AAA/0x040000D4 literals), remains open. Media identification as SRAM rests on PACKET.md, the 32768-byte size, and the byte-copy+verify driver shape.",
+    "Checksum covered length for header A: algorithm and stored value are CONFIRMED_VERIFIED, but bytes +0x14..+0x5F are all zero in both samples, so lengths 0x14..0x60 are sample-indistinguishable; 0x50 rests on the decompiled constant (CONFIRMED_STATIC). Fuzzing target 8 (mutate 0x0050..0x005F) settles it."
+  ]
+}

@@ -1,0 +1,147 @@
+{
+  "schema": "gbakit-save-research/1",
+  "release_key": "A2RE-r0-fb4811eac43aa876",
+  "display_name": "Bratz (USA) (En,Fr,Es)",
+  "rom_sha256": "fb4811eac43aa8763d7ebae1ef8296bcbc71da9623331990a42c6209d1c7e93f",
+  "game_code": "A2RE",
+  "header_family": "A2R",
+  "community_id": "comm-020",
+  "overall_confidence": "MEDIUM",
+  "media": {
+    "kind": "eeprom512",
+    "size_bytes": 512,
+    "sdk_tags": ["EEPROM_V122@3444128"],
+    "fill_byte": "0xff"
+  },
+  "slots_and_copies": [
+    {
+      "name": "slot_0",
+      "offset": 0,
+      "size": 32,
+      "redundancy_role": "primary",
+      "selection_rule": "Caller-selected index 0; loaded by FUN_08011794(base,0) via FUN_080119a2; valid iff seeded sum8 over bytes 0..27 equals u32_le at +28; invalid slots are zeroed in RAM after 3 read retries. No backup copy, no generation counter."
+    },
+    {
+      "name": "slot_1",
+      "offset": 32,
+      "size": 32,
+      "redundancy_role": "primary",
+      "selection_rule": "Same rule as slot_0 with index 1 (EEPROM block 4). All-0xFF (erased/invalid) in the sample."
+    },
+    {
+      "name": "slot_2",
+      "offset": 64,
+      "size": 32,
+      "redundancy_role": "primary",
+      "selection_rule": "Same rule as slot_0 with index 2 (EEPROM block 8). All-0xFF (erased/invalid) in the sample."
+    },
+    {
+      "name": "global_block",
+      "offset": 96,
+      "size": 312,
+      "redundancy_role": "global_config",
+      "selection_rule": "Always loaded by FUN_0800a328(base) at boot (EEPROM block 12, length 0x138); valid iff seeded sum8 over bytes 96..403 equals u32_le at 404; invalid image is zeroed in RAM after 3 retries. All-0xFF in the sample."
+    }
+  ],
+  "magic_signatures": [],
+  "checksums": [
+    {
+      "name": "slot_sum8_seeded",
+      "algorithm": "sum8",
+      "formula_detail": "u32 accumulator seeded with literal-pool word _DAT_08011b98 (value NOT present in workspace), then adds each byte of slot[0..27] with u32 wraparound; compared against stored u32_le. Decompiled proof: FUN_08011794 at ghidra/decompiled.c:1145-1149.",
+      "stored_offset": 28,
+      "stored_size": 4,
+      "covered_start": 0,
+      "covered_end": 28,
+      "function_addrs": ["0x08011794"],
+      "verified_on_samples": [
+        {"file": "saves/sav-00-f1402.sav", "stored_hex": "0x00000000", "computed_hex": "0x000001fc", "match": false}
+      ],
+      "confidence": "CONFIRMED_STATIC"
+    },
+    {
+      "name": "global_sum8_seeded",
+      "algorithm": "sum8",
+      "formula_detail": "Same shape as slot checksum: seed _DAT_0800a730 (value NOT present in workspace) plus sum of global-block bytes [0..307] relative to block start (file 96..403); stored u32_le at file offset 404 (RAM base+0x1E4). Decompiled proof: FUN_0800a328 at ghidra/decompiled.c:620-625.",
+      "stored_offset": 404,
+      "stored_size": 4,
+      "covered_start": 96,
+      "covered_end": 404,
+      "function_addrs": ["0x0800a328"],
+      "verified_on_samples": [
+        {"file": "saves/sav-00-f1402.sav", "stored_hex": "0xffffffff", "computed_hex": "0x000132cc", "match": false}
+      ],
+      "confidence": "CONFIRMED_STATIC"
+    }
+  ],
+  "io_driver_functions": [
+    {"addr": "0x0802dbb8", "role": "write", "callers": ["0x0802dc38"], "notes": "DMA3 engine: writes src/dst/count|0x80000000 to three literal-pool pointers (inferred DMA3 SAD 0x040000D4 / DAD 0x040000D8 / CNT 0x040000DC per packet hardware spec), then polls CNT busy bit. Used for both EEPROM bitstream phases; role listed as write because it programs DMA in both directions."},
+    {"addr": "0x0802dc38", "role": "read", "callers": ["0x0802b9ac"], "notes": "EEPROM read one 8-byte block: builds MSB-first address bitstream with two leading 1 bits, DMA to 0x0D000000 (addr_bits+3 units), DMA back 0x44 halfwords, unpacks 64 bits into u16s at ram+6,+4,+2,+0."},
+    {"addr": "0x0802b9ac", "role": "read", "callers": ["0x08011794", "0x0800a328"], "notes": "EEPROM bulk read: loops func_0x0802dc38 over (byte_len>>3) 8-byte blocks after func_0x0802da4c(4) bus setup. Callers mapped by address equality of func_0x0802b9ac call sites (callgraph.json drops func_ edges)."},
+    {"addr": "0x08011794", "role": "deserialize", "callers": ["0x080119a2"], "notes": "Slot load+validate+unpack; also computes the slot checksum inline (no separate checksum function). Zeroes fields and retries x3 on mismatch."},
+    {"addr": "0x0800a328", "role": "deserialize", "callers": ["0x080119d2"], "notes": "Global block load+validate (312 bytes at EEPROM block 12); checksum inline; no field unpacking in this function."},
+    {"addr": "0x08010226", "role": "deserialize", "callers": ["0x080119a2", "0x080119d2"], "notes": "RAM defaults/reset for the same fields the slot unpacker writes (sets +0x0C lanes to 4 and 0x17, zeroes counters). Does not touch EEPROM; not a writer."}
+  ],
+  "caller_chains": [
+    {
+      "entry_caller": "0x080145da",
+      "chain": ["0x080145da", "0x080119d2", "0x080119a2", "0x08011794", "0x0802b9ac", "0x0802dc38", "0x0802dbb8"],
+      "trigger_context": "Boot: FUN_080145da allocates auStack_340[824], inits it via FUN_0800019c, then FUN_080119d2 (main state machine) calls FUN_080119a2 which loads slots 0..2 before gameplay dispatch.",
+      "ram_fields_updated": ["base+0x08 bitfields", "base+0x0C bitfields", "base+0x28 u32", "base+0x2C u32", "base+0x30 blob[9]", "base+0xA4+slot*4 load flags"],
+      "how_mapped": "callgraph.json edge 0x080119a2->0x08011794 plus func_0x0802b9ac call site at ghidra/decompiled.c:1144 resolved by address equality to FUN_0802b9ac; FUN_080119d2 call at decompiled.c:1317."
+    },
+    {
+      "entry_caller": "0x080145da",
+      "chain": ["0x080145da", "0x080119d2", "0x0800a328", "0x0802b9ac", "0x0802dc38", "0x0802dbb8"],
+      "trigger_context": "Boot, immediately after slot loading (decompiled.c:1318): global 312-byte block read from EEPROM block 12 into base+0xB0 and checksum-validated.",
+      "ram_fields_updated": ["base+0xB0..base+0x1E7 global image (zeroed on invalid)"],
+      "how_mapped": "FUN_ call at decompiled.c:1318 and func_0x0802b9ac(0xC, base+0xB0, 0x138) at decompiled.c:620."
+    },
+    {
+      "entry_caller": "0x080119d2",
+      "chain": ["0x080119d2", "0x08010226", "0x0800cdec", "0x08006d74"],
+      "trigger_context": "HYPOTHESIZED save/new-slot flow: main state machine resets RAM fields via FUN_08010226 then calls untraced func_0x0800cdec(base, slot) and func_0x08006d74(base, slot) at decompiled.c:2283-2284. Neither callee body exists in the workspace; writer role is unproven.",
+      "ram_fields_updated": ["base+0x08/base+0x0C defaults (proven for FUN_08010226 only)"],
+      "how_mapped": "Call sites only; callees absent from both decompiled.c FUN_ set and callgraph.json (237-node FUN_-only graph)."
+    }
+  ],
+  "fields": [
+    {"name": "slot0_field_b0_low3", "offset": 0, "size": 1, "type": "bitflags", "ram_addr": "base+0x08 bits17-19 (struct base from FUN_080145da auStack_340)", "writers": [], "readers": ["0x08011794"], "observed_values": {"sav-00-f1402.sav": "raw 0x41, masked field 1"}, "update_mechanism": "Reader: (byte & 7) << 0x11 into RAM+0x08. Serializer untraced.", "confidence": "CONFIRMED_STATIC", "evidence": "ghidra/decompiled.c:1167-1169 in FUN_08011794; sample byte verified by /tmp/verify.py unpack output."},
+    {"name": "slot0_field_b1_bit0", "offset": 1, "size": 1, "type": "bitflags", "ram_addr": "base+0x08 bit24", "writers": [], "readers": ["0x08011794"], "observed_values": {"sav-00-f1402.sav": "0x00"}, "update_mechanism": "(byte & 1) << 0x18.", "confidence": "CONFIRMED_STATIC", "evidence": "ghidra/decompiled.c:1170-1172."},
+    {"name": "slot0_field_b2_low2", "offset": 2, "size": 1, "type": "bitflags", "ram_addr": "base+0x08 bits28-29", "writers": [], "readers": ["0x08011794"], "observed_values": {"sav-00-f1402.sav": "raw 0x17, masked field 3"}, "update_mechanism": "(byte & 3) << 0x1C.", "confidence": "CONFIRMED_STATIC", "evidence": "ghidra/decompiled.c:1173-1175."},
+    {"name": "slot0_field_b3_low4_dual", "offset": 3, "size": 1, "type": "bitflags", "ram_addr": "base+0x0C bits0-3 and base+0x08 bits20-23", "writers": [], "readers": ["0x08011794"], "observed_values": {"sav-00-f1402.sav": "0x04"}, "update_mechanism": "Same nibble written to two RAM words (byte & 0xF; and (byte & 0xF) << 0x14).", "confidence": "CONFIRMED_STATIC", "evidence": "ghidra/decompiled.c:1176-1180."},
+    {"name": "slot0_field_b4_low5", "offset": 4, "size": 1, "type": "bitflags", "ram_addr": "base+0x0C bits4-8", "writers": [], "readers": ["0x08011794"], "observed_values": {"sav-00-f1402.sav": "0x00"}, "update_mechanism": "(byte & 0x1F) << 4. RAM default 4 set by FUN_08010226.", "confidence": "CONFIRMED_STATIC", "evidence": "ghidra/decompiled.c:1181-1183; defaults at decompiled.c:635-655."},
+    {"name": "slot0_field_b5_low6", "offset": 5, "size": 1, "type": "bitflags", "ram_addr": "base+0x0C bits9-14", "writers": [], "readers": ["0x08011794"], "observed_values": {"sav-00-f1402.sav": "0x00"}, "update_mechanism": "(byte & 0x3F) << 9. RAM default 0x17 set by FUN_08010226.", "confidence": "CONFIRMED_STATIC", "evidence": "ghidra/decompiled.c:1184-1186."},
+    {"name": "slot0_field_b6_low5", "offset": 6, "size": 1, "type": "bitflags", "ram_addr": "base+0x0C bits15-19", "writers": [], "readers": ["0x08011794"], "observed_values": {"sav-00-f1402.sav": "0x00"}, "update_mechanism": "(byte & 0x1F) << 0x0F.", "confidence": "CONFIRMED_STATIC", "evidence": "ghidra/decompiled.c:1187-1189."},
+    {"name": "slot0_blob9", "offset": 7, "size": 9, "type": "bytes", "ram_addr": "base+0x30", "writers": [], "readers": ["0x08011794", "0x080119d2"], "observed_values": {"sav-00-f1402.sav": "00 00 00 00 00 00 00 00 00"}, "update_mechanism": "Copied verbatim by untraced func_0x0802e5a4(base+0x30, slotbuf+7, 9) on valid load; first byte tested != 0 by FUN_080119d2 (decompiled.c:2129) as slot-occupied flag.", "confidence": "CONFIRMED_STATIC", "evidence": "ghidra/decompiled.c:1198 and :2129. Semantics beyond occupancy UNKNOWN."},
+    {"name": "slot0_u32_at_0x10", "offset": 16, "size": 4, "type": "u32_le", "ram_addr": "base+0x28", "writers": [], "readers": ["0x08011794"], "observed_values": {"sav-00-f1402.sav": "0x00000000"}, "update_mechanism": "Direct u32 copy; zeroed on invalid load and by FUN_08010226.", "confidence": "CONFIRMED_STATIC", "evidence": "ghidra/decompiled.c:1190."},
+    {"name": "slot0_u32_at_0x14", "offset": 20, "size": 4, "type": "u32_le", "ram_addr": "base+0x2C", "writers": [], "readers": ["0x08011794"], "observed_values": {"sav-00-f1402.sav": "0x00000000"}, "update_mechanism": "Direct u32 copy; zeroed on invalid load and by FUN_08010226.", "confidence": "CONFIRMED_STATIC", "evidence": "ghidra/decompiled.c:1191."},
+    {"name": "slot0_u16_at_0x18_low4", "offset": 24, "size": 2, "type": "u16_le", "ram_addr": "base+0x0C bits20-23", "writers": [], "readers": ["0x08011794"], "observed_values": {"sav-00-f1402.sav": "raw 0x5B07, masked field 7"}, "update_mechanism": "(u16 & 0xF) << 0x14. Upper 12 bits unread by traced code.", "confidence": "CONFIRMED_STATIC", "evidence": "ghidra/decompiled.c:1192-1194."},
+    {"name": "slot0_u16_at_0x1A_low5", "offset": 26, "size": 2, "type": "u16_le", "ram_addr": "base+0x0C bits24-28", "writers": [], "readers": ["0x08011794"], "observed_values": {"sav-00-f1402.sav": "raw 0x71CD, masked field 13"}, "update_mechanism": "(u16 & 0x1F) << 0x18. Bytes 0x18..0x1B jointly form 0x71CD5B07; a wider unmasked field underneath is unproven.", "confidence": "CONFIRMED_STATIC", "evidence": "ghidra/decompiled.c:1195-1197."},
+    {"name": "slot0_checksum", "offset": 28, "size": 4, "type": "u32_le", "ram_addr": null, "writers": [], "readers": ["0x08011794"], "observed_values": {"sav-00-f1402.sav": "stored 0x00000000; computed seed-0 0x000001FC; match false"}, "update_mechanism": "Compared in-buffer against seed _DAT_08011b98 + sum8(slot[0..27]). Writer/checksum-store untraced.", "confidence": "CONFIRMED_STATIC", "evidence": "ghidra/decompiled.c:1145-1149; verification output in SAVE-FORMAT-REPORT.md section 4."},
+    {"name": "slot1_image", "offset": 32, "size": 32, "type": "bytes", "ram_addr": "base+0x64 buffer", "writers": [], "readers": ["0x08011794"], "observed_values": {"sav-00-f1402.sav": "all 0xFF (erased)"}, "update_mechanism": "Same 32-byte layout/checksum as slot 0, index 1.", "confidence": "CONFIRMED_STATIC", "evidence": "FUN_080119a2 loop decompiled.c:1210-1220; byte scan."},
+    {"name": "slot2_image", "offset": 64, "size": 32, "type": "bytes", "ram_addr": "base+0x84 buffer", "writers": [], "readers": ["0x08011794"], "observed_values": {"sav-00-f1402.sav": "all 0xFF (erased)"}, "update_mechanism": "Same 32-byte layout/checksum as slot 0, index 2.", "confidence": "CONFIRMED_STATIC", "evidence": "FUN_080119a2 loop; byte scan."},
+    {"name": "global_payload", "offset": 96, "size": 308, "type": "bytes", "ram_addr": "base+0xB0", "writers": [], "readers": ["0x0800a328"], "observed_values": {"sav-00-f1402.sav": "all 0xFF (erased)"}, "update_mechanism": "Read as part of 312-byte image; no field unpacker or consumer traced.", "confidence": "UNKNOWN", "evidence": "Geometry from FUN_0800a328 decompiled.c:595-633; semantics unknown."},
+    {"name": "global_checksum", "offset": 404, "size": 4, "type": "u32_le", "ram_addr": null, "writers": [], "readers": ["0x0800a328"], "observed_values": {"sav-00-f1402.sav": "stored 0xFFFFFFFF; computed seed-0 0x000132CC; match false (expected for erased block)"}, "update_mechanism": "Compared against seed _DAT_0800a730 + sum8(global[0..307]).", "confidence": "CONFIRMED_STATIC", "evidence": "ghidra/decompiled.c:620-625."},
+    {"name": "unused_tail", "offset": 408, "size": 104, "type": "bytes", "ram_addr": null, "writers": [], "readers": [], "observed_values": {"sav-00-f1402.sav": "all 0xFF"}, "update_mechanism": "Never addressed by traced code (max EEPROM byte touched is 407).", "confidence": "CONFIRMED_VERIFIED", "evidence": "Byte scan of sample plus exhaustive EEPROM-offset search (blocks 0..51 only)."}
+  ],
+  "fuzzing_targets": [
+    {"offset": 0, "size": 1, "mutation": "0x41 -> 0x42 (masked field 1->2)", "requires_checksum_repair": true, "predicted_effect": "Slot still loads after seed resolution; RAM base+0x08 bits17-19 become 2 with a visible UI/mode change. Slot vanishing falsifies the seed."},
+    {"offset": 0, "size": 1, "mutation": "0x41 -> 0x01 (flip bit 6, above mask 0x07)", "requires_checksum_repair": true, "predicted_effect": "No gameplay change; any change falsifies the reader mask map."},
+    {"offset": 24, "size": 1, "mutation": "0x07 -> 0x08 in u16 at 0x18 (masked lane 7->8)", "requires_checksum_repair": true, "predicted_effect": "RAM base+0x0C bits20-23 become 8; distinguishes masked-lane model from a u32-counter-at-0x18 model."},
+    {"offset": 7, "size": 1, "mutation": "0x00 -> 0x01 (blob first byte / occupancy flag)", "requires_checksum_repair": true, "predicted_effect": "File-select treats slot 0 as occupied (FUN_080119d2 tests base+0x4B != 0). Without repair the slot is zeroed and treated as empty."},
+    {"offset": 3, "size": 1, "mutation": "0x04 -> 0x05 (dual-lane nibble)", "requires_checksum_repair": true, "predicted_effect": "Both RAM lanes (base+0x0C bits0-3 and base+0x08 bits20-23) change together."},
+    {"offset": 5, "size": 1, "mutation": "Corrupt one payload byte, no checksum repair", "requires_checksum_repair": false, "predicted_effect": "Loader rejects after 3 retries; RAM fields fall back to FUN_08010226 defaults and slot is treated as new/empty."},
+    {"offset": 28, "size": 4, "mutation": "Store candidate-seed checksums (seed 0, 0xFFFFFE04) over zeroed payload, one boot each", "requires_checksum_repair": false, "predicted_effect": "Exactly the surviving image identifies the unresolved seed _DAT_08011b98; gates all other slot fuzzing."},
+    {"offset": 404, "size": 4, "mutation": "Store candidate-seed checksums over patterned global payload (96..403), one boot each", "requires_checksum_repair": false, "predicted_effect": "Surviving image identifies _DAT_0800a730 and proves global-block geometry; watch options/language/unlock observables."}
+  ],
+  "open_questions": [
+    "Checksum seed values _DAT_08011b98 (slots) and _DAT_0800a730 (global) are literal-pool words whose values appear nowhere in the workspace; with seed 0 the sample slot 0 computes 0x000001FC vs stored 0x00000000. Is the true slot seed 0xFFFFFE04, is this snapshot pre-first-flush/invalid, or is the stored word at +0x1C written by a different (untraced) rule?",
+    "No EEPROM write/serialize function exists among the 237 traced functions. Are func_0x0800cdec / func_0x08006d74 (called with base+slot at decompiled.c:2283-2284) the serializer+flush, and what EEPROM write-bitstream routine do they use?",
+    "What are the semantics of the 9-byte blob at slot offset 7 (only its first byte is proven as an occupancy flag) and of the two u32 fields at 0x10/0x14?",
+    "Bytes 0x18..0x1B (0x71CD5B07) are consumed only through two narrow masks (0xF / 0x1F). Is there a wider field (counter, play time, RNG state) that the untraced serializer maintains?",
+    "Global block (312 bytes at 0x60) field semantics: no consumer offsets were traced beyond the checksum reader.",
+    "Exact DMA3 register addresses for FUN_0802dbb8's literal-pool pointers (inferred 0x040000D4/D8/DC from hardware spec, not resolved in corpus), and the register written by func_0x0802da4c(4).",
+    "Does the emulator .sav byte order within each 8-byte EEPROM block match the RAM buffer order? sum8 is permutation-invariant so the checksum cannot decide this; a known-answer field test (fuzzing target at offset 0) can."
+  ]
+}

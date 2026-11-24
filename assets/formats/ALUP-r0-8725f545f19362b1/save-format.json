@@ -1,0 +1,168 @@
+{
+  "schema": "gbakit-save-research/1",
+  "release_key": "ALUP-r0-8725f545f19362b1",
+  "display_name": "Super Monkey Ball Jr. (Europe) (En,Fr,De,Es,It)",
+  "rom_sha256": "8725f545f19362b1c72243ef9b9a848572ae5193c7a863a88f521a4cdd279be6",
+  "game_code": "ALUP",
+  "header_family": "ALU",
+  "community_id": "comm-009",
+  "overall_confidence": "HIGH",
+  "media": {
+    "kind": "eeprom8k",
+    "size_bytes": 8192,
+    "sdk_tags": [],
+    "fill_byte": "0xff"
+  },
+  "slots_and_copies": [
+    {
+      "name": "slot_0",
+      "offset": 0,
+      "size": 512,
+      "redundancy_role": "primary",
+      "selection_rule": "Single copy, no backup or mirroring. Valid iff EEPROM read succeeds AND header byte 0 == 'N' (0x4E) AND CRC-16/CCITT-FALSE(header[0x00..0x37]) == u16 at header+0x38 AND sum of CRC-16/CCITT-FALSE over each of the 7 data chunks (60 bytes each) == u32 at header+0x34 (FUN_08008ec4). Otherwise the whole save is rejected and defaults are used. No generation/sequence counter."
+    }
+  ],
+  "magic_signatures": [
+    {
+      "offset": 0,
+      "bytes_hex": "4e",
+      "ascii": "N",
+      "verified_in_code": true,
+      "verified_in_sav": true,
+      "function_addrs": ["0x08008da4", "0x08008ec4"]
+    },
+    {
+      "offset": 64,
+      "bytes_hex": "534d4200",
+      "ascii": "SMB",
+      "verified_in_code": true,
+      "verified_in_sav": true,
+      "function_addrs": ["0x08008da4"]
+    }
+  ],
+  "checksums": [
+    {
+      "name": "header_crc16",
+      "algorithm": "crc16",
+      "formula_detail": "CRC-16/CCITT-FALSE: poly 0x1021, init 0xFFFF, MSB-first (crc = (crc<<8) ^ table[((crc>>8)^byte)]), no reflection, no final XOR; implemented by FUN_08041c38. Stored after aggregate at 0x34 is final and byte 0x32 has been zeroed by the saver.",
+      "stored_offset": 56,
+      "stored_size": 2,
+      "covered_start": 0,
+      "covered_end": 56,
+      "function_addrs": ["0x08041c38", "0x08008ec4", "0x08008f5c"],
+      "verified_on_samples": [
+        {"file": "cap-01-future-1.sav", "stored_hex": "dee5", "computed_hex": "dee5", "match": true},
+        {"file": "cap-00-future-0.sav", "stored_hex": "ffff", "computed_hex": "e313", "match": false}
+      ],
+      "confidence": "CONFIRMED_VERIFIED"
+    },
+    {
+      "name": "chunk_crc16_sum",
+      "algorithm": "crc16",
+      "formula_detail": "Sum (u32) of CRC-16/CCITT-FALSE (poly 0x1021, init 0xFFFF, MSB-first, no final XOR, FUN_08041c38) computed over each of the 7 data chunks' 60 data bytes (chunk offsets 0x40+0x40*i, i=0..6). No per-chunk CRC is stored; pad bytes at chunk+0x3C..0x3F are excluded. cap-01: 4*0xf132 + 3*0xddb6 = 0x00065dea.",
+      "stored_offset": 52,
+      "stored_size": 4,
+      "covered_start": 64,
+      "covered_end": 512,
+      "function_addrs": ["0x08041c38", "0x08008ec4", "0x08008f5c"],
+      "verified_on_samples": [
+        {"file": "cap-01-future-1.sav", "stored_hex": "00065dea", "computed_hex": "00065dea", "match": true},
+        {"file": "cap-00-future-0.sav", "stored_hex": "ffffffff", "computed_hex": "00044986", "match": false}
+      ],
+      "confidence": "CONFIRMED_VERIFIED"
+    }
+  ],
+  "io_driver_functions": [
+    {"addr": "0x0804a7d0", "role": "read", "callers": ["0x0804a850", "0x0804a900"], "notes": "DMA3 primitive: programs DMA source/dest/control (param3|0x80000000 enable) via 0x040000D4-family registers, waits on busy bit 0x8000; used to transfer bitstreams to/from EEPROM window 0x0D000000."},
+    {"addr": "0x0804a850", "role": "read", "callers": ["0x08041cf4", "0x0804a9dc"], "notes": "Read one 8-byte EEPROM block: sends 2 start bits + address bits (count from chip config byte +8) MSB-first via FUN_0804a7d0 to 0x0D000000, reads 0x44 halfwords back, extracts 64 bits into 4 u16 written backwards from dst+6 (origin of in-block byte reversal in raw .sav)."},
+    {"addr": "0x0804a900", "role": "write", "callers": ["0x0804aa34"], "notes": "Write one 8-byte EEPROM block: expands 4 u16 into 64 bits MSB-first, prepends write opcode/address bits, DMAs addr_bits+0x43 halfwords to 0x0D000000, polls EEPROM busy (0x0D000000 & 1); uses helpers FUN_0804a704/FUN_0804a78c."},
+    {"addr": "0x0804a9dc", "role": "read", "callers": ["0x0804aa34"], "notes": "Verify: re-reads block via FUN_0804a850 and compares 4 u16; returns 0x8000 on mismatch."},
+    {"addr": "0x0804aa34", "role": "write", "callers": ["0x08041d90"], "notes": "Write-with-retry: up to 3 rounds of FUN_0804a900 + FUN_0804a9dc verify."},
+    {"addr": "0x08041cf4", "role": "read", "callers": ["0x08008ec4"], "notes": "Byte-range EEPROM read wrapper (device type 3 only): block addr (offset & 0x7FFFF)>>3, 8 bytes per FUN_0804a850 call, handles trailing partial block."},
+    {"addr": "0x08041d90", "role": "write", "callers": ["0x08008f5c"], "notes": "Byte-range EEPROM write wrapper (device type 3 only): per-8-byte-block FUN_0804aa34; flags error state 7 on status bit 0x8000."},
+    {"addr": "0x08041c38", "role": "checksum", "callers": ["0x08008ec4", "0x08008f5c"], "notes": "CRC-16/CCITT-FALSE (table-driven MSB-first; table/init ROM literals identified empirically as poly 0x1021 / init 0xFFFF by exact match on real saves). Callers per decompiled C text; callgraph.json records none (func_0x spelling omitted)."},
+    {"addr": "0x08008ec4", "role": "deserialize", "callers": ["0x08035420"], "notes": "Load: reads header (0,0x3C) and 7 chunks (0x40+0x40*i, 0x40 read / 0x3C copied), checks magic 'N', header CRC at +0x38, and chunk CRC sum at +0x34; returns 1 on success."},
+    {"addr": "0x08008f5c", "role": "serialize", "callers": [], "notes": "Save: recomputes chunk CRC sum into header+0x34, zeroes header+0x32, stores header CRC at +0x38, writes 7 chunks (0x3C data + 4 zero pad) then header. No caller recorded in callgraph/decompiled text (unrecovered jumptable dispatch); caller unknown."},
+    {"addr": "0x08008da4", "role": "serialize", "callers": [], "notes": "Factory-default init: writes header constants and 'N' magic, sets unlock bits 1/11/31 via FUN_0800988c, fills 7 chunks with 5x12-byte template entries chosen per block by FUN_08009900. No caller recorded; trigger inferred as load-failure/first-boot."},
+    {"addr": "0x08041e44", "role": "read", "callers": ["0x08035420"], "notes": "Save-device init called at boot as FUN_08041e44(3,4): selects EEPROM (type 3) chip configuration via FUN_0804a664/FUN_0804a6cc."}
+  ],
+  "caller_chains": [
+    {
+      "entry_caller": "0x08035420",
+      "chain": ["0x08035420", "0x08041cac", "0x08041e44", "0x08008ec4", "0x08041cf4", "0x0804a850", "0x0804a7d0"],
+      "trigger_context": "Boot: main task function clears EEPROM driver state, selects EEPROM device type 3, then loads the save before starting the main loop.",
+      "ram_fields_updated": ["game_state+0x6d := (load failed)", "header+0x33 := 0 on load failure", "game_state+0x85 := header+0x33 on load success"],
+      "how_mapped": "Direct FUN_/func_ call sites in ghidra/decompiled.c (FUN_08035420 body) cross-checked with callgraph.json (records 0x08035420 -> 0x08008ec4). Header pointer and game-state pointer are unresolved literal-pool values, so RAM addresses are null."
+    },
+    {
+      "entry_caller": "0x08008f5c",
+      "chain": ["0x08008f5c", "0x08041d90", "0x0804aa34", "0x0804a900", "0x0804a7d0"],
+      "trigger_context": "Save flush (gameplay/menu trigger not recoverable: FUN_08008f5c has no recorded caller and no textual call site; dispatch is via an unrecovered jumptable).",
+      "ram_fields_updated": ["header+0x34 := sum of 7 chunk CRC16s", "header+0x32 := 0", "header+0x38 := CRC16(header,0x38)", "header+0x04 cleared during write and restored after"],
+      "how_mapped": "Internal call sites in the FUN_08008f5c / FUN_08041d90 / FUN_0804aa34 bodies in ghidra/decompiled.c and ghidra/save_related_functions.c; callgraph.json confirms 0x0804aa34 -> {0x0804a900, 0x0804a9dc}."
+    },
+    {
+      "entry_caller": "0x08008da4",
+      "chain": ["0x08008da4", "0x0800988c", "0x08009900"],
+      "trigger_context": "Factory defaults (inferred: first boot / rejected save). No caller recorded in callgraph.json or decompiled text.",
+      "ram_fields_updated": ["header+0x00='N'", "header+0x01=3, +0x02=3, +0x03=1, +0x04=0, +0x05=0, +0x06=1, +0x07=3", "header+0x08..0x20 zeroed then bits 1,11,31 set", "header+0x24 u32=0, +0x28..0x2F=0, +0x30=5, +0x32=1, +0x33=0", "all 7 chunks := 5 template entries (name, default score, 0)"],
+      "how_mapped": "Direct writes and func_0x0800988c(1)/(0xb)/(0x1f), func_0x08009900 calls in the FUN_08008da4 body; resulting byte pattern matches cap-01-future-1.sav exactly after CRC computation."
+    },
+    {
+      "entry_caller": "0x0800988c",
+      "chain": ["0x0800988c"],
+      "trigger_context": "Progress/unlock bit setter: header+8+(bit>>3) |= 1<<(bit&7) for bit<100. Only traced callers are the three calls in FUN_08008da4 (bits 1, 11, 31); gameplay callers untraced.",
+      "ram_fields_updated": ["header bitfield at +0x08 (one bit per call)"],
+      "how_mapped": "FUN_0800988c body in decompiled.c; observed sav bitfield 02 08 00 80 at header+8 equals exactly bits 1, 11, 31 set by the defaults init."
+    }
+  ],
+  "fields": [
+    {"name": "magic_N", "offset": 0, "size": 1, "type": "u8", "ram_addr": null, "writers": ["0x08008da4"], "readers": ["0x08008ec4"], "observed_values": {"cap-01-future-1.sav": "0x4e ('N')", "cap-00-future-0.sav": "0xff"}, "update_mechanism": "Written once by factory-default init; loader rejects save if != 'N'. Appears at raw file offset 7 due to per-8-byte-block reversal.", "confidence": "CONFIRMED_VERIFIED", "evidence": "FUN_08008da4 writes 0x4E; FUN_08008ec4 checks *hdr != 'N'; reversed cap-01 byte 0 = 0x4E."},
+    {"name": "header_byte_01", "offset": 1, "size": 1, "type": "u8", "ram_addr": null, "writers": ["0x08008da4"], "readers": ["0x08041c38"], "observed_values": {"cap-01-future-1.sav": "0x03"}, "update_mechanism": "Constant 3 from defaults init; covered by header CRC; semantics unknown.", "confidence": "CONFIRMED_STATIC", "evidence": "FUN_08008da4: *(hdr+1)=3."},
+    {"name": "header_byte_02", "offset": 2, "size": 1, "type": "u8", "ram_addr": null, "writers": ["0x08008da4"], "readers": ["0x08041c38"], "observed_values": {"cap-01-future-1.sav": "0x03"}, "update_mechanism": "Constant 3 from defaults init; semantics unknown.", "confidence": "CONFIRMED_STATIC", "evidence": "FUN_08008da4: *(hdr+2)=3."},
+    {"name": "header_byte_03", "offset": 3, "size": 1, "type": "u8", "ram_addr": null, "writers": ["0x08008da4"], "readers": ["0x08041c38"], "observed_values": {"cap-01-future-1.sav": "0x01"}, "update_mechanism": "Constant 1 from defaults init; semantics unknown.", "confidence": "CONFIRMED_STATIC", "evidence": "FUN_08008da4: *(hdr+3)=1."},
+    {"name": "header_byte_04_transient_flag", "offset": 4, "size": 1, "type": "u8", "ram_addr": null, "writers": ["0x08008da4", "0x08008f5c"], "readers": ["0x08008f5c"], "observed_values": {"cap-01-future-1.sav": "0x00"}, "update_mechanism": "Defaults init writes 0; saver clears it for the duration of the flush and restores it afterwards, so the persisted value is the in-RAM value at save time.", "confidence": "CONFIRMED_STATIC", "evidence": "FUN_08008f5c: saved to stack, *(hdr+4)=0 before writes, restored after header write."},
+    {"name": "header_byte_05", "offset": 5, "size": 1, "type": "u8", "ram_addr": null, "writers": ["0x08008da4"], "readers": ["0x08041c38"], "observed_values": {"cap-01-future-1.sav": "0x00"}, "update_mechanism": "Constant 0 from defaults init; semantics unknown.", "confidence": "CONFIRMED_STATIC", "evidence": "FUN_08008da4: *(hdr+5)=0."},
+    {"name": "header_byte_06", "offset": 6, "size": 1, "type": "u8", "ram_addr": null, "writers": ["0x08008da4"], "readers": ["0x08041c38"], "observed_values": {"cap-01-future-1.sav": "0x01"}, "update_mechanism": "Constant 1 from defaults init; semantics unknown.", "confidence": "CONFIRMED_STATIC", "evidence": "FUN_08008da4: *(hdr+6)=1."},
+    {"name": "header_byte_07", "offset": 7, "size": 1, "type": "u8", "ram_addr": null, "writers": ["0x08008da4"], "readers": ["0x08041c38"], "observed_values": {"cap-01-future-1.sav": "0x03"}, "update_mechanism": "Constant 3 from defaults init; semantics unknown.", "confidence": "CONFIRMED_STATIC", "evidence": "FUN_08008da4: *(hdr+7)=3."},
+    {"name": "progress_bitfield", "offset": 8, "size": 25, "type": "bitflags", "ram_addr": null, "writers": ["0x08008da4", "0x0800988c"], "readers": ["0x08041c38"], "observed_values": {"cap-01-future-1.sav": "bits 1, 11, 31 set (02 08 00 80 00...)"}, "update_mechanism": "FUN_0800988c(bit<100): hdr[8+(bit>>3)] |= 1<<(bit&7). Defaults init zeroes 0x08..0x20 then sets bits 1, 11, 31; further gameplay setters untraced.", "confidence": "CONFIRMED_STATIC", "evidence": "FUN_0800988c body and FUN_08008da4 calls (1, 0xb, 0x1f) reproduce the observed bytes 02 08 00 80 exactly."},
+    {"name": "header_bytes_15_20", "offset": 21, "size": 12, "type": "bytes", "ram_addr": null, "writers": ["0x08008da4"], "readers": ["0x08041c38"], "observed_values": {"cap-01-future-1.sav": "all 0x00"}, "update_mechanism": "Zeroed by defaults init (loop over +8 for 0x19 bytes, plus explicit +0x15=+0x16=0); semantics unknown; overlaps tail of the bitfield region.", "confidence": "CONFIRMED_STATIC", "evidence": "FUN_08008da4 zero loop and explicit writes."},
+    {"name": "header_bytes_21_23_uninitialized", "offset": 33, "size": 3, "type": "bytes", "ram_addr": null, "writers": [], "readers": ["0x08041c38"], "observed_values": {"cap-01-future-1.sav": "ff ff ff"}, "update_mechanism": "No writer traced; defaults init stops at 0x20. 0xFF suggests erased/uninitialized bytes copied verbatim, or a field set by untraced code.", "confidence": "UNKNOWN", "evidence": "Observed ff ff ff; absent from FUN_08008da4 writes."},
+    {"name": "header_u32_24", "offset": 36, "size": 4, "type": "u32_le", "ram_addr": null, "writers": ["0x08008da4"], "readers": ["0x08041c38"], "observed_values": {"cap-01-future-1.sav": "0x00000000"}, "update_mechanism": "Zeroed by defaults init; semantics unknown.", "confidence": "CONFIRMED_STATIC", "evidence": "FUN_08008da4: *(u32*)(hdr+0x24)=0."},
+    {"name": "header_bytes_28_2f", "offset": 40, "size": 8, "type": "bytes", "ram_addr": null, "writers": ["0x08008da4"], "readers": ["0x08041c38"], "observed_values": {"cap-01-future-1.sav": "all 0x00"}, "update_mechanism": "Zeroed by defaults init (8-byte loop at +0x28); semantics unknown.", "confidence": "CONFIRMED_STATIC", "evidence": "FUN_08008da4 loop."},
+    {"name": "header_byte_30", "offset": 48, "size": 1, "type": "u8", "ram_addr": null, "writers": ["0x08008da4"], "readers": ["0x08041c38"], "observed_values": {"cap-01-future-1.sav": "0x05"}, "update_mechanism": "Constant 5 from defaults init; semantics unknown.", "confidence": "CONFIRMED_STATIC", "evidence": "FUN_08008da4: *(hdr+0x30)=5."},
+    {"name": "header_byte_31_uninitialized", "offset": 49, "size": 1, "type": "u8", "ram_addr": null, "writers": [], "readers": ["0x08041c38"], "observed_values": {"cap-01-future-1.sav": "0xff"}, "update_mechanism": "No writer traced (init writes +0x30, +0x32, +0x33 only in this area).", "confidence": "UNKNOWN", "evidence": "Observed 0xff; absent from FUN_08008da4 writes."},
+    {"name": "header_byte_32_flag", "offset": 50, "size": 1, "type": "u8", "ram_addr": null, "writers": ["0x08008da4", "0x08008f5c"], "readers": ["0x08041c38"], "observed_values": {"cap-01-future-1.sav": "0x00"}, "update_mechanism": "Defaults init sets 1; saver clears to 0 before computing the header CRC, so the on-disk value is always 0.", "confidence": "CONFIRMED_STATIC", "evidence": "FUN_08008da4: *(hdr+0x32)=1; FUN_08008f5c: *(hdr+0x32)=0 before CRC16(header,0x38)."},
+    {"name": "header_byte_33_persisted_setting", "offset": 51, "size": 1, "type": "u8", "ram_addr": null, "writers": ["0x08008da4", "0x08035420"], "readers": ["0x08035420"], "observed_values": {"cap-01-future-1.sav": "0x00"}, "update_mechanism": "Defaults init and boot-on-load-failure write 0; on load success boot copies it to game-state +0x85. Meaning unknown.", "confidence": "CONFIRMED_STATIC", "evidence": "FUN_08035420 boot body: failure branch *(hdr+0x33)=0, success branch game_state+0x85 = hdr+0x33."},
+    {"name": "chunk_crc_sum", "offset": 52, "size": 4, "type": "u32_le", "ram_addr": null, "writers": ["0x08008f5c"], "readers": ["0x08008ec4"], "observed_values": {"cap-01-future-1.sav": "0x00065dea", "cap-00-future-0.sav": "0xffffffff"}, "update_mechanism": "Recomputed on every save as the sum of the 7 chunk CRC-16/CCITT-FALSE values; verified against real saves (Section 4 of report).", "confidence": "CONFIRMED_VERIFIED", "evidence": "FUN_08008f5c accumulation loop; Python: 4*0xf132+3*0xddb6=0x65dea matches stored."},
+    {"name": "header_crc16", "offset": 56, "size": 2, "type": "u16_le", "ram_addr": null, "writers": ["0x08008f5c"], "readers": ["0x08008ec4"], "observed_values": {"cap-01-future-1.sav": "0xdee5", "cap-00-future-0.sav": "0xffff"}, "update_mechanism": "CRC-16/CCITT-FALSE over header bytes 0x00..0x37, stored LE (as u32 with zero high half, bytes 0x38..0x3B = e5 de 00 00) on every save.", "confidence": "CONFIRMED_VERIFIED", "evidence": "FUN_08041c38 + FUN_08008f5c/FUN_08008ec4; Python computed dee5 == stored dee5 on cap-01."},
+    {"name": "header_pad", "offset": 60, "size": 4, "type": "bytes", "ram_addr": null, "writers": ["0x08008f5c"], "readers": ["0x08008ec4"], "observed_values": {"cap-01-future-1.sav": "00 00 00 00"}, "update_mechanism": "Saver zeroes stack bytes 60..63; loader reads 0x40 but copies only 0x3C. Block-alignment padding, not checksummed.", "confidence": "CONFIRMED_VERIFIED", "evidence": "FUN_08008f5c stack zeroing; FUN_08008ec4 memcpy length 0x3C."},
+    {"name": "score_entry_name", "offset": 64, "size": 4, "type": "ascii", "ram_addr": null, "writers": ["0x08008da4"], "readers": ["0x08041c38"], "observed_values": {"cap-01-future-1.sav": "\"SMB\\0\" at chunk+12*j (j=0..4) in all 7 chunks (file offsets 0x40+0x40*i+12*j)"}, "update_mechanism": "Copied from one of 4 ROM templates (chosen per chunk by FUN_08009900) by defaults init; gameplay overwrite by score-insertion code untraced. Field offset shown is chunk 0 entry 0; repeats every 12 bytes within each 64-byte chunk.", "confidence": "CONFIRMED_VERIFIED", "evidence": "Reversed cap-01 chunks are exactly 5x ('SMB\\0', score, 0); FUN_08008da4 copies 3-word records from ROM template pointers."},
+    {"name": "score_entry_score", "offset": 68, "size": 4, "type": "u32_le", "ram_addr": null, "writers": ["0x08008da4"], "readers": ["0x08041c38"], "observed_values": {"cap-01-future-1.sav": "1000 in chunks 0-3, 50 in chunks 4-6 (all 35 entries)"}, "update_mechanism": "Template default score copied by defaults init; gameplay replacement untraced. Offset shown is chunk 0 entry 0 score; repeats every 12 bytes.", "confidence": "CONFIRMED_VERIFIED", "evidence": "Reversed cap-01: e8 03 00 00 (=1000) chunks 0-3, 32 00 00 00 (=50) chunks 4-6; FUN_08008da4 template copy."},
+    {"name": "score_entry_word2", "offset": 72, "size": 4, "type": "u32_le", "ram_addr": null, "writers": ["0x08008da4"], "readers": ["0x08041c38"], "observed_values": {"cap-01-future-1.sav": "0x00000000 in all 35 entries"}, "update_mechanism": "Third word of the 12-byte template record copied by defaults init; meaning unknown (no non-zero sample). Offset shown is chunk 0 entry 0; repeats every 12 bytes.", "confidence": "CONFIRMED_STATIC", "evidence": "FUN_08008da4 copies puVar3[0..2] per entry; observed third word always 0."},
+    {"name": "chunk_pad", "offset": 124, "size": 4, "type": "bytes", "ram_addr": null, "writers": ["0x08008f5c"], "readers": ["0x08008ec4"], "observed_values": {"cap-01-future-1.sav": "00 00 00 00 at chunk+0x3C in all 7 chunks"}, "update_mechanism": "Saver zeroes stack bytes 60..63 per chunk; loader discards. Not checksummed. Offset shown is chunk 0 pad; repeats per chunk.", "confidence": "CONFIRMED_VERIFIED", "evidence": "FUN_08008f5c / FUN_08008ec4 lengths 0x40 written/read vs 0x3C copied/CRC'd."}
+  ],
+  "fuzzing_targets": [
+    {"offset": 0, "size": 1, "mutation": "Change magic 'N' (0x4E) to 'O' in RAM order (raw file offset 7), repair header CRC only", "requires_checksum_repair": true, "predicted_effect": "Load rejected on magic check in FUN_08008ec4 despite valid CRC; defaults boot and header+0x33 force-cleared."},
+    {"offset": 56, "size": 2, "mutation": "Flip one bit of stored header CRC, no repair", "requires_checksum_repair": false, "predicted_effect": "Load rejected on header-CRC mismatch; defaults used."},
+    {"offset": 68, "size": 4, "mutation": "Set chunk 0 entry 0 score 1000 -> 999999 (u32 LE), repair chunk CRC sum and header CRC", "requires_checksum_repair": true, "predicted_effect": "Corresponding high-score table shows 999999 for name SMB at rank 1; no effect refutes score interpretation."},
+    {"offset": 64, "size": 4, "mutation": "Set chunk 0 entry 0 name 'SMB\\0' -> 'ZZZ\\0', repair checksums", "requires_checksum_repair": true, "predicted_effect": "Score table displays ZZZ; confirms plain ASCII name encoding."},
+    {"offset": 324, "size": 4, "mutation": "Set chunk 4 entry 0 score 50 -> 51 (offset 0x140+4), repair checksums", "requires_checksum_repair": true, "predicted_effect": "Only the chunks 4-6 table family changes; divergent UI effect vs chunk 0 identifies the mode/difficulty split."},
+    {"offset": 8, "size": 1, "mutation": "Set bit 2 of progress bitfield (byte |= 0x04), repair header CRC; sweep bits 0..99 individually", "requires_checksum_repair": true, "predicted_effect": "An unlock/progress element becomes available per FUN_0800988c semantics; maps the bitfield."},
+    {"offset": 51, "size": 1, "mutation": "Set header byte 0x33 0x00 -> 0x01, repair header CRC", "requires_checksum_repair": true, "predicted_effect": "Boot copies byte to game-state +0x85; observe which title/menu setting changes. In a CRC-broken variant it should be force-cleared to 0."},
+    {"offset": 33, "size": 3, "mutation": "Set uninitialized header bytes 0x21..0x23 (and separately 0x31) from 0xFF to 0x00, repair header CRC", "requires_checksum_repair": true, "predicted_effect": "No visible change supports uninitialized-padding classification; any change promotes them to real fields."},
+    {"offset": 72, "size": 4, "mutation": "Set chunk 0 entry 0 third word 0 -> 1 (then larger), repair checksums", "requires_checksum_repair": true, "predicted_effect": "Reveals third-word meaning (time/character/flags) via score-table row change, or confirms reserved padding."},
+    {"offset": 124, "size": 4, "mutation": "Set chunk 0 pad bytes (chunk+0x3C) to 0xFF, no checksum repair (pad is outside coverage)", "requires_checksum_repair": false, "predicted_effect": "Load still succeeds unchanged; failure would refute pad/coverage analysis."},
+    {"offset": 512, "size": 16, "mutation": "Write random bytes at 0x200+, no repair", "requires_checksum_repair": false, "predicted_effect": "Load still succeeds; region is never read. Failure would indicate a second save area missed statically."}
+  ],
+  "open_questions": [
+    "Concrete RAM addresses of the header struct and the 7 chunk structs: referenced only via unresolved literal pools (_DAT_08008f44, pointer tables _DAT_08008f48/_DAT_08009038); literal values are not in the workspace, so ram_addr is null rather than guessed.",
+    "Caller of the saver FUN_08008f5c and of the defaults initializer FUN_08008da4: neither has a recorded caller in callgraph.json nor a textual call site in decompiled.c (unrecovered jumptable/function-pointer dispatch).",
+    "Gameplay writers of score entries (name/score/third word beyond defaults) and of progress bits beyond the initial 1/11/31: FUN_0800988c and the chunk structs must be written during play, but no further call sites are recoverable from the extraction.",
+    "Semantics of header bytes 0x01..0x07, 0x15..0x30 constants, byte 0x33 (a persisted setting copied to game-state +0x85 at boot), and the score entries' third word (always 0 in samples).",
+    "Header bytes 0x21..0x23 and 0x31 hold 0xFF and are written by no traced function: uninitialized/erased bytes copied verbatim, or fields set by untraced code before the first save.",
+    "Which gameplay mode/difficulty each of the 7 chunks (and the 1000-default vs 50-default families) corresponds to; per-chunk category values returned by the FUN_08009900 ROM table are not in the workspace.",
+    "Exact chip-config values (block count at config+4, address-bit count at config+8) selected by FUN_08041e44(3,4)/FUN_0804a664/FUN_0804a6cc: behind literal pools; bounded by the observed use of EEPROM block addresses 0..63 only.",
+    "No paired .ss save states ship in this workspace (states/ is empty), so the fuzzing plan in the report must be executed from cold boot with the mutated .sav in place."
+  ]
+}

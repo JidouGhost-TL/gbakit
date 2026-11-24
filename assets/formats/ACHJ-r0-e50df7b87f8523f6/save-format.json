@@ -1,0 +1,255 @@
+{
+  "schema": "gbakit-save-research/1",
+  "release_key": "ACHJ-r0-e50df7b87f8523f6",
+  "display_name": "Castlevania - Byakuya no Concerto (Japan)",
+  "rom_sha256": "e50df7b87f8523f6301d41baa02961b940887f33339c73d22c20e53623ebc30e",
+  "game_code": "ACHJ",
+  "header_family": "ACH",
+  "community_id": "comm-048",
+  "overall_confidence": "MEDIUM",
+  "media": {
+    "kind": "sram",
+    "size_bytes": 32768,
+    "sdk_tags": [],
+    "fill_byte": "0x00"
+  },
+  "slots_and_copies": [
+    {
+      "name": "format_magic",
+      "offset": 0,
+      "size": 16,
+      "redundancy_role": "global_config",
+      "selection_rule": "Checked at boot by FUN_08000f28; if mismatched, FUN_08000800 calls FUN_08000e98 to reformat the entire 32KiB region and rewrite this magic."
+    },
+    {
+      "name": "file_slot_0",
+      "offset": 0,
+      "size": 20,
+      "redundancy_role": "primary",
+      "selection_rule": "Absolute SRAM offset unresolved (param_1*0x3F8 + _DAT_0800b9e0, param_1=0). Loaded only if FUN_08000ff8(0) reports the slot-0 validity bit clear (present)."
+    },
+    {
+      "name": "file_slot_1",
+      "offset": 1016,
+      "size": 20,
+      "redundancy_role": "primary",
+      "selection_rule": "Absolute SRAM offset unresolved (param_1*0x3F8 + _DAT_0800b9e0, param_1=1). Loaded only if FUN_08000ff8(1) reports the slot-1 validity bit clear (present)."
+    },
+    {
+      "name": "file_slot_2",
+      "offset": 2032,
+      "size": 20,
+      "redundancy_role": "primary",
+      "selection_rule": "Absolute SRAM offset unresolved (param_1*0x3F8 + _DAT_0800b9e0, param_1=2). Loaded only if FUN_08000ff8(2) reports the slot-2 validity bit clear (present)."
+    },
+    {
+      "name": "global_config",
+      "offset": 0,
+      "size": 76,
+      "redundancy_role": "global_config",
+      "selection_rule": "Absolute SRAM offset unresolved (_DAT_0800ba8c, fixed). Loaded once at cold boot by FUN_0800ba4c (called from FUN_080006d4) only if FUN_08000ff8(3) reports the config validity bit clear (present)."
+    }
+  ],
+  "magic_signatures": [
+    {
+      "offset": 0,
+      "bytes_hex": "434153544c4556414e4941312e303000",
+      "ascii": "CASTLEVANIA1.00\u0000",
+      "verified_in_code": true,
+      "verified_in_sav": true,
+      "function_addrs": ["0x08000e98", "0x08000f28", "0x08000800"]
+    }
+  ],
+  "checksums": [],
+  "io_driver_functions": [
+    {
+      "addr": "0x080bcc58",
+      "role": "write",
+      "callers": ["0x080bcd7c"],
+      "notes": "Raw byte-copy primitive; sets an SRAM wait-control register bit pattern (|=3) before copying param_3 bytes one at a time. Confirms flat SRAM bus access (no Flash unlock sequence, no EEPROM DMA3 bitstream)."
+    },
+    {
+      "addr": "0x080bd178",
+      "role": "read",
+      "callers": ["0x080bcd7c", "0x08000e98", "0x08000f28", "0x08000ff8", "0x0800b98c", "0x0800ba4c"],
+      "notes": "Low-level src,dst,size,retries transfer entry point used by every save read/write call site in this workspace. Body is an unresolved indirect jump-table trampoline in the decompilation; behavior inferred from all call sites (used for both SRAM->RAM and RAM->SRAM transfers depending on argument order)."
+    },
+    {
+      "addr": "0x080bcd7c",
+      "role": "write",
+      "callers": ["0x08000e98"],
+      "notes": "Write-with-retry wrapper: calls FUN_080bcc58 then func_0x080bd178 up to 3 times, breaking on a zero (success) return."
+    },
+    {
+      "addr": "0x08000e98",
+      "role": "write",
+      "callers": ["0x08000800"],
+      "notes": "Format/write function: bulk-copies a RAM buffer to SRAM 0x0E000000 in 0x1000-byte chunks, then writes the 15-byte magic to offset 0. Only called from the boot-time format-if-invalid path."
+    },
+    {
+      "addr": "0x08000f28",
+      "role": "read",
+      "callers": ["0x08000800", "0x0800b98c", "0x0800ba4c"],
+      "notes": "Magic/version verify function: reads 15 bytes from SRAM offset 0 and compares against a ROM literal; returns 1 on match, 0 otherwise. Gates every other save read in this workspace."
+    },
+    {
+      "addr": "0x08000ff8",
+      "role": "read",
+      "callers": ["0x0800b98c", "0x0800ba4c"],
+      "notes": "Reads a single flag byte from SRAM (offset unresolved, _DAT_08001024) and returns the complement of bit param_1 (1 = slot present, 0 = slot blank)."
+    },
+    {
+      "addr": "0x0800b98c",
+      "role": "deserialize",
+      "callers": ["0x080041ac"],
+      "notes": "Per-file-slot loader: if magic valid and slot-flag set present, copies 20 bytes from SRAM (param_1*0x3F8 + base) into the RAM mirror (struct+param_2*0x14+0x20); otherwise zero-initializes the RAM record. No writer counterpart was found in this workspace."
+    },
+    {
+      "addr": "0x0800ba4c",
+      "role": "deserialize",
+      "callers": ["0x080006d4"],
+      "notes": "Global-config loader: if magic valid and config-flag (bit 3) present, copies 76 bytes from a fixed SRAM offset into the RAM mirror (struct+0x35C). Called once at cold boot. No writer counterpart was found in this workspace."
+    }
+  ],
+  "caller_chains": [
+    {
+      "entry_caller": "0x08000800",
+      "chain": ["0x08000800", "0x08000f28", "0x08000e98"],
+      "trigger_context": "Boot-time format check: if the 15-byte magic at SRAM offset 0 does not match the expected literal, the entire 32KiB SRAM region is bulk-reformatted and the magic rewritten.",
+      "ram_fields_updated": ["format_magic"],
+      "how_mapped": "Direct static call found in ghidra/decompiled.c lines 205-210 (func_0x08000f28 then conditional func_0x08000e98), cross-referenced against the [MMIO-SEED] tags in ghidra/save_related_functions.c. Note: callgraph.json lists callers:[] for 0x08000e98; this caller edge was recovered only by reading decompiled.c directly, not from the callgraph."
+    },
+    {
+      "entry_caller": "0x080041ac",
+      "chain": ["0x080041ac", "0x0800b98c", "0x08000f28", "0x08000ff8"],
+      "trigger_context": "File-select-menu population loop: iterates file index 0..2, loads each into RAM scratch slot 0 via FUN_0800b98c, then inspects an offset-0x2A field to set a per-file presence bitmask used by the menu UI.",
+      "ram_fields_updated": ["file_slot_0", "file_slot_1", "file_slot_2"],
+      "how_mapped": "Direct static call found in ghidra/decompiled.c lines 1507-1537 (func_0x0800b98c(uVar3,0) in a do/while loop bounded uVar3<3). callgraph.json also lists callers:[] for 0x080041ac itself; no static caller of FUN_080041ac was found anywhere in decompiled.c, implying indirect/function-pointer dispatch from a menu state machine."
+    },
+    {
+      "entry_caller": "0x080006d4",
+      "chain": ["0x080006d4", "0x0800ba4c", "0x08000f28", "0x08000ff8"],
+      "trigger_context": "Cold-boot system initialization: after audio/graphics/controller subsystem init calls, loads the global config/options block from SRAM into the RAM mirror exactly once at startup.",
+      "ram_fields_updated": ["global_config"],
+      "how_mapped": "Direct static call found in ghidra/decompiled.c lines 152-165, the last of a sequence of subsystem-init calls inside FUN_080006d4. callgraph.json confirms FUN_0800ba4c has no other recorded caller."
+    }
+  ],
+  "fields": [
+    {
+      "name": "format_magic_stamp",
+      "offset": 0,
+      "size": 16,
+      "type": "ascii",
+      "ram_addr": null,
+      "writers": ["0x08000e98"],
+      "readers": ["0x08000f28"],
+      "observed_values": {"cap-00-future-0.sav": "CASTLEVANIA1.00\u0000"},
+      "update_mechanism": "Written verbatim from a ROM literal by FUN_08000e98 only during the boot-time reformat path (triggered when FUN_08000f28's compare fails). Never otherwise rewritten.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "ghidra/decompiled.c:605-669 (writer+verifier bodies); saves/cap-00-future-0.sav bytes 0x00-0x0F match the compared literal exactly, confirmed by Python sha256/slice check in SAVE-FORMAT-REPORT.md section 4.3."
+    },
+    {
+      "name": "file_validity_flags",
+      "offset": null,
+      "size": 1,
+      "type": "bitflags",
+      "ram_addr": null,
+      "writers": [],
+      "readers": ["0x08000ff8"],
+      "observed_values": {"cap-00-future-0.sav": "implied 0x00 (falls inside the all-zero bulk region; absolute offset unresolved so it cannot be pinpointed directly)"},
+      "update_mechanism": "No writer for this byte was found in this workspace; only a reader (FUN_08000ff8) exists among the 177 decompiled functions. Bit N (N=0..2) gates file slot N; bit 3 gates the global config block. Each bit reads as inverted: 0=present, 1=blank.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "ghidra/decompiled.c:684-693 (FUN_08000ff8 body: `~(byte>>param_1)&1`); consumed by FUN_0800b98c (ghidra/decompiled.c:1544-1574) and FUN_0800ba4c (ghidra/decompiled.c:1581-1599)."
+    },
+    {
+      "name": "file_slot_record_0",
+      "offset": null,
+      "size": 20,
+      "type": "bytes",
+      "ram_addr": "0x02xxxxxx/0x03xxxxxx struct_base+0x20 (slot param_2=0; struct_base pointer itself at _DAT_0800b9d8, absolute value unresolved)",
+      "writers": [],
+      "readers": ["0x0800b98c"],
+      "observed_values": {"cap-00-future-0.sav": "indistinguishable from zero-fill; no non-zero sample available"},
+      "update_mechanism": "Read from SRAM offset (0*0x3F8 + base) into the RAM mirror only if the corresponding validity bit (0) is clear. No writer found in this workspace (gameplay save-write path not covered by the 177 decompiled functions here).",
+      "confidence": "HYPOTHESIS",
+      "evidence": "ghidra/decompiled.c:1544-1574; stride and size proven, absolute SRAM base address and internal field layout not resolvable from decompiled text alone."
+    },
+    {
+      "name": "file_slot_record_1",
+      "offset": null,
+      "size": 20,
+      "type": "bytes",
+      "ram_addr": "struct_base+0x20 (slot param_2 would be set accordingly by a caller; the one traced caller, FUN_080041ac, always passes param_2=0, so slot 1's true destination offset in RAM is not directly observed)",
+      "writers": [],
+      "readers": ["0x0800b98c"],
+      "observed_values": {"cap-00-future-0.sav": "indistinguishable from zero-fill; no non-zero sample available"},
+      "update_mechanism": "Read from SRAM offset (1*0x3F8 + base) into the RAM mirror only if validity bit 1 is clear.",
+      "confidence": "HYPOTHESIS",
+      "evidence": "ghidra/decompiled.c:1544-1574."
+    },
+    {
+      "name": "file_slot_record_2",
+      "offset": null,
+      "size": 20,
+      "type": "bytes",
+      "ram_addr": "struct_base+0x20 (see file_slot_record_1 caveat on param_2)",
+      "writers": [],
+      "readers": ["0x0800b98c"],
+      "observed_values": {"cap-00-future-0.sav": "indistinguishable from zero-fill; no non-zero sample available"},
+      "update_mechanism": "Read from SRAM offset (2*0x3F8 + base) into the RAM mirror only if validity bit 2 is clear.",
+      "confidence": "HYPOTHESIS",
+      "evidence": "ghidra/decompiled.c:1544-1574."
+    },
+    {
+      "name": "global_config_block",
+      "offset": null,
+      "size": 76,
+      "type": "bytes",
+      "ram_addr": "struct_base+0x35C (struct_base pointer at _DAT_0800ba84, absolute value unresolved)",
+      "writers": [],
+      "readers": ["0x0800ba4c"],
+      "observed_values": {"cap-00-future-0.sav": "indistinguishable from zero-fill; no non-zero sample available"},
+      "update_mechanism": "Read from a fixed SRAM offset into the RAM mirror once at cold boot, only if validity bit 3 is clear. No writer found in this workspace.",
+      "confidence": "HYPOTHESIS",
+      "evidence": "ghidra/decompiled.c:1581-1599; called once from FUN_080006d4's boot sequence."
+    }
+  ],
+  "fuzzing_targets": [
+    {
+      "offset": 0,
+      "size": 1,
+      "mutation": "Flip byte 0x0000 from 0x43 to 0x00, breaking the 'CASTLEVANIA1.00' magic compare.",
+      "requires_checksum_repair": false,
+      "predicted_effect": "On next boot, FUN_08000f28's 15-byte compare fails, triggering FUN_08000800 -> FUN_08000e98 to reformat the entire 32KiB SRAM region and rewrite the magic, destroying any existing file/config data."
+    },
+    {
+      "offset": null,
+      "size": 1,
+      "mutation": "Set bit 0 of the (currently unresolved-offset) file validity flag byte, marking file slot 0 as blank.",
+      "requires_checksum_repair": false,
+      "predicted_effect": "FUN_08000ff8(0) returns 0 instead of 1; FUN_0800b98c(0,0) takes the blank-init branch, zeroing file slot 0's in-RAM record regardless of its actual SRAM bytes; file-select menu should show file 0 as empty."
+    },
+    {
+      "offset": null,
+      "size": 20,
+      "mutation": "Mutate a single byte inside file slot record 0 (once a non-zero sample pinpoints its true SRAM offset) after first capturing a populated .sav for diffing.",
+      "requires_checksum_repair": false,
+      "predicted_effect": "Expected to load without rejection, since no checksum covers this record; a visible in-game change (e.g. stat, flag, or the offset-0x2A field read by FUN_080041ac) with no corruption warning would confirm the 'no checksum' conclusion in SAVE-FORMAT-REPORT.md section 3.2."
+    },
+    {
+      "offset": null,
+      "size": 76,
+      "mutation": "Mutate a single byte inside the global config block (once its true SRAM offset is resolved).",
+      "requires_checksum_repair": false,
+      "predicted_effect": "Effect only observable after a fresh cold boot (FUN_0800ba4c runs once at startup via FUN_080006d4, not on every menu visit); requires a power-on .ss state rather than an in-session reload."
+    }
+  ],
+  "open_questions": [
+    "No checksum/CRC/integrity routine was found anywhere in the 177 decompiled functions. Confirm whether one of the un-decompiled callees (func_0x0801027c, func_0x080103ac, func_0x08010d44, func_0x080ba988) contains such a routine, or whether this title genuinely has none.",
+    "Absolute SRAM offsets for the three file-slot records, the global config block, and the 1-byte validity flag (_DAT_0800b9e0, _DAT_0800ba84, _DAT_0800ba88, _DAT_0800ba8c, _DAT_08001024, _DAT_08001020, _DAT_08000f20, etc.) are referenced only symbolically in this decompilation and were not resolvable to literal integers from the workspace text alone.",
+    "No writer function was found for the file-slot records or the global config block in this workspace -- only readers (FUN_0800b98c, FUN_0800ba4c) were traced. The actual in-game save-write path (presumably invoked from a save-menu/checkpoint trigger) is not covered by the 177 decompiled functions here.",
+    "Only one .sav sample (saves/cap-00-future-0.sav) was physically present in this workspace despite packet metadata referencing total_sav_files=6, and it is a freshly-formatted, never-played save (magic only, all else zero). No field beyond the magic stamp could be verified against real non-zero bytes.",
+    "No states/*.ss paired save states were present in this checkpoint cohort, so none of the fuzzing_targets predictions above could be runtime-verified in this session.",
+    "FUN_080041ac's offset-0x2A field check (used to set the file-select presence bitmask) was observed to run unconditionally on the same struct across all three loop iterations in the decompiled C, which may be an artifact of decompiler register/variable aliasing rather than true program behavior; needs confirmation via a live trace."
+  ]
+}

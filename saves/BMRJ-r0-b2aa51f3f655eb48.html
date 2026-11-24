@@ -1,0 +1,257 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Matantei Loki Ragnarok - Gensou no Labyrinth (Japan) Save Format — gbakit GBA Reference</title>
+  <link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+  <header>
+    <div class="brand"><a href="../index.html" style="color:inherit">gbakit GBA Reference <span class="badge badge-emerald">v2.0</span></a></div>
+    <nav>
+      <a href="../index.html">Games</a>
+      <a href="../saves/index.html">Save Formats</a>
+      <a href="../patches/index.html">Debug Patches</a>
+      <a href="../assets/index.html">Assets &amp; Audio</a>
+      <a href="../engines/index.html">Engines &amp; Hardware</a>
+      <a href="../families/index.html">Families</a>
+      <a href="../gbakit/index.html">Using gbakit</a>
+    </nav>
+  </header>
+  <main>
+<p class="meta"><a href="index.html">&larr; Save Formats</a> &middot; <a href="../titles/BMRJ-r0-b2aa51f3f655eb48.html">Matantei Loki Ragnarok - Gensou no Labyrinth (Japan)</a></p>
+<h1>Matantei Loki Ragnarok - Gensou no Labyrinth (Japan) — Save Format Specification</h1>
+<p><span class="badge badge-indigo">Confidence: MEDIUM</span> <span class="badge badge-blue">10 Fields</span> <span class="badge badge-emerald">0 Verified Checksum(s)</span> <span class='badge badge-emerald'>gbakit Built-In</span></p>
+<p><a class='btn' href='../assets/saves/BMRJ-r0-b2aa51f3f655eb48/BMRJ-r0-b2aa51f3f655eb48.sav' download>Download Sample .sav (512 B)</a><a class='btn btn-secondary' href='../assets/formats/BMRJ-r0-b2aa51f3f655eb48/save-format.json' download>Download save-format.json</a><a class='btn btn-secondary' href='../titles/BMRJ-r0-b2aa51f3f655eb48.html'>View Game Page</a></p>
+
+<div class="callout">
+  <strong>Use directly with <code>gbakit</code> (built-in definition <code>BMRJ</code>):</strong>
+  <pre><code>gbakit save verify BMRJ save.sav
+gbakit save decode BMRJ save.sav
+gbakit save fix    BMRJ damaged.sav -o repaired.sav</code></pre>
+</div>
+
+<div class='md-body'>
+<h2>GBA Save Format Report — Matantei Loki Ragnarok: Gensou no Labyrinth (Japan)</h2>
+<ul><li>Release key: <code>BMRJ-r0-b2aa51f3f655eb48</code></li><li>Game code / header family: <code>BMRJ</code> / <code>BMR</code></li><li>ROM SHA-256: <code>b2aa51f3f655eb48e0c62a0613b06d5f4d061a63e7f584ad0ec0358c462ef5e6</code></li><li>Community: <code>comm-002</code></li><li>Evidence used: <code>saves/cap-00-future-0.sav</code>, <code>saves/cap-01-future-1.sav</code>, <code>saves/hexdump_and_diffs.txt</code>, <code>ghidra/decompiled.c</code> (119 functions), <code>ghidra/save_related_functions.c</code>, <code>ghidra/callgraph.json</code>, and the cold-reload probe in <code>PACKET.md</code>.</li><li>Clean-room rule: no third-party game-specific source was used.</li></ul>
+<h2>1. Executive Summary &amp; Overall Confidence</h2>
+<p><strong>Overall confidence: MEDIUM.</strong></p>
+<p>Structure and integrity are proven to a high standard. Field semantics are mostly unproven. Both samples are near-blank, so most payload bytes are zero in every observed state.</p>
+<p>Proven by both code and <code>.sav</code> bytes:</p>
+<ul><li>The save medium is byte-serial EEPROM accessed at <code>0x0D000000</code> through DMA3.</li><li>The physical file is 512 bytes.</li><li>One save image starts at EEPROM block 0.</li><li>The game writes 176 bytes (<code>0xB0</code>) and reads back only 144 bytes (<code>0x90</code>).</li><li>The logical (in-RAM) image is not byte-identical to the physical EEPROM file.</li></ul>
+<p>Each 8-byte EEPROM block is stored byte-reversed relative to the logical image.</p>
+<ul><li>Logical offset <code>0x00</code> holds signature <code>0x1234</code> (little-endian <code>u16</code>).</li><li>Logical offset <code>0x8C</code> holds <code>0x000B</code> in both samples.</li><li>Logical offset <code>0x8E</code> is a writer-stamped validity signature.</li></ul>
+<p>It is <code>0x0000</code> in the cleared save and <code>0x9797</code> in the committed save.</p>
+<ul><li>There is <strong>no stored data checksum</strong> (no sum, XOR, or CRC over the payload) in the save path.</li></ul>
+<p>Integrity is two signatures plus per-block read-back verification after writing.</p>
+<ul><li>Mutating physical <code>0x88</code> in the probe reverted the save.</li></ul>
+<p>Physical <code>0x88</code> is the high byte of the logical <code>0x8E</code> validity signature. That probe result matches the code path exactly.</p>
+<p>Still open:</p>
+<ul><li>Exact RAM addresses of the save buffers and game-state structs.</li></ul>
+<p>The Ghidra export names literal-pool slots (<code>_DAT_08015ff8</code>, <code>_DAT_080004c4</code>, …) but does not export their values, so no <code>0x02xxxxxx</code>/<code>0x03xxxxxx</code> address can be stated honestly.</p>
+<ul><li>Gameplay meaning of logical fields at <code>0x02</code>, <code>0x04</code>, <code>0x08</code>, and the 125-byte blob at <code>0x0C..0x88</code>.</li></ul>
+<p>They are zero in both samples.</p>
+<ul><li>Why the writer emits <code>0xB0</code> bytes while the reader consumes <code>0x90</code>.</li></ul>
+<p>The trailing <code>0x20</code> bytes are written but never read by any traced reader.</p>
+<p>Confidence split:</p>
+<table><thead><tr><th>Area</th><th>Confidence</th></tr></thead><tbody><tr><td>Media, DMA/EEPROM driver, block geometry</td><td>HIGH</td></tr><tr><td>Logical↔physical byte mapping</td><td>HIGH</td></tr><tr><td>Signatures and absence of a data checksum</td><td>HIGH</td></tr><tr><td>Slot count and selection rule</td><td>HIGH</td></tr><tr><td>Individual payload field semantics</td><td>LOW</td></tr><tr><td>Exact RAM mirror addresses</td><td>LOW (not exported)</td></tr></tbody></table>
+<h2>2. Physical Media, Slot Geometry &amp; Redundancy</h2>
+<h3>Media</h3>
+<ul><li>SDK tag in ROM (per packet): <code>EEPROM_V124@524712</code>.</li><li>Observed media label: <code>EEPROM 4K</code>, i.e. 4 Kbit = 512 bytes.</li><li>Both <code>.sav</code> files are exactly 512 bytes.</li><li><code>cap-00-future-0.sav</code> SHA-256: <code>11979f0a06cd18e38e53e05eafa20cf19270d398d17f0749a82a9ea3aae875a7</code></li><li><code>cap-01-future-1.sav</code> SHA-256: <code>5f822d15e513657134f7cd80fcd9181bcd5ca3b75fd963729eb60f4cb5104a8b</code></li><li>Fill byte outside the written image is <code>0xFF</code>.</li></ul>
+<p>Bytes <code>0xB0..0x1FF</code> are <code>0xFF</code> in both files (336/336 bytes verified in Python).</p>
+<h3>Geometry</h3>
+<ul><li>EEPROM is transferred in 8-byte (64-bit) blocks.</li><li>Bulk write length: <code>0xB0</code> = 176 bytes = 22 blocks, EEPROM block addresses <code>0..21</code>.</li><li>Bulk read length: <code>0x90</code> = 144 bytes = 18 blocks, EEPROM block addresses <code>0..17</code>.</li><li>Physical active range in the files: <code>0x00..0xAF</code>.</li><li>Logical valid range: <code>0x00..0x8F</code>.</li></ul>
+<p>The reader stops at <code>0x90</code>, which is exactly the end of the <code>0x8E</code> signature.</p>
+<ul><li>Logical <code>0x90..0xAF</code> is written, never read, and zero in both samples.</li></ul>
+<p>Treat it as buffer slack / reserved, not as a second slot.</p>
+<h3>Logical ↔ physical mapping (verified)</h3>
+<p>Within each 8-byte block, physical order is the reverse of logical order:</p>
+<pre><code>physical_offset = block_base + (7 - (logical_offset mod 8))
+block_base      = logical_offset &amp; ~7</code></pre>
+<p>Equivalently: reverse every consecutive 8-byte group of the <code>.sav</code> to obtain the logical RAM image, and vice versa.</p>
+<p>Two independent fields prove this mapping:</p>
+<ol><li>Logical <code>0x00..0x01</code> becomes physical <code>0x06..0x07</code> = <code>12 34</code>, giving logical LE <code>u16</code> <code>0x1234</code> — the value the writer stamps and the reader compares.</li><li>Logical <code>0x8C..0x8D</code> becomes physical <code>0x8A..0x8B</code> = <code>00 0B</code>, giving logical LE <code>u16</code> <code>0x000B</code> — exactly the default (<code>*(u16 *)(struct + 8) = 0xB</code>) that <code>FUN_080003d4</code> writes and <code>FUN_08015f98</code> copies to save offset <code>0x8C</code>.</li></ol>
+<p>A naive direct-offset reading misplaces both: it would put a fake magic at physical <code>0x06</code> and a fake field at physical <code>0x8A/0x8B</code>. All offsets in the field map below are <strong>logical</strong> unless labelled physical.</p>
+<h3>Slots, copies, counters, selection</h3>
+<ul><li><strong>One slot only.</strong> Every traced bulk read and write uses EEPROM address <code>0</code>:</li><li>Load: <code>FUN_08015f84</code> → <code>FUN_08015df4(0, buffer, 0x90)</code>.</li><li>Save: <code>FUN_08015f98</code> / <code>FUN_0801600c</code> → <code>FUN_08015eb8(buffer, 0, 0xB0)</code>.</li><li>No backup copy, mirror slot, or A/B ping-pong was found in code or bytes.</li><li>No generation/sequence counter was found.</li></ul>
+<p>No traced writer increments any save field. Logical <code>0x8C = 0x000B</code> is constant across both samples and is set as a literal default, so it is not a counter.</p>
+<ul><li>Selection rule (there is only one candidate, so this is a validity rule, not a slot choice):</li></ul>
+<ol><li>Read 144 bytes.</li><li>If logical <code>u16[0x00] != 0x1234</code>, zero the read buffer (<code>FUN_08015df4</code>).</li><li>At boot, if logical <code>u16[0x8E] != &lt;expected signature&gt;</code>, discard, write a cleared save via <code>FUN_0801600c</code>, and reload (<code>FUN_08000408</code>).</li><li>If <code>u16[0x8E]</code> matches, copy the 125-byte blob at logical <code>0x0C..0x88</code> into the RAM blob.</li></ol>
+<h2>3. Save Writer, Reader &amp; Caller-Chain Architecture</h2>
+<h3>How callers were mapped</h3>
+<p>Two sources were cross-checked:</p>
+<ul><li><code>ghidra/callgraph.json</code> (119 nodes).</li><li>Textual call sites in <code>ghidra/decompiled.c</code> (<code>FUN_…</code> / <code>func_0x…</code> calls with line numbers).</li></ul>
+<p>The callgraph is incomplete for the high-level save functions. For example it lists <code>FUN_08015eb8</code> with callees <code>[]</code>, while <code>decompiled.c:4735/4745</code> shows it calling the EEPROM write and verify functions (as <code>func_0x08018854</code> / <code>func_0x080189c8</code> stubs), and it lists <code>FUN_08015f98</code>/<code>FUN_0801600c</code> with no recorded caller for the former beyond the graph edge that does exist. Where the two disagreed, the textual call site in <code>decompiled.c</code> was treated as authoritative and the callgraph as corroboration. Unrecovered jumptables (<code>UNRECOVERED_JUMPTABLE</code>) hide some dispatch, so root functions with no static caller are identified as state-machine/table entries, not as dead code.</p>
+<h3>Low-level hardware I/O</h3>
+<h4><code>FUN_08018724</code> — DMA3 transfer to/from EEPROM (<code>0x0D000000</code>)</h4>
+<pre><code>void FUN_08018724(undefined4 param_1 /*src*/, undefined4 param_2 /*dst*/, uint param_3 /*count*/)
+{
+  uVar1 = *_DAT_08018784; *_DAT_08018784 = 0;                 // save &amp; clear IRQ/DMA ctrl
+  *_DAT_08018788 = *_DAT_08018788 &amp; (ushort)_DAT_0801878c
+                 | *(ushort *)(*_DAT_08018790 + 6);           // DMA control bits
+  *_DAT_08018794 = param_1;                                   // DMA3 source (0x040000D4 family)
+  *_DAT_08018798 = param_2;                                   // DMA3 dest
+  *_DAT_0801879c = param_3 &amp; 0xffff | 0x80000000;             // DMA3 count + enable
+  while ((*(ushort *)(_DAT_0801879c + 2) &amp; 0x8000) != 0) {}    // poll busy
+  *_DAT_08018784 = uVar1;                                     // restore
+}</code></pre>
+<p>This is the only function that moves bits between RAM and <code>0x0D000000</code>. Callers: <code>FUN_080187a4</code>, <code>FUN_08018868</code> (callgraph agrees).</p>
+<h4><code>FUN_080187a4</code> — EEPROM read one 8-byte block</h4>
+<ul><li>Signature: <code>FUN_080187a4(uint block_addr, int out_buf)</code>.</li><li>Bounds check: <code>block_addr &lt; *(u16 *)(eeprom_type + 4)</code>.</li><li>Builds the serial address bitstream on the stack (address bits shifted out MSB-first, then start bits <code>1,1</code>).</li><li>Sends it with <code>FUN_08018724(stack, 0x0D000000, addr_bits + 3)</code>.</li><li>Clocks data back with <code>FUN_08018724(0x0D000000, stack, 0x44)</code> (68 halfword transfers = 64 data bits + turnaround).</li><li>Reassembles four <code>u16</code> words bit-by-bit (<code>uVar4 = uVar4 &lt;&lt; 1 | *puVar5 &amp; 1</code>) and stores them in reverse word order (<code>puVar6 = (ushort *)(param_2 + 6)</code>, decrementing).</li></ul>
+<p>Together with the emulator&#x27;s bit packing this produces the verified per-8-byte reversal between the logical image and the <code>.sav</code> file.</p>
+<h4><code>FUN_08018868</code> — EEPROM write one 8-byte block; <code>FUN_08018854</code> — wrapper</h4>
+<ul><li><code>FUN_08018868(uint block_addr, ushort *in_buf, char wait_flag)</code>.</li><li>Expands each of the 4 input <code>u16</code>s into 16 serial bit cells, prepends the block address bits and start/stop cells (<code>*puVar6 = 0; puVar6[-1] = 1</code>).</li><li>Sends <code>addr_bits + 0x43</code> cells via <code>FUN_08018724(stack, 0x0D000000, …)</code>.</li><li>Then waits for the EEPROM programming cycle: it polls <code>0x0D000000 &amp; 1</code> and a timer (<code>_DAT_08018954</code>), accumulating elapsed ticks and bailing out when the total exceeds <code>0x88</code>.</li></ul>
+<p>That <code>0x88</code> is a <strong>timeout tick count</strong>, not a save offset and not a checksum constant. Do not confuse it with physical probe offset <code>0x88</code>.</p>
+<ul><li><code>FUN_08018854(param_1, param_2)</code> is a thin wrapper: <code>func_0x08018868(param_1, param_2, 1)</code>.</li></ul>
+<h4><code>FUN_080189c8</code> — write-verify (read-back compare)</h4>
+<ul><li><code>FUN_080189c8(ushort block_addr, short *expected)</code>.</li><li>Reads the block back with <code>FUN_080187a4(block_addr, stack[4])</code>.</li><li>Compares all 4 <code>short</code>s; returns <code>0x8000</code> on first mismatch, <code>0</code> on success.</li><li>Note: <code>FUN_08015eb8</code> calls it as <code>func_0x080189c8(uVar4, param_1)</code> using the block index as address.</li></ul>
+<p>That is only correct because every caller passes EEPROM base <code>0</code>. It would verify the wrong blocks for a non-zero base; with base <code>0</code> it is exact.</p>
+<h4>False seeds excluded</h4>
+<ul><li><code>FUN_08018b34</code> (listed as an MMIO seed in <code>save_related_functions.c</code>) is a signed remainder routine (<code>__modsi3</code>-style). It touches no MMIO and no save data.</li><li><code>FUN_08018a9c</code> is the matching signed divide, <code>FUN_08018a60/08018a64</code> are indirect-jump stubs, and <code>FUN_08018d3c</code> is a word-copy/<code>memcpy</code>-style routine used for RAM copies (e.g. <code>FUN_08001384</code> line 658), not for EEPROM I/O.</li><li><code>FUN_080186c8</code> is SWI <code>0x0B</code> (CPU set / interrupt helper) used by unrelated init code.</li></ul>
+<h3>Bulk reader / writer</h3>
+<h4><code>FUN_08015df4</code> — bulk EEPROM read + header signature check</h4>
+<pre><code>void FUN_08015df4(uint eeprom_addr, ushort *buf, uint len)
+{
+  uVar7 = (len &amp; 0xffff) &gt;&gt; 3;                       // 8-byte blocks
+  for (uVar5 = 0; uVar5 &lt; uVar7; uVar5++) {
+    sVar4 = func_0x080187a4((eeprom_addr &amp; 0xffff) + uVar5, puVar6);
+    if (sVar4 != 0) goto fail;
+    puVar6 += 4;
+  }
+  if (*buf != _DAT_08015eb4) goto fail;               // signature at logical 0x00
+  return;
+fail:
+  for (uVar5 = 0; uVar5 &lt; (uVar7 &lt;&lt; 2); uVar5++) buf[uVar5] = 0;   // zero whole buffer
+}</code></pre>
+<p>Surrounding calls <code>func_0x08017324(0xe)</code> / <code>func_0x0801785c()</code> before and <code>func_0x08017358(0xe)</code> / <code>func_0x080178d8()</code> after are audio/IRQ guard operations (they appear around many unrelated hardware accesses), not save logic. The save-relevant contract is: read blocks, then require <code>buf[0] == signature</code>, else return a zeroed buffer.</p>
+<h4><code>FUN_08015eb8</code> — bulk EEPROM write + verify</h4>
+<pre><code>void FUN_08015eb8(undefined2 *buf, uint eeprom_addr, uint len)
+{
+  *buf = (short)_DAT_08015f80;                       // stamp signature at logical 0x00
+  uVar6 = (len &amp; 0xffff) &gt;&gt; 3;
+  for (uVar4 = 0; uVar4 &lt; uVar6; uVar4++) {          // write blocks
+    uVar3 = func_0x08018854((eeprom_addr &amp; 0xffff) + uVar4, puVar5);
+    if ((uVar3 &amp; 0xffff) != 0) goto done;
+    puVar5 += 4;
+  }
+  for (uVar4 = 0; uVar4 &lt; uVar6; uVar4++) {          // verify blocks
+    uVar3 = func_0x080189c8(uVar4, buf);
+    if ((uVar3 &amp; 0xffff) != 0) break;
+    buf += 4;
+  }
+done: /* restore guard state, return last status */
+}</code></pre>
+<h3>Wrappers and serializers</h3>
+<table><thead><tr><th>Function</th><th>Role</th><th>Key behaviour</th></tr></thead><tbody><tr><td><code>FUN_08015de4</code></td><td>EEPROM init wrapper</td><td><code>func_0x080186dc(0x40)</code> once at startup. <code>0x40</code> = 64 blocks = 512 bytes, matching the file size.</td></tr><tr><td><code>FUN_080186dc</code></td><td>SDK EEPROM type/config</td><td>Selects register set by size code (<code>4</code>, <code>0x40</code>, other). Static-only; exact register names not exported.</td></tr><tr><td><code>FUN_08015f84</code></td><td>Load wrapper</td><td><code>FUN_08015df4(0, read_buffer, 0x90)</code>. No other logic.</td></tr><tr><td><code>FUN_08015f98</code></td><td>Serialize + save</td><td>Builds the 144-byte logical image (below), stamps validity signature, <code>FUN_08015eb8(image, 0, 0xB0)</code>, then <code>func_0x08017258(*(u16 *)(struct + 8))</code> (post-save notification keyed by the <code>0x000B</code> field).</td></tr><tr><td><code>FUN_0801600c</code></td><td>Clear + save</td><td>Same layout, but header fields and blob zeroed and validity signature written as <code>0</code>. Then the same <code>FUN_08015eb8(image, 0, 0xB0)</code>.</td></tr><tr><td><code>FUN_080003d4</code></td><td>RAM defaults init</td><td>Zeroes the 125-byte blob; sets game-state <code>+8 = 0x000B</code> and game-state <code>+10 = &lt;literal _DAT_08000404&gt;</code>. Runs before every load at boot.</td></tr></tbody></table>
+<p>Serializer layout construction in <code>FUN_08015f98</code> (dest = save image <code>iVar1</code>, all offsets logical):</p>
+<pre><code>*(u16 *)(iVar1 + 2)    = *(u16 *)(game_state + 0x76);
+*(u32 *)(iVar1 + 4)    = *(u32 *)(game_state + 0x78);
+*(u32 *)(iVar1 + 8)    = *(u32 *)(game_state + 0x7c);
+for (u = 0; u &lt; 0x7d; u++)                          // 125 bytes
+  *(u8 *)(iVar1 + 0xC + u) = *(u8 *)(blob_src + u);
+*(u16 *)(iVar1 + 0x8C) = *(u16 *)(game_state2 + 8);  // 0x000B by default
+*(i16 *)(iVar1 + 0x8E) = (short)_DAT_08016008;       // validity signature stamp (constant load, no computation)
+func_0x0801738c();                                    // guard
+FUN_08015eb8(iVar1, 0, 0xB0);                         // stamps u16[0], writes + verifies</code></pre>
+<p><code>FUN_0801600c</code> is identical except the <code>+2/+4/+8</code> fields and blob are written as <code>0</code> and <code>+0x8E</code> is written as <code>0</code>. Offsets <code>0x89..0x8B</code> and <code>0x90..0xAF</code> are never written by either serializer; they retain whatever the static image buffer held (zero in both samples).</p>
+<h3>Caller chains</h3>
+<h4>Chain A — boot / load (verified in code)</h4>
+<pre><code>FUN_080010e8 (main loop, root)
+ ├─ func_0x08015de4() → func_0x080186dc(0x40)            EEPROM config, once
+ └─ FUN_08000408 (boot state)
+     ├─ FUN_080003d4()                                    RAM defaults: blob=0, state+8=0x000B
+     ├─ func_0x08015f84() → FUN_08015df4(0, buf, 0x90)
+     │    └─ func_0x080187a4(block) → FUN_08018724(…, 0x0D000000, …)   per block
+     ├─ if (*(u16 *)(read_buf + 0x8E) == _DAT_080004c8)
+     │    └─ copy 125 bytes read_buf+0x0C → RAM blob (iRam08000550)
+     └─ else
+          ├─ func_0x0801600c() → FUN_08015eb8(image, 0, 0xB0)   write cleared save
+          └─ func_0x08015f84()                                  reload it</code></pre>
+<p>How mapped: <code>FUN_08000408</code> body at <code>decompiled.c:152-166</code>; callgraph confirms <code>080010e8 → 08000408</code> and <code>08000408 → 080003d4</code>. RAM mutation in this chain: defaults are installed <strong>before</strong> the load, and the loaded blob overwrites the blob only when the <code>0x8E</code> signature passes. If it fails, the cleared image (validity <code>0</code>) is written back, so the next boot takes the same branch and keeps the default (zero) blob — matching <code>cap-00</code>, which is exactly a cleared-save image that nevertheless carries the <code>0x1234</code> header because <code>FUN_08015eb8</code> stamps it unconditionally.</p>
+<h4>Chain B — committed save (verified in code)</h4>
+<pre><code>FUN_08001b5c (root state loop)
+ └─ FUN_08001384 (mode/state setup)
+     └─ func_0x08015f98()  (decompiled.c:652, unconditional on the fall-through path)
+         └─ FUN_08015eb8(image, 0, 0xB0)
+             ├─ func_0x08018854(block, data) → func_0x08018868(block, data, 1) → FUN_08018724(…, 0x0D000000, …)
+             └─ func_0x080189c8(block, image) → FUN_080187a4(block, stack)      read-back verify</code></pre>
+<p>How mapped: callgraph <code>08001b5c → 08001384</code>; textual call at <code>decompiled.c:652</code>. <code>FUN_08001384</code> performs display/state setup (writes <code>0x1740</code>, <code>0x80E</code>, object flags <code>0xD50/0xDD0</code>, a table dispatch at <code>decompiled.c:631</code>) and then always serializes. So the trigger context is <strong>entering this state via <code>FUN_08001b5c</code></strong>, not a menu &quot;Save&quot; command that could be isolated further with the exported evidence. RAM mutation before flush: none inside <code>FUN_08001384</code> touches the serialized game-state fields; it flushes whatever the game state already holds.</p>
+<h4>Chain C — game-state mutator that feeds the serializer (static, indirect entry)</h4>
+<pre><code>(table/unrecovered-jumptable dispatch — no static caller in callgraph)
+ └─ FUN_0800e3e8(param_1, param_2, param_3, param_4, param_5, param_6, …)
+     ├─ *(u16 *)(game_state + 0x76) = display_struct[0x23]        → save 0x02
+     ├─ *(u32 *)(game_state + 0x78) = param_6[2]                  → save 0x04
+     │    where param_6[2] = (param_2 == -1) ? *(u32 *)(ram + 0xC) : (param_2 &lt;&lt; 7)
+     └─ *(u32 *)(game_state + 0x7c) = param_6[3]                  → save 0x08
+          where param_6[3] = (param_3 == -1) ? *(u32 *)(ram + 0x10) : (param_3 &lt;&lt; 7)</code></pre>
+<p>How mapped: textual writes at <code>decompiled.c:3317-3319</code>, matching the serializer&#x27;s reads at <code>decompiled.c:4796-4798</code> offset-for-offset (<code>0x76/0x78/0x7C</code>). <code>FUN_0800e3e8</code> does not itself call the save writer; the values are flushed on the next Chain-B save. Its own entry is via unrecovered dispatch (callgraph callers: <code>[]</code>), so the gameplay trigger (likely a position/coordinate update, given the <code>&lt;&lt; 7</code> fixed-point scaling and the <code>-0x78</code>/<code>-0x50</code> screen-centring in the same function) is a hypothesis, not a verified label. The analogous spawner <code>FUN_0801243c</code> calls <code>FUN_0800bdb4</code> with the same flag patterns but never touches the save state; it is a negative control, not a save caller.</p>
+<h4>Chain D — clear-save triggers</h4>
+<ul><li>Boot invalid-signature path: <code>FUN_08000408</code> → <code>FUN_0801600c</code> (Chain A).</li><li>No other static caller of <code>FUN_0801600c</code> exists in the export.</li></ul>
+<p>A user-facing &quot;delete save&quot; entry, if any, would have to arrive through an unrecovered jumptable and cannot be claimed.</p>
+<h2>4. Magic Signatures &amp; Checksum / Integrity Algorithm</h2>
+<h3>Signatures</h3>
+<table><thead><tr><th>Logical offset</th><th>Size</th><th>Value</th><th>Set by</th><th>Checked by</th><th>In <code>.sav</code> (physical)</th></tr></thead><tbody><tr><td><code>0x00</code></td><td><code>u16_le</code></td><td><code>0x1234</code></td><td><code>FUN_08015eb8</code>: <code>*buf = _DAT_08015f80</code></td><td><code>FUN_08015df4</code>: <code>*buf != _DAT_08015eb4</code> → zero buffer</td><td>bytes <code>12 34</code> at physical <code>0x06..0x07</code></td></tr><tr><td><code>0x8E</code></td><td><code>u16_le</code></td><td><code>0x9797</code> (committed) / <code>0x0000</code> (cleared)</td><td><code>FUN_08015f98</code>: <code>*(i16 *)(image+0x8E) = (short)_DAT_08016008</code>; <code>FUN_0801600c</code> writes <code>0</code></td><td><code>FUN_08000408</code>: <code>*(u16 *)(read_buf+0x8E) == _DAT_080004c8</code></td><td>bytes <code>97 97</code> at physical <code>0x88..0x89</code> (palindromic, same both ways)</td></tr></tbody></table>
+<p>The literal-pool values (<code>_DAT_08015f80</code>, <code>_DAT_08015eb4</code>, <code>_DAT_08016008</code>, <code>_DAT_080004c8</code>) are not exported as numbers. Their equality with the observed <code>0x1234</code> / <code>0x9797</code> is inferred from the <code>.sav</code> bytes plus the stamp/compare code shape, and is labelled accordingly in the field map. The <code>0x9797</code> byte palindrome means this one field cannot by itself distinguish byte order; <code>0x1234</code> and <code>0x000B</code> carry the byte-order proof.</p>
+<h3>There is no data checksum — proof</h3>
+<p>Three independent lines of evidence:</p>
+<ol><li><strong>Code:</strong> neither serializer computes anything over the payload.</li></ol>
+<p><code>FUN_08015f98</code> copies fields and loads the <code>0x8E</code> value from a literal (<code>(short)_DAT_08016008</code>). There is no accumulation loop, table CRC, or XOR fold anywhere in <code>FUN_08015f98</code>, <code>FUN_0801600c</code>, <code>FUN_08015eb8</code>, or <code>FUN_08015df4</code>. The only load-side tests are the two signature compares above. The only other integrity mechanism is read-back verification in <code>FUN_080189c8</code>, which compares EEPROM content against RAM and stores nothing.</p>
+<ol><li><strong>Counterfactual in the samples:</strong> the payloads of the two files are byte-identical except at logical <code>0x8E..0x8F</code>.</li></ol>
+<p>Any data-dependent checksum over the same payload would have to take the same value in both files. The stored values differ (<code>0x0000</code> vs <code>0x9797</code>), and the difference tracks the <strong>writer path</strong> (clear vs serialize), not the data.</p>
+<ol><li><strong>Numeric verification:</strong> every standard candidate computed over the logical image fails to reproduce <code>0x9797</code> (see output below).</li></ol>
+<p>Therefore the correct classification for the <code>checksums</code> entry in <code>save-format.json</code> is a custom two-signature validity scheme, not <code>sum8/sum16/crc</code>. Anyone editing a save does <strong>not</strong> need to repair a checksum; they must preserve/restore the two signatures (see §6).</p>
+<h3>Python verification output</h3>
+<p>Script (run in the workspace; de-reverses each 8-byte block, then tests candidates):</p>
+<pre><code>import hashlib, pathlib, struct, functools, binascii
+def derev(d):
+    out = bytearray(len(d))
+    for i in range(0, len(d), 8):
+        b = d[i:i+8]; out[i:i+len(b)] = b[::-1]
+    return bytes(out)
+for name in sorted(p.name for p in pathlib.Path(&#x27;saves&#x27;).glob(&#x27;*.sav&#x27;)):
+    d = pathlib.Path(&#x27;saves&#x27;, name).read_bytes(); L = derev(d)
+    print(name, len(d), hashlib.sha256(d).hexdigest())
+    print(&quot; logical u16[0x00]=%#06x u16[0x8c]=%#06x u16[0x8e]=%#06x&quot; % (
+        struct.unpack_from(&#x27;&lt;H&#x27;, L, 0)[0],
+        struct.unpack_from(&#x27;&lt;H&#x27;, L, 0x8c)[0],
+        struct.unpack_from(&#x27;&lt;H&#x27;, L, 0x8e)[0]))
+    seg = L[:0x8e]
+    print(&quot; sum16(byte)=%04x sum16(u16)=%04x xor8=%02x crc_hqx(0)=%04x crc_hqx(FFFF)=%04x&quot; % (
+        sum(seg) &amp; 0xffff,
+        sum(struct.unpack(&#x27;&lt;71H&#x27;, L[:0x8e])) &amp; 0xffff,
+        functools.reduce(lambda a, b: a ^ b, seg, 0),
+        binascii.crc_hqx(seg, 0), binascii.crc_hqx(seg, 0xffff)))
+    print(&quot; tail 0xB0.. is all FF:&quot;, set(d[0xb0:]) == {0xff},
+          &quot; roundtrip:&quot;, derev(L) == d)</code></pre>
+<p>Observed output:</p>
+<pre><code>== cap-00-future-0.sav size=512 sha256=11979f0a06cd18e38e53e05eafa20cf19270d398d17f0749a82a9ea3aae875a7
+ logical u16[0x00]=0x1234 u16[0x8c]=0x000b u16[0x8e]=0x0000
+ sum16(byte)=0051 sum16(u16)=123f xor8=2d crc_hqx(0)=da9b crc_hqx(FFFF)=7cfe
+ tail 0xB0.. is all FF: True  roundtrip: True
+== cap-01-future-1.sav size=512 sha256=5f822d15e513657134f7cd80fcd9181bcd5ca3b75fd963729eb60f4cb5104a8b
+ logical u16[0x00]=0x1234 u16[0x8c]=0x000b u16[0x8e]=0x9797
+ sum16(byte)=0051 sum16(u16)=123f xor8=2d crc_hqx(0)=da9b crc_hqx(FFFF)=7cfe
+ tail 0xB0.. is all FF: True  roundtrip: True
+logical diff cap-00 -&gt; cap-01: only 0x8E,0x8F (0x00 -&gt; 0x97)</code></pre>
+<p>Stored vs computed:</p>
+<table><thead><tr><th>File</th><th>Stored @ logical <code>0x8E</code></th><th>sum16 (bytes)</th><th>sum16 (u16)</th><th>xor8</th><th>CRC16-CCITT(0)</th><th>CRC16-CCITT(FFFF)</th><th>Any match?</th></tr></thead><tbody><tr><td><code>cap-00-future-0.sav</code></td><td><code>0x0000</code></td><td><code>0x0051</code></td><td><code>0x123F</code></td><td><code>0x2D</code></td><td><code>0xDA9B</code></td><td><code>0x7CFE</code></td><td>No</td></tr><tr><td><code>cap-01-future-1.sav</code></td><td><code>0x9797</code></td><td><code>0x0051</code></td><td><code>0x123F</code></td><td><code>0x2D</code></td><td><code>0xDA9B</code></td><td><code>0x7CFE</code></td><td>No</td></tr></tbody></table>
+<p>The identical computed values on differing stored values are the decisive result. Physical-file candidates were also tested (e.g. sum16 over physical <code>0x00..0x87</code> = <code>0x0046</code> in both files) with the same conclusion.</p>
+<h3>Probe corroboration</h3>
+<p>Packet probe: mutation at physical <code>0x88</code>, <code>integrity_check_confirmed: true</code>, <code>reverted_to_blank_on_mutation: true</code>, <code>save_rewritten_after_mutation: true</code>, <code>visual_delta_after_mutation: false</code>. Physical <code>0x88</code> maps to logical <code>0x8F</code>, the high byte of the <code>0x8E</code> validity signature. Corrupting it makes Chain A take the invalid branch: cleared save written (<code>save_rewritten_after_mutation</code>), gameplay state remains the zero defaults (<code>visual_delta_after_mutation: false</code> on an already-blank profile). This is fully consistent with the code and inconsistent with a payload-checksum reading, under which a mutation at a payload byte would have been the natural probe target.</p>
+<h2>5. Complete Field Map Table</h2>
+<p>Offsets are <strong>logical</strong> (RAM image). Physical offset = <code>block_base + (7 - (logical mod 8))</code>. RAM mirror addresses cannot be resolved from this export (literal-pool values not included); the <code>_DAT_</code> slot that holds each pointer is given instead.</p>
+<table><thead><tr><th>Offset (hex)</th><th>Size</th><th>Type / Endianness</th><th>RAM Mirror Addr</th><th>Writers / Callers</th><th>Readers</th><th>Observed Values in .sav</th><th>Confidence</th><th>How Mapped &amp; Updated</th></tr></thead><tbody><tr><td><code>0x00</code></td><td>2</td><td><code>u16_le</code> signature</td><td>read/write image via <code>_DAT_08015f94</code>, <code>_DAT_08015ff8</code> (value unexported)</td><td><code>FUN_08015eb8</code> stamps <code>_DAT_08015f80</code> on every write (callers <code>FUN_08015f98</code>, <code>FUN_0801600c</code>)</td><td><code>FUN_08015df4</code> compares <code>_DAT_08015eb4</code>, zeroes buffer on mismatch</td><td><code>0x1234</code> both files (physical <code>12 34</code> @ <code>0x06</code>)</td><td>CONFIRMED_VERIFIED</td><td>Writer stamp + reader compare in code; value and byte order proven by de-reversed sav</td></tr><tr><td><code>0x02</code></td><td>2</td><td><code>u16_le</code></td><td>game-state <code>+0x76</code> via <code>_DAT_08015ffc</code></td><td>Serializer <code>FUN_08015f98</code> copies state<code>+0x76</code>; state written by <code>FUN_0800e3e8</code> (<code>= display[0x23]</code>)</td><td><code>FUN_08015df4</code> into read buffer; no traced gameplay reader</td><td><code>0x0000</code> both</td><td>CONFIRMED_STATIC</td><td>Offset-for-offset copy <code>0x76 → 0x02</code> in <code>FUN_08015f98:4796</code>; semantics unknown (zero samples)</td></tr><tr><td><code>0x04</code></td><td>4</td><td><code>u32_le</code></td><td>game-state <code>+0x78</code> via <code>_DAT_08015ffc</code></td><td><code>FUN_08015f98</code> copies state<code>+0x78</code>; <code>FUN_0800e3e8</code> sets it <code>= param_6[2]</code> (<code>param_2&lt;&lt;7</code> or RAM fallback)</td><td>Read buffer only (traced)</td><td><code>0x00000000</code> both</td><td>CONFIRMED_STATIC</td><td><code>FUN_08015f98:4797</code> + <code>FUN_0800e3e8:3318</code>; fixed-point (<code>&lt;&lt;7</code>) flavour is inferred from the mutator</td></tr><tr><td><code>0x08</code></td><td>4</td><td><code>u32_le</code></td><td>game-state <code>+0x7C</code> via <code>_DAT_08015ffc</code></td><td><code>FUN_08015f98</code> copies state<code>+0x7C</code>; <code>FUN_0800e3e8</code> sets it <code>= param_6[3]</code> (<code>param_3&lt;&lt;7</code> or RAM fallback)</td><td>Read buffer only (traced)</td><td><code>0x00000000</code> both</td><td>CONFIRMED_STATIC</td><td><code>FUN_08015f98:4798</code> + <code>FUN_0800e3e8:3319</code></td></tr><tr><td><code>0x0C..0x88</code></td><td>125 (<code>0x7D</code>)</td><td><code>bytes</code> blob</td><td>blob RAM via <code>_DAT_08016004</code> (save src), <code>iRam08000550</code> (load dest)</td><td><code>FUN_08015f98</code> byte-copies blob → image; <code>FUN_080003d4</code> zeroes blob at boot; <code>FUN_0801600c</code> writes zeros</td><td><code>FUN_08000408</code> copies image<code>+0x0C</code> → RAM blob iff <code>0x8E</code> signature passes</td><td>All <code>0x00</code> both files (125/125 bytes)</td><td>CONFIRMED_STATIC</td><td>Three matching <code>0x7D</code>-byte loops (<code>FUN_080003d4:105</code>, <code>FUN_08000408:161</code>, <code>FUN_08015f98:4805</code>); internal layout completely unknown</td></tr><tr><td><code>0x89..0x8B</code></td><td>3</td><td><code>bytes</code> gap/padding</td><td>image buffer only</td><td>Nobody (serializer jumps <code>0x88 → 0x8C</code>)</td><td>Nobody traced</td><td><code>0x00</code> both</td><td>UNKNOWN</td><td>Never written by either serializer; zero because the static image buffer is zero</td></tr><tr><td><code>0x8C</code></td><td>2</td><td><code>u16_le</code></td><td>game-state <code>+8</code> via <code>_DAT_08016000</code></td><td><code>FUN_08015f98</code>/<code>FUN_0801600c</code> copy state<code>+8</code>; <code>FUN_080003d4</code> sets state<code>+8 = 0x000B</code>; post-save <code>FUN_08017258(state+8)</code> notification</td><td>Read buffer; also used as post-save notify key</td><td><code>0x000B</code> both files (physical <code>00 0B</code> @ <code>0x8A..0x8B</code>)</td><td>CONFIRMED_VERIFIED</td><td>Default literal in <code>FUN_080003d4:107</code>, copy in <code>FUN_08015f98:4806</code>, value proven in sav; meaning of <code>11</code> unknown (stage/mode index is a guess only)</td></tr><tr><td><code>0x8E</code></td><td>2</td><td><code>u16_le</code> validity signature</td><td>image via <code>_DAT_08015ff8</code>; checked via <code>_DAT_080004c4 + 0x8E</code></td><td><code>FUN_08015f98</code>: <code>= (short)_DAT_08016008</code> (constant stamp); <code>FUN_0801600c</code>: <code>= 0</code></td><td><code>FUN_08000408</code> compares <code>_DAT_080004c8</code>; mismatch → clear-save + reload</td><td><code>0x0000</code> (cap-00, cleared), <code>0x9797</code> (cap-01, committed) (physical @ <code>0x88..0x89</code>)</td><td>CONFIRMED_VERIFIED</td><td>Constant-load writer (no computation), boot compare, probe mutation at physical <code>0x88</code> reverts; literal equality <code>_DAT_08016008 == _DAT_080004c8 == 0x9797</code> inferred from sav, not exported</td></tr><tr><td><code>0x90..0xAF</code></td><td>32 (<code>0x20</code>)</td><td><code>bytes</code> trailing</td><td>image buffer only</td><td>Written to EEPROM by <code>FUN_08015eb8(len=0xB0)</code>; never populated by serializers</td><td>Nobody (reader length is <code>0x90</code>)</td><td><code>0x00</code> both</td><td>HYPOTHESIS</td><td>Write/read length asymmetry (<code>0xB0</code> vs <code>0x90</code>) is verified; purpose (slack vs reserved) is not</td></tr><tr><td><code>0xB0..0x1FF</code></td><td>336</td><td><code>bytes</code> unwritten EEPROM</td><td>—</td><td>Nobody</td><td>Nobody</td><td><code>0xFF</code> fill both</td><td>CONFIRMED_VERIFIED</td><td>File inspection; EEPROM never addressed beyond block 21</td></tr></tbody></table>
+<h2>6. Save Fuzzing &amp; Counterfactual Verification Plan</h2>
+<p>General rules for every test:</p>
+<ul><li>Work on a copy of <code>cap-01-future-1.sav</code> (the committed save). Keep <code>cap-00</code> as the cleared-save reference.</li><li>Mutate <strong>physical</strong> offsets in the file. Convert with: <code>physical = (logical &amp; ~7) + (7 - (logical &amp; 7))</code>.</li><li><strong>No checksum repair exists or is needed.</strong> The only repair is signatures: logical <code>0x00 = 0x1234</code> (physical bytes @ <code>0x06..0x07</code> = <code>12 34</code>) and, for a save that should be accepted as committed, logical <code>0x8E = 0x9797</code> (physical @ <code>0x88..0x89</code> = <code>97 97</code>).</li><li>Reload from a paired emulator state / cold boot and observe: (a) whether the file is rewritten, (b) whether it reverts to the <code>cap-00</code> cleared pattern, (c) RAM blob contents, (d) any gameplay/UI change.</li></ul>
+<p>No <code>.ss</code> states were supplied in this packet (<code>states/</code> is empty), so predictions below are for cold-reload observation.</p>
+<table><thead><tr><th>#</th><th>Physical offset(s)</th><th>Mutation</th><th>Signature repair</th><th>Predicted effect (from code)</th></tr></thead><tbody><tr><td>F1</td><td><code>0x07</code> (logical <code>0x00</code>, header signature high byte)</td><td><code>0x34 → 0x35</code></td><td>None (break it on purpose)</td><td><code>FUN_08015df4</code> zeroes the read buffer → boot signature-2 test also fails → <code>FUN_0801600c</code> rewrites a cleared save; file converges to the <code>cap-00</code> pattern; no visual change on a blank profile</td></tr><tr><td>F2</td><td><code>0x88</code> (logical <code>0x8F</code>, validity signature high byte)</td><td><code>0x97 → 0x96</code></td><td>None</td><td>Reproduces the packet probe: save rejected, cleared save rewritten, state stays blank. Confirms physical↔logical mapping a second way</td></tr><tr><td>F3</td><td><code>0x89</code> (logical <code>0x8E</code>, validity signature low byte)</td><td><code>0x97 → 0x00</code></td><td>None</td><td>Same as F2. If F2 reverts but F3 does not (or vice versa), the field is not a plain <code>u16_le</code> compare — re-examine <code>FUN_08000408</code></td></tr><tr><td>F4</td><td><code>0x88..0x89</code></td><td><code>97 97 → 00 00</code> on <code>cap-01</code></td><td>None</td><td>File becomes byte-identical to a cleared save in the signature field; predicted boot behaviour identical to loading <code>cap-00</code> (clear-save rewrite is a no-op)</td></tr><tr><td>F5</td><td><code>0x8B</code> (logical <code>0x8C</code> low byte, the <code>0x000B</code> field)</td><td><code>0x0B → 0x0C</code></td><td>Keep both signatures intact</td><td>Save must still be <strong>accepted</strong> (no reader compares <code>0x8C</code>). Watch the post-save notify path <code>FUN_08017258(0x0C)</code> on the next save and any mode/stage-like UI change. A revert here would falsify the field map</td></tr><tr><td>F6</td><td><code>0x8A</code> (logical <code>0x8D</code>, high byte of <code>0x8C</code>)</td><td><code>0x00 → 0x01</code> (logical <code>0x8C = 0x010B</code>)</td><td>Keep signatures</td><td>Same acceptance prediction as F5; distinguishes &quot;small index&quot; from &quot;bitflags/version&quot; readings of <code>0x8C</code></td></tr><tr><td>F7</td><td><code>0x0B</code> (logical <code>0x0C</code>, first blob byte)</td><td><code>0x00 → 0x01</code></td><td>Keep signatures</td><td>Save accepted; blob byte lands in RAM blob at load (<code>FUN_08000408</code> copy). Observe RAM/UI for the first blob field. Sweep <code>0x0C, 0x20, 0x40, 0x60, 0x88</code> (logical) one at a time to bisect the blob&#x27;s internal layout</td></tr><tr><td>F8</td><td><code>0x06</code> (logical <code>0x01</code>, header signature low byte) then repair</td><td><code>0x12 → 0x99</code>, observe, then restore <code>0x12</code></td><td>Restore signature</td><td>Broken phase must revert (as F1); repaired file must load as committed again. Proves no hidden checksum over the header, since a single-byte restore fully recovers acceptance</td></tr><tr><td>F9</td><td>Any byte in physical <code>0x90..0xAF</code> (trailing written area)</td><td><code>0x00 → 0xAA</code></td><td>Keep signatures</td><td>Predicted <strong>no effect at all</strong>: reader never fetches blocks 18..21. Any gameplay change would mean an untraced reader exists — a major finding</td></tr><tr><td>F10</td><td>Any byte in physical <code>0xB0..0x1FF</code> (<code>0xFF</code> region)</td><td><code>0xFF → 0x00</code></td><td>None</td><td>Predicted no effect; EEPROM is never addressed there (<code>FUN_08015de4</code> configured 64 blocks, image uses 22). Guards against emulator-level whole-file hashing theories</td></tr><tr><td>F11</td><td>Logical <code>0x02</code> (physical <code>0x05</code>)</td><td><code>0x00 → 0x01</code></td><td>Keep signatures</td><td>Accepted. Tests the <code>state+0x76</code> field in isolation; compare RAM game-state <code>+0x76</code> after load — if RAM does not reflect it, this field is write-only telemetry, sharpening Chain C</td></tr><tr><td>F12</td><td>Whole file</td><td>Substitute <code>cap-00</code> bytes but set physical <code>0x88..0x89 = 97 97</code></td><td>Signature 2 forged</td><td>Boot must accept the (all-zero) blob as committed. Distinguishes &quot;signature is the only gate&quot; from any hidden payload validation</td></tr></tbody></table>
+<p>Negative controls already in hand: the packet probe (F2 equivalent) reverted as predicted, and <code>cap-00</code> itself demonstrates that a <code>0x1234</code>-only save is preserved as a cleared image rather than crashing the boot path.</p>
+<h3>Open questions</h3>
+<ul><li>Exact RAM addresses behind <code>_DAT_08015f94</code>, <code>_DAT_08015ff8</code>, <code>_DAT_08015ffc</code>, <code>_DAT_08016000</code>, <code>_DAT_08016004</code>, <code>_DAT_080004c4</code>, and <code>iRam08000550</code>. Resolving the literal pool (e.g. from the ROM or a fuller Ghidra export) would pin every <code>ram_addr</code> in the field map.</li><li>Whether <code>_DAT_08016008</code> and <code>_DAT_080004c8</code> are literally <code>0x9797</code> in ROM, or whether <code>0x9797</code> is derived from a RAM variable at stamp time. The decompiled shape (constant load) favours a literal.</li><li>Gameplay semantics of save fields <code>0x02</code>, <code>0x04</code>, <code>0x08</code>, <code>0x8C</code>, and the internal layout of the 125-byte blob. Both samples are zero there; a progressed save is needed.</li><li>Why the image buffer / write length is <code>0xB0</code> when the logical format is <code>0x90</code>. Possibilities: fixed SDK buffer size, reserved expansion, or an unobserved second reader.</li><li>The gameplay trigger names for <code>FUN_08001384</code> (committed-save state) and <code>FUN_0800e3e8</code> (game-state mutator). Both are reached through unrecovered dispatch in this export.</li><li>Whether <code>FUN_080186dc(0x40)</code> also probes for EEPROM presence/type at runtime (its register writes are unexported), which would matter for behaviour on 8 Kbit parts.</li></ul>
+</div>
+</main>
+  <footer>gbakit GBA Format Reference &middot; <a href="https://github.com/JidouGhost-TL/gbakit">GitHub: JidouGhost-TL/gbakit</a> &middot; Clean-room GBA binary format specs &amp; Rust toolkit.</footer>
+</body>
+</html>

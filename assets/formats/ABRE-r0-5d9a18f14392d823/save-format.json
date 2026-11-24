@@ -1,0 +1,287 @@
+{
+  "schema": "gbakit-save-research/1",
+  "release_key": "ABRE-r0-5d9a18f14392d823",
+  "display_name": "Blender Bros. (USA)",
+  "rom_sha256": "5d9a18f14392d823c88de21a73ce7cd57baa5a4fac47c6ab0bad0956d6eb34b4",
+  "game_code": "ABRE",
+  "header_family": "ABR",
+  "community_id": "comm-010",
+  "overall_confidence": "MEDIUM",
+  "media": {
+    "kind": "sram",
+    "size_bytes": 32768,
+    "sdk_tags": ["SRAM_V112"],
+    "fill_byte": "0xff"
+  },
+  "slots_and_copies": [
+    {
+      "name": "slot_0",
+      "offset": 0,
+      "size": 256,
+      "redundancy_role": "primary",
+      "selection_rule": "Addressed directly by slot index via FUN_08005970/FUN_08005958; validated independently at boot by FUN_0803d6bc via FUN_08005bc8(3,0). Status 0=valid/populated, 1=empty (*(u32*)(buf+0x10)==0), 2=invalid (magic mismatch, buf[0x0A]==0, or checksum mismatch). No backup copy, no generation counter, no newest-copy selection."
+    },
+    {
+      "name": "slot_1",
+      "offset": 1024,
+      "size": 256,
+      "redundancy_role": "unknown",
+      "selection_rule": "Addressed directly by slot index; validated at boot via FUN_08005bc8(3,1) with the identical header/checksum scheme as slot_0. Erased (0xFF) in the only sample, so its role vs slot_0 is unproven; not a mirror of slot_0 (never written when slot_0 was)."
+    },
+    {
+      "name": "slot_2",
+      "offset": 2048,
+      "size": 768,
+      "redundancy_role": "unknown",
+      "selection_rule": "Addressed directly by slot index; validated at boot via FUN_08005bc8(3,2) with the identical header/checksum scheme; FUN_0803d6bc caches (status==0) separately in *_DAT_0803d7a0, hinting at a distinct role. Erased (0xFF) in the only sample; 3x size purpose unknown."
+    }
+  ],
+  "magic_signatures": [
+    {
+      "offset": 0,
+      "bytes_hex": "424c454e30393131",
+      "ascii": "BLEN0911",
+      "verified_in_code": true,
+      "verified_in_sav": true,
+      "function_addrs": ["0x080059c8", "0x08005b64"]
+    }
+  ],
+  "checksums": [
+    {
+      "name": "slot_sum16_bytes_0x10_to_size",
+      "algorithm": "custom",
+      "formula_detail": "16-bit additive sum of unsigned bytes modulo 65536 (short accumulator: sVar1 = sVar1 + (ushort)*pbVar3), no seed/XOR/CRC/complement. Covered range is slot-relative [0x10, slot_size): 0x100-byte slots cover [0x10,0x100), the 0x300-byte slot covers [0x10,0x300). Header [0x00,0x10) is excluded. Stored as u16_le at slot offset 0x08; computed by FUN_08005990, stored value read by FUN_080059c0 (*(u16*)(buf+8)), compared in FUN_08005b64. 'custom' is used because the schema enum has no sum-of-bytes-into-u16 value; sum16_le would falsely imply summing u16 words.",
+      "stored_offset": 8,
+      "stored_size": 2,
+      "covered_start": 16,
+      "covered_end": 256,
+      "function_addrs": ["0x08005990", "0x080059c0", "0x08005b64"],
+      "verified_on_samples": [
+        {"file": "sav-00-f1162.sav", "stored_hex": "0x70a1", "computed_hex": "0x70a1", "match": true}
+      ],
+      "confidence": "CONFIRMED_VERIFIED"
+    }
+  ],
+  "io_driver_functions": [
+    {"addr": "0x08005940", "role": "read", "callers": ["0x08005a14"], "notes": "SRAM copy trampoline: forwards (SRAM addr 0x0E000000+slot_offset, RAM buf, slot size) to FUN_0805e6a4. Args dropped by Ghidra (declared void); direction SRAM->RAM proven by 0x0E000000 being the first/source argument from FUN_08005a14. The same primitive would serve writes with args swapped, but only the read instantiation was recovered."},
+    {"addr": "0x0805e6a4", "role": "read", "callers": ["0x08005940"], "notes": "Copy engine: copies a small routine to the stack and tail-calls func_0x08061968(src,dst,len,stack_routine) - pattern for executing a byte-copy loop from RAM against 8-bit SRAM. Body of 0x08061968 is an unrecovered jumptable. Not catalogued as a separate io_driver entry to avoid double-counting the trampoline's callees."},
+    {"addr": "0x08005958", "role": "serialize", "callers": ["0x08005990", "0x08005a14", "0x08005b64"], "notes": "Slot size table: returns 0x300 iff slot==2 else 0x100. Role 'serialize' is the nearest schema value for geometry/serialization support; it performs no I/O itself."},
+    {"addr": "0x08005970", "role": "serialize", "callers": ["0x08005a14"], "notes": "Slot offset table: slot1->0x400, slot2->0x800, else 0. Added to 0x0E000000 by FUN_08005a14. No I/O itself."},
+    {"addr": "0x08005990", "role": "checksum", "callers": ["0x08005b64"], "notes": "Computes (u16) sum of bytes buf[0x10 .. FUN_08005958(slot)) with a short accumulator."},
+    {"addr": "0x080059c0", "role": "checksum", "callers": ["0x08005b64"], "notes": "Returns *(u16*)(buf+8), the stored checksum."},
+    {"addr": "0x080059c8", "role": "deserialize", "callers": ["0x08005b64"], "notes": "Magic validator: byte-compares buf[0..8) against ROM string at _DAT_080059e0 (identified as 'BLEN0911' from the .sav); returns 0=match, 1=mismatch. Role is validation during deserialize."},
+    {"addr": "0x08005a14", "role": "read", "callers": ["0x08005b64"], "notes": "SRAM read: FUN_08005940(FUN_08005970(slot)+0x0E000000, ram_buf, FUN_08005958(slot)). Only 0x0E000000 reference in the entire decompilation; no Flash 0x5555/0x2AAA sequence and no EEPROM DMA3 stream exists anywhere."},
+    {"addr": "0x08005a64", "role": "write", "callers": ["0x08005bc8"], "notes": "UNRECOVERED body (address lies in the gap between FUN_08005a14 and FUN_08005b64; no callgraph node). Dispatcher target for op=1 (flag 0) and op=4 (flag 1) of FUN_08005bc8. Write role and flag meaning (hypothesised full-write vs header/checksum refresh) are HYPOTHESIS from dispatcher symmetry only."},
+    {"addr": "0x08005af8", "role": "erase", "callers": ["0x08005bc8"], "notes": "UNRECOVERED body (no callgraph node). Dispatcher target for op=2 of FUN_08005bc8. Erase/init role is HYPOTHESIS from dispatcher symmetry only."},
+    {"addr": "0x08005b64", "role": "deserialize", "callers": ["0x08005bc8"], "notes": "Validated load: alloc bounce buffer via FUN_080050d8, SRAM-read via FUN_08005a14, then status: magic mismatch->2, buf[0x0A]==0->2, stored!=computed checksum->2, *(u32*)(buf+0x10)==0->1 (empty, tested last so it overrides), else 0. Frees buffer via FUN_08005174 before returning."},
+    {"addr": "0x08005bc8", "role": "serialize", "callers": ["0x0803d6bc"], "notes": "Dispatcher: op1->func_0x08005a64(slot,0), op2->func_0x08005af8(slot), op3->FUN_08005b64(slot) validated read, op4->func_0x08005a64(slot,1), else 0. Only op3 has a recovered callee and a recovered caller. Role 'serialize' is the nearest enum value for the dispatch entry point."},
+    {"addr": "0x080050d8", "role": "deserialize", "callers": ["0x08005b64"], "notes": "Heap allocator wrapper (FUN_08005038 best-fit, 16-byte aligned blocks) used to obtain the reader's transient bounce buffer; not a fixed RAM save struct. Role denotes load-path support only."},
+    {"addr": "0x08005174", "role": "deserialize", "callers": ["0x08005b64"], "notes": "Heap free wrapper (FUN_080050fc) releasing the reader's bounce buffer. Load-path support only."}
+  ],
+  "caller_chains": [
+    {
+      "entry_caller": "0x0803d864",
+      "chain": ["0x0803d864", "0x0803d6bc", "0x08005bc8", "0x08005b64", "0x08005a14", "0x08005940", "0x0805e6a4"],
+      "trigger_context": "Boot/init: FUN_0803d864 is a thunk with no recovered callers (entry via unrecovered jumptable). FUN_0803d6bc zeroes init globals (*_DAT_0803d76c/774/780/788-79c), sets *_DAT_0803d778=0x100 and *_DAT_0803d784=0x10, calls init helpers, then probes all three slots with FUN_08005bc8(3,0),(3,1),(3,2), caching *_DAT_0803d7a0=(slot2 status==0) and *_DAT_0803d790=1 if any slot status==0, then branches on FUN_08002888()==8/9. Callgraph edges confirmed in decompiled.c lines 5877-5880.",
+      "ram_fields_updated": ["*_DAT_0803d76c = 0 (pre-probe)", "*_DAT_0803d770 = FUN_0800b368() (pre-probe)", "*_DAT_0803d778 = 0x100 (pre-probe)", "*_DAT_0803d780..*_DAT_0803d79c = 0 / 0x10 defaults (pre-probe)", "*_DAT_0803d7a0 = (slot2_status == 0)", "*_DAT_0803d790 = 1 if any slot status == 0"],
+      "how_mapped": "callgraph.json: 0x08005bc8.callers=[0x0803d6bc], 0x0803d6bc.callers=[0x0803d864], 0x0803d864.callers=[]; each edge confirmed by reading the body in decompiled.c. All _DAT_0803d7xx targets are unresolved literal-pool pointers, so absolute RAM addresses cannot be stated and ram_addr is null in fields. This chain only reads/validates; it never mutates a save struct or writes SRAM."
+    },
+    {
+      "entry_caller": "0x08005bc8",
+      "chain": ["0x08005bc8", "0x08005a64"],
+      "trigger_context": "Hypothesised save/write path: dispatcher op=1 (flag 0) and op=4 (flag 1). No caller invoking op=1 or op=4 was recovered anywhere in decompiled.c or callgraph.json (the only recovered dispatcher calls are op=3 from FUN_0803d6bc); write callers are presumed hidden behind UNRECOVERED_JUMPTABLE indirect calls. Trigger context and pre-flush RAM mutations are therefore unknown.",
+      "ram_fields_updated": [],
+      "how_mapped": "Dispatcher body in decompiled.c (FUN_08005bc8): op1 -> func_0x08005a64(param_2,0), op4 -> func_0x08005a64(param_2,1). Target 0x08005a64 has no decompiled body and no callgraph node (checked: callgraph.get('0x08005a64') is None). Included as a chain with empty ram_fields_updated to record the gap honestly rather than invent a writer chain."
+    },
+    {
+      "entry_caller": "0x08005bc8",
+      "chain": ["0x08005bc8", "0x08005af8"],
+      "trigger_context": "Hypothesised erase/init path: dispatcher op=2. No caller invoking op=2 was recovered; see write chain note.",
+      "ram_fields_updated": [],
+      "how_mapped": "Dispatcher body in decompiled.c (FUN_08005bc8): op2 -> func_0x08005af8(param_2). Target 0x08005af8 has no decompiled body and no callgraph node. Erase/init semantics are inferred from dispatcher symmetry only."
+    }
+  ],
+  "fields": [
+    {
+      "name": "magic_blen0911",
+      "offset": 0,
+      "size": 8,
+      "type": "ascii",
+      "ram_addr": null,
+      "writers": ["0x08005a64"],
+      "readers": ["0x080059c8", "0x08005b64"],
+      "observed_values": {"sav-00-f1162.sav": "BLEN0911"},
+      "update_mechanism": "Written by the unrecovered writer (dispatcher op1/4) at save time; validated byte-by-byte against ROM string _DAT_080059e0 by FUN_080059c8 on every load. Offsets are slot-0 absolute; the same 8-byte header is expected at slot1+0 (1024) and slot2+0 (2048) since one reader validates all slots.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "FUN_080059c8 loop over 8 bytes in decompiled.c; sample bytes 42 4c 45 4e 30 39 31 31 at 0x00 with verifying checksum. Writer attribution is hypothesised (body unrecovered) but the field itself is verified in both code and bytes."
+    },
+    {
+      "name": "checksum_sum16",
+      "offset": 8,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": ["0x08005a64"],
+      "readers": ["0x080059c0", "0x08005990", "0x08005b64"],
+      "observed_values": {"sav-00-f1162.sav": "0x70a1"},
+      "update_mechanism": "Writer stores (sum of slot bytes [0x10,slot_size)) & 0xFFFF after assembling the payload; reader recomputes via FUN_08005990 and compares against this stored value via FUN_080059c0. Header bytes never covered, so header edits need no repair.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "FUN_08005990 (sum from buf+0x10, count size-0x10) + FUN_080059c0 (*(u16*)(buf+8)) in decompiled.c; Python recomputation on sav-00-f1162.sav slot0: stored 0x70a1 == computed 0x70a1; alternative ranges [0,0x100)=0x739f, [8,0x100)=0x71b3, [0,8)=0x01ec all falsified."
+    },
+    {
+      "name": "valid_flag_u16_at_0x0a",
+      "offset": 10,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": ["0x08005a64"],
+      "readers": ["0x08005b64"],
+      "observed_values": {"sav-00-f1162.sav": "0x0001"},
+      "update_mechanism": "Set by the writer (unrecovered) to a non-zero value in its low byte; reader rejects the slot (status 2) if *(char*)(buf+10)==0. High byte (offset 0x0B, observed 0x00) is never tested by recovered code.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "Explicit test in FUN_08005b64 decompiled body; sample holds 01 00. Semantics (valid flag vs version) unproven - only the non-zero-low-byte requirement is code-proven, hence not CONFIRMED_VERIFIED."
+    },
+    {
+      "name": "header_reserved_0x0c",
+      "offset": 12,
+      "size": 4,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": ["0x08005a64"],
+      "readers": [],
+      "observed_values": {"sav-00-f1162.sav": "00000000"},
+      "update_mechanism": "Part of the 16-byte header, outside checksum cover, never read by any recovered function. Presumed written as zero by the writer; otherwise opaque.",
+      "confidence": "UNKNOWN",
+      "evidence": "No reader in decompiled.c references buf+0x0C; observed zero in the single sample. Padding/reserved on current evidence."
+    },
+    {
+      "name": "payload_first_dword_populated_marker",
+      "offset": 16,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": ["0x08005a64"],
+      "readers": ["0x08005b64"],
+      "observed_values": {"sav-00-f1162.sav": "0x00000001"},
+      "update_mechanism": "First payload dword doubles as the populated marker: reader reports status 1 (empty) iff *(int*)(buf+0x10)==0, tested after magic/checksum so empty overrides invalid. Writer stores a non-zero value (observed 1) for a populated slot. Covered by the checksum.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "Explicit test in FUN_08005b64 decompiled body; sample dword = 1. Whether the exact value carries meaning beyond non-zero is unproven with one sample, hence not CONFIRMED_VERIFIED."
+    },
+    {
+      "name": "payload_body_0x14",
+      "offset": 20,
+      "size": 12,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": ["0x08005a64"],
+      "readers": [],
+      "observed_values": {"sav-00-f1162.sav": "all 0x00"},
+      "update_mechanism": "Opaque payload written by the unrecovered writer and covered by the checksum; no recovered reader interprets these bytes beyond the first payload dword.",
+      "confidence": "UNKNOWN",
+      "evidence": "Single near-empty sample; no reader code. Refusing to subdivide further without more samples or fuzzing results."
+    },
+    {
+      "name": "payload_erased_gap_0x20",
+      "offset": 32,
+      "size": 112,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": ["0x08005a64"],
+      "readers": [],
+      "observed_values": {"sav-00-f1162.sav": "all 0xFF"},
+      "update_mechanism": "Still-erased (0xFF) region inside the checksummed payload: the writer evidently does not zero/initialise the whole slot image before writing (or writes the slot in pieces), and these 0xFF bytes contribute to the verified checksum 0x70a1. Covered by checksum; must be preserved or the checksum repaired if altered.",
+      "confidence": "UNKNOWN",
+      "evidence": "Bytes 0x20-0x8F are 0xFF while 0x00-0x1F and 0x90-0xFF are written; checksum covers the gap and verifies. Mechanism inference recorded in the report; field semantics unknown."
+    },
+    {
+      "name": "payload_tail_zero_0x90",
+      "offset": 144,
+      "size": 35,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": ["0x08005a64"],
+      "readers": [],
+      "observed_values": {"sav-00-f1162.sav": "all 0x00"},
+      "update_mechanism": "Zero-filled second written region of the payload, after the 0xFF gap. Covered by checksum.",
+      "confidence": "UNKNOWN",
+      "evidence": "Non-blank written span 0x90-0xFF per hexdump_and_diffs.txt; no reader code interprets it."
+    },
+    {
+      "name": "payload_values_0xb3",
+      "offset": 179,
+      "size": 6,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": ["0x08005a64"],
+      "readers": [],
+      "observed_values": {"sav-00-f1162.sav": "03 03 00 03 ff 08"},
+      "update_mechanism": "Only non-trivial payload values in the sample (surrounded by 0x00 at 0xB0-0xB2 and 0xB9-0xFF). Updated by the writer with the rest of the payload; covered by checksum. Meaning, width and signedness cannot be assigned from one sample.",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Observed bytes only; no reader code. Flagged as fuzzing target T6 in the report to discover semantics by mutation."
+    },
+    {
+      "name": "payload_tail_0xb9",
+      "offset": 185,
+      "size": 71,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": ["0x08005a64"],
+      "readers": [],
+      "observed_values": {"sav-00-f1162.sav": "all 0x00"},
+      "update_mechanism": "Zero payload tail to the end of slot 0 (0xFF). Covered by checksum.",
+      "confidence": "UNKNOWN",
+      "evidence": "Observed zeros; no reader code."
+    },
+    {
+      "name": "slot1_erased_record",
+      "offset": 1024,
+      "size": 256,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": ["0x08005a64", "0x08005af8"],
+      "readers": ["0x08005b64"],
+      "observed_values": {"sav-00-f1162.sav": "all 0xFF (erased)"},
+      "update_mechanism": "Whole-slot record. Geometry and the shared header/checksum validation are code-proven (FUN_08005970->0x400, FUN_08005958->0x100, one reader for all slots); contents prove only that it was never written in this sample. Reader reports it invalid (magic fail, status 2).",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "Geometry functions + dispatcher probe FUN_08005bc8(3,1) in FUN_0803d6bc; uniform 0xFF in the sample. Internal payload layout if written is UNKNOWN and deliberately not modelled as separate fields."
+    },
+    {
+      "name": "slot2_erased_record",
+      "offset": 2048,
+      "size": 768,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": ["0x08005a64", "0x08005af8"],
+      "readers": ["0x08005b64"],
+      "observed_values": {"sav-00-f1162.sav": "all 0xFF (erased)"},
+      "update_mechanism": "Whole-slot record at 3x the size of slots 0/1. Same header/checksum validation (checksum would cover [0x10,0x300)); FUN_0803d6bc caches its (status==0) separately. Never written in this sample.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "FUN_08005970->0x800, FUN_08005958->0x300, probe FUN_08005bc8(3,2); uniform 0xFF in the sample. Purpose of the larger size is an open question."
+    }
+  ],
+  "fuzzing_targets": [
+    {"offset": 0, "size": 1, "mutation": "Change magic first byte 'B' (0x42) to 'X' (0x58) in BLEN0911", "requires_checksum_repair": false, "predicted_effect": "Slot 0 rejected at boot (magic mismatch -> status 2); file-select behaves as if slot 0 is absent/corrupt. Any successful load falsifies the magic mapping."},
+    {"offset": 8, "size": 2, "mutation": "Increment stored checksum 0x70a1 -> 0x70a2, payload untouched (fault injection, no repair)", "requires_checksum_repair": false, "predicted_effect": "Checksum mismatch -> status 2, slot 0 treated as corrupt. Proves the checksum is enforced, not advisory."},
+    {"offset": 16, "size": 4, "mutation": "Zero the payload first dword (01 00 00 00 -> 00 00 00 00), then repair checksum over [0x10,0x100) at offset 8", "requires_checksum_repair": true, "predicted_effect": "Status 1 (empty) despite valid magic+checksum: slot presented as empty/new rather than corrupt. Distinguishes the empty gate from the invalid gates."},
+    {"offset": 10, "size": 1, "mutation": "Zero the valid byte at 0x0A (01 -> 00), header only", "requires_checksum_repair": false, "predicted_effect": "Status 2 (invalid), observably distinct from the empty result of zeroing offset 0x10. Confirms byte 0x0A as an independent validity gate."},
+    {"offset": 20, "size": 1, "mutation": "Flip one payload byte 0x00 -> 0x01 at 0x14 without checksum repair", "requires_checksum_repair": false, "predicted_effect": "Status 2 via checksum mismatch; control proving uninterpreted payload bytes are integrity-protected."},
+    {"offset": 179, "size": 6, "mutation": "Increment each of the 6 bytes 03 03 00 03 FF 08 at 0xB3 one at a time (one experiment per byte), repairing the checksum after each", "requires_checksum_repair": true, "predicted_effect": "Slot still loads (status 0); any title/file-select/gameplay delta vs the unmutated reload begins mapping this hypothesised field. No delta on the boot path implies data not shown there; repeat entering gameplay."},
+    {"offset": 1024, "size": 256, "mutation": "Transplant slot 0's full 256 bytes verbatim to slot 1 at 0x0400 (checksum travels with the copy); optionally combine with invalidating slot 0's magic", "requires_checksum_repair": false, "predicted_effect": "Slot 1 probe returns status 0 and the any-valid boot flag is set from slot 1 alone. Proves slots share one format and are selected by index, not content."},
+    {"offset": 2048, "size": 768, "mutation": "Synthesise a slot 2 image: BLEN0911 at 0x800, 0x01 at 0x80A, dword 1 at 0x810, zeroes elsewhere, checksum over [0x810,0xB00) stored at 0x808", "requires_checksum_repair": true, "predicted_effect": "Slot 2 probe returns status 0 and the cached slot2-valid global is set. Proves slot 2 uses the identical header/checksum scheme at 3x size; failure would reveal an additional unmapped slot-2 check."},
+    {"offset": 32, "size": 16, "mutation": "Zero 16 bytes inside the 0xFF payload gap (0x20-0x2F), then repair checksum over [0x10,0x100) at offset 8", "requires_checksum_repair": true, "predicted_effect": "Slot still loads (status 0), proving the 0xFF gap is checksummed filler rather than a second signature. Rejection would imply separate validation of the gap."},
+    {"offset": 8, "size": 2, "mutation": "Deliberately wrong repair: store the checksum computed over the wrong range [0x00,0x100) (0x739f) with payload untouched", "requires_checksum_repair": true, "predicted_effect": "Must be rejected (status 2). Acceptance would falsify the [0x10,size) covered range proven against the sample - a falsification guard."},
+    {"offset": 256, "size": 768, "mutation": "Fill inter-slot padding 0x0100-0x03FF with 0x00", "requires_checksum_repair": false, "predicted_effect": "No observable change whatsoever; proves the padding is never read. Any change implies a hidden scan absent from the recovered code."},
+    {"offset": 0, "size": 256, "mutation": "Erase slot 0 only: fill 0x0000-0x00FF with 0xFF, leave the rest of the file untouched", "requires_checksum_repair": false, "predicted_effect": "All three slot probes report non-valid and boot reaches the no-save flow; baseline distinguishing corrupt (T1/T2/T4) from absent save handling."}
+  ],
+  "open_questions": [
+    "Body of 0x08005a64 (dispatcher op1 flag0 / op4 flag1): what does the flag select - full write vs header/checksum-only refresh? The function was not recovered (no decompiled body, no callgraph node).",
+    "Body of 0x08005af8 (dispatcher op2): erase (fill 0xFF) vs initialise-empty-header? Not recovered.",
+    "Which gameplay routines call FUN_08005bc8 with ops 1/2/4 and what RAM state they serialise: no recovered caller exists; write chains are presumed hidden behind UNRECOVERED_JUMPTABLE indirect calls and need a runtime trace or fuller decompilation.",
+    "Absolute RAM addresses behind _DAT_0803d76c.._DAT_0803d850 and the allocator globals: only resolvable from the ROM literal pool, which is not in the workspace, so every ram_addr is null.",
+    "Semantics of payload bytes, especially slot+0xB3..0xB8 (03 03 00 03 FF 08) and the purpose of the still-erased 0xFF payload gap at slot+0x20..0x8F; needs more populated samples or the fuzzing campaign in the report.",
+    "Purpose of slot 2's triple size (0x300 vs 0x100): third save file, different record type, or global data? Boot probes it identically but caches its validity separately (*_DAT_0803d7a0).",
+    "Whether '0911' in the magic is a format version checked differently by other builds, and whether header byte +0x0B (observed 0x00, never tested by recovered code) is a sub-version.",
+    "Exact behaviour of the copy engine FUN_0805e6a4 / func_0x08061968 (WAITCNT handling for SRAM access): inferred as a RAM-executed byte copy from structure; the loop body itself is an unrecovered jumptable.",
+    "SDK tag SRAM_V112 is taken from PACKET.md metadata; no ROM binary is in the workspace to re-derive it from."
+  ]
+}

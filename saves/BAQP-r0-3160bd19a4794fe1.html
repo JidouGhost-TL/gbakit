@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Premier Action Soccer (Europe) (En,Fr,De,Es,It) Save Format — gbakit GBA Reference</title>
+  <link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+  <header>
+    <div class="brand"><a href="../index.html" style="color:inherit">gbakit GBA Reference <span class="badge badge-emerald">v2.0</span></a></div>
+    <nav>
+      <a href="../index.html">Games</a>
+      <a href="../saves/index.html">Save Formats</a>
+      <a href="../patches/index.html">Debug Patches</a>
+      <a href="../assets/index.html">Assets &amp; Audio</a>
+      <a href="../engines/index.html">Engines &amp; Hardware</a>
+      <a href="../families/index.html">Families</a>
+      <a href="../gbakit/index.html">Using gbakit</a>
+    </nav>
+  </header>
+  <main>
+<p class="meta"><a href="index.html">&larr; Save Formats</a> &middot; <a href="../titles/BAQP-r0-3160bd19a4794fe1.html">Premier Action Soccer (Europe) (En,Fr,De,Es,It)</a></p>
+<h1>Premier Action Soccer (Europe) (En,Fr,De,Es,It) — Save Format Specification</h1>
+<p><span class="badge badge-indigo">Confidence: MEDIUM</span> <span class="badge badge-blue">6 Fields</span> <span class="badge badge-emerald">0 Verified Checksum(s)</span> <span class='badge badge-emerald'>gbakit Built-In</span></p>
+<p><a class='btn' href='../assets/saves/BAQP-r0-3160bd19a4794fe1/BAQP-r0-3160bd19a4794fe1.sav' download>Download Sample .sav (8,192 B)</a><a class='btn btn-secondary' href='../assets/formats/BAQP-r0-3160bd19a4794fe1/save-format.json' download>Download save-format.json</a><a class='btn btn-secondary' href='../titles/BAQP-r0-3160bd19a4794fe1.html'>View Game Page</a></p>
+
+<div class="callout">
+  <strong>Use directly with <code>gbakit</code> (built-in definition <code>BAQP</code>):</strong>
+  <pre><code>gbakit save verify BAQP save.sav
+gbakit save decode BAQP save.sav
+gbakit save fix    BAQP damaged.sav -o repaired.sav</code></pre>
+</div>
+
+<div class='md-body'>
+<h2>Save Format Report — Premier Action Soccer (Europe) (En,Fr,De,Es,It)</h2>
+<ul><li><strong>Release key:</strong> <code>BAQP-r0-3160bd19a4794fe1</code></li><li><strong>Game code / header family:</strong> <code>BAQP</code> / <code>BAQ</code></li><li><strong>ROM SHA-256:</strong> <code>3160bd19a4794fe1f9c755830dcb30836877f93b10ea3fdabfb583677eefeadf</code></li><li><strong>Community:</strong> <code>comm-006</code></li><li><strong>Save media (SDK tag):</strong> <code>EEPROM 64K</code> (<code>EEPROM_V124@7929260</code>)</li></ul>
+<p>All findings below are derived exclusively from the files in this workspace: <code>saves/*.sav</code> (raw bytes), <code>saves/hexdump_and_diffs.txt</code> (precomputed diffs), <code>ghidra/decompiled.c</code> (43 trace-guided decompiled functions), <code>ghidra/callgraph.json</code>, and <code>ghidra/save_related_functions.c</code>, plus standard, publicly documented GBA hardware addressing (SRAM/Flash <code>0x0E000000</code>, EEPROM <code>0x0D000000</code> via DMA3 <code>0x040000D4</code>, EWRAM <code>0x02000000</code>, IWRAM <code>0x03000000</code>, WAITCNT <code>0x04000204</code>). No game-specific third-party research was consulted.</p>
+<h2>1. Executive Summary &amp; Overall Confidence</h2>
+<p><strong>Overall confidence: MEDIUM</strong>, and it is not uniform across layers:</p>
+<ul><li><strong>HIGH confidence</strong> on the <em>physical media and low-level I/O driver</em>: the</li></ul>
+<p>traced code is a textbook GBA EEPROM 64Kbit (8KB) serial driver built on the DMA3 MMIO registers, and its behavior is fully consistent with the two <code>.sav</code> samples (erased-state file vs. a file with exactly two 8-byte-aligned active regions).</p>
+<ul><li><strong>LOW confidence</strong> on the <em>save-record semantics</em>: the decompiled function</li></ul>
+<p>set (43 functions, scoped by the trace/seed tool to the save bus) contains only the low-level 8-byte EEPROM block read/write/verify primitives. It does</p>
+<p><strong>not</strong> contain the higher-level game code that decides <em>when</em> to save,</p>
+<p><em>which</em> block address to target, or <em>how</em> the checksum/magic footer is computed. Only one non-blank <code>.sav</code> sample exists, so no field hypothesis below could be confirmed by cross-sample statistics — only by matching byte-grid alignment to the hardware block size.</p>
+<ul><li>A 4-byte value <code>13 37 C0 DE</code> at save offset <code>0x0004</code> is almost certainly a</li></ul>
+<p>magic/sentinel constant (it is <strong>not</strong> random — see §4), but it was <strong>not</strong> found as a literal anywhere in <code>ghidra/decompiled.c</code>, so it is <code>.sav</code>-verified but <strong>not</strong> code-verified.</p>
+<ul><li>A footer value <code>2E BC 66 D6</code> at offset <code>0x1FFC</code> (inside the EEPROM&#x27;s last</li></ul>
+<p>block, address <code>0x3FF</code>) could not be reproduced by any of sum8/sum16/ sum32/xor8/crc32/two&#x27;s-complement-sum32 over the candidate header region. It is left as <code>HYPOTHESIS</code>/<code>UNKNOWN</code> rather than claimed as a confirmed checksum — see the Python verification run in §4.</p>
+<p><strong>What is proven:</strong> EEPROM 64Kbit media, 1024×8-byte block grid, a generic DMA3-based 8-byte block read/write/verify driver (4 functions), and that exactly two blocks (block <code>0x000</code> and block <code>0x3FF</code>) are touched by the single captured save event.</p>
+<p><strong>What remains open:</strong> the caller(s) that trigger a save, the meaning of every byte in block 0 beyond the candidate magic, the algorithm (if any) behind the block-<code>0x3FF</code> footer bytes, and whether any of blocks <code>0x001</code>– <code>0x3FE</code> are ever used (no sample shows them non-blank).</p>
+<h2>2. Physical Media, Slot Geometry &amp; Redundancy</h2>
+<table><thead><tr><th>Property</th><th>Value</th><th>Evidence</th></tr></thead><tbody><tr><td>Media</td><td>EEPROM, 64Kbit variant</td><td>SDK tag <code>EEPROM_V124@7929260</code>; file size 8192 bytes; <code>0x0D000000</code>/DMA3 access pattern in code</td></tr><tr><td>Total size</td><td>8192 bytes (0x2000)</td><td><code>saves/*.sav</code> file size</td></tr><tr><td>Block size</td><td>8 bytes</td><td><code>FUN_0805cfc8</code>/<code>FUN_0805d08c</code> each move exactly 4×16-bit (8-byte) payload words per call</td></tr><tr><td>Block count</td><td>1024 (addresses <code>0x000</code>–<code>0x3FF</code>)</td><td>8192 / 8</td></tr><tr><td>Fill byte (erased)</td><td><code>0xFF</code></td><td><code>cap-00-future-0.sav</code> is 100% <code>0xFF</code></td></tr><tr><td>Active regions observed</td><td><code>0x0000–0x0040</code> (blocks <code>0x000</code>–<code>0x007</code>, 64B) and <code>0x1FFC–0x2000</code> (last 4B of block <code>0x3FF</code>)</td><td><code>saves/hexdump_and_diffs.txt</code>, confirmed in §4 Python run</td></tr></tbody></table>
+<p><strong>Slots/copies:</strong> Two distinct, non-adjacent regions are written by the one captured save event:</p>
+<ul><li><strong><code>slot_0</code> / primary record</strong> — EEPROM blocks <code>0x000</code>–<code>0x007</code> (byte offsets</li></ul>
+<p><code>0x0000</code>–<code>0x003F</code>, 64 bytes). Contains the only non-zero content in that range: a 4-byte magic candidate at <code>+0x0004</code> (see §4); the remaining 56 bytes are all <code>0x00</code>.</p>
+<ul><li><strong>footer block <code>0x3FF</code></strong> — the chip&#x27;s last addressable block (byte offsets</li></ul>
+<p><code>0x1FF8</code>–<code>0x1FFF</code>). The first 4 bytes of this block equal the erased fill value <code>0xFFFFFFFF</code> (so it is ambiguous whether they were deliberately rewritten to <code>0xFF</code> or left untouched — a single 8-byte DMA3 write would write both halves together, so <code>0xFFFFFFFF</code> as a <em>written</em> value is possible but not distinguishable from &quot;never touched&quot; with this evidence). The last 4 bytes hold <code>2E BC 66 D6</code>.</p>
+<p><strong>Redundancy / mirroring:</strong> No evidence of a true mirrored backup copy. The 64-byte primary block and the 8-byte footer block differ in size and content structure, so the footer is more likely a distinct generation counter/metadata slot than a byte-for-byte backup of the primary record.</p>
+<p><strong>Selection rule:</strong> none observed — only one save slot/record was exercised in the available captures, so no slot-selection or rotation logic can be confirmed or ruled out.</p>
+<h2>3. Save Writer, Reader &amp; Caller-Chain Architecture</h2>
+<p>All four traced save-bus functions are <strong>generic EEPROM driver primitives</strong> (matching standard documented GBA EEPROM-via-DMA3 behavior), not game-specific save logic. Source: <code>ghidra/decompiled.c</code> lines noted below; cross-checked against <code>ghidra/callgraph.json</code> and <code>ghidra/save_related_functions.c</code>.</p>
+<h3>3.1 <code>0x0805cf48</code> — DMA3 transfer primitive (shared by both directions)</h3>
+<pre><code>void FUN_0805cf48(undefined4 param_1, undefined4 param_2, uint param_3)</code></pre>
+<ul><li>Saves/clears the IME interrupt-master-enable mirror (<code>*_DAT_0805cfa8</code>),</li></ul>
+<p>programs what are, by address pattern and bit usage, DMA3 SAD/DAD/CNT registers (<code>*_DAT_0805cfb8 = param_1</code> [src], <code>*_DAT_0805cfbc = param_2</code> [dst], <code>*_DAT_0805cfc0 = param_3 &amp; 0xffff | 0x80000000</code> [count | DMA-enable bit]), then <strong>polls bit <code>0x8000</code> of the CNT_H half-word</strong> until it clears — the documented DMA3-busy/enable-bit idiom — before restoring IME.</p>
+<ul><li>Called by both <code>FUN_0805cfc8</code> (read) and <code>FUN_0805d08c</code> (write) to shuttle</li></ul>
+<p>serialized bitstreams to/from <code>0x0D000000</code> (EEPROM data port). This is the lowest-level MMIO hardware I/O driver in the traced set.</p>
+<h3>3.2 <code>0x0805cfc8</code> — EEPROM 8-byte block READ</h3>
+<pre><code>void FUN_0805cfc8(uint param_1 /*block addr*/, int param_2 /*out: 4x u16*/)</code></pre>
+<ul><li>Builds an address-request bitstream in a 134-byte stack buffer: two</li></ul>
+<p>leading &quot;1,1&quot; request bits followed by the block address serialized MSB-first over a runtime-configured bit width (<code>*(byte*)(*_DAT_0805d074+8)</code>, consistent with the EEPROM protocol&#x27;s configurable 6-bit vs 14-bit addressing).</p>
+<ul><li><code>FUN_0805cf48(stackbuf, 0x0D000000, N+3)</code> clocks the request bitstream out</li></ul>
+<p>to the EEPROM.</p>
+<ul><li><code>FUN_0805cf48(0x0D000000, stackbuf, 0x44)</code> clocks 68 (<code>0x44</code>) response bits</li></ul>
+<p>back in from the EEPROM.</p>
+<ul><li>Unpacks those response bits into 4×16-bit words (MSB-first bit order,</li></ul>
+<p>written out in reverse word order into <code>param_2[3..0]</code>) — i.e. it deserializes one 8-byte EEPROM block into a caller-supplied buffer.</p>
+<ul><li><strong>Caller:</strong> <code>0x0805d1ec</code> (verify-read, confirmed via <code>callgraph.json</code>).</li></ul>
+<h3>3.3 <code>0x0805d1ec</code> — EEPROM block READ + VERIFY</h3>
+<pre><code>void FUN_0805d1ec(ushort param_1 /*block addr*/, short *param_2 /*expected 4x u16*/)</code></pre>
+<ul><li>Calls <code>FUN_0805cfc8(param_1, local_buf)</code> to read 8 bytes back from the</li></ul>
+<p>given block, then compares all 4 words against the caller-supplied <code>param_2</code> buffer; returns <code>0x8000</code> (fail flag) on first mismatch, <code>0</code> if all 4 words match. This is a classic &quot;verify after write&quot; routine.</p>
+<ul><li><strong>Callers:</strong> none found in the traced 43-function set (confirmed by</li></ul>
+<p><code>callgraph.json</code>: <code>&quot;0x0805d1ec&quot;: {&quot;callers&quot;: []}</code> and by <code>grep</code> across all of <code>ghidra/decompiled.c</code> for the symbol — no hit outside its own definition). <strong>This is an open gap</strong>: the code that decides to verify a save, and what &quot;expected&quot; data it checks, is outside our visibility.</p>
+<h3>3.4 <code>0x0805d08c</code> — EEPROM 8-byte block WRITE</h3>
+<pre><code>void FUN_0805d08c(uint param_1 /*block addr*/, ushort *param_2 /*4x u16 payload*/, char param_3 /*blocking flag*/)</code></pre>
+<ul><li>Serializes a write-request bitstream: leading request bits, the 4×16-bit</li></ul>
+<p>payload word-by-word (MSB-first), then the block address (same configurable bit width as the read path), then <code>FUN_0805cf48(stackbuf, 0x0D000000, N+0x43)</code> clocks the whole write bitstream out.</p>
+<ul><li>Afterward it busy-waits on bit 0 of <code>0x0D000000</code> (EEPROM write-ready flag)</li></ul>
+<p>using the hardware VCOUNT register (<code>*_DAT_0805d178</code>, compared against <code>0xE4</code> = 228, the GBA&#x27;s total-scanlines-per-frame constant — i.e. this is a frame-boundary-aware wrap handler) with a timeout accumulator capped at <code>0x88</code> (136) scanline-ticks. <code>param_3</code> selects whether the function retries indefinitely (<code>!= 0</code>, blocking) or bails after one timeout window (<code>== 0</code>).</p>
+<ul><li>**Caller found by manual source inspection (not present in</li></ul>
+<p><code>callgraph.json</code>&#x27;s edge list — see note below):** <code>0x0805d078</code>.</p>
+<h3>3.5 <code>0x0805d078</code> — blocking-write wrapper (<strong>caller-graph gap</strong>)</h3>
+<pre><code>void FUN_0805d078(undefined2 param_1, undefined4 param_2)
+{
+  uVar1 = func_0x0805d08c(param_1, param_2, 1);   // forces blocking mode
+  ...
+}</code></pre>
+<ul><li>A thin 1-line wrapper around <code>FUN_0805d08c</code> that hardcodes <code>param_3 = 1</code></li></ul>
+<p>(always block/retry until the EEPROM reports write-complete).</p>
+<ul><li><strong>Methodology note:</strong> <code>ghidra/callgraph.json</code> lists both <code>&quot;0x0805d078&quot;</code> and</li></ul>
+<p><code>&quot;0x0805d08c&quot;</code> with empty <code>callers</code>/<code>callees</code> arrays — it <strong>missed this edge</strong>. We found it only by <code>grep</code>-ing <code>ghidra/decompiled.c</code> for <code>func_0x0805d08c</code>. This means <code>callgraph.json</code> (built from &quot;static C + runtime direct-calls.json&quot; per its header comment) is <strong>not fully complete</strong>, and any caller-chain claim in this report that relies solely on the JSON should be treated as a lower bound, not an exhaustive list.</p>
+<ul><li><strong>Caller of <code>0x0805d078</code>:</strong> none found anywhere in <code>ghidra/decompiled.c</code></li></ul>
+<p>(verified by <code>grep</code> across the whole file). The actual game-logic entry point that decides <em>when</em> to persist a save and <em>what</em> block address/ payload to pass is <strong>not present in this trace</strong> — it is an explicit unknown, not something we can infer from clean-room evidence here.</p>
+<h3>3.6 Caller-chain summary</h3>
+<table><thead><tr><th>Entry point</th><th>Chain</th><th>Trigger context</th><th>How mapped</th></tr></thead><tbody><tr><td><code>0x0805d078</code></td><td><code>0x0805d078 → 0x0805d08c → 0x0805cf48</code></td><td><strong>Unknown</strong> — no caller traced</td><td>Manual <code>grep</code> of <code>decompiled.c</code> for <code>func_0x0805d08c</code>; NOT present in <code>callgraph.json</code></td></tr><tr><td><code>0x0805d1ec</code></td><td><code>0x0805d1ec → 0x0805cfc8 → 0x0805cf48</code></td><td><strong>Unknown</strong> — no caller traced</td><td><code>callgraph.json</code> edge <code>0x0805cfc8.callers = [&quot;0x0805d1ec&quot;]</code>, cross-checked against <code>decompiled.c</code> source</td></tr></tbody></table>
+<p>Because no caller mutates an identifiable in-RAM save struct in the traced set, <strong>we cannot document how any <code>0x02xxxxxx</code>/<code>0x03xxxxxx</code> RAM mirror is populated before a flush</strong> — that logic lives in game code outside the 43 traced functions. This is flagged as an open question (§6) rather than guessed.</p>
+<h2>4. Magic Signatures &amp; Checksum / Integrity Algorithm</h2>
+<h3>4.1 Candidate magic signature</h3>
+<ul><li><strong>Offset:</strong> <code>0x0004</code> (bytes 4–7 of EEPROM block <code>0x000</code>)</li><li><strong>Bytes:</strong> <code>13 37 C0 DE</code></li><li><strong>Verified in <code>.sav</code>:</strong> YES — present in <code>cap-01-future-1.sav</code>, absent (all</li></ul>
+<p><code>0xFF</code>, i.e. erased) in <code>cap-00-future-0.sav</code>.</p>
+<ul><li><strong>Verified in code:</strong> NO — <code>grep -i &quot;1337\|c0de&quot;</code> across</li></ul>
+<p><code>ghidra/decompiled.c</code> and <code>ghidra/save_related_functions.c</code> returns no hits. The comparison/write of this literal happens in code outside the traced function set.</p>
+<ul><li><strong>Confidence:</strong> <code>HYPOTHESIS</code> (strong structural evidence — it is the only</li></ul>
+<p>non-zero, non-boundary data in an otherwise all-zero 64-byte record, and its value is distinctive/non-random-looking — but not code-confirmed).</p>
+<h3>4.2 Footer bytes at <code>0x1FFC</code>–<code>0x1FFF</code></h3>
+<ul><li><strong>Bytes:</strong> <code>2E BC 66 D6</code> (as <code>u32</code> LE = <code>0xD666BC2E</code>, BE = <code>0x2EBC66D6</code>)</li><li>Located in EEPROM block <code>0x3FF</code> (the chip&#x27;s last block), whose first 4</li></ul>
+<p>bytes (<code>0x1FF8</code>–<code>0x1FFB</code>) read back as <code>FF FF FF FF</code> — identical to the erased fill, so it is undetermined whether that half was actively rewritten to <code>0xFF</code> or never touched (an 8-byte block write would cover both halves atomically either way).</p>
+<h3>4.3 Python verification run (<code>verify_save.py</code>, included in this workspace)</h3>
+<pre><code>$ python3 verify_save.py
+block0[0:4]  (flags/counter?) : 00000000
+block0[4:8]  (candidate magic): 1337c0de
+block0[8:64] (reserved)       : 00...00  all-zero: True
+block1023[0:4] (0x1FF8-0x1FFB): ffffffff == erased fill: True
+block1023[4:8] (0x1FFC-0x1FFF): 2ebc66d6
+
+stored footer tail4: LE=0xd666bc2e BE=0x2ebc66d6
+  sum8(block0)                     = 0x000000e8  match=False
+  sum16(block0)                    = 0x000001e8  match=False
+  sum32(block0)                    = 0x000001e8  match=False
+  xor8(block0)                     = 0x0000003a  match=False
+  crc32(block0)                    = 0xfbd9f6e8  match=False
+  crc32(magic)                     = 0xe85dfce5  match=False
+  twos_complement_sum32(block0)    = 0xfffffe18  match=False
+
+RESULT: no generic sum/xor/crc32 formula over block 0 reproduces the
+footer bytes. With only one non-blank .sav sample, this cannot be
+statistically confirmed either way -&gt; classified HYPOTHESIS/UNKNOWN.</code></pre>
+<p><strong>Conclusion:</strong> no checksum algorithm is <code>CONFIRMED</code> by this evidence. We explicitly reject the temptation to claim a formula &quot;probably&quot; fits — none of the standard sum/xor/crc32 trials matched, and there is only one non-blank sample to test against, so even a coincidental match would not be verifiable. The footer is logged as an <code>UNKNOWN</code>-algorithm integrity/ID field candidate, not a confirmed checksum.</p>
+<h2>5. Complete Field Map Table</h2>
+<table><thead><tr><th>Offset (hex)</th><th>Size</th><th>Type / Endianness</th><th>RAM Mirror Addr</th><th>Writers / Callers</th><th>Readers</th><th>Observed Values in <code>.sav</code></th><th>Confidence</th><th>How Mapped &amp; Updated</th></tr></thead><tbody><tr><td><code>0x0000</code></td><td>4</td><td><code>u32</code>, endianness unknown</td><td>unknown (no traced RAM mirror)</td><td>unknown caller via <code>0x0805d078</code>→<code>0x0805d08c</code> (block <code>0x000</code>)</td><td>unknown caller via <code>0x0805d1ec</code>→<code>0x0805cfc8</code></td><td><code>00 00 00 00</code></td><td><code>UNKNOWN</code></td><td>Byte-grid position inferred from 8-byte EEPROM block boundary; semantic purpose not determinable from available code/data</td></tr><tr><td><code>0x0004</code></td><td>4</td><td><code>bytes</code> (candidate magic)</td><td>unknown</td><td>unknown (writer not in traced set)</td><td>unknown</td><td><code>13 37 C0 DE</code></td><td><code>HYPOTHESIS</code></td><td>Only non-zero, non-generic value in the primary record; absent in erased state — see §4.1</td></tr><tr><td><code>0x0008</code>–<code>0x003F</code></td><td>56</td><td><code>bytes</code>, all-zero in sample</td><td>unknown</td><td>same block-0 write path as above</td><td>same block-0 read path</td><td>all <code>0x00</code></td><td><code>HYPOTHESIS</code></td><td>Part of the same 64-byte/8-block primary record; all-zero may indicate default/new-game state rather than an unused region</td></tr><tr><td><code>0x1FF8</code>–<code>0x1FFB</code></td><td>4</td><td><code>u32</code>, unknown</td><td>unknown</td><td>unknown</td><td>unknown</td><td><code>FF FF FF FF</code> (== erased fill)</td><td><code>UNKNOWN</code></td><td>Cannot distinguish &quot;written as 0xFFFFFFFF&quot; from &quot;never rewritten&quot;; part of the same 8-byte DMA3 block as the footer bytes below</td></tr><tr><td><code>0x1FFC</code>–<code>0x1FFF</code></td><td>4</td><td><code>bytes</code>/<code>u32</code>, endianness unknown</td><td>unknown</td><td>unknown</td><td>unknown</td><td><code>2E BC 66 D6</code></td><td><code>HYPOTHESIS</code></td><td>Second active region in diff; last block (<code>0x3FF</code>) of the EEPROM address space; candidate footer/generation-counter/ID field; no checksum formula over block 0 reproduces it (§4.3)</td></tr><tr><td><code>0x0040</code>–<code>0x1FF7</code></td><td>8120</td><td>unknown</td><td>n/a</td><td>none observed</td><td>none observed</td><td>all <code>0xFF</code> (erased)</td><td><code>UNKNOWN</code></td><td>Never non-blank in either sample; blocks <code>0x008</code>–<code>0x3FE</code> unexercised by available captures</td></tr></tbody></table>
+<p>No field in this table reaches <code>CONFIRMED_VERIFIED</code> or <code>CONFIRMED_STATIC</code>: the hardware-layer functions themselves are code-confirmed (§3), but every</p>
+<p><em>field-level</em> semantic claim in this table rests on byte-grid position and single-sample observation only, not on a located writer/reader in the traced decompilation. This is reported honestly rather than inflated.</p>
+<h2>6. Save Fuzzing &amp; Counterfactual Verification Plan</h2>
+<p>All mutations below should be applied to a copy of <code>cap-01-future-1.sav</code>, loaded as <code>.sav</code>, paired with fresh <code>gameplay.ss</code>/<code>final.ss</code> save states per the project&#x27;s capture-retention rules, and bounded to the existing ≤8 screenshot / ≤4 save-state caps per job.</p>
+<ol><li><strong>Magic-byte corruption</strong> — flip offset <code>0x0004</code> from <code>13</code> to <code>00</code> (or any</li></ol>
+<p>other byte), reload. <em>Predicted:</em> if <code>13 37 C0 DE</code> is actually checked as a validity magic, the game should treat the save as absent/corrupt and fall back to a &quot;new game&quot; boot path (mirroring the observed all-<code>0xFF</code> <code>cap-00</code> boot behavior). If nothing changes, the magic hypothesis in §4.1 is falsified.</p>
+<ol><li><strong>Reserved-region mutation</strong> — write non-zero bytes into <code>0x0008</code>–<code>0x003F</code></li></ol>
+<p>(currently all-zero) without touching the magic at <code>0x0004</code>. <em>Predicted:</em> if this region is genuinely a zeroed/default game-state payload, the title screen or save-select UI should visibly reflect different stored state (e.g. non-default selection); if the magic alone gates load validity, no visible change is expected. This distinguishes &quot;payload field&quot; from &quot;padding.&quot;</p>
+<ol><li><strong>Footer corruption at <code>0x1FFC</code>–<code>0x1FFF</code></strong> — flip one byte (e.g. <code>2E</code>→<code>2F</code>)</li></ol>
+<p>and reload with no other changes. <em>Predicted:</em> if this is a checksum or integrity field consumed on load, the game should reject/reset the save (same signature as test 1); if it is an unchecked ID/counter, there should be no observable difference. Record which outcome occurs — this is the cheapest way to promote/demote the footer&#x27;s confidence level without needing the missing caller code.</p>
+<ol><li><strong>Footer-only vs whole-block-1023 write test</strong> — since</li></ol>
+<p><code>0x1FF8</code>–<code>0x1FFB</code> reads back as the erased value, write a <em>distinguishable</em> non-erased value there (e.g. <code>AA AA AA AA</code>) and observe whether the game ever overwrites it back to <code>FF FF FF FF</code> on a subsequent save. <em>Predicted:</em> if the game always writes the full 8-byte block together, a forced save event should restore <code>FF FF FF FF</code> there (proving it&#x27;s an actively managed field); persistence of <code>AA AA AA AA</code> across saves would mean that half of the block is never touched by the traced write path.</p>
+<ol><li><strong>Blank-slot soak test</strong> — from the erased <code>cap-00</code> state, step through</li></ol>
+<p>enough gameplay/menu actions to trigger at least one additional save event, and diff the result against both existing samples. <em>Predicted:</em> this should reveal whether blocks <code>0x008</code>–<code>0x3FE</code> are ever used (currently unexercised in all available captures) and whether <code>0x0000</code>-<code>0x0003</code> ever becomes non-zero, which would start to explain its purpose.</p>
+<ol><li><strong>Repeated save-count check</strong> — perform two consecutive, distinct save</li></ol>
+<p>events and diff all three resulting <code>.sav</code> files. <em>Predicted:</em> this is the only way to gain the second non-blank data point needed before any checksum/counter formula in §4 could be promoted beyond <code>HYPOTHESIS</code> — a single sample is structurally insufficient for statistical confirmation, regardless of which formula is tried.</p>
+<p>All of the above are genuine open counterfactuals — none of them assumes an answer in advance, and each has a concrete observable (visual delta, save rejection/reset, or byte-level recurrence) that can falsify the corresponding hypothesis in this report.</p>
+</div>
+</main>
+  <footer>gbakit GBA Format Reference &middot; <a href="https://github.com/JidouGhost-TL/gbakit">GitHub: JidouGhost-TL/gbakit</a> &middot; Clean-room GBA binary format specs &amp; Rust toolkit.</footer>
+</body>
+</html>

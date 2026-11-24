@@ -1,0 +1,334 @@
+{
+  "schema": "gbakit-save-research/1",
+  "release_key": "AH4P-r0-4d57fc66d3f893e1",
+  "display_name": "Shrek - Hassle at the Castle (Europe) (En,Fr,De,Es,It,Nl)",
+  "rom_sha256": "4d57fc66d3f893e1ab94ef2f6a302f5843b2bce90051b386793e4f98a1871424",
+  "game_code": "AH4P",
+  "header_family": "AH4",
+  "community_id": "comm-037",
+  "overall_confidence": "MEDIUM",
+  "media": {
+    "kind": "eeprom512",
+    "size_bytes": 512,
+    "sdk_tags": [],
+    "fill_byte": "0xff"
+  },
+  "slots_and_copies": [
+    {
+      "name": "slot_0",
+      "offset": 0,
+      "size": 80,
+      "redundancy_role": "primary",
+      "selection_rule": "Single fixed slot at EEPROM block 0 (byte offset 0x00); no second copy, mirror, or selection logic found in traced code. Blocks 10-63 (bytes 0x50-0x1FF) are unused by any reachable save writer/reader in this corpus."
+    }
+  ],
+  "magic_signatures": [
+    {
+      "offset": 0,
+      "bytes_hex": "45565f4b4552485300000365",
+      "ascii": "EV_KERHS\u0000\u0000\u0003e",
+      "verified_in_code": true,
+      "verified_in_sav": true,
+      "function_addrs": ["0x080092ec", "0x080094e0"]
+    }
+  ],
+  "checksums": [
+    {
+      "name": "header_checksum",
+      "algorithm": "custom",
+      "formula_detail": "FUN_08009374: unsigned 32-bit running sum = sum of 12 individual magic bytes (buf[0x00..0x0B]) + four 32-bit header fields (buf+0x10,+0x14,+0x18,+0x1C) + twelve 32-bit slot-record fields (buf+0x20..+0x4F); checksum field itself (buf+0x0C) is excluded from the sum. Stored via FUN_080094cc immediately before every write (caller FUN_08009548) and recomputed for comparison on every load (caller FUN_080094e0, via FUN_08009374). Algorithm shape is CONFIRMED_STATIC; the resulting value does NOT reproduce the stored field in the one populated sample under either 32-bit word endianness tested (see verified_on_samples) -- flagged as an open discrepancy, not resolved.",
+      "stored_offset": 12,
+      "stored_size": 4,
+      "covered_start": 0,
+      "covered_end": 79,
+      "function_addrs": ["0x08009374", "0x080094cc", "0x080094e0"],
+      "verified_on_samples": [
+        {"file": "cap-01-future-1.sav", "stored_hex": "30313052", "computed_hex": "000002ea", "match": false}
+      ],
+      "confidence": "HYPOTHESIS"
+    }
+  ],
+  "io_driver_functions": [
+    {"addr": "0x08032d54", "role": "write", "callers": ["0x08032dd4", "0x08032e84"], "notes": "Raw DMA3-style transfer primitive: programs src/dst/count|enable-bit and busy-waits on a status halfword. Shared by both the EEPROM read and write bitstream paths."},
+    {"addr": "0x08032c88", "role": "write", "callers": ["0x08032e84"], "notes": "IRQ-mask/DMA-enable-bit set + small FIFO push, invoked only on the write path before the serial transfer."},
+    {"addr": "0x08032d10", "role": "write", "callers": ["0x08032e84"], "notes": "Counterpart IRQ-mask/DMA-enable-bit clear + FIFO pop, invoked only on the write path after the serial transfer completes."},
+    {"addr": "0x08032dd4", "role": "read", "callers": ["0x08032f60", "0x0801fa40", "0x0801fbb4"], "notes": "EepromRead(block_num, out_ptr): builds read-request bitstream, sends via 0x08032d54, clocks out 68 response bits into 4 halfwords. Bounds-checks block_num against a config max; address-bit-width parameterizes 4K vs 64K EEPROM."},
+    {"addr": "0x08032e84", "role": "write", "callers": ["0x08032fb8"], "notes": "EepromWrite(block_num, in_ptr): serializes write opcode + address + 64 data bits + stop bit via 0x08032c88/0x08032d54, writes to 0xD000000, waits for EEPROM ready bit, releases via 0x08032d10."},
+    {"addr": "0x08032f60", "role": "read", "callers": ["0x08032fb8"], "notes": "Write-verify: re-reads the just-written block via 0x08032dd4 and compares all 4 halfwords against the intended buffer; returns 0x8000 on mismatch."},
+    {"addr": "0x08032fb8", "role": "write", "callers": ["0x0801fa40"], "notes": "EepromWriteVerified(block_num, buf): write (0x08032e84) + verify (0x08032f60), retried up to 3 times. The actual save-commit primitive."},
+    {"addr": "0x0801fa40", "role": "write", "callers": ["0x08009548"], "notes": "WriteSaveBytes(handle, byte_offset, src, length): generic byte-range-to-block-range writer; merges partial blocks by reading first via 0x08032dd4, commits each block via 0x08032fb8."},
+    {"addr": "0x0801fbb4", "role": "read", "callers": ["0x0800959c"], "notes": "ReadSaveBytes(handle, dst, byte_offset, length): generic byte-range-to-block-range reader; reads+verifies each block via 0x08032dd4/0x08032f60 (up to 3 attempts each) then copies out the requested bytes."},
+    {"addr": "0x08009374", "role": "checksum", "callers": ["0x08009548", "0x080094e0"], "notes": "Computes the header_checksum described above. See checksums[0] for the unresolved verification mismatch."},
+    {"addr": "0x080094cc", "role": "serialize", "callers": ["0x08009548", "0x080092ec"], "notes": "Writer accessor for checksum field at buf+0x0C."},
+    {"addr": "0x080094e0", "role": "deserialize", "callers": ["0x0800959c"], "notes": "Validator: compares magic bytes and recomputed-vs-stored checksum; result consumed by the loader to decide whether to reset to defaults."},
+    {"addr": "0x080092ec", "role": "deserialize", "callers": ["0x0800959c"], "notes": "Default-initializer: writes the hard-coded magic bytes and all header/slot field defaults; invoked by the loader whenever EEPROM transfer or validation fails."}
+  ],
+  "caller_chains": [
+    {
+      "entry_caller": "0x08009548",
+      "chain": ["0x08009548", "0x08009374", "0x080094cc", "0x0801fa40", "0x08032fb8", "0x08032e84", "0x08032c88", "0x08032d54", "0x08032d10", "0x08032f60", "0x08032dd4"],
+      "trigger_context": "Top-level game save-write entry point (only traced caller of the generic byte-stream writer in this corpus)",
+      "ram_fields_updated": ["0x0c"],
+      "how_mapped": "Traced forward from FUN_08009548's direct calls in ghidra/decompiled.c (text search for func_0x0801fa40 and FUN_08009374), cross-checked against ghidra/callgraph.json caller/callee edges for every 0x08032xxx hop; 0x0801fa40 internally also calls 0x08032dd4 directly for partial-block read-merge before committing via 0x08032fb8."
+    },
+    {
+      "entry_caller": "0x0800959c",
+      "chain": ["0x0800959c", "0x0801fbb4", "0x08032dd4", "0x08032d54", "0x08032f60", "0x080094e0", "0x08009374", "0x080092ec"],
+      "trigger_context": "Top-level game save-load entry point; falls back to FUN_080092ec (default-initializer) on transfer failure or checksum/magic mismatch",
+      "ram_fields_updated": ["0x00-0x4f (only on validation failure, via FUN_080092ec reset-to-defaults)"],
+      "how_mapped": "Traced forward from FUN_0800959c's direct calls (func_0x0801fbb4, FUN_080094e0, FUN_080092ec) in ghidra/decompiled.c; 0x0801fbb4's internal use of 0x08032dd4/0x08032f60 cross-checked against ghidra/callgraph.json."
+    }
+  ],
+  "fields": [
+    {
+      "name": "magic_version_tag",
+      "offset": 0,
+      "size": 12,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": ["0x080092ec"],
+      "readers": ["0x080094e0"],
+      "observed_values": {"cap-01-future-1.sav": "45565f4b4552485300000365"},
+      "update_mechanism": "Copied raw from a ROM constant at init; compared byte-for-byte against a second ROM constant on load to detect corruption/absence.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "FUN_080092ec copy loop (len 12) and FUN_080094e0 compare loop (len 12 of a 13-byte copy) both bound to buf+0x00; bytes match cap-01-future-1.sav exactly and match the packet's auto-detected ascii_magic_strings."
+    },
+    {
+      "name": "header_checksum",
+      "offset": 12,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": ["0x080094cc"],
+      "readers": ["0x080094c8 (inferred, body not present in decompiled corpus)"],
+      "observed_values": {"cap-01-future-1.sav": "30313052"},
+      "update_mechanism": "Recomputed by FUN_08009374 and stored before every write; recomputed again and compared on load to gate acceptance vs. default-reset.",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Offset/trigger proven in code (FUN_08009548, FUN_080092ec both call FUN_080094cc immediately after FUN_08009374). Value verification against cap-01-future-1.sav FAILED for both LE and BE 32-bit-word interpretations of the summed fields (computed 0x000002ea vs stored 0x30313052/0x52303130) -- see SAVE-FORMAT-REPORT.md Sec 4.2 for full Python output."
+    },
+    {
+      "name": "header_field_a",
+      "offset": 16,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": ["0x080094c4"],
+      "readers": ["0x080094c0"],
+      "observed_values": {"default_init": 0, "cap-01-future-1.sav": "00000001"},
+      "update_mechanism": "Default-initialized to 0 by FUN_080092ec; no gameplay writer traced in this corpus beyond the default-initializer, so the observed value of 1 implies an untraced write path exists.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "Offset proven via *(u32*)(buf+0x10) in both accessor bodies; semantics unknown."
+    },
+    {
+      "name": "header_field_b",
+      "offset": 20,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": ["0x080094bc"],
+      "readers": ["0x080094b8"],
+      "observed_values": {"default_init": 1, "cap-01-future-1.sav": "00000000"},
+      "update_mechanism": "Default-initialized to 1 by FUN_080092ec; observed sample shows 0, implying an untraced write path.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "Offset proven via *(u32*)(buf+0x14) in both accessor bodies; semantics unknown."
+    },
+    {
+      "name": "header_field_c",
+      "offset": 24,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": ["0x080094b4"],
+      "readers": ["0x080094b0"],
+      "observed_values": {"default_init": 0, "cap-01-future-1.sav": "00000000"},
+      "update_mechanism": "Default-initialized to 0; observed sample matches default (cannot distinguish 'never changed' from 'reset to default').",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "Offset proven via *(u32*)(buf+0x18) in both accessor bodies; semantics unknown."
+    },
+    {
+      "name": "header_field_d",
+      "offset": 28,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": ["0x080094ac"],
+      "readers": ["0x080094a8"],
+      "observed_values": {"default_init": 0, "cap-01-future-1.sav": "00000001"},
+      "update_mechanism": "Default-initialized to 0; observed sample shows 1, implying an untraced write path.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "Offset proven via *(u32*)(buf+0x1C) in both accessor bodies; semantics unknown."
+    },
+    {
+      "name": "slot_record_0_field_0",
+      "offset": 32,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": ["0x08009468"],
+      "readers": ["0x0800945c"],
+      "observed_values": {"default_init": 0, "cap-01-future-1.sav": "00000003"},
+      "update_mechanism": "FUN_08009474(buf, idx) default-initializes idx=0..2 of a 16-byte-stride record array (base 0x20); this is field 0 of record 0.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "Offset proven via *(u32*)(buf+0x20+idx*0x10) in accessor bodies; semantics unknown."
+    },
+    {
+      "name": "slot_record_0_field_1",
+      "offset": 36,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": ["0x08009450"],
+      "readers": ["0x08009444"],
+      "observed_values": {"default_init": 3, "cap-01-future-1.sav": "00000000"},
+      "update_mechanism": "Field 1 of record 0 (base 0x24 + idx*0x10).",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "Offset proven via *(u32*)(buf+0x24+idx*0x10); semantics unknown."
+    },
+    {
+      "name": "slot_record_0_field_2",
+      "offset": 40,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": ["0x08009438"],
+      "readers": ["0x0800942c"],
+      "observed_values": {"default_init": 0, "cap-01-future-1.sav": "00000000"},
+      "update_mechanism": "Field 2 of record 0 (base 0x28 + idx*0x10).",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "Offset proven via *(u32*)(buf+0x28+idx*0x10); semantics unknown."
+    },
+    {
+      "name": "slot_record_0_field_3",
+      "offset": 44,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": ["0x08009420"],
+      "readers": ["0x08009414"],
+      "observed_values": {"default_init": 0, "cap-01-future-1.sav": "00000000"},
+      "update_mechanism": "Field 3 of record 0 (base 0x2c + idx*0x10).",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "Offset proven via *(u32*)(buf+0x2c+idx*0x10); semantics unknown."
+    },
+    {
+      "name": "slot_record_1_field_0",
+      "offset": 48,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": ["0x08009468"],
+      "readers": ["0x0800945c"],
+      "observed_values": {"default_init": 0, "cap-01-future-1.sav": "00000003"},
+      "update_mechanism": "Same accessor as slot_record_0_field_0, called with idx=1.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "Record stride of 0x10 confirmed by (param_2 & 0xff) * 0x10 term in accessor."
+    },
+    {
+      "name": "slot_record_1_field_1",
+      "offset": 52,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": ["0x08009450"],
+      "readers": ["0x08009444"],
+      "observed_values": {"default_init": 3, "cap-01-future-1.sav": "00000000"},
+      "update_mechanism": "Same accessor as slot_record_0_field_1, idx=1.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "Record stride of 0x10 confirmed."
+    },
+    {
+      "name": "slot_record_1_field_2",
+      "offset": 56,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": ["0x08009438"],
+      "readers": ["0x0800942c"],
+      "observed_values": {"default_init": 0, "cap-01-future-1.sav": "00000000"},
+      "update_mechanism": "Same accessor as slot_record_0_field_2, idx=1.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "Record stride of 0x10 confirmed."
+    },
+    {
+      "name": "slot_record_1_field_3",
+      "offset": 60,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": ["0x08009420"],
+      "readers": ["0x08009414"],
+      "observed_values": {"default_init": 0, "cap-01-future-1.sav": "00000000"},
+      "update_mechanism": "Same accessor as slot_record_0_field_3, idx=1.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "Record stride of 0x10 confirmed."
+    },
+    {
+      "name": "slot_record_2_field_0",
+      "offset": 64,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": ["0x08009468"],
+      "readers": ["0x0800945c"],
+      "observed_values": {"default_init": 0, "cap-01-future-1.sav": "00000003"},
+      "update_mechanism": "Same accessor, idx=2.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "Record stride of 0x10 confirmed; idx loop bound (bVar1 < 3) proven in FUN_080092ec."
+    },
+    {
+      "name": "slot_record_2_field_1",
+      "offset": 68,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": ["0x08009450"],
+      "readers": ["0x08009444"],
+      "observed_values": {"default_init": 3, "cap-01-future-1.sav": "00000000"},
+      "update_mechanism": "Same accessor, idx=2.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "Record stride of 0x10 confirmed."
+    },
+    {
+      "name": "slot_record_2_field_2",
+      "offset": 72,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": ["0x08009438"],
+      "readers": ["0x0800942c"],
+      "observed_values": {"default_init": 0, "cap-01-future-1.sav": "00000000"},
+      "update_mechanism": "Same accessor, idx=2.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "Record stride of 0x10 confirmed."
+    },
+    {
+      "name": "slot_record_2_field_3",
+      "offset": 76,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": ["0x08009420"],
+      "readers": ["0x08009414"],
+      "observed_values": {"default_init": 0, "cap-01-future-1.sav": "00000000"},
+      "update_mechanism": "Same accessor, idx=2.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "Record stride of 0x10 confirmed; total struct size 0x20 + 3*0x10 = 0x50 matches the literal length (0x50) passed to both top-level save write/read wrappers."
+    }
+  ],
+  "fuzzing_targets": [
+    {"offset": 0, "size": 1, "mutation": "flip byte 0x00 (0x45 -> 0x44)", "requires_checksum_repair": false, "predicted_effect": "Magic compare fails on next load; loader resets entire struct to FUN_080092ec defaults."},
+    {"offset": 12, "size": 4, "mutation": "zero checksum field (0x0C-0x0F -> 00000000), magic untouched", "requires_checksum_repair": false, "predicted_effect": "If checksum is consulted on load as traced, behavior should match the magic-corruption case (reset to defaults); directly tests whether FUN_08009374's output is actually gating load acceptance."},
+    {"offset": 12, "size": 4, "mutation": "write computed sum8(magic)+sum32_LE(header+slots) and sum32_BE variants into 0x0C-0x0F in separate copies", "requires_checksum_repair": true, "predicted_effect": "Resolves the unverified checksum formula experimentally: whichever variant (if any) the game accepts without resetting to defaults is the real algorithm."},
+    {"offset": 16, "size": 4, "mutation": "flip header_field_a (0x10): 00000001 -> 00000000", "requires_checksum_repair": true, "predicted_effect": "If this field is checksum-covered as traced, loading without repairing the checksum should trigger a default reset; loading successfully without reset would falsify the field's inclusion in the checksum range."},
+    {"offset": 32, "size": 4, "mutation": "flip slot_record_{0,1,2}_field_0 simultaneously (0x20,0x30,0x40): 00000003 -> 00000000, with checksum repaired", "requires_checksum_repair": true, "predicted_effect": "Since all three records carry the same value in the one observed sample, a correlated in-game/HUD change across three instances (if any) would be the most detectable observable effect; absence of any observable change would suggest these are cosmetic/reserved fields."},
+    {"offset": 0, "size": 80, "mutation": "boot fresh (all-0xFF EEPROM) vs. boot from cap-01-derived state, run identical input script for identical frame count, diff resulting .sav", "requires_checksum_repair": false, "predicted_effect": "Separates fields that change purely due to boot/time-of-day/frame-count from fields that only change due to specific player actions, for every UNKNOWN-semantics field in the map."}
+  ],
+  "open_questions": [
+    "Checksum algorithm (FUN_08009374) does not reproduce the stored value (0x30313052/0x52303130) in the only populated sample under either 32-bit word endianness tested; computed sum is 0x000002ea in both cases. Needs experimental resolution (fuzzing target 3) or a second populated .sav sample.",
+    "Semantic meaning of header_field_a/b/c/d and all twelve slot-record fields is completely unknown beyond their byte offsets and default-init values; only one non-blank sample exists so far, insufficient to separate stable fields from per-session-volatile ones.",
+    "The checksum reader accessor (conventionally 'func_0x080094c8') is inferred by offset symmetry with the writer FUN_080094cc but its body is not present among the 170 decompiled functions in this corpus -- needs re-extraction.",
+    "No code path writing to EEPROM blocks 10-63 (bytes 0x50-0x1FF) was found in the 170 decompiled functions, but this is an absence-based claim limited by decompilation coverage, not a proof of non-use.",
+    "No RTC-backed fields, multi-slot selection, generation counter, or backup-copy mechanism were found; consistent with a simple single-slot EEPROM title but likewise absence-based and should be re-checked against a fuller decompilation if available.",
+    "No paired .ss save states exist for this legacy capture cohort (states/ is empty), so the fuzzing plan in Section 6 cannot yet be executed against matched pre/post emulator states as required by the project's save-state pairing standard."
+  ]
+}

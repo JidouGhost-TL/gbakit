@@ -1,0 +1,249 @@
+{
+  "schema": "gbakit-save-research/1",
+  "release_key": "A3MP-r0-0858b2f49f4229a1",
+  "display_name": "Magical Quest Starring Mickey & Minnie (Europe) (En,Fr,De,Es,It)",
+  "rom_sha256": "0858b2f49f4229a1f13a66d03c72f9c09125c177d85651a97ef9b55739755035",
+  "game_code": "A3MP",
+  "header_family": "A3M",
+  "community_id": "",
+  "overall_confidence": "MEDIUM",
+  "media": {
+    "kind": "eeprom512",
+    "size_bytes": 512,
+    "sdk_tags": [],
+    "fill_byte": "0xff"
+  },
+  "slots_and_copies": [
+    {
+      "name": "slot_a",
+      "offset": 0,
+      "size": 128,
+      "redundancy_role": "primary",
+      "selection_rule": "Chosen when in-RAM generation value's low bit (*mirror & 1) == 0 at save time; preferred on load if its magic/checksum validate (FUN_08001430) and (slot_b invalid OR slot_a's recency is within 0x40 of slot_b's)."
+    },
+    {
+      "name": "slot_b",
+      "offset": 256,
+      "size": 128,
+      "redundancy_role": "backup",
+      "selection_rule": "Chosen when in-RAM generation value's low bit (*mirror & 1) == 1 at save time; on load, overrides slot_a's loaded data if slot_b validates and is deemed newer/not within the recency window favoring slot_a."
+    },
+    {
+      "name": "unused_gap_1",
+      "offset": 128,
+      "size": 128,
+      "redundancy_role": "unknown",
+      "selection_rule": "Never written or read by any traced function; remains EEPROM-erased 0xFF in all samples."
+    },
+    {
+      "name": "unused_gap_2",
+      "offset": 384,
+      "size": 128,
+      "redundancy_role": "unknown",
+      "selection_rule": "Never written or read by any traced function; remains EEPROM-erased 0xFF in all samples."
+    }
+  ],
+  "magic_signatures": [
+    {
+      "offset": 112,
+      "bytes_hex": "414d5945334b43494d",
+      "ascii": "AMYEKCIM",
+      "verified_in_code": true,
+      "verified_in_sav": true,
+      "function_addrs": ["0x08001474"]
+    },
+    {
+      "offset": 124,
+      "bytes_hex": "5644",
+      "ascii": "VD",
+      "verified_in_code": true,
+      "verified_in_sav": true,
+      "function_addrs": ["0x08001430"]
+    }
+  ],
+  "checksums": [
+    {
+      "name": "record_sum16_zero",
+      "algorithm": "sum16_le",
+      "formula_detail": "Writer (FUN_08001474) sums the first 63 little-endian 16-bit words of the 128-byte record (bytes 0x00-0x7D) and stores the two's-complement negation of that sum as word 63 (bytes 0x7E-0x7F), making the sum of all 64 words equal 0x0000 by construction. Validator (FUN_08001430) independently re-sums all 64 words and requires the total to equal 0x0000 (and additionally requires the u16 field at offset 0x7C to equal a fixed ROM constant before even attempting the sum).",
+      "stored_offset": 126,
+      "stored_size": 2,
+      "covered_start": 0,
+      "covered_end": 127,
+      "function_addrs": ["0x08001474", "0x08001430"],
+      "verified_on_samples": [
+        {"file": "cap-00-future-0.sav", "stored_hex": "4741", "computed_hex": "fd03", "match": false},
+        {"file": "cap-01-future-1.sav (slot@0x000)", "stored_hex": "4741", "computed_hex": "fd03", "match": false},
+        {"file": "cap-01-future-1.sav (slot@0x100)", "stored_hex": "4741", "computed_hex": "fd03", "match": false}
+      ],
+      "confidence": "CONFIRMED_STATIC"
+    }
+  ],
+  "io_driver_functions": [
+    {"addr": "0x0804b588", "role": "write", "callers": ["0x0804b608", "0x0804b6b8"], "notes": "Generic bit-serial DMA pump to/from EEPROM bus address 0xD000000; shared by both read and write block primitives; not game-specific."},
+    {"addr": "0x0804b4bc", "role": "write", "callers": ["0x0804b6b8"], "notes": "Pre-write busy/ready handshake setup."},
+    {"addr": "0x0804b544", "role": "write", "callers": ["0x0804b6b8"], "notes": "Post-write handshake teardown."},
+    {"addr": "0x0804b608", "role": "read", "callers": ["0x0804b794"], "notes": "Reads one 8-byte EEPROM block via a 2-bit opcode + 6-bit block address command, clocks back 64 data bits."},
+    {"addr": "0x0804b6b8", "role": "write", "callers": [], "notes": "Writes one 8-byte EEPROM block; callers not resolved by static callgraph (compiler-aliased call via func_0x0804b6b8), located by text search to FUN_08001374."},
+    {"addr": "0x0804b794", "role": "read", "callers": [], "notes": "Reads one 8-byte block and compares it to an expected buffer; used as the write-back verification step, called from FUN_08001374 via alias func_0x0804b794."},
+    {"addr": "0x08001374", "role": "write", "callers": ["0x0800154c"], "notes": "Writes 16 blocks (128 bytes) to a selected slot, then reads back and verifies all 16 blocks."},
+    {"addr": "0x080013e0", "role": "read", "callers": ["0x080014b8"], "notes": "Zeroes a 128-byte buffer then reads 16 blocks (128 bytes) from a selected slot."},
+    {"addr": "0x08001430", "role": "checksum", "callers": ["0x080014b8"], "notes": "Validates the static format tag at offset 0x7C and the 64-word sum-to-zero checksum."},
+    {"addr": "0x08001474", "role": "checksum", "callers": ["0x0800154c"], "notes": "Builds the 12-byte header, 2-byte version field, and the negated-sum checksum word before a write."},
+    {"addr": "0x08000d4c", "role": "serialize", "callers": ["0x0800154c"], "notes": "Copies live gameplay globals into the 52-byte in-RAM mirror struct, tiered by a depth parameter."},
+    {"addr": "0x08000df4", "role": "deserialize", "callers": ["0x0800151c"], "notes": "Exact inverse of 0x08000d4c; copies the loaded 52-byte mirror struct back into live gameplay globals."}
+  ],
+  "caller_chains": [
+    {
+      "entry_caller": "0x0800154c",
+      "chain": ["0x0800154c", "0x08000d4c", "0x08001474", "0x08001374", "0x0804b6b8", "0x0804b588", "0x0804b794", "0x0804b608"],
+      "trigger_context": "Top-level in-game save action.",
+      "ram_fields_updated": ["mirror_struct_generation_low_bit", "mirror_struct_52_byte_payload"],
+      "how_mapped": "Traced by following FUN_0800154c's direct calls in ghidra/decompiled.c; FUN_08001374's calls to func_0x0804b6b8/func_0x0804b794 were found by text-searching the hex addresses since ghidra/callgraph.json did not record those edges for the aliased call forms."
+    },
+    {
+      "entry_caller": "0x080014b8",
+      "chain": ["0x080014b8", "0x080013e0", "0x0804b608", "0x0804b588", "0x08001430", "0x0800151c", "0x08000df4"],
+      "trigger_context": "Top-level in-game load / title-screen continue.",
+      "ram_fields_updated": ["gameplay_globals_from_52_byte_payload"],
+      "how_mapped": "ghidra/callgraph.json gave 0x080013e0 and 0x08001430 as direct callees of 0x080014b8; 0x0800151c's and 0x08000df4's involvement was found by scanning decompiled.c for the single remaining undocumented caller of 0x080014b8 and following its memcpy argument back to the mirror struct."
+    }
+  ],
+  "fields": [
+    {
+      "name": "record_header",
+      "offset": 0,
+      "size": 12,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": ["0x08001474"],
+      "readers": ["0x08001430"],
+      "observed_values": {"cap-00-future-0.sav@0x0": "000000000000000000000000", "cap-01-future-1.sav@0x0": "000000000000000000000000", "cap-01-future-1.sav@0x100": "000000000000000100000000"},
+      "update_mechanism": "memcpy from a ROM/RAM source into the record start, performed by FUN_08001474 before the checksum is computed.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "Decompiled memcpy(dest, src, 0xc) in FUN_08001474; internal field boundaries beyond this are not resolvable from the two near-default samples available."
+    },
+    {
+      "name": "slot_parity_byte",
+      "offset": 7,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": ["0x08001474"],
+      "readers": ["0x0800154c"],
+      "observed_values": {"cap-00-future-0.sav": "0x00", "cap-01-future-1.sav_slot_a": "0x00", "cap-01-future-1.sav_slot_b": "0x01"},
+      "update_mechanism": "Copied as part of the 12-byte header; correlates exactly with which of the two ping-pong slots was written in each capture.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Only header byte that differs between the two capture generations; FUN_0800154c's slot-selection logic uses *mirror & 1, matching the observed 0->1 transition timed with the switch from slot_a-only to slot_a+slot_b."
+    },
+    {
+      "name": "format_version_tag",
+      "offset": 12,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": ["0x08001474"],
+      "readers": [],
+      "observed_values": {"all_samples": "0x0080"},
+      "update_mechanism": "Direct store of a ROM constant (_DAT_080014b0) by FUN_08001474.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "Decompiled *(short*)(dest+0xc) = _DAT_080014b0; constant across all observed records."
+    },
+    {
+      "name": "gameplay_payload",
+      "offset": 14,
+      "size": 52,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": ["0x08000d4c", "0x0800154c"],
+      "readers": ["0x08000df4", "0x0800151c"],
+      "observed_values": {"note": "mostly 0x00 (new-game default); non-zero bytes at struct-relative offsets 0x0E (0x0040), 0x24 (0x01), 0x29 (0x03), 0x2E (0x10), 0x35 (0x05 slot_a only)"},
+      "update_mechanism": "FUN_08000d4c serializes live gameplay globals into a 52-byte mirror struct, tiered by a depth parameter (deeper tiers copy more fields); FUN_0800154c then relocates the whole struct into the EEPROM write buffer.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "Byte ranges and copy sizes directly read from FUN_08000d4c/FUN_08000df4's memcpy and scalar-store operations; per-field gameplay semantics unresolved due to insufficient non-default sample data."
+    },
+    {
+      "name": "payload_flag_byte",
+      "offset": 53,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": ["0x08000d4c"],
+      "readers": ["0x08000df4"],
+      "observed_values": {"cap-01-future-1.sav_slot_a": "0x01", "cap-01-future-1.sav_slot_b": "0x00"},
+      "update_mechanism": "Part of the serialized gameplay payload; copied verbatim in/out by the serialize/deserialize pair.",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Second and only other byte that differs between capture generations; falls inside the mapped payload region but no second confirming data point exists to assign it a concrete meaning.",
+      "unknown_meaning": true
+    },
+    {
+      "name": "magic_signature_mickeyma",
+      "offset": 112,
+      "size": 8,
+      "type": "ascii",
+      "ram_addr": null,
+      "writers": ["0x08001474"],
+      "readers": [],
+      "observed_values": {"all_samples": "AMYEKCIM"},
+      "update_mechanism": "Static ROM constant copied as part of the record header build; byte-reverses to 'MICKEYMA', a fragment of the game's title.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Byte-identical across all 3 observed record instances; reversal confirmed via Python: 'AMYEKCIM'[::-1] == 'MICKEYMA'."
+    },
+    {
+      "name": "unidentified_static_block",
+      "offset": 120,
+      "size": 4,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": ["0x08001474"],
+      "readers": [],
+      "observed_values": {"all_samples": "fd5455ab"},
+      "update_mechanism": "Static, copied with the rest of the header/footer block.",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Non-ASCII, constant across all samples; not matched by any sum-to-zero checksum window in the brute-force search performed in the report, so not confirmed as a secondary checksum.",
+      "unknown_meaning": true
+    },
+    {
+      "name": "format_tag_checked_by_validator",
+      "offset": 124,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": ["0x08001474"],
+      "readers": ["0x08001430"],
+      "observed_values": {"all_samples": "0x4456"},
+      "update_mechanism": "Static ROM constant; compared by FUN_08001430 against *_DAT_08001448 before any checksum work is attempted.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "Directly gated on in decompiled FUN_08001430; constant across all samples."
+    },
+    {
+      "name": "record_checksum_word",
+      "offset": 126,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": ["0x08001474"],
+      "readers": ["0x08001430"],
+      "observed_values": {"all_samples": "0x4741"},
+      "update_mechanism": "Writer stores the negated sum of the preceding 63 words; validator requires the sum of all 64 words to equal 0.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "Algorithm fully traced in both FUN_08001474 and FUN_08001430; numeric verification against all 3 sample instances produced sum=0x03fd (expected 0x0000) — a confirmed MISMATCH, not a confirmed-correct checksum. See fuzzing_targets and open_questions."
+    }
+  ],
+  "fuzzing_targets": [
+    {"offset": 126, "size": 2, "mutation": "Recompute and write the correct negated-sum checksum for the real Slot A payload.", "requires_checksum_repair": true, "predicted_effect": "No change if the loader doesn't actually enforce this on these synthetic samples; a behavioral change would confirm the algorithm and that the originals were unverified states."},
+    {"offset": 126, "size": 2, "mutation": "Zero out the checksum word on an otherwise-untouched Slot A while Slot B remains valid.", "requires_checksum_repair": false, "predicted_effect": "Loader should reject Slot A and fall back entirely to Slot B on next load."},
+    {"offset": 124, "size": 2, "mutation": "Flip one bit of the 0x4456 format tag.", "requires_checksum_repair": false, "predicted_effect": "Immediate rejection of the slot by FUN_08001430 regardless of checksum correctness, since the tag check short-circuits before the checksum loop."},
+    {"offset": 7, "size": 1, "mutation": "Flip the slot-parity byte 0x00 -> 0x01 in Slot A.", "requires_checksum_repair": false, "predicted_effect": "Next in-game save should target the slot indicated by the flipped byte rather than the one the game would otherwise have chosen."},
+    {"offset": 53, "size": 1, "mutation": "Flip the unidentified payload flag byte 0x01 <-> 0x00.", "requires_checksum_repair": false, "predicted_effect": "Unknown by design; intended to surface a visible UI/behavior difference to help identify this field's meaning."},
+    {"offset": 112, "size": 8, "mutation": "Corrupt one byte inside the MICKEYMA magic block.", "requires_checksum_repair": false, "predicted_effect": "No behavioral change predicted, since no traced function reads/validates this specific sub-range; would confirm it is decorative rather than enforced."}
+  ],
+  "open_questions": [
+    "Why does the sum-to-zero checksum at offset 0x7E-0x7F fail to validate (sum=0x03fd, not 0x0000) on all 3 available record instances? Is this because both .sav samples are synthetic 'future' capture states rather than organically-produced saves, or is the checksum model (coverage range / seed) incomplete?",
+    "What are the exact field boundaries and gameplay semantics inside the 12-byte header (offset 0x00-0x0B) beyond the slot-parity byte at offset 0x07?",
+    "What does the payload flag byte at offset 0x35 (absolute) represent? Only one data point of change (0x01 -> 0x00) is available.",
+    "What is the purpose of the static 4-byte block at offset 0x78-0x7B (fd 54 55 ab)? Not matched to any checksum window; could be an unused/legacy secondary checksum or pure padding.",
+    "What are the RAM mirror addresses (0x02xxxxxx/0x03xxxxxx) for the mirror struct and gameplay globals referenced by FUN_08000d4c/FUN_08000df4? Not resolvable from the symbolic _DAT_ globals in the available decompilation without a resolved pointer/literal-pool dump.",
+    "Does the 52-byte gameplay payload struct contain more meaningful fields that stay at their default/zero values in both available new-game-like samples? Requires saves captured after real, varied gameplay progress to triangulate."
+  ]
+}

@@ -1,0 +1,845 @@
+{
+  "schema": "gbakit-save-research/1",
+  "release_key": "AY7J-r0-a60ea170e5daaee6",
+  "display_name": "Yu-Gi-Oh! Duel Monsters 7 - Kettou Toshi Densetsu (Japan)",
+  "rom_sha256": "a60ea170e5daaee64f475bedf3ae8ba94219d61dac0db98816c0b3b438a5e102",
+  "game_code": "AY7J",
+  "header_family": "AY7",
+  "community_id": "comm-002",
+  "overall_confidence": "MEDIUM",
+  "media": {
+    "kind": "sram",
+    "size_bytes": 32768,
+    "sdk_tags": [],
+    "fill_byte": "0xff"
+  },
+  "slots_and_copies": [
+    {
+      "name": "slot_0_copy_a",
+      "offset": 0,
+      "size": 16416,
+      "redundancy_role": "primary",
+      "selection_rule": "Header (status+magic) lives here; copy A written first (status phase 1). Validator FUN_08005a84 combines magic, status<3 and both per-copy checksum results into state 0-3; load dispatch by state (FUN_08005b44 -> 0x08005c3c/0x08005c64, bodies missing). Primary label is HYPOTHESIS."
+    },
+    {
+      "name": "slot_0_copy_b",
+      "offset": 16352,
+      "size": 16416,
+      "redundancy_role": "backup",
+      "selection_rule": "Copy frame at 0x3FE0 (size 0x4020, ending exactly at 0x8000); payload itself at 0x3FF0 (stride 0x3FE0 from copy A payload at 0x10), overlapping copy A checksum window; written second (status phase 2) with the same sum16 value. Same validator/state rule as copy A; A-vs-B priority unproven."
+    }
+  ],
+  "magic_signatures": [
+    {
+      "offset": 1,
+      "bytes_hex": "3032303332325f444d375f4b43454a",
+      "ascii": "020322_DM7_KCEJ",
+      "verified_in_code": true,
+      "verified_in_sav": true,
+      "function_addrs": [
+        "0x08005ecc",
+        "0x08005ee4"
+      ]
+    }
+  ],
+  "checksums": [
+    {
+      "name": "payload_sum16_copy_a",
+      "algorithm": "sum16_le",
+      "formula_detail": "stored_u16le = (sum of unsigned bytes over covered range) mod 65536; s16 accumulator in FUN_0801fffc, no seed/complement/CRC. Header (status+magic) excluded: computed from RAM payload before magic is written to SRAM.",
+      "stored_offset": 16414,
+      "stored_size": 2,
+      "covered_start": 16,
+      "covered_end": 16414,
+      "function_addrs": [
+        "0x0801fffc",
+        "0x08005dfc",
+        "0x08005c98"
+      ],
+      "verified_on_samples": [
+        {
+          "file": "cap-01-future-1.sav",
+          "stored_hex": "0x112e",
+          "computed_hex": "0x112e",
+          "match": true
+        },
+        {
+          "file": "cap-00-future-0.sav",
+          "stored_hex": "0xffff (blank)",
+          "computed_hex": "n/a (no magic, status 0xff)",
+          "match": false
+        }
+      ],
+      "confidence": "CONFIRMED_VERIFIED"
+    },
+    {
+      "name": "payload_sum16_copy_b",
+      "algorithm": "sum16_le",
+      "formula_detail": "Same single FUN_0801fffc value as copy A, stored by FUN_08005e18. Covered range is copy B payload [0x3ff0,0x7ffe) as summed from RAM; on-disk naive sum is 0x116d because copy A checksum bytes at 0x401e-0x401f sit inside copy B's window (delta 0x3f = 0x2e+0x11). RAM-view computed value (overlap bytes = pristine payload 0x00,0x00) is 0x112e.",
+      "stored_offset": 32766,
+      "stored_size": 2,
+      "covered_start": 16368,
+      "covered_end": 32766,
+      "function_addrs": [
+        "0x0801fffc",
+        "0x08005e18",
+        "0x08005c98"
+      ],
+      "verified_on_samples": [
+        {
+          "file": "cap-01-future-1.sav",
+          "stored_hex": "0x112e",
+          "computed_hex": "0x112e (RAM-view; raw on-disk sum 0x116d)",
+          "match": true
+        }
+      ],
+      "confidence": "CONFIRMED_VERIFIED"
+    }
+  ],
+  "io_driver_functions": [
+    {
+      "addr": "0x08034230",
+      "role": "write",
+      "callers": [
+        "0x08005c98",
+        "0x08005ba4",
+        "0x08005bc4",
+        "0x08005da0",
+        "0x08005dbc",
+        "0x08005dfc",
+        "0x08005e18",
+        "0x08005ecc"
+      ],
+      "notes": "Verified SRAM write variant 2: byte copy FUN_0803410c + FUN_08036430 compare, up to 3 retries. Used for all multi-byte SRAM writes incl. 4x0x2000 whole-chip flush to 0x0e000000/0x0e002000/0x0e004000/0x0e006000."
+    },
+    {
+      "addr": "0x08034094",
+      "role": "write",
+      "callers": [
+        "0x08005d68",
+        "0x08005d84"
+      ],
+      "notes": "Verified SRAM write variant 1: byte copy FUN_08033fc0 + FUN_08034030 compare, up to 3 retries. Used for 1-byte status writes to SRAM+0."
+    },
+    {
+      "addr": "0x0803410c",
+      "role": "write",
+      "callers": [
+        "0x08034230"
+      ],
+      "notes": "Byte-copy loop; programs WAITCNT-class register (mask|3) first."
+    },
+    {
+      "addr": "0x08033fc0",
+      "role": "write",
+      "callers": [
+        "0x08034094"
+      ],
+      "notes": "Byte-copy loop; programs WAITCNT-class register (mask|3) first."
+    },
+    {
+      "addr": "0x08034030",
+      "role": "checksum",
+      "callers": [
+        "0x08034094"
+      ],
+      "notes": "Verify/compare helper; copies helper code to stack and calls FUN_08036430 through it."
+    },
+    {
+      "addr": "0x08036430",
+      "role": "read",
+      "callers": [
+        "0x08034230",
+        "0x08034030",
+        "0x08005ee4"
+      ],
+      "notes": "Unrecovered library read/compare primitive (bare jumptable in export); semantics UNKNOWN beyond use sites."
+    },
+    {
+      "addr": "0x08033f2c",
+      "role": "write",
+      "callers": [
+        "0x08005c98"
+      ],
+      "notes": "BIOS SWI 0x0B (CpuSet-class) wrapper; zero-fills RAM mirror and general copies."
+    },
+    {
+      "addr": "0x08033f34",
+      "role": "write",
+      "callers": [],
+      "notes": "BIOS SWI 0x11 wrapper; not on traced save path."
+    },
+    {
+      "addr": "0x08034198",
+      "role": "write",
+      "callers": [
+        "0x08005c8c"
+      ],
+      "notes": "SRAM driver init: copies ROM code blocks to RAM, sets WAITCNT-class register."
+    },
+    {
+      "addr": "0x0801fffc",
+      "role": "checksum",
+      "callers": [
+        "0x08005c98"
+      ],
+      "notes": "sum16 over contiguous RAM payload: s16 acc += u8 byte, count = literal bound+1 (unresolved)."
+    },
+    {
+      "addr": "0x08020028",
+      "role": "serialize",
+      "callers": [
+        "0x08005c98"
+      ],
+      "notes": "Pack: concatenates (src,len) table chunks at _DAT_08020084 into contiguous payload at *_DAT_08020088."
+    },
+    {
+      "addr": "0x08005c98",
+      "role": "write",
+      "callers": [
+        "0x08020258"
+      ],
+      "notes": "Formatter/creator: zero mirror, flush whole SRAM, defaults FUN_08005d30, pack, checksum, status1+chunkA+cksumA, status2+chunkB+cksumB, status3+magic, status0."
+    },
+    {
+      "addr": "0x08005ba4",
+      "role": "write",
+      "callers": [
+        "0x08005c98"
+      ],
+      "notes": "Chunk writer A (FUN_08034230 with literal src/dst/len); inferred payload copy A flush."
+    },
+    {
+      "addr": "0x08005bc4",
+      "role": "write",
+      "callers": [
+        "0x08005c98"
+      ],
+      "notes": "Chunk writer B; inferred payload copy B flush."
+    },
+    {
+      "addr": "0x08005dfc",
+      "role": "write",
+      "callers": [
+        "0x08005c98"
+      ],
+      "notes": "Stores u16 checksum at SRAM+0x401E (literal dst unresolved, offset proven by .sav)."
+    },
+    {
+      "addr": "0x08005e18",
+      "role": "write",
+      "callers": [
+        "0x08005c98"
+      ],
+      "notes": "Stores u16 checksum at SRAM+0x7FFE."
+    },
+    {
+      "addr": "0x08005ecc",
+      "role": "write",
+      "callers": [
+        "0x08005c98"
+      ],
+      "notes": "Writes 15-byte magic at SRAM+1 via FUN_08034230."
+    },
+    {
+      "addr": "0x08005d84",
+      "role": "write",
+      "callers": [
+        "0x08005c98"
+      ],
+      "notes": "Writes status byte 1 to SRAM+0."
+    },
+    {
+      "addr": "0x08005da0",
+      "role": "write",
+      "callers": [
+        "0x08005c98"
+      ],
+      "notes": "Writes status byte 2 to SRAM+0."
+    },
+    {
+      "addr": "0x08005dbc",
+      "role": "write",
+      "callers": [
+        "0x08005c98"
+      ],
+      "notes": "Writes status byte 3 to SRAM+0."
+    },
+    {
+      "addr": "0x08005d68",
+      "role": "write",
+      "callers": [
+        "0x08005c98"
+      ],
+      "notes": "Writes status byte 0 (commit) to SRAM+0."
+    },
+    {
+      "addr": "0x08005ee4",
+      "role": "read",
+      "callers": [
+        "0x08005a84"
+      ],
+      "notes": "Magic validator: reads 15 SRAM bytes via FUN_08036430, compares to ROM string 020322_DM7_KCEJ, returns 1 iff all match."
+    },
+    {
+      "addr": "0x08005a84",
+      "role": "checksum",
+      "callers": [
+        "0x08005b44",
+        "0x08020258"
+      ],
+      "notes": "Save-state validator: magic + status<3 (0x08005dd8, missing) + two per-copy checksum bits (0x08005e34/0x08005e5c, missing) -> state 0-3."
+    },
+    {
+      "addr": "0x08005d30",
+      "role": "serialize",
+      "callers": [
+        "0x08005c98"
+      ],
+      "notes": "New-save defaults init; callees FUN_08001bf4,FUN_08004134,FUN_08013abc,FUN_0801377c,FUN_08013800,FUN_08015900,FUN_080182cc,FUN_080181cc,FUN_08031b80,FUN_08031340,FUN_08031a34."
+    }
+  ],
+  "caller_chains": [
+    {
+      "entry_caller": "0x08020258",
+      "chain": [
+        "0x08020258",
+        "0x08005a84",
+        "0x08005ee4",
+        "0x08005dd8",
+        "0x08005e34",
+        "0x08005e5c",
+        "0x08020294",
+        "0x08020310",
+        "0x08005c98",
+        "0x08005b08",
+        "0x08005be4",
+        "0x08020500"
+      ],
+      "trigger_context": "Boot/title dispatch (no static callers; jumptable entry). State 0 -> FUN_08020294 new-game flow, else missing 0x08020310; sub-result 0 -> format via FUN_08005c98, else load via missing 0x08005b08(state)+0x08005be4.",
+      "ram_fields_updated": [],
+      "how_mapped": "Direct calls in decompiled.c cross-checked with callgraph.json (0x08020258 callees 0x08005a84,0x08005c98). 0x08005dd8/0x08005e34/0x08005e5c/0x08020310/0x08005b08/0x08005be4 are func_ calls with no decompiled body and no callgraph node."
+    },
+    {
+      "entry_caller": "0x08005b44",
+      "chain": [
+        "0x08005b44",
+        "0x08005a84",
+        "0x08005c3c",
+        "0x08005c64"
+      ],
+      "trigger_context": "Load dispatch (no static callers): state 2 -> 0x08005c3c, state 3 -> 0x08005c64 (both missing bodies, inferred per-copy loaders).",
+      "ram_fields_updated": [],
+      "how_mapped": "Direct calls in decompiled.c; callgraph confirms 0x08005b44 -> 0x08005a84 only (missing callees absent from graph)."
+    },
+    {
+      "entry_caller": "0x08005c98",
+      "chain": [
+        "0x08005c98",
+        "0x08033f2c",
+        "0x08034230",
+        "0x08005d30",
+        "0x08020028",
+        "0x0801fffc",
+        "0x08005d84",
+        "0x08005ba4",
+        "0x08005dfc",
+        "0x08005da0",
+        "0x08005bc4",
+        "0x08005e18",
+        "0x08005dbc",
+        "0x08005ecc",
+        "0x08005d68"
+      ],
+      "trigger_context": "Format/create new save, called only by 0x08020258 when no valid save path is taken.",
+      "ram_fields_updated": [
+        "whole RAM payload struct reset to defaults by 0x08005d30 callees, then packed by 0x08020028"
+      ],
+      "how_mapped": "Sequential direct/func_ calls in decompiled.c FUN_08005c98 body; SRAM destinations 0x0e000000+0x2000*n are literals."
+    },
+    {
+      "entry_caller": "0x08005d30",
+      "chain": [
+        "0x08005d30",
+        "0x08001bf4",
+        "0x08004134",
+        "0x08013abc",
+        "0x0801377c",
+        "0x08013800",
+        "0x08015900",
+        "0x080182cc",
+        "0x080181cc",
+        "0x08031b80",
+        "0x08031340",
+        "0x08031a34"
+      ],
+      "trigger_context": "Default-state initialisation inside format, before pack+checksum+flush.",
+      "ram_fields_updated": [
+        "9-byte field zeroed (0x08001bf4)",
+        "0x385-byte default table copied (0x08004134)",
+        "40xu16 default list copied to dst+10 (0x08013abc)",
+        "scalar=0x640 (0x0801377c)",
+        "scalar=0x48 (0x08013800)",
+        "strided array zeroed (0x08015900)",
+        "byte=1 (0x080182cc, 0x08031b80)",
+        "two u32 constants (0x080181cc)",
+        "0x32 bytes zeroed (0x08031340)",
+        "2 bytes zeroed (0x08031a34)"
+      ],
+      "how_mapped": "Call list in decompiled.c FUN_08005d30; each callee body inspected. All RAM targets are unresolved _DAT_ literals, so fields are described by effect, not address."
+    }
+  ],
+  "fields": [
+    {
+      "name": "status_commit_byte",
+      "offset": 0,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": [
+        "0x08005d84",
+        "0x08005da0",
+        "0x08005dbc",
+        "0x08005d68"
+      ],
+      "readers": [
+        "0x08005dd8",
+        "0x08005a84"
+      ],
+      "observed_values": {
+        "cap-01-future-1.sav": "0x00",
+        "cap-00-future-0.sav": "0xff"
+      },
+      "update_mechanism": "Written 1,2,3,0 around copy A, copy B, magic writes in FUN_08005c98; validator requires <3",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Writer bodies store immediates 1/2/3/0 to 0x0e000000; FUN_08005a84 gates on <3; observed 0x00"
+    },
+    {
+      "name": "magic_ascii",
+      "offset": 1,
+      "size": 15,
+      "type": "ascii",
+      "ram_addr": null,
+      "writers": [
+        "0x08005ecc"
+      ],
+      "readers": [
+        "0x08005ee4"
+      ],
+      "observed_values": {
+        "cap-01-future-1.sav": "020322_DM7_KCEJ",
+        "cap-00-future-0.sav": "absent"
+      },
+      "update_mechanism": "Verified-written once per format after both copies+checksums",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "FUN_08005ecc length 0xf; FUN_08005ee4 15-byte compare; string at sav offset 1"
+    },
+    {
+      "name": "payload_index_byte_array",
+      "offset": 16,
+      "size": 958,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [
+        "0x08005ba4",
+        "0x08020028"
+      ],
+      "readers": [
+        "0x08005c3c",
+        "0x08005c64"
+      ],
+      "observed_values": {
+        "nonzero_count": 42,
+        "all_nonzero_values": "0x01",
+        "set_indices_rel": "0x42,0x51,0xa2,0xb4,0xc2,0xe0,0xf9,0xfe,0x126,0x15a,0x1c2-0x1c4,0x1c7,0x1c8,0x1d3,0x1d4,0x1df,0x1e5,0x1ed,0x1f5,0x20e,0x214,0x21d,0x21e,0x221,0x22c,0x231,0x245,0x248,0x256,0x25c,0x25d,0x267,0x26c,0x2b4,0x2bd,0x316,0x339,0x341,0x370,0x392"
+      },
+      "update_mechanism": "RAM fields packed by FUN_08020028 and flushed wholesale; no per-field writer in corpus",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Sparse 0/1 byte-per-index shape fits card ownership/count flags; semantics unproven with one populated sample. Copy B mirror at +0x3fe0"
+    },
+    {
+      "name": "list_header_pair",
+      "offset": 974,
+      "size": 4,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": [
+        "0x08005ba4"
+      ],
+      "readers": [
+        "0x08005c3c",
+        "0x08005c64"
+      ],
+      "observed_values": {
+        "u16_0": "0x031a",
+        "u16_1": "0x00c3"
+      },
+      "update_mechanism": "Flushed with payload; no distinct writer in corpus",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Immediately precedes 40xu16 list at 0x3d2; candidate count/length pair"
+    },
+    {
+      "name": "u16_list_40",
+      "offset": 978,
+      "size": 80,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": [
+        "0x08013abc",
+        "0x08005ba4"
+      ],
+      "readers": [
+        "0x08005c3c",
+        "0x08005c64"
+      ],
+      "observed_values": {
+        "entries": [
+          "0x150",
+          "0x152",
+          "0x189",
+          "0x18f",
+          "0x195",
+          "0x1b4",
+          "0x1cc",
+          "0x1db",
+          "0x1f2",
+          "0x1f8",
+          "0x1fa",
+          "0x204",
+          "0x205",
+          "0x20f",
+          "0x218",
+          "0x21c",
+          "0x220",
+          "0x223",
+          "0x224",
+          "0x225",
+          "0x22c",
+          "0x22e",
+          "0x233",
+          "0x242",
+          "0x243",
+          "0x24f",
+          "0x256",
+          "0x25a",
+          "0x263",
+          "0x274",
+          "0x27b",
+          "0x284",
+          "0x2a9",
+          "0x300",
+          "0x315",
+          "0x2b5",
+          "0x66",
+          "0x337",
+          "0x640",
+          "0x0"
+        ]
+      },
+      "update_mechanism": "Default 40xu16 list copied in RAM by FUN_08013abc during FUN_08005d30, then packed/flushed",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Entry count 40 matches FUN_08013abc 0x28-entry copy; values mostly ascending 0x0150-0x02a9 (card-ID-like), tail unsorted incl. 0x0640,0x0000 - internal boundaries UNKNOWN"
+    },
+    {
+      "name": "byte_after_list_0x48",
+      "offset": 1058,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": [
+        "0x08013800",
+        "0x08005ba4"
+      ],
+      "readers": [
+        "0x08005c3c",
+        "0x08005c64"
+      ],
+      "observed_values": {
+        "cap-01-future-1.sav": "0x48"
+      },
+      "update_mechanism": "RAM default 0x48 stored by FUN_08013800 in FUN_08005d30; flushed with payload",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Value equals FUN_08013800 constant; semantic identity unknown"
+    },
+    {
+      "name": "reserved_zero_0x423",
+      "offset": 1059,
+      "size": 107,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [
+        "0x08005ba4"
+      ],
+      "readers": [],
+      "observed_values": {
+        "cap-01-future-1.sav": "all 0x00"
+      },
+      "update_mechanism": "Flushed with payload",
+      "confidence": "UNKNOWN",
+      "evidence": "Zero gap, no distinct code reference"
+    },
+    {
+      "name": "flag_0x48e",
+      "offset": 1166,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": [
+        "0x08005ba4"
+      ],
+      "readers": [
+        "0x08005c3c",
+        "0x08005c64"
+      ],
+      "observed_values": {
+        "cap-01-future-1.sav": "0x01"
+      },
+      "update_mechanism": "Flushed with payload; possible default-on flag (FUN_080182cc/FUN_08031b80 store byte 1 in RAM)",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Isolated 0x01 in zero region; semantics unknown"
+    },
+    {
+      "name": "table_0x385_candidate",
+      "offset": 1167,
+      "size": 901,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [
+        "0x08004134",
+        "0x08005ba4"
+      ],
+      "readers": [],
+      "observed_values": {
+        "cap-01-future-1.sav": "all 0x00"
+      },
+      "update_mechanism": "FUN_08004134 copies 0x385 bytes in RAM during defaults; flushed with payload",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Region length exactly 0x385 matching FUN_08004134 copy length; alignment unproven (all zero, RAM addr unresolved)"
+    },
+    {
+      "name": "counter_u16_0x814",
+      "offset": 2068,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": [
+        "0x08005ba4"
+      ],
+      "readers": [
+        "0x08005c3c",
+        "0x08005c64"
+      ],
+      "observed_values": {
+        "cap-01-future-1.sav": "0x01f4 (500)"
+      },
+      "update_mechanism": "Flushed with payload; updated in RAM during play (writer not in corpus)",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Only payload scalar outside list region; round value 500 fits currency/points counter. Copy B at 0x47f4"
+    },
+    {
+      "name": "reserved_zero_0x816",
+      "offset": 2070,
+      "size": 38,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [
+        "0x08005ba4"
+      ],
+      "readers": [],
+      "observed_values": {
+        "cap-01-future-1.sav": "all 0x00"
+      },
+      "update_mechanism": "Flushed with payload",
+      "confidence": "UNKNOWN",
+      "evidence": "Zero gap"
+    },
+    {
+      "name": "flag_0x83c",
+      "offset": 2108,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": [
+        "0x08005ba4"
+      ],
+      "readers": [
+        "0x08005c3c",
+        "0x08005c64"
+      ],
+      "observed_values": {
+        "cap-01-future-1.sav": "0x01"
+      },
+      "update_mechanism": "Flushed with payload; possible default-on flag",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Last nonzero payload byte; isolated 0x01"
+    },
+    {
+      "name": "payload_zero_tail",
+      "offset": 2109,
+      "size": 14305,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [
+        "0x08005ba4"
+      ],
+      "readers": [],
+      "observed_values": {
+        "cap-01-future-1.sav": "all 0x00"
+      },
+      "update_mechanism": "Flushed with payload copy A",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "Extent fixed by checksum covered range ending at stored offset 0x401e; contributes 0 to sum on this sample"
+    },
+    {
+      "name": "checksum_a",
+      "offset": 16414,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": [
+        "0x08005dfc",
+        "0x0801fffc"
+      ],
+      "readers": [
+        "0x08005e34",
+        "0x08005e5c"
+      ],
+      "observed_values": {
+        "cap-01-future-1.sav": "0x112e"
+      },
+      "update_mechanism": "sum16 of payload [0x10,0x401e) written after copy A flush",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Python: computed 0x112e == stored 0x112e. Overlaps copy B payload +0x2e"
+    },
+    {
+      "name": "payload_copy_b",
+      "offset": 16368,
+      "size": 16398,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [
+        "0x08005bc4",
+        "0x08020028"
+      ],
+      "readers": [
+        "0x08005c3c",
+        "0x08005c64"
+      ],
+      "observed_values": {
+        "relation": "byte-identical to copy A payload except 0x401e-0x401f (checksum A in B window)",
+        "mirror_examples": "list at 0x43ae, counter 0x01f4 at 0x47f4, flag at 0x481c"
+      },
+      "update_mechanism": "Flushed after checksum A under status 2; same packed RAM payload as copy A",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Python byte diff of [0x10,0x401e) vs [0x3ff0,0x7ffe): only offsets 0x3e,0x3f (A-relative) differ. Backup role is HYPOTHESIS"
+    },
+    {
+      "name": "checksum_b",
+      "offset": 32766,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": [
+        "0x08005e18",
+        "0x0801fffc"
+      ],
+      "readers": [
+        "0x08005e34",
+        "0x08005e5c"
+      ],
+      "observed_values": {
+        "cap-01-future-1.sav": "0x112e"
+      },
+      "update_mechanism": "Same FUN_0801fffc value as checksum A, written after copy B flush",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Stored 0x112e; RAM-view computed 0x112e (raw on-disk sum 0x116d due to overlap, delta exactly 0x3f)"
+    }
+  ],
+  "fuzzing_targets": [
+    {
+      "offset": 5,
+      "size": 1,
+      "mutation": "flip one magic byte ('2'->'3')",
+      "requires_checksum_repair": false,
+      "predicted_effect": "FUN_08005ee4 fails -> state 0 -> treated as blank, new-game/format offer"
+    },
+    {
+      "offset": 0,
+      "size": 1,
+      "mutation": "set status to 0x01, 0x02, 0x03, 0xff in separate runs",
+      "requires_checksum_repair": false,
+      "predicted_effect": "0x01/0x02 shift validator state; 0x03/0xff -> state 0, save rejected as interrupted/absent"
+    },
+    {
+      "offset": 2068,
+      "size": 1,
+      "mutation": "corrupt copy A counter byte only (0xf4->0xf5)",
+      "requires_checksum_repair": false,
+      "predicted_effect": "Copy A checksum fails, B valid -> state 2/3 dispatch loads B (value 500 shown); identifies A-bad state"
+    },
+    {
+      "offset": 18420,
+      "size": 1,
+      "mutation": "corrupt copy B counter byte only (0x47f4: 0xf4->0xf5)",
+      "requires_checksum_repair": false,
+      "predicted_effect": "Mirror of copy A test; opposite state, loads A"
+    },
+    {
+      "offset": 2068,
+      "size": 2,
+      "mutation": "corrupt same logical field in both copies (0x814 and 0x47f4)",
+      "requires_checksum_repair": false,
+      "predicted_effect": "Both checksums fail -> state 0 -> save rejected despite intact magic"
+    },
+    {
+      "offset": 16414,
+      "size": 2,
+      "mutation": "zero both stored checksums (0x401e, 0x7ffe)",
+      "requires_checksum_repair": false,
+      "predicted_effect": "Stored 0x0000 != computed 0x112e -> rejected; proves recompute-and-compare"
+    },
+    {
+      "offset": 2068,
+      "size": 2,
+      "mutation": "set counter u16 500->1000 in both copies",
+      "requires_checksum_repair": true,
+      "predicted_effect": "If currency/DP, wallet display shows 1000; no change refutes counter semantics"
+    },
+    {
+      "offset": 83,
+      "size": 1,
+      "mutation": "set clear index byte 0x53 0x00->0x01; also set a set byte to 0x02 and to 0x00",
+      "requires_checksum_repair": true,
+      "predicted_effect": "If per-card counts, collection UI gains/loses an entry or shows count 2/clamps"
+    },
+    {
+      "offset": 978,
+      "size": 2,
+      "mutation": "change first list u16 0x0150->0x0151",
+      "requires_checksum_repair": true,
+      "predicted_effect": "Deck/trunk slot shows neighbouring card ID if list is a deck; no change implies derived data"
+    },
+    {
+      "offset": 1166,
+      "size": 1,
+      "mutation": "clear flags 0x48e and 0x83c separately (0x01->0x00)",
+      "requires_checksum_repair": true,
+      "predicted_effect": "Tutorial/menu/intro state change names the flag subsystem; no delta keeps default-on hypothesis"
+    },
+    {
+      "offset": 2068,
+      "size": 2,
+      "mutation": "inconsistent copies: A counter=1000 (A checksum repaired), B untouched valid",
+      "requires_checksum_repair": true,
+      "predicted_effect": "Displayed value identifies preferred copy; rejection implies cross-copy consistency check"
+    }
+  ],
+  "open_questions": [
+    "Bodies of 0x08005dd8, 0x08005e34, 0x08005e5c, 0x08005c3c, 0x08005c64, 0x08005b08, 0x08005be4, 0x08020310 are absent from the 174-function decompilation: which validator maps to copy A vs B, which loader state 2/3 selects, and whether loaders cross-compare copies are unknown.",
+    "All RAM pointer literals (_DAT_0800xxxx) are unresolved in this Ghidra export, so no field can be bound to a concrete EWRAM/IWRAM address and FUN_08005ba4/0x08005bc4 destinations/lengths and FUN_0801fffc count constant cannot be read directly.",
+    "Only one populated .sav sample exists (the other is blank 0xFF), so all payload field semantics (index array, 40xu16 list, 0x01f4 counter, flags) are hypotheses awaiting a second gameplay-different snapshot or RAM tracing.",
+    "No gameplay save writer beyond the FUN_08005c98 format path was captured; routine progress saving likely reuses the FUN_08005ba4/0x08005bc4 + checksum tail via unrecovered jumptable callers, unverified.",
+    "states/ contains 0 paired save states, so every fuzzing prediction in section 6 is unexecuted and requires an emulator cold-load harness.",
+    "Whether the loader sums copy B raw (getting 0x116d on this file) or from the pristine payload (0x112e) is discriminated by fuzz tests F3/F4/F7 but not yet observed."
+  ]
+}

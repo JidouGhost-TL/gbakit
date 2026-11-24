@@ -1,0 +1,200 @@
+{
+  "schema": "gbakit-save-research/1",
+  "release_key": "AJKJ-r0-5cfd354c5dcba758",
+  "display_name": "Jikkyou World Soccer Pocket 2 (Japan)",
+  "rom_sha256": "5cfd354c5dcba7583a954bfb04d28145ced4ccc0a441dcb3b694c039bae583aa",
+  "game_code": "AJKJ",
+  "header_family": "AJK",
+  "community_id": "comm-009",
+  "overall_confidence": "LOW",
+  "media": {
+    "kind": "eeprom8k",
+    "size_bytes": 8192,
+    "sdk_tags": ["EEPROM_V122@608352"],
+    "fill_byte": "0xff"
+  },
+  "slots_and_copies": [
+    {
+      "name": "active_record",
+      "offset": 4100,
+      "size": 84,
+      "redundancy_role": "unknown",
+      "selection_rule": "No second populated region or redundant copy found anywhere in the 8192-byte file; only one 84-byte non-erased span exists. No slot-selection logic was found in the traced code (no caller of the save-write entry point was recovered)."
+    }
+  ],
+  "magic_signatures": [],
+  "checksums": [],
+  "io_driver_functions": [
+    {
+      "addr": "0x08084c70",
+      "role": "write",
+      "callers": ["0x08084cf0", "0x08084da0"],
+      "notes": "Generic DMA kick-off + busy-wait primitive: loads src/dst/count+enable-bit into three consecutive global slots matching SAD/DAD/CNT_L_CNT_H layout (enable = bit31 of combined word = bit15 of CNT_H), then polls a status halfword for bit 0x8000 to clear. Not EEPROM-specific; shared by both the block-read and block-write paths with destination 0xD000000."
+    },
+    {
+      "addr": "0x08084cf0",
+      "role": "read",
+      "callers": ["0x08084e7c"],
+      "notes": "EEPROM block read (MMIO seed). Issues a bit-serial read-request stream via FUN_08084c70 to 0xD000000, then DMAs 68 halfwords back and unpacks 4x16-bit words by shifting in one bit per received halfword, producing one 8-byte block."
+    },
+    {
+      "addr": "0x08084da0",
+      "role": "write",
+      "callers": ["0x08084ed4"],
+      "notes": "EEPROM block write (MMIO seed). Packs an 8-byte buffer plus block address into a bit-serial write-request stream, DMAs it to 0xD000000 wrapped in FUN_08084ba4/FUN_08084c2c critical-section calls, then busy-waits on the EEPROM ready bit (uRam0d000000 & 1)."
+    },
+    {
+      "addr": "0x08084ba4",
+      "role": "write",
+      "callers": ["0x08084da0"],
+      "notes": "Enters a critical section / enqueues a 3-field descriptor into what reads as a circular pending-DMA-request queue; sets a busy/armed flag to 1. Called immediately before the write DMA in FUN_08084da0."
+    },
+    {
+      "addr": "0x08084c2c",
+      "role": "write",
+      "callers": ["0x08084da0"],
+      "notes": "Mirror-image teardown of FUN_08084ba4: clears the busy flag, unlinks the queue node, clears an enable-mask bit."
+    },
+    {
+      "addr": "0x08084e7c",
+      "role": "checksum",
+      "callers": ["0x08084ed4"],
+      "notes": "Read-back verification, not a checksum algorithm: calls FUN_08084cf0 to re-read the just-written block and compares it halfword-by-halfword (4 words) against the expected buffer; returns 0x8000 on mismatch, 0 on match. Labeled 'checksum' role only because it is the sole integrity-check mechanism found; it performs direct comparison, not a hash/sum."
+    },
+    {
+      "addr": "0x08084ed4",
+      "role": "write",
+      "callers": [],
+      "notes": "Top-level write-with-verify-and-retry (up to 3 attempts): FUN_08084da0 then FUN_08084e7c, retrying on failure. NO CALLER FOUND anywhere in the 266-function traced corpus (ghidra/callgraph.json reports callers: [] and no other address in ghidra/decompiled.c references 0x08084ed4). The game-logic layer that decides what/when to save is not present in this workspace."
+    }
+  ],
+  "caller_chains": [
+    {
+      "entry_caller": "0x08084ed4",
+      "chain": ["0x08084ed4", "0x08084da0", "0x08084ba4", "0x08084c70", "0x08084c2c", "0x08084e7c", "0x08084cf0", "0x08084c70"],
+      "trigger_context": "UNKNOWN — no higher-level caller traced; trigger context (menu save prompt, auto-save, etc.) cannot be determined from this workspace",
+      "ram_fields_updated": [],
+      "how_mapped": "Traced statically via ghidra/callgraph.json caller/callee edges, cross-verified by grepping every one of the 7 save-driver addresses across the full ghidra/decompiled.c (266 functions). No function outside this cluster references any of these addresses, and none of the 266 functions reference any 0x02xxxxxx (EWRAM) or 0x03xxxxxx (IWRAM) literal, so the in-RAM save struct and its mutation sites remain entirely unmapped."
+    }
+  ],
+  "fields": [
+    {
+      "name": "field_0x1004_tag",
+      "offset": 4100,
+      "size": 4,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": ["0x08084ed4"],
+      "readers": ["0x08084ed4"],
+      "observed_values": {"cap-00-future-0.sav": "ffffffff", "cap-01-future-1.sav": "00012345"},
+      "update_mechanism": "Only non-zero, non-erased 4-byte run in the first 8-byte block of the active record; written atomically with the rest of the record by the EEPROM block-write driver. No in-RAM producer identified.",
+      "confidence": "HYPOTHESIS",
+      "evidence": "saves/hexdump_and_diffs.txt diff at 0x01004-0x01007; distinctive non-repeating value suggests a record tag/version/counter rather than a cleared field, but no code assigns it semantic meaning."
+    },
+    {
+      "name": "field_0x1008_0x101f_zero_block",
+      "offset": 4104,
+      "size": 24,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": ["0x08084ed4"],
+      "readers": ["0x08084ed4"],
+      "observed_values": {"cap-00-future-0.sav": "ff...ff (24 bytes)", "cap-01-future-1.sav": "00...00 (24 bytes)"},
+      "update_mechanism": "Transitions from erased (0xFF) to zero on first save; indistinguishable from padding with only one non-blank sample.",
+      "confidence": "HYPOTHESIS",
+      "evidence": "saves/hexdump_and_diffs.txt diff at 0x01008-0x0101f"
+    },
+    {
+      "name": "field_0x1023_trailing_counter",
+      "offset": 4131,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": ["0x08084ed4"],
+      "readers": ["0x08084ed4"],
+      "observed_values": {"cap-00-future-0.sav": "ff", "cap-01-future-1.sav": "02"},
+      "update_mechanism": "Last byte of the 8-byte block spanning 0x101C-0x1023; preceded by 7 zero bytes in this sample.",
+      "confidence": "HYPOTHESIS",
+      "evidence": "saves/hexdump_and_diffs.txt diff at 0x01023; structurally mirrored by field_0x102b_trailing_counter exactly 8 bytes later"
+    },
+    {
+      "name": "field_0x102b_trailing_counter",
+      "offset": 4139,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": ["0x08084ed4"],
+      "readers": ["0x08084ed4"],
+      "observed_values": {"cap-00-future-0.sav": "ff", "cap-01-future-1.sav": "02"},
+      "update_mechanism": "Last byte of the 8-byte block spanning 0x1024-0x102B; preceded by 7 zero bytes in this sample. Exact positional and value match with field_0x1023_trailing_counter 8 bytes earlier makes coincidence unlikely, but no code ties either to specific semantics.",
+      "confidence": "HYPOTHESIS",
+      "evidence": "saves/hexdump_and_diffs.txt diff at 0x0102b"
+    },
+    {
+      "name": "field_0x102c_0x1057_zero_block",
+      "offset": 4140,
+      "size": 44,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": ["0x08084ed4"],
+      "readers": ["0x08084ed4"],
+      "observed_values": {"cap-00-future-0.sav": "ff...ff (44 bytes)", "cap-01-future-1.sav": "00...00 (44 bytes)"},
+      "update_mechanism": "Transitions from erased to zero on first save; indistinguishable from padding with only one non-blank sample.",
+      "confidence": "HYPOTHESIS",
+      "evidence": "saves/hexdump_and_diffs.txt diff at 0x0102c-0x01057"
+    }
+  ],
+  "fuzzing_targets": [
+    {
+      "offset": 4100,
+      "size": 4,
+      "mutation": "Set to 00000000, then FFFFFFFF, and observe title-screen Continue-prompt behavior",
+      "requires_checksum_repair": false,
+      "predicted_effect": "If this is a presence/version tag, the save should appear absent/corrupt on next boot; if inert, no change"
+    },
+    {
+      "offset": 4131,
+      "size": 1,
+      "mutation": "Increment 0x02 -> 0x03, independently of the field at offset 4139",
+      "requires_checksum_repair": false,
+      "predicted_effect": "If backing a visible counter/stat, a specific on-screen value changes by a matching amount; if an enum/flag, expect no change or a mode switch"
+    },
+    {
+      "offset": 4139,
+      "size": 1,
+      "mutation": "Increment 0x02 -> 0x03, independently of the field at offset 4131",
+      "requires_checksum_repair": false,
+      "predicted_effect": "Same test as offset 4131, run independently to avoid conflating the two fields"
+    },
+    {
+      "offset": 4104,
+      "size": 24,
+      "mutation": "Fill with 0x55 pattern",
+      "requires_checksum_repair": false,
+      "predicted_effect": "If true padding, zero observable effect and the write-verify-retry driver re-saves it unchanged; if live default-valued fields, expect UI/behavior change"
+    },
+    {
+      "offset": 4140,
+      "size": 44,
+      "mutation": "Fill with 0x55 pattern",
+      "requires_checksum_repair": false,
+      "predicted_effect": "Same padding-falsification test as offset 4104, applied to the second zero run"
+    },
+    {
+      "offset": 4184,
+      "size": 8,
+      "mutation": "Write a distinctive non-0xFF marker just past the currently observed active span (0x1058-0x105F)",
+      "requires_checksum_repair": false,
+      "predicted_effect": "If the real record extends further than observed, a legitimate future save overwrites the marker; if the marker survives, the true boundary is narrower or elsewhere"
+    }
+  ],
+  "open_questions": [
+    "No caller of FUN_08084ed4 (top-level EEPROM write+verify+retry) exists anywhere in the 266-function traced corpus; the game-logic trigger and in-RAM save struct producer are entirely unmapped.",
+    "No EWRAM (0x02xxxxxx) or IWRAM (0x03xxxxxx) address is referenced by any traced function, so no RAM mirror address could be assigned to any field.",
+    "No checksum/CRC/magic-signature routine was found; integrity may rely solely on the hardware write-verify-retry, or may live in untraced code.",
+    "Only one non-blank .sav sample exists, making it impossible to distinguish fixed-format fields from coincidental zero/constant values, or to observe any sequence/generation counter advancing.",
+    "The active record's true start/end boundaries are unconfirmed: bytes 0x1000-0x1003 (just before the observed diff) and 0x1058 onward (just after) are both still erased in the only non-blank sample and could belong to the same logical record or to adjacent, never-yet-written structures.",
+    "Whether this title uses more than one save slot cannot be determined; no second populated region exists in either sample, and no slot-selection code was traced.",
+    "The exact DMA channel used for EEPROM transfers (FUN_08084c70) is inferred from SAD/DAD/CNT register-layout structure, not from a resolved MMIO symbol name, since Ghidra did not label any of the _DAT_* globals involved."
+  ]
+}

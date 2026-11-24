@@ -1,0 +1,117 @@
+{
+  "schema": "gbakit-save-research/1",
+  "release_key": "BBYX-r0-6ff7310164563ca8",
+  "display_name": "Barnyard (Europe) (En,Fr,De,Es,It,Nl)",
+  "rom_sha256": "6ff7310164563ca80d4b4df2da4dd9d638e77237715e141e146ca6503d3ff07f",
+  "game_code": "BBYX",
+  "header_family": "BBY",
+  "community_id": "comm-003",
+  "overall_confidence": "MEDIUM",
+  "media": {
+    "kind": "eeprom8k",
+    "size_bytes": 8192,
+    "sdk_tags": [],
+    "fill_byte": "0xff"
+  },
+  "slots_and_copies": [
+    {"name": "slot_0", "offset": 0, "size": 2176, "redundancy_role": "primary", "selection_rule": "Fixed scan order slot 0,1,2 in FUN_0800dea4. Header status u32 at +0x10: 0=empty, 1=valid, -1=invalid. No backup copy, no generation counter."},
+    {"name": "slot_1", "offset": 2176, "size": 2176, "redundancy_role": "primary", "selection_rule": "Same as slot_0. Offset = 1 * 0x880."},
+    {"name": "slot_2", "offset": 4352, "size": 2176, "redundancy_role": "primary", "selection_rule": "Same as slot_0. Offset = 2 * 0x880."},
+    {"name": "global_config", "offset": 6528, "size": 1664, "redundancy_role": "global_config", "selection_rule": "Single copy at 0x1980 (header 0x80) + payload at 0x1A00 (0xE0 used of 0x600 reserved). Loaded by FUN_0800d8c4 at boot; factory-reset by FUN_0800d838 on any failure. No fallback copy."}
+  ],
+  "magic_signatures": [
+    {"offset": 0, "bytes_hex": "0030326162677962", "ascii": "02abgyb", "verified_in_code": true, "verified_in_sav": true, "function_addrs": ["0x08086af4", "0x080929f8", "0x08086b48", "0x0809299c"]},
+    {"offset": 2176, "bytes_hex": "0030326162677962", "ascii": "02abgyb", "verified_in_code": true, "verified_in_sav": true, "function_addrs": ["0x08086af4", "0x08086b48"]},
+    {"offset": 4352, "bytes_hex": "0030326162677962", "ascii": "02abgyb", "verified_in_code": true, "verified_in_sav": true, "function_addrs": ["0x08086af4", "0x08086b48"]},
+    {"offset": 6528, "bytes_hex": "0030326162677962", "ascii": "02abgyb", "verified_in_code": true, "verified_in_sav": true, "function_addrs": ["0x08086af4", "0x08086b48"]}
+  ],
+  "checksums": [
+    {
+      "name": "global_payload_checksum",
+      "algorithm": "custom",
+      "formula_detail": "h=0xAA55A5A5; for each byte b in RAM order (after reversing each 8-byte file block): h=rol32(h,1)+b mod 2^32. FUN_08087c68. Stored u32 LE at header +0x0C. Covered: 0xE0-byte payload at EEPROM 0x1A00.",
+      "stored_offset": 6540,
+      "stored_size": 4,
+      "covered_start": 6656,
+      "covered_end": 6880,
+      "function_addrs": ["0x08087c68", "0x0800d838", "0x0800d8c4", "0x0800e2a8"],
+      "verified_on_samples": [
+        {"file": "cap-00-future-0.sav", "stored_hex": "0x0a95a66b", "computed_hex": "0x0a95a66b", "match": true},
+        {"file": "cap-01-future-1.sav", "stored_hex": "0xca95a5ab", "computed_hex": "0xca95a5ab", "match": true}
+      ],
+      "confidence": "CONFIRMED_VERIFIED"
+    },
+    {
+      "name": "slot_payload_checksum",
+      "algorithm": "custom",
+      "formula_detail": "Same FUN_08087c68 rotate-left/add hash, seed 0xAA55A5A5, over 0x800-byte slot payload at slot*0x880+0x80. Stored u32 LE at slot header +0x0C. No occupied slot in samples, so unverified on bytes.",
+      "stored_offset": 12,
+      "stored_size": 4,
+      "covered_start": 128,
+      "covered_end": 2176,
+      "function_addrs": ["0x08087c68", "0x0800dd30"],
+      "verified_on_samples": [],
+      "confidence": "CONFIRMED_STATIC"
+    }
+  ],
+  "io_driver_functions": [
+    {"addr": "0x08090934", "role": "write", "callers": ["0x080909b4", "0x08090a78"], "notes": "DMA3 primitive to 0x0D000000 via 0x040000D4; polls busy bit 0x8000."},
+    {"addr": "0x080909b4", "role": "read", "callers": ["0x08090bd8"], "notes": "EEPROM read: command bitstream DMA out, 0x44 halfwords DMA in, MSB-first pack into 8 bytes."},
+    {"addr": "0x08090a78", "role": "write", "callers": ["0x08090c70"], "notes": "EEPROM write: write bitstream with 64 data bits; polls EEPROM ready bit with timeout."},
+    {"addr": "0x08090bd8", "role": "read", "callers": ["0x08090ca8"], "notes": "Verify-after-write: re-reads block and compares 4 halfwords; returns 0x8000 on mismatch."},
+    {"addr": "0x08090c70", "role": "write", "callers": ["0x08090ca8"], "notes": "Single-block write wrapper; skips when EEPROM type word == 0x200."},
+    {"addr": "0x08090ca8", "role": "write", "callers": [], "notes": "Retried block write: up to 3 write+verify attempts. Called by FUN_0808bce8 (indirect, not in callgraph)."},
+    {"addr": "0x0808bc3c", "role": "read", "callers": ["0x0808bbe0"], "notes": "Block read loop: block addr = (offset>>3)+index, RAM ptr += 8 per block."},
+    {"addr": "0x0808bce8", "role": "write", "callers": ["0x0808bc04"], "notes": "Block write loop over FUN_08090ca8 per 8-byte block."},
+    {"addr": "0x0808bbe0", "role": "read", "callers": ["0x0800d8c4", "0x0800dd30", "0x0800de34"], "notes": "Guarded read entry; returns -1 if EEPROM-present flag is 0."},
+    {"addr": "0x0808bc04", "role": "write", "callers": ["0x0800d838", "0x0800db98", "0x0800e2a8"], "notes": "Guarded write entry; returns -1 if EEPROM-present flag is 0."},
+    {"addr": "0x08087c68", "role": "checksum", "callers": ["0x0800d838", "0x0800d8c4", "0x0800db98", "0x0800dd30", "0x0800e2a8"], "notes": "rol32(h,1)+byte hash, seed 0xAA55A5A5 (recovered by inversion, identical for both samples)."},
+    {"addr": "0x0800d838", "role": "serialize", "callers": ["0x0800023c"], "notes": "Global factory reset: defaults, magic, checksum, write header 0x1980 + payload 0x1A00."},
+    {"addr": "0x0800e2a8", "role": "serialize", "callers": [], "notes": "Global save. No caller found in callgraph or text search (unrecovered jump table/function pointer) - named gap."},
+    {"addr": "0x0800d8c4", "role": "deserialize", "callers": ["0x0800023c"], "notes": "Global load: magic strcmp, status<2, checksum over 0xE0, then RAM clamps."},
+    {"addr": "0x0800db98", "role": "serialize", "callers": ["0x0800dea4"], "notes": "Slot create/erase: writes only the 0x80 header at slot*0x880; may refresh global block."},
+    {"addr": "0x0800dd30", "role": "deserialize", "callers": ["0x0800dea4"], "notes": "Slot load: magic, status, 12-byte mirror memcmp, 5 summary compares, checksum over 0x800."},
+    {"addr": "0x0800dea4", "role": "deserialize", "callers": ["0x0800023c"], "notes": "Load-or-repair all 3 slots at boot."},
+    {"addr": "0x0800de34", "role": "deserialize", "callers": ["0x0800023c"], "notes": "Count slots with valid magic."}
+  ],
+  "caller_chains": [
+    {"entry_caller": "0x0800023c", "chain": ["0x0800023c", "0x0808bbb4", "0x0800de34", "0x0800d8c4"], "trigger_context": "Boot: EEPROM init, count slots, load global block.", "ram_fields_updated": ["global header status @+0x10 (RAM)", "global payload clamps @+2, @+4, @+8"], "how_mapped": "Text-read call sequence in FUN_0800023c in ghidra/decompiled.c; callgraph has no indirect edges for these calls."},
+    {"entry_caller": "0x0800023c", "chain": ["0x0800023c", "0x0800d838", "0x08087c68", "0x0808bc04", "0x0808bce8", "0x08090ca8"], "trigger_context": "Boot fallback when global load (FUN_0800d8c4) returns -1: factory-reset global block.", "ram_fields_updated": ["global payload defaults @+0 (ROM literal), @+2=1, @+4=0xC0, @+8=0x100, @+0xCC=0", "global header magic @+0, checksum @+0x0C, status @+0x10=1"], "how_mapped": "Text-read of FUN_0800023c failure branch plus FUN_0800d838 body."},
+    {"entry_caller": "0x0800023c", "chain": ["0x0800023c", "0x0800dea4", "0x0800dd30", "0x0808bbe0", "0x0808bc3c", "0x080909b4", "0x08090934"], "trigger_context": "Boot: load each of 3 slots.", "ram_fields_updated": ["slot header status @+0x10 set to -1 in RAM on any check failure"], "how_mapped": "Callgraph edge FUN_0800dea4 -> FUN_0800dd30 plus text-read bodies."},
+    {"entry_caller": "0x0800dea4", "chain": ["0x0800dea4", "0x0800db98", "0x0808bc04", "0x0808bce8", "0x08090ca8"], "trigger_context": "Boot repair: slot that failed to load is recreated as empty (header only).", "ram_fields_updated": ["slot header @+8=0, checksum @+0x0C=0, status @+0x10=0, bytes @+0x18..+0x1D=0, byte @+0x20=0, magic @+0"], "how_mapped": "Callgraph edge plus text-read of FUN_0800db98."},
+    {"entry_caller": "0x0800e2a8", "chain": ["0x0800e2a8", "0x08087c68", "0x0808bc04", "0x0808bce8", "0x08090ca8"], "trigger_context": "Global save during gameplay. Entry caller unknown (no call site in callgraph or decompiled text).", "ram_fields_updated": ["global payload dwords @+4, @+8 refreshed from ROM literals", "global header checksum @+0x0C, status @+0x10=1"], "how_mapped": "Text-read of FUN_0800e2a8 body; caller search returned no results - recorded as open question."}
+  ],
+  "fields": [
+    {"name": "header_magic", "offset": 0, "size": 8, "type": "ascii", "ram_addr": null, "writers": ["0x0800db98", "0x0800d838", "0x0800e2a8"], "readers": ["0x0800dd30", "0x0800d8c4", "0x0800de34"], "observed_values": {"cap-00-future-0.sav": "00 30 32 61 62 67 79 62 (file order); RAM bygba20\\0", "cap-01-future-1.sav": "same"}, "update_mechanism": "strcpy (FUN_08086af4->FUN_080929f8) on every header write; strcmp==0 (FUN_08086b48->FUN_0809299c) required on load. Present at file offsets 0, 0x880, 0x1100, 0x1980.", "confidence": "CONFIRMED_VERIFIED", "evidence": "Decompiled strcpy/strcmp call sites plus identical bytes in all 4 headers of both .sav files."},
+    {"name": "header_checksum", "offset": 12, "size": 4, "type": "u32_le", "ram_addr": null, "writers": ["0x0800d838", "0x0800e2a8"], "readers": ["0x0800d8c4", "0x0800dd30"], "observed_values": {"cap-00-future-0.sav": "0x0a95a66b (global header at 0x1980, RAM order)", "cap-01-future-1.sav": "0xca95a5ab (global); 0x00000000 in empty slot headers"}, "update_mechanism": "Recomputed by FUN_08087c68 over payload on every save; compared on load. Offset is header-relative; add header base (0/0x880/0x1100/0x1980).", "confidence": "CONFIRMED_VERIFIED", "evidence": "Python verification: computed equals stored on both global payloads with seed 0xAA55A5A5. Slot coverage CONFIRMED_STATIC only."},
+    {"name": "header_status", "offset": 16, "size": 4, "type": "u32_le", "ram_addr": null, "writers": ["0x0800db98", "0x0800d838", "0x0800e2a8"], "readers": ["0x0800dd30", "0x0800d8c4"], "observed_values": {"cap-00-future-0.sav": "global=1, slots=0", "cap-01-future-1.sav": "global=1, slots=0"}, "update_mechanism": "0=empty written by FUN_0800db98; 1=valid written by savers; -1 set only in RAM by loaders on failure.", "confidence": "CONFIRMED_VERIFIED", "evidence": "Code writes/comparisons plus observed values in both files."},
+    {"name": "header_reserved_08", "offset": 8, "size": 4, "type": "u32_le", "ram_addr": null, "writers": ["0x0800db98"], "readers": [], "observed_values": {"cap-00-future-0.sav": "0x00000000 slots; 0xFFFFFFFF global (RAM order)", "cap-01-future-1.sav": "same"}, "update_mechanism": "Zeroed for slots by FUN_0800db98; no traced reader. In file order its bytes interleave with the checksum due to 8-byte block reversal.", "confidence": "HYPOTHESIS", "evidence": "Static write only; occupied-global value unexplained."},
+    {"name": "slot_header_summary_18", "offset": 24, "size": 6, "type": "bytes", "ram_addr": null, "writers": ["0x0800db98"], "readers": ["0x0800dd30"], "observed_values": {"cap-00-future-0.sav": "00 00 00 00 00 00 in empty slots", "cap-01-future-1.sav": "same"}, "update_mechanism": "Mirrors slot payload bytes +5, +4, u16@+0x34, byte +0x36, i8 vs payload i32@+0xD0. Zeroed on erase; real-save writer not recovered.", "confidence": "CONFIRMED_STATIC", "evidence": "Comparison code in FUN_0800dd30."},
+    {"name": "slot_header_mirror_20", "offset": 32, "size": 12, "type": "bytes", "ram_addr": null, "writers": ["0x0800db98"], "readers": ["0x0800dd30"], "observed_values": {"cap-00-future-0.sav": "00 + 0xFF padding in empty slots", "cap-01-future-1.sav": "same"}, "update_mechanism": "Mirror of slot payload +0x40..+0x4B, compared via func_0x08092af0 (probable memcmp). Only first byte zeroed on erase.", "confidence": "CONFIRMED_STATIC", "evidence": "Call shape in FUN_0800dd30; callee body absent from decompilation."},
+    {"name": "slot_payload", "offset": 128, "size": 2048, "type": "bytes", "ram_addr": null, "writers": [], "readers": ["0x0800dd30"], "observed_values": {"cap-00-future-0.sav": "all 0xFF (empty)", "cap-01-future-1.sav": "all 0xFF (empty)"}, "update_mechanism": "Offset is slot-relative (add slot*0x880). No slot-payload writer recovered. Checksum-covered (0x800 bytes).", "confidence": "UNKNOWN", "evidence": "Only loader and checksum coverage are known."},
+    {"name": "global_payload_field_00", "offset": 6656, "size": 2, "type": "u16_le", "ram_addr": null, "writers": ["0x0800d838"], "readers": ["0x0800d8c4"], "observed_values": {"cap-00-future-0.sav": "0xFFFF (RAM order)", "cap-01-future-1.sav": "0x0000 (RAM order)"}, "update_mechanism": "Set from ROM literal at factory reset; sole payload field changed between captures (file diff at 0x1A06..0x1A07 maps here after block reversal).", "confidence": "CONFIRMED_VERIFIED", "evidence": "Byte diff plus checksum update verified on both files. Meaning unknown."},
+    {"name": "global_payload_field_02", "offset": 6658, "size": 2, "type": "i16_le", "ram_addr": null, "writers": ["0x0800d838"], "readers": ["0x0800d8c4"], "observed_values": {"cap-00-future-0.sav": "1", "cap-01-future-1.sav": "1"}, "update_mechanism": "Default 1 at factory reset; signed-clamped to 0..2 in RAM on load.", "confidence": "CONFIRMED_STATIC", "evidence": "FUN_0800d838 write and FUN_0800d8c4 clamp code."},
+    {"name": "global_payload_field_04", "offset": 6660, "size": 4, "type": "u32_le", "ram_addr": null, "writers": ["0x0800d838", "0x0800e2a8"], "readers": ["0x0800d8c4"], "observed_values": {"cap-00-future-0.sav": "0x000000C0", "cap-01-future-1.sav": "0x000000C0"}, "update_mechanism": "Default 0xC0; refreshed from ROM literal by global saver; clamped 0..0x100 on load (exact clamp-offset mapping via pointer arithmetic is best-supported, not certain).", "confidence": "CONFIRMED_STATIC", "evidence": "FUN_0800d838/FUN_0800e2a8 writes; FUN_0800d8c4 clamp."},
+    {"name": "global_payload_field_08", "offset": 6664, "size": 4, "type": "u32_le", "ram_addr": null, "writers": ["0x0800d838", "0x0800e2a8"], "readers": ["0x0800d8c4"], "observed_values": {"cap-00-future-0.sav": "0x00000100", "cap-01-future-1.sav": "0x00000100"}, "update_mechanism": "Default 0x100; refreshed by global saver; clamped 0..0x100 on load.", "confidence": "CONFIRMED_STATIC", "evidence": "Same as field_04."},
+    {"name": "global_payload_field_CC", "offset": 6860, "size": 4, "type": "u32_le", "ram_addr": null, "writers": ["0x0800d838"], "readers": [], "observed_values": {"cap-00-future-0.sav": "0", "cap-01-future-1.sav": "0"}, "update_mechanism": "Written 0 at factory reset (u16-pointer offset 0x66); checksum-covered only.", "confidence": "CONFIRMED_STATIC", "evidence": "Single write in FUN_0800d838."}
+  ],
+  "fuzzing_targets": [
+    {"offset": 6536, "size": 1, "mutation": "Flip one stored-checksum byte (file 0x1988 ^= 0xFF)", "requires_checksum_repair": false, "predicted_effect": "Global load fails; boot factory-resets global block to defaults. Already confirmed by PACKET.md probe."},
+    {"offset": 6529, "size": 1, "mutation": "Flip one magic byte (file order)", "requires_checksum_repair": false, "predicted_effect": "strcmp fails before checksum; same factory-reset outcome via a different gate."},
+    {"offset": 6544, "size": 4, "mutation": "Set global header status (RAM +0x10) to 2", "requires_checksum_repair": false, "predicted_effect": "Status gate (<2) rejects block despite valid checksum; factory reset."},
+    {"offset": 6662, "size": 1, "mutation": "Change global payload RAM +0 u16 to 0x0001 (file block at 0x1A00 after reversal)", "requires_checksum_repair": true, "predicted_effect": "Save still loads; isolates meaning of the only field observed to change between captures."},
+    {"offset": 6658, "size": 2, "mutation": "Set global payload i16 +2 to 3, then to -1", "requires_checksum_repair": true, "predicted_effect": "Loads; RAM value clamped to 2 / 0 by FUN_0800d8c4."},
+    {"offset": 6720, "size": 1, "mutation": "Mutate global payload byte near end of covered range (0x1A40 block)", "requires_checksum_repair": false, "predicted_effect": "Checksum mismatch and factory reset; proves 0xE0 coverage. Negative control: mutate reserved tail at 0x1B00, expect no effect."},
+    {"offset": 128, "size": 2048, "mutation": "Hand-craft occupied slot 0: status=1, zero payload, header mirrors from payload +4/+5/+0x34/+0x36/+0x40/+0xD0, repair slot checksum", "requires_checksum_repair": true, "predicted_effect": "Slot accepted by FUN_0800dea4 if slot model is correct; any mirror mismatch causes recreate-as-empty. Tests static-only slot model."}
+  ],
+  "open_questions": [
+    "No caller of the global saver FUN_0800e2a8 exists in ghidra/callgraph.json or as a text call in ghidra/decompiled.c; its trigger (menu action, autosave point) is unknown (likely an unrecovered jump table / function pointer).",
+    "No slot-payload writer was recovered at all; how a real game save fills the 0x800-byte slot payload and its header mirrors (+0x18..+0x1D, +0x20..+0x2B) is unknown.",
+    "Exact RAM mirror addresses (0x02xxxxxx/0x03xxxxxx) of all save buffers are unrecoverable from the workspace: decompiled.c names only _DAT_0800xxxx literal slots without values.",
+    "Meaning of global payload u16 at +0 (0xFFFF -> 0x0000 between captures) and of clamped fields at +2/+4/+8 is unknown; no save states exist in states/ to correlate with gameplay.",
+    "Seed literal _DAT_08087c84 is not printed in the decompilation; seed 0xAA55A5A5 is proven only by checksum inversion agreeing on both samples.",
+    "func_0x08092af0 (probable memcmp) and the lock/unlock thunks FUN_0808bbc8/FUN_0808bbd4 have no recovered bodies; their identification is by call shape only.",
+    "Header dword at +8 is 0xFFFFFFFF in the occupied global header but 0 in empty slots; no traced code writes that value.",
+    "Whether the 8-byte block reversal is an emulator .sav convention or the on-cartridge EEPROM bit order cannot be distinguished from workspace files alone; all interpretation must apply it consistently."
+  ]
+}

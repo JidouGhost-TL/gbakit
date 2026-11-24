@@ -1,0 +1,1240 @@
+{
+  "schema": "gbakit-save-research/1",
+  "release_key": "BSOP-r0-3a54c26a185ed113",
+  "display_name": "Shaman King - Master of Spirits (Europe) (En,Fr,De)",
+  "rom_sha256": "3a54c26a185ed11324fc29e70a7cc811591cd11d79cf1009f2c6cde8dac7175b",
+  "game_code": "BSOP",
+  "header_family": "BSO",
+  "community_id": "comm-014",
+  "overall_confidence": "MEDIUM",
+  "media": {
+    "kind": "sram",
+    "size_bytes": 32768,
+    "sdk_tags": [],
+    "fill_byte": "0xff"
+  },
+  "slots_and_copies": [
+    {
+      "name": "slot_0",
+      "offset": 0,
+      "size": 5760,
+      "redundancy_role": "primary",
+      "selection_rule": "4 copies of 1440B at +0x000,+0x5a0,+0xb40,+0x10e0 within slot; reader FUN_0800917c tries copies in order, first with magic '*', byte1<3 and valid ~sum16 checksum wins; if none valid, FUN_08008fe8 reinitialises RAM defaults (note: FUN_0803411c calls reader then writer for every slot, so all slots are refreshed, not selected exclusively)"
+    },
+    {
+      "name": "slot_1",
+      "offset": 5760,
+      "size": 5760,
+      "redundancy_role": "primary",
+      "selection_rule": "Same 4-copy first-valid rule; byte1 must equal 1 in observed sav (reader only checks byte1<3 statically)"
+    },
+    {
+      "name": "slot_2",
+      "offset": 11520,
+      "size": 5760,
+      "redundancy_role": "primary",
+      "selection_rule": "Same 4-copy first-valid rule; byte1 must equal 2 in observed sav"
+    },
+    {
+      "name": "unused_sram_tail",
+      "offset": 17280,
+      "size": 15488,
+      "redundancy_role": "unknown",
+      "selection_rule": "Never accessed by traced writer/reader (max offset 2*0x1680+3*0x5a0+0x5a0=0x4380); all 0xff in both samples"
+    }
+  ],
+  "magic_signatures": [
+    {
+      "offset": 0,
+      "bytes_hex": "2a",
+      "ascii": "*",
+      "verified_in_code": true,
+      "verified_in_sav": true,
+      "function_addrs": [
+        "0x080090f0",
+        "0x0800917c"
+      ]
+    }
+  ],
+  "checksums": [
+    {
+      "name": "not_sum16_le_block_checksum",
+      "algorithm": "sum16_le",
+      "formula_detail": "stored_u16_le = (~(sum of u16_le words over covered range)) & 0xffff; equivalently sum+stored == 0xffff mod 0x10000. Signedness of Ghidra short* accumulation does not change low-16 result.",
+      "stored_offset": 1436,
+      "stored_size": 2,
+      "covered_start": 0,
+      "covered_end": 1436,
+      "function_addrs": [
+        "0x080090f0",
+        "0x0800917c"
+      ],
+      "verified_on_samples": [
+        {
+          "file": "saves/cap-01-future-1.sav slot0 (all 4 copies)",
+          "stored_hex": "0xf1c8",
+          "computed_hex": "0xf1c8",
+          "match": true
+        },
+        {
+          "file": "saves/cap-01-future-1.sav slot1 (all 4 copies)",
+          "stored_hex": "0xf0c8",
+          "computed_hex": "0xf0c8",
+          "match": true
+        },
+        {
+          "file": "saves/cap-01-future-1.sav slot2 (all 4 copies)",
+          "stored_hex": "0xefc8",
+          "computed_hex": "0xefc8",
+          "match": true
+        },
+        {
+          "file": "saves/cap-00-future-0.sav (blank, all 0xff)",
+          "stored_hex": "none (no magic)",
+          "computed_hex": "n/a",
+          "match": false
+        }
+      ],
+      "confidence": "CONFIRMED_VERIFIED"
+    }
+  ],
+  "io_driver_functions": [
+    {
+      "addr": "0x0805e93c",
+      "role": "write",
+      "callers": [
+        "0x080090f0"
+      ],
+      "notes": "Byte-by-byte SRAM write: sets WAITCNT-related reg (*DAT & mask |3) then *dst++=*src++ for 0x5a0 bytes to 0x0E000000+slot*0x1680+copy*0x5a0"
+    },
+    {
+      "addr": "0x0805e8d8",
+      "role": "read",
+      "callers": [
+        "0x0800917c"
+      ],
+      "notes": "SRAM read via stack/IWRAM-relocated trampoline func_0x0805ea54 (copies code to stack, sets WAITCNT bits |3); src=SRAM, dst=RAM buffer, len 0x5a0"
+    },
+    {
+      "addr": "0x0805e9ac",
+      "role": "read",
+      "callers": [
+        "0x080090f0"
+      ],
+      "notes": "Verify/read-back compare via same trampoline pattern; writer treats return 0 as success (sets result flag 1 if any copy verifies)"
+    },
+    {
+      "addr": "0x080090f0",
+      "role": "serialize",
+      "callers": [
+        "0x0803411c"
+      ],
+      "notes": "Save writer: sets magic/slot byte, computes ~sum16 at +0x59c, writes 4 redundant copies, verifies each"
+    },
+    {
+      "addr": "0x0800917c",
+      "role": "deserialize",
+      "callers": [
+        "0x0803411c"
+      ],
+      "notes": "Save reader: tries 4 copies in order, checks '*' + ~sum16 + byte1<3; on total failure calls FUN_08008fe8 default-init"
+    },
+    {
+      "addr": "0x08008fe8",
+      "role": "serialize",
+      "callers": [
+        "0x0800917c"
+      ],
+      "notes": "Default/factory init: zero-clears 0x5a0 block and inferred 0xb0 tail sub-struct at +0x4ec via FUN_080007d0, writes default constants, calls FUN_08008f44(0x12)/FUN_08008e98(0)/FUN_08008ee8(1,1)"
+    },
+    {
+      "addr": "0x080007d0",
+      "role": "write",
+      "callers": [
+        "0x08008fe8",
+        "0x08000bc4"
+      ],
+      "notes": "DMA/CpuSet-style zero fill (stack zero word as source, DMA control 0x85000000/0x81000000); used to clear RAM save buffers, not SRAM directly"
+    },
+    {
+      "addr": "0x0803411c",
+      "role": "serialize",
+      "callers": [
+        "0x08034d58"
+      ],
+      "notes": "Save-all coordinator: clamps param 0..4, for slot 0..2: FUN_0800917c(slot) load/repair, stores clamped byte to a RAM byte (*_DAT_0803414c, exact offset unresolved), FUN_080090f0(slot) flush"
+    },
+    {
+      "addr": "0x08008b08",
+      "role": "deserialize",
+      "callers": [
+        "0x08008e98",
+        "0x08008ee8",
+        "0x08008f44"
+      ],
+      "notes": "Derived-state recompute over RAM save struct: reads 5-byte records at +0x7e indexed by byte+0x92, calls FUN_0800898c, rewrites cached u16s at +0x00..+0x2c and bitfields; not an SRAM driver"
+    },
+    {
+      "addr": "0x080098f0",
+      "role": "serialize",
+      "callers": [
+        "0x08034d58"
+      ],
+      "notes": "Called after FUN_0803411c in the save branch of FUN_08034d58 (and with another arg in the alternate branch); writes a 0x14-stride table entry in RAM - downstream/non-SRAM, exact role unresolved"
+    }
+  ],
+  "caller_chains": [
+    {
+      "entry_caller": "0x08034d58",
+      "chain": [
+        "0x08034d58",
+        "0x0803411c",
+        "0x0800917c",
+        "0x080090f0",
+        "0x0805e93c",
+        "0x0805e9ac"
+      ],
+      "trigger_context": "No callers in callgraph.json (top-level/state-machine handler, exits via unrecovered jumptable). Save branch: when (*DAT &1)!=0 it calls func_0x0805d618(1), FUN_0803411c(*pbVar2) with a byte previously clamped to 0..2 (and >0x80 reset to 2), stores that byte at *(DAT+0x74), then FUN_080098f0(...). Alternate branches adjust the same byte +/-1 for bits 0x10/0x20 without saving.",
+      "ram_fields_updated": [
+        "clamped byte passed to FUN_0803411c (stored per-slot by FUN_0803411c to *_DAT_0803414c, offset unresolved)",
+        "byte at *(DAT_08034df8+0x74) set to same value after save"
+      ],
+      "how_mapped": "callgraph.json: 0x08034d58 callees include 0x0803411c and 0x080098f0; decompiled.c lines for FUN_08034d58 show the bit-0 branch directly"
+    },
+    {
+      "entry_caller": "0x0803411c",
+      "chain": [
+        "0x0803411c",
+        "0x0800917c",
+        "0x08008fe8"
+      ],
+      "trigger_context": "Load-or-repair half of save-all: each slot is read first; if all 4 copies fail magic/checksum, FUN_0800917c calls FUN_08008fe8 to reinitialise RAM defaults before the subsequent write",
+      "ram_fields_updated": [
+        "entire 0x5a0 RAM block zeroed and default constants written (only on total copy failure)"
+      ],
+      "how_mapped": "callgraph.json 0x0800917c->0x08008fe8; decompiled FUN_0800917c if(uVar4==4) FUN_08008fe8()"
+    },
+    {
+      "entry_caller": "0x08008fe8",
+      "chain": [
+        "0x08008fe8",
+        "0x080007d0",
+        "0x08008f44",
+        "0x08008b08",
+        "0x0800898c"
+      ],
+      "trigger_context": "Default init sub-call FUN_08008f44(0x12): stores (0x12-0x12)=0 (or -1 if arg 0) at *(base+DAT) then recomputes via FUN_08008b08",
+      "ram_fields_updated": [
+        "one byte at unresolved DAT offset = 0",
+        "derived fields rewritten by FUN_08008b08"
+      ],
+      "how_mapped": "callgraph.json 0x08008fe8 callees + decompiled bodies"
+    },
+    {
+      "entry_caller": "0x08008fe8",
+      "chain": [
+        "0x08008fe8",
+        "0x08008e98",
+        "0x08008b08",
+        "0x0800898c"
+      ],
+      "trigger_context": "Default init sub-call FUN_08008e98(0): stores 0 at *(base+DAT), masks byte+0x540 (&0xf3|2 -> sav 0x540=2), recomputes, conditionally zeroes bytes +0x97/+0x98",
+      "ram_fields_updated": [
+        "byte+0x540 low bits =2",
+        "bytes +0x97,+0x98 =0 if bit29 of u32+0x510 clear",
+        "one byte at unresolved DAT offset =0"
+      ],
+      "how_mapped": "decompiled FUN_08008e98 body; sav byte 0x540=0x02"
+    },
+    {
+      "entry_caller": "0x08008fe8",
+      "chain": [
+        "0x08008fe8",
+        "0x08008ee8",
+        "0x08008b08",
+        "0x0800898c"
+      ],
+      "trigger_context": "Default init sub-call FUN_08008ee8(1,1): writes byte 1 into 5-byte record at base+0x7e+byte[0x92]*5+1, masks byte+0x54 (&0xf3|2), recomputes, conditionally zeroes two bytes at unresolved DAT offset",
+      "ram_fields_updated": [
+        "record byte at +0x7e+idx*5+1 =1 (idx=byte+0x92; final sav 0x7f=0, so later state overwrote it or idx differed at init time - unresolved)",
+        "byte+0x54 low bits=2"
+      ],
+      "how_mapped": "decompiled FUN_08008ee8 body; sav discrepancy explicitly noted"
+    }
+  ],
+  "fields": [
+    {
+      "name": "magic_star",
+      "offset": 0,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": [
+        "0x080090f0"
+      ],
+      "readers": [
+        "0x0800917c"
+      ],
+      "observed_values": {
+        "cap-01": "0x2a ('*') in all 12 copies",
+        "cap-00": "0xff (blank)"
+      },
+      "update_mechanism": "Writer sets byte0=0x2a before checksum; reader requires (char)*ptr=='*'",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "FUN_080090f0 *(u8*)buf=0x2a; FUN_0800917c compares '*'; verified in sav"
+    },
+    {
+      "name": "slot_index",
+      "offset": 1,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": [
+        "0x080090f0"
+      ],
+      "readers": [
+        "0x0800917c"
+      ],
+      "observed_values": {
+        "cap-01": "0,1,2 matching slot ordinal"
+      },
+      "update_mechanism": "Writer sets byte1=(char)slot_param; reader requires byte1<3",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "FUN_080090f0 byte1=param_1; FUN_0800917c byte1<3; sav byte1 equals slot number in all copies"
+    },
+    {
+      "name": "reserved_header_zero",
+      "offset": 2,
+      "size": 16,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [
+        "0x08008fe8"
+      ],
+      "readers": [
+        "0x0800917c"
+      ],
+      "observed_values": {
+        "cap-01": "all 0x00"
+      },
+      "update_mechanism": "Zeroed by init clear of 0x5a0 block (FUN_080007d0 DMA/CpuSet-style zero fill via FUN_08008fe8)",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Zero in sav; no named writer traced to individual bytes; DAT literal bases unresolved"
+    },
+    {
+      "name": "flag_byte_at_0x12",
+      "offset": 18,
+      "size": 1,
+      "type": "bitflags",
+      "ram_addr": null,
+      "writers": [
+        "0x08008fe8"
+      ],
+      "readers": [
+        "0x08008b08"
+      ],
+      "observed_values": {
+        "cap-01": "0x08"
+      },
+      "update_mechanism": "Init ORs bit3: *(iVar3+0x12)|=8 in FUN_08008fe8 (second instance at +0x1c)",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "Decompiled OR-8 at +0x12/+0x1c and sav byte=0x08; semantic meaning unknown"
+    },
+    {
+      "name": "reserved_0x13_0x1b",
+      "offset": 19,
+      "size": 9,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [
+        "0x08008fe8"
+      ],
+      "readers": [
+        "0x0800917c"
+      ],
+      "observed_values": {
+        "cap-01": "all 0x00"
+      },
+      "update_mechanism": "Zeroed on init",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Zero region between two OR-8 flag bytes"
+    },
+    {
+      "name": "flag_byte_at_0x1c",
+      "offset": 28,
+      "size": 1,
+      "type": "bitflags",
+      "ram_addr": null,
+      "writers": [
+        "0x08008fe8"
+      ],
+      "readers": [
+        "0x08008b08"
+      ],
+      "observed_values": {
+        "cap-01": "0x08"
+      },
+      "update_mechanism": "Init ORs bit3: *(iVar3+0x1c)|=8",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "As 0x12"
+    },
+    {
+      "name": "reserved_0x1d_0x25",
+      "offset": 29,
+      "size": 9,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [
+        "0x08008fe8"
+      ],
+      "readers": [
+        "0x0800917c"
+      ],
+      "observed_values": {
+        "cap-01": "all 0x00"
+      },
+      "update_mechanism": "Zeroed on init",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Zero region; stride-0x0a pattern 0x12,0x1c,0x26,0x30 suggests 4-entry array of 10-byte records (entry field at +0x0a?) - unproven"
+    },
+    {
+      "name": "flag_byte_at_0x26",
+      "offset": 38,
+      "size": 1,
+      "type": "bitflags",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [
+        "0x08008b08"
+      ],
+      "observed_values": {
+        "cap-01": "0x08"
+      },
+      "update_mechanism": "No direct writer in save_related_functions.c; pattern matches 0x12/0x1c; likely set by FUN_08008b08 record loop or same array init in full decompiled.c",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Sav byte=0x08 at stride 0x0a; writer not isolated due to unresolved DAT bases"
+    },
+    {
+      "name": "reserved_0x27_0x2f",
+      "offset": 39,
+      "size": 9,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [
+        "0x08008fe8"
+      ],
+      "readers": [
+        "0x0800917c"
+      ],
+      "observed_values": {
+        "cap-01": "all 0x00"
+      },
+      "update_mechanism": "Zeroed on init",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Zero"
+    },
+    {
+      "name": "flag_byte_at_0x30",
+      "offset": 48,
+      "size": 1,
+      "type": "bitflags",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [
+        "0x08008b08"
+      ],
+      "observed_values": {
+        "cap-01": "0x08"
+      },
+      "update_mechanism": "As 0x26",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Sav byte=0x08 at stride 0x0a"
+    },
+    {
+      "name": "reserved_0x31_0x71",
+      "offset": 49,
+      "size": 65,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [
+        "0x08008fe8"
+      ],
+      "readers": [
+        "0x0800917c"
+      ],
+      "observed_values": {
+        "cap-01": "all 0x00"
+      },
+      "update_mechanism": "Zeroed on init; FUN_08008b08 writes cached/derived u16s at block+0x00..0x2c and 5-byte records at +0x7e indexed by byte+0x92 in RAM (all zero in this capture)",
+      "confidence": "HYPOTHESIS",
+      "evidence": "FUN_08008b08 puVar2[0x10..0x16]=0 and record indexing static-only; offsets in RAM mirror not proven to equal sav offsets for every sub-write"
+    },
+    {
+      "name": "counter_or_value_1000_at_0x72",
+      "offset": 114,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": [
+        "0x08008fe8"
+      ],
+      "readers": [
+        "0x08008b08"
+      ],
+      "observed_values": {
+        "cap-01": "1000 (0x03e8)"
+      },
+      "update_mechanism": "Init writes a 1000 constant (*(u16*)(ptr+DAT)=1000 in FUN_08008fe8; also *(u32*)(substruct+0x58)=1000 at sav 0x544). Exact assignment-to-offset mapping is via unresolved DAT literal",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "Sav u16=1000 at 0x72 and 0x544; two 1000 constants in FUN_08008fe8"
+    },
+    {
+      "name": "byte_0x74_zero",
+      "offset": 116,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": [
+        "0x08008fe8"
+      ],
+      "readers": [
+        "0x0800917c"
+      ],
+      "observed_values": {
+        "cap-01": "0x00"
+      },
+      "update_mechanism": "Zeroed / low byte of adjacent field",
+      "confidence": "UNKNOWN",
+      "evidence": "Zero in sav"
+    },
+    {
+      "name": "sentinel_ff_at_0x75",
+      "offset": 117,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": [
+        "0x08008fe8"
+      ],
+      "readers": [
+        "0x0800917c"
+      ],
+      "observed_values": {
+        "cap-01": "0xff"
+      },
+      "update_mechanism": "Init writes 0xff bytes (*(u8*)(ptr+DAT)=0xff in FUN_08008fe8, two instances); also at 0x58b",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "Sav 0xff at 0x75 and 0x58b amid zero block; 0xff constants in init"
+    },
+    {
+      "name": "reserved_0x76_0x4eb",
+      "offset": 118,
+      "size": 1142,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [
+        "0x08008fe8"
+      ],
+      "readers": [
+        "0x0800917c"
+      ],
+      "observed_values": {
+        "cap-01": "all 0x00 (0x476 bytes)"
+      },
+      "update_mechanism": "Zeroed on init; this is the bulk payload area - in cap-01 it carries no progression data beyond defaults, so per-field semantics cannot be extracted from this corpus",
+      "confidence": "UNKNOWN",
+      "evidence": "All zero in only non-blank sample; FUN_08008b08 5-byte records at RAM+0x7e and bitfield writes at +0x20.. fall in this span statically"
+    },
+    {
+      "name": "substruct_u16_0_at_0x4ec",
+      "offset": 1260,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": [
+        "0x08008fe8"
+      ],
+      "readers": [
+        "0x0800917c"
+      ],
+      "observed_values": {
+        "cap-01": "120 (0x78)"
+      },
+      "update_mechanism": "Init: puVar1[0]=0x78 where puVar1 is the 0xb0-byte tail sub-struct inferred at sav+0x4ec (0x4ec+0xb0=0x59c=checksum offset)",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "Sequence 120,120,120,80,80 at 0x4ec..0x4f5 exactly matches puVar1[0..4]=0x78,0x78,0x78,0x50,0x50 in FUN_08008fe8"
+    },
+    {
+      "name": "substruct_u16_1_at_0x4ee",
+      "offset": 1262,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": [
+        "0x08008fe8"
+      ],
+      "readers": [
+        "0x0800917c"
+      ],
+      "observed_values": {
+        "cap-01": "120"
+      },
+      "update_mechanism": "Init puVar1[1]=0x78",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "As above"
+    },
+    {
+      "name": "substruct_u16_2_at_0x4f0",
+      "offset": 1264,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": [
+        "0x08008fe8"
+      ],
+      "readers": [
+        "0x0800917c"
+      ],
+      "observed_values": {
+        "cap-01": "120"
+      },
+      "update_mechanism": "Init puVar1[2]=0x78",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "As above"
+    },
+    {
+      "name": "substruct_u16_3_at_0x4f2",
+      "offset": 1266,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": [
+        "0x08008fe8"
+      ],
+      "readers": [
+        "0x0800917c"
+      ],
+      "observed_values": {
+        "cap-01": "80 (0x50)"
+      },
+      "update_mechanism": "Init puVar1[3]=0x50",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "As above"
+    },
+    {
+      "name": "substruct_u16_4_at_0x4f4",
+      "offset": 1268,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": [
+        "0x08008fe8"
+      ],
+      "readers": [
+        "0x0800917c"
+      ],
+      "observed_values": {
+        "cap-01": "80"
+      },
+      "update_mechanism": "Init puVar1[4]=0x50",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "As above"
+    },
+    {
+      "name": "substruct_u16_at_0x4f6",
+      "offset": 1270,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [
+        "0x0800917c"
+      ],
+      "observed_values": {
+        "cap-01": "10 (0x0a)"
+      },
+      "update_mechanism": "No writer isolated in seed functions; within inferred 0xb0 tail sub-struct (+0x0a)",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Nonzero in sav only"
+    },
+    {
+      "name": "reserved_0x4f8_0x4f9",
+      "offset": 1272,
+      "size": 2,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [
+        "0x08008fe8"
+      ],
+      "readers": [
+        "0x0800917c"
+      ],
+      "observed_values": {
+        "cap-01": "0x00"
+      },
+      "update_mechanism": "Zeroed on init",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Zero"
+    },
+    {
+      "name": "substruct_byte_at_0x4fb",
+      "offset": 1275,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [
+        "0x0800917c"
+      ],
+      "observed_values": {
+        "cap-01": "0x01 (u16 at 0x4fa = 0x0100)"
+      },
+      "update_mechanism": "No writer isolated; tail sub-struct +0x0f",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Nonzero byte in sav only"
+    },
+    {
+      "name": "reserved_0x4fc_0x50b",
+      "offset": 1276,
+      "size": 16,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [
+        "0x08008fe8"
+      ],
+      "readers": [
+        "0x0800917c"
+      ],
+      "observed_values": {
+        "cap-01": "all 0x00"
+      },
+      "update_mechanism": "Zeroed on init",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Zero"
+    },
+    {
+      "name": "substruct_u16_at_0x50c",
+      "offset": 1292,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [
+        "0x0800917c"
+      ],
+      "observed_values": {
+        "cap-01": "2"
+      },
+      "update_mechanism": "Tail sub-struct +0x20; no writer isolated (FUN_08008b08 writes *(u16*)(other_base+0x6a) etc. may touch this region - unresolved)",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Nonzero in sav only"
+    },
+    {
+      "name": "reserved_0x50e_0x53f",
+      "offset": 1294,
+      "size": 50,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [
+        "0x08008fe8"
+      ],
+      "readers": [
+        "0x0800917c"
+      ],
+      "observed_values": {
+        "cap-01": "all 0x00"
+      },
+      "update_mechanism": "Zeroed on init; FUN_08008e98 masks byte at RAM+0x540 (&0xf3|2) adjacent",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Zero"
+    },
+    {
+      "name": "value_2_at_0x540",
+      "offset": 1344,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": [
+        "0x08008e98"
+      ],
+      "readers": [
+        "0x08008b08"
+      ],
+      "observed_values": {
+        "cap-01": "2"
+      },
+      "update_mechanism": "FUN_08008e98: *(byte*)(base+0x540) = *(byte*)(base+0x540)&0xf3|2 (low 2 bits set to 2, bits2-3 cleared), called with param 0 from init; FUN_08008ee8 does same to byte+0x54",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "Static mask-write at +0x540 and sav u16=2; caller FUN_08008fe8->FUN_08008e98(0)"
+    },
+    {
+      "name": "reserved_0x542_0x543",
+      "offset": 1346,
+      "size": 2,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [
+        "0x08008fe8"
+      ],
+      "readers": [
+        "0x0800917c"
+      ],
+      "observed_values": {
+        "cap-01": "0x00"
+      },
+      "update_mechanism": "Zeroed",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Zero"
+    },
+    {
+      "name": "substruct_1000_at_0x544",
+      "offset": 1348,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": [
+        "0x08008fe8"
+      ],
+      "readers": [
+        "0x0800917c"
+      ],
+      "observed_values": {
+        "cap-01": "1000 (0x000003e8)"
+      },
+      "update_mechanism": "Init: *(u32*)(puVar1+0x2c as u16-indexed, byte +0x58 from 0x4ec)=1000",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "Sav u32=1000 at 0x544 = 0x4ec+0x58; FUN_08008fe8 *(undefined4*)(puVar1+0x2c)=1000"
+    },
+    {
+      "name": "reserved_0x548_0x549",
+      "offset": 1352,
+      "size": 2,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [
+        "0x08008fe8"
+      ],
+      "readers": [
+        "0x0800917c"
+      ],
+      "observed_values": {
+        "cap-01": "0x00"
+      },
+      "update_mechanism": "Zeroed",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Zero"
+    },
+    {
+      "name": "substruct_u16_at_0x54a",
+      "offset": 1354,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": [
+        "0x08008fe8"
+      ],
+      "readers": [
+        "0x0800917c"
+      ],
+      "observed_values": {
+        "cap-01": "2"
+      },
+      "update_mechanism": "Init puVar1[0x2f]=2 (byte +0x5e from 0x4ec)",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "Sav=2; FUN_08008fe8 puVar1[0x2f]=2"
+    },
+    {
+      "name": "substruct_u16_at_0x54c",
+      "offset": 1356,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": [
+        "0x08008fe8"
+      ],
+      "readers": [
+        "0x0800917c"
+      ],
+      "observed_values": {
+        "cap-01": "2"
+      },
+      "update_mechanism": "Init puVar1[0x30]=2",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "Sav=2"
+    },
+    {
+      "name": "substruct_u16_at_0x54e",
+      "offset": 1358,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": [
+        "0x08008fe8"
+      ],
+      "readers": [
+        "0x0800917c"
+      ],
+      "observed_values": {
+        "cap-01": "1"
+      },
+      "update_mechanism": "Init puVar1[0x31]=1",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "Sav=1"
+    },
+    {
+      "name": "substruct_u16_at_0x550",
+      "offset": 1360,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": [
+        "0x08008fe8"
+      ],
+      "readers": [
+        "0x0800917c"
+      ],
+      "observed_values": {
+        "cap-01": "1"
+      },
+      "update_mechanism": "Init puVar1[0x32]=1",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "Sav=1"
+    },
+    {
+      "name": "reserved_0x552_0x55d",
+      "offset": 1362,
+      "size": 12,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [
+        "0x08008fe8"
+      ],
+      "readers": [
+        "0x0800917c"
+      ],
+      "observed_values": {
+        "cap-01": "all 0x00"
+      },
+      "update_mechanism": "Zeroed",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Zero"
+    },
+    {
+      "name": "substruct_u16_at_0x55e",
+      "offset": 1374,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": [
+        "0x08008fe8"
+      ],
+      "readers": [
+        "0x0800917c"
+      ],
+      "observed_values": {
+        "cap-01": "1"
+      },
+      "update_mechanism": "Init puVar1[0x39]=1 (byte +0x72 from 0x4ec) - later/first 1000-write at an unresolved DAT offset does not land here in final sav",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "Sav=1 exactly matches puVar1[0x39]=1"
+    },
+    {
+      "name": "reserved_0x560_0x569",
+      "offset": 1376,
+      "size": 10,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [
+        "0x08008fe8"
+      ],
+      "readers": [
+        "0x0800917c"
+      ],
+      "observed_values": {
+        "cap-01": "all 0x00"
+      },
+      "update_mechanism": "Zeroed",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Zero"
+    },
+    {
+      "name": "substruct_byte_at_0x56b",
+      "offset": 1387,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [
+        "0x0800917c"
+      ],
+      "observed_values": {
+        "cap-01": "0x01 (u16 at 0x56a=0x0100)"
+      },
+      "update_mechanism": "No writer isolated; tail sub-struct +0x7f",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Nonzero byte in sav only"
+    },
+    {
+      "name": "reserved_0x56c_0x589",
+      "offset": 1388,
+      "size": 30,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [
+        "0x08008fe8"
+      ],
+      "readers": [
+        "0x0800917c"
+      ],
+      "observed_values": {
+        "cap-01": "all 0x00"
+      },
+      "update_mechanism": "Zeroed; init ORs bit1 at tail-substruct offsets via DAT literals (*(byte*)(puVar1+0xa3)|=2, +0xad|=2) - final sav bytes in this span are 0, so those writes either target other offsets or were later cleared",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Static OR-2 writes exist but sav mapping unresolved"
+    },
+    {
+      "name": "sentinel_ff_at_0x58b",
+      "offset": 1419,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": [
+        "0x08008fe8"
+      ],
+      "readers": [
+        "0x0800917c"
+      ],
+      "observed_values": {
+        "cap-01": "0xff (byte 0x58a=0x00)"
+      },
+      "update_mechanism": "Init *(u8*)((int)puVar1+0x9f)=0xff with puVar1 at 0x4ec gives 0x58b",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "Sav 0xff at 0x58b = 0x4ec+0x9f; byte 0x58a (puVar1+0x4f u16-indexed write of 0xff) is 0x00 in sav - noted discrepancy, that write may target a different base or be overwritten"
+    },
+    {
+      "name": "reserved_0x58c_0x58d",
+      "offset": 1420,
+      "size": 2,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [
+        "0x08008fe8"
+      ],
+      "readers": [
+        "0x0800917c"
+      ],
+      "observed_values": {
+        "cap-01": "0x00"
+      },
+      "update_mechanism": "Zeroed",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Zero"
+    },
+    {
+      "name": "value_at_0x58e",
+      "offset": 1422,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [
+        "0x0800917c"
+      ],
+      "observed_values": {
+        "cap-01": "512 (0x0200, byte 0x58f=0x02)"
+      },
+      "update_mechanism": "No writer isolated; tail sub-struct +0xa2",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Nonzero in sav only"
+    },
+    {
+      "name": "reserved_0x590_0x597",
+      "offset": 1424,
+      "size": 8,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [
+        "0x08008fe8"
+      ],
+      "readers": [
+        "0x0800917c"
+      ],
+      "observed_values": {
+        "cap-01": "0x00"
+      },
+      "update_mechanism": "Zeroed",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Zero"
+    },
+    {
+      "name": "value_at_0x598",
+      "offset": 1432,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [
+        "0x0800917c"
+      ],
+      "observed_values": {
+        "cap-01": "512 (byte 0x599=0x02)"
+      },
+      "update_mechanism": "No writer isolated; tail sub-struct +0xac",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Nonzero in sav only"
+    },
+    {
+      "name": "reserved_0x59a_0x59b",
+      "offset": 1434,
+      "size": 2,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [
+        "0x08008fe8"
+      ],
+      "readers": [
+        "0x0800917c"
+      ],
+      "observed_values": {
+        "cap-01": "0x00"
+      },
+      "update_mechanism": "Zeroed; last covered bytes before checksum",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Zero"
+    },
+    {
+      "name": "checksum_not_sum16",
+      "offset": 1436,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": [
+        "0x080090f0"
+      ],
+      "readers": [
+        "0x0800917c"
+      ],
+      "observed_values": {
+        "cap-01": "slot0 0xf1c8, slot1 0xf0c8, slot2 0xefc8 (LE bytes c8 f1 / c8 f0 / c8 ef)"
+      },
+      "update_mechanism": "Writer computes ~sum16 over [0,0x59c) and stores at 0x59c before flushing 4 copies; reader recomputes and compares",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Python: 12/12 copies match (see report section 4)"
+    },
+    {
+      "name": "trailing_pad_zero",
+      "offset": 1438,
+      "size": 2,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [
+        "0x08008fe8"
+      ],
+      "readers": [
+        "0x0800917c"
+      ],
+      "observed_values": {
+        "cap-01": "0x00 0x00"
+      },
+      "update_mechanism": "Not covered by checksum (sum is over [0,0x59c)); zeroed on init, flushed as part of 0x5a0 block",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "Writer/reader loop bound is the DAT checksum offset (0x59c verified by sav); block flushed is full 0x5a0"
+    }
+  ],
+  "fuzzing_targets": [
+    {
+      "offset": 0,
+      "size": 1,
+      "mutation": "Change 0x2a to 0x2b in copy0 only of slot0",
+      "requires_checksum_repair": false,
+      "predicted_effect": "Reader skips copy0, loads identical copy1; no visible change - proves first-valid copy fallback"
+    },
+    {
+      "offset": 0,
+      "size": 1,
+      "mutation": "Change 0x2a to 0x2b in all 4 copies of slot0",
+      "requires_checksum_repair": false,
+      "predicted_effect": "Slot0 total failure -> FUN_08008fe8 defaults reinitialised in RAM, then (via FUN_0803411c) rewritten; progress for slot0 resets to defaults on next save/load cycle"
+    },
+    {
+      "offset": 1,
+      "size": 1,
+      "mutation": "Set slot byte to 3 in all copies of slot0 and repair checksum",
+      "requires_checksum_repair": true,
+      "predicted_effect": "Reader rejects (byte1<3 fails despite valid checksum) -> default init; proves byte1 is a validity gate, not just a label"
+    },
+    {
+      "offset": 1,
+      "size": 1,
+      "mutation": "Set slot1 byte1 from 1 to 0 and repair checksum",
+      "requires_checksum_repair": true,
+      "predicted_effect": "Statically reader accepts (only <3 checked); if game then mislabels/mis-selects slot, byte1 also used elsewhere - distinguishes reader gate vs downstream use"
+    },
+    {
+      "offset": 1436,
+      "size": 2,
+      "mutation": "Flip one checksum byte in copy0 only",
+      "requires_checksum_repair": false,
+      "predicted_effect": "Copy0 rejected, copy1 loads; no visible change"
+    },
+    {
+      "offset": 114,
+      "size": 2,
+      "mutation": "Set u16 1000 -> 999 and repair checksum in all 4 copies of slot0",
+      "requires_checksum_repair": true,
+      "predicted_effect": "If value is a counter/resource, UI/gameplay value decrements by 1; if no visible change, it is a cached/default constant"
+    },
+    {
+      "offset": 18,
+      "size": 1,
+      "mutation": "Clear bit3 (0x08->0x00) and repair checksum in all copies",
+      "requires_checksum_repair": true,
+      "predicted_effect": "One of 4 stride-0x0a array entries loses a flag; observe per-entry UI/gameplay difference to identify the array"
+    },
+    {
+      "offset": 1260,
+      "size": 10,
+      "mutation": "Change 120,120,120,80,80 pattern (e.g. first u16 -> 121) and repair checksum in all copies",
+      "requires_checksum_repair": true,
+      "predicted_effect": "Tail sub-struct default/stat values change; observe stats/limits UI - tests whether these are caps, stats, or timers"
+    },
+    {
+      "offset": 1344,
+      "size": 1,
+      "mutation": "Set low bits 2->1 (0x02->0x01) and repair checksum",
+      "requires_checksum_repair": true,
+      "predicted_effect": "Field written by FUN_08008e98 mask &0xf3|2; a mode/enum change should be visible where that setter is used in gameplay"
+    },
+    {
+      "offset": 512,
+      "size": 1,
+      "mutation": "Set a zero payload byte to 1 in all copies WITHOUT checksum repair",
+      "requires_checksum_repair": false,
+      "predicted_effect": "All copies rejected on checksum -> default init; negative control proving checksum covers mid-block"
+    },
+    {
+      "offset": 1438,
+      "size": 2,
+      "mutation": "Set trailing pad 0x0000 -> 0xffff in all copies, no checksum repair needed",
+      "requires_checksum_repair": false,
+      "predicted_effect": "Predicted NO effect (outside covered range); if load fails, covered range is actually 0x5a0 and formula must be revised"
+    },
+    {
+      "offset": 17280,
+      "size": 1,
+      "mutation": "Write 0x00 into unused tail 0x4380",
+      "requires_checksum_repair": false,
+      "predicted_effect": "Predicted no effect; confirms tail is unused by traced code"
+    }
+  ],
+  "open_questions": [
+    "Exact RAM mirror base address (0x02xxxxxx/0x03xxxxxx) of the 0x5a0 block: Ghidra DAT literals (_DAT_08009174, _DAT_080091e8, _DAT_08008b60, _DAT_080090a8) are unresolved in decompiled.c, so ram_addr is null throughout; the inferred tail sub-struct base sav+0x4ec (size 0xb0, ending at checksum) is static inference from sav byte patterns, not a resolved pointer value.",
+    "Semantics of almost all payload fields: cap-01 is a near-default save (only init constants nonzero; slots differ only in byte1+checksum), so no progression-dependent field can be named from this corpus. More mutated .sav captures are needed.",
+    "Discrepancy: FUN_08008fe8 writes 0xff via puVar1[0x4f] (inferred sav 0x58a, observed 0x00) and FUN_08008ee8(1,1) writes record byte (inferred sav 0x7f, observed 0x00) - either the inferred sub-struct base is off for those writes, or later gameplay/init steps cleared them before the flush captured in cap-01.",
+    "What FUN_08034d58's clamped 0..2 byte and FUN_0803411c's per-slot stored byte (*_DAT_0803414c) represent (difficulty? language? profile id?) - in cap-01 all slots carry identical payload, so the value's sav offset could not be isolated.",
+    "Whether slots are truly independent player profiles: FUN_0803411c rewrites ALL 3 slots from (apparently) the same RAM buffer on every save, and cap-01 slots are byte-identical except slot index - either this capture saved the same state 3x, or slots are not independent in the way geometry suggests.",
+    "func_0x0805ea54 trampoline body (SRAM read/verify core) is unrecovered (jumptable), so read/verify return-code semantics are inferred from callers only.",
+    "No .ss save states were provided (states/ empty), so no fuzzing prediction in section 6 has been executed; cold-reload probe in PACKET.md only confirms a non-blank save is retained/recognised."
+  ]
+}

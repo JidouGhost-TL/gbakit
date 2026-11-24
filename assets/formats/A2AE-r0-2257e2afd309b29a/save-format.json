@@ -1,0 +1,518 @@
+{
+  "schema": "gbakit-save-research/1",
+  "release_key": "A2AE-r0-2257e2afd309b29a",
+  "display_name": "Disney Sports - Basketball (USA)",
+  "rom_sha256": "2257e2afd309b29ae69521a43f9cba5011f2244c096946ab0f1a09571e1801ab",
+  "game_code": "A2AE",
+  "header_family": "A2A",
+  "community_id": "comm-009",
+  "overall_confidence": "MEDIUM",
+  "media": {
+    "kind": "eeprom512",
+    "size_bytes": 512,
+    "sdk_tags": [
+      "EEPROM_V122@1425880"
+    ],
+    "fill_byte": "0xff"
+  },
+  "slots_and_copies": [
+    {
+      "name": "slot_0",
+      "offset": 0,
+      "size": 512,
+      "redundancy_role": "primary",
+      "selection_rule": "Only copy present. No mirrored/backup slot in the 512-byte image: layout is header (0x00-0x17) + five 32B records (0x18-0xb7) + three 108B records (0xb8-0x1fb) + trailer (0x1fc-0x1ff). record108_1==record108_2 in sav-01 is template duplication, not slot redundancy; no generation/sequence counter found anywhere (header bytes identical in both snapshots, no incrementing field)."
+    }
+  ],
+  "magic_signatures": [
+    {
+      "offset": 0,
+      "bytes_hex": "532059454e534944202020524543434f",
+      "ascii": "S YENSID   RECCO (raw .sav order); DISNEY SOCCER   (logical RAM order after per-8-byte-block reversal)",
+      "verified_in_code": true,
+      "verified_in_sav": true,
+      "function_addrs": [
+        "0x080fc3b8"
+      ]
+    }
+  ],
+  "checksums": [
+    {
+      "name": "unidentified - candidate stored u16 at logical 0x10 (0xc78f), no standard algorithm verified",
+      "algorithm": "unknown",
+      "formula_detail": "No verified checksum. Exhaustive Python search (sum8, sum16 byte-sum, sum16/sum32 LE-word sums and complements, xor8/xor16, CRC16 Modbus/CCITT/XMODEM/Kermit, CRC32 and complement, Adler32, weighted sums) over all 8-byte-aligned start/end ranges in both raw .sav order and rev8 logical order on both samples produced no non-spurious match to stored 0xc78f/0x8fc7 at logical 0x10, nor to any plausible header/trailer stored value. Representative computed-vs-stored (rev8, sav-01): range 0x00-0x200 sum16=0x3a46 crc16modbus=0x7818 crc32=0x8cc4934d; range 0x18-0xb8 sum16=0x29bd crc16modbus=0xde91 crc32=0xddd9b236; all != 0xc78f. Integrity may rely on magic alone, on a custom/bitwise algorithm in the untraced writer gap (0x080fc46c-0x080fc5dc), or the u16 at 0x10 may not be a checksum at all. Confidence UNKNOWN; fuzzing must treat checksum repair as unknown.",
+      "stored_offset": 16,
+      "stored_size": 2,
+      "covered_start": 0,
+      "covered_end": 0,
+      "function_addrs": [],
+      "verified_on_samples": [
+        {
+          "file": "sav-00-f1501.sav",
+          "stored_hex": "0xc78f",
+          "computed_hex": "sum16(0x00-0x150)=0x351d; crc16modbus(0x00-0x150)=0x58a3; crc32(0x00-0x150)=0x6346cf4e",
+          "match": false
+        },
+        {
+          "file": "sav-01-f1525.sav",
+          "stored_hex": "0xc78f",
+          "computed_hex": "sum16(0x00-0x200)=0x3a46; crc16modbus(0x00-0x200)=0x7818; crc32(0x00-0x200)=0x8cc4934d",
+          "match": false
+        }
+      ],
+      "confidence": "UNKNOWN"
+    }
+  ],
+  "io_driver_functions": [
+    {
+      "addr": "0x080fc3b8",
+      "role": "read",
+      "callers": [],
+      "notes": "EEPROM read of one 8-byte block: param1=block address (&0xffff, bounds-checked vs *(u16*)(type+4)), address bits from type+8, sends (addr_bits+3)-bit serial command via FUN_080fc338 to 0x0d000000, then DMAs 0x44 halfwords back and reassembles 4 u16s MSB-first into RAM at param2+6,+4,+2,+0 (hence per-8-byte reversal between .sav and RAM). NO callers in callgraph.json and no func_0x080fc3b8 reference in decompiled.c - caller is indirect/untraced. This is the sole proven save-bus reader."
+    },
+    {
+      "addr": "0x080fc338",
+      "role": "read",
+      "callers": [
+        "0x080fc3b8"
+      ],
+      "notes": "DMA3 driver: saves/restores interrupt/DMA regs via _DAT_080fc398.., writes src/dst to DMA3 regs (_DAT_080fc3a8/_DAT_080fc3ac), control = count&0xffff | 0x80000000 (enable), spins on DMA busy bit 0x8000. Used for both EEPROM serial TX (buffer->0x0d000000) and RX (0x0d000000->buffer) inside FUN_080fc3b8. Generic DMA, not save-specific."
+    },
+    {
+      "addr": "0x080fc1cc",
+      "role": "read",
+      "callers": [],
+      "notes": "Candidate EEPROM type/size select (SDK): param 4 and 0x40 select different type-table entries via _DAT_080fc1e0/_DAT_080fc1f4, else error 1. Static-only, no callers traced; supports EEPROM_V122 type dispatch but exact size mapping unresolved (DAT placeholders)."
+    },
+    {
+      "addr": "0x080fc234",
+      "role": "read",
+      "callers": [],
+      "notes": "Candidate EEPROM type identify/set (SDK): if param1<=3 stores type byte and type-table pointer (*param2), else returns true. Static-only, no callers traced."
+    },
+    {
+      "addr": "0x0807c9e8",
+      "role": "read",
+      "callers": [],
+      "notes": "FALSE-POSITIVE seed from save_related_functions.c: gameplay/entity update (uses FUN_08045e48/FUN_08045e80/FUN_08045ec4 RNG-like helpers and FUN_08000110 jumptable stub). No EEPROM/DMA3/MMIO save I/O. Listed here only to close the seed; callers in save_related header: none in callgraph for this addr as save path."
+    },
+    {
+      "addr": "0x080fc8a4",
+      "role": "read",
+      "callers": [],
+      "notes": "FALSE-POSITIVE seed: unsigned modulo runtime helper (shifts/subtracts, calls func_0x080fc6ac on div-by-zero). No save I/O. Callers: none."
+    }
+  ],
+  "caller_chains": [
+    {
+      "entry_caller": "0x080fc3b8",
+      "chain": [
+        "0x080fc3b8",
+        "0x080fc338"
+      ],
+      "trigger_context": "EEPROM 8-byte block read (serial command + DMA3 via 0x0d000000). Entry caller itself has no traced caller: callgraph.json callers=[] and no direct reference in decompiled.c, so the game-side save manager that passes the RAM destination (param2) and block address (param1) is indirect or in the untraced gap. How mapped: matched 0xd000000 literal in FUN_080fc3b8 + DMA3 register writes in FUN_080fc338 + rev8 magic reconstruction.",
+      "ram_fields_updated": [],
+      "how_mapped": "Code literal 0xd000000 (EEPROM window) in FUN_080fc3b8; DMA3 pattern in FUN_080fc338; callgraph edge 0x080fc3b8->0x080fc338 is the only save-bus edge in the corpus."
+    },
+    {
+      "entry_caller": "0x080fc1cc",
+      "chain": [
+        "0x080fc1cc"
+      ],
+      "trigger_context": "Candidate EEPROM type/size selection at init (static-only). No traced callers; RAM save struct unknown.",
+      "ram_fields_updated": [],
+      "how_mapped": "SDK-style type-table writes (_DAT_080fc1e0 etc.) in 0x080fc1xx library cluster adjacent to FUN_080fc3b8; no .sav-byte proof."
+    },
+    {
+      "entry_caller": "0x080fc234",
+      "chain": [
+        "0x080fc234"
+      ],
+      "trigger_context": "Candidate EEPROM identify at init (static-only). No traced callers.",
+      "ram_fields_updated": [],
+      "how_mapped": "Type byte/table store in same 0x080fc2xx cluster; no .sav-byte proof."
+    }
+  ],
+  "fields": [
+    {
+      "name": "magic_disney_soccer",
+      "offset": 0,
+      "size": 16,
+      "type": "ascii",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [
+        "0x080fc3b8"
+      ],
+      "observed_values": {
+        "sav-00-f1501.sav": "44 49 53 4e 45 59 20 53 4f 43 43 45 52 20 20 20",
+        "sav-01-f1525.sav": "44 49 53 4e 45 59 20 53 4f 43 43 45 52 20 20 20"
+      },
+      "update_mechanism": "Written once at save creation/format (writer not in traced corpus); read back and compared by unseen save manager (inferred). Raw .sav bytes are byte-reversed per 8-byte EEPROM block; logical RAM order is DISNEY SOCCER + 3 spaces.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "rev8(raw[0:16]) == b'DISNEY SOCCER   ' in both files; FUN_080fc3b8 (0x080fc3b8) reconstructs each 8-byte EEPROM block into RAM in exactly this reversed-u16 order (writes u16s to param2+6,+4,+2,+0). Note SOCCER (not Basketball) is literal in both samples - shared comm-009 engine heritage, not a transcription error. Raw offset 0x00, raw bytes 53 20 59 45 4e 53 49 44 20 20 20 52 45 43 43 4f"
+    },
+    {
+      "name": "header_unknown_u16_at_0x10",
+      "offset": 16,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [
+        "0x080fc3b8"
+      ],
+      "observed_values": {
+        "sav-00-f1501.sav": "8f c7",
+        "sav-01-f1525.sav": "8f c7"
+      },
+      "update_mechanism": "Unknown. Candidate checksum/integrity or ID field; no standard algorithm reproduced it (see checksums). Do not assume repair formula.",
+      "confidence": "UNKNOWN",
+      "evidence": "Logical bytes 8f c7 (LE 0xc78f, BE 0x8fc7) identical in both files. Exhaustive sum8/sum16/sum32/xor/CRC16(Modbus/CCITT/XMODEM/Kermit)/CRC32/Adler32 search over 8-byte-aligned ranges in raw and rev8 domains found no non-spurious match at this offset."
+    },
+    {
+      "name": "header_bytes_0x12_0x14_all_0x3f",
+      "offset": 18,
+      "size": 3,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [
+        "0x080fc3b8"
+      ],
+      "observed_values": {
+        "sav-00-f1501.sav": "3f 3f 3f",
+        "sav-01-f1525.sav": "3f 3f 3f"
+      },
+      "update_mechanism": "Unknown; three identical 0x3f (63) bytes. Hypothesis: per-record/per-chunk count-minus-one, capacity, or defaulted settings. 63 also equals EEPROM block-count-1 for 512B/8B, but no code in corpus reads these bytes.",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Logical bytes 3f 3f 3f in both files at 0x12-0x14; following 3 bytes zero."
+    },
+    {
+      "name": "header_reserved_zero",
+      "offset": 21,
+      "size": 3,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [
+        "0x080fc3b8"
+      ],
+      "observed_values": {
+        "sav-00-f1501.sav": "00 00 00",
+        "sav-01-f1525.sav": "00 00 00"
+      },
+      "update_mechanism": "Unknown; zero in both samples. Padding/alignment to 8-byte EEPROM block boundary (block 2 ends at 0x18).",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Logical 00 00 00 in both files."
+    },
+    {
+      "name": "record32_0",
+      "offset": 24,
+      "size": 32,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [
+        "0x080fc3b8"
+      ],
+      "observed_values": {
+        "sav-00-f1501.sav": "32 0a 47 03 c0 40 a0 28 1c 0d 00 03 e1 a1 70 34 00 0c 04 85 c2 d1 00 30 10 0a 0a 47 03 c0 40 00",
+        "sav-01-f1525.sav": "32 0a 47 03 c0 40 a0 28 1c 0d 00 03 e1 a1 70 34 00 0c 04 85 c2 d1 00 30 10 0a 0a 47 03 c0 40 00"
+      },
+      "update_mechanism": "Whole-record flush by unseen writer in 8-byte EEPROM blocks; in-RAM mutation before flush not traced (no caller of FUN_080fc3b8 in callgraph). Record 4 is the divergent one - fuzz it first.",
+      "confidence": "HYPOTHESIS",
+      "evidence": "32-byte record 0 at logical 0x18, byte-identical to records 0-3 in both files (template/default pattern). Internal semantics unknown."
+    },
+    {
+      "name": "record32_1",
+      "offset": 56,
+      "size": 32,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [
+        "0x080fc3b8"
+      ],
+      "observed_values": {
+        "sav-00-f1501.sav": "32 0a 47 03 c0 40 a0 28 1c 0d 00 03 e1 a1 70 34 00 0c 04 85 c2 d1 00 30 10 0a 0a 47 03 c0 40 00",
+        "sav-01-f1525.sav": "32 0a 47 03 c0 40 a0 28 1c 0d 00 03 e1 a1 70 34 00 0c 04 85 c2 d1 00 30 10 0a 0a 47 03 c0 40 00"
+      },
+      "update_mechanism": "Whole-record flush by unseen writer in 8-byte EEPROM blocks; in-RAM mutation before flush not traced (no caller of FUN_080fc3b8 in callgraph). Record 4 is the divergent one - fuzz it first.",
+      "confidence": "HYPOTHESIS",
+      "evidence": "32-byte record 1 at logical 0x38, byte-identical to records 0-3 in both files (template/default pattern). Internal semantics unknown."
+    },
+    {
+      "name": "record32_2",
+      "offset": 88,
+      "size": 32,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [
+        "0x080fc3b8"
+      ],
+      "observed_values": {
+        "sav-00-f1501.sav": "32 0a 47 03 c0 40 a0 28 1c 0d 00 03 e1 a1 70 34 00 0c 04 85 c2 d1 00 30 10 0a 0a 47 03 c0 40 00",
+        "sav-01-f1525.sav": "32 0a 47 03 c0 40 a0 28 1c 0d 00 03 e1 a1 70 34 00 0c 04 85 c2 d1 00 30 10 0a 0a 47 03 c0 40 00"
+      },
+      "update_mechanism": "Whole-record flush by unseen writer in 8-byte EEPROM blocks; in-RAM mutation before flush not traced (no caller of FUN_080fc3b8 in callgraph). Record 4 is the divergent one - fuzz it first.",
+      "confidence": "HYPOTHESIS",
+      "evidence": "32-byte record 2 at logical 0x58, byte-identical to records 0-3 in both files (template/default pattern). Internal semantics unknown."
+    },
+    {
+      "name": "record32_3",
+      "offset": 120,
+      "size": 32,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [
+        "0x080fc3b8"
+      ],
+      "observed_values": {
+        "sav-00-f1501.sav": "32 0a 47 03 c0 40 a0 28 1c 0d 00 03 e1 a1 70 34 00 0c 04 85 c2 d1 00 30 10 0a 0a 47 03 c0 40 00",
+        "sav-01-f1525.sav": "32 0a 47 03 c0 40 a0 28 1c 0d 00 03 e1 a1 70 34 00 0c 04 85 c2 d1 00 30 10 0a 0a 47 03 c0 40 00"
+      },
+      "update_mechanism": "Whole-record flush by unseen writer in 8-byte EEPROM blocks; in-RAM mutation before flush not traced (no caller of FUN_080fc3b8 in callgraph). Record 4 is the divergent one - fuzz it first.",
+      "confidence": "HYPOTHESIS",
+      "evidence": "32-byte record 3 at logical 0x78, byte-identical to records 0-3 in both files (template/default pattern). Internal semantics unknown."
+    },
+    {
+      "name": "record32_4",
+      "offset": 152,
+      "size": 32,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [
+        "0x080fc3b8"
+      ],
+      "observed_values": {
+        "sav-00-f1501.sav": "46 0a 47 03 c0 40 f0 28 1c 0d 00 03 21 a3 70 34 00 0c 04 8a c2 d1 00 30 10 1e 0a 47 03 c0 40 00",
+        "sav-01-f1525.sav": "46 0a 47 03 c0 40 f0 28 1c 0d 00 03 21 a3 70 34 00 0c 04 8a c2 d1 00 30 10 1e 0a 47 03 c0 40 00"
+      },
+      "update_mechanism": "Whole-record flush by unseen writer in 8-byte EEPROM blocks; in-RAM mutation before flush not traced (no caller of FUN_080fc3b8 in callgraph). Record 4 is the divergent one - fuzz it first.",
+      "confidence": "HYPOTHESIS",
+      "evidence": "32-byte record 4 at logical 0x98. Records 0-3 byte-identical in both files; record 4 differs at +0 (0x32->0x46), +6 (0xa0->0xf0), +12 (0xe1->0x21), +13 (0xa1->0xa3), +19 (0x85->0x8a), +25 (0x0a->0x1e) in logical order - the only mutated record, consistent with one active/defaulted entity vs four template copies. Internal field semantics unknown; bytes look bit-packed, not plain LE ints (e.g. u16s 2610,839,16576... have no obvious stats meaning)."
+    },
+    {
+      "name": "record108_0",
+      "offset": 184,
+      "size": 108,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [
+        "0x080fc3b8"
+      ],
+      "observed_values": {
+        "sav-00-f1501.sav": "00 00 00 00 00 00 82 00 08 01 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 10 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00",
+        "sav-01-f1525.sav": "00 00 00 00 00 00 82 00 08 01 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 10 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00"
+      },
+      "update_mechanism": "Whole-record flush by unseen writer in 8-byte blocks. sav-00: record108_1 only written up to ~0x150 and record108_2 still erased 0xff; sav-01: all written (mostly 0x00). Suggests sequential/lazy block writes across frames 1501-1525, not a second save slot.",
+      "confidence": "HYPOTHESIS",
+      "evidence": "108-byte record at logical 0xb8. Sparse single-bit bytes recur at identical internal offsets in all three records: +0x2a=0x10, +0x3c=0x01, +0x5c=0x01 (logical). record108_1 == record108_2 byte-for-byte in sav-01 (verified); record108_0 differs only at +0..+5 (00*6 vs fd 7e bf df ef 03) and +9 (0x01 vs 0x00)."
+    },
+    {
+      "name": "record108_1",
+      "offset": 292,
+      "size": 108,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [
+        "0x080fc3b8"
+      ],
+      "observed_values": {
+        "sav-00-f1501.sav": "fd 7e bf df ef 03 82 00 08 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 10 00 ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff",
+        "sav-01-f1525.sav": "fd 7e bf df ef 03 82 00 08 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 10 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00"
+      },
+      "update_mechanism": "Whole-record flush by unseen writer in 8-byte blocks. sav-00: record108_1 only written up to ~0x150 and record108_2 still erased 0xff; sav-01: all written (mostly 0x00). Suggests sequential/lazy block writes across frames 1501-1525, not a second save slot.",
+      "confidence": "HYPOTHESIS",
+      "evidence": "108-byte record at logical 0x124. Sparse single-bit bytes recur at identical internal offsets in all three records: +0x2a=0x10, +0x3c=0x01, +0x5c=0x01 (logical). record108_1 == record108_2 byte-for-byte in sav-01 (verified); record108_0 differs only at +0..+5 (00*6 vs fd 7e bf df ef 03) and +9 (0x01 vs 0x00)."
+    },
+    {
+      "name": "record108_2",
+      "offset": 400,
+      "size": 108,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [
+        "0x080fc3b8"
+      ],
+      "observed_values": {
+        "sav-00-f1501.sav": "ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff",
+        "sav-01-f1525.sav": "fd 7e bf df ef 03 82 00 08 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 10 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 01 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00"
+      },
+      "update_mechanism": "Whole-record flush by unseen writer in 8-byte blocks. sav-00: record108_1 only written up to ~0x150 and record108_2 still erased 0xff; sav-01: all written (mostly 0x00). Suggests sequential/lazy block writes across frames 1501-1525, not a second save slot.",
+      "confidence": "HYPOTHESIS",
+      "evidence": "108-byte record at logical 0x190. Sparse single-bit bytes recur at identical internal offsets in all three records: +0x2a=0x10, +0x3c=0x01, +0x5c=0x01 (logical). record108_1 == record108_2 byte-for-byte in sav-01 (verified); record108_0 differs only at +0..+5 (00*6 vs fd 7e bf df ef 03) and +9 (0x01 vs 0x00)."
+    },
+    {
+      "name": "record108_1_dense_header",
+      "offset": 292,
+      "size": 6,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [
+        "0x080fc3b8"
+      ],
+      "observed_values": {
+        "sav-00-f1501.sav": "fd 7e bf df ef 03",
+        "sav-01-f1525.sav": "fd 7e bf df ef 03"
+      },
+      "update_mechanism": "Unknown. Dense bit-pattern fd 7e bf df ef 03 (many bits set) at head of record108_1 and record108_2, zero in record108_0. Hypothesis: default/all-set flag bitmask, not a checksum - identical in both records despite different preceding context, so it cannot be a checksum of preceding data.",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Logical fd 7e bf df ef 03 in both files at 0x124 and (sav-01) 0x190; 00*6 at 0xb8."
+    },
+    {
+      "name": "record108_2_dense_header",
+      "offset": 400,
+      "size": 6,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [
+        "0x080fc3b8"
+      ],
+      "observed_values": {
+        "sav-00-f1501.sav": "ff ff ff ff ff ff",
+        "sav-01-f1525.sav": "fd 7e bf df ef 03"
+      },
+      "update_mechanism": "Same as record108_1_dense_header. In sav-00 this range is still erased 0xff (unwritten).",
+      "confidence": "HYPOTHESIS",
+      "evidence": "sav-01 logical fd 7e bf df ef 03; sav-00 raw/logical ff*6 (unwritten)."
+    },
+    {
+      "name": "flag_byte_0xbe",
+      "offset": 190,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [
+        "0x080fc3b8"
+      ],
+      "observed_values": {
+        "sav-00-f1501.sav": "82",
+        "sav-01-f1525.sav": "82"
+      },
+      "update_mechanism": "Single-bit-style byte (0x82 = bits 7 and 1) inside record108_0 at +6; part of +6..+9 subfield shared in layout with other 108-records (0x82 at +6 in all three). Unknown semantics.",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Logical 0x82 in both files at 0xbe, 0x12a, 0x196 (record108 internal +6). Raw .sav offset for 0xbe is 0xb9 (byte-reversed within block)."
+    },
+    {
+      "name": "flag_bytes_sparse_0x2a_0x3c_0x5c_per_108record",
+      "offset": 226,
+      "size": 1,
+      "type": "bitflags",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [
+        "0x080fc3b8"
+      ],
+      "observed_values": {
+        "sav-00-f1501.sav": "10",
+        "sav-01-f1525.sav": "10"
+      },
+      "update_mechanism": "Sparse flag bytes at 108-record internal +0x2a (0x10), +0x3c (0x01), +0x5c (0x01), repeating in every 108-record. Likely individual progress/unlock bits packed across the record; exact bit meanings unknown.",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Logical: 0xe2=0x10,0xf4=0x01,0x114=0x01; 0x14e=0x10,0x160=0x01,0x180=0x01; 0x1ba=0x10,0x1cc=0x01,0x1ec=0x01 (sav-01). Positions verified in both files where written."
+    },
+    {
+      "name": "trailer_last_4_bytes",
+      "offset": 508,
+      "size": 4,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [
+        "0x080fc3b8"
+      ],
+      "observed_values": {
+        "sav-00-f1501.sav": "ff ff ff ff",
+        "sav-01-f1525.sav": "00 00 00 80"
+      },
+      "update_mechanism": "Unknown. Logical 00 00 00 80 in sav-01 (final byte bit7 set); erased ff ff ff ff in sav-00 (not yet written). Hypothesis: final flag bit of record108_2 bitfield or end-of-image marker. Not a verified checksum (no algorithm match).",
+      "confidence": "HYPOTHESIS",
+      "evidence": "sav-01 rev8[0x1fc:0x200]=00 00 00 80; sav-00 = ff ff ff ff. Raw sav-01 offset 0x1f8 bytes 80 00 00 00 in file order at block start (reversed within final block)."
+    }
+  ],
+  "fuzzing_targets": [
+    {
+      "offset": 0,
+      "size": 1,
+      "mutation": "Raw .sav: flip first raw byte 0x53->0x54 (logical last magic byte). Reload from sav-01-pre.ss-equivalent state.",
+      "requires_checksum_repair": false,
+      "predicted_effect": "If magic is the only integrity gate, save is rejected/reinitialised (blank/default save, visual delta vs preserved save). If it loads, magic is not checked on this path."
+    },
+    {
+      "offset": 16,
+      "size": 2,
+      "mutation": "Logical 0x10: change 8f c7 -> 8e c7 (raw .sav offset 0x16-0x17 reversed in block: raw bytes at 0x10 block are 00 00 00 3f 3f 3f c7 8f, so edit raw 0x17).",
+      "requires_checksum_repair": true,
+      "predicted_effect": "If this u16 is a checksum, save rejected despite intact magic. If it loads unchanged, it is an ID/settings field, not integrity."
+    },
+    {
+      "offset": 18,
+      "size": 3,
+      "mutation": "Logical 0x12-0x14: 3f 3f 3f -> 3e 3f 3f one at a time.",
+      "requires_checksum_repair": true,
+      "predicted_effect": "Watch for changed counts/limits/defaults in UI, or rejection if these are structural counts. No change suggests padding/settings."
+    },
+    {
+      "offset": 152,
+      "size": 32,
+      "mutation": "Logical record32_4 (0x98): revert its 6 divergent bytes to record32_0 template values (+0 0x46->0x32, +6 0xf0->0xa0, +12 0x21->0xe1, +13 0xa3->0xa1, +19 0x8a->0x85, +25 0x1e->0x0a), one byte at a time.",
+      "requires_checksum_repair": true,
+      "predicted_effect": "One in-game entity/stat should revert to default if record32_4 is the active entity; no visible change suggests it is an unused template slot."
+    },
+    {
+      "offset": 184,
+      "size": 6,
+      "mutation": "Logical record108_0 header 0xb8: 00*6 -> fd 7e bf df ef 03 (copy record108_1 header).",
+      "requires_checksum_repair": true,
+      "predicted_effect": "If dense header is a flag bitmask, many unlocks/progress bits should appear; if it is data, expect garbled progress. Tests the bitmask hypothesis."
+    },
+    {
+      "offset": 226,
+      "size": 1,
+      "mutation": "Logical 0xe2: 0x10 -> 0x00 and -> 0x11 (toggle sparse flag bits in record108_0 at +0x2a). Repeat at 0x14e/0x1ba equivalents.",
+      "requires_checksum_repair": true,
+      "predicted_effect": "Single progress/unlock flag should toggle in UI/RAM mirror; observe which menu/team state changes."
+    },
+    {
+      "offset": 292,
+      "size": 108,
+      "mutation": "Logical: overwrite record108_1 (0x124) with record108_0 (0xb8) bytes and vice versa.",
+      "requires_checksum_repair": true,
+      "predicted_effect": "If 108-records are profiles/slots, the swapped profile should become active; identical behaviour suggests template/backup copies."
+    },
+    {
+      "offset": 508,
+      "size": 4,
+      "mutation": "Logical trailer 0x1fc: 00 00 00 80 -> 00 00 00 00.",
+      "requires_checksum_repair": true,
+      "predicted_effect": "If trailer is an end marker/final flag, save may be treated as incomplete and rewritten or rejected; no effect suggests a spare flag bit."
+    },
+    {
+      "offset": 336,
+      "size": 176,
+      "mutation": "Use sav-00 image (0x150-0x1ff still 0xff) vs sav-01 image as-is, reload each from paired states.",
+      "requires_checksum_repair": false,
+      "predicted_effect": "Counterfactual already in corpus: sav-00 must be accepted up to its written prefix (it was the live save at frame 1501), proving the loader does not require the 0x150-0x1ff region to be non-0xff - i.e. writes are lazy/sequential and no whole-image checksum over 0x00-0x200 with the stored u16 unchanged can be valid for both files unless it excludes the tail."
+    }
+  ],
+  "open_questions": [
+    "Who calls FUN_080fc3b8? No direct caller in callgraph.json/decompiled.c; the save manager and the RAM mirror base (0x02xxxxxx/0x03xxxxxx - param2 destination) are unknown. DAT_* placeholders in the 0x080fc cluster are unresolved, so RAM addresses cannot be named honestly.",
+    "Where is the EEPROM write driver? Address gap 0x080fc46c-0x080fc5dc (0x224 bytes after FUN_080fc3b8) is not in the 591 traced functions and is the natural location for the SDK write/verify routine; the serializer and any checksum routine likely live there or in the same untraced caller.",
+    "Is the u16 at logical 0x10 (0xc78f) a checksum, an ID, or data? No standard algorithm reproduced it; a custom algorithm cannot be ruled out.",
+    "What do the five 32-byte records and three 108-byte records mean semantically (teams/players/profiles/progress)? Only template-vs-divergent structure is proven; no code in the corpus mutates them by name.",
+    "Why does the magic say DISNEY SOCCER in a Basketball title? Literal in both .sav files after rev8 reconstruction; presumed shared comm-009 engine save code, unproven beyond the bytes.",
+    "EEPROM geometry: file is 512 bytes (64 x 8-byte blocks, EEPROM 4Kbit from PACKET). FUN_080fc3b8 takes address-bit count from type struct (+8) and block count from +4; neither value is resolved in decompiled.c, so 6-bit block addressing is inferred from media size, not read from code.",
+    "Generation/selection: no sequence counter or backup slot found; if the game keeps redundancy, it is outside the 512-byte EEPROM image."
+  ]
+}

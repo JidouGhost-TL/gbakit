@@ -1,0 +1,132 @@
+{
+  "schema": "gbakit-save-research/1",
+  "release_key": "ALFP-r0-a51382a23fbfba42",
+  "display_name": "Dragon Ball Z - The Legacy of Goku II (Europe) (En,Fr,De,Es,It)",
+  "rom_sha256": "a51382a23fbfba425074fc75821ac653b56134648c31ef80a26181e256a54925",
+  "game_code": "ALFP",
+  "header_family": "ALF",
+  "community_id": "comm-024",
+  "overall_confidence": "LOW",
+  "media": {
+    "kind": "eeprom8k",
+    "size_bytes": 8192,
+    "sdk_tags": [],
+    "fill_byte": "0xff"
+  },
+  "slots_and_copies": [
+    {
+      "name": "block_0",
+      "offset": 0,
+      "size": 8,
+      "redundancy_role": "unknown",
+      "selection_rule": "Only region observed written in either sample; no second written region found, so slot count/redundancy cannot be confirmed or refuted from 2 samples."
+    },
+    {
+      "name": "unwritten_tail",
+      "offset": 8,
+      "size": 8184,
+      "redundancy_role": "unknown",
+      "selection_rule": "Reads back as 0xFF (erased) in both samples; not yet exercised by any observed write event."
+    }
+  ],
+  "magic_signatures": [],
+  "checksums": [
+    {
+      "name": "candidate_header_checksum",
+      "algorithm": "custom",
+      "formula_detail": "FUN_080219ee (ghidra/decompiled.c) is structurally an Adler-32 variant: A=1,B=0; per byte A=A+byte, B=B+A; periodic modulo reduction via FUN_080283a0 (compiler reciprocal-multiply mod, modulus unresolved from decompiled C); return (B<<16)|A. No traced caller/callee edge exists for this function in ghidra/callgraph.json, and no tested byte-range/endianness/modulus combination reproduces the stored bytes at offset 0x0-0x3 in saves/cap-01-future-1.sav. Treated as an unverified structural candidate only.",
+      "stored_offset": 0,
+      "stored_size": 4,
+      "covered_start": 4,
+      "covered_end": 8,
+      "function_addrs": ["0x080219ee", "0x080283a0"],
+      "verified_on_samples": [
+        {"file": "saves/cap-01-future-1.sav", "stored_hex": "87566212", "computed_hex": "0020000f", "match": false},
+        {"file": "saves/cap-01-future-1.sav", "stored_hex": "12625687", "computed_hex": "0020000f", "match": false}
+      ],
+      "confidence": "HYPOTHESIS"
+    }
+  ],
+  "io_driver_functions": [
+    {"addr": "0x08021efc", "role": "serialize", "callers": ["0x08021f7c", "0x0802202c"], "notes": "Low-level DMA3 register programmer (src/dst/control) + busy-wait, used by both the EEPROM read and write primitives to drive the serial bus."},
+    {"addr": "0x08021f7c", "role": "read", "callers": ["0x08022108"], "notes": "EEPROM single 8-byte block READ: builds READ-opcode+address bitstream, DMAs it out to 0x0D000000, DMAs back 64 data bits, deserializes into caller buffer. MMIO seed function."},
+    {"addr": "0x0802202c", "role": "write", "callers": ["0x08022160"], "notes": "EEPROM single 8-byte block WRITE: builds WRITE-opcode+address+64-bit-payload bitstream, DMAs it to 0x0D000000, polls EEPROM write-busy bit via paired IRQ-guard helpers 0x08021e30/0x08021eb8. MMIO seed function."},
+    {"addr": "0x08021e30", "role": "write", "callers": ["0x0802202c"], "notes": "Interrupt-state guard entered immediately before the EEPROM write-busy poll (BIOS Intr-wait-style jump table)."},
+    {"addr": "0x08021eb8", "role": "write", "callers": ["0x0802202c"], "notes": "Paired interrupt-state restore, entered immediately after the write-busy poll resolves."},
+    {"addr": "0x08022108", "role": "write", "callers": ["0x08022160"], "notes": "Read-back verify: reads one block via 0x08021f7c and compares against the caller's write buffer; returns 0x8000 on mismatch."},
+    {"addr": "0x08022160", "role": "write", "callers": [], "notes": "Block write-with-retry wrapper: write (0x0802202c) + verify (0x08022108), retry up to 3 times. No traced caller in ghidra/callgraph.json; likely called from un-traced game-logic save code."},
+    {"addr": "0x08021904", "role": "deserialize", "callers": [], "notes": "Load-all entry point: selects EEPROM backup type, allocates an 8192-byte heap buffer, reads all 1024 blocks via 0x08021f7c into it. No traced caller."},
+    {"addr": "0x08021974", "role": "serialize", "callers": [], "notes": "Save entry point: flushes a caller-specified byte range of the RAM mirror to EEPROM, one 8-byte block at a time, via 0x08022160. Byte-count parameter is caller-controlled, consistent with only block 0 having been flushed in the observed samples. No traced caller."},
+    {"addr": "0x080219d6", "role": "serialize", "callers": [], "notes": "Sets up the same transfer-descriptor fields as 0x08021974's tail but contains no write loop of its own; hypothesized deferred/async write-descriptor setup. Unverified, no caller/callee edges traced."}
+  ],
+  "caller_chains": [
+    {
+      "entry_caller": "0x08021904",
+      "chain": ["0x08021904", "0x08021d90", "0x0801f53c", "0x0802106a", "0x08021f7c", "0x08021efc", "0x08021080"],
+      "trigger_context": "Unknown game event (no traced caller); presumably a continue/load-save menu action.",
+      "ram_fields_updated": ["dynamic heap buffer at *_DAT_08021a48 (8192 bytes, full save mirror)"],
+      "how_mapped": "Traced by reading FUN_08021904 in ghidra/decompiled.c: calls func_0x08021d90(0x40) to select EEPROM backup type, FUN_0801f53c(0x2000) to allocate the RAM mirror, FUN_0802106a to program the DMA control word, then loops func_0x08021f7c once per 8-byte block for all 1024 blocks (0..0x2000 step 8), confirmed to match the 8192-byte EEPROM size from saves/*.sav."
+    },
+    {
+      "entry_caller": "0x08021974",
+      "chain": ["0x08021974", "0x0802106a", "0x08022160", "0x0802202c", "0x08021efc", "0x08021e30", "0x08021eb8", "0x08022108", "0x08021080"],
+      "trigger_context": "Unknown game event (no traced caller); byte-range parameter (param_4) is caller-controlled. Observed .sav evidence implies the actual call(s) that produced saves/cap-01-future-1.sav used param_4 ~= 8 (only block 0 written).",
+      "ram_fields_updated": ["EEPROM offset 0x0-0x7 (block 0) confirmed written; wider ranges only hypothetical"],
+      "how_mapped": "Traced by reading FUN_08021974: loops func_0x08022160 (write+verify+retry) once per 8-byte block across the caller-supplied byte range, then restores DMA state via FUN_08021080. Cross-checked against saves/hexdump_and_diffs.txt showing exactly 8 changed bytes (one block) between cap-00 and cap-01."
+    }
+  ],
+  "fields": [
+    {
+      "name": "block0_header_candidate",
+      "offset": 0,
+      "size": 4,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": ["0x08021974", "0x08022160", "0x0802202c"],
+      "readers": ["0x08021904", "0x08021f7c"],
+      "observed_values": {"cap-00-future-0.sav": "ffffffff", "cap-01-future-1.sav": "87566212"},
+      "update_mechanism": "Flushed as the first half of EEPROM block 0 via the write-with-retry primitive (0x08022160); no field-level writer code was captured in-trace, so the exact in-RAM producer of this value is unknown.",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Only non-fill bytes besides offset 4-7; candidate checksum per the structural Adler-32 match of FUN_080219ee, but no tested formula/window reproduces this exact value (see checksums[0].verified_on_samples)."
+    },
+    {
+      "name": "block0_payload_candidate",
+      "offset": 4,
+      "size": 4,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": ["0x08021974", "0x08022160", "0x0802202c"],
+      "readers": ["0x08021904", "0x08021f7c"],
+      "observed_values": {"cap-00-future-0.sav": "ffffffff", "cap-01-future-1.sav": "00040604"},
+      "update_mechanism": "Flushed as the second half of EEPROM block 0; producer code not captured in-trace.",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Low-magnitude byte values (0,4,6,4) plausible as small counters/flags; no semantic label can be assigned without further gameplay-correlated samples."
+    },
+    {
+      "name": "unwritten_region",
+      "offset": 8,
+      "size": 8184,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": ["0x08021904"],
+      "observed_values": {"cap-00-future-0.sav": "ff (fill)", "cap-01-future-1.sav": "ff (fill)"},
+      "update_mechanism": "Not yet written by any observed event; EEPROM erased-state fill value.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Direct hex inspection of both .sav files: identical 0xFF fill across this entire span in saves/hexdump_and_diffs.txt and raw bytes."
+    }
+  ],
+  "fuzzing_targets": [
+    {"offset": 0, "size": 1, "mutation": "flip a single bit (e.g. 0x12 -> 0x13)", "requires_checksum_repair": false, "predicted_effect": "If offset 0x0-0x3 is a validated checksum, the game should either reject/reset the block or overwrite it with a freshly computed value on next save; if it is ordinary data, no corrective reaction should occur."},
+    {"offset": 4, "size": 1, "mutation": "increment/decrement individual bytes at 0x4, 0x5, 0x6, 0x7 independently", "requires_checksum_repair": false, "predicted_effect": "Any observable HUD/menu/state change would begin to assign semantics to these 4 bytes; requires paired pre/post .ss states, which are not currently present in states/ for this release."},
+    {"offset": 8, "size": 1, "mutation": "write a non-0xFF byte into the currently-unwritten tail", "requires_checksum_repair": false, "predicted_effect": "Determines whether block 1+ is live-but-unused-so-far versus structurally dead space; a subsequent real game save overwriting this byte back would indicate the former."}
+  ],
+  "open_questions": [
+    "Is offset 0x0-0x3 actually a checksum, and if so over what range/algorithm/modulus/endianness? FUN_080219ee is a structural Adler-32 candidate but is unverified and has no traced caller in ghidra/callgraph.json.",
+    "What do bytes at offset 0x4-0x7 represent semantically?",
+    "Does this title use more than one save slot or a backup/mirrored copy elsewhere in the 8192-byte EEPROM? Not observed in either of the 2 available samples.",
+    "Is there a sequence/generation counter governing slot selection? Not observed (only a single write event visible across both samples).",
+    "Which game-logic call sites invoke 0x08021904 (load) and 0x08021974 (save)? Both have zero traced callers in ghidra/callgraph.json.",
+    "What is the role of 0x080219d6 (descriptor-setup-only, no write loop) relative to 0x08021974 -- deferred/async write path, or unused/dead code?"
+  ]
+}

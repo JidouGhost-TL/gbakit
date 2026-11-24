@@ -1,0 +1,391 @@
+{
+  "schema": "gbakit-save-research/1",
+  "release_key": "BHTE-r0-f596a7b90af7504c",
+  "display_name": "Harry Potter and the Prisoner of Azkaban (USA, Europe) (En,Fr,De,Es,It,Nl,Da)",
+  "rom_sha256": "f596a7b90af7504c18e6fc970b7316f0917a7c343e50a98405949b33157f231c",
+  "game_code": "BHTE",
+  "header_family": "BHT",
+  "community_id": "comm-006",
+  "overall_confidence": "MEDIUM",
+  "media": {
+    "kind": "eeprom8k",
+    "size_bytes": 8192,
+    "sdk_tags": ["EEPROM_V124@16426960"],
+    "fill_byte": "0xff"
+  },
+  "slots_and_copies": [
+    {
+      "name": "header_record",
+      "offset": 0,
+      "size": 16,
+      "redundancy_role": "global_config",
+      "selection_rule": "EEPROM blocks 0-1; validated at boot by FUN_0803c244 (zero-sum + magic); rewritten from RAM canonical copy by FUN_0803c114/FUN_0803c204 on mismatch"
+    },
+    {
+      "name": "global_record",
+      "offset": 16,
+      "size": 40,
+      "redundancy_role": "global_config",
+      "selection_rule": "EEPROM blocks 2-6; validated by FUN_0803c2e0 (zero-sum); rewritten from template by FUN_0803c29c on checksum failure"
+    },
+    {
+      "name": "slot_0",
+      "offset": 56,
+      "size": 2712,
+      "redundancy_role": "primary",
+      "selection_rule": "EEPROM blocks 7-345 (start = 339*0+7); read whole by FUN_0803c0dc(0), validity flag from FUN_0803c0a8 stored at RAM save_struct+0x60; no mirroring, independent menu slot"
+    },
+    {
+      "name": "slot_1",
+      "offset": 2768,
+      "size": 2712,
+      "redundancy_role": "primary",
+      "selection_rule": "EEPROM blocks 346-684 (start = 339*1+7); read whole by FUN_0803c0dc(1), validity flag at RAM save_struct+0x64; independent menu slot"
+    },
+    {
+      "name": "slot_2",
+      "offset": 5480,
+      "size": 2712,
+      "redundancy_role": "primary",
+      "selection_rule": "EEPROM blocks 685-1023 (start = 339*2+7); read whole by FUN_0803c0dc(2), validity flag at RAM save_struct+0x68; independent menu slot; ends exactly at byte 8192"
+    }
+  ],
+  "magic_signatures": [
+    {
+      "offset": 0,
+      "bytes_hex": "313030414f505048",
+      "ascii": "100AOPPH",
+      "verified_in_code": true,
+      "verified_in_sav": true,
+      "function_addrs": ["0x0803c244"]
+    }
+  ],
+  "checksums": [
+    {
+      "name": "header_zero_sum16",
+      "algorithm": "custom",
+      "formula_detail": "16-bit wrapping sum (FUN_0803c1e0) of the 16-byte header as 8 words; writer stores two's-complement negation at offset 0x0E so the whole record sums to 0 mod 65536. In .sav file space words must be read big-endian (serial MSB-first EEPROM packing in FUN_08049f8c/FUN_0804a050 byte-swaps each RAM word); little-endian file-space sum is 0x01FE on both samples and is falsified. Repair: stored_BE = (-sum(BE words with checksum zeroed)) & 0xFFFF at 0x0E.",
+      "stored_offset": 14,
+      "stored_size": 2,
+      "covered_start": 0,
+      "covered_end": 16,
+      "function_addrs": ["0x0803c1e0", "0x0803c114", "0x0803c204", "0x0803c244"],
+      "verified_on_samples": [
+        {"file": "cap-00-future-0.sav", "stored_hex": "0a00", "computed_hex": "0a00", "match": true},
+        {"file": "cap-01-retained-3.sav", "stored_hex": "0a80", "computed_hex": "0a80", "match": true}
+      ],
+      "confidence": "CONFIRMED_VERIFIED"
+    },
+    {
+      "name": "global_record_zero_sum16",
+      "algorithm": "custom",
+      "formula_detail": "Same FUN_0803c1e0 primitive over the 40-byte global record (20 words, EEPROM blocks 2-6); FUN_0803c29c stores -sum at record offset 0x26 (file 0x36, RAM struct+0x36); FUN_0803c2e0 validates sum==0. Both samples are all-zero so byte verification is trivial; formula is code-proven.",
+      "stored_offset": 54,
+      "stored_size": 2,
+      "covered_start": 16,
+      "covered_end": 56,
+      "function_addrs": ["0x0803c1e0", "0x0803c29c", "0x0803c2e0"],
+      "verified_on_samples": [
+        {"file": "cap-00-future-0.sav", "stored_hex": "0000", "computed_hex": "0000", "match": true},
+        {"file": "cap-01-retained-3.sav", "stored_hex": "0000", "computed_hex": "0000", "match": true}
+      ],
+      "confidence": "CONFIRMED_VERIFIED"
+    },
+    {
+      "name": "slot_zero_sum16_unresolved_length",
+      "algorithm": "custom",
+      "formula_detail": "FUN_0803c0a8 computes FUN_0803c1e0(*(save_struct+0x38), _DAT_0803c0d8) and stores (sum==0) at save_struct+0x60+slot*4. The length literal _DAT_0803c0d8 is not resolved in the workspace. Candidate A full 2712-byte slot: BE sum on blank samples = 0xFABC (invalid, consistent with empty-slot handling in FUN_0803bc08). Candidate B 16-byte head only: sum = 0x0000 (trivially valid, all-zero head). Cannot be decided with blank slots only.",
+      "stored_offset": 0,
+      "stored_size": 2,
+      "covered_start": 56,
+      "covered_end": 2768,
+      "function_addrs": ["0x0803c1e0", "0x0803c0a8", "0x0803c0dc"],
+      "verified_on_samples": [],
+      "confidence": "HYPOTHESIS"
+    }
+  ],
+  "io_driver_functions": [
+    {"addr": "0x08049f0c", "role": "write", "callers": ["0x08049f8c", "0x0804a050"], "notes": "DMA3 engine: programs DMA src/dst/count (count|0x80000000 enable) via literal-pool regs (0x040000D4 family), spins on busy bit 0x8000; used for both directions to/from 0x0D000000"},
+    {"addr": "0x08049f8c", "role": "read", "callers": ["0x0804a1b0", "0x0803c318"], "notes": "EEPROM read 8 bytes (1 block): MSB-first command+address bitstream to 0x0D000000, then 0x44 halfwords back (64 data + 4 dummy bits), reassembles 4xu16 MSB-first"},
+    {"addr": "0x0804a050", "role": "write", "callers": ["0x0804a248"], "notes": "EEPROM write 8 bytes (1 block): serialises 4xu16 + address MSB-first (stream length addr_bits+0x43), DMA to 0x0D000000, polls data line with 0x88-tick timeout for write-cycle completion"},
+    {"addr": "0x0804a1b0", "role": "read", "callers": ["0x0804a280"], "notes": "Verify: read-back via 0x08049f8c, compares 4xi16, returns 0x8000 on mismatch else 0"},
+    {"addr": "0x0804a248", "role": "write", "callers": ["0x0804a280"], "notes": "Write wrapper: forwards to 0x0804a050 unless device-type word == 0x200"},
+    {"addr": "0x0804a280", "role": "write", "callers": ["0x0803c348"], "notes": "Write+verify with up to 3 retries per 8-byte block; caller edge from decompiled.c:5008 (missing in callgraph.json)"},
+    {"addr": "0x0803c318", "role": "read", "callers": ["0x0803c0dc", "0x0803c114", "0x0803c244", "0x0803c2e0"], "notes": "Multi-block read: bus setup 0x0803c378, loop 0x08049f8c stepping block++/ptr+=8, bus restore 0x0803c3a8"},
+    {"addr": "0x0803c348", "role": "write", "callers": ["0x0803bc9c", "0x0803c114", "0x0803c204", "0x0803c29c"], "notes": "Multi-block write: bus setup 0x0803c378, loop 0x0804a280 stepping block++/ptr+=8, bus restore 0x0803c3a8"},
+    {"addr": "0x0803c1e0", "role": "checksum", "callers": ["0x0803c0a8", "0x0803c114"], "notes": "Checksum primitive: i16 wrapping sum of (byte_len>>1) signed 16-bit words; also inlined as open loops in 0x0803c204/0x0803c244/0x0803c29c/0x0803c2e0"},
+    {"addr": "0x0803c378", "role": "serialize", "callers": ["0x0803c318", "0x0803c348"], "notes": "EEPROM bus setup: saves WAITCNT-family state and calls 0x08049ec4(0x40) to select EEPROM wait-state timing (WAITCNT 0x04000204 family)"},
+    {"addr": "0x0803c3a8", "role": "serialize", "callers": ["0x0803c318", "0x0803c348"], "notes": "EEPROM bus restore after block transfer"},
+    {"addr": "0x0803c244", "role": "deserialize", "callers": ["0x0803bc9c"], "notes": "Header validate: read blocks 0-1, zero-sum over 8 words, then 8-byte magic compare; returns 1 valid / 0 invalid"},
+    {"addr": "0x0803c2e0", "role": "deserialize", "callers": ["0x0803bc9c"], "notes": "Global record validate: read blocks 2-6 (40B), returns sum==0 over 20 words"},
+    {"addr": "0x0803c0a8", "role": "checksum", "callers": ["0x0803bc08"], "notes": "Slot validate: FUN_0803c1e0 over slot RAM buffer with unresolved length literal; stores (sum==0) at save_struct+0x60+slot*4"},
+    {"addr": "0x0803c0dc", "role": "read", "callers": ["0x0803bc08"], "notes": "Slot read: FUN_0803c318(339*slot+7, 339, *(save_struct+0x38)); stride 339 blocks proven by .sav islands 0x38/0xAD0/0x1568 and 56+3*2712=8192"},
+    {"addr": "0x0803c204", "role": "serialize", "callers": ["0x0803bc9c"], "notes": "Format header: memcpy 16B template (0x0802c4bc), sum 8 words, store -sum at word 7 (byte 0x0E), write blocks 0-1"},
+    {"addr": "0x0803c114", "role": "serialize", "callers": [], "notes": "Header sync: read EEPROM header, recompute RAM canonical checksum (+0xE zeroed, sum, negate), 4xu32 compare, rewrite blocks 0-1 on mismatch (returns 1); no caller recovered in callgraph.json or decompiled bodies"},
+    {"addr": "0x0803c29c", "role": "serialize", "callers": ["0x0803bc9c"], "notes": "Write global record: memcpy 40B template, store -sum at struct+0x36 (record offset 0x26), write blocks 2-6 from struct+0x10"},
+    {"addr": "0x0803bd2c", "role": "erase", "callers": ["0x0803bc9c"], "notes": "Zeroes slot RAM buffer *(save_struct+0x38) via memset 0x0802c450 before slot-head format writes (RAM only; EEPROM erase does not exist)"}
+  ],
+  "caller_chains": [
+    {
+      "entry_caller": "0x0803bc9c",
+      "chain": ["0x0803bc9c", "0x0803c244", "0x0803c318", "0x08049f8c", "0x08049f0c"],
+      "trigger_context": "Save-system boot init (entry caller itself unrecovered: no edge in callgraph.json, no func_ call site; reached via pointer/jumptable). Header validation leg.",
+      "ram_fields_updated": [],
+      "how_mapped": "callgraph.json callees of 0x0803bc9c plus func_0x0803c244 call site at decompiled.c:4677; inner edges from func_0x0803c318 site in FUN_0803c244 body and FUN_ call in save_related_functions.c"
+    },
+    {
+      "entry_caller": "0x0803bc9c",
+      "chain": ["0x0803bc9c", "0x0803c204", "0x0803c348", "0x0804a280", "0x0804a248", "0x0804a050", "0x08049f0c"],
+      "trigger_context": "Boot format leg, taken only when FUN_0803c244 returns 0: format and write header blocks 0-1",
+      "ram_fields_updated": ["header RAM buffer: memcpy 16B template via 0x0802c4bc, checksum word at +0x0E = -sum"],
+      "how_mapped": "func_0x0803c204 site decompiled.c:4679; func_0x0803c348 site in FUN_0803c204 body (3rd arg dropped by Ghidra rendering, parallel site decompiled.c:4813 shows full form); driver chain from callgraph.json + save_related_functions.c"
+    },
+    {
+      "entry_caller": "0x0803bc9c",
+      "chain": ["0x0803bc9c", "0x0803c29c", "0x0803c348", "0x0804a280", "0x0804a1b0", "0x08049f8c", "0x08049f0c"],
+      "trigger_context": "Boot format leg and global-repair leg (after FUN_0803c2e0 failure): write global record blocks 2-6 with write+verify",
+      "ram_fields_updated": ["global RAM struct: memcpy 40B template via 0x0802c4bc, checksum at struct+0x36 = -sum over 20 words"],
+      "how_mapped": "func_0x0803c29c sites decompiled.c:4680 and :4692; func_0x0803c348(2,5,struct+0x10) in FUN_0803c29c body; verify leg via callgraph.json 0x0804a280->0x0804a1b0->0x08049f8c"
+    },
+    {
+      "entry_caller": "0x0803bc9c",
+      "chain": ["0x0803bc9c", "0x0803bd2c", "0x0803c348", "0x0804a280", "0x0804a248", "0x0804a050", "0x08049f0c"],
+      "trigger_context": "Boot format leg: zero RAM slot buffer then write 16-byte zero head to each slot at blocks 7, 7+339, 7+678 (loop x3)",
+      "ram_fields_updated": ["slot RAM buffer *(save_struct+0x38): memset 0 via 0x0802c450 (FUN_0803bd2c)"],
+      "how_mapped": "func_0x0803bd2c site decompiled.c:4681 and func_0x0803c348 loop in FUN_0803bc9c body; stride literal unresolved in code, fixed to 339 blocks by .sav islands 0x38/0xAD0/0x1568 and exact 8192 partition"
+    },
+    {
+      "entry_caller": "0x0803bc9c",
+      "chain": ["0x0803bc9c", "0x0803bc08", "0x0803c0dc", "0x0803c318", "0x08049f8c", "0x08049f0c"],
+      "trigger_context": "Boot slot scan: for slots 0-2 read whole slot into RAM buffer and checksum it (up to 2 attempts per slot)",
+      "ram_fields_updated": ["slot RAM buffer *(save_struct+0x38) filled by read", "validity flags save_struct+0x60+slot*4 via 0x0803c0a8", "on valid: save_struct+0x70 = buffer ptr, save_struct+0x74 = 0; on invalid: 12-byte memset of per-slot menu struct via 0x0802c450"],
+      "how_mapped": "FUN_0803bc08 call at decompiled.c:4695 (FUN_ call, also in callgraph.json); func_0x0803c0dc/func_0x0803c0a8 sites in FUN_0803bc08 body decompiled.c:4633-4634"
+    },
+    {
+      "entry_caller": "0x0803c114",
+      "chain": ["0x0803c114", "0x0803c318", "0x08049f8c", "0x08049f0c"],
+      "trigger_context": "Header sync read leg (entry caller unrecovered); compares EEPROM header vs RAM canonical header as 4xu32",
+      "ram_fields_updated": ["RAM canonical header checksum recomputed: word at +0x0E zeroed, summed via 0x0803c1e0(buf,0x10), negated back into +0x0E"],
+      "how_mapped": "func_0x0803c318(0,2,&stack) and func_0x0803c1e0 sites in FUN_0803c114 body decompiled.c:4794-4797"
+    },
+    {
+      "entry_caller": "0x0803c114",
+      "chain": ["0x0803c114", "0x0803c348", "0x0804a280", "0x0804a248", "0x0804a050", "0x08049f0c"],
+      "trigger_context": "Header sync write leg, taken only when RAM != EEPROM header; returns 1",
+      "ram_fields_updated": [],
+      "how_mapped": "func_0x0803c348(0,2,_DAT_0803c174) site decompiled.c:4813"
+    },
+    {
+      "entry_caller": "0x0803bd04",
+      "chain": ["0x0803bd04", "0x080425d8"],
+      "trigger_context": "Locale update (entry caller unrecovered): sets save_struct byte +8 bit7 and low-7 bits from current locale getter; RAM only, persistence via a later header write is hypothesised not observed",
+      "ram_fields_updated": ["save_struct+8: (old & 0x80) | (locale & 0x7F) | 0x80 in effect"],
+      "how_mapped": "func_0x080425d8 site in FUN_0803bd04 body decompiled.c:4718; consumer FUN_08042588 called with (byte & 0x7F) from FUN_0803bc9c decompiled.c:4694"
+    }
+  ],
+  "fields": [
+    {
+      "name": "header_magic",
+      "offset": 0,
+      "size": 8,
+      "type": "ascii",
+      "ram_addr": null,
+      "writers": ["0x0803c204", "0x0803c114"],
+      "readers": ["0x0803c244", "0x0803c114"],
+      "observed_values": {"cap-00-future-0.sav": "100AOPPH", "cap-01-retained-3.sav": "100AOPPH"},
+      "update_mechanism": "Written only as part of whole 16-byte header record at format (0x0803c204 template memcpy) or sync-rewrite (0x0803c114); byte-compared after checksum in 0x0803c244",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "FUN_0803c244 8-byte compare loop (iVar3<8) in decompiled.c; both .sav files start 313030414f505048 (Python read in verification run)"
+    },
+    {
+      "name": "header_payload_word_0x08",
+      "offset": 8,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": ["0x0803c204", "0x0803c114"],
+      "readers": ["0x0803c1e0"],
+      "observed_values": {"cap-00-future-0.sav": "f3ed (BE word 0xF3ED)", "cap-01-retained-3.sav": "f36d (BE word 0xF36D)"},
+      "update_mechanism": "Whole-record writes only; byte 0x09 is the PACKET.md mutation probe offset; no individual field reader recovered, split shown only to isolate the mutated byte",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Covered by header checksum (sum includes word 4); inter-sample diff 0x09 ED->6D exactly compensated at 0x0F; no code reads this word individually"
+    },
+    {
+      "name": "header_payload_0x0A",
+      "offset": 10,
+      "size": 2,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": ["0x0803c204", "0x0803c114"],
+      "readers": ["0x0803c1e0"],
+      "observed_values": {"cap-00-future-0.sav": "0000", "cap-01-retained-3.sav": "0000"},
+      "update_mechanism": "Whole-record writes only; checksum-covered",
+      "confidence": "UNKNOWN",
+      "evidence": "Zero in both blank samples; no individual reader in decompiled corpus"
+    },
+    {
+      "name": "header_byte_0x0C",
+      "offset": 12,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": ["0x0803c204", "0x0803c114"],
+      "readers": [],
+      "observed_values": {"cap-00-future-0.sav": "01", "cap-01-retained-3.sav": "01"},
+      "update_mechanism": "Whole-record writes only",
+      "confidence": "UNKNOWN",
+      "evidence": "Constant 0x01 in both blank samples; candidate version field not claimed; no reader recovered"
+    },
+    {
+      "name": "header_byte_0x0D",
+      "offset": 13,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": ["0x0803c204", "0x0803c114"],
+      "readers": [],
+      "observed_values": {"cap-00-future-0.sav": "0a", "cap-01-retained-3.sav": "0a"},
+      "update_mechanism": "Whole-record writes only",
+      "confidence": "UNKNOWN",
+      "evidence": "Constant 0x0A in both samples; distinct from checksum word at 0x0E; no reader recovered"
+    },
+    {
+      "name": "header_checksum",
+      "offset": 14,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": ["0x0803c114", "0x0803c204"],
+      "readers": ["0x0803c244"],
+      "observed_values": {"cap-00-future-0.sav": "0a00 stored BE 0x0A00 computed 0x0A00 match", "cap-01-retained-3.sav": "0a80 stored BE 0x0A80 computed 0x0A80 match"},
+      "update_mechanism": "Writer zeroes +0x0E, sums 8 words via 0x0803c1e0(buf,0x10), stores -sum at +0x0E (FUN_0803c114 explicit); file-space BE identity verified, LE falsified (0x01FE)",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Decompiled FUN_0803c114/FUN_0803c204/FUN_0803c244; Python verification over both .sav files stored==computed 2/2 (see SAVE-FORMAT-REPORT.md section 4.4)"
+    },
+    {
+      "name": "global_record_payload",
+      "offset": 16,
+      "size": 38,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": ["0x0803c29c"],
+      "readers": ["0x0803c2e0"],
+      "observed_values": {"cap-00-future-0.sav": "all 00 (38 bytes)", "cap-01-retained-3.sav": "all 00 (38 bytes)"},
+      "update_mechanism": "Template memcpy 40B (0x0802c4bc len 0x28) then whole-record write blocks 2-6 via 0x0803c348(2,5,struct+0x10); all-zero in blank saves so no sub-field split is possible",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "FUN_0803c29c/FUN_0803c2e0 block counts 5x8=40 and sum over 20 words; .sav bytes 0x10-0x35 all zero"
+    },
+    {
+      "name": "global_record_checksum",
+      "offset": 54,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": ["0x0803c29c"],
+      "readers": ["0x0803c2e0"],
+      "observed_values": {"cap-00-future-0.sav": "0000 computed 0x0000 match (trivial)", "cap-01-retained-3.sav": "0000 computed 0x0000 match (trivial)"},
+      "update_mechanism": "FUN_0803c29c stores -sum at RAM struct+0x36 = record offset 0x26 (last word); validated sum==0 by FUN_0803c2e0",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Explicit *(short*)(struct+0x36) = -sum in FUN_0803c29c; Python sum over file 0x10-0x37 = 0x0000 both files (trivial, all-zero record; formula rests on code)"
+    },
+    {
+      "name": "slot0_head",
+      "offset": 56,
+      "size": 16,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": ["0x0803bc9c"],
+      "readers": ["0x0803c0dc", "0x0803c0a8"],
+      "observed_values": {"cap-00-future-0.sav": "16x00, body from 0x48 all FF", "cap-01-retained-3.sav": "16x00, body from 0x48 all FF"},
+      "update_mechanism": "Format path only: RAM slot buffer zeroed by 0x0803bd2c then 0x0803c348(7,2,buf) writes 2 blocks; no individual head-field reader recovered",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Non-FF island 0x38-0x47 in both .sav files matches 2-block zero write; FUN_0803bc9c format loop in decompiled.c"
+    },
+    {
+      "name": "slot0_body",
+      "offset": 72,
+      "size": 2696,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": ["0x0803c0dc"],
+      "observed_values": {"cap-00-future-0.sav": "all FF (never written)", "cap-01-retained-3.sav": "all FF (never written)"},
+      "update_mechanism": "No slot-body writer recovered in the 220-function corpus; read whole (339 blocks) by FUN_0803c0dc(0)",
+      "confidence": "UNKNOWN",
+      "evidence": "Bytes all 0xFF; only slot writes in corpus are the 16-byte heads in FUN_0803bc9c format path"
+    },
+    {
+      "name": "slot1_head",
+      "offset": 2768,
+      "size": 16,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": ["0x0803bc9c"],
+      "readers": ["0x0803c0dc", "0x0803c0a8"],
+      "observed_values": {"cap-00-future-0.sav": "16x00", "cap-01-retained-3.sav": "16x00"},
+      "update_mechanism": "Format loop block 7+339, 2 blocks from zeroed RAM buffer",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Island at 0xAD0 = block 346 x 8 in both files; confirms 339-block stride"
+    },
+    {
+      "name": "slot1_body",
+      "offset": 2784,
+      "size": 2696,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": ["0x0803c0dc"],
+      "observed_values": {"cap-00-future-0.sav": "all FF", "cap-01-retained-3.sav": "all FF"},
+      "update_mechanism": "No slot-body writer recovered",
+      "confidence": "UNKNOWN",
+      "evidence": "All 0xFF in both samples"
+    },
+    {
+      "name": "slot2_head",
+      "offset": 5480,
+      "size": 16,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": ["0x0803bc9c"],
+      "readers": ["0x0803c0dc", "0x0803c0a8"],
+      "observed_values": {"cap-00-future-0.sav": "16x00", "cap-01-retained-3.sav": "16x00"},
+      "update_mechanism": "Format loop block 7+2x339, 2 blocks from zeroed RAM buffer",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Island at 0x1568 = block 685 x 8 in both files"
+    },
+    {
+      "name": "slot2_body",
+      "offset": 5496,
+      "size": 2696,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": ["0x0803c0dc"],
+      "observed_values": {"cap-00-future-0.sav": "all FF", "cap-01-retained-3.sav": "all FF"},
+      "update_mechanism": "No slot-body writer recovered; slot 2 ends at byte 8192 exactly",
+      "confidence": "UNKNOWN",
+      "evidence": "All 0xFF in both samples; 5480+2712=8192 exact partition"
+    }
+  ],
+  "fuzzing_targets": [
+    {"offset": 0, "size": 1, "mutation": "Change magic byte 0x00 0x31->0x32 with header checksum repaired at 0x0E (BE zero-sum)", "requires_checksum_repair": true, "predicted_effect": "FUN_0803c244 passes sum, fails magic compare -> FUN_0803bc9c full reformat (header+global rewritten, slot heads re-zeroed); post-boot .sav equals fresh formatted image"},
+    {"offset": 9, "size": 1, "mutation": "Flip header payload byte 0x09 without checksum repair (repeats PACKET.md probe uncompensated)", "requires_checksum_repair": false, "predicted_effect": "Header sum != 0 -> FUN_0803c244 returns 0 at sum step -> full reformat regardless of magic; distinguishes sum-gating from magic-gating. Compensated cap-01 file is the positive control that must not reformat"},
+    {"offset": 9, "size": 1, "mutation": "Flip header payload byte 0x09 with header checksum repaired at 0x0E", "requires_checksum_repair": true, "predicted_effect": "Header validates, no rewrite; mutated byte survives cold reload byte-for-byte. Controlled repeat closes who-wrote-byte-0x0F unknown in cap-01"},
+    {"offset": 14, "size": 1, "mutation": "Corrupt header checksum byte 0x0E 0x0A->0x0B, no repair", "requires_checksum_repair": false, "predicted_effect": "Sum != 0 -> full reformat via FUN_0803bc9c; confirms no nested/secondary integrity check"},
+    {"offset": 16, "size": 1, "mutation": "Set global payload byte 0x10 0x00->0x01 with global checksum repaired at 0x36", "requires_checksum_repair": true, "predicted_effect": "FUN_0803c2e0 passes, header/slots untouched, no rewrite; if byte later changes, an unrecovered global-record consumer exists"},
+    {"offset": 16, "size": 1, "mutation": "Set global payload byte 0x10 0x00->0x01 without repair", "requires_checksum_repair": false, "predicted_effect": "FUN_0803c2e0 fails -> only FUN_0803c29c rewrites global record to all-zero template; header bytes 0x00-0x0F unchanged (branch discriminator vs header failure)"},
+    {"offset": 72, "size": 16, "mutation": "Write 0x00 over slot0 body start 0x48-0x57 (was FF), no slot repair attempted (layout unresolved)", "requires_checksum_repair": false, "predicted_effect": "If slot0 validity/menu state changes vs blank control, slot checksum covers body (full-slot candidate); if unchanged, head-only candidate gains support; also observe FUN_0803bc08 invalid-branch menu memset effect"},
+    {"offset": 72, "size": 2696, "mutation": "Zero entire slot0 body 0x48-0xACF leaving head zeroed", "requires_checksum_repair": false, "predicted_effect": "Full-slot BE sum becomes 0x0000: under full-slot candidate slot becomes checksum-valid-but-empty and FUN_0803bc08 takes valid branch (save_struct+0x70 set, func_0x08021604 called, blank-but-present menu slot); null result falsifies full-slot candidate"},
+    {"offset": 12, "size": 1, "mutation": "Change header byte 0x0C 0x01->0x02 with header checksum repaired", "requires_checksum_repair": true, "predicted_effect": "Probes unidentified constant: if FUN_0803c114 sync rewrites it back to 0x01 the RAM template owns the field; if it persists, watch locale/boot behaviour via FUN_08042588 path"}
+  ],
+  "open_questions": [
+    "Slot checksum length literal _DAT_0803c0d8 (FUN_0803c0a8) is not resolved in the workspace: full 2712-byte slot vs smaller prefix cannot be decided with only blank (0xFF-body) slots; needs a populated slot sample or fuzz target 7/8 outcome",
+    "No gameplay slot-body writer was recovered in the 220-function corpus: the only slot writes are the 16-byte zero heads in the FUN_0803bc9c format path. Slot payload fields (progress, inventory, etc.) are entirely unmapped",
+    "Callers above FUN_0803bc9c (boot init) and FUN_0803c114 (header sync) are unrecovered in both callgraph.json and decompiled bodies (pointer/jumptable dispatch); trigger contexts (boot vs save-menu vs autosave) are unknown",
+    "All RAM mirror addresses are unknown: _DAT_0803xxxx literal-pool values are absent from the workspace files, so no 0x02xxxxxx/0x03xxxxxx address can be stated. Struct offsets (+0x38 buffer ptr, +0x60 flags, +0x70/+0x74, +8 locale byte) are known, absolute bases are not",
+    "Who updated byte 0x0F in cap-01-retained-3.sav to compensate the 0x09 probe mutation (game header rewrite vs capture pipeline) cannot be distinguished from the workspace files; PACKET.md states save_rewritten_after_mutation=false yet the checksum byte differs",
+    "Header payload semantics (bytes 0x08-0x0D: values F3ED/F36D, 0000, 01, 0A) are unmapped; the save_struct+8 locale byte (FUN_0803bd04/FUN_08042588) coinciding with header offset 8 is a hypothesis, not a proven link",
+    "EEPROM device-struct literals (block count at struct+4, address-bit count at struct+8) behind _DAT_08049fa4/_DAT_0804a038 etc. are unresolved; 1024-block geometry is proven by the .sav partition arithmetic, not by reading those literals",
+    "Word order within an 8-byte EEPROM block in file space cannot be distinguished by the additive checksum; only the big-endian word-sum identity is verified. A populated sample with known RAM values would be needed to pin intra-block ordering"
+  ]
+}

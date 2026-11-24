@@ -1,0 +1,629 @@
+{
+  "schema": "gbakit-save-research/1",
+  "release_key": "A5AE-r0-a0df916402b36c0b",
+  "display_name": "Bionicle - Matoran Adventures (USA, Europe) (En,Fr,De,Es,It,Nl,Sv,Da)",
+  "rom_sha256": "a0df916402b36c0b605201059e4d7872c4c94d88b43473d270ed3ab6bf56d002",
+  "game_code": "A5AE",
+  "header_family": "A5A",
+  "community_id": "",
+  "overall_confidence": "MEDIUM",
+  "media": {
+    "kind": "eeprom512",
+    "size_bytes": 512,
+    "sdk_tags": [],
+    "fill_byte": "0xff"
+  },
+  "slots_and_copies": [
+    {
+      "name": "slot_0",
+      "offset": 0,
+      "size": 16,
+      "redundancy_role": "global_config",
+      "selection_rule": "Fixed EEPROM blocks 0-1 (hypothesis allocation up to 128B / blocks 0-15). No reader/writer/checksum in traced corpus; validity rule unknown. Not a copy of slot_1."
+    },
+    {
+      "name": "slot_1",
+      "offset": 256,
+      "size": 24,
+      "redundancy_role": "primary",
+      "selection_rule": "Fixed EEPROM blocks 32-34 within a 128B read allocation (blocks 32-47) via FUN_0816ab08(0x10,2) from FUN_08156508. Validity = seed-7 sum16 checksum at logical 0x116; on failure FUN_08156508 substitutes RAM defaults, never selects another copy. No backup/mirror and no generation counter exist."
+    }
+  ],
+  "magic_signatures": [],
+  "checksums": [
+    {
+      "name": "slotB_sum16_seed7",
+      "algorithm": "sum16_le",
+      "formula_detail": "Logical (per-8-byte-block-reversed) image: acc=7; for i in 0..10: acc=(acc + u16_le[logical 0x100+i*2]) & 0xFFFF; stored u16_le at logical 0x116 (word 11). Raw file: reversing each 8-byte block of sav-00-f1492.sav gives the logical image; stored raw bytes are at raw 0x110-0x111 = 00 0d. No complement/XOR/CRC. Decompiled proof: FUN_08156508 at 0x08156508 (decompiled.c:380-389).",
+      "stored_offset": 278,
+      "stored_size": 2,
+      "covered_start": 256,
+      "covered_end": 278,
+      "function_addrs": [
+        "0x08156508"
+      ],
+      "verified_on_samples": [
+        {
+          "file": "sav-00-f1492.sav",
+          "stored_hex": "0x000d",
+          "computed_hex": "0x000d",
+          "match": true
+        }
+      ],
+      "confidence": "CONFIRMED_VERIFIED"
+    }
+  ],
+  "io_driver_functions": [
+    {
+      "addr": "0x08156508",
+      "role": "deserialize",
+      "callers": [],
+      "notes": "Load+validate+deserialize Slot B. Calls FUN_0816a924, FUN_0816ab08(0x10,2), FUN_0816a998; on read error calls untraced func_0x0816ab68; on checksum failure installs defaults ([1,0,0,0,0,0], 2, 2, 0, [0,0]). Caller not in callgraph (indirect dispatch); graph lists it caller-less."
+    },
+    {
+      "addr": "0x08156508",
+      "role": "checksum",
+      "callers": [],
+      "notes": "Same function also verifies seed-7 sum16 over logical words 0-10 vs word 11 (also listed under checksums). Duplicate entry only to satisfy role enumeration."
+    },
+    {
+      "addr": "0x0816ab08",
+      "role": "read",
+      "callers": [
+        "0x08156508"
+      ],
+      "notes": "EEPROM block-read helper: for i in 0..count-1 calls thunk FUN_0817faf0(block=i+page*16, dest), dest += 8 per block, returns first non-zero char. Called as (0x10, 2) = blocks 32-47, 128 bytes. Per-block DMA3/EEPROM implementation behind thunk 0x0817faf0 is not in corpus; no 0x0D000000 reference in any traced function."
+    },
+    {
+      "addr": "0x0816ab68",
+      "role": "write",
+      "callers": [
+        "0x08156508"
+      ],
+      "notes": "UNKNOWN: called only when FUN_0816ab08 returns non-zero (read error). Body not decompiled (func_0x0816ab68 external). Plausibly EEPROM format/write-defaults, but unverified; role is a placeholder hypothesis, not a confirmed write."
+    },
+    {
+      "addr": "0x0816a924",
+      "role": "read",
+      "callers": [
+        "0x08156508"
+      ],
+      "notes": "Bracketing helper before EEPROM read: clears DISPCNT bit12 (0x04000000 &= 0xEFFF), calls FUN_0817d738, func_0x0817facc(3, ptr), sets RAM flags 0/1 (literals 0x0816a990/0x0816a994). Does not mutate save fields. Role marks participation in the read transaction, not a media transfer."
+    },
+    {
+      "addr": "0x0816a998",
+      "role": "read",
+      "callers": [
+        "0x08156508"
+      ],
+      "notes": "Bracketing helper after EEPROM read: sets DISPCNT bit12 (0x04000000 |= 0x1000), writes 3 to 0x04000200 (REG_IE), restores pointer fields. Does not mutate save fields."
+    },
+    {
+      "addr": "0x0817faf0",
+      "role": "read",
+      "callers": [
+        "0x0816ab08"
+      ],
+      "notes": "One-instruction indirect thunk ((*pcRam0817faf8)()); target per-block EEPROM transfer routine not in corpus."
+    },
+    {
+      "addr": "0x08155800",
+      "role": "write",
+      "callers": [],
+      "notes": "FALSE POSITIVE seed: DMA3 (0x040000D4/D8/DC), CNT 0x85000100, source=stack, dest=literal uRam081558cc (value not in corpus), preceded by callback-table walk. No 0x0D000000 endpoint; graphics DMA, not save I/O."
+    },
+    {
+      "addr": "0x0815feb0",
+      "role": "write",
+      "callers": [],
+      "notes": "FALSE POSITIVE seed: DMA3 CNT 0x85000040 inside sprite/entity update loop (0x18-byte records). No 0x0D000000 endpoint; not save I/O."
+    },
+    {
+      "addr": "0x081658c8",
+      "role": "write",
+      "callers": [],
+      "notes": "FALSE POSITIVE seed: DMA3 CNT 0x81000400, dest proven 0x06001800 (VRAM) in code. Graphics fill/copy, definitively not save media."
+    },
+    {
+      "addr": "0x0817f4b0",
+      "role": "write",
+      "callers": [],
+      "notes": "Generic Thumb DMA-copy wrapper (address regs + count|0x80000000, spins on count bit15). Never called with 0x0D000000/0x0E000000 by traced code."
+    }
+  ],
+  "caller_chains": [
+    {
+      "entry_caller": "0x08156508",
+      "chain": [
+        "0x08156508",
+        "0x0816a924",
+        "0x0816ab08",
+        "0x0817faf0",
+        "0x0816a998"
+      ],
+      "trigger_context": "Boot/title load (save present by frame 1492 per states/sav-00-post.ss). Entry caller is indirect (not in callgraph.json); chain order from FUN_08156508 body: FUN_0816a924 -> FUN_0816ab08(0x10,2) -> FUN_0816a998, with FUN_0817faf0 called per block inside FUN_0816ab08. Callgraph lists helpers as caller-less because decompiler emitted func_0x thunks; edges recovered from decompiled.c text.",
+      "ram_fields_updated": [
+        "slotB_arrayA_0..5 (6-byte RAM array via literal 0x08156660)",
+        "slotB_word6_setting_a (literal 0x08156670)",
+        "slotB_word7_setting_b (literal 0x08156668)",
+        "slotB_word8 (literal 0x08156674)",
+        "slotB_word9_pair0/slotB_word10_pair1 (literal 0x0815666c[0..1])",
+        "on checksum failure only: second 6-byte array (literal 0x08156664) = [1,0,0,0,0,0]"
+      ],
+      "how_mapped": "FUN_08156508 body decompiled.c:374-425; success copies low bytes of logical words 0-10, failure installs defaults, read-error calls func_0x0816ab68 without touching RAM fields."
+    },
+    {
+      "entry_caller": "0x0816ab68",
+      "chain": [
+        "0x08156508",
+        "0x0816ab68"
+      ],
+      "trigger_context": "Only when FUN_0816ab08 returns non-zero (EEPROM read error). Presumed first-boot format/write-defaults; body untraced.",
+      "ram_fields_updated": [],
+      "how_mapped": "Call site decompiled.c:427-428 (else branch). No decompiled body exists; listed as unknown write path."
+    }
+  ],
+  "fields": [
+    {
+      "name": "slotA_word0",
+      "offset": 0,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {
+        "sav-00-f1492.sav": 3
+      },
+      "update_mechanism": "Written by untraced writer before frame 1492; never updated by any traced function",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Logical (per-8-byte-block-reversed) u16 word 0 at offset 0x000; raw file block 0x000-0x00F = 00 00 00 00 00 00 00 03 ff ff 00 03 00 00 00 00. No reader/writer/checksum in ghidra/decompiled.c. Word0==word6==3; word7=0xFFFF is erased fill, so written structure is <=14 bytes."
+    },
+    {
+      "name": "slotA_word1",
+      "offset": 2,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {
+        "sav-00-f1492.sav": 0
+      },
+      "update_mechanism": "Written by untraced writer before frame 1492; never updated by any traced function",
+      "confidence": "UNKNOWN",
+      "evidence": "Written (block non-erased) but zero in this near-initial sample; no code reference in corpus."
+    },
+    {
+      "name": "slotA_word2",
+      "offset": 4,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {
+        "sav-00-f1492.sav": 0
+      },
+      "update_mechanism": "Written by untraced writer before frame 1492; never updated by any traced function",
+      "confidence": "UNKNOWN",
+      "evidence": "Written (block non-erased) but zero in this near-initial sample; no code reference in corpus."
+    },
+    {
+      "name": "slotA_word3",
+      "offset": 6,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {
+        "sav-00-f1492.sav": 0
+      },
+      "update_mechanism": "Written by untraced writer before frame 1492; never updated by any traced function",
+      "confidence": "UNKNOWN",
+      "evidence": "Written (block non-erased) but zero in this near-initial sample; no code reference in corpus."
+    },
+    {
+      "name": "slotA_word4",
+      "offset": 8,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {
+        "sav-00-f1492.sav": 0
+      },
+      "update_mechanism": "Written by untraced writer before frame 1492; never updated by any traced function",
+      "confidence": "UNKNOWN",
+      "evidence": "Written (block non-erased) but zero in this near-initial sample; no code reference in corpus."
+    },
+    {
+      "name": "slotA_word5",
+      "offset": 10,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {
+        "sav-00-f1492.sav": 0
+      },
+      "update_mechanism": "Written by untraced writer before frame 1492; never updated by any traced function",
+      "confidence": "UNKNOWN",
+      "evidence": "Written (block non-erased) but zero in this near-initial sample; no code reference in corpus."
+    },
+    {
+      "name": "slotA_word6",
+      "offset": 12,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {
+        "sav-00-f1492.sav": 3
+      },
+      "update_mechanism": "Written by untraced writer before frame 1492; never updated by any traced function",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Logical (per-8-byte-block-reversed) u16 word 6 at offset 0x000; raw file block 0x000-0x00F = 00 00 00 00 00 00 00 03 ff ff 00 03 00 00 00 00. No reader/writer/checksum in ghidra/decompiled.c. Word0==word6==3; word7=0xFFFF is erased fill, so written structure is <=14 bytes."
+    },
+    {
+      "name": "slotA_word7",
+      "offset": 14,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {
+        "sav-00-f1492.sav": 65535
+      },
+      "update_mechanism": "Written by untraced writer before frame 1492; never updated by any traced function",
+      "confidence": "UNKNOWN",
+      "evidence": "Logical (per-8-byte-block-reversed) u16 word 7 at offset 0x000; raw file block 0x000-0x00F = 00 00 00 00 00 00 00 03 ff ff 00 03 00 00 00 00. No reader/writer/checksum in ghidra/decompiled.c. Word0==word6==3; word7=0xFFFF is erased fill, so written structure is <=14 bytes."
+    },
+    {
+      "name": "slotB_arrayA_0",
+      "offset": 256,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": [
+        "0x08156508 (failure-default only; success-path writer untraced)"
+      ],
+      "readers": [
+        "0x08156508"
+      ],
+      "observed_values": {
+        "sav-00-f1492.sav": 1
+      },
+      "update_mechanism": "FUN_08156508 success: RAM array A[i] = low byte of word i (high byte ignored); failure: A=[1,0,0,0,0,0]. In-game mutator untraced.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "FUN_08156508 (decompiled.c:390-395) puRam08156660[0] = *(byte*)(buf+0x0); logical word0=1 in sav-00-f1492.sav after per-block reversal; checksum over words0-10 verified (computed=stored=0x000D). RAM target value behind ROM literal 0x08156660 not in corpus, hence ram_addr null."
+    },
+    {
+      "name": "slotB_arrayA_1",
+      "offset": 258,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": [
+        "0x08156508 (failure-default only; success-path writer untraced)"
+      ],
+      "readers": [
+        "0x08156508"
+      ],
+      "observed_values": {
+        "sav-00-f1492.sav": 0
+      },
+      "update_mechanism": "FUN_08156508 success: RAM array A[i] = low byte of word i (high byte ignored); failure: A=[1,0,0,0,0,0]. In-game mutator untraced.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "FUN_08156508 (decompiled.c:390-395) puRam08156660[1] = *(byte*)(buf+0x2); logical word1=0 in sav-00-f1492.sav after per-block reversal; checksum over words0-10 verified (computed=stored=0x000D). RAM target value behind ROM literal 0x08156660 not in corpus, hence ram_addr null."
+    },
+    {
+      "name": "slotB_arrayA_2",
+      "offset": 260,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": [
+        "0x08156508 (failure-default only; success-path writer untraced)"
+      ],
+      "readers": [
+        "0x08156508"
+      ],
+      "observed_values": {
+        "sav-00-f1492.sav": 0
+      },
+      "update_mechanism": "FUN_08156508 success: RAM array A[i] = low byte of word i (high byte ignored); failure: A=[1,0,0,0,0,0]. In-game mutator untraced.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "FUN_08156508 (decompiled.c:390-395) puRam08156660[2] = *(byte*)(buf+0x4); logical word2=0 in sav-00-f1492.sav after per-block reversal; checksum over words0-10 verified (computed=stored=0x000D). RAM target value behind ROM literal 0x08156660 not in corpus, hence ram_addr null."
+    },
+    {
+      "name": "slotB_arrayA_3",
+      "offset": 262,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": [
+        "0x08156508 (failure-default only; success-path writer untraced)"
+      ],
+      "readers": [
+        "0x08156508"
+      ],
+      "observed_values": {
+        "sav-00-f1492.sav": 0
+      },
+      "update_mechanism": "FUN_08156508 success: RAM array A[i] = low byte of word i (high byte ignored); failure: A=[1,0,0,0,0,0]. In-game mutator untraced.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "FUN_08156508 (decompiled.c:390-395) puRam08156660[3] = *(byte*)(buf+0x6); logical word3=0 in sav-00-f1492.sav after per-block reversal; checksum over words0-10 verified (computed=stored=0x000D). RAM target value behind ROM literal 0x08156660 not in corpus, hence ram_addr null."
+    },
+    {
+      "name": "slotB_arrayA_4",
+      "offset": 264,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": [
+        "0x08156508 (failure-default only; success-path writer untraced)"
+      ],
+      "readers": [
+        "0x08156508"
+      ],
+      "observed_values": {
+        "sav-00-f1492.sav": 0
+      },
+      "update_mechanism": "FUN_08156508 success: RAM array A[i] = low byte of word i (high byte ignored); failure: A=[1,0,0,0,0,0]. In-game mutator untraced.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "FUN_08156508 (decompiled.c:390-395) puRam08156660[4] = *(byte*)(buf+0x8); logical word4=0 in sav-00-f1492.sav after per-block reversal; checksum over words0-10 verified (computed=stored=0x000D). RAM target value behind ROM literal 0x08156660 not in corpus, hence ram_addr null."
+    },
+    {
+      "name": "slotB_arrayA_5",
+      "offset": 266,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": [
+        "0x08156508 (failure-default only; success-path writer untraced)"
+      ],
+      "readers": [
+        "0x08156508"
+      ],
+      "observed_values": {
+        "sav-00-f1492.sav": 0
+      },
+      "update_mechanism": "FUN_08156508 success: RAM array A[i] = low byte of word i (high byte ignored); failure: A=[1,0,0,0,0,0]. In-game mutator untraced.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "FUN_08156508 (decompiled.c:390-395) puRam08156660[5] = *(byte*)(buf+0xa); logical word5=0 in sav-00-f1492.sav after per-block reversal; checksum over words0-10 verified (computed=stored=0x000D). RAM target value behind ROM literal 0x08156660 not in corpus, hence ram_addr null."
+    },
+    {
+      "name": "slotB_word6_setting_a",
+      "offset": 268,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": [
+        "0x08156508 (failure-default only; success-path writer untraced)"
+      ],
+      "readers": [
+        "0x08156508"
+      ],
+      "observed_values": {
+        "sav-00-f1492.sav": 2
+      },
+      "update_mechanism": "FUN_08156508 success: RAM byte via literal 0x08156670 = low byte of word6; failure default = 2. In-game mutator untraced.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "FUN_08156508 (decompiled.c:396-406); logical word6=2 in sav-00-f1492.sav; checksum verified. RAM target behind ROM literal 0x08156670 not in corpus, hence ram_addr null."
+    },
+    {
+      "name": "slotB_word7_setting_b",
+      "offset": 270,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": [
+        "0x08156508 (failure-default only; success-path writer untraced)"
+      ],
+      "readers": [
+        "0x08156508"
+      ],
+      "observed_values": {
+        "sav-00-f1492.sav": 2
+      },
+      "update_mechanism": "FUN_08156508 success: RAM byte via literal 0x08156668 = low byte of word7; failure default = 2. In-game mutator untraced.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "FUN_08156508 (decompiled.c:396-406); logical word7=2 in sav-00-f1492.sav; checksum verified. RAM target behind ROM literal 0x08156668 not in corpus, hence ram_addr null."
+    },
+    {
+      "name": "slotB_word8",
+      "offset": 272,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": [
+        "0x08156508 (failure-default only; success-path writer untraced)"
+      ],
+      "readers": [
+        "0x08156508"
+      ],
+      "observed_values": {
+        "sav-00-f1492.sav": 0
+      },
+      "update_mechanism": "FUN_08156508 success: RAM byte via literal 0x08156674 = low byte of word8; failure default = 0. In-game mutator untraced.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "FUN_08156508 (decompiled.c:396-406); logical word8=0 in sav-00-f1492.sav; checksum verified. RAM target behind ROM literal 0x08156674 not in corpus, hence ram_addr null."
+    },
+    {
+      "name": "slotB_word9_pair0",
+      "offset": 274,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": [
+        "0x08156508 (failure-default only; success-path writer untraced)"
+      ],
+      "readers": [
+        "0x08156508"
+      ],
+      "observed_values": {
+        "sav-00-f1492.sav": 1
+      },
+      "update_mechanism": "FUN_08156508 success: RAM byte via literal 0x0815666c = low byte of word9; failure default = 0. In-game mutator untraced.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "FUN_08156508 (decompiled.c:396-406); logical word9=1 in sav-00-f1492.sav; checksum verified. Key discriminator: failure default is 0 but sample has 1, proving success path. RAM target behind ROM literal 0x0815666c not in corpus, hence ram_addr null."
+    },
+    {
+      "name": "slotB_word10_pair1",
+      "offset": 276,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": [
+        "0x08156508 (failure-default only; success-path writer untraced)"
+      ],
+      "readers": [
+        "0x08156508"
+      ],
+      "observed_values": {
+        "sav-00-f1492.sav": 0
+      },
+      "update_mechanism": "FUN_08156508 success: RAM byte via literal 0x0815666c = low byte of word10; failure default = 0. In-game mutator untraced.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "FUN_08156508 (decompiled.c:396-406); logical word10=0 in sav-00-f1492.sav; checksum verified. RAM target behind ROM literal 0x0815666c not in corpus, hence ram_addr null."
+    },
+    {
+      "name": "slotB_checksum_word11",
+      "offset": 278,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [
+        "0x08156508"
+      ],
+      "observed_values": {
+        "sav-00-f1492.sav": 13
+      },
+      "update_mechanism": "Reader compares stored word11 against seed-7 sum of words0-10 (decompiled.c:380-389). Writer-side recomputation presumed but no writer in corpus.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Logical offset 0x116; raw file bytes at raw 0x110-0x111 = 00 0d (per-block reversal). Computed 0x000D == stored 0x000D on sav-00-f1492.sav (see SAVE-FORMAT-REPORT.md Section 4.3)."
+    },
+    {
+      "name": "slotB_reserved_tail_blocks35_47",
+      "offset": 280,
+      "size": 104,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [
+        "0x0816ab08"
+      ],
+      "observed_values": {
+        "sav-00-f1492.sav": "all 0xFF"
+      },
+      "update_mechanism": "Read into 128-byte RAM buffer by FUN_0816ab08(0x10,2) via FUN_08156508 but never inspected by traced code.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "FUN_0816ab08 reads 16 blocks x 8B from block 32; FUN_08156508 only inspects first 24 bytes. Sample bytes 0x118-0x17F all 0xFF."
+    },
+    {
+      "name": "unused_blocks2_31_and_48_63",
+      "offset": 16,
+      "size": 240,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {
+        "sav-00-f1492.sav": "all 0xFF"
+      },
+      "update_mechanism": "Never written or read by traced code (offset/size here covers blocks 2-31; blocks 48-63 at offset 384 size 128 are likewise all 0xFF).",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Hexdump/non-blank scan in saves/hexdump_and_diffs.txt: only 0x000-0x00F and 0x100-0x117 non-0xFF."
+    }
+  ],
+  "fuzzing_targets": [
+    {
+      "offset": 273,
+      "size": 1,
+      "mutation": "Raw 0x111 (logical checksum low byte 0x0D) -> 0x0E, no repair",
+      "requires_checksum_repair": false,
+      "predicted_effect": "FUN_08156508 failure path: arrays=[1,0,0,0,0,0], settings bytes=2,2, word8=0, pair=[0,0]; any continue/unlock indicator tied to word9 (sample 1 vs default 0) disappears."
+    },
+    {
+      "offset": 277,
+      "size": 1,
+      "mutation": "Logical word9 low byte (raw 0x115) 0x01 -> 0x00, with checksum repair to 0x000C (raw 0x110-0x111 = 00 0c)",
+      "requires_checksum_repair": true,
+      "predicted_effect": "Success path retained; isolates word9: same UI change as checksum-failure test implicates word9 alone."
+    },
+    {
+      "offset": 261,
+      "size": 1,
+      "mutation": "Logical arrayA_1 low byte (raw within reversed block 0x100-0x107) 0x00 -> 0x01, one array entry at a time for entries 1-5, repair checksum (+1 each)",
+      "requires_checksum_repair": true,
+      "predicted_effect": "Each entry that lights a level/character/icon on select screen maps that array element; inert entries retested in gameplay."
+    },
+    {
+      "offset": 267,
+      "size": 1,
+      "mutation": "Logical word6 (raw block 0x108-0x10F reversed) and word7 separately: 2 -> 0,1,3,4,5,6,7,8, repair checksum each time",
+      "requires_checksum_repair": true,
+      "predicted_effect": "Language/options/music change reveals enumerated setting and valid range; crash on out-of-range would indicate unchecked table index."
+    },
+    {
+      "offset": 279,
+      "size": 1,
+      "mutation": "Logical word8 low byte (raw 0x117) 0x00 -> 0x01 then 9/99/255; same for word10 (raw 0x113); repair checksum",
+      "requires_checksum_repair": true,
+      "predicted_effect": "Change in displayed counter (lives/collectibles/completion) identifies counter field; no change keeps flag hypothesis."
+    },
+    {
+      "offset": 7,
+      "size": 1,
+      "mutation": "Slot A word0 (raw 0x007) 0x03 -> 0,1,2,4; independently Slot A word6 (logical 0x00C, raw 0x003 area) 3 -> n; then both together",
+      "requires_checksum_repair": false,
+      "predicted_effect": "Boot language/options change identifies Slot A field; game rewriting Slot A back to 3 proves untraced boot formatter. No known checksum repair exists for Slot A; rejection/defaulting itself reveals hidden validity check."
+    },
+    {
+      "offset": 256,
+      "size": 24,
+      "mutation": "Fill raw 0x100-0x117 with 0xFF (erase Slot B blocks 32-34); separately erase entire 512B file",
+      "requires_checksum_repair": false,
+      "predicted_effect": "Checksum fails (erased sum 0xFFFC != stored 0xFFFF) -> defaults as in first target. If game writes a fresh .sav, diff vs sample exposes untraced writer's exact first-boot output for both slots."
+    },
+    {
+      "offset": 263,
+      "size": 1,
+      "mutation": "Logical word0 low byte (raw 0x107) 0x01 -> 0x02 without repair (computed 0x000E vs stored 0x000D)",
+      "requires_checksum_repair": false,
+      "predicted_effect": "Must trigger defaults; acceptance would falsify the seed-7 sum16 model in SAVE-FORMAT-REPORT.md Section 4."
+    },
+    {
+      "offset": 280,
+      "size": 104,
+      "mutation": "Fill raw 0x118-0x17F (blocks 35-47) with incrementing bytes 0x00..0x67",
+      "requires_checksum_repair": false,
+      "predicted_effect": "No behaviour change (loader reads but never inspects tail); any change refutes reserved-tail reading and implies untraced consumer."
+    },
+    {
+      "offset": 384,
+      "size": 1,
+      "mutation": "Negative control: one 0xFF byte in blocks 48-63 (raw 0x180) -> 0x00",
+      "requires_checksum_repair": false,
+      "predicted_effect": "Zero effect predicted; any effect means slot geometry in this file is incomplete."
+    }
+  ],
+  "open_questions": [
+    "Where is the EEPROM writer/serial driver (DMA3 to 0x0D000000) and what triggers it? No traced function references 0x0D000000, 0x0E000000, 0x5555/0x2AAA, or WAITCNT 0x04000204.",
+    "What is func_0x0816ab68 (0x0816ab68), called by FUN_08156508 only on EEPROM read error - format/write-defaults or something else? Body not in corpus.",
+    "What reads/writes Slot A (EEPROM blocks 0-1, logical words [3,0,0,0,0,0,3,0xFFFF]) and what is its validity rule, if any?",
+    "Gameplay semantics and valid ranges of Slot B words 0-10 (6-entry array [1,0,0,0,0,0], bytes 2,2,0, pair [1,0]) are unknown; only types/destinations/defaults are verified.",
+    "What loads the second 6-byte RAM array (literal 0x08156664), which FUN_08156508 only defaults on checksum failure?",
+    "Actual RAM addresses behind ROM literal-pool symbols 0x0815665c-0x08156674 are not recoverable from decompiled.c (pointer values not included); ram_addr is null for all fields for this reason.",
+    "Is Slot B's true structure only 24 bytes, or do untraced consumers use the 104 erased tail bytes of its 128-byte allocation (blocks 35-47)?",
+    "Which in-game events mutate the RAM save fields before a flush (level completion, options, game over)? None were traced (trace ends frame 1620, boot/title only).",
+    "Who calls FUN_08156508? callgraph.json lists it caller-less (indirect/jump-table dispatch), so the boot caller chain above it is unmapped."
+  ]
+}

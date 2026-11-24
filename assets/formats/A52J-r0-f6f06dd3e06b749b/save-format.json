@@ -1,0 +1,296 @@
+{
+  "schema": "gbakit-save-research/1",
+  "release_key": "A52J-r0-f6f06dd3e06b749b",
+  "display_name": "Koukou Juken Advance Series Eitango Hen - 2000 Words Shuuroku (Japan)",
+  "rom_sha256": "f6f06dd3e06b749b0a3f47334c04e1f87a64b69ecadee8945173fbfb9b9083c4",
+  "game_code": "A52J",
+  "header_family": "A52",
+  "community_id": "comm-011",
+  "overall_confidence": "MEDIUM",
+  "media": {
+    "kind": "sram",
+    "size_bytes": 32768,
+    "sdk_tags": [
+      "SRAM_V112@4385852"
+    ],
+    "fill_byte": "0xff"
+  },
+  "slots_and_copies": [
+    {
+      "name": "slot_0",
+      "offset": 0,
+      "size": 18304,
+      "redundancy_role": "primary",
+      "selection_rule": "Single copy at SRAM offset 0. FUN_08000584 reads it via FUN_08015b68(0x0E000000,RAM,length); validity decided solely by u32 at offset 0 vs a literal-pool constant. On mismatch RAM-side defaults are initialised (68x u16 OR-loop at RAM+0x4780 and RAM+DAT_08000674). No backup/mirror copy, generation counter or slot-selection comparison was found in the 57-function corpus; bytes 0x4780-0x7FFF in cap-01 are 0xFF (untouched) except an unexplained 12-byte zero island at 0x4890. Size 18304 (0x4780) is inferred from the exact cap-00->cap-01 diff boundary 0x0000-0x477F, corroborated by the RAM+0x4780 reference in both seed functions; the literal copy-length (_DAT_08000580/_DAT_08000660) is unresolved in the decompilation."
+    }
+  ],
+  "magic_signatures": [
+    {
+      "offset": 0,
+      "bytes_hex": "e42b516e",
+      "ascii": "",
+      "verified_in_code": true,
+      "verified_in_sav": true,
+      "function_addrs": [
+        "0x08000484",
+        "0x08000584"
+      ]
+    }
+  ],
+  "checksums": [
+    {
+      "name": "none_found",
+      "algorithm": "unknown",
+      "formula_detail": "No checksum/integrity computation over the save buffer exists in the traced corpus: no arithmetic loop over the payload appears in any of the 57 decompiled functions (the only arithmetic loops are the M4A audio cluster 0x08014xxx-0x08015670 and the integer divider FUN_08015d14). Python tests on cap-01 over 0x04..0x4780 (all zero) give sum8/sum16/sum32=0, xor8/xor32=0, crc32=0x8d7fbee4, adler32=0x477c0001, crc16-modbus=0xc154, crc16-ccitt=0x6d25; none equals the stored dword0 0x6e512be4 (LE), consistent with dword0 being a constant magic rather than a computed checksum. A custom checksum cannot be excluded but has no supporting code evidence.",
+      "stored_offset": 0,
+      "stored_size": 0,
+      "covered_start": 0,
+      "covered_end": 0,
+      "function_addrs": [],
+      "verified_on_samples": [
+        {
+          "file": "saves/cap-01-future-1.sav",
+          "stored_hex": "6e512be4",
+          "computed_hex": "sum16=0000 crc32=8d7fbee4 (over 0x04..0x4780)",
+          "match": false
+        },
+        {
+          "file": "saves/cap-00-future-0.sav",
+          "stored_hex": "ffffffff (erased)",
+          "computed_hex": "n/a blank",
+          "match": false
+        }
+      ],
+      "confidence": "UNKNOWN"
+    }
+  ],
+  "io_driver_functions": [
+    {
+      "addr": "0x08000484",
+      "role": "write",
+      "callers": [],
+      "notes": "Save writer (MMIO seed). Stamps dword0 and other fields into RAM struct (base=_DAT_08000534, unresolved), calls FUN_08014d90, byte-writes RAM->0x0E000000 via FUN_08015bcc(base,0x0E000000,_DAT_08000580), verifies via FUN_08015c3c(base,0x0E000000,length), calls FUN_08014ddc, tail-dispatches on verify result through UNRECOVERED_JUMPTABLE. No caller in callgraph.json or decompiled.c."
+    },
+    {
+      "addr": "0x08000584",
+      "role": "read",
+      "callers": [],
+      "notes": "Save reader (MMIO seed). FUN_08015b68(0x0E000000,RAM_base=_DAT_0800065c,_DAT_08000660); if *RAM_base != _DAT_08000664, initialises defaults: 68-iteration (0x43 down to 0) u16 OR-loop at RAM+0x4780 and RAM+_DAT_08000674 with value _DAT_08000670. Then copies struct fields out to globals and tail-dispatches. No caller in corpus."
+    },
+    {
+      "addr": "0x08015bcc",
+      "role": "write",
+      "callers": [
+        "0x08000484"
+      ],
+      "notes": "Low-level SRAM byte-copy (SDK WriteSram-style): sets a WAITCNT-like register (*_DAT_08015c04 & mask | 3, cf. 0x04000204 SRAM wait bits) then while(count-- != -1) *dst++ = *src++ byte loop, required by the 8-bit SRAM bus at 0x0E000000. Called in decompiled.c as func_0x08015bcc; absent from callgraph.json edges."
+    },
+    {
+      "addr": "0x08015b68",
+      "role": "read",
+      "callers": [
+        "0x08000584"
+      ],
+      "notes": "Low-level SRAM read (SDK ReadSram-style): sets WAITCNT-like register |3, copies via stack buffer and calls FUN_08015ce4(src,dst,len,stack+1). Direction proven by call site FUN_08015b68(0x0E000000,RAM,len) in FUN_08000584."
+    },
+    {
+      "addr": "0x08015c3c",
+      "role": "write",
+      "callers": [
+        "0x08000484"
+      ],
+      "notes": "Verify-after-write (SDK VerifySram-style): same WAITCNT/stack-buffer prologue as FUN_08015b68, calls FUN_08015ce4(RAM,0x0E000000,len,stack+1) and returns its result; FUN_08000484 tail-dispatches on the returned value. Exact compare semantics inside FUN_08015ce4 are not recovered (jump-table stub)."
+    },
+    {
+      "addr": "0x08015ce4",
+      "role": "deserialize",
+      "callers": [
+        "0x08015b68",
+        "0x08015c3c"
+      ],
+      "notes": "Unrecovered jump-table stub invoked with (src,dst,len,stack_buf) by both SRAM read and verify routines; internal copy/compare not recoverable from this corpus."
+    },
+    {
+      "addr": "0x08014d90",
+      "role": "serialize",
+      "callers": [
+        "0x08000484",
+        "0x08014ca4"
+      ],
+      "notes": "Pre-write helper also called by FUN_08014ca4 (audio cluster): conditionally advances a counter by 10 and clears fields via FUN_08015b38 (SWI 0x0B CpuSet wrapper). Save-specific role unproven; likely a shared sound/system guard, NOT proven save logic."
+    },
+    {
+      "addr": "0x08014ddc",
+      "role": "serialize",
+      "callers": [
+        "0x08000484",
+        "0x08014c00"
+      ],
+      "notes": "Post-write helper also called by FUN_08014c00 (audio): conditionally writes 0xB600 and decrements a counter by 10. Save-specific role unproven; shared with the M4A audio cluster."
+    },
+    {
+      "addr": "0x08015b38",
+      "role": "serialize",
+      "callers": [
+        "0x08014778",
+        "0x080149e8",
+        "0x08014b40",
+        "0x08014d90"
+      ],
+      "notes": "software_interrupt(0x0B) = BIOS CpuSet wrapper. Used by audio/init code, not a save driver."
+    }
+  ],
+  "caller_chains": [
+    {
+      "entry_caller": "0x08000484",
+      "chain": [
+        "0x08000484",
+        "0x08014d90",
+        "0x08015bcc",
+        "0x08015c3c",
+        "0x08014ddc"
+      ],
+      "trigger_context": "UNKNOWN in corpus: no caller in ghidra/callgraph.json (callers:[]) and none in ghidra/decompiled.c; function ends in UNRECOVERED_JUMPTABLE tail dispatch, so it is reached via an unrecovered state/jump table. Hypothesis: invoked on a save action (e.g. after a study session / from a menu state). Before flushing it mutates the RAM struct: *base=_DAT_0800057c (dword0 magic stamp), *(base+_DAT_08000538)=*_DAT_0800053c, *(base+_DAT_08000540)=*_DAT_08000544 (offsets unresolved), plus a series of writes through a second pointer _DAT_08000548 referencing base, base+_DAT_08000564+0x3c and base+0x4780 (word offset 0x11e0).",
+      "ram_fields_updated": [
+        "dword at RAM+0 (magic stamp, offset proven, constant unresolved)",
+        "fields at RAM+_DAT_08000538 and RAM+_DAT_08000540 (numeric offsets unresolved)",
+        "descriptor/second-struct fields referencing RAM+0x4780"
+      ],
+      "how_mapped": "Mapped from the function body in ghidra/decompiled.c lines 15-48 (func_0x08015bcc/func_0x08015c3c call sites with literal 0x0E000000) cross-checked against ghidra/save_related_functions.c; callgraph.json records NO edges for this function, so the chain comes from decompiled.c only - a stated corpus discrepancy."
+    },
+    {
+      "entry_caller": "0x08000584",
+      "chain": [
+        "0x08000584",
+        "0x08015b68"
+      ],
+      "trigger_context": "UNKNOWN in corpus: no caller in callgraph.json or decompiled.c; UNRECOVERED_JUMPTABLE tail dispatch. Hypothesis: boot/load path. After reading SRAM into RAM it checks dword0; on mismatch it ORs a constant (_DAT_08000670) into 68 u16 entries at RAM+0x4780 and 68 at RAM+_DAT_08000674 (fresh-save defaults, RAM-only in this trace), then copies fields from RAM+_DAT_0800067c and RAM+_DAT_0800067c-4 out to *_DAT_08000678/*_DAT_08000680 before dispatching.",
+      "ram_fields_updated": [
+        "RAM+0x4780..0x4807: 68x u16 OR-defaults (only on magic mismatch)",
+        "RAM+_DAT_08000674.. : 68x u16 OR-defaults (only on magic mismatch)"
+      ],
+      "how_mapped": "Mapped from ghidra/decompiled.c lines 69-120 and ghidra/save_related_functions.c; piVar1+0x11e0 is int* arithmetic = byte offset 0x4780, loop count 0x43 down to 0 = 68 iterations. callgraph.json has no edges for this function."
+    }
+  ],
+  "fields": [
+    {
+      "name": "magic_dword0",
+      "offset": 0,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": [
+        "0x08000484"
+      ],
+      "readers": [
+        "0x08000584"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": "0xffffffff (erased)",
+        "cap-01-future-1.sav": "0x6e512be4 (bytes e4 2b 51 6e)"
+      },
+      "update_mechanism": "FUN_08000484 executes *RAM_base = _DAT_0800057c (literal-pool constant) immediately before FUN_08015bcc flushes RAM to 0x0E000000; FUN_08000584 compares *RAM_base against _DAT_08000664 after FUN_08015b68 loads SRAM, branching to default-initialisation on mismatch. RAM base literal (_DAT_08000534/_DAT_0800065c) is unresolved, so ram_addr is null.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "ghidra/decompiled.c:36 (*puVar1 = _DAT_0800057c) and :72 (if *piVar1 != _DAT_08000664); sav dword0 is the ONLY non-zero dword in cap-01. Equality of the two unresolved constants with each other / with 0x6E512BE4 is inferred, not directly read, hence not CONFIRMED_VERIFIED."
+    },
+    {
+      "name": "payload_zero_region",
+      "offset": 4,
+      "size": 18296,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [
+        "0x08000484"
+      ],
+      "readers": [
+        "0x08000584"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": "all 0xFF",
+        "cap-01-future-1.sav": "all 0x00 (0x0004-0x477F)"
+      },
+      "update_mechanism": "Bulk-copied as part of the single FUN_08015bcc RAM->SRAM transfer (inferred length 0x4780 total) and FUN_08015b68 SRAM->RAM load. Internal sub-field layout CANNOT be mapped: every payload byte is 0x00 in the only populated sample, and all struct offsets in the seed functions are unresolved _DAT_ literal-pool values.",
+      "confidence": "UNKNOWN",
+      "evidence": "Python diff cap-00->cap-01: single contiguous range 0x0000-0x477F; Counter(cap-01) = 0x00:18312, 0xFF:14452, plus the 4 magic bytes. No non-zero payload byte exists to anchor any sub-field."
+    },
+    {
+      "name": "sram_untouched_tail",
+      "offset": 18304,
+      "size": 14464,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {
+        "cap-01-future-1.sav": "all 0xFF except 0x4890-0x489B = 0x00 (12 bytes)"
+      },
+      "update_mechanism": "Never written by the traced writer (remains at erased 0xFF in cap-01), except the unexplained 12-byte zero island at 0x4890-0x489B, which no function in the corpus accounts for.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Python run analysis of cap-01: runs 0x4780-0x488F 0xFF, 0x4890-0x489B 0x00, 0x489C-0x7FFF 0xFF; identical ranges in saves/hexdump_and_diffs.txt."
+    },
+    {
+      "name": "ram_only_default_flags_4780",
+      "offset": 18304,
+      "size": 136,
+      "type": "bitflags",
+      "ram_addr": null,
+      "writers": [
+        "0x08000584"
+      ],
+      "readers": [],
+      "observed_values": {
+        "cap-01-future-1.sav": "0xFF bytes at file offset 0x4780 (NOT written by traced flush; RAM-only in this trace)"
+      },
+      "update_mechanism": "RAM-only: in FUN_08000584, on magic mismatch, puVar4=(u16*)(RAM_base+0x4780) is ORed with _DAT_08000670 for 68 iterations alongside a second array at RAM+_DAT_08000674. If the SRAM copy length is 0x4780 (inferred), these RAM fields lie just past the persisted image and are re-derived at load; if the copy length is larger, this mapping is wrong - flagged as the key open geometry question.",
+      "confidence": "HYPOTHESIS",
+      "evidence": "ghidra/decompiled.c:78-90 (piVar1+0x11e0 int* = +0x4780 bytes, iVar6=0x43 loop). File offset is given as the RAM offset; persistence is unproven."
+    }
+  ],
+  "fuzzing_targets": [
+    {
+      "offset": 0,
+      "size": 4,
+      "mutation": "Flip one byte of dword0 (e.g. e4->e5) in cap-01, no checksum repair exists/needed per current evidence",
+      "requires_checksum_repair": false,
+      "predicted_effect": "FUN_08000584 magic check (*base != _DAT_08000664) fails on reload: game treats save as fresh/corrupt and initialises defaults (68x u16 OR-loop at RAM+0x4780). Observable: progress/settings reset to defaults. If instead the game loads normally, dword0 is NOT the checked magic and this model is falsified."
+    },
+    {
+      "offset": 4,
+      "size": 1,
+      "mutation": "Set byte 0x0004 to 0x01 in cap-01",
+      "requires_checksum_repair": false,
+      "predicted_effect": "Unknown sub-field: watch RAM struct base+4 and UI/progress after reload from a paired state. Any change localises the first payload field; no change suggests padding/unused or a field not loaded on this path. No paired .ss states exist in this workspace (states/ is empty), so this requires a fresh emulator capture."
+    },
+    {
+      "offset": 18300,
+      "size": 4,
+      "mutation": "Write non-zero bytes at 0x477C-0x477F (last 4 bytes of inferred image)",
+      "requires_checksum_repair": false,
+      "predicted_effect": "Tests the inferred 0x4780 copy length: if the values appear in RAM / affect behaviour after reload, length >= 0x4780 confirmed at its top edge; mutate 0x4780-0x4783 next - if those are ignored/overwritten by the reader's default OR-loop, the persisted image ends at 0x4780."
+    },
+    {
+      "offset": 18544,
+      "size": 12,
+      "mutation": "Restore 0x4890-0x489B zero island to 0xFF, and separately write 0x01 there",
+      "requires_checksum_repair": false,
+      "predicted_effect": "Determines whether the unexplained 12-byte island at 0x4890 is read by any load path: no behavioural/RAM change in either direction supports emulator/write artifact; a change implies a second small SRAM record outside the traced corpus."
+    },
+    {
+      "offset": 0,
+      "size": 18304,
+      "mutation": "Truncate/blank the whole slot (all 0xFF, as cap-00) and boot",
+      "requires_checksum_repair": false,
+      "predicted_effect": "Cold-boot baseline already evidenced by PACKET cold-reload probe (save_preserved_on_load=true, reverted_to_blank_boot=false for cap-01). Blank SRAM should take the magic-mismatch default-init branch in FUN_08000584."
+    }
+  ],
+  "open_questions": [
+    "Exact numeric values of ALL _DAT_ literal-pool operands in FUN_08000484/FUN_08000584 (RAM struct base address, copy length _DAT_08000580/_DAT_08000660, magic constants _DAT_0800057c/_DAT_08000664, OR-default value _DAT_08000670, second default-array offset _DAT_08000674) are unresolved in ghidra/decompiled.c; the 0x4780 length and 0x6E512BE4 magic are therefore inferred from .sav geometry + code structure, not read from code.",
+    "Internal layout of payload 0x0004-0x477F is completely unmapped: the only populated sample is all zero there, so no sub-field offset, type or semantics can be assigned without a non-trivial gameplay save.",
+    "Who calls FUN_08000484 / FUN_08000584, and in what menu/boot state? Both have zero callers in callgraph.json and decompiled.c and exit via UNRECOVERED_JUMPTABLE; trigger context is unknown.",
+    "Is there a checksum at all? None found in the 57-function corpus and no standard algorithm matches dword0, but the corpus is trace-guided and partial; a checksum routine outside the traced set cannot be excluded.",
+    "What wrote the 12 zero bytes at 0x4890-0x489B in cap-01, inside otherwise untouched 0xFF SRAM? No traced function accounts for it.",
+    "Are FUN_08014d90/FUN_08014ddc (shared with the 0x08014xxx M4A audio cluster) genuinely part of the save path (e.g. sound quiesce before SRAM access) or Ghidra/trace artefacts of the seed extraction?",
+    "Is the RAM flag array at RAM+0x4780 persisted (copy length > 0x4780) or RAM-only re-derived state? The cap-01 0xFF bytes at file 0x4780 favour RAM-only / length==0x4780 but do not prove it.",
+    "states/ contains no paired .ss save states, so no reload/fuzz prediction in this report has been executed; all fuzzing items are a plan, not results."
+  ]
+}

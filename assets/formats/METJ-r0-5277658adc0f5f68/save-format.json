@@ -1,0 +1,305 @@
+{
+  "schema": "gbakit-save-research/1",
+  "release_key": "METJ-r0-5277658adc0f5f68",
+  "display_name": "Metroid Fusion (Europe) (En,Fr,De,Es,It) (Beta) (2002-09-11)",
+  "rom_sha256": "5277658adc0f5f681065bf11e163b3cbb4b53b3afa6180d35f124419f6fb7883",
+  "game_code": "METJ",
+  "header_family": "MET",
+  "community_id": "comm-047",
+  "overall_confidence": "MEDIUM",
+  "media": {
+    "kind": "sram",
+    "size_bytes": 32768,
+    "sdk_tags": [],
+    "fill_byte": "0xff"
+  },
+  "slots_and_copies": [
+    {
+      "name": "header_block",
+      "offset": 0,
+      "size": 128,
+      "redundancy_role": "primary",
+      "selection_rule": "FUN_0807cb60 calls FUN_0807cc34(0); if it returns 0 (checksum + build-tag + complement all valid) this block is treated as the active header."
+    },
+    {
+      "name": "candidate_slot_b",
+      "offset": 128,
+      "size": 128,
+      "redundancy_role": "unknown",
+      "selection_rule": "FUN_0807cc34(1) validates a second 128-byte candidate at base+0x80 (in words). No populated copy was observed at SRAM offset 0x80-0xFF in either .sav (both are 0xFF fill), so it is unresolved whether this candidate is ever physically written to this SRAM offset or is RAM-only."
+    },
+    {
+      "name": "unresolved_zero_block",
+      "offset": 256,
+      "size": 256,
+      "redundancy_role": "unknown",
+      "selection_rule": "Zero-filled in both captures; no decompiled function references absolute SRAM offset 0x100. FUN_08000e50 reads 0x00-0xFF, not this range."
+    },
+    {
+      "name": "footer_tag",
+      "offset": 32752,
+      "size": 16,
+      "redundancy_role": "unknown",
+      "selection_rule": "Static 'METDSAVE\\0\\0' tag followed by 0xFF fill; identical in both captures; no writer or reader traced in available decompilation."
+    }
+  ],
+  "magic_signatures": [
+    {
+      "offset": 12,
+      "bytes_hex": "4147424d6574726f69645f555356657245303033",
+      "ascii": "AGBMetroid_USVerE003",
+      "verified_in_code": true,
+      "verified_in_sav": true,
+      "function_addrs": ["0x0807caf4", "0x0807cc34"]
+    },
+    {
+      "offset": 32752,
+      "bytes_hex": "4d455444534156450000",
+      "ascii": "METDSAVE\u0000\u0000",
+      "verified_in_code": false,
+      "verified_in_sav": true,
+      "function_addrs": []
+    }
+  ],
+  "checksums": [
+    {
+      "name": "header_block_sum32_complement",
+      "algorithm": "sum32_le",
+      "formula_detail": "Sum of all 32 little-endian u32 words of SRAM 0x00-0x7F, with word0 forced to 0x00000000 and word1 forced to 0xFFFFFFFF before summing. Result stored at offset 0x00; one's complement (~sum) stored at offset 0x04. Validator additionally checks stored_sum == ~stored_complement.",
+      "stored_offset": 0,
+      "stored_size": 8,
+      "covered_start": 0,
+      "covered_end": 127,
+      "function_addrs": ["0x0807caf4", "0x0807cc34", "0x08000dac"],
+      "verified_on_samples": [
+        {"file": "cap-00-future-0.sav", "stored_hex": "b8a9d7be", "computed_hex": "b8a9d7be", "match": true},
+        {"file": "cap-01-future-1.sav", "stored_hex": "b8a9d7be", "computed_hex": "b8a9d7be", "match": true}
+      ],
+      "confidence": "CONFIRMED_VERIFIED"
+    }
+  ],
+  "io_driver_functions": [
+    {"addr": "0x08000d74", "role": "write", "callers": ["0x0807cb60"], "notes": "Full-SRAM writer: stages RAM mirror via func_0x080030a0 then flushes 0x8000 bytes to 0xe000000 via func_0x08004dc8."},
+    {"addr": "0x08000dac", "role": "write", "callers": ["0x0807caf4", "0x0807cb60"], "notes": "Writes just the 128-byte checksummed header block to 0xe000000 via func_0x08004dc8."},
+    {"addr": "0x08000e50", "role": "read", "callers": ["0x0807cb60"], "notes": "Reads 256 bytes (0x00-0xFF) from 0xe000000 into RAM via func_0x08004c90."},
+    {"addr": "0x0807caf4", "role": "serialize", "callers": ["0x0807cb60"], "notes": "Serializes header fields (tag bytes, build string) and computes/stores the sum32/complement checksum pair, then calls 0x08000dac."},
+    {"addr": "0x0807cc34", "role": "checksum", "callers": ["0x0807cb60"], "notes": "Validator: recomputes sum32, compares build-tag bytes, checks sum/complement self-consistency; returns a 3-bit failure mask."},
+    {"addr": "0x0807d3d4", "role": "write", "callers": ["0x0807cb60"], "notes": "SRAM presence self-test: writes 16 bytes, reads back, increments, rewrites, and compares to detect whether save hardware is present/writable."}
+  ],
+  "caller_chains": [
+    {
+      "entry_caller": "0x0807cb60",
+      "chain": ["0x0807cb60", "0x0807d3d4", "0x08000e50", "0x0807cc34", "0x08000d74", "0x0807caf4", "0x08000dac"],
+      "trigger_context": "Top-level save-menu/dispatch entry point; no static caller recovered in ghidra/callgraph.json (reached via an un-recovered indirect jump table at 0x0807cae4/0x0807cc2c).",
+      "ram_fields_updated": ["header checksum pair (0x00-0x07)", "build-tag bytes (0x0C-0x1F)", "static tag bytes (0x08-0x0B)"],
+      "how_mapped": "Traced via ghidra/callgraph.json caller/callee edges starting from the three literal 0xe000000 MMIO seed call sites in ghidra/save_related_functions.c, then cross-referenced against ghidra/decompiled.c for full function bodies."
+    },
+    {
+      "entry_caller": "0x0807caf4",
+      "chain": ["0x0807caf4", "0x08000dac"],
+      "trigger_context": "Called at the end of FUN_0807cb60's save-due branch, immediately after the full-SRAM write (0x08000d74), to (re)serialize and flush the 128-byte header with a freshly computed checksum.",
+      "ram_fields_updated": ["0x00-0x07 checksum pair", "0x08-0x0B tag bytes", "0x0C-0x1F build string"],
+      "how_mapped": "ghidra/callgraph.json: \"0x08000dac\": {\"callers\": [\"0x0807caf4\", \"0x0807cb60\"]} combined with decompiled.c body of FUN_0807caf4."
+    }
+  ],
+  "fields": [
+    {
+      "name": "header_checksum_sum32",
+      "offset": 0,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": ["0x0807caf4"],
+      "readers": ["0x0807cc34"],
+      "observed_values": {"cap-00-future-0.sav": "0xb8a9d7be", "cap-01-future-1.sav": "0xb8a9d7be"},
+      "update_mechanism": "Recomputed on every header serialization as the sum of all 32 header words (with this word and the complement word forced to placeholder values first).",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "FUN_0807caf4 decompiled body; Python re-derivation matches both .sav files exactly (see SAVE-FORMAT-REPORT.md section 4.2)."
+    },
+    {
+      "name": "header_checksum_complement",
+      "offset": 4,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": ["0x0807caf4"],
+      "readers": ["0x0807cc34"],
+      "observed_values": {"cap-00-future-0.sav": "0x47562841", "cap-01-future-1.sav": "0x47562841"},
+      "update_mechanism": "Stored as the bitwise one's complement of the sum32 at offset 0, so sum+complement always equals 0xFFFFFFFF.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "FUN_0807caf4 decompiled body; Python verification: (stored_sum + stored_complement) & 0xFFFFFFFF == 0xFFFFFFFF on both files."
+    },
+    {
+      "name": "tag_char_0",
+      "offset": 8,
+      "size": 1,
+      "type": "ascii",
+      "ram_addr": null,
+      "writers": ["0x0807caf4"],
+      "readers": [],
+      "observed_values": {"cap-00-future-0.sav": "0x30", "cap-01-future-1.sav": "0x30"},
+      "update_mechanism": "Literal immediate store of '0' on every header serialization.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "FUN_0807caf4 decompiled body, line *(undefined1*)(_DAT_0807cb54+2)=0x30; byte matches both .sav files."
+    },
+    {
+      "name": "tag_char_1",
+      "offset": 9,
+      "size": 1,
+      "type": "ascii",
+      "ram_addr": null,
+      "writers": ["0x0807caf4"],
+      "readers": [],
+      "observed_values": {"cap-00-future-0.sav": "0x31", "cap-01-future-1.sav": "0x31"},
+      "update_mechanism": "Literal immediate store of '1' on every header serialization.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "FUN_0807caf4 decompiled body; byte matches both .sav files."
+    },
+    {
+      "name": "unresolved_global_byte",
+      "offset": 10,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": ["0x0807caf4"],
+      "readers": [],
+      "observed_values": {"cap-00-future-0.sav": "0x00", "cap-01-future-1.sav": "0x00"},
+      "update_mechanism": "Copied from an opaque global (*_DAT_0807cb58) at serialization time; the global's semantic meaning could not be resolved from this trace.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "FUN_0807caf4 decompiled body; source global not further resolvable in available decompilation."
+    },
+    {
+      "name": "constant_flag_byte",
+      "offset": 11,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": ["0x0807caf4"],
+      "readers": [],
+      "observed_values": {"cap-00-future-0.sav": "0x01", "cap-01-future-1.sav": "0x01"},
+      "update_mechanism": "Literal immediate store of 1 on every header serialization.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "FUN_0807caf4 decompiled body; byte matches both .sav files."
+    },
+    {
+      "name": "build_tag_string",
+      "offset": 12,
+      "size": 20,
+      "type": "ascii",
+      "ram_addr": null,
+      "writers": ["0x0807caf4"],
+      "readers": ["0x0807cc34"],
+      "observed_values": {"cap-00-future-0.sav": "AGBMetroid_USVerE003", "cap-01-future-1.sav": "AGBMetroid_USVerE003"},
+      "update_mechanism": "20-byte copy loop from a fixed source (_DAT_0807cb5c) on every header serialization; compared byte-for-byte on validation against a fixed reference (_DAT_0807cca4).",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "FUN_0807caf4 copy loop and FUN_0807cc34 compare loop both decompiled; string matches both .sav files exactly."
+    },
+    {
+      "name": "header_reserved_padding",
+      "offset": 32,
+      "size": 96,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"cap-00-future-0.sav": "0xff fill", "cap-01-future-1.sav": "0xff fill"},
+      "update_mechanism": "Not individually written by any traced function; swept into the checksum sum as part of the 128-byte block loop.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "Byte range verified as 0xFF fill in both .sav files; no writer found in ghidra/decompiled.c."
+    },
+    {
+      "name": "candidate_slot_b_bytes",
+      "offset": 128,
+      "size": 128,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": ["0x0807cc34"],
+      "observed_values": {"cap-00-future-0.sav": "0xff fill", "cap-01-future-1.sav": "0xff fill"},
+      "update_mechanism": "Unknown; validated by FUN_0807cc34(1) but never observed populated on disk in either capture.",
+      "confidence": "HYPOTHESIS",
+      "evidence": "FUN_0807cc34 validates a second 128-byte candidate at base+0x80 words; SRAM offset 0x80-0xFF is 0xFF fill (unpopulated) in both .sav files."
+    },
+    {
+      "name": "unresolved_zero_block",
+      "offset": 256,
+      "size": 256,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"cap-00-future-0.sav": "0x00 fill", "cap-01-future-1.sav": "0x00 fill"},
+      "update_mechanism": "Unknown; no decompiled function references absolute SRAM offset 0x100.",
+      "confidence": "UNKNOWN",
+      "evidence": "Zero fill (distinct from surrounding 0xFF default) confirmed in both .sav files; no matching writer/reader found in ghidra/decompiled.c."
+    },
+    {
+      "name": "volatile_counter_bytes",
+      "offset": 28736,
+      "size": 5,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"cap-00-future-0.sav": "0x0000000000", "cap-01-future-1.sav": "0x1f010a99f5"},
+      "update_mechanism": "Unknown; changed between the two captures but no writer traced.",
+      "confidence": "UNKNOWN",
+      "evidence": "Byte-diff between cap-00 and cap-01 at 0x7040-0x7044; not ASCII, not matching the sum/complement checksum shape used elsewhere."
+    },
+    {
+      "name": "unexplained_language_key_text",
+      "offset": 28741,
+      "size": 34,
+      "type": "ascii",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"cap-00-future-0.sav": "all 0x00", "cap-01-future-1.sav": "fSTARTKEYLANGUAGE\u0002ENDKEY_LANGUAGE_"},
+      "update_mechanism": "Text absent from ghidra/decompiled.c entirely; hypothesized to be uninitialized RAM-mirror content leaked through the full-32KiB bulk writer (0x08000d74) rather than a deliberately written field.",
+      "confidence": "HYPOTHESIS",
+      "evidence": "saves/hexdump_and_diffs.txt diff between the two capture files; string searched for and not found anywhere in ghidra/decompiled.c."
+    },
+    {
+      "name": "footer_tag_string",
+      "offset": 32752,
+      "size": 10,
+      "type": "ascii",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"cap-00-future-0.sav": "METDSAVE\u0000\u0000", "cap-01-future-1.sav": "METDSAVE\u0000\u0000"},
+      "update_mechanism": "Unknown; identical across both captures, but no writer or reader for this string exists in the available decompilation.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "Bytes proven identical in both .sav files via direct Python read; no matching function found in ghidra/decompiled.c."
+    },
+    {
+      "name": "footer_fill",
+      "offset": 32762,
+      "size": 6,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"cap-00-future-0.sav": "0xff fill", "cap-01-future-1.sav": "0xff fill"},
+      "update_mechanism": "Erased-SRAM default, trailing the footer tag.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "Byte range verified as 0xFF fill in both .sav files."
+    }
+  ],
+  "fuzzing_targets": [
+    {"offset": 0, "size": 4, "mutation": "increment one byte of the stored sum32 without updating the complement", "requires_checksum_repair": false, "predicted_effect": "FUN_0807cc34(0) sets failure bit 0x1 on next boot; slot-selection logic should treat the header as invalid."},
+    {"offset": 12, "size": 1, "mutation": "flip one byte inside the AGBMetroid_USVerE003 build tag, then repair the sum32/complement pair", "requires_checksum_repair": true, "predicted_effect": "Checksum check passes (bit 0x1 clear) but build-tag compare fails (bit 0x2 set), isolating whether the tag is independently enforced."},
+    {"offset": 4, "size": 4, "mutation": "set the complement word to a value that is not ~sum, while leaving the sum itself internally correct", "requires_checksum_repair": false, "predicted_effect": "Sum recompute still matches (bit 0x1 clear) but self-consistency bit 0x4 sets, proving the two checks are independent."},
+    {"offset": 28736, "size": 34, "mutation": "zero the 0x7040-0x7066 region after it has been populated (as in cap-01), then replay identical frame count under emulation", "requires_checksum_repair": false, "predicted_effect": "If this is leaked uninitialized data (hypothesis), repeated identical play sessions will NOT reliably reproduce the same bytes here; if it is a real field, the same bytes should reappear deterministically."},
+    {"offset": 256, "size": 256, "mutation": "fill 0x100-0x1FF with a non-zero marker pattern and reload", "requires_checksum_repair": false, "predicted_effect": "Pattern should persist unchanged across a boot/save cycle, since no traced reader/writer touches this absolute offset; any change would reveal an untraced function."},
+    {"offset": 32752, "size": 1, "mutation": "flip the first byte of the METDSAVE footer tag", "requires_checksum_repair": false, "predicted_effect": "Unknown by design; no reader was traced for this tag, so this test is purely exploratory to discover whether any boot path depends on it."}
+  ],
+  "open_questions": [
+    "Who calls FUN_0807cb60? No caller edge exists in ghidra/callgraph.json; the indirect jump table at 0x0807cae4/0x0807cc2c could not be recovered.",
+    "What RAM-absolute addresses do _DAT_0807cbbc/_DAT_0807cbb8/_DAT_0807cbc0/_DAT_0807cbc4/_DAT_0807cbc8 refer to, and do they correspond to real in-RAM save-struct mirrors at 0x02xxxxxx/0x03xxxxxx?",
+    "Is there a genuine second physical 128-byte header slot anywhere in the 32 KiB SRAM, or is FUN_0807cc34(1)'s second candidate purely a RAM-resident template never materialized to disk?",
+    "What writes the METDSAVE tag at 0x7FF0, and is it ever read back by any code path?",
+    "Is the 0x7040 text block ('fSTARTKEYLANGUAGE'/'ENDKEY_LANGUAGE_') genuine leaked Beta-build debug content, or an as-yet-unidentified real save field?",
+    "What (untraced) code clears SRAM 0x100-0x1FF to zero, and why does it differ from the 0xFF fill used everywhere else on this cart?"
+  ]
+}

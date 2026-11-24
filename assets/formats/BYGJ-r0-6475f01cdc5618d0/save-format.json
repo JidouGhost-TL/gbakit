@@ -1,0 +1,137 @@
+{
+  "schema": "gbakit-save-research/1",
+  "release_key": "BYGJ-r0-6475f01cdc5618d0",
+  "display_name": "Yu-Gi-Oh! Duel Monsters GX - Mezase Duel King! (Japan)",
+  "rom_sha256": "6475f01cdc5618d0aadca4be96e28e376b05c839aaaf7f62b7c3716ad29c1783",
+  "game_code": "BYGJ",
+  "header_family": "BYG",
+  "community_id": "comm-014",
+  "overall_confidence": "LOW",
+  "media": {
+    "kind": "sram",
+    "size_bytes": 32768,
+    "sdk_tags": [],
+    "fill_byte": "0xff"
+  },
+  "slots_and_copies": [
+    {
+      "name": "slot_0",
+      "offset": 0,
+      "size": 24968,
+      "redundancy_role": "primary",
+      "selection_rule": "Only copy evidenced. Written by FUN_080e69bc via FUN_080f1e1c to SRAM 0x0E000000; bytes 0x6188..0x7FFF are untouched 0xFF in the populated sample so no backup/mirror exists there. Exact write length is inferred from the 0xFF tail start (0x6188) because the length literal _DAT_080e69dc is unresolved. Boot acceptance gated by FUN_080e0ee0 (8-byte compare + checksum_1 validate); no generation counter or A/B selection found."
+    }
+  ],
+  "magic_signatures": [
+    {
+      "offset": 14478,
+      "bytes_hex": "595547494f484758",
+      "ascii": "YUGIOHGX",
+      "verified_in_code": false,
+      "verified_in_sav": true,
+      "function_addrs": ["0x080e0f10", "0x080e0eb8", "0x080e0ee0"]
+    }
+  ],
+  "checksums": [
+    {
+      "name": "checksum_1",
+      "algorithm": "custom",
+      "formula_detail": "u=SEED; for each u16_le w in region: u=((u+w)&0xFFFF)^K; stored u16 compared in FUN_080e692c and written by FUN_080e697c. Decompiled form: uVar1=((*puVar2+uVar1)*0x10000 ^ _DAT_080e68f0)>>0x10 over ushorts from _DAT_080e68e8 for _DAT_080e68ec bytes, seed _DAT_080e68e4. SEED, K=(_DAT>>16), start, length and stored offset are unresolved literal-pool values (ROM not in workspace), so no numeric verification was possible. Plain sum16/xor16/crc16/crc32 over candidate ranges and recurrence brute-force (seed 0, all K) over the deck-like region all failed to match candidate stored values.",
+      "stored_offset": 0,
+      "stored_size": 2,
+      "covered_start": 0,
+      "covered_end": 0,
+      "function_addrs": ["0x080e68bc", "0x080e692c", "0x080e697c"],
+      "verified_on_samples": [
+        {"file": "cap-01-future-1.sav", "stored_hex": "0x6cfd (candidate u16@0x3856, unproven)", "computed_hex": "sum16(0x0-0x6188)=0xe1e1; sum16(0x385a-0x38aa)=0x58d8; recurrence(seed=0,any K) over 0x385a-0x38aa: no solution", "match": false},
+        {"file": "cap-00-future-0.sav", "stored_hex": "none (all 0xFF blank)", "computed_hex": "n/a", "match": false}
+      ],
+      "confidence": "UNKNOWN"
+    },
+    {
+      "name": "checksum_2",
+      "algorithm": "custom",
+      "formula_detail": "Same recurrence shape as checksum_1 with independent literals (_DAT_080e691c seed, _DAT_080e6920 start, _DAT_080e6924 length, _DAT_080e6928 xor) in FUN_080e68f4; validated by FUN_080e6954, updated by FUN_080e699c inside the flush FUN_080e69bc immediately before the SRAM write. All numeric parameters and the stored offset are unresolved; not verified on samples.",
+      "stored_offset": 0,
+      "stored_size": 2,
+      "covered_start": 0,
+      "covered_end": 0,
+      "function_addrs": ["0x080e68f4", "0x080e6954", "0x080e699c", "0x080e69bc"],
+      "verified_on_samples": [
+        {"file": "cap-01-future-1.sav", "stored_hex": "unknown (stored field not identifiable)", "computed_hex": "sum16(0x4000-0x6188)=0x7783; xor16=0x5405 (candidates only, no identified stored value to compare)", "match": false}
+      ],
+      "confidence": "UNKNOWN"
+    }
+  ],
+  "io_driver_functions": [
+    {"addr": "0x080f1d48", "role": "write", "callers": ["0x080f1e1c"], "notes": "Byte-copy RAM->SRAM; sets WAITCNT-like register |3 first. Byte granularity matches 8-bit SRAM at 0x0E000000."},
+    {"addr": "0x080f1db8", "role": "read", "callers": ["0x080f1e1c"], "notes": "Verify: copies a routine to a stack buffer and executes it via 0x080f1e60; returns compare result used by the retry loop."},
+    {"addr": "0x080f1ce4", "role": "read", "callers": [], "notes": "Presumed SRAM read (same stack-trampoline shape as verify). No traced callers; reached via unrecovered jumptable or untraced code. Role is HYPOTHESIS."},
+    {"addr": "0x080f1e1c", "role": "write", "callers": ["0x080e69bc"], "notes": "Write-with-verify, up to 3 attempts: FUN_080f1d48 then FUN_080f1db8, break on success. Call from 0x080e69bc passes dst 0x0E000000; src/length literals unresolved."},
+    {"addr": "0x080e69bc", "role": "serialize", "callers": ["0x080e0f70"], "notes": "Flush: validate checksum_1 (0x080e692c), update checksum_2 (0x080e699c), then write whole RAM struct verbatim to SRAM. No serialisation layer; RAM struct is the file image."},
+    {"addr": "0x080e68bc", "role": "checksum", "callers": ["0x080e692c", "0x080e697c"], "notes": "Checksum_1 compute: u=((u+w)&0xFFFF)^K per u16_le; seed/start/length/K unresolved literals."},
+    {"addr": "0x080e68f4", "role": "checksum", "callers": ["0x080e6954", "0x080e699c"], "notes": "Checksum_2 compute, same shape, independent unresolved literals."},
+    {"addr": "0x080e692c", "role": "checksum", "callers": ["0x080e69bc"], "notes": "Checksum_1 validate: computed == *(u16*)(base+off), both unresolved."},
+    {"addr": "0x080e6954", "role": "checksum", "callers": [], "notes": "Checksum_2 validate. No traced callers (jumptable-hidden)."},
+    {"addr": "0x080e697c", "role": "checksum", "callers": ["0x080e0f70", "0x080cc9d8", "0x080ce280", "0x080ce2dc", "0x080e5248", "0x080e5e40", "0x080e64d0"], "notes": "Checksum_1 update: FUN_080e0f10 (8-byte copy) then store FUN_080e68bc result at base+off. Callers found textually in decompiled.c; callgraph.json lists none (misses func_-spelled calls)."},
+    {"addr": "0x080e699c", "role": "checksum", "callers": ["0x080e69bc"], "notes": "Checksum_2 update: 8-byte copy then store FUN_080e68f4 result."},
+    {"addr": "0x080e0f10", "role": "serialize", "callers": ["0x080e697c", "0x080e699c"], "notes": "Copies exactly 8 bytes between two unresolved addresses before each checksum update; candidate magic/name field maintenance."},
+    {"addr": "0x080e0eb8", "role": "deserialize", "callers": ["0x080e0ee0"], "notes": "memcmp (returns 0 if equal over param_3 bytes)."},
+    {"addr": "0x080e0ee0", "role": "deserialize", "callers": [], "notes": "Save-validity gate: memcmp(...,8)==0 AND checksum_1 valid. No traced callers."},
+    {"addr": "0x080f1f28", "role": "deserialize", "callers": [], "notes": "EXCLUDED: signed remainder helper mis-seeded as save-related in save_related_functions.c; not save I/O."},
+    {"addr": "0x080f2070", "role": "deserialize", "callers": [], "notes": "EXCLUDED: unsigned remainder helper mis-seeded as save-related; not save I/O."}
+  ],
+  "caller_chains": [
+    {"entry_caller": "0x080e0f70", "chain": ["0x080e0f70", "0x080e697c", "0x080e69bc", "0x080f1e1c", "0x080f1d48", "0x080f1db8"], "trigger_context": "Boot/init: builds default in-RAM state (calls 0x080cc9d8 reset, 0x080e5248(0) setter), re-checksums, flushes whole struct to SRAM.", "ram_fields_updated": ["struct header bytes (mask |0x88, |1)", "u32 field via 0x080e5248 = 0", "4 zeroed bytes at base+off", "u16 field |0x1A bits"], "how_mapped": "Textual call sites at decompiled.c:2599-2600 attributed to enclosing header // 080e0f70; callgraph omits func_-spelled calls."},
+    {"entry_caller": "0x080cc9d8", "chain": ["0x080cc9d8", "0x080ce2dc", "0x080e5e40", "0x080e697c", "0x080e68bc"], "trigger_context": "New-game/reset constructor for the save struct, ending in checksum_1 update.", "ram_fields_updated": ["0x20 zeroed bytes at base", "bytes +0x20/+0x21 masks", "stride-6-u16 records at +0x24 (low-bit masks)", "0x1A zeroed u32s", "records at +0x23C stamped &0x83|0x13, |0xD00", "fields |0x50, |0x58, |0x2D0, |0x78"], "how_mapped": "Textual call at decompiled.c:817 inside FUN_080cc9d8; its internal loops read directly from its body."},
+    {"entry_caller": "0x080ce280", "chain": ["0x080ce280", "0x080e60f4", "0x080e697c"], "trigger_context": "Binary-search a record, decrement its short count, re-checksum; returns success flag.", "ram_fields_updated": ["short at searched record+off decremented by scan count"], "how_mapped": "Textual call at decompiled.c:957."},
+    {"entry_caller": "0x080ce2dc", "chain": ["0x080ce2dc", "0x080e5e40", "0x080e64d0", "0x080e697c"], "trigger_context": "Progression routine: inserts 8-byte records, advances <<3-packed u16 counters (one at base+0x6180), sets bitflags 0x47-0x4E/0x32-0x37 after testing them, re-checksums after each phase (3 call sites).", "ram_fields_updated": ["u16 at base+off (&7 | val<<3)", "u16 at base+0x6180 (&7 | val<<3)", "8-byte records via 0x080e5e40", "bitflags via 0x080e64d0"], "how_mapped": "Textual calls at decompiled.c:1019, 1093, 1350."},
+    {"entry_caller": "0x080e5248", "chain": ["0x080e5248", "0x080e697c"], "trigger_context": "Generic single-u32 save-field setter.", "ram_fields_updated": ["u32 at base+off (unresolved) = param_1"], "how_mapped": "Textual call at decompiled.c:3889; called with 0 from 0x080e0f70."},
+    {"entry_caller": "0x080e5e40", "chain": ["0x080e5e40", "0x080e697c"], "trigger_context": "Sorted insert of an 8-byte record (shift-up, write, count++ capped at 0x17F), re-checksum on all exits.", "ram_fields_updated": ["8-byte record array (stride 8)", "u16 record count"], "how_mapped": "Textual call at decompiled.c:4016."},
+    {"entry_caller": "0x080e64d0", "chain": ["0x080e64d0", "0x080e697c"], "trigger_context": "Set one bit in the save bit array, re-checksum. Reader counterpart 0x080e6548.", "ram_fields_updated": ["u16 bit array word (id>>4)*2, bit (id&0xF)"], "how_mapped": "Textual call at decompiled.c:4132."},
+    {"entry_caller": "0x080e69bc", "chain": ["0x080e69bc", "0x080e692c", "0x080e699c", "0x080f1e1c", "0x080f1d48", "0x080f1db8"], "trigger_context": "Flush: validate checksum_1, refresh checksum_2, write RAM struct to SRAM 0x0E000000 with verify/retry x3.", "ram_fields_updated": ["stored checksum_2 u16 (via 0x080e699c)", "8-byte field (via 0x080e0f10 inside 0x080e699c)"], "how_mapped": "Body of FUN_080e69bc at decompiled.c:4351-4363; callgraph callees agree for 692c/699c but miss the func_0x080f1e1c call."}
+  ],
+  "fields": [
+    {"name": "whole_written_image", "offset": 0, "size": 24968, "type": "bytes", "ram_addr": null, "writers": ["0x080f1d48", "0x080e69bc"], "readers": ["0x080f1ce4", "0x080f1db8"], "observed_values": {"cap-01-future-1.sav": "populated, 0xFF tail from 0x6188", "cap-00-future-0.sav": "all 0xFF"}, "update_mechanism": "Verbatim RAM->SRAM byte copy at 0x0E000000 via 0x080f1e1c (write+verify x3); RAM base/length literals unresolved, size inferred from 0xFF tail", "confidence": "CONFIRMED_VERIFIED", "evidence": "FUN_080e69bc passes literal 0xe000000 to func_0x080f1e1c; python: FF tail starts 0x6188 len 7800 in cap-01"},
+    {"name": "first_u32_scalar", "offset": 0, "size": 4, "type": "u32_le", "ram_addr": null, "writers": [], "readers": [], "observed_values": {"cap-01-future-1.sav": "0x00000188 (392)"}, "update_mechanism": "unknown", "confidence": "UNKNOWN", "evidence": "struct.unpack_from('<I', sav, 0) == 0x188"},
+    {"name": "sparse_stride12_record_region", "offset": 4, "size": 14376, "type": "bytes", "ram_addr": null, "writers": ["0x080cc9d8"], "readers": [], "observed_values": {"cap-01-future-1.sav": "133 aligned u32==10, 67 aligned u32==0xFFFFFFFF, diffs multiples of 12"}, "update_mechanism": "Reset loops in FUN_080cc9d8 (stride 6 u16 / stride 4 u32); stride-12 record shape matches FUN_080e533c (id-1)*0xC record with packed count at +4", "confidence": "HYPOTHESIS", "evidence": "Python offset arithmetic over cap-01; FUN_080e533c record stride 0xC in decompiled.c"},
+    {"name": "pre_string_u16", "offset": 14476, "size": 2, "type": "u16_le", "ram_addr": null, "writers": [], "readers": [], "observed_values": {"cap-01-future-1.sav": "0x001A (26)"}, "update_mechanism": "unknown", "confidence": "UNKNOWN", "evidence": "bytes 0x384C..0x384D = 1a 00"},
+    {"name": "ascii_YUGIOHGX", "offset": 14478, "size": 8, "type": "ascii", "ram_addr": null, "writers": ["0x080e0f10"], "readers": ["0x080e0eb8", "0x080e0ee0"], "observed_values": {"cap-01-future-1.sav": "YUGIOHGX at 0x384E (only occurrence)", "cap-00-future-0.sav": "absent (all 0xFF)"}, "update_mechanism": "If identical to the code field: refreshed by 8-byte copy FUN_080e0f10 before each checksum update, compared by FUN_080e0eb8(...,8) in gate FUN_080e0ee0. Alternative reading: deck/player name field.", "confidence": "HYPOTHESIS", "evidence": "Python re.finditer -> [0x384e]; 8-byte copy/compare lengths match in decompiled.c but addresses/expected bytes are unresolved literals"},
+    {"name": "post_string_candidate_checksum", "offset": 14486, "size": 2, "type": "u16_le", "ram_addr": null, "writers": [], "readers": [], "observed_values": {"cap-01-future-1.sav": "0x6CFD"}, "update_mechanism": "unknown; tested as stored checksum for neighbouring ranges with sum16/xor16/crc and the decompiled recurrence (seed 0, all K): no match", "confidence": "UNKNOWN", "evidence": "/tmp/verify.py output quoted in report section 4.3"},
+    {"name": "deck_like_count", "offset": 14488, "size": 2, "type": "u16_le", "ram_addr": null, "writers": [], "readers": [], "observed_values": {"cap-01-future-1.sav": "40"}, "update_mechanism": "unknown", "confidence": "HYPOTHESIS", "evidence": "u16@0x3858 == 40 followed by exactly 40 u16 slots"},
+    {"name": "deck_like_u16_array_40", "offset": 14490, "size": 80, "type": "u16_le", "ram_addr": null, "writers": [], "readers": [], "observed_values": {"cap-01-future-1.sav": "[318, 482, 483, 483, 485, 892, 892, 1003, 190, 221, 251, 261, 444, 580, 621, 862, 894, 1009, 841, 117, 148, 280, 381, 389, 397, 425, 437, 475, 702, 766, 826, 843, 983, 1065, 368, 380, 402, 956, 1192, 0]"}, "update_mechanism": "unknown", "confidence": "HYPOTHESIS", "evidence": "39 small non-zero u16 + trailing 0 at 0x385A..0x38A9; card-ID-like range, no semantic mapping (clean-room)"},
+    {"name": "second_sparse_u16_array", "offset": 14506, "size": 1384, "type": "u16_le", "ram_addr": null, "writers": [], "readers": [], "observed_values": {"cap-01-future-1.sav": "sparse u16s ~0x100..0x4A0 at 0x391E..0x3A33 and 0x3DC2..0x3E11"}, "update_mechanism": "unknown", "confidence": "UNKNOWN", "evidence": "byte-pattern scan of cap-01; boundaries approximate (offset overlaps deck array end deliberately avoided: region starts after 0x38AA)"},
+    {"name": "zero_reserved_region", "offset": 15890, "size": 1702, "type": "bytes", "ram_addr": null, "writers": ["0x080f1d48"], "readers": [], "observed_values": {"cap-01-future-1.sav": "all 0x00 (largest zero run 0x3E12..0x44B7)"}, "update_mechanism": "Written as zeros by the flush (inside written span, not erased 0xFF)", "confidence": "HYPOTHESIS", "evidence": "largest 00 run measured in python"},
+    {"name": "stride12_ff_pair_record_region", "offset": 19672, "size": 792, "type": "bytes", "ram_addr": null, "writers": ["0x080e533c"], "readers": [], "observed_values": {"cap-01-future-1.sav": "12-byte cadence with FF FF pairs at 0x4CF0,0x4CFC,0x4D08..."}, "update_mechanism": "Record mutator pattern of FUN_080e533c (stride 0xC, packed count u16 at +4, u32 at +8) - static pattern match only", "confidence": "HYPOTHESIS", "evidence": "12-byte periodicity scan over 0x4CF0..0x4F00"},
+    {"name": "sorted_8byte_record_table", "offset": 20480, "size": 2532, "type": "bytes", "ram_addr": null, "writers": ["0x080e5e40", "0x080cc9d8"], "readers": ["0x080e60f4"], "observed_values": {"cap-01-future-1.sav": "dense records at 0x5000 (e.g. 07001000ED008E71); ~315 empty slots stamped 13 0D from 0x5126 alignment"}, "update_mechanism": "FUN_080e5e40 sorted insert (stride 8, count u16 capped 0x17F=383) + re-checksum; FUN_080e60f4 binary search reader; FUN_080cc9d8 stamps record bytes |0x13 on reset", "confidence": "HYPOTHESIS", "evidence": "Code stride/cap in decompiled.c matches observed 8-byte record cadence and slot count; exact table base offset unresolved"},
+    {"name": "trailing_scalar_6148", "offset": 24904, "size": 4, "type": "u32_le", "ram_addr": null, "writers": [], "readers": [], "observed_values": {"cap-01-future-1.sav": "123"}, "update_mechanism": "unknown", "confidence": "UNKNOWN", "evidence": "u32@0x6148 == 0x7B"},
+    {"name": "trailing_scalars_6164_6178", "offset": 24932, "size": 24, "type": "u32_le", "ram_addr": null, "writers": [], "readers": [], "observed_values": {"cap-01-future-1.sav": "u32@0x6164=8, u32@0x6168=0x50, u32@0x6170=8, u32@0x6174=0x58, u32@0x6178=1"}, "update_mechanism": "unknown", "confidence": "UNKNOWN", "evidence": "dword dump of 0x6160..0x617F"},
+    {"name": "trailing_scalar_617c", "offset": 24956, "size": 4, "type": "u32_le", "ram_addr": null, "writers": [], "readers": [], "observed_values": {"cap-01-future-1.sav": "723 (0x2D3)"}, "update_mechanism": "unknown", "confidence": "UNKNOWN", "evidence": "u32@0x617C"},
+    {"name": "packed_counter_at_6180", "offset": 24960, "size": 2, "type": "u16_le", "ram_addr": "base+0x6180 (base unresolved)", "writers": ["0x080ce2dc"], "readers": ["0x080ce2dc"], "observed_values": {"cap-01-future-1.sav": "0x0010 -> field value 2 under >>3"}, "update_mechanism": "*(u16*)(base+0x6180) = (old & 7) | (value << 3) in FUN_080ce2dc; low 3 bits belong to another packed field", "confidence": "CONFIRMED_STATIC", "evidence": "Literal +0x6180 offset and &7|<<3 packing at decompiled.c:1080,1091-1092; in-file u16@0x6180=0x0010"},
+    {"name": "last_dword_6184", "offset": 24964, "size": 4, "type": "u32_le", "ram_addr": null, "writers": [], "readers": [], "observed_values": {"cap-01-future-1.sav": "1596 (0x63C)"}, "update_mechanism": "unknown; rejected as stored checksum for all formulas tested in report 4.3", "confidence": "UNKNOWN", "evidence": "u32@0x6184; last non-0xFF dword in image"},
+    {"name": "erased_tail", "offset": 24968, "size": 7800, "type": "bytes", "ram_addr": null, "writers": [], "readers": [], "observed_values": {"cap-01-future-1.sav": "all 0xFF", "cap-00-future-0.sav": "all 0xFF"}, "update_mechanism": "Never written in these samples; proves no backup slot in upper medium", "confidence": "CONFIRMED_VERIFIED", "evidence": "FF tail starts 0x6188 len 7800 (python)"},
+    {"name": "stored_checksum_1", "offset": 0, "size": 2, "type": "u16_le", "ram_addr": null, "writers": ["0x080e697c"], "readers": ["0x080e692c", "0x080e0ee0"], "observed_values": {}, "update_mechanism": "FUN_080e697c stores FUN_080e68bc result at *(u16*)(_DAT_080e6994+_DAT_080e6998); offset value 0 here is a placeholder - true offset is an unresolved literal and the field could not be identified in the file", "confidence": "UNKNOWN", "evidence": "Existence CONFIRMED_STATIC from decompiled.c:4311-4323; offset/value UNKNOWN (see open_questions)"},
+    {"name": "stored_checksum_2", "offset": 0, "size": 2, "type": "u16_le", "ram_addr": null, "writers": ["0x080e699c"], "readers": ["0x080e6954"], "observed_values": {}, "update_mechanism": "FUN_080e699c stores FUN_080e68f4 result at *(u16*)(_DAT_080e69b4+_DAT_080e69b8), called from flush FUN_080e69bc; offset placeholder as above", "confidence": "UNKNOWN", "evidence": "decompiled.c:4331-4343, 4351-4363"},
+    {"name": "bitflag_array", "offset": 0, "size": 0, "type": "bitflags", "ram_addr": null, "writers": ["0x080e64d0"], "readers": ["0x080e6548"], "observed_values": {}, "update_mechanism": "Set: *(u16*)((id>>4)*2+base+off) |= 1<<(id&0xF) then re-checksum (0x080e64d0); test: same addressing in 0x080e6548. Base/offset unresolved, not localised in file; offset/size 0 are placeholders", "confidence": "CONFIRMED_STATIC", "evidence": "decompiled.c:4124-4149; ids used by 0x080ce2dc: 0x12,0x1B,0x32-0x37,0x47-0x4E"}
+  ],
+  "fuzzing_targets": [
+    {"offset": 14478, "size": 8, "mutation": "Change one byte of YUGIOHGX (e.g. Y->Z), no checksum repair", "requires_checksum_repair": false, "predicted_effect": "If boot rejects save (blank boot): field is/inside the validated 8-byte magic of FUN_080e0ee0. If save loads with only a name/deck change: it is a name field. Highest-information test."},
+    {"offset": 14488, "size": 2, "mutation": "count 40 -> 39 and 40 -> 41 (two runs), with checksum repair once known", "requires_checksum_repair": true, "predicted_effect": "Deck/record size changes in UI if the deck reading is correct; no effect falsifies it."},
+    {"offset": 14490, "size": 2, "mutation": "first array u16 318 -> 319, with checksum repair", "requires_checksum_repair": true, "predicted_effect": "One deck card identity changes if the array is a deck list."},
+    {"offset": 14486, "size": 2, "mutation": "0x6CFD -> 0x6CFE, no repair", "requires_checksum_repair": false, "predicted_effect": "Deck/save invalidation if this is a stored checksum; no effect if it is plain data."},
+    {"offset": 0, "size": 4, "mutation": "0x188 -> 0x189, first without then with checksum repair", "requires_checksum_repair": true, "predicted_effect": "Unrepaired: gate rejection (proves offset 0 is checksummed). Repaired: one UI counter/count moves by one."},
+    {"offset": 24960, "size": 2, "mutation": "0x10 -> 0x18 (packed field 2->3), and separately 0x10 -> 0x11 (low 3 bits), with checksum repair", "requires_checksum_repair": true, "predicted_effect": "First: FUN_080ce2dc progression counter steps. Second: a different packed field changes. Pair discriminates the <<3 packing from decompiled.c."},
+    {"offset": 20480, "size": 16, "mutation": "Swap two adjacent 8-byte records in 0x5000..0x5123 (break sortedness), with checksum repair", "requires_checksum_repair": true, "predicted_effect": "FUN_080e60f4 binary search misses an existing record: entry unfindable in UI while data present."},
+    {"offset": 24968, "size": 1, "mutation": "0xFF -> 0x00 at 0x6188 (first erased byte), no repair", "requires_checksum_repair": false, "predicted_effect": "No effect at all (negative control for the inferred 0x6188 written length); any effect falsifies slot geometry."}
+  ],
+  "open_questions": [
+    "Checksum seed, XOR constant K, covered ranges and stored offsets for both checksums are unresolved literal-pool values (_DAT_080e68e4/68e8/68ec/68f0, _DAT_080e691c/6920/6924/6928, base+off pairs in 0x080e692c/6954/697c/699c); the ROM is not in the workspace, so they cannot be read and no checksum could be verified on samples. Resolution path: report section 6 Steps A-B (self-repair diffing + recurrence solving), or supply the ROM literal pool at 0x080e68e4..0x080e69dc.",
+    "Is YUGIOHGX at 0x384E the save magic compared by FUN_080e0ee0, or a deck/player name? Its context (u16 0x1A before, candidate checksum 0x6CFD, count 40, 40 u16s after) supports the name reading. Discriminated by fuzzing target 1.",
+    "Exact SRAM write length (slot size): inferred 0x6188 from the 0xFF tail, but _DAT_080e69dc is unresolved; a larger length writing 0x00/0xFF trailing bytes cannot be excluded from one sample.",
+    "RAM base address of the save struct (EWRAM 0x02000000 vs IWRAM) and all struct offsets expressed as base+_DAT are unresolved; only +0x6180 is literal in code. Locating YUGIOHGX in emulator RAM after load would resolve the base.",
+    "Who calls the SRAM read (0x080f1ce4), the validity gate (0x080e0ee0) and checksum_2 validator (0x080e6954)? No traced callers - edges are hidden by unrecovered jumptables or untraced code.",
+    "Only one populated sample exists (plus one blank), although PACKET.md mentions 6 .sav files; no differential field tracking across gameplay states was possible. PACKET.md profile also claims candidate_checksum_or_counter_spans empty and classification multi_state_mutated_save, which the workspace files alone cannot reproduce.",
+    "Gameplay semantics of all record arrays (stride-12 region, stride-8 sorted table, sparse u16 arrays, trailing scalars at 0x6148..0x6184) are unknown; no third-party data was used to label them.",
+    "FUN_080e69bc discards the result of the checksum_1 validation before flushing (likely a decompiler jumptable artefact); whether a failed validation actually blocks the write in the real code is unconfirmed."
+  ]
+}

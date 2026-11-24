@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Shining Force - Resurrection of the Dark Dragon (USA) — gbakit GBA Reference</title>
+  <link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+  <header>
+    <div class="brand"><a href="../index.html" style="color:inherit">gbakit GBA Reference <span class="badge badge-emerald">v2.0</span></a></div>
+    <nav>
+      <a href="../index.html">Games</a>
+      <a href="../saves/index.html">Save Formats</a>
+      <a href="../patches/index.html">Debug Patches</a>
+      <a href="../assets/index.html">Assets &amp; Audio</a>
+      <a href="../engines/index.html">Engines &amp; Hardware</a>
+      <a href="../families/index.html">Families</a>
+      <a href="../gbakit/index.html">Using gbakit</a>
+    </nav>
+  </header>
+  <main>
+<p class="meta"><a href="../index.html">&larr; Games</a> &middot; Family <code>AF5</code></p>
+<h1>Shining Force - Resurrection of the Dark Dragon (USA)</h1>
+<p><span class='badge badge-zinc'>Stateless / Passcode</span> <span class='badge badge-amber'>Debug Menu Patch</span></p>
+
+<h2>Cartridge Identity</h2>
+<dl class="kv">
+  <dt>Game Code</dt><dd><code>AF5E</code> (Family <code>AF5</code>)</dd>
+  <dt>Header Title</dt><dd><code>SHININGFORCE</code></dd>
+  <dt>Maker / Revision</dt><dd><code>EB</code> / rev <code>0</code></dd>
+  <dt>ROM Size</dt><dd>8.0 MiB (8,388,608 B)</dd>
+  <dt>Save Media</dt><dd><code>None / Unknown</code></dd>
+  <dt>SHA-256</dt><dd><code>33bcb4f2b359118726e7ca0e4dae4917886d7e8faa7bfb684061cbd0f8812a02</code></dd>
+  <dt>Engine / SDK Group</dt><dd><a href='../engines/index.html#comm-001'><code>comm-001</code></a> (196 families)</dd>
+</dl>
+<h2>Screenshots</h2><div class='gallery'><figure><img src='../assets/thumbs/AF5E-r0-33bcb4f2b3591187-boot.png' alt='Boot Screen' loading='lazy'><figcaption>Boot Screen</figcaption></figure><figure><img src='../assets/thumbs/AF5E-r0-33bcb4f2b3591187-after.png' alt='In-Game' loading='lazy'><figcaption>In-Game</figcaption></figure></div>
+
+<h2>Debug Menu Re-Enablement Patch (<code>.ips</code>)</h2>
+<p><a class="btn" href="../assets/patches/AF5E-r0-33bcb4f2b3591187/AF5E-debug.ips" download>Download AF5E-debug.ips (26 B IPS / 8 B delta)</a></p>
+<dl class="kv">
+  <dt>Hook Mechanism</dt><dd><code>state_jump_table_ptr</code> &middot; Replace scene-factory jump-table boot slots (0x0800b420 &amp; 0x0800b424 -&gt; bl 0x08002700) with DebugMenuScene constructor stub (0x0800b4cc -&gt; bl 0x08000778)</dd>
+  <dt>IPS SHA-256</dt><dd><code>c6c83a01b7f4c3efbb3ac1d9f24d29b6dd65f2bf343057b61c127538500e5550</code></dd>
+</dl>
+<pre><code>gbakit patch apply AF5E-debug.ips original.gba patched-debug.gba</code></pre>
+<div class='gallery'><figure><img src='../assets/patches/AF5E-r0-33bcb4f2b3591187/boot-patched.png' alt='Re-enabled debug menu' loading='lazy'><figcaption>Re-Enabled Debug Menu</figcaption></figure><figure><img src='../assets/patches/AF5E-r0-33bcb4f2b3591187/after-input.png' alt='Interactive debug menu navigation' loading='lazy'><figcaption>After D-Pad / A Input</figcaption></figure></div>
+
+
+<h2>Cartridge Storage Architecture: Stateless / Passcode</h2>
+<div class="callout">
+  <strong>Zero non-volatile battery hardware:</strong> This cartridge PCB contains ROM only (no SRAM, Flash, or EEPROM chips). Progression is preserved via on-screen passcodes or session-only gameplay. No <code>.sav</code> file is generated or required.
+</div>
+
+
+<h2>ROM Assets, Compression &amp; Audio</h2><dl class='kv'><dt>BIOS Compression</dt><dd>LZ77 (<code>0x10</code>): <strong>0</strong> streams &middot; RLE (<code>0x30</code>): <strong>0</strong> streams</dd><dt>ROM Pointer Tables</dt><dd>72 tables (0 pointing to validated compressed streams)</dd><dt>SDK Backup Tags</dt><dd><code>SRAM_V113</code></dd></dl>
+<h2>Hardware MMIO Subsystems</h2><dl class='kv'><dt><code>ppu_display</code></dt><dd><code>0x800a2c0</code>, <code>0x800a2dc</code>, <code>0x800a2f0</code>, <code>0x800a31c</code>, <code>0x80204b4</code>, <code>0x805dcf0</code></dd></dl>
+<h2>Regional Variants &amp; Revisions (Family <code>AF5</code>)</h2><ul><li><a href='AF5J-r0-0387ab2fb037beec.html'>Shining Force - Kuroki Ryuu no Fukkatsu (Japan)</a> (<code>AF5J</code>, 8 MiB)</li><li><a href='AF5J-r0-3803c8f84b8bc137.html'>Shining Force - Kuroki Ryuu no Fukkatsu (Japan) (Virtual Console)</a> (<code>AF5J</code>, 8 MiB)</li><li><a href='AF5P-r0-8a8485e100d9747e.html'>Shining Force - Resurrection of the Dark Dragon (Europe) (En,Fr,De,Es,It)</a> (<code>AF5P</code>, 16 MiB)</li></ul>
+</main>
+  <footer>gbakit GBA Format Reference &middot; <a href="https://github.com/JidouGhost-TL/gbakit">GitHub: JidouGhost-TL/gbakit</a> &middot; Clean-room GBA binary format specs &amp; Rust toolkit.</footer>
+</body>
+</html>

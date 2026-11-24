@@ -1,0 +1,337 @@
+{
+  "schema": "gbakit-save-research/1",
+  "release_key": "B85A-r0-2b20acddd425242b",
+  "display_name": "Hamtaro - Ham-Ham Games (Japan, USA) (En,Ja)",
+  "rom_sha256": "2b20acddd425242b088b1aa19721c06ae886281a37d11dd87ef59f0db271e4d1",
+  "game_code": "B85A",
+  "header_family": "B85",
+  "community_id": "comm-001",
+  "overall_confidence": "MEDIUM",
+  "media": {
+    "kind": "sram",
+    "size_bytes": 32768,
+    "sdk_tags": [],
+    "fill_byte": "0xff"
+  },
+  "slots_and_copies": [
+    {
+      "name": "global_header",
+      "offset": 0,
+      "size": 332,
+      "redundancy_role": "global_config",
+      "selection_rule": "Single block at SRAM 0x0E000000, read via FUN_080bbb00 and written with verify via FUN_080bbc38 by FUN_080038c0; all-zero in both samples; no second copy and no traced checksum."
+    },
+    {
+      "name": "slot_0_primary",
+      "offset": 512,
+      "size": 15812,
+      "redundancy_role": "primary",
+      "selection_rule": "59 chunks packed from SRAM offset 0x200. Valid iff magic 'Hamtaro\\0' matches (FUN_080bdb94 strcmp in FUN_080038c0) and u16 sum at +8 plus complement at +10 validate. Preferred copy; if invalid and backup valid, rebuilt via FUN_08002fd8."
+    },
+    {
+      "name": "slot_0_backup",
+      "offset": 16384,
+      "size": 15812,
+      "redundancy_role": "backup",
+      "selection_rule": "Identical 59 chunks at primary SRAM offsets +0x3E00 (file 0x4000..0x7DC4), byte-identical to primary in cap-01. Selected when primary fails magic/checksum validation; if both copies fail magic, FUN_08002434 creates a new save. No generation counter."
+    }
+  ],
+  "magic_signatures": [
+    {
+      "offset": 512,
+      "bytes_hex": "48616d7461726f00",
+      "ascii": "Hamtaro",
+      "verified_in_code": true,
+      "verified_in_sav": true,
+      "function_addrs": ["0x080038c0", "0x080bdb94", "0x08002434"]
+    },
+    {
+      "offset": 16384,
+      "bytes_hex": "48616d7461726f00",
+      "ascii": "Hamtaro",
+      "verified_in_code": true,
+      "verified_in_sav": true,
+      "function_addrs": ["0x080038c0", "0x080bdb94", "0x08002434"]
+    }
+  ],
+  "checksums": [
+    {
+      "name": "save_chunk_sum16_with_complement",
+      "algorithm": "sum16_le",
+      "formula_detail": "u16 sum (mod 2^16) of every byte of the 59 descriptor-delimited chunk buffers (desc stride 0x18, table span 0x588, loop bound 0x3B), accumulated per chunk into a u16 then summed; stored LE at struct +8, ones' complement stored LE at struct +10. FUN_08002f84 recomputes from scratch; FUN_08002fd8 delta-adjusts (+8 += ram_chunk_sum - sram_chunk_sum per differing chunk, +10 = ~+8); FUN_080038c0 validates both copies with the pair test (+8 == sum && +10 == ~sum). NOTE: descriptor table is ROM-resident and absent from this workspace, so the covered byte set is a proper subset of the contiguous SRAM span and cannot be recomputed from .sav bytes alone (whole-span sum 0x5442 != stored 0x4D49).",
+      "stored_offset": 520,
+      "stored_size": 2,
+      "covered_start": 512,
+      "covered_end": 16324,
+      "function_addrs": ["0x08002f84", "0x080038c0", "0x08002fd8"],
+      "verified_on_samples": [
+        {"file": "cap-01-future-1.sav", "stored_hex": "0x4d49", "computed_hex": "0x5442 (whole contiguous span 0x200..0x3FC4; true 59-chunk subset not recomputable without ROM descriptor table)", "match": false},
+        {"file": "cap-01-future-1.sav (backup copy @0x4000)", "stored_hex": "0x4d49", "computed_hex": "0x5442 (same whole-span sum; complement pair 0xb2b6 == ~0x4d49 verified)", "match": false},
+        {"file": "cap-00-future-0.sav", "stored_hex": "0xffff (erased, no save present)", "computed_hex": "n/a (magic absent in both copies; boot code creates a new save)", "match": false}
+      ],
+      "confidence": "CONFIRMED_STATIC"
+    }
+  ],
+  "io_driver_functions": [
+    {"addr": "0x080bbb64", "role": "write", "callers": ["0x080bbc38"], "notes": "Byte-copy loop *dst++=*src++ after wait-state setup; SRAM byte write primitive."},
+    {"addr": "0x080bbbd4", "role": "read", "callers": ["0x080bbc38"], "notes": "Read-back/verify copy paired with FUN_080bbb64."},
+    {"addr": "0x080bbc38", "role": "write", "callers": [], "notes": "Write-with-verify, up to 3 attempts (FUN_080bbb64 + FUN_080bbbd4); used by FUN_080038c0 for the 0x14C global header at SRAM 0x0E000000. Caller list empty in callgraph because call sites use stripped func_0x prototypes; body-proven."},
+    {"addr": "0x080bbb00", "role": "read", "callers": [], "notes": "SRAM block read; called as FUN_080bbb00(0x0E000000, ram, 0x14C) in FUN_080038c0."},
+    {"addr": "0x080bbc7c", "role": "read", "callers": [], "notes": "Per-chunk transfer stub (unrecovered jump table), arguments (ram_ptr, sram_offset[, +0x3E00], size, arg4) in FUN_080038c0/FUN_08002fd8; used for both load and store directions, exact DMA/CPU mechanism unknown."},
+    {"addr": "0x08002f84", "role": "checksum", "callers": ["0x08002434"], "notes": "Recomputes sum16 over 59 chunks into struct +8 and ~sum into +10."},
+    {"addr": "0x080038c0", "role": "deserialize", "callers": [], "notes": "Boot orchestrator: loads both copies, magic + checksum validation, copy selection, repair or reinit; also writes global header."},
+    {"addr": "0x08002434", "role": "serialize", "callers": ["0x080038c0"], "notes": "New-save constructor: zeroes/seeds struct, calls FUN_080034b0, FUN_0800327c(1,3,1), FUN_08002634, FUN_08002f84."},
+    {"addr": "0x08002634", "role": "serialize", "callers": ["0x08002434", "0x0800327c"], "notes": "Resets record region +0xF0..+0x310 and +0x3B0 array with seed patterns."},
+    {"addr": "0x08002fd8", "role": "write", "callers": ["0x080038c0", "0x0801b93c"], "notes": "Flush + delta checksum repair; writes present chunks to mirror RAM and backup SRAM (+0x3E00)."},
+    {"addr": "0x080031a0", "role": "serialize", "callers": ["0x0801b93c"], "notes": "Writes selection byte at struct +0xCC, then FUN_080034b0 derived-text rebuild."},
+    {"addr": "0x0800327c", "role": "serialize", "callers": ["0x08002434"], "notes": "Counter writer for +0xCF (<=100), +0xD0 (1..7), +0xD1 (1..4) with carry chain."},
+    {"addr": "0x080034b0", "role": "serialize", "callers": ["0x08002434", "0x080031a0"], "notes": "Rebuilds 8 derived text/name entries guarded by struct bitmask; reads +0xCC. No direct SRAM access."}
+  ],
+  "caller_chains": [
+    {
+      "entry_caller": "0x080038c0",
+      "chain": ["0x080038c0", "0x08002434", "0x080034b0", "0x0800327c", "0x08002634", "0x08002f84"],
+      "trigger_context": "Boot with both copies failing the 'Hamtaro' magic strcmp (or both failing checksum): create new save, copy canonical RAM struct to mirror, write global header via FUN_080bbc38.",
+      "ram_fields_updated": ["+0x00 magic (template copy)", "+0x08/+0x0A checksum pair", "+0xCC selection byte", "+0xCF/+0xD0/+0xD1 = 1/1/3", "+0xF0.. record seeds"],
+      "how_mapped": "callgraph.json callees of 0x080038c0 plus body call sites in ghidra/decompiled.c (FUN_08002434 at lines 2427/2539, FUN_08002f84 via FUN_08002434 line 1533)."
+    },
+    {
+      "entry_caller": "0x080038c0",
+      "chain": ["0x080038c0", "0x08002fd8"],
+      "trigger_context": "Boot with exactly one of primary/backup failing checksum validation: rebuild RAM from the valid copy and delta-repair/rewrite both SRAM copies.",
+      "ram_fields_updated": ["+0x08/+0x0A checksum pair (delta-adjusted)"],
+      "how_mapped": "callgraph.json (0x08002fd8 callers include 0x080038c0) and the aiStack_28 selection block in FUN_080038c0 body (decompiled.c lines 2495-2535)."
+    },
+    {
+      "entry_caller": "0x0801b93c",
+      "chain": ["0x0801b93c", "0x080031a0", "0x080034b0", "0x08002fd8"],
+      "trigger_context": "Menu/state handler confirms a selection: FUN_080031a0 stores the choice, FUN_08002fd8 flushes chunks and repairs checksum. FUN_0801b93c also reads struct +0xCC to build menu state.",
+      "ram_fields_updated": ["+0xCC selection byte", "derived text entries (FUN_080034b0)", "+0x08/+0x0A checksum pair (delta)"],
+      "how_mapped": "callgraph.json (0x080031a0 and 0x08002fd8 both list caller 0x0801b93c) confirmed in FUN_0801b93c body (FUN_080031a0(_DAT_0801bc68, uVar8); FUN_08002fd8(uVar11))."
+    },
+    {
+      "entry_caller": "0x08002434",
+      "chain": ["0x08002434", "0x0800327c", "0x08002634"],
+      "trigger_context": "Counter initialisation inside new-save construction (args 1,3,1); later standalone FUN_0800327c calls update counters and reset records on +0xCF change. No direct SRAM write; persisted by next FUN_08002fd8 flush.",
+      "ram_fields_updated": ["+0xCF", "+0xD0", "+0xD1", "+0xF0..+0x310 record region (on +0xCF change)"],
+      "how_mapped": "Body call sites: FUN_0800327c(param_1,1,3,1) in FUN_08002434 (decompiled.c line 1494); FUN_08002634(param_1) inside FUN_0800327c (line 2266). Callgraph omits these edges due to stripped prototypes."
+    }
+  ],
+  "fields": [
+    {
+      "name": "magic_hamtaro",
+      "offset": 512,
+      "size": 8,
+      "type": "ascii",
+      "ram_addr": null,
+      "writers": ["0x08002434"],
+      "readers": ["0x080038c0"],
+      "observed_values": {"cap-01-future-1.sav": "Hamtaro\\0 @0x200 and @0x4000", "cap-00-future-0.sav": "absent (0xFF erased)"},
+      "update_mechanism": "Copied from ROM template struct at new-save creation; strcmp-tested (FUN_080bdb94) on both loaded copies at every boot.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "FUN_080038c0 magic gate (decompiled.c 2424-2432); bytes 48 61 6D 74 61 72 6F 00 verified in both copies of cap-01 by /tmp/verify_save.py."
+    },
+    {
+      "name": "checksum_sum16",
+      "offset": 520,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": ["0x08002f84", "0x08002fd8"],
+      "readers": ["0x080038c0"],
+      "observed_values": {"cap-01-future-1.sav": "0x4d49 @0x208 and @0x4008", "cap-00-future-0.sav": "0xffff (erased)"},
+      "update_mechanism": "Full recompute by FUN_08002f84 at creation; delta adjustment (+= ram_sum - sram_sum per changed chunk) by FUN_08002fd8 at flush.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "FUN_08002f84 body (decompiled.c 1976-2007); stored value and pair relation verified in .sav; full-coverage recomputation blocked by missing ROM descriptor table (see open_questions)."
+    },
+    {
+      "name": "checksum_complement",
+      "offset": 522,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": ["0x08002f84", "0x08002fd8"],
+      "readers": ["0x080038c0"],
+      "observed_values": {"cap-01-future-1.sav": "0xb2b6 @0x20A and @0x400A", "cap-00-future-0.sav": "0xffff (erased)"},
+      "update_mechanism": "Stored as ~checksum_sum16 in the same write; validated as a pair at boot.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "0xb2b6 == (~0x4d49) & 0xffff in both copies (verify script comp_ok=True)."
+    },
+    {
+      "name": "version_or_type_word",
+      "offset": 524,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": ["0x08002434"],
+      "readers": [],
+      "observed_values": {"cap-01-future-1.sav": 4, "cap-00-future-0.sav": "0xffffffff (erased)"},
+      "update_mechanism": "Seeded once from ROM template struct (param_1[1]) at new-save creation; no traced updater.",
+      "confidence": "HYPOTHESIS",
+      "evidence": "FUN_08002434 template copy (decompiled.c 1488-1490); constant 4 in populated save."
+    },
+    {
+      "name": "header_bitflags_0x18",
+      "offset": 536,
+      "size": 4,
+      "type": "bitflags",
+      "ram_addr": null,
+      "writers": ["0x08002434"],
+      "readers": [],
+      "observed_values": {"cap-01-future-1.sav": "0x00008040"},
+      "update_mechanism": "Template-seeded; FUN_080034b0 consults a similar struct bitmask to guard derived-text rebuilds, but no direct writer traced for this word.",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Observed u32 at file 0x218 in cap-01; zero in erased state."
+    },
+    {
+      "name": "unknown_u16_0x52",
+      "offset": 594,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"cap-01-future-1.sav": 8},
+      "update_mechanism": "Chunk-interior field updated through the descriptor table; no direct code site resolved.",
+      "confidence": "UNKNOWN",
+      "evidence": "Non-zero only in populated save at file 0x252."
+    },
+    {
+      "name": "selection_index_cc",
+      "offset": 716,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": ["0x080031a0", "0x08002434"],
+      "readers": ["0x080038c0", "0x080034b0", "0x0801b93c"],
+      "observed_values": {"cap-01-future-1.sav": 0, "cap-00-future-0.sav": "0xff (erased)"},
+      "update_mechanism": "FUN_080031a0 writes the confirmed menu choice (byte at struct +0xCC), triggers flag range-write 1<<value and FUN_080034b0 text rebuild; FUN_08002fd8 flushes. Boot guards the flag write with value < 6.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "FUN_080031a0 body (decompiled.c 2130-2132); FUN_080038c0 +0xCC loop (2483-2493); FUN_0801b93c reads *(struct+0xCC)."
+    },
+    {
+      "name": "counter_cf_max100",
+      "offset": 719,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": ["0x0800327c"],
+      "readers": ["0x0800327c"],
+      "observed_values": {"cap-01-future-1.sav": 1},
+      "update_mechanism": "High-order counter of the +0xCF/+0xD0/+0xD1 carry chain, clamped to 100; any change also resets the record region via FUN_08002634. Init value 1 from FUN_08002434 call FUN_0800327c(struct,1,3,1).",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "FUN_0800327c body (decompiled.c 2243-2267)."
+    },
+    {
+      "name": "counter_d0_1to7",
+      "offset": 720,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": ["0x0800327c"],
+      "readers": ["0x0800327c"],
+      "observed_values": {"cap-01-future-1.sav": 1},
+      "update_mechanism": "Middle counter; >7 wraps to 1 and increments +0xCF. Init value 1 matches decompiled call args vs file byte (cross-checked).",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "FUN_0800327c body (decompiled.c 2221-2242); file 0x2D0 low byte = 1 in cap-01."
+    },
+    {
+      "name": "counter_d1_1to4",
+      "offset": 721,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": ["0x0800327c"],
+      "readers": ["0x0800327c"],
+      "observed_values": {"cap-01-future-1.sav": 3},
+      "update_mechanism": "Low-order counter; >4 resets to 1 and increments +0xD0. Init value 3 matches FUN_08002434 call args vs file byte.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "FUN_0800327c body (decompiled.c 2199-2220); file 0x2D1 = 3 in cap-01."
+    },
+    {
+      "name": "record_region_f0",
+      "offset": 752,
+      "size": 544,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": ["0x08002634"],
+      "readers": [],
+      "observed_values": {"cap-01-future-1.sav": "repeating u32 record pattern (4,1,2,3 groups, occasional 5,6,7) from file 0x2F5"},
+      "update_mechanism": "FUN_08002634 zeroes struct +0xF0..+0x310, plants 4-sentinels and strided 0..7 index patterns; gameplay then mutates records through chunk buffers (no direct sites).",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "FUN_08002634 body (decompiled.c 1598-1964); hexdump_and_diffs.txt record pattern at 0x02F5..0x05B8."
+    },
+    {
+      "name": "ordering_array_3b0",
+      "offset": 1456,
+      "size": 24,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": ["0x08002634"],
+      "readers": [],
+      "observed_values": {"cap-01-future-1.sav": "within active tail near file 0x5B0"},
+      "update_mechanism": "Zeroed then bytes 0,1,2,3 planted at +0x3B4.. by FUN_08002634.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "FUN_08002634 (decompiled.c 1887-1891)."
+    },
+    {
+      "name": "mid_chunk_payload_zero_region",
+      "offset": 1508,
+      "size": 14272,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": ["0x080038c0", "0x08002f84"],
+      "observed_values": {"cap-01-future-1.sav": "all 0x00 (byte sum 0x200..0x3DA0 equals sum 0x200..0x5E4)", "cap-00-future-0.sav": "0xFF (never flushed)"},
+      "update_mechanism": "Reserved per-chunk payloads, zero-filled on first flush; only read by checksum validation until gameplay writes them.",
+      "confidence": "UNKNOWN",
+      "evidence": "Verified all-zero content in cap-01 via verify script range sums; no field-level code sites (descriptor-table interior)."
+    },
+    {
+      "name": "tail_records_3da5",
+      "offset": 16293,
+      "size": 543,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": ["0x080038c0"],
+      "observed_values": {"cap-01-future-1.sav": "dense packed patterns (0A 05 21 FF 8D 04 21 FF...; 59 5A 5B 5C at file 0x3FB8)"},
+      "update_mechanism": "Chunk-interior records (candidate rankings/tables); integrity-protected — PACKET probe mutation at 0x3DAC triggered a save rewrite.",
+      "confidence": "HYPOTHESIS",
+      "evidence": "hexdump_and_diffs.txt tail dumps; PACKET mutation_probe probe_offset_hex 0x3DAC with save_rewritten_after_mutation=true."
+    },
+    {
+      "name": "global_header_block",
+      "offset": 0,
+      "size": 332,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": ["0x080038c0"],
+      "readers": ["0x080038c0"],
+      "observed_values": {"cap-01-future-1.sav": "all 0x00", "cap-00-future-0.sav": "all 0x00 (only region ever written)"},
+      "update_mechanism": "Read via FUN_080bbb00(0x0E000000, ram, 0x14C), written with verify via FUN_080bbc38 after new-save creation. Sub-fields at +0x100 (gate byte), +0x140/+0x144 (log args), +0x148 feed only a diagnostic print path in traced code.",
+      "confidence": "UNKNOWN",
+      "evidence": "FUN_080038c0 header calls (decompiled.c 2428-2444); both .sav files all-zero over 0x0000..0x014C."
+    }
+  ],
+  "fuzzing_targets": [
+    {"offset": 4096, "size": 1, "mutation": "Flip one byte (0x00->0x01) in primary copy only, no checksum repair", "requires_checksum_repair": false, "predicted_effect": "Primary checksum invalid, backup valid: boot silently restores primary via FUN_08002fd8; byte reverts, no new-game reset."},
+    {"offset": 4096, "size": 1, "mutation": "Same flip in both copies (0x1000 and 0x4E00), no checksum repair", "requires_checksum_repair": false, "predicted_effect": "Both copies invalid: FUN_08002434 new-save re-init; counters return to 1/1/3 and record region reseeds."},
+    {"offset": 512, "size": 1, "mutation": "Corrupt magic 'H'->'X' in primary copy only", "requires_checksum_repair": false, "predicted_effect": "Primary rejected by strcmp gate; backup selected and primary rebuilt; save survives."},
+    {"offset": 512, "size": 8, "mutation": "Corrupt magic in both copies (0x200 and 0x4000)", "requires_checksum_repair": false, "predicted_effect": "Both magic tests fail: new-save creation regardless of checksum state."},
+    {"offset": 716, "size": 1, "mutation": "Set selection byte +0xCC from 0 to 5 in both copies (0x2CC/0x40CC)", "requires_checksum_repair": true, "predicted_effect": "Reload keeps save; selection-dependent flag write (1<<5) and FUN_080034b0 text variant change. Boundary value 6 should skip the boot flag write (<6 guard)."},
+    {"offset": 721, "size": 1, "mutation": "Set counter +0xD1 from 3 to 4 in both copies", "requires_checksum_repair": true, "predicted_effect": "Accepted at load (no range validation in loader); next FUN_0800327c increment wraps 4->1 and bumps +0xD0."},
+    {"offset": 719, "size": 1, "mutation": "Set counter +0xCF to 101 in both copies", "requires_checksum_repair": true, "predicted_effect": "Accepted at load; next FUN_0800327c call clamps to 100 and resets record region via FUN_08002634 (0x2F0 records return to seed pattern)."},
+    {"offset": 15820, "size": 1, "mutation": "Flip byte at PACKET probe offset 0x3DAC, primary only", "requires_checksum_repair": false, "predicted_effect": "Reproduces cold-reload probe: integrity failure detected, save rewritten from backup after mutation."},
+    {"offset": 256, "size": 1, "mutation": "Set global-header byte at file 0x100 to 1 (no copy, no traced checksum)", "requires_checksum_repair": false, "predicted_effect": "Only the diagnostic log gate in FUN_080038c0 changes; save validity unaffected. A validity change would prove an untraced checksum over the global block."},
+    {"offset": 512, "size": 15812, "mutation": "Swap primary and backup spans wholesale (control; spans are byte-identical)", "requires_checksum_repair": false, "predicted_effect": "No observable change; any delta falsifies the no-generation-counter finding."}
+  ],
+  "open_questions": [
+    "Exact 59-chunk descriptor table (RAM ptr / size / SRAM offset per chunk) is ROM-resident at the unresolved _DAT_08003bf0 address and absent from this workspace; without it the stored sum16 0x4D49 cannot be recomputed from .sav bytes (whole-span sum is 0x5442). Dumping that table closes checksum verification mechanically.",
+    "Absolute EWRAM/IWRAM addresses of the canonical save struct, its mirror, and every chunk buffer are unknown (all _DAT_* placeholders unresolved); ram_addr is therefore null for every field.",
+    "FUN_080bbc7c chunk-transfer stub body is unrecovered: DMA3 vs CPU copy, transfer width, and exact argument order/direction per call site remain CONFIRMED_STATIC at best.",
+    "Semantics of the +0xCF/+0xD0/+0xD1 carry-chain counters (date/time/season vs abstract progress), the +0xCC selection byte (character vs slot vs language), the +0x0C word (=4), and the tail records at 0x3DA5 are hypotheses from code shape and observed values only.",
+    "Global header block (0x0000..0x014C) has no mapped gameplay field; its +0x100/+0x140/+0x144/+0x148 sub-fields only feed a diagnostic print path in traced code.",
+    "No paired .ss save states exist in this workspace (states/ is empty), so every fuzzing prediction is unverified against live reload behaviour."
+  ]
+}

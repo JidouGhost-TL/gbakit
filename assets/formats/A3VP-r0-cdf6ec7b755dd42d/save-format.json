@@ -1,0 +1,751 @@
+{
+  "schema": "gbakit-save-research/1",
+  "release_key": "A3VP-r0-cdf6ec7b755dd42d",
+  "display_name": "Sonic Pinball Party (Europe) (En,Ja,Fr,De,Es,It)",
+  "rom_sha256": "cdf6ec7b755dd42d529a2e29722382f52827766641c4cfa33a200d483c294ad2",
+  "game_code": "A3VP",
+  "header_family": "A3V",
+  "community_id": "comm-016",
+  "overall_confidence": "MEDIUM",
+  "media": {
+    "kind": "flash512",
+    "size_bytes": 65536,
+    "sdk_tags": [],
+    "fill_byte": "0xff"
+  },
+  "slots_and_copies": [
+    {
+      "name": "slot_0",
+      "offset": 0,
+      "size": 4096,
+      "redundancy_role": "primary",
+      "selection_rule": "Ring buffer: writer uses slot=(generation_counter-1)%10 (FUN_08049640 via FUN_08060ef4 mod-10); loader FUN_08048dcc scans all 10, requires magic+checksum, picks greatest generation counter at +8/+0xC"
+    },
+    {
+      "name": "slot_1",
+      "offset": 4096,
+      "size": 4096,
+      "redundancy_role": "backup",
+      "selection_rule": "Ring buffer: writer uses slot=(generation_counter-1)%10 (FUN_08049640 via FUN_08060ef4 mod-10); loader FUN_08048dcc scans all 10, requires magic+checksum, picks greatest generation counter at +8/+0xC"
+    },
+    {
+      "name": "slot_2",
+      "offset": 8192,
+      "size": 4096,
+      "redundancy_role": "backup",
+      "selection_rule": "Ring buffer: writer uses slot=(generation_counter-1)%10 (FUN_08049640 via FUN_08060ef4 mod-10); loader FUN_08048dcc scans all 10, requires magic+checksum, picks greatest generation counter at +8/+0xC"
+    },
+    {
+      "name": "slot_3",
+      "offset": 12288,
+      "size": 4096,
+      "redundancy_role": "backup",
+      "selection_rule": "Ring buffer: writer uses slot=(generation_counter-1)%10 (FUN_08049640 via FUN_08060ef4 mod-10); loader FUN_08048dcc scans all 10, requires magic+checksum, picks greatest generation counter at +8/+0xC"
+    },
+    {
+      "name": "slot_4",
+      "offset": 16384,
+      "size": 4096,
+      "redundancy_role": "backup",
+      "selection_rule": "Ring buffer: writer uses slot=(generation_counter-1)%10 (FUN_08049640 via FUN_08060ef4 mod-10); loader FUN_08048dcc scans all 10, requires magic+checksum, picks greatest generation counter at +8/+0xC"
+    },
+    {
+      "name": "slot_5",
+      "offset": 20480,
+      "size": 4096,
+      "redundancy_role": "backup",
+      "selection_rule": "Ring buffer: writer uses slot=(generation_counter-1)%10 (FUN_08049640 via FUN_08060ef4 mod-10); loader FUN_08048dcc scans all 10, requires magic+checksum, picks greatest generation counter at +8/+0xC"
+    },
+    {
+      "name": "slot_6",
+      "offset": 24576,
+      "size": 4096,
+      "redundancy_role": "backup",
+      "selection_rule": "Ring buffer: writer uses slot=(generation_counter-1)%10 (FUN_08049640 via FUN_08060ef4 mod-10); loader FUN_08048dcc scans all 10, requires magic+checksum, picks greatest generation counter at +8/+0xC"
+    },
+    {
+      "name": "slot_7",
+      "offset": 28672,
+      "size": 4096,
+      "redundancy_role": "backup",
+      "selection_rule": "Ring buffer: writer uses slot=(generation_counter-1)%10 (FUN_08049640 via FUN_08060ef4 mod-10); loader FUN_08048dcc scans all 10, requires magic+checksum, picks greatest generation counter at +8/+0xC"
+    },
+    {
+      "name": "slot_8",
+      "offset": 32768,
+      "size": 4096,
+      "redundancy_role": "backup",
+      "selection_rule": "Ring buffer: writer uses slot=(generation_counter-1)%10 (FUN_08049640 via FUN_08060ef4 mod-10); loader FUN_08048dcc scans all 10, requires magic+checksum, picks greatest generation counter at +8/+0xC"
+    },
+    {
+      "name": "slot_9",
+      "offset": 36864,
+      "size": 4096,
+      "redundancy_role": "backup",
+      "selection_rule": "Ring buffer: writer uses slot=(generation_counter-1)%10 (FUN_08049640 via FUN_08060ef4 mod-10); loader FUN_08048dcc scans all 10, requires magic+checksum, picks greatest generation counter at +8/+0xC"
+    }
+  ],
+  "magic_signatures": [
+    {
+      "offset": 0,
+      "bytes_hex": "534f4e49435f5042",
+      "ascii": "SONIC_PB",
+      "verified_in_code": true,
+      "verified_in_sav": true,
+      "function_addrs": [
+        "0x080494c8",
+        "0x08048dcc"
+      ]
+    }
+  ],
+  "checksums": [
+    {
+      "name": "magic_prefix_sum16_be",
+      "algorithm": "custom",
+      "formula_detail": "u16 sum (mod 65536) of only the first 4 bytes of the slot: sum(slot[0:4]) & 0xFFFF, i.e. 'S'+'O'+'N'+'I'=0x53+0x4F+0x4E+0x49=0x0139, stored BIG-ENDIAN at 0xFFE (high) / 0xFFF (low). FUN_08049718 loops uVar2<4 over byte pointer at save base. Payload bytes 4..0xFFD are NOT covered.",
+      "stored_offset": 4094,
+      "stored_size": 2,
+      "covered_start": 0,
+      "covered_end": 4,
+      "function_addrs": [
+        "0x08049718",
+        "0x080494c8",
+        "0x08049640",
+        "0x08048dcc"
+      ],
+      "verified_on_samples": [
+        {
+          "file": "saves/cap-00-future-0.sav",
+          "stored_hex": "0x0139",
+          "computed_hex": "0x0139",
+          "match": true
+        },
+        {
+          "file": "saves/cap-01-future-1.sav",
+          "stored_hex": "0x0139",
+          "computed_hex": "0x0139",
+          "match": true
+        },
+        {
+          "file": "saves/cap-01-future-1.sav",
+          "stored_hex": "0x0139",
+          "computed_hex": "0x0139",
+          "match": true
+        }
+      ],
+      "confidence": "CONFIRMED_VERIFIED"
+    }
+  ],
+  "io_driver_functions": [
+    {
+      "addr": "0x0805ff44",
+      "role": "read",
+      "callers": [
+        "0x08060420"
+      ],
+      "notes": "Flash autoselect/ID read: unlock 0xAA->[0x5555], 0x55->[0x2AAA] (DAT-scaled), 0x90, read ID bytes at 0x0E000000, 0xF0 reset; returns (mfr<<8)|device via FUN_080608a4 byte-read trampoline"
+    },
+    {
+      "addr": "0x08060420",
+      "role": "read",
+      "callers": [],
+      "notes": "IdentifyFlash/select config: calls FUN_0805ff44, walks chip table comparing ID short at entry+0x28, copies entry +0x00..+0x14 fields to driver globals (incl. shift at +8 used for sector addressing)"
+    },
+    {
+      "addr": "0x08060198",
+      "role": "read",
+      "callers": [
+        "0x08048dcc",
+        "0x080492e4"
+      ],
+      "notes": "ReadFlash(sector_index, dst_offset, dst, len=0x1000): sets WAITCNT bits |3, bank-switch via FUN_0805ff20 if chip size==0x20000 (Flash 1M), addr=0x0E000000+(index<<shift)+offset, copies via RAM-resident FUN_0806089c trampoline; code copied to stack first (FUN_08060134 pattern)"
+    },
+    {
+      "addr": "0x080602fc",
+      "role": "write",
+      "callers": [
+        "0x080492e4",
+        "0x08049640"
+      ],
+      "notes": "WriteFlash(sector_index, src, len=0x1000): mirror of FUN_08060198, addr=0x0E000000+(index<<shift), via FUN_0806089c"
+    },
+    {
+      "addr": "0x080605b0",
+      "role": "erase",
+      "callers": [],
+      "notes": "EraseSector(index<0x10): unlock 0xAA/0x55, 0x80, 0xAA/0x55, 0x30 at sector addr 0x0E000000+(index<<shift); copies routine to stack via FUN_08060134, poll via FUN_0806089c(2,addr,0xFF,...)"
+    },
+    {
+      "addr": "0x0806064c",
+      "role": "write",
+      "callers": [],
+      "notes": "ProgramByte: unlock 0xAA/0x55, 0xA0, *dst=*src byte program, via FUN_0806089c"
+    },
+    {
+      "addr": "0x08060134",
+      "role": "write",
+      "callers": [
+        "0x080605b0",
+        "0x0805ff44"
+      ],
+      "notes": "Copy flash-driver routine from ROM (between two DAT bounds) into a stack/RAM buffer so it can execute while flash is busy/unmapped"
+    },
+    {
+      "addr": "0x08060008",
+      "role": "write",
+      "callers": [
+        "0x080492e4",
+        "0x08049640"
+      ],
+      "notes": "Set flash type/size selector (param<=3) storing type index and derived table pointer; gate for erase/write retry loops"
+    },
+    {
+      "addr": "0x08049718",
+      "role": "checksum",
+      "callers": [
+        "0x08048dcc",
+        "0x080494c8",
+        "0x08049640"
+      ],
+      "notes": "sum16 of first 4 bytes only (see checksums)"
+    },
+    {
+      "addr": "0x0805feb4",
+      "role": "write",
+      "callers": [
+        "0x08048dcc",
+        "0x080494c8"
+      ],
+      "notes": "SWI 0x0B (CpuSet) wrapper used as memcpy for high-score entries and small field copies"
+    }
+  ],
+  "caller_chains": [
+    {
+      "entry_caller": "0x08048dcc",
+      "chain": [
+        "0x08048dcc",
+        "0x08048d94",
+        "0x08060420",
+        "0x0805ff44",
+        "0x08060198",
+        "0x08049718",
+        "0x0803a098",
+        "0x08049d4c"
+      ],
+      "trigger_context": "Boot/load: FUN_08048d94 zeroes RAM save struct and calls FUN_08060420 IdentifyFlash; FUN_08048dcc reads all 10 slots (FUN_08060198 len 0x1000), validates magic(8B)+checksum, picks max counter, copies scores +0x22C->work+0x1E0, fields +0x30/+0x36/+0x3A, settings +0xCC/+0xCE, config via FUN_0803a098; if none valid -> FUN_080492e4",
+      "ram_fields_updated": [
+        "highscore working copy at +0x1E0 (from save +0x22C)",
+        "config u16s from +0x18 via FUN_0803a098",
+        "settings mirrored from +0xCC/+0xCE",
+        "value from +0x14"
+      ],
+      "how_mapped": "Direct calls read in decompiled.c body of FUN_08048dcc; callgraph.json only lists 0x08048d94/0x0803a098/0x08002f14 as callees because remaining calls go through func_0x0806xxxx indirect trampolines Ghidra did not resolve - mapping is by explicit func_0x08060198/0x08049718 call sites in the C body, cross-checked against callgraph for the resolved edges"
+    },
+    {
+      "entry_caller": "0x080492e4",
+      "chain": [
+        "0x080492e4",
+        "0x08060008",
+        "0x080494c8",
+        "0x08030e88",
+        "0x080602fc"
+      ],
+      "trigger_context": "No valid slot on load (or new game): FUN_08060008(3) selects flash type, erases/validates 10 slots via FUN_08060894 loop, FUN_080494c8 builds default struct, writes slot 0 via erase (FUN_08060898) + FUN_080602fc(0,src,0x1000) retry x3",
+      "ram_fields_updated": [
+        "entire default save struct (magic,counter=1,value=100,config,flags,scores)"
+      ],
+      "how_mapped": "Decompiled body of FUN_080492e4 + FUN_080494c8 field writes matched byte-for-byte against observed sav defaults"
+    },
+    {
+      "entry_caller": "0x08049640",
+      "chain": [
+        "0x08049640",
+        "0x08049718",
+        "0x08060ef4",
+        "0x08060898",
+        "0x080602fc"
+      ],
+      "trigger_context": "Save/flush: increments 64-bit counter +8/+0xC, recomputes checksum (FUN_08049718) stored BE at 0xFFE/0xFFF, slot=(counter-1)%10 via 64-bit mod helper FUN_08060ef4, erase+write FUN_080602fc(slot,RAM struct,0x1000) with up to 3 retries gated by FUN_08060008/FUN_08060898",
+      "ram_fields_updated": [
+        "generation_counter +8/+0xC",
+        "checksum 0xFFE/0xFFF"
+      ],
+      "how_mapped": "Decompiled body; verified empirically: cap-00 has only slot0 counter=1, cap-01 adds slot1 counter=2 identical otherwise, exactly (2-1)%10=1"
+    },
+    {
+      "entry_caller": "0x080498f0",
+      "chain": [
+        "0x080498f0",
+        "0x08049640"
+      ],
+      "trigger_context": "Flush trigger: copies working+0x6E0 to +0x72C area, calls FUN_08049640 unless a suppress flag is set (then returns 1 without saving)",
+      "ram_fields_updated": [
+        "pending save via FUN_08049640"
+      ],
+      "how_mapped": "Callgraph callee 0x08049640 + decompiled body"
+    },
+    {
+      "entry_caller": "0x08049d4c",
+      "chain": [
+        "0x08049d4c",
+        "0x08049640"
+      ],
+      "trigger_context": "Pending-score flush: if save+0x11!=0 and FUN_0805dbd8() value qualifies, sets save+0x14=value, clears +0x11, calls FUN_08049640",
+      "ram_fields_updated": [
+        "value_0x14",
+        "pending flag +0x11 cleared"
+      ],
+      "how_mapped": "Callgraph callee 0x08049640 + decompiled body"
+    }
+  ],
+  "fields": [
+    {
+      "name": "magic_SONIC_PB",
+      "offset": 0,
+      "size": 8,
+      "type": "ascii",
+      "ram_addr": null,
+      "writers": [
+        "0x080494c8"
+      ],
+      "readers": [
+        "0x08048dcc"
+      ],
+      "observed_values": {
+        "all_slots": "SONIC_PB"
+      },
+      "update_mechanism": "Written by default-builder copying 8-byte template; loader byte-compares 8 bytes",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "FUN_080494c8 copies 8 bytes to +0; FUN_08048dcc compares 8 bytes per slot; present at 0x0 and 0x1000 in cap-01"
+    },
+    {
+      "name": "generation_counter_lo",
+      "offset": 8,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": [
+        "0x080494c8",
+        "0x08049640"
+      ],
+      "readers": [
+        "0x08048dcc"
+      ],
+      "observed_values": {
+        "slot0": 1,
+        "slot1": 2
+      },
+      "update_mechanism": "FUN_08049640 increments 64-bit counter at +8/+0xC before each flush; slot=(counter-1)%10",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Default +8=1 in FUN_080494c8; increment in FUN_08049640; sav slot0=1, slot1=2, only differing byte between slots"
+    },
+    {
+      "name": "generation_counter_hi",
+      "offset": 12,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": [
+        "0x080494c8",
+        "0x08049640"
+      ],
+      "readers": [
+        "0x08048dcc"
+      ],
+      "observed_values": {
+        "all_slots": 0
+      },
+      "update_mechanism": "High word of 64-bit generation counter, carry from lo",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "FUN_08049640 iVar5=hi+(0xfffffffe<lo); FUN_08048dcc records +8/+0xC pair"
+    },
+    {
+      "name": "flag_0x10",
+      "offset": 16,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": [
+        "0x080494c8"
+      ],
+      "readers": [],
+      "observed_values": {
+        "all_slots": 0
+      },
+      "update_mechanism": "Cleared by default builder",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "FUN_080494c8 *(u8*)(+0x10)=0"
+    },
+    {
+      "name": "pending_score_flag_0x11",
+      "offset": 17,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": [
+        "0x080494c8",
+        "0x08049d4c"
+      ],
+      "readers": [
+        "0x08049d4c"
+      ],
+      "observed_values": {
+        "all_slots": 0
+      },
+      "update_mechanism": "FUN_08049d4c: if +0x11!=0 and new value qualifies, writes +0x14, clears +0x11, calls FUN_08049640 to flush",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "FUN_08049d4c body in decompiled.c"
+    },
+    {
+      "name": "value_0x14_default100",
+      "offset": 20,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": [
+        "0x080494c8",
+        "0x08049d4c"
+      ],
+      "readers": [
+        "0x08048dcc"
+      ],
+      "observed_values": {
+        "all_slots": 100
+      },
+      "update_mechanism": "Default 100; FUN_08049d4c may replace with FUN_0805dbd8() result when +0x11 set; loader copies +0x14 to a RAM variable",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "FUN_080494c8 *(u32*)(+0x14)=100; FUN_08049d4c *(u32*)(+0x14)=uVar3; observed 100 (0x64)"
+    },
+    {
+      "name": "config_u16_array_0x18",
+      "offset": 24,
+      "size": 14,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [
+        "0x080494c8"
+      ],
+      "readers": [
+        "0x0803a098"
+      ],
+      "observed_values": {
+        "u16_le": [
+          8,
+          1,
+          32,
+          1,
+          512,
+          256,
+          2
+        ]
+      },
+      "update_mechanism": "Default builder writes 7 u16s; FUN_0803a098 loads them from save+0x18..+0x24 into working struct if a flag is set, else uses same defaults",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Defaults in both FUN_080494c8 and FUN_0803a098 match observed bytes exactly"
+    },
+    {
+      "name": "reserved_0x26",
+      "offset": 38,
+      "size": 10,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {
+        "all_slots": "all zero"
+      },
+      "update_mechanism": "No writer traced",
+      "confidence": "UNKNOWN",
+      "evidence": "Zero in all slots; no decompiled reference resolved (DAT literals opaque)"
+    },
+    {
+      "name": "flags_0x30",
+      "offset": 48,
+      "size": 6,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [
+        "0x080494c8"
+      ],
+      "readers": [
+        "0x08048dcc"
+      ],
+      "observed_values": {
+        "bytes": [
+          1,
+          1,
+          0,
+          1,
+          0,
+          0
+        ]
+      },
+      "update_mechanism": "Default bytes at +0x30..+0x35 (1,1,0,1); loader copies 6 bytes from +0x30 to a separate RAM destination",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "FUN_080494c8 writes +0x30..+0x35; FUN_08048dcc copies 6 bytes from +0x30; observed matches"
+    },
+    {
+      "name": "field_0x36",
+      "offset": 54,
+      "size": 4,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [
+        "0x08048dcc"
+      ],
+      "observed_values": {
+        "all_slots": "all zero"
+      },
+      "update_mechanism": "Loader copies 4 bytes from +0x36 to a separate RAM destination",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "FUN_08048dcc second copy loop (<4 from +0x36)"
+    },
+    {
+      "name": "field_0x3a",
+      "offset": 58,
+      "size": 16,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [
+        "0x08048dcc"
+      ],
+      "observed_values": {
+        "all_slots": "all zero"
+      },
+      "update_mechanism": "Loader copies 16 bytes from +0x3a to a separate RAM destination",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "FUN_08048dcc third copy loop (<0x10 from +0x3a)"
+    },
+    {
+      "name": "reserved_0x4a_0xcb",
+      "offset": 74,
+      "size": 130,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {
+        "all_slots": "all zero"
+      },
+      "update_mechanism": "No writer traced",
+      "confidence": "UNKNOWN",
+      "evidence": "Zero in all slots"
+    },
+    {
+      "name": "setting_u16_0xcc",
+      "offset": 204,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": [
+        "0x080494c8"
+      ],
+      "readers": [
+        "0x08048dcc"
+      ],
+      "observed_values": {
+        "all_slots": 1
+      },
+      "update_mechanism": "Default 1; loader mirrors save+0xCC to working+0x80",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "FUN_080494c8 *(u16*)(+0xCC)=1; FUN_08048dcc *(u16*)(work+0x80)=*(u16*)(save+0xCC)"
+    },
+    {
+      "name": "setting_u16_0xce",
+      "offset": 206,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": [
+        "0x080494c8"
+      ],
+      "readers": [
+        "0x08048dcc"
+      ],
+      "observed_values": {
+        "all_slots": 1
+      },
+      "update_mechanism": "Default 1; loader mirrors save+0xCE to working+0x82",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "FUN_080494c8 *(u16*)(+0xCE)=1; FUN_08048dcc *(u16*)(work+0x82)=*(u16*)(save+0xCE)"
+    },
+    {
+      "name": "setting_u16_0xd0",
+      "offset": 208,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": [
+        "0x080494c8"
+      ],
+      "readers": [],
+      "observed_values": {
+        "all_slots": 1
+      },
+      "update_mechanism": "Default 1",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "FUN_080494c8 *(u16*)(+0xD0)=1 (and a fourth write via unresolved DAT offset, not observed nonzero)"
+    },
+    {
+      "name": "reserved_0xd2_0x22b",
+      "offset": 210,
+      "size": 346,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {
+        "all_slots": "all zero except none"
+      },
+      "update_mechanism": "No writer traced; loader also mirrors save+0xD2(?) via unresolved DAT to working+0x6E0 - offset not provable",
+      "confidence": "UNKNOWN",
+      "evidence": "Zero in all slots; DAT literal values not present in decompiled C"
+    },
+    {
+      "name": "highscore_tables_4x20x16",
+      "offset": 556,
+      "size": 1280,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [
+        "0x080494c8",
+        "0x08030e88"
+      ],
+      "readers": [
+        "0x08048dcc"
+      ],
+      "observed_values": {
+        "entry0": {
+          "score_u32_le": 1000000000,
+          "name": "SON"
+        },
+        "entry1": {
+          "score_u32_le": 950000000,
+          "name": "TAI"
+        },
+        "last_score": 50000000
+      },
+      "update_mechanism": "4 tables x 20 entries x 16B: +0 u64 score (lo observed), +8 8-byte NUL-padded ASCII name (3 chars used). Default builder zeroes, FUN_08030e88 fills descending scores 1,000,000,000-50,000,000*i and names, copied working+0x1E0 -> save+0x22C; loader copies save+0x22C -> working+0x1E0 (8B/entry via FUN_0805feb4 SWI 0x0B CpuSet)",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Observed SON/TAI/KNU/AMY/CLA.../SEG with scores 1e9 down to 5e7 in all 4 tables; FUN_08030e88 writes 'S','O','N' at entry+8/+9/+10 and score arithmetic"
+    },
+    {
+      "name": "byte_0x72c",
+      "offset": 1836,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {
+        "all_slots": 1
+      },
+      "update_mechanism": "Immediately after high-score area (0x22C+0x500); no writer traced",
+      "confidence": "UNKNOWN",
+      "evidence": "Single nonzero byte 0x01 after score tables in all slots"
+    },
+    {
+      "name": "reserved_0x72d_0xffd",
+      "offset": 1837,
+      "size": 2257,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {
+        "all_slots": "all zero"
+      },
+      "update_mechanism": "No writer traced",
+      "confidence": "UNKNOWN",
+      "evidence": "Zero in all slots"
+    },
+    {
+      "name": "checksum_be16_0xffe",
+      "offset": 4094,
+      "size": 2,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [
+        "0x080494c8",
+        "0x08049640"
+      ],
+      "readers": [
+        "0x08048dcc"
+      ],
+      "observed_values": {
+        "all_slots": "01 39 (BE 0x0139)"
+      },
+      "update_mechanism": "Stored big-endian: high byte at 0xFFE, low at 0xFFF (per store order in FUN_080494c8/FUN_08049640: char at higher DAT offset = >>8). NOTE type field records raw byte order as stored; value is BE",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Python: sum(slot[0:4])&0xFFFF=0x0139 == BE u16 at 0xFFE on all 3 slot instances"
+    }
+  ],
+  "fuzzing_targets": [
+    {
+      "offset": 8,
+      "size": 4,
+      "mutation": "Set slot1 counter lo to 0xFFFFFFFF (hi 0) vs slot0 counter 1",
+      "requires_checksum_repair": false,
+      "predicted_effect": "Loader should pick the max-counter slot; tests selection rule and (ushort) truncation quirk in FUN_08048dcc (uVar11=(ushort)counter_lo). No checksum repair needed because checksum covers only bytes 0..3"
+    },
+    {
+      "offset": 4094,
+      "size": 2,
+      "mutation": "Corrupt checksum 0xFFE/0xFFF to 00 00 in the newest slot only",
+      "requires_checksum_repair": false,
+      "predicted_effect": "That slot rejected by FUN_08048dcc; loader falls back to older valid slot (counter 1) instead of reinitialising"
+    },
+    {
+      "offset": 0,
+      "size": 1,
+      "mutation": "Change 'S' (0x53) to 'X' in newest slot, then repair checksum to sum of new first 4 bytes BE at 0xFFE",
+      "requires_checksum_repair": true,
+      "predicted_effect": "Slot still rejected on 8-byte magic compare in FUN_08048dcc despite valid checksum - proves magic and checksum are independent checks and checksum covers only magic prefix"
+    },
+    {
+      "offset": 20,
+      "size": 4,
+      "mutation": "Set value at 0x14 from 100 to 9999 in newest slot",
+      "requires_checksum_repair": false,
+      "predicted_effect": "No checksum repair needed (outside covered 0..3); on load the RAM variable copied from +0x14 should show 9999 wherever FUN_08048dcc's *_DAT_08049064 consumer displays/uses it"
+    },
+    {
+      "offset": 556,
+      "size": 4,
+      "mutation": "Set table0 entry0 score (0x22C) to 0xFFFFFFFF and name at 0x234 to 'ZZZ'",
+      "requires_checksum_repair": false,
+      "predicted_effect": "High-score table 0 rank 1 should display 4294967295 / ZZZ after load via save+0x22C -> work+0x1E0 copy"
+    },
+    {
+      "offset": 24,
+      "size": 14,
+      "mutation": "Change config u16s at 0x18 (e.g. first u16 8 -> 99)",
+      "requires_checksum_repair": false,
+      "predicted_effect": "FUN_0803a098 should load altered config into working struct; observable in whichever menu/gameplay parameter consumes that u16 - semantics unknown, so RAM-watch at working struct +0x00.. is the oracle"
+    },
+    {
+      "offset": 1836,
+      "size": 1,
+      "mutation": "Set byte 0x72C from 1 to 0 / 2",
+      "requires_checksum_repair": false,
+      "predicted_effect": "Unknown field; any load-time change localises its consumer - treat as exploratory, no firm prediction"
+    },
+    {
+      "offset": 4096,
+      "size": 4096,
+      "mutation": "Delete (0xFF-fill) slot1 in cap-01, leaving only slot0",
+      "requires_checksum_repair": false,
+      "predicted_effect": "Loader picks slot0 (counter 1); next in-game save writes counter 2 into slot1 again, recreating the cap-00 -> cap-01 transition"
+    }
+  ],
+  "open_questions": [
+    "Exact RAM base address of the save struct: Ghidra DAT literal values are symbolic (_DAT_08049xxx) in the provided decompiled.c, so RAM mirror is proven only as struct-relative offsets (whole 0x1000 struct copied verbatim by FUN_08060198/FUN_080602fc), not an absolute 0x02xxxxxx/0x03xxxxxx address",
+    "Semantics of fields at 0x10/0x11/0x14 (value=100), 0x30/0x36/0x3A byte groups, 0xCC/0xCE/0xD0 settings, byte 0x72C, and the 7 config u16s at 0x18 - writers/readers traced but gameplay meaning not derivable clean-room",
+    "Whether FUN_08049718's 4-byte loop bound is intentional or a Ghidra artifact: it matches all 3 observed slots exactly and the validator code, but a checksum covering only 'SONI' is degenerate - fuzzing target 3 tests this directly",
+    "Fourth default u16 write in FUN_080494c8 via unresolved DAT offset (after +0xD0) - no corresponding nonzero byte observed",
+    "FUN_08060890..0x080608a4 trampolines and FUN_0805ff20 bank switch are unresolved jumptables in the decompilation; their roles are inferred from call sites, not proven",
+    "Load selection quirk: FUN_08048dcc stores counter_lo truncated to u16 (uVar11=(ushort)...) and forces selection when counter_hi!=0 - behaviour for counters >0xFFFF is a hypothesis from code reading only"
+  ]
+}

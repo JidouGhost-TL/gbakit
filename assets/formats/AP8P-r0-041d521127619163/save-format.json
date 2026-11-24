@@ -1,0 +1,357 @@
+{
+  "schema": "gbakit-save-research/1",
+  "release_key": "AP8P-r0-041d521127619163",
+  "display_name": "Scooby-Doo (Europe)",
+  "rom_sha256": "041d5211276191639362c024d6e4037e9007c30be38ca5570a8be4dc6aeac579",
+  "game_code": "AP8P",
+  "header_family": "AP8",
+  "community_id": "comm-004",
+  "overall_confidence": "MEDIUM",
+  "media": {
+    "kind": "eeprom512",
+    "size_bytes": 512,
+    "sdk_tags": [],
+    "fill_byte": "0xff"
+  },
+  "slots_and_copies": [
+    {
+      "name": "header_slot_0",
+      "offset": 0,
+      "size": 8,
+      "redundancy_role": "unknown",
+      "selection_rule": "8-byte name/label record for save slot 0; read/written as EEPROM sector 0"
+    },
+    {
+      "name": "header_slot_1",
+      "offset": 8,
+      "size": 8,
+      "redundancy_role": "unknown",
+      "selection_rule": "8-byte name/label record for save slot 1; EEPROM sector 1"
+    },
+    {
+      "name": "header_slot_2",
+      "offset": 16,
+      "size": 8,
+      "redundancy_role": "unknown",
+      "selection_rule": "8-byte name/label record for save slot 2; EEPROM sector 2"
+    },
+    {
+      "name": "body_slot_0",
+      "offset": 24,
+      "size": 160,
+      "redundancy_role": "primary",
+      "selection_rule": "Independent save-game record for slot 0 (EEPROM sectors 3-22). Status byte at RAM-order offset 0 (file offset 0x1F) of 0xD8=empty, 0x27=has-data selects whether boot UI shows this slot as populated."
+    },
+    {
+      "name": "body_slot_1",
+      "offset": 184,
+      "size": 160,
+      "redundancy_role": "primary",
+      "selection_rule": "Independent save-game record for slot 1 (EEPROM sectors 23-42), same status-byte rule"
+    },
+    {
+      "name": "body_slot_2",
+      "offset": 344,
+      "size": 160,
+      "redundancy_role": "primary",
+      "selection_rule": "Independent save-game record for slot 2 (EEPROM sectors 43-62), same status-byte rule"
+    }
+  ],
+  "magic_signatures": [
+    {
+      "offset": 0,
+      "bytes_hex": "0000646573756e55",
+      "ascii": "Unused (after reversing the 8-byte sector's byte order)",
+      "verified_in_code": true,
+      "verified_in_sav": true,
+      "function_addrs": ["0x08022680"]
+    },
+    {
+      "offset": 8,
+      "bytes_hex": "0000646573756e55",
+      "ascii": "Unused (after reversing the 8-byte sector's byte order)",
+      "verified_in_code": true,
+      "verified_in_sav": true,
+      "function_addrs": ["0x08022680"]
+    },
+    {
+      "offset": 16,
+      "bytes_hex": "0000646573756e55",
+      "ascii": "Unused (after reversing the 8-byte sector's byte order)",
+      "verified_in_code": true,
+      "verified_in_sav": true,
+      "function_addrs": ["0x08022680"]
+    },
+    {
+      "offset": 31,
+      "bytes_hex": "d8",
+      "ascii": "",
+      "verified_in_code": true,
+      "verified_in_sav": true,
+      "function_addrs": ["0x08022680", "0x080281d8"]
+    }
+  ],
+  "checksums": [
+    {
+      "name": "none_found",
+      "algorithm": "unknown",
+      "formula_detail": "No checksum/CRC computation over save payload bytes was found in any traced function. The only 'verify' primitive (0x08032edc) is a write-then-read-back equality check against the data the caller just supplied, not a stored/derived integrity value. Brute-force sum8/xor8/complement tests against the trailer-looking bytes (0xD8, 0x41, 0x5A, 0x73) at every 8-byte-aligned prefix range did not produce a code-corroborated match.",
+      "stored_offset": 0,
+      "stored_size": 0,
+      "covered_start": 0,
+      "covered_end": 0,
+      "function_addrs": ["0x08032edc"],
+      "verified_on_samples": [],
+      "confidence": "UNKNOWN"
+    }
+  ],
+  "io_driver_functions": [
+    {
+      "addr": "0x08032cd0",
+      "role": "write",
+      "callers": ["0x08032d50", "0x08032e00"],
+      "notes": "Generic DMA3 transfer primitive (DmaXfer): programs src/dst/control for DMA3, sets enable bit 0x80000000, busy-waits on control-word bit 15. Shared by both EEPROM read and write bitstream paths."
+    },
+    {
+      "addr": "0x08032d50",
+      "role": "read",
+      "callers": ["0x08032edc"],
+      "notes": "EepromReadSector(sector, dst[4xu16]). Builds a 2-bit read opcode + 6-bit sector-address bitstream, DMAs it out to 0xD000000, DMAs 0x44 (68) response bits back in, unpacks 4x16-bit words."
+    },
+    {
+      "addr": "0x08032e00",
+      "role": "write",
+      "callers": [],
+      "notes": "EepromWriteSector(sector, src[4xu16]). Builds a 2-bit write opcode + 6-bit sector address + 64 data bits, DMAs it to 0xD000000 with length param+0x43, brackets the hardware busy-poll with 0x08032c04/0x08032c8c."
+    },
+    {
+      "addr": "0x08032edc",
+      "role": "read",
+      "callers": [],
+      "notes": "EepromReadVerify(sector, expected[4xu16]) = calls EepromReadSector then compares word-by-word against expected; returns 0 on match, 0x8000 on mismatch. Write-confirmation only, not a payload checksum."
+    },
+    {
+      "addr": "0x08032c04",
+      "role": "write",
+      "callers": ["0x08032e00"],
+      "notes": "Small wrapper around the EEPROM write busy-poll; sets/clears an internal flag pair, no data transformation observed."
+    },
+    {
+      "addr": "0x08032c8c",
+      "role": "write",
+      "callers": ["0x08032e00"],
+      "notes": "Paired wrapper with 0x08032c04, clears the flag set by it on completion."
+    },
+    {
+      "addr": "0x0800df48",
+      "role": "read",
+      "callers": ["0x080281d8", "0x08028364"],
+      "notes": "ReadEepromBlock(startSector, buf, len). Loops 8 bytes at a time calling EepromReadSector directly into buf then EepromReadVerify; handles non-multiple-of-8 tails via an 8-byte scratch buffer."
+    },
+    {
+      "addr": "0x0800dfb8",
+      "role": "write",
+      "callers": ["0x08022680"],
+      "notes": "WriteEepromBlock(startSector, buf, len). Loops 8 bytes at a time calling EepromWriteSector then EepromReadVerify; handles tails via read-modify-write of an 8-byte scratch buffer."
+    },
+    {
+      "addr": "0x0800deb8",
+      "role": "write",
+      "callers": ["0x08022680"],
+      "notes": "Acquire-style wrapper called before every traced block read/write pair; sets a busy/lock flag. Exact mechanism (reentrancy guard vs interrupt mask) unresolved."
+    },
+    {
+      "addr": "0x0800defc",
+      "role": "write",
+      "callers": ["0x08022680"],
+      "notes": "Release-style wrapper paired with 0x0800deb8; clears the busy/lock flag."
+    }
+  ],
+  "caller_chains": [
+    {
+      "entry_caller": "0x08029098",
+      "chain": ["0x08029098", "0x080281d8", "0x0800df48", "0x08032d50", "0x08032cd0"],
+      "trigger_context": "Title/boot-flow function calling the save-slot scan once at startup",
+      "ram_fields_updated": ["per-slot UI 'has data' flag array", "per-slot 10-byte header RAM record"],
+      "how_mapped": "Call-graph lookup of 0x080281d8's caller in ghidra/callgraph.json, confirmed by reading FUN_08029098's body in decompiled.c which calls FUN_080281d8 first before any rendering calls."
+    },
+    {
+      "entry_caller": "0x080281d8",
+      "chain": ["0x080281d8", "0x0800df48", "0x08032d50", "0x08032edc", "0x08032cd0"],
+      "trigger_context": "Boot-time per-slot scan loop (slot = 0..2), reading the slot's status byte and 8-byte header",
+      "ram_fields_updated": ["per-slot UI 'has data' flag array", "per-slot 10-byte header RAM record"],
+      "how_mapped": "Grepped ghidra/decompiled.c for literal func_0x0800df48 call sites (the auto-generated call-graph entry for 0x0800df48 lists 0x080281d8 and 0x08028364 as its only callers); read the surrounding C to see the 0x27/0xD8 comparison logic."
+    },
+    {
+      "entry_caller": "0x080281d8",
+      "chain": ["0x080281d8", "0x08022680", "0x0800dfb8", "0x08032e00", "0x08032edc", "0x08032cd0"],
+      "trigger_context": "Boot-time per-slot scan loop: if the slot's status byte is neither 0x27 (has data) nor 0xD8 (already blank), the slot is reformatted to blank",
+      "ram_fields_updated": ["160-byte body buffer (40 bytes explicit zero + 0xD8 marker, 120 bytes stale stack)", "8-byte header buffer (template copy)"],
+      "how_mapped": "callgraph.json lists 0x08022680's only caller as 0x080281d8; read FUN_08022680 body for the buffer-zero + WriteEepromBlock calls, and cross-checked buffer size (40 bytes declared) against write length (160 bytes requested) to find the undersized-buffer issue."
+    },
+    {
+      "entry_caller": "0x08028364",
+      "chain": ["0x08028364", "0x0800deb8", "0x0800df48", "0x0800defc", "0x08034adc"],
+      "trigger_context": "Reads one slot's 8-byte header and strcmp's it against a caller-supplied name pointer; no traced caller found for 0x08028364 itself",
+      "ram_fields_updated": ["none (read-only helper)"],
+      "how_mapped": "Found via callgraph.json callees list of 0x0800df48 (lists 0x08028364 as a caller); read FUN_08028364 body and FUN_08034adc body to confirm the comparison is a generic strcmp, not checksum logic."
+    }
+  ],
+  "fields": [
+    {
+      "name": "slot0_header_name",
+      "offset": 0,
+      "size": 8,
+      "type": "ascii",
+      "ram_addr": null,
+      "writers": ["0x08022680"],
+      "readers": ["0x080281d8", "0x08028364"],
+      "observed_values": {"cap-01-future-1.sav": "Unused (reversed-sector ASCII)"},
+      "update_mechanism": "Written by WriteEepromBlock(sector=0, ...) inside InitBlankSaveSlot, copying an 8-byte global template",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Reversing file bytes 00 00 64 65 73 75 6e 55 yields ASCII 'Unused\\0\\0'; matches code path that copies a template buffer at this sector"
+    },
+    {
+      "name": "slot1_header_name",
+      "offset": 8,
+      "size": 8,
+      "type": "ascii",
+      "ram_addr": null,
+      "writers": ["0x08022680"],
+      "readers": ["0x080281d8", "0x08028364"],
+      "observed_values": {"cap-01-future-1.sav": "Unused (reversed-sector ASCII)"},
+      "update_mechanism": "Same as slot0_header_name, sector 1",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Identical byte pattern at file offset 0x08"
+    },
+    {
+      "name": "slot2_header_name",
+      "offset": 16,
+      "size": 8,
+      "type": "ascii",
+      "ram_addr": null,
+      "writers": ["0x08022680"],
+      "readers": ["0x080281d8", "0x08028364"],
+      "observed_values": {"cap-01-future-1.sav": "Unused (reversed-sector ASCII)"},
+      "update_mechanism": "Same as slot0_header_name, sector 2",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Identical byte pattern at file offset 0x10"
+    },
+    {
+      "name": "slot0_body_padding",
+      "offset": 24,
+      "size": 7,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": ["0x08022680"],
+      "readers": [],
+      "observed_values": {"cap-01-future-1.sav": "00 00 00 00 00 00 00"},
+      "update_mechanism": "Explicitly zeroed stack buffer bytes 1-6, written as part of the 160-byte body flush",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "Buffer-zero loop in FUN_08022680 covers these words; no reader found"
+    },
+    {
+      "name": "slot0_status_marker",
+      "offset": 31,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": ["0x08022680"],
+      "readers": ["0x080281d8"],
+      "observed_values": {"cap-01-future-1.sav": "0xD8"},
+      "update_mechanism": "Buffer byte 0 explicitly set to 0xD8 by InitBlankSaveSlot; boot-time scan treats 0x27 as 'has data', 0xD8 as 'empty', anything else as 'corrupt -> reformat'",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Code sets this exact byte to 0xD8 at this exact sector; file byte matches exactly once the containing 8-byte sector is un-reversed"
+    },
+    {
+      "name": "slot1_status_marker",
+      "offset": 191,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": ["0x08022680"],
+      "readers": ["0x080281d8"],
+      "observed_values": {"cap-01-future-1.sav": "0xD8"},
+      "update_mechanism": "Same mechanism as slot0_status_marker, slot index 1",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "File offset 0xBF matches expected position (slot1 body start sector + 7, reversed)"
+    },
+    {
+      "name": "slot2_status_marker",
+      "offset": 351,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": ["0x08022680"],
+      "readers": ["0x080281d8"],
+      "observed_values": {"cap-01-future-1.sav": "0xD8"},
+      "update_mechanism": "Same mechanism as slot0_status_marker, slot index 2",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "File offset 0x15F matches expected position"
+    },
+    {
+      "name": "slot_sequence_tag_byte",
+      "offset": 77,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": ["0x08022680"],
+      "readers": [],
+      "observed_values": {"slot0 (0x4C)": "0x00", "slot1 (0xEC)": "0x04", "slot2 (0x18C)": "0x08"},
+      "update_mechanism": "Unresolved; steps by exactly +4 per slot index at init time, no mutation observed",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Byte 2 of the u32 at relative body offset +0x08 is 0x00/0x04/0x08 for slots 0/1/2 respectively; no reader was traced for this field"
+    },
+    {
+      "name": "slot_body_stack_garbage_region",
+      "offset": 64,
+      "size": 96,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": ["0x08022680"],
+      "readers": [],
+      "observed_values": {"all 3 slots": "byte-identical content at matching relative offsets"},
+      "update_mechanism": "Unintentional: WriteEepromBlock is asked to flush 160 bytes from a stack buffer that InitBlankSaveSlot only explicitly initializes for its first 40 bytes; the remaining 120 bytes (of which this is most) are stale stack contents from the call site, reused identically on each of the 3 loop iterations",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Buffer declared as undefined4 auStack_48[10] (40 bytes) but passed to WriteEepromBlock with length 0xA0 (160); cross-slot byte-for-byte identity in the raw .sav corroborates stale/incidental content rather than deliberate per-slot data"
+    }
+  ],
+  "fuzzing_targets": [
+    {
+      "offset": 31,
+      "size": 1,
+      "mutation": "0xD8 -> 0x27",
+      "requires_checksum_repair": false,
+      "predicted_effect": "Boot-time save-select screen should present slot 0 as containing data instead of empty"
+    },
+    {
+      "offset": 31,
+      "size": 1,
+      "mutation": "0xD8 -> 0x00 (neither recognized sentinel)",
+      "requires_checksum_repair": false,
+      "predicted_effect": "Boot scan should treat the slot as corrupt and call InitBlankSaveSlot(0) again, rewriting the full 160-byte body with fresh (possibly different) stack garbage"
+    },
+    {
+      "offset": 0,
+      "size": 8,
+      "mutation": "Replace reversed-sector 'Unused' template with a different 6-char ASCII name",
+      "requires_checksum_repair": false,
+      "predicted_effect": "If rendered, slot 0's label on the save-select screen changes; strcmp-based comparisons in 0x08028364 against a fixed name would now fail where they previously matched"
+    },
+    {
+      "offset": 64,
+      "size": 96,
+      "mutation": "Zero out the entire stack-garbage region (file offsets 0x40-0x9F etc.)",
+      "requires_checksum_repair": false,
+      "predicted_effect": "No observable effect if the stack-garbage hypothesis is correct (no reader traced); any observed behavior change would disprove the hypothesis and indicate these are real fields"
+    }
+  ],
+  "open_questions": [
+    "Does any checksum/CRC protect save payload bytes anywhere in the (currently unresolved) jump-table targets not covered by this decompilation? No evidence of one was found in the 292 traced functions.",
+    "What writes real gameplay data into a slot body (score, level, items, etc.)? No caller of the EEPROM write path other than the boot-time auto-formatter (0x08022680, called only from 0x080281d8) was found in this workspace -- the in-game 'Save' action's caller chain is unmapped.",
+    "What is the true meaning of the per-slot stepped-by-4 byte at relative body offset +0x08 (observed 0x00/0x04/0x08 across slots 0/1/2)? No reader was traced.",
+    "Is the apparent 'stack garbage' region (relative body offset +0x28 through +0x9F) ever actually read by any game code, or is it truly dead? No reader was found, but absence of a traced reader in a partial decompilation is not proof of absence.",
+    "What are the concrete absolute RAM addresses for the save struct mirrors? All relevant pointers in the decompiled code are unresolved Ghidra globals (_DAT_*), so 'RAM Mirror Addr' is UNKNOWN for every field.",
+    "Both available .sav samples represent pre-gameplay/blank-init states; no sample of a real played save exists in this workspace to validate any body-field hypothesis against actual game state changes."
+  ]
+}

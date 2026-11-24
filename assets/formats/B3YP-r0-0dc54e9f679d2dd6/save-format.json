@@ -1,0 +1,1182 @@
+{
+  "schema": "gbakit-save-research/1",
+  "release_key": "B3YP-r0-0dc54e9f679d2dd6",
+  "display_name": "Legend of Spyro, The - A New Beginning (Europe) (En,Fr,De,Es,It,Nl)",
+  "rom_sha256": "0dc54e9f679d2dd65a509e27977eac4c1bd5dc401707b6260b06ccb29fa91b8a",
+  "game_code": "B3YP",
+  "header_family": "B3Y",
+  "community_id": "comm-003",
+  "overall_confidence": "MEDIUM",
+  "media": {
+    "kind": "eeprom8k",
+    "size_bytes": 8192,
+    "sdk_tags": [],
+    "fill_byte": "0xff"
+  },
+  "slots_and_copies": [
+    {
+      "name": "slot_0",
+      "offset": 0,
+      "size": 640,
+      "redundancy_role": "primary",
+      "selection_rule": "Independent slot; boot-probed by 0x08019848 via 0x080197d0, re-blanked by 0x08019b5c if invalid. Header 0x20 at +0, payload 0x260 at +0x20. No mirror/backup."
+    },
+    {
+      "name": "slot_1",
+      "offset": 640,
+      "size": 640,
+      "redundancy_role": "primary",
+      "selection_rule": "Independent slot, base = 1*0x280. Same probe/re-blank rule as slot_0. No mirror/backup."
+    },
+    {
+      "name": "slot_2",
+      "offset": 1280,
+      "size": 640,
+      "redundancy_role": "primary",
+      "selection_rule": "Independent slot, base = 2*0x280. Same probe/re-blank rule as slot_0. No mirror/backup."
+    },
+    {
+      "name": "global_config",
+      "offset": 1920,
+      "size": 48,
+      "redundancy_role": "global_config",
+      "selection_rule": "Single global block: header 0x20 at 0x780 + data 0x10 at 0x7A0. Loaded at boot by 0x080192d8; created by 0x08019c1c only if global load fails and all slots invalid; saved by 0x08019c80 (caller absent from corpus). No backup copy."
+    }
+  ],
+  "magic_signatures": [],
+  "checksums": [
+    {
+      "name": "slot_payload_checksum",
+      "algorithm": "custom",
+      "formula_detail": "h=0xAA55A5A5; for each byte b in RAM payload order: h=ROL32(h,1)+b (mod 2^32). Implemented in FUN_0806f1c0 (h=_DAT_0806f1dc seed, recovered as 0xAA55A5A5 by inverting all 8 stored regions, then verified forward). Stored as u32_le in RAM header at +0x0C; in .sav bytes it appears at slot file +0x08 due to the 8-byte-block reversal transform (file[block*8+i]=ram[block*8+7-i]), which must be undone before computing.",
+      "stored_offset": 8,
+      "stored_size": 4,
+      "covered_start": 32,
+      "covered_end": 640,
+      "function_addrs": [
+        "0x0806f1c0",
+        "0x0801969c",
+        "0x08019754",
+        "0x08019b5c"
+      ],
+      "verified_on_samples": [
+        {
+          "file": "cap-00-future-0.sav",
+          "stored_hex": "0xf5e045d3",
+          "computed_hex": "0xf5e045d3",
+          "match": true
+        },
+        {
+          "file": "cap-01-future-1.sav",
+          "stored_hex": "0xf5e045d3",
+          "computed_hex": "0xf5e045d3",
+          "match": true
+        }
+      ],
+      "confidence": "CONFIRMED_VERIFIED"
+    },
+    {
+      "name": "global_data_checksum",
+      "algorithm": "custom",
+      "formula_detail": "Same FUN_0806f1c0 ROL1-add hash, seed 0xAA55A5A5, over the 16-byte RAM global data block. Stored as u32_le in RAM global header at +0x0C; appears at file 0x788 due to the 8-byte-block reversal transform.",
+      "stored_offset": 1928,
+      "stored_size": 4,
+      "covered_start": 1952,
+      "covered_end": 1968,
+      "function_addrs": [
+        "0x0806f1c0",
+        "0x080192d8",
+        "0x08019c1c",
+        "0x08019c80"
+      ],
+      "verified_on_samples": [
+        {
+          "file": "cap-00-future-0.sav",
+          "stored_hex": "0xa66b0a95",
+          "computed_hex": "0xa66b0a95",
+          "match": true
+        },
+        {
+          "file": "cap-01-future-1.sav",
+          "stored_hex": "0xa5abca95",
+          "computed_hex": "0xa5abca95",
+          "match": true
+        }
+      ],
+      "confidence": "CONFIRMED_VERIFIED"
+    }
+  ],
+  "io_driver_functions": [
+    {
+      "addr": "0x0807a4a8",
+      "role": "read",
+      "callers": [
+        "0x0807a528",
+        "0x0807a5ec"
+      ],
+      "notes": "DMA3 transfer primitive; writes DMA src/dst/count (count|0x80000000) via pointer-indirect registers (DMA3 block 0x040000D4), waits on busy bit. Callers pass EEPROM window 0x0D000000 as one endpoint. Roles read+write (direction depends on src/dst order)."
+    },
+    {
+      "addr": "0x0807a528",
+      "role": "read",
+      "callers": [
+        "0x0807a74c",
+        "0x08072b44"
+      ],
+      "notes": "EEPROM read one 64-bit block: command 1,1 + address (bits at typeblock+8) MSB-first via DMA to/from 0x0D000000, reassembles 4x u16 backwards from dst+6. 0x08072b44 caller is textual (line 8650), absent from callgraph.json."
+    },
+    {
+      "addr": "0x0807a5ec",
+      "role": "write",
+      "callers": [
+        "0x0807a7e4"
+      ],
+      "notes": "EEPROM write one 64-bit block: command 1,0 + address + 64 data bits MSB-first + trailing 0, DMA out (len bits+0x43), polls EEPROM bit0 with timer timeout 0x88."
+    },
+    {
+      "addr": "0x0807a74c",
+      "role": "read",
+      "callers": [
+        "0x0807a81c"
+      ],
+      "notes": "Verify-read: reads block via 0x0807a528, compares 4x u16, returns 0x8000 on mismatch else 0."
+    },
+    {
+      "addr": "0x0807a7e4",
+      "role": "write",
+      "callers": [
+        "0x0807a81c"
+      ],
+      "notes": "Write gate: skips physical write when typeblock size field ==0x200 (512); else calls 0x0807a5ec. Typeblock layout unresolved."
+    },
+    {
+      "addr": "0x0807a81c",
+      "role": "write",
+      "callers": [
+        "0x08072bf0"
+      ],
+      "notes": "Write one block with verify, up to 3 retries (write via 0x0807a7e4, verify via 0x0807a74c). Caller edge is textual (line 8698); callgraph.json shows no callers."
+    },
+    {
+      "addr": "0x08072b44",
+      "role": "read",
+      "callers": [
+        "0x08072ae8"
+      ],
+      "notes": "Byte-range EEPROM read (offset,dst,len,*err): block=(offset>>3)+i via 0x0807a528, bus lock 0x08072924/0x0806ae84(1) and unlock 0x08072930/0x0806ae84(0)."
+    },
+    {
+      "addr": "0x08072bf0",
+      "role": "write",
+      "callers": [
+        "0x08072b0c"
+      ],
+      "notes": "Byte-range EEPROM write (offset,src,len,*err): per-8-byte via 0x0807a81c, same lock pairing."
+    },
+    {
+      "addr": "0x08072ae8",
+      "role": "read",
+      "callers": [
+        "0x080192d8",
+        "0x08019754",
+        "0x080197d0"
+      ],
+      "notes": "Public read gate: returns -1 if ready flag is 0 else forwards 4 args to 0x08072b44. Printed prototype shows 1 arg due to unrecovered jumptable."
+    },
+    {
+      "addr": "0x08072b0c",
+      "role": "write",
+      "callers": [
+        "0x0801969c",
+        "0x08019b5c",
+        "0x08019c1c",
+        "0x08019c80"
+      ],
+      "notes": "Public write gate: returns -1 if ready flag is 0 else forwards 4 args to 0x08072bf0."
+    },
+    {
+      "addr": "0x0807a460",
+      "role": "serialize",
+      "callers": [
+        "0x08072b30"
+      ],
+      "notes": "EEPROM type select (4 / 0x40 / other). Boot selects 0x40 via 0x08072b30 <- 0x08072abc <- 0x080002f4. Role is device-configure, closest schema value serialize."
+    },
+    {
+      "addr": "0x0806f1c0",
+      "role": "checksum",
+      "callers": [
+        "0x080192d8",
+        "0x0801969c",
+        "0x08019754",
+        "0x08019b5c",
+        "0x08019c1c",
+        "0x08019c80"
+      ],
+      "notes": "ROL32(h,1)+byte hash, seed 0xAA55A5A5 (literal _DAT_0806f1dc, recovered from .sav). Covers slot payload 0x260 or global data 0x10."
+    },
+    {
+      "addr": "0x08019958",
+      "role": "serialize",
+      "callers": [
+        "0x0801969c",
+        "0x08019b5c"
+      ],
+      "notes": "Pack game struct -> 608B payload buffer at scrambled offsets + 58B copy game+0x8C..+0xC5 -> payload+0x38..+0x71."
+    },
+    {
+      "addr": "0x08019a50",
+      "role": "deserialize",
+      "callers": [
+        "0x08019754"
+      ],
+      "notes": "Unpack payload -> game struct. NO body in corpus (call site only); called after checksum verifies."
+    },
+    {
+      "addr": "0x0801969c",
+      "role": "write",
+      "callers": [
+        "0x08019b5c"
+      ],
+      "notes": "Save slot: counter update, pack, header+0x10=1, header+0x0C=checksum(payload,0x260), writes header 0x20 + payload 0x260 at slot*0x280. In-game trigger caller absent from corpus."
+    },
+    {
+      "addr": "0x08019754",
+      "role": "read",
+      "callers": [
+        "0x080197d0"
+      ],
+      "notes": "Load slot full: reads header+payload, verifies header+0x0C vs checksum, calls unpack 0x08019a50 on match."
+    },
+    {
+      "addr": "0x080197d0",
+      "role": "read",
+      "callers": [
+        "0x08019848"
+      ],
+      "notes": "Probe slot: header read, counter <0x65 fast path, else full load via 0x08019754."
+    },
+    {
+      "addr": "0x08019b5c",
+      "role": "write",
+      "callers": [
+        "0x080002f4"
+      ],
+      "notes": "Create blank slot: defaults 0x080194e0 + pack + save, then rewrite with counter=0, flag=0. Called x6 at boot (lines 82-94)."
+    },
+    {
+      "addr": "0x080194e0",
+      "role": "serialize",
+      "callers": [
+        "0x08019b5c"
+      ],
+      "notes": "New-game game-struct defaults (250/10/200/7/120/5 etc.) + zeroes 608B buffer via memset 0x0807c954."
+    },
+    {
+      "addr": "0x080192d8",
+      "role": "read",
+      "callers": [
+        "0x080002f4"
+      ],
+      "notes": "Load global: reads 0x780/0x7A0, verifies checksum, clamps data fields ([0,5],[0,2],[0,0x100],[0,0x100])."
+    },
+    {
+      "addr": "0x08019c1c",
+      "role": "write",
+      "callers": [
+        "0x080002f4"
+      ],
+      "notes": "Create default global data (u16+0=unresolved const, +2=1, u32+4=0xC0, +8=0x100), checksum to header+0x0C, writes 0x780/0x7A0."
+    },
+    {
+      "addr": "0x08019c80",
+      "role": "write",
+      "callers": [],
+      "notes": "Save global: refreshes data+4/+8 from live globals, recomputes checksum, writes 0x780/0x7A0. NO caller in corpus."
+    },
+    {
+      "addr": "0x08019848",
+      "role": "read",
+      "callers": [
+        "0x080002f4"
+      ],
+      "notes": "Probe all 3 slots at boot, records status -1/0/1 at struct+0xDC/+0xFC/+0x11C; uses absent-bodied string compare 0x0806e918."
+    }
+  ],
+  "caller_chains": [
+    {
+      "entry_caller": "0x080002f4",
+      "chain": [
+        "0x080002f4",
+        "0x08019848",
+        "0x080197d0",
+        "0x08019754"
+      ],
+      "trigger_context": "Boot slot probe (callgraph + textual lines 78,881-956)",
+      "ram_fields_updated": [
+        "slot header buffers (struct+0xCC/+0xEC/+0x10C)",
+        "slot status words struct+0xDC/+0xFC/+0x11C (-1/0/1)"
+      ],
+      "how_mapped": "Textual func_ refs attributed to enclosing //080xxxx headers; callgraph confirms 0x080197d0->0x08019754 and 0x08019848->0x080197d0."
+    },
+    {
+      "entry_caller": "0x080002f4",
+      "chain": [
+        "0x080002f4",
+        "0x08072abc",
+        "0x08072b30",
+        "0x0807a460"
+      ],
+      "trigger_context": "Boot EEPROM identify before any save access (line 53)",
+      "ram_fields_updated": [
+        "EEPROM ready flag (*_DAT_08072acc=1)",
+        "EEPROM type block selection (0x40 variant)"
+      ],
+      "how_mapped": "Textual call in FUN_080002f4 body; FUN_08072abc body calls func_0x08072b30 which calls func_0x0807a460(0x40)."
+    },
+    {
+      "entry_caller": "0x080002f4",
+      "chain": [
+        "0x080002f4",
+        "0x080192d8",
+        "0x08072ae8",
+        "0x08072b44",
+        "0x0807a528",
+        "0x0807a4a8"
+      ],
+      "trigger_context": "Boot global load (line 79, struct+300 header buffer)",
+      "ram_fields_updated": [
+        "global header buffer (struct+0x12C)",
+        "global data RAM copy: clamps +0->[0,5], +2->[0,2], +4->[0,0x100], +8->[0,0x100]"
+      ],
+      "how_mapped": "Textual refs in FUN_080192d8 (0x780/0x10 reads, checksum compare); gated-read chain via 0x08072ae8 body."
+    },
+    {
+      "entry_caller": "0x080002f4",
+      "chain": [
+        "0x080002f4",
+        "0x08019b5c",
+        "0x080194e0",
+        "0x08019958",
+        "0x0801969c",
+        "0x08072b0c",
+        "0x08072bf0",
+        "0x0807a81c",
+        "0x0807a7e4",
+        "0x0807a5ec",
+        "0x0807a4a8"
+      ],
+      "trigger_context": "Factory init: global load failed and all slots invalid, or per-slot invalid re-blank (lines 80-95)",
+      "ram_fields_updated": [
+        "game struct defaults (0x080194e0: +0x20=250,+0x22=10,+0x28=200,+0x2A=7,+0x2C=120,+0x2E=5,+0x38..+0x3B=0xFF,...)",
+        "payload buffer (pack 0x08019958)",
+        "slot header +0x08 counter, +0x0C checksum, +0x10 flag (final blank: 0, checksum, 0)"
+      ],
+      "how_mapped": "Callgraph confirms 0x08019b5c->{0x080194e0,0x08019958,0x0801969c}; textual refs confirm boot call sites and 0x0801969c->0x08072b0c; driver tail via 0x08072bf0 body line 8698."
+    },
+    {
+      "entry_caller": "0x0801969c",
+      "chain": [
+        "0x0801969c",
+        "0x08019958",
+        "0x0806f1c0",
+        "0x08072b0c",
+        "0x08072bf0",
+        "0x0807a81c",
+        "0x0807a74c",
+        "0x0807a528",
+        "0x0807a4a8"
+      ],
+      "trigger_context": "Normal slot save (in-game trigger ABSENT from corpus; only traced caller is 0x08019b5c)",
+      "ram_fields_updated": [
+        "payload buffer (all pack offsets)",
+        "slot header +0x08 (increment), +0x0C (checksum), +0x10 (=1)"
+      ],
+      "how_mapped": "FUN_0801969c body (lines 788-833): pack call, flag, FUN_0806f1c0(payload,0x260), gated writes. Trigger gap reported, not filled."
+    },
+    {
+      "entry_caller": "0x080197d0",
+      "chain": [
+        "0x080197d0",
+        "0x08019754",
+        "0x0806f1c0",
+        "0x08019a50"
+      ],
+      "trigger_context": "Slot load after header probe succeeds past counter fast-path",
+      "ram_fields_updated": [
+        "payload read buffer (_DAT_080197c0-relative)",
+        "game struct via unpack 0x08019a50 (body missing, inverse of pack map only)"
+      ],
+      "how_mapped": "FUN_08019754 body lines 840-869: gated reads, checksum compare, func_0x08019a50 call on match."
+    },
+    {
+      "entry_caller": "0x08019c80",
+      "chain": [
+        "0x08019c80",
+        "0x0806f1c0",
+        "0x08072b0c",
+        "0x08072bf0",
+        "0x0807a81c",
+        "0x0807a5ec",
+        "0x0807a4a8"
+      ],
+      "trigger_context": "Global save (caller ABSENT from corpus; options/settings trigger not traced)",
+      "ram_fields_updated": [
+        "global data +4, +8 refreshed from live globals (*_DAT_08019cd0/*_DAT_08019cd4)",
+        "global header +0x0C checksum"
+      ],
+      "how_mapped": "FUN_08019c80 body lines 1110-1135. Only traced writer that recomputes global checksum; candidate for cap-00->cap-01 delta."
+    }
+  ],
+  "fields": [
+    {
+      "name": "slot_header_label_byte0",
+      "offset": 7,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": [
+        "0x08019b5c"
+      ],
+      "readers": [
+        "0x08019848"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": "0x00 (RAM hdr +0x00)",
+        "cap-01-future-1.sav": "0x00"
+      },
+      "update_mechanism": "First byte of header copy via 0x0806e8c4 in 0x08019b5c; string-compared at boot via absent-bodied 0x0806e918. File offset is slot base+7 due to 8B-block reversal (RAM +0x00). Add slot*0x280 for slots 1-2.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "FUN_08019b5c header copy; FUN_08019848 compare call. Source constant unresolved; meaning UNKNOWN."
+    },
+    {
+      "name": "slot_header_stale_01_07",
+      "offset": 1,
+      "size": 7,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {
+        "both_files": "0xff x7 (RAM hdr +0x01..+0x07)"
+      },
+      "update_mechanism": "Never written by traced code; stale erased content carried through header writes (RAM offsets +0x01..+0x07, file slot+0x001..0x006 reversed positions).",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Both .sav headers; no writer in decompiled corpus."
+    },
+    {
+      "name": "slot_header_counter",
+      "offset": 11,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": [
+        "0x0801969c",
+        "0x08019b5c"
+      ],
+      "readers": [
+        "0x080197d0"
+      ],
+      "observed_values": {
+        "both_files": "0 (RAM hdr +0x08)"
+      },
+      "update_mechanism": "RAM header +0x08 (file bytes reversed within block 0x08-0x0F, shown offset is last file byte of the word). Increment-style update on save in 0x0801969c, reset 0 for blank in 0x08019b5c; <0x65 fast path in 0x080197d0.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "FUN_0801969c/FUN_08019b5c/FUN_080197d0 bodies. Exact increment arithmetic uses unresolved string buffer, not quoted."
+    },
+    {
+      "name": "slot_header_checksum",
+      "offset": 8,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": [
+        "0x0801969c",
+        "0x08019b5c",
+        "0x0806f1c0"
+      ],
+      "readers": [
+        "0x08019754",
+        "0x080197d0"
+      ],
+      "observed_values": {
+        "both_files": "0xf5e045d3 (RAM hdr +0x0C; file bytes F5 E0 45 D3)"
+      },
+      "update_mechanism": "RAM header +0x0C (file slot+0x08..0x0B). Recomputed after pack on every save. See checksums[0].",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "FUN_0806f1c0 + verification 6/6 slot instances (Section 4.4 of report)."
+    },
+    {
+      "name": "slot_header_valid_flag",
+      "offset": 23,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": [
+        "0x0801969c",
+        "0x08019b5c"
+      ],
+      "readers": [
+        "0x08019848"
+      ],
+      "observed_values": {
+        "both_files": "0 (RAM hdr +0x10, blank)"
+      },
+      "update_mechanism": "RAM header +0x10 (file block 0x10-0x17 reversed; shown offset last byte). =1 during real save, rewritten =0 for blank slot.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "FUN_0801969c sets 1; FUN_08019b5c final rewrite sets 0; observed 0."
+    },
+    {
+      "name": "slot_header_word_14",
+      "offset": 16,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": [
+        "0x08019b5c"
+      ],
+      "readers": [
+        "0x08019848"
+      ],
+      "observed_values": {
+        "both_files": "0 (RAM hdr +0x14)"
+      },
+      "update_mechanism": "Zeroed for blank slots; consulted in boot status 0-vs-1 decision. Meaning UNKNOWN.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "FUN_08019b5c zeroing; FUN_08019848 struct+0xE0-family check."
+    },
+    {
+      "name": "slot_header_tail_18_1f",
+      "offset": 24,
+      "size": 8,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {
+        "both_files": "0xff x8 (RAM hdr +0x18..+0x1F)"
+      },
+      "update_mechanism": "Uninitialised header tail, never written by traced code.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Both .sav; no writer in corpus."
+    },
+    {
+      "name": "slot_payload_g34_u16",
+      "offset": 32,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": [
+        "0x08019958"
+      ],
+      "readers": [
+        "0x08019a50"
+      ],
+      "observed_values": {
+        "both_files": "0 (RAM payload +0x00, from game+0x34)"
+      },
+      "update_mechanism": "Pack: payload u16[0]=game u16(G+0x34). RAM offset +0x00; file bytes reversed in block. Unpack body absent.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "FUN_08019958 pack assignments; FUN_080194e0 default G+0x34=0."
+    },
+    {
+      "name": "slot_payload_g20_u16",
+      "offset": 37,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": [
+        "0x08019958"
+      ],
+      "readers": [
+        "0x08019a50"
+      ],
+      "observed_values": {
+        "both_files": "250 (RAM payload +0x02, from game+0x20; file byte 0xFA at slot+0x25)"
+      },
+      "update_mechanism": "Pack: payload u16[1]=game u16(G+0x20); default 250 in FUN_080194e0. Meaning UNKNOWN.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Pack map + default + observed file byte prove transform and field."
+    },
+    {
+      "name": "slot_payload_g38_bytes",
+      "offset": 36,
+      "size": 4,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [
+        "0x08019958"
+      ],
+      "readers": [
+        "0x08019a50"
+      ],
+      "observed_values": {
+        "both_files": "ff ff ff ff (RAM payload +0x04..+0x07, from game+0x38..+0x3B)"
+      },
+      "update_mechanism": "Pack byte copies G+0x38..+0x3B; defaults 0xFF in FUN_080194e0. Sentinel-like; meaning UNKNOWN.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "FUN_08019958 + FUN_080194e0 lines for +0x38..+0x3B + observed."
+    },
+    {
+      "name": "slot_payload_g3c_bytes",
+      "offset": 40,
+      "size": 4,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [
+        "0x08019958"
+      ],
+      "readers": [
+        "0x08019a50"
+      ],
+      "observed_values": {
+        "both_files": "00 00 00 00 (RAM payload +0x08..+0x0B, from game+0x3C..+0x3F)"
+      },
+      "update_mechanism": "Pack byte copies. Meaning UNKNOWN.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "FUN_08019958 pack assignments."
+    },
+    {
+      "name": "slot_payload_gap_0c_0e",
+      "offset": 44,
+      "size": 3,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {
+        "both_files": "00 00 00 (RAM payload +0x0C..+0x0E)"
+      },
+      "update_mechanism": "Pack-map gap; zeroed buffer only.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "FUN_08019958 writes nothing here; FUN_080194e0 zeroes buffer."
+    },
+    {
+      "name": "slot_payload_g45_u8",
+      "offset": 47,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": [
+        "0x08019958"
+      ],
+      "readers": [
+        "0x08019a50"
+      ],
+      "observed_values": {
+        "both_files": "0 (RAM payload +0x0F, from game+0x45)"
+      },
+      "update_mechanism": "Pack byte copy. Meaning UNKNOWN.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "FUN_08019958."
+    },
+    {
+      "name": "slot_payload_gap_10_17",
+      "offset": 48,
+      "size": 8,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {
+        "both_files": "00 x8 (RAM payload +0x10..+0x17)"
+      },
+      "update_mechanism": "Pack-map gap; zeroed buffer.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "FUN_08019958 gap."
+    },
+    {
+      "name": "slot_payload_g14_bytes",
+      "offset": 56,
+      "size": 11,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [
+        "0x08019958"
+      ],
+      "readers": [
+        "0x08019a50"
+      ],
+      "observed_values": {
+        "both_files": "00 x11 (RAM payload +0x18..+0x22, from game+0x14..+0x1C plus constant 0 at +0x22)"
+      },
+      "update_mechanism": "Pack byte copies G+0x14..+0x1C to payload +0x18,+0x19,+0x1A,+0x1B,+0x1C,+0x1D,+0x1F,+0x20,+0x21 (code order) and literal 0 at +0x22. Meaning UNKNOWN.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "FUN_08019958 assignments."
+    },
+    {
+      "name": "slot_payload_gap_23_25",
+      "offset": 67,
+      "size": 3,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {
+        "both_files": "00 00 00 (RAM payload +0x23..+0x25)"
+      },
+      "update_mechanism": "Pack-map gap.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "FUN_08019958 gap."
+    },
+    {
+      "name": "slot_payload_g22_u16",
+      "offset": 70,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": [
+        "0x08019958"
+      ],
+      "readers": [
+        "0x08019a50"
+      ],
+      "observed_values": {
+        "both_files": "10 (RAM payload +0x26, zero-extended game u8 G+0x22; file byte 0x0A at slot+0x41)"
+      },
+      "update_mechanism": "Pack: payload u16[0x13]=(u16)game u8(G+0x22); default 10. Meaning UNKNOWN.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Pack + default + observed."
+    },
+    {
+      "name": "slot_payload_g24_u16",
+      "offset": 72,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": [
+        "0x08019958"
+      ],
+      "readers": [
+        "0x08019a50"
+      ],
+      "observed_values": {
+        "both_files": "0 (RAM payload +0x28, game G+0x24)"
+      },
+      "update_mechanism": "Pack u16 copy; default 0. Meaning UNKNOWN.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "FUN_08019958."
+    },
+    {
+      "name": "slot_payload_g26_u16",
+      "offset": 74,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": [
+        "0x08019958"
+      ],
+      "readers": [
+        "0x08019a50"
+      ],
+      "observed_values": {
+        "both_files": "0 (RAM payload +0x2A, zero-extended game u8 G+0x26)"
+      },
+      "update_mechanism": "Pack u16 copy. Meaning UNKNOWN.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "FUN_08019958."
+    },
+    {
+      "name": "slot_payload_g28_u16",
+      "offset": 76,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": [
+        "0x08019958"
+      ],
+      "readers": [
+        "0x08019a50"
+      ],
+      "observed_values": {
+        "both_files": "200 (RAM payload +0x2C, game G+0x28; file byte 0xC8 at slot+0x4B)"
+      },
+      "update_mechanism": "Pack u16 copy; default 200. Meaning UNKNOWN.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Pack + default + observed."
+    },
+    {
+      "name": "slot_payload_g2a_u16",
+      "offset": 78,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": [
+        "0x08019958"
+      ],
+      "readers": [
+        "0x08019a50"
+      ],
+      "observed_values": {
+        "both_files": "7 (RAM payload +0x2E, zero-extended game u8 G+0x2A; file byte at slot+0x49)"
+      },
+      "update_mechanism": "Pack u16 copy; default 7. Meaning UNKNOWN.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Pack + default + observed."
+    },
+    {
+      "name": "slot_payload_g2c_u16",
+      "offset": 80,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": [
+        "0x08019958"
+      ],
+      "readers": [
+        "0x08019a50"
+      ],
+      "observed_values": {
+        "both_files": "120 (RAM payload +0x30, game G+0x2C; file byte 0x78 at slot+0x57)"
+      },
+      "update_mechanism": "Pack u16 copy; default 120. Meaning UNKNOWN.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Pack + default + observed."
+    },
+    {
+      "name": "slot_payload_g2e_u16",
+      "offset": 82,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": [
+        "0x08019958"
+      ],
+      "readers": [
+        "0x08019a50"
+      ],
+      "observed_values": {
+        "both_files": "5 (RAM payload +0x32, zero-extended game u8 G+0x2E; file byte at slot+0x55)"
+      },
+      "update_mechanism": "Pack u16 copy; default 5. Meaning UNKNOWN.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Pack + default + observed."
+    },
+    {
+      "name": "slot_payload_g30_u16",
+      "offset": 84,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": [
+        "0x08019958"
+      ],
+      "readers": [
+        "0x08019a50"
+      ],
+      "observed_values": {
+        "both_files": "0 (RAM payload +0x34, game G+0x30)"
+      },
+      "update_mechanism": "Pack u16 copy. Meaning UNKNOWN.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "FUN_08019958."
+    },
+    {
+      "name": "slot_payload_g32_u16",
+      "offset": 86,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": [
+        "0x08019958"
+      ],
+      "readers": [
+        "0x08019a50"
+      ],
+      "observed_values": {
+        "both_files": "0 (RAM payload +0x36, zero-extended game u8 G+0x32)"
+      },
+      "update_mechanism": "Pack u16 copy. Meaning UNKNOWN.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "FUN_08019958."
+    },
+    {
+      "name": "slot_payload_g8c_block",
+      "offset": 88,
+      "size": 58,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [
+        "0x08019958"
+      ],
+      "readers": [
+        "0x08019a50"
+      ],
+      "observed_values": {
+        "both_files": "00 x58 (RAM payload +0x38..+0x71, from game+0x8C..+0xC5)"
+      },
+      "update_mechanism": "Pack loop copy 0x3A bytes. Internal subdivision UNKNOWN; largest unknown field.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "FUN_08019958 loop (i<0x3A)."
+    },
+    {
+      "name": "slot_payload_gap_72_75",
+      "offset": 146,
+      "size": 4,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {
+        "both_files": "00 00 00 00 (RAM payload +0x72..+0x75)"
+      },
+      "update_mechanism": "Pack-map gap.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "FUN_08019958 gap."
+    },
+    {
+      "name": "slot_payload_g36_u16",
+      "offset": 150,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": [
+        "0x08019958"
+      ],
+      "readers": [
+        "0x08019a50"
+      ],
+      "observed_values": {
+        "both_files": "0 (RAM payload +0x76, game G+0x36)"
+      },
+      "update_mechanism": "Pack: payload u16[0x3B]=game u16(G+0x36). Meaning UNKNOWN.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "FUN_08019958."
+    },
+    {
+      "name": "slot_payload_reserved_tail",
+      "offset": 152,
+      "size": 488,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [
+        "0x0806f1c0"
+      ],
+      "observed_values": {
+        "both_files": "00 x488 (RAM payload +0x78..+0x25F)"
+      },
+      "update_mechanism": "Never pack-written; zeroed buffer only, but checksum-covered. File slot range continues to slot+0x27F.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Observed zero in both files; checksum coverage proven by FUN_0806f1c0 length 0x260 (fuzz F3 tests it)."
+    },
+    {
+      "name": "global_header_stale_except_checksum",
+      "offset": 1920,
+      "size": 32,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [
+        "0x08019c1c",
+        "0x08019c80"
+      ],
+      "readers": [
+        "0x080192d8"
+      ],
+      "observed_values": {
+        "both_files": "ff x8, checksum word, ff x20 (only RAM +0x0C written)"
+      },
+      "update_mechanism": "Header buffer never initialised; writers set only +0x0C checksum. Counter (+0x08) and flag (+0x10) remain 0xFFFFFFFF and are meaningless for global block.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Both .sav global headers; FUN_08019c1c/c80 write only +0x0C."
+    },
+    {
+      "name": "global_data_field_00",
+      "offset": 1959,
+      "size": 2,
+      "type": "i16_le",
+      "ram_addr": null,
+      "writers": [
+        "0x08019c1c",
+        "0x08019c80"
+      ],
+      "readers": [
+        "0x080192d8"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": "-1 (RAM gbl +0x00)",
+        "cap-01-future-1.sav": "0"
+      },
+      "update_mechanism": "RAM global data +0x00 (file 0x7A6-0x7A7 reversed). Clamped [0,5] in RAM on load by 0x080192d8. Default from unresolved const in 0x08019c1c. Name UNKNOWN (range 0-5 only). History hypothesis in report.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Observed delta + clamp code. Values verified; flush history is HYPOTHESIS (see report)."
+    },
+    {
+      "name": "global_data_field_02",
+      "offset": 1957,
+      "size": 2,
+      "type": "i16_le",
+      "ram_addr": null,
+      "writers": [
+        "0x08019c1c"
+      ],
+      "readers": [
+        "0x080192d8"
+      ],
+      "observed_values": {
+        "both_files": "1 (RAM gbl +0x02)"
+      },
+      "update_mechanism": "Default 1 in 0x08019c1c; clamped [0,2] on load. Name UNKNOWN.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Default + clamp code + observed."
+    },
+    {
+      "name": "global_data_field_04",
+      "offset": 1955,
+      "size": 4,
+      "type": "i32_le",
+      "ram_addr": null,
+      "writers": [
+        "0x08019c1c",
+        "0x08019c80"
+      ],
+      "readers": [
+        "0x080192d8"
+      ],
+      "observed_values": {
+        "both_files": "192 (RAM gbl +0x04, 0xC0; file byte 0xC0 at 0x7A3)"
+      },
+      "update_mechanism": "Default 0xC0; refreshed from live global on save; clamped [0,0x100] on load. Name UNKNOWN.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "FUN_08019c1c/c80 + clamp + observed."
+    },
+    {
+      "name": "global_data_field_08",
+      "offset": 1952,
+      "size": 4,
+      "type": "i32_le",
+      "ram_addr": null,
+      "writers": [
+        "0x08019c1c",
+        "0x08019c80"
+      ],
+      "readers": [
+        "0x080192d8"
+      ],
+      "observed_values": {
+        "both_files": "256 (RAM gbl +0x08, 0x100)"
+      },
+      "update_mechanism": "Default 0x100; refreshed on save; clamped [0,0x100] on load (at max). Name UNKNOWN.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "FUN_08019c1c/c80 + clamp + observed."
+    },
+    {
+      "name": "global_data_tail_0c",
+      "offset": 1964,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": [
+        "0x08019c1c"
+      ],
+      "readers": [
+        "0x0806f1c0"
+      ],
+      "observed_values": {
+        "both_files": "0 (RAM gbl +0x0C)"
+      },
+      "update_mechanism": "Unused, zero-cleared, checksum-covered.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "Buffer clear in FUN_08019c1c; checksum length 0x10."
+    },
+    {
+      "name": "unused_eeprom_tail",
+      "offset": 1968,
+      "size": 6224,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {
+        "both_files": "0xff x6224 (0x7B0-0x1FFF)"
+      },
+      "update_mechanism": "Never accessed by traced code.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Script-verified all 0xFF in both files; no accessor in corpus."
+    }
+  ],
+  "fuzzing_targets": [
+    {
+      "offset": 1928,
+      "size": 1,
+      "mutation": "Flip one bit in global checksum first file byte (0x788), no repair",
+      "requires_checksum_repair": false,
+      "predicted_effect": "Global load fails (0x080192d8 -1); packet probe observed blank boot + rewrite. Control with repair must boot normally."
+    },
+    {
+      "offset": 8,
+      "size": 1,
+      "mutation": "Flip one bit in slot0 checksum file byte, no repair; slots 1-2 untouched",
+      "requires_checksum_repair": false,
+      "predicted_effect": "Slot0 status -1 at boot, re-blanked only (checksum returns to 0xf5e045d3, counter/flag 0); other slots byte-identical."
+    },
+    {
+      "offset": 935,
+      "size": 1,
+      "mutation": "Slot1 payload RAM +0x100 byte 0x00->0x01 (file offset via block reversal), no repair",
+      "requires_checksum_repair": false,
+      "predicted_effect": "Slot1 invalidated, proving checksum covers unused payload tail. Survival falsifies covered range."
+    },
+    {
+      "offset": 935,
+      "size": 1,
+      "mutation": "Same byte 0x00->0x01 with checksum repair (unreverse, recompute seed 0xAA55A5A5, store hdr+0x0C, re-reverse)",
+      "requires_checksum_repair": true,
+      "predicted_effect": "Slot validates/loads; no gameplay change predicted (unused tail). Any change reveals reader outside pack map."
+    },
+    {
+      "offset": 23,
+      "size": 4,
+      "mutation": "Slot0 RAM hdr valid flag +0x10: 0->1 (header is not checksum-covered)",
+      "requires_checksum_repair": false,
+      "predicted_effect": "Slot must NOT invalidate; boot may show blank-payload slot0 as occupied in save-select UI."
+    },
+    {
+      "offset": 11,
+      "size": 4,
+      "mutation": "Slot0 RAM hdr counter +0x08: 0->100 vs 0->101 in separate files",
+      "requires_checksum_repair": false,
+      "predicted_effect": "<0x65 header-only fast path vs full-load branch in 0x080197d0; combine with corrupt payload checksum to discriminate branches."
+    },
+    {
+      "offset": 37,
+      "size": 2,
+      "mutation": "Slot payload RAM +0x02 (game+0x20) 250->251 with repair; separately +0x26 10->11, +0x2C 200->201, +0x30 120->121",
+      "requires_checksum_repair": true,
+      "predicted_effect": "Loads via missing unpacker; no semantic prediction - measurement probe for field meanings; crash indicates unpack range-check."
+    },
+    {
+      "offset": 1959,
+      "size": 2,
+      "mutation": "Global data RAM +0x00: 0->6 and 0->-1 (separate files) with global repair; +0x02 1->3; +0x04 192->257",
+      "requires_checksum_repair": true,
+      "predicted_effect": "Clamped on load to [0,5]/[0,2]/[0,0x100] in RAM without invalidation; settings UI shows clamped value; next global save persists clamped value."
+    },
+    {
+      "offset": 1968,
+      "size": 1,
+      "mutation": "Unused tail file 0x7B0 / 0x1000 / 0x1FFF: 0xFF->0x00, no repair",
+      "requires_checksum_repair": false,
+      "predicted_effect": "No effect whatsoever; any boot difference falsifies geometry."
+    },
+    {
+      "offset": 7,
+      "size": 1,
+      "mutation": "Slot0 RAM hdr byte0 0x00->0x41 with no repair",
+      "requires_checksum_repair": false,
+      "predicted_effect": "Open test of unresolved 0x08019848 string compare: status flip/rejection reveals validated label; no change reveals cosmetic name."
+    }
+  ],
+  "open_questions": [
+    "Unpacker FUN 0x08019a50 has no body in the 298-function corpus: payload->game assignments are inferred only as inverse of pack 0x08019958.",
+    "String compare 0x0806e918 and its constant (uRam08019894 family) absent: slot header byte0 label semantics and boot status 0-vs-1 rule incomplete.",
+    "In-game slot-save trigger calling 0x0801969c during play absent (only blank-slot creator 0x08019b5c traced); global-save 0x08019c80 has no caller in corpus.",
+    "All absolute RAM mirror addresses unrecoverable: decompilation exports only _DAT_08019xxxx placeholders without literal-pool values. Fields mapped by buffer-relative offset.",
+    "EEPROM type-block numeric fields (*(u16*)(block+4) capacity, *(u8*)(block+8) address bits, size gate 0x200 in 0x0807a7e4) unresolved; capacity 1024 blocks inferred from 8192-byte image.",
+    "Exact counter increment arithmetic in 0x0801969c (unresolved _DAT_080196c8 string buffer, ':'/0x3A overflow path) not quotable beyond incremented/reset semantics.",
+    "Gameplay semantics (names) of all payload fields and global settings fields unknown: both samples contain only default/blank state, no non-default slot ever observed.",
+    "Global data +0x00 flush history (cap-00 -1 -> cap-01 0 via load-clamp then 0x08019c80) is a hypothesis: 0x08019c80 writes only +4/+8 in its traced body.",
+    "Lock helpers 0x08072ad0/0x08072adc/0x08072924/0x08072930/0x0806ae84 inner semantics (interrupt vs DMA mutex) unrecovered; roles assigned by bracketing position only.",
+    "No paired .ss save states in states/ (0 states): fuzzing plan requires fresh emulator boots; UI predictions untested in this workspace."
+  ]
+}

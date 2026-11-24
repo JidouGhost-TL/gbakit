@@ -1,0 +1,337 @@
+{
+  "schema": "gbakit-save-research/1",
+  "release_key": "BLYX-r0-135e13f36b883066",
+  "display_name": "Lemony Snicket's A Series of Unfortunate Events (Europe) (Fr,Es)",
+  "rom_sha256": "135e13f36b8830662130d7b6019714e876e16a384afd9a4533a7bce1fd2305d5",
+  "game_code": "BLYX",
+  "header_family": "BLY",
+  "community_id": "comm-006",
+  "overall_confidence": "MEDIUM",
+  "media": {
+    "kind": "eeprom512",
+    "size_bytes": 512,
+    "sdk_tags": [],
+    "fill_byte": "0xff"
+  },
+  "slots_and_copies": [
+    {
+      "name": "header",
+      "offset": 0,
+      "size": 16,
+      "redundancy_role": "global_config",
+      "selection_rule": "Single copy at EEPROM blocks 0-1. Valid iff FUN_08039ac0 sum over 16 bytes == 0 and first 8 bytes match magic (FUN_08039b4c); invalid at boot triggers blank-save recreation in FUN_0803935c. No backup copy exists."
+    },
+    {
+      "name": "slot_0",
+      "offset": 16,
+      "size": 160,
+      "redundancy_role": "primary",
+      "selection_rule": "EEPROM blocks 2-21 (addr = 0*0x14+2, count 0x14). Loaded by FUN_080399d0(0); validity flag at manager struct +0x20 = (FUN_08039ac0 sum over 160 bytes == 0) via FUN_08039988(0); consumed by FUN_08039474(0). No generation counter; selection among valid slots is outside the traced code."
+    },
+    {
+      "name": "slot_1",
+      "offset": 176,
+      "size": 160,
+      "redundancy_role": "primary",
+      "selection_rule": "EEPROM blocks 22-41 (addr = 1*0x14+2, count 0x14). Loaded by FUN_080399d0(1); validity flag at manager struct +0x24 via FUN_08039988(1); consumed by FUN_08039474(1). No generation counter."
+    },
+    {
+      "name": "slot_2",
+      "offset": 336,
+      "size": 160,
+      "redundancy_role": "primary",
+      "selection_rule": "EEPROM blocks 42-61 (addr = 2*0x14+2, count 0x14). Loaded by FUN_080399d0(2); validity flag at manager struct +0x28 via FUN_08039988(2); consumed by FUN_08039474(2). No generation counter."
+    }
+  ],
+  "magic_signatures": [
+    {
+      "offset": 0,
+      "bytes_hex": "3735303045555341",
+      "ascii": "7500EUSA",
+      "verified_in_code": true,
+      "verified_in_sav": true,
+      "function_addrs": ["0x08039b4c", "0x08039a48", "0x08039afc"]
+    }
+  ],
+  "checksums": [
+    {
+      "name": "header_sum16",
+      "algorithm": "sum16_le",
+      "formula_detail": "FUN_08039ac0: sum of u16 words modulo 0x10000 (RAM little-endian words; EEPROM MSB-first serial packing makes each word appear big-endian in the raw .sav file, so file verification sums big-endian word pairs). Writers zero the stored word at header+0x0E, sum all 8 words over 0x00-0x0F, and store (-sum) mod 0x10000. Valid iff the sum over the full 16 bytes including the stored word equals 0.",
+      "stored_offset": 14,
+      "stored_size": 2,
+      "covered_start": 0,
+      "covered_end": 16,
+      "function_addrs": ["0x08039ac0", "0x08039afc", "0x08039a48", "0x08039b4c"],
+      "verified_on_samples": [
+        {"file": "cap-00-future-0.sav", "stored_hex": "0xff80", "computed_hex": "0xff80", "match": true},
+        {"file": "cap-01-future-1.sav", "stored_hex": "0xff80", "computed_hex": "0xff80", "match": true}
+      ],
+      "confidence": "CONFIRMED_VERIFIED"
+    },
+    {
+      "name": "slot_sum16",
+      "algorithm": "sum16_le",
+      "formula_detail": "Same FUN_08039ac0 primitive over the full 160-byte (0xA0, 80-word) slot buffer. Validity rule is code-proven: slot is valid iff the total sum equals 0 (FUN_08039988). The stored word position is inferred as the last word of the slot (slot+0x9E) by analogy with the header; no slot-checksum writer exists in the corpus, so the position is unproven. Both corpus samples are blank slots (8x0x00 + 152x0xFF) summing to 0xffb4 != 0, i.e. invalid/empty, as expected.",
+      "stored_offset": 158,
+      "stored_size": 2,
+      "covered_start": 16,
+      "covered_end": 176,
+      "function_addrs": ["0x08039ac0", "0x08039988", "0x080399d0"],
+      "verified_on_samples": [
+        {"file": "cap-00-future-0.sav", "stored_hex": "0xffff", "computed_hex": "0xffb4", "match": false},
+        {"file": "cap-01-future-1.sav", "stored_hex": "0xffff", "computed_hex": "0xffb4", "match": false}
+      ],
+      "confidence": "HYPOTHESIS"
+    }
+  ],
+  "io_driver_functions": [
+    {"addr": "0x080510f4", "role": "write", "callers": ["0x08051174", "0x08051238"], "notes": "DMA3 primitive: programs DMA source/dest/control (count|0x80000000 enable), busy-waits on busy bit; one endpoint is EEPROM window 0x0D000000. Used for both directions."},
+    {"addr": "0x08051174", "role": "read", "callers": ["0x08051398", "0x08039bb4"], "notes": "EEPROM read one 8-byte block: MSB-first address bitstream via FUN_080510f4 to 0x0D000000 (cmd len addr-bits+3, data len 0x44), packs received bits MSB-first into 4 u16 words."},
+    {"addr": "0x08051238", "role": "write", "callers": ["0x08051224"], "notes": "EEPROM write one 8-byte block: serializes 4 u16 words + address MSB-first (len addr-bits+0x43) via DMA to 0x0D000000, then polls EEPROM busy (0x0D000000 & 1) with timeout."},
+    {"addr": "0x08051224", "role": "write", "callers": ["0x08039c30"], "notes": "Write wrapper: calls FUN_08051238(addr, ptr, 1) with wait-for-completion enabled."},
+    {"addr": "0x08051398", "role": "read", "callers": ["0x08039c30"], "notes": "Write-verify: reads block back via FUN_08051174 and compares all 4 u16 words; returns 0 on match, 0x8000 on mismatch."},
+    {"addr": "0x080510ac", "role": "erase", "callers": ["0x08039cb8"], "notes": "Not an erase: EEPROM bus timing/WAITCNT profile select (modes 4 / 0x40 / other). No EEPROM erase operation exists; blank state is the erased 0xFF state plus explicit zero-prefix writes."},
+    {"addr": "0x08039ac0", "role": "checksum", "callers": ["0x08039988", "0x08039a48", "0x08039afc", "0x08039b4c"], "notes": "Sum16 primitive: sum of byte_count/2 u16 words modulo 0x10000. Callers negate when storing; validation requires total sum == 0."},
+    {"addr": "0x08039bb4", "role": "read", "callers": ["0x080399d0", "0x08039a48", "0x08039b4c"], "notes": "Block reader: reads block_count consecutive 8-byte blocks (ram_ptr += 8, addr += 1), up to 3 attempts per block, framed by FUN_08039cb8/FUN_08039d04 session begin/end."},
+    {"addr": "0x08039c30", "role": "write", "callers": ["0x0803935c", "0x08039a48", "0x08039afc"], "notes": "Block writer with verify: per block FUN_08051224 write + FUN_08051398 read-back compare, up to 3 attempts per block, same session framing."},
+    {"addr": "0x08039afc", "role": "serialize", "callers": ["0x0803935c"], "notes": "Blank-header creation: memcpy 16-byte ROM template to RAM header, store negated FUN_08039ac0 sum at +0x0E, flush blocks 0-1 via FUN_08039c30."},
+    {"addr": "0x08039a48", "role": "serialize", "callers": [], "notes": "Header re-checksum and flush: reads blocks 0-1, zeroes RAM header +0x0E, stores negated sum, writes header back if first u32 (magic dword) unchanged. Caller not in corpus (unrecovered jumptable suspected). Only path persisting header bytes 0x08-0x0D mutations."},
+    {"addr": "0x080399d0", "role": "deserialize", "callers": ["0x0803994c"], "notes": "Slot loader: zeroes 160-byte buffer (FUN_080393fc), reads 20 blocks from EEPROM addr slot*0x14+2 via FUN_08039bb4."},
+    {"addr": "0x08039988", "role": "checksum", "callers": ["0x0803994c"], "notes": "Slot validator: stores boolean (FUN_08039ac0 slot sum over 0xA0 bytes == 0) at manager struct +0x20+slot*4."},
+    {"addr": "0x08039b4c", "role": "deserialize", "callers": ["0x0803935c"], "notes": "Header validator: returns 1 iff EEPROM read ok AND 16-byte sum == 0 AND first 8 bytes match the expected magic constant."}
+  ],
+  "caller_chains": [
+    {
+      "entry_caller": "0x0803935c",
+      "chain": ["0x0803935c", "0x08039b4c", "0x08039bb4", "0x08051174", "0x080510f4"],
+      "trigger_context": "Boot-time save load: validate EEPROM header (magic + sum16) before loading slots. FUN_0803935c itself has no traced caller (top-level, unrecovered jumptable suspected).",
+      "ram_fields_updated": ["manager+0x10 slot buffer pointer (FUN_0800c064(0xA0) allocation)"],
+      "how_mapped": "Explicit func_0x08039b4c call site in FUN_0803935c body in ghidra/decompiled.c; FUN_08039bb4/FUN_08051174/FUN_080510f4 chain confirmed in bodies and ghidra/callgraph.json."
+    },
+    {
+      "entry_caller": "0x0803935c",
+      "chain": ["0x0803935c", "0x08039afc", "0x0800c2bc", "0x08039ac0", "0x08039c30", "0x08051224", "0x08051238", "0x080510f4"],
+      "trigger_context": "Blank-save creation when header validation fails at boot: copy ROM header template, fix checksum at +0x0E, write+verify blocks 0-1 (verify leg: FUN_08039c30 -> 0x08051398 -> 0x08051174). Followed by zeroing the slot buffer (FUN_080393fc) and writing an 8-byte zero prefix to each slot start via FUN_08039c30 with count=1 at blocks 2, 22, 42.",
+      "ram_fields_updated": ["header struct +0x00..0x0F (full template copy)", "header struct +0x0E (negated checksum)", "slot buffer +0x00..0x9F (zeroed; only +0x00..0x07 flushed per slot)"],
+      "how_mapped": "Explicit call sites in FUN_0803935c and FUN_08039afc bodies in ghidra/decompiled.c; slot-prefix geometry (count=1, addrs 2/22/42 step 0x14) read directly from the FUN_0803935c loop and cross-verified against the 8x0x00+152x0xFF pattern in both .sav files."
+    },
+    {
+      "entry_caller": "0x0803935c",
+      "chain": ["0x0803935c", "0x0803994c", "0x080399d0", "0x08039bb4", "0x08051174", "0x080510f4"],
+      "trigger_context": "Load all three slots into the 160-byte RAM buffer after header validation (or blank creation), validate each with FUN_08039988 -> FUN_08039ac0, then build per-slot state with FUN_08039474.",
+      "ram_fields_updated": ["slot buffer +0x00..0x9F (per-slot EEPROM image)", "manager+0x20/0x24/0x28 validity flags", "manager+0x14+slot*4 per-slot state (FUN_08039474)"],
+      "how_mapped": "Explicit call sites in FUN_0803935c, FUN_0803994c, FUN_080399d0, FUN_08039988 bodies; slot EEPROM address formula slot*0x14+2 with count 0x14 read from FUN_080399d0."
+    },
+    {
+      "entry_caller": "0x08039a48",
+      "chain": ["0x08039a48", "0x08039bb4", "0x08051174", "0x080510f4", "0x08039ac0", "0x08039c30", "0x08051238"],
+      "trigger_context": "Header update flush: re-read header, recompute checksum, write back if magic dword unchanged. Triggering gameplay event and the mutator of header bytes 0x08/0x0C are outside the corpus (no traced caller).",
+      "ram_fields_updated": ["header struct +0x0E (zeroed, then negated sum)"],
+      "how_mapped": "Function body in ghidra/decompiled.c; caller search over all 273 bodies and ghidra/callgraph.json found no caller."
+    }
+  ],
+  "fields": [
+    {
+      "name": "header_magic",
+      "offset": 0,
+      "size": 8,
+      "type": "ascii",
+      "ram_addr": null,
+      "writers": ["0x08039afc"],
+      "readers": ["0x08039b4c", "0x08039a48"],
+      "observed_values": {"cap-00-future-0.sav": "7500EUSA", "cap-01-future-1.sav": "7500EUSA"},
+      "update_mechanism": "Copied from ROM template at blank-header creation (FUN_08039afc via FUN_0800c2bc); validated byte-by-byte at boot (FUN_08039b4c) and as first u32 before header reflush (FUN_08039a48). RAM mirror is header struct +0x00; absolute RAM address unresolved in corpus.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Bytes 37 35 30 30 45 55 53 41 at offset 0 in both .sav files; 8-byte compare loop in FUN_08039b4c body."
+    },
+    {
+      "name": "header_byte_08",
+      "offset": 8,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": ["0x08039a48"],
+      "readers": ["0x08039b4c"],
+      "observed_values": {"cap-00-future-0.sav": "0x00", "cap-01-future-1.sav": "0xff"},
+      "update_mechanism": "Mutated in RAM by code outside the corpus, then persisted with a refreshed checksum by FUN_08039a48 (flush only; the mutator itself was not found). Covered by the header sum16, so any change requires checksum repair. Flag-like 0x00/0xFF pattern; semantics unknown.",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Only differing byte besides 0x0C between the two captures (saves/hexdump_and_diffs.txt); PACKET probe confirms single-byte mutation at 0x08 triggers blank-save rewrite (integrity coverage)."
+    },
+    {
+      "name": "header_byte_09",
+      "offset": 9,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": ["0x08039a48"],
+      "readers": ["0x08039b4c"],
+      "observed_values": {"cap-00-future-0.sav": "0x85", "cap-01-future-1.sav": "0x85"},
+      "update_mechanism": "Persisted by FUN_08039a48 flush; covered by header sum16. Constant 0x85 in both blank captures; may pair with byte 0x08 as a u16. No individual reader in corpus.",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Constant byte in both .sav files; no dedicated accessor in ghidra/decompiled.c."
+    },
+    {
+      "name": "header_word_0a",
+      "offset": 10,
+      "size": 2,
+      "type": "unknown",
+      "ram_addr": null,
+      "writers": ["0x08039a48"],
+      "readers": ["0x08039b4c"],
+      "observed_values": {"cap-00-future-0.sav": "0x0000", "cap-01-future-1.sav": "0x0000"},
+      "update_mechanism": "Covered by header sum16 only; no individual writer/reader traced. Endianness unproven (zero in all samples).",
+      "confidence": "UNKNOWN",
+      "evidence": "Zero bytes at 0x0A-0x0B in both .sav files; no accessor found in the 273-function corpus."
+    },
+    {
+      "name": "header_counter_candidate",
+      "offset": 12,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": ["0x08039a48"],
+      "readers": ["0x08039b4c"],
+      "observed_values": {"cap-00-future-0.sav": "0x0000", "cap-01-future-1.sav": "0x0001"},
+      "update_mechanism": "Incremented between the two captures (file bytes 00 00 -> 01 00, little-endian reading) by a mutator outside the corpus and persisted by FUN_08039a48 with checksum refresh. Counter semantics are an inference from the +1 delta; big-endian reading (0x0000 -> 0x0100) cannot be excluded.",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Byte diff at 0x0C (00 -> 01) in saves/hexdump_and_diffs.txt; checksum remained valid only via the compensating +0xFF00 big-endian delta at 0x08 (net +0x10000 mod 0x10000), consistent with a FUN_08039a48 reflush."
+    },
+    {
+      "name": "header_checksum",
+      "offset": 14,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": ["0x08039afc", "0x08039a48"],
+      "readers": ["0x08039b4c"],
+      "observed_values": {"cap-00-future-0.sav": "0xff80", "cap-01-future-1.sav": "0xff80"},
+      "update_mechanism": "Zeroed, then set to (-sum of all 8 u16 words over header 0x00-0x0F) mod 0x10000 by FUN_08039afc/FUN_08039a48 using FUN_08039ac0. RAM word is little-endian; raw file bytes are FF 80 (high byte first) due to MSB-first EEPROM packing. Validation: full-region sum == 0.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Python verification: stored 0xff80 == computed negated sum 0xff80 and total big-endian word sum 0x0000 in both .sav files; formula read from FUN_08039ac0/FUN_08039a48/FUN_08039afc bodies."
+    },
+    {
+      "name": "slot0_prefix",
+      "offset": 16,
+      "size": 8,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": ["0x0803935c", "0x08039c30"],
+      "readers": ["0x080399d0", "0x08039988"],
+      "observed_values": {"cap-00-future-0.sav": "0000000000000000", "cap-01-future-1.sav": "0000000000000000"},
+      "update_mechanism": "Blank-init writes the first 8 bytes of the zeroed 160-byte slot buffer to EEPROM block 2 (FUN_0803935c via FUN_08039c30 count=1). Read back as part of the 20-block slot load (FUN_080399d0).",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "8x0x00 at 0x10-0x17 in both files matches the count=1 prefix write at block 2 in FUN_0803935c; remainder of slot is erased 0xFF."
+    },
+    {
+      "name": "slot0_payload",
+      "offset": 24,
+      "size": 152,
+      "type": "unknown",
+      "ram_addr": null,
+      "writers": [],
+      "readers": ["0x080399d0", "0x08039988"],
+      "observed_values": {"cap-00-future-0.sav": "0xff x152 (erased)", "cap-01-future-1.sav": "0xff x152 (erased)"},
+      "update_mechanism": "Part of the 160-byte slot (EEPROM blocks 3-21) loaded by FUN_080399d0(0) and summed by FUN_08039988(0). No populated sample and no payload writer in corpus; internal field layout unknown.",
+      "confidence": "UNKNOWN",
+      "evidence": "All 0xFF in both blank captures; slot geometry from FUN_080399d0 address/count formula only."
+    },
+    {
+      "name": "slot1_prefix",
+      "offset": 176,
+      "size": 8,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": ["0x0803935c", "0x08039c30"],
+      "readers": ["0x080399d0", "0x08039988"],
+      "observed_values": {"cap-00-future-0.sav": "0000000000000000", "cap-01-future-1.sav": "0000000000000000"},
+      "update_mechanism": "Blank-init writes first 8 bytes of zeroed slot buffer to EEPROM block 22 (FUN_0803935c via FUN_08039c30 count=1).",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "8x0x00 at 0xB0-0xB7 in both files matches prefix write at block 22 (1*0x14+2) in FUN_0803935c."
+    },
+    {
+      "name": "slot1_payload",
+      "offset": 184,
+      "size": 152,
+      "type": "unknown",
+      "ram_addr": null,
+      "writers": [],
+      "readers": ["0x080399d0", "0x08039988"],
+      "observed_values": {"cap-00-future-0.sav": "0xff x152 (erased)", "cap-01-future-1.sav": "0xff x152 (erased)"},
+      "update_mechanism": "Part of the 160-byte slot (EEPROM blocks 23-41). No populated sample; layout unknown.",
+      "confidence": "UNKNOWN",
+      "evidence": "All 0xFF in both blank captures; geometry from FUN_080399d0 formula only."
+    },
+    {
+      "name": "slot2_prefix",
+      "offset": 336,
+      "size": 8,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": ["0x0803935c", "0x08039c30"],
+      "readers": ["0x080399d0", "0x08039988"],
+      "observed_values": {"cap-00-future-0.sav": "0000000000000000", "cap-01-future-1.sav": "0000000000000000"},
+      "update_mechanism": "Blank-init writes first 8 bytes of zeroed slot buffer to EEPROM block 42 (FUN_0803935c via FUN_08039c30 count=1).",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "8x0x00 at 0x150-0x157 in both files matches prefix write at block 42 (2*0x14+2) in FUN_0803935c."
+    },
+    {
+      "name": "slot2_payload",
+      "offset": 344,
+      "size": 152,
+      "type": "unknown",
+      "ram_addr": null,
+      "writers": [],
+      "readers": ["0x080399d0", "0x08039988"],
+      "observed_values": {"cap-00-future-0.sav": "0xff x152 (erased)", "cap-01-future-1.sav": "0xff x152 (erased)"},
+      "update_mechanism": "Part of the 160-byte slot (EEPROM blocks 43-61). No populated sample; layout unknown.",
+      "confidence": "UNKNOWN",
+      "evidence": "All 0xFF in both blank captures; geometry from FUN_080399d0 formula only."
+    },
+    {
+      "name": "slot_checksum_candidate_slot0",
+      "offset": 174,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": [],
+      "readers": ["0x08039988"],
+      "observed_values": {"cap-00-future-0.sav": "0xffff (erased)", "cap-01-future-1.sav": "0xffff (erased)"},
+      "update_mechanism": "Inferred stored word (slot+0x9E, last word of the checksummed region) by analogy with header_checksum. Validity rule (full-slot FUN_08039ac0 sum == 0) is code-proven in FUN_08039988; stored position has no writer in corpus to confirm it. Blank slots sum to 0xffb4 (invalid). Same candidate applies at file offsets 334 (slot1) and 494 (slot2).",
+      "confidence": "HYPOTHESIS",
+      "evidence": "FUN_08039988 body proves the sum-over-0xA0==0 rule; position inferred from header layout only. No valid slot sample exists."
+    },
+    {
+      "name": "unused_tail",
+      "offset": 496,
+      "size": 16,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"cap-00-future-0.sav": "0xff x16", "cap-01-future-1.sav": "0xff x16"},
+      "update_mechanism": "EEPROM blocks 62-63 inside the 512-byte image but outside every traced read/write range; never accessed by traced code.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "All 0xFF in both files; max EEPROM block touched by traced code is 61 (slot 2 end)."
+    }
+  ],
+  "fuzzing_targets": [
+    {"offset": 8, "size": 1, "mutation": "Flip one bit with no checksum repair (control)", "requires_checksum_repair": false, "predicted_effect": "Header sum != 0, FUN_08039b4c fails, FUN_0803935c recreates blank header and slot prefixes; boot as no-save. Already probe-confirmed per PACKET."},
+    {"offset": 0, "size": 1, "mutation": "Change magic byte 0x37 -> 0x38, then repair header checksum (recompute negated big-endian sum16, store at 0x0E)", "requires_checksum_repair": true, "predicted_effect": "Checksum passes but 8-byte magic compare in FUN_08039b4c fails; blank-save rewrite, distinguishing magic check from checksum check."},
+    {"offset": 12, "size": 2, "mutation": "Set LE u16 to 0x0002 / 0x0010 / 0xFFFF in separate runs, repairing header checksum each time", "requires_checksum_repair": true, "predicted_effect": "If a benign counter: normal boot and the value is preserved or incremented by the next FUN_08039a48 flush (check post-boot .sav dump). Blank rewrite refutes benign-counter hypothesis."},
+    {"offset": 8, "size": 1, "mutation": "Set to 0x01 / 0x7F / 0x80 in separate runs, repairing header checksum each time", "requires_checksum_repair": true, "predicted_effect": "If a pure flag/counter byte: normal boot in all cases. Any blank rewrite or changed title/language UI indicates a validated selector value."},
+    {"offset": 174, "size": 2, "mutation": "Forge slot 0 validity: write 0x01 at 0x10, zero the word at 0xAE, set it to the negated big-endian sum16 over slot bytes 0x10-0xAF", "requires_checksum_repair": true, "predicted_effect": "If stored-word position (+0x9E) is correct: FUN_08039988(0) marks slot 0 valid and file-select shows it loadable. Still-empty display refutes the position; repeat with stored word at slot+0x00 and slot+0x08."},
+    {"offset": 496, "size": 16, "mutation": "Zero EEPROM blocks 62-63 (0x1F0-0x1FF canary)", "requires_checksum_repair": false, "predicted_effect": "No behavioral change and bytes survive a boot/save cycle, confirming the tail is never accessed. Rewritten bytes would prove an untraced accessor exists."},
+    {"offset": 16, "size": 480, "mutation": "Zero all slot bytes while keeping a valid repaired header", "requires_checksum_repair": true, "predicted_effect": "All-zero slot buffers sum to 0, so FUN_08039988 marks all three slots valid with zeroed payloads: three loadable blank games on file-select would confirm the sum-only slot validity rule with no secondary in-slot magic."}
+  ],
+  "open_questions": [
+    "What are the semantics of header bytes 0x08, 0x09 (constant 0x85), 0x0A-0x0B, and 0x0C-0x0D (counter candidate)? Which code mutates them in RAM before the FUN_08039a48 flush? No mutator or caller of FUN_08039a48 exists in the 273-function corpus.",
+    "What is the internal field layout of a populated 160-byte slot? Both corpus saves are blank-initialized (8x0x00 + 152x0xFF per slot); a real in-game save capture is required.",
+    "Which function writes a full populated slot (20 blocks via FUN_08039c30 with count 0x14) and computes the slot checksum? Only count=1 prefix writes and header writes were traced.",
+    "Where exactly is the slot checksum stored word (hypothesized slot+0x9E)? The FUN_08039988 sum==0 validity rule is proven, the position is not.",
+    "What are the absolute RAM mirror addresses (0x02xxxxxx/0x03xxxxxx) of the header struct and manager struct? All _DAT_ literal-pool values are unresolved in the corpus, so ram_addr is null throughout.",
+    "How does the game choose among multiple valid slots (file-select presentation / most-recent logic)? FUN_08039474 builds per-slot state but no recency/generation comparison was found; no generation counter exists in the traced code.",
+    "What are the EEPROM config values (block-count limit at cfg+4, address-width at cfg+8) in ROM data? 64 blocks / 512 bytes is verified from the image; the config words themselves are not in the corpus.",
+    "Does the ROM header template used by FUN_08039afc hold 0x0000 at +0x0E (required for its non-zeroing checksum fix-up to produce a valid header)? The template bytes are not in the corpus; both real blank headers validate, which supports but does not prove it."
+  ]
+}

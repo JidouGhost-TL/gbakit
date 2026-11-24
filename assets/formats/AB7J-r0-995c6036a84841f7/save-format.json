@@ -1,0 +1,225 @@
+{
+  "schema": "gbakit-save-research/1",
+  "release_key": "AB7J-r0-995c6036a84841f7",
+  "display_name": "Minna no Shiiku Series 1 - Boku no Kabutomushi (Japan)",
+  "rom_sha256": "995c6036a84841f792bf4c644789ea9dbdd3b6af25c436ab347b21823c43be9e",
+  "game_code": "AB7J",
+  "header_family": "AB7",
+  "community_id": "comm-009",
+  "overall_confidence": "MEDIUM",
+  "media": {
+    "kind": "sram",
+    "size_bytes": 32768,
+    "sdk_tags": ["SRAM_V112@3579328"],
+    "fill_byte": "0xff"
+  },
+  "slots_and_copies": [
+    {
+      "name": "slot_1",
+      "offset": 12316,
+      "size": 110,
+      "redundancy_role": "primary",
+      "selection_rule": "unknown; only slot id 1 observed via FUN_08022b88(1, ...) in traced caller FUN_0801df08; slot-table entries for other ids (incl. the slot-0 target of Writer A, FUN_08022b24) are not resolvable from static data"
+    }
+  ],
+  "magic_signatures": [],
+  "checksums": [
+    {
+      "name": "record_sum8_complement",
+      "algorithm": "sum8",
+      "formula_detail": "stored_byte = (~(sum(header[0..27] with byte[0x17] zeroed) + sum(payload[0..payload_len-1]))) & 0xFF. Equivalently, sum(header_as_stored) + sum(payload) == 0xFF (mod 256) for any valid record.",
+      "stored_offset": 12339,
+      "stored_size": 1,
+      "covered_start": 12316,
+      "covered_end": 12426,
+      "function_addrs": ["0x08022ae0", "0x08022b88"],
+      "verified_on_samples": [
+        {
+          "file": "saves/cap-01-future-1.sav",
+          "stored_hex": "0x15",
+          "computed_hex": "0x15",
+          "match": true
+        }
+      ],
+      "confidence": "CONFIRMED_VERIFIED"
+    }
+  ],
+  "io_driver_functions": [
+    {
+      "addr": "0x08022ae0",
+      "role": "checksum",
+      "callers": ["0x08022b24", "0x08022b88"],
+      "notes": "8-bit additive sum: first 0x1c (28) bytes at param_1 (header), then param_3 bytes at param_2 (payload). Wraparound char accumulator."
+    },
+    {
+      "addr": "0x08022b24",
+      "role": "write",
+      "callers": ["0x08007ab4"],
+      "notes": "Unverified 'fast' writer: raw-copies a 28-byte header and a variable-length payload into SRAM via FUN_0802cb44, computes a checksum via FUN_08022ae0 but does not appear to store it; only identified caller passes slot=0, src=EWRAM 0x02000000, size=0x3000. No byte evidence this path ever executed in the two available .sav samples (entire file outside the 0x301c-0x3089 window is untouched 0xFF)."
+    },
+    {
+      "addr": "0x08022b88",
+      "role": "write",
+      "callers": ["0x0801df08"],
+      "notes": "Verified writer: builds a 28-byte header (zeroes byte 0, optionally memcpy's a 22-byte ROM default template into bytes 1-22 when 'fresh' flag param_2==0), computes the sum8 checksum, stores its one's complement at header byte 0x17, then writes header+payload via FUN_0802cc7c (write+verify+retry up to 3x). This is the writer that produced the single real record found in saves/cap-01-future-1.sav."
+    },
+    {
+      "addr": "0x0802cb44",
+      "role": "write",
+      "callers": ["0x08022b24"],
+      "notes": "Low-level raw copy used only by the unverified writer path; sets a bus/wait-state control word then delegates to func_0x0802ccc0 for the byte transfer."
+    },
+    {
+      "addr": "0x0802cba8",
+      "role": "write",
+      "callers": ["0x0802cc7c"],
+      "notes": "Sets SRAM wait-control bits (*_DAT_0802cbe0 |= 3) then performs a tight byte-copy loop. Used as the 'write' half of the verified writer's retry wrapper."
+    },
+    {
+      "addr": "0x0802cc18",
+      "role": "read",
+      "callers": ["0x0802cc7c"],
+      "notes": "Structurally parallel to 0x0802cb44 (same wait-control idiom); used as the read-back/verify half of the retry wrapper."
+    },
+    {
+      "addr": "0x0802cc7c",
+      "role": "write",
+      "callers": ["0x08022b88"],
+      "notes": "Write-then-verify wrapper, retries up to 3 times (for (i=0;i<3;i++) { write(); verify(); if (ok) break; }). Called twice per FUN_08022b88 invocation: once for the 28-byte header, once for the payload."
+    },
+    {
+      "addr": "0x0802e77c",
+      "role": "serialize",
+      "callers": ["0x08022b88"],
+      "notes": "Generic memcpy (word-at-a-time with 4-byte alignment check, byte fallback). Used to seed 22 header bytes from a fixed ROM default template when the 'fresh record' flag is set."
+    },
+    {
+      "addr": "0x0802e864",
+      "role": "serialize",
+      "callers": ["0x0801df08"],
+      "notes": "Generic memset (word-at-a-time with alignment check, byte fallback). Used by the only traced caller to zero-fill the 82-byte payload buffer immediately before saving."
+    }
+  ],
+  "caller_chains": [
+    {
+      "entry_caller": "0x0801df08",
+      "chain": ["0x0801df08", "0x0802e864", "0x08022b88", "0x08022ae0", "0x0802cc7c", "0x0802cba8", "0x0802cc18"],
+      "trigger_context": "Unknown in-game trigger; FUN_0801df08 has no identified caller in the static call graph (reached only via an unresolved indirect/jumptable dispatch per the many 'UNRECOVERED_JUMPTABLE' warnings throughout decompiled.c). It zero-fills an 82-byte RAM payload buffer, then calls the verified writer with slot=1, fresh-template flag=0, that same buffer, size=0x52.",
+      "ram_fields_updated": ["0x02xxxxxx payload buffer at _DAT_0801df28 (zeroed via memset)", "global 28-byte header staging buffer at _DAT_08022bf4 (template bytes 1-22 copied in, byte 0 zeroed, checksum byte 0x17 computed)"],
+      "how_mapped": "Found by grepping decompiled.c for literal references to the address 0x08022b88; FUN_0801df08 was the only call site. Confirmed by exact byte match against saves/cap-01-future-1.sav: 28-byte header length, 82-byte all-zero payload, and checksum byte all match the traced code and the Python-recomputed checksum."
+    },
+    {
+      "entry_caller": "0x08007ab4",
+      "chain": ["0x08007ab4", "0x08022b24", "0x08022ae0", "0x0802cb44"],
+      "trigger_context": "Unknown in-game trigger; FUN_08007ab4 has no identified caller in the static call graph. It directly calls the unverified writer with slot=0, src=EWRAM 0x02000000, size=0x3000 (12288 bytes).",
+      "ram_fields_updated": ["unidentified 0x02000000-region EWRAM buffer (producer not found in the 246-function trace set)"],
+      "how_mapped": "Found by grepping decompiled.c for literal references to the address 0x08022b24; FUN_08007ab4 was the only call site. NOT confirmed by byte evidence: no .sav sample shows any write consistent with a 12288-byte bulk transfer; both files are 0xFF outside the single 110-byte window attributable to the other caller chain."
+    }
+  ],
+  "fields": [
+    {
+      "name": "record_type_or_flags",
+      "offset": 12316,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": ["0x08022b88"],
+      "readers": [],
+      "observed_values": {"cap-01-future-1.sav": "0x00"},
+      "update_mechanism": "Zeroed as part of a 4-byte store (*_DAT_08022bf4 = 0) at the start of FUN_08022b88, prior to any template copy.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "Write mechanism proven in decompiled.c; semantic meaning (version/type/flags) is speculative since only a single value (0) has ever been observed."
+    },
+    {
+      "name": "template_block",
+      "offset": 12317,
+      "size": 22,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": ["0x08022b88"],
+      "readers": [],
+      "observed_values": {"cap-01-future-1.sav": "00600000 9a006e00 7b006600 fe00ff00 0000001c 3000001c 40"},
+      "update_mechanism": "memcpy'd verbatim from a fixed ROM default template (_DAT_08022bf8) via FUN_0802e77c whenever FUN_08022b88's 'fresh' flag (param_2) == 0. The param_2 != 0 reuse code path, which presumably preserves/updates live game data here instead of the template, was never exercised in the available 2-sample evidence.",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Byte-for-byte match against a verbatim ROM-template memcpy is CONFIRMED_STATIC at the mechanism level, but no byte evidence exists of this block ever containing anything other than the static template, so per-field game semantics (e.g. any individual sub-value being a stat/currency/species id) remain unverified hypotheses."
+    },
+    {
+      "name": "checksum",
+      "offset": 12339,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": ["0x08022b88"],
+      "readers": [],
+      "observed_values": {"cap-01-future-1.sav": "0x15"},
+      "update_mechanism": "puVar1[0x17] = ~FUN_08022ae0(header, payload, payload_len); one's complement of the sum8 checksum over the 28-byte header (with this byte temporarily zeroed) plus the full payload.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Independent Python recomputation against saves/cap-01-future-1.sav reproduces the exact stored byte (0x15); see save-format report section 4 for full script and output."
+    },
+    {
+      "name": "reserved_unknown",
+      "offset": 12340,
+      "size": 4,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": ["0x08022b88"],
+      "readers": [],
+      "observed_values": {"cap-01-future-1.sav": "0xffffffff"},
+      "update_mechanism": "Included in the 0x1c-byte header range passed to the write-verify wrapper (func_0x0802cc7c), so it IS written every save, but its in-RAM source value at _DAT_08022bf4[0x18..0x1b] was apparently already 0xFF at save time in this sample, so the write was a no-op in effect.",
+      "confidence": "UNKNOWN",
+      "evidence": "No writer sets these bytes to anything other than their pre-existing value in the one available sample; could be intentional padding or incidental buffer residue."
+    },
+    {
+      "name": "payload",
+      "offset": 12344,
+      "size": 82,
+      "type": "bytes",
+      "ram_addr": "0x0801df28",
+      "writers": ["0x08022b88"],
+      "readers": [],
+      "observed_values": {"cap-01-future-1.sav": "82 bytes of 0x00"},
+      "update_mechanism": "The only traced producer, FUN_0801df08, zero-fills this RAM buffer with FUN_0802e864 (memset) immediately before calling FUN_08022b88 to save it. No other producer of this buffer's contents was found in the 246-function decompiled corpus.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "82-byte length, RAM buffer address, and all-zero content all match decompiled.c and the real .sav bytes exactly; however since content is always zero in available evidence, no sub-field structure within the payload can be determined."
+    }
+  ],
+  "fuzzing_targets": [
+    {
+      "offset": 12339,
+      "size": 1,
+      "mutation": "Flip one bit of the stored checksum byte (XOR 0x01)",
+      "requires_checksum_repair": false,
+      "predicted_effect": "If the loader validates this checksum, expect a visibly different load outcome (reset-to-default, refusal, or re-templating) vs. an unmutated file. Falsifies whether the checksum is actually checked on load, which static tracing could not confirm (no load-side caller identified)."
+    },
+    {
+      "offset": 12318,
+      "size": 1,
+      "mutation": "Change a single template byte, e.g. file offset 0x301e from 0x60 to 0x61, then repair checksum",
+      "requires_checksum_repair": true,
+      "predicted_effect": "If this byte is live game data, expect a visible UI/stat change after reload; if dead/unused padding, expect no observable change. Tests the HYPOTHESIS confidence on the template_block field."
+    },
+    {
+      "offset": 12344,
+      "size": 82,
+      "mutation": "Set all 82 payload bytes to 0xAB instead of 0x00, then repair checksum",
+      "requires_checksum_repair": true,
+      "predicted_effect": "Any crash, garbage display, or stat change confirms the payload is actively read; no observable change would suggest this record/slot is not yet consumed by game logic as of this capture."
+    },
+    {
+      "offset": 12340,
+      "size": 4,
+      "mutation": "Set the 4 reserved bytes to 0x00 instead of 0xFF, then repair checksum",
+      "requires_checksum_repair": true,
+      "predicted_effect": "Tests whether the game structurally validates or ever reads these bytes; a rejection or crash would reclassify them from UNKNOWN to CONFIRMED_VERIFIED as meaningful padding/guard bytes."
+    }
+  ],
+  "open_questions": [
+    "What in-game action or dispatch path actually invokes FUN_08007ab4 and FUN_0801df08? Both are unreferenced in the static call graph and only reachable via unresolved indirect/jumptable calls.",
+    "What are the slot-table entries (_DAT_08022b70 for Writer A, _DAT_08022bfc for Writer B) for slot ids other than 1, including the slot-0 target used by Writer A?",
+    "Do the 22 template header bytes ever differ from the fixed ROM default, i.e. what does FUN_08022b88's param_2 != 0 ('reuse existing record') path actually write?",
+    "What is the semantic/gameplay meaning, if any, of the template block's internal values and of the 82-byte payload region?",
+    "Are header bytes at relative offset 0x18-0x1b (file 0x3034-0x3037) intentional reserved/guard bytes or incidental RAM buffer residue?",
+    "Is the stored checksum actually validated on load, and if invalid, what is the game's fallback behavior?",
+    "Is there truly no redundancy/backup copy, or does a second copy exist at a slot-table offset we have not yet sampled?"
+  ]
+}

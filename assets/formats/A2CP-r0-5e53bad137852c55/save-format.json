@@ -1,0 +1,185 @@
+{
+  "schema": "gbakit-save-research/1",
+  "release_key": "A2CP-r0-5e53bad137852c55",
+  "display_name": "Castlevania - Aria of Sorrow (Europe) (En,Fr,De)",
+  "rom_sha256": "5e53bad137852c55280964c08f8f4a6622ddf332fa0108722a26d462e1f8a92a",
+  "game_code": "A2CP",
+  "header_family": "A2C",
+  "community_id": "comm-048",
+  "overall_confidence": "LOW",
+  "media": {
+    "kind": "sram",
+    "size_bytes": 32768,
+    "sdk_tags": [],
+    "fill_byte": "0x00"
+  },
+  "slots_and_copies": [
+    {
+      "name": "slot_0",
+      "offset": 0,
+      "size": 32768,
+      "redundancy_role": "primary",
+      "selection_rule": "unknown - no slot-index/slot-select function identified among the 115 decompiled functions; both sample .sav files show exactly one populated magic/data region starting at offset 0"
+    }
+  ],
+  "magic_signatures": [
+    {
+      "offset": 0,
+      "bytes_hex": "43415354 4c455641 4e494132 2d303130",
+      "ascii": "CASTLEVANIA2-010",
+      "verified_in_code": true,
+      "verified_in_sav": true,
+      "function_addrs": ["0x08001094", "0x08001004"]
+    }
+  ],
+  "checksums": [],
+  "io_driver_functions": [
+    {"addr": "0x080da7c0", "role": "read", "callers": ["0x08001094", "0x080010e4", "0x08001124", "0x08001164", "0x080137cc", "0x08013930", "0x080d82dc"], "notes": "Primitive SRAM reader, called as (media_addr, ram_dest_ptr, size, bank) at every observed call site; copies 0x0E000000-relative bytes into a RAM destination. No Flash command bytes (0x5555/0x2AAA) or DMA3 (0x040000D4) programming anywhere in ghidra/decompiled.c, which rules out Flash/EEPROM for this title and supports plain SRAM classification."},
+    {"addr": "0x080d82dc", "role": "write", "callers": ["0x08001004", "0x080010e4", "0x08001124", "0x080138fc"], "notes": "Write-and-verify wrapper: calls FUN_080d81b8 to copy RAM->SRAM then reads back via func_0x080da7c0 to confirm, retrying up to 3 times before giving up. Called as (ram_src, media_dest, size[, bank])."},
+    {"addr": "0x080d81b8", "role": "write", "callers": ["0x080d82dc"], "notes": "Raw byte-copy primitive underneath FUN_080d82dc; body not resolved in this excerpt (no disassembly shown beyond the call-site argument shape), inferred role is the actual memcpy-to-SRAM step."},
+    {"addr": "0x08001094", "role": "checksum", "callers": ["0x080137cc", "0x08013930"], "notes": "Not a checksum in the arithmetic sense - this is the 16-byte magic-signature compare/verify routine, used as a precondition gate before both traced field readers. Classified under 'checksum' role per schema enum since 'verify' is not an available role value; it performs integrity gating, not an arithmetic checksum."},
+    {"addr": "0x08001004", "role": "deserialize", "callers": [], "notes": "Bulk restore: copies the whole save region from 0x0E000000 into a RAM buffer in 0x1000-byte chunks via FUN_080d82dc, then overwrites the final 16 bytes of the RAM buffer with a ROM constant and re-writes that 16-byte magic back to SRAM offset 0. No traced caller in ghidra/callgraph.json; likely invoked from untraced higher-level boot/corrupt-save-recovery code."},
+    {"addr": "0x080010e4", "role": "serialize", "callers": ["0x080138fc"], "notes": "Sets bit 6 of a 1-byte SRAM status flag (read-modify-write via func_0x080da7c0 + func_0x080d82dc). Used as the 'write in progress' guard set before the FUN_080138fc field commit."},
+    {"addr": "0x08001124", "role": "serialize", "callers": ["0x080138fc"], "notes": "Clears bit 6 of the same 1-byte SRAM status flag. Used as the 'commit complete' guard cleared after the FUN_080138fc field commit."},
+    {"addr": "0x08001164", "role": "read", "callers": ["0x080137cc", "0x08013930"], "notes": "Tests bit 6 of the 1-byte SRAM status flag, returns ~(byte>>bit)&1. Used as a read-gate precondition in both traced field-reader functions."},
+    {"addr": "0x080137cc", "role": "read", "callers": [], "notes": "Reads a 4-byte field at RAM-struct offset +0x60 from SRAM, gated by (magic valid AND status bit 6 true). No traced caller in ghidra/callgraph.json."},
+    {"addr": "0x08013930", "role": "read", "callers": [], "notes": "Reads a 4-byte field at RAM-struct offset +0x4d0 from SRAM, gated by (magic valid AND status bit 6 true). No traced caller in ghidra/callgraph.json."},
+    {"addr": "0x080138fc", "role": "write", "callers": [], "notes": "Transactional writer for the same +0x4d0 field read by 0x08013930: sets status bit 6, commits 4 bytes RAM->SRAM via FUN_080d82dc, then clears status bit 6. No traced caller in ghidra/callgraph.json."}
+  ],
+  "caller_chains": [
+    {
+      "entry_caller": "0x080137cc",
+      "chain": ["0x080137cc", "0x08001094", "0x08001164", "0x080da7c0"],
+      "trigger_context": "unknown - no traced caller; gate condition is (FUN_08001094() magic check true) AND (FUN_08001164(6) status-bit-6 test true)",
+      "ram_fields_updated": ["struct(piVar1=_DAT_08013800)+0x60"],
+      "how_mapped": "Traced directly in ghidra/decompiled.c:781-799 and cross-checked against ghidra/callgraph.json, which shows FUN_08001094 and FUN_08001164 as callees with FUN_080137cc as their sole non-empty caller alongside FUN_08013930."
+    },
+    {
+      "entry_caller": "0x08013930",
+      "chain": ["0x08013930", "0x08001094", "0x08001164", "0x080da7c0"],
+      "trigger_context": "unknown - no traced caller; gate condition is (FUN_08001094() magic check true) AND (FUN_08001164(6) status-bit-6 test true)",
+      "ram_fields_updated": ["struct(piVar1=_DAT_08013968)+0x4d0"],
+      "how_mapped": "Traced directly in ghidra/decompiled.c:829-847, structurally identical sibling of the 0x080137cc chain, differing only in the field offset (+0x4d0 vs +0x60) and the opaque base-address DAT constants used."
+    },
+    {
+      "entry_caller": "0x080138fc",
+      "chain": ["0x080138fc", "0x080010e4", "0x080d82dc", "0x080da7c0", "0x080d81b8", "0x08001124"],
+      "trigger_context": "unknown - no traced caller; this is the write side whose committed field is later read back by the 0x08013930 chain, bracketed by a set-bit/clear-bit transactional guard around the single FUN_080d82dc write",
+      "ram_fields_updated": ["struct(piVar1=_DAT_08013928)+0x4d0", "status byte bit 6 (set then cleared)"],
+      "how_mapped": "Traced directly in ghidra/decompiled.c:806-822; the set-write-clear bracket pattern (FUN_080010e4(6) -> func_0x080d82dc -> FUN_08001124(6)) is the basis for classifying this as a transactional/journaled single-field commit guarding against an interrupted write."
+    },
+    {
+      "entry_caller": "0x08001004",
+      "chain": ["0x08001004", "0x080d82dc", "0x080d81b8", "0x080da7c0"],
+      "trigger_context": "unknown - no traced caller; structurally a bulk whole-save restore followed by re-stamping the 16-byte magic signature",
+      "ram_fields_updated": ["entire save RAM buffer (0x1000-byte chunks, loop bound _DAT_0800108c)", "offset 0x0000-0x000F magic signature (overwritten with constant from _DAT_08001090 after the bulk copy)"],
+      "how_mapped": "Traced directly in ghidra/decompiled.c:359-397; classified as a restore/initializer because it is the only traced function that both bulk-copies the full save region and unconditionally re-writes the magic bytes afterward, regardless of their prior content."
+    }
+  ],
+  "fields": [
+    {
+      "name": "magic_signature",
+      "offset": 0,
+      "size": 16,
+      "type": "ascii",
+      "ram_addr": null,
+      "writers": ["0x08001004"],
+      "readers": ["0x08001094"],
+      "observed_values": {
+        "saves/cap-00-future-0.sav": "43415354_4c455641_4e494132_2d303130",
+        "saves/cap-01-future-1.sav": "43415354_4c455641_4e494132_2d303130"
+      },
+      "update_mechanism": "Re-stamped unconditionally by FUN_08001004 at the end of a bulk-restore pass; verified on every gated-read path (FUN_080137cc, FUN_08013930) via FUN_08001094's 16-byte compare against a ROM constant pointed to by _DAT_080010c4 (literal value of that constant is not printed in ghidra/decompiled.c, so the content match is proven by direct byte observation in both .sav files, not by reading the ROM constant itself).",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "ghidra/decompiled.c:404-431 (FUN_08001094 compare routine) and ghidra/decompiled.c:359-397 (FUN_08001004 writer); byte-identical 16-byte ASCII run at offset 0 in both saves/cap-00-future-0.sav and saves/cap-01-future-1.sav per saves/hexdump_and_diffs.txt"
+    },
+    {
+      "name": "unknown_mutating_byte_0x1afc",
+      "offset": 6908,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {
+        "saves/cap-00-future-0.sav": "0x00",
+        "saves/cap-01-future-1.sav": "0x01"
+      },
+      "update_mechanism": "Unknown. No function in ghidra/decompiled.c or ghidra/callgraph.json resolves a literal or struct-relative address equal to this file offset. Only direct evidence is the byte diff between the two sample .sav files, which matches the independent cold-reload mutation_probe.probe_offset_hex (0x1AFC) in the PACKET metadata, whose integrity_check_confirmed is false (no checksum reaction to mutating this byte).",
+      "confidence": "HYPOTHESIS",
+      "evidence": "saves/hexdump_and_diffs.txt diff section (only non-magic byte that differs between saves/cap-00-future-0.sav and saves/cap-01-future-1.sav); corroborated by PACKET.md Section 1 mutation_probe metadata at the same offset"
+    },
+    {
+      "name": "gated_field_plus_0x60",
+      "offset": null,
+      "size": 4,
+      "type": "unknown",
+      "ram_addr": "0x02... or 0x03... (RAM-resident struct pointer, base address _DAT_08013800 not printed in ghidra/decompiled.c; absolute SRAM file offset therefore unresolvable)",
+      "writers": [],
+      "readers": ["0x080137cc"],
+      "observed_values": {},
+      "update_mechanism": "Read from SRAM into struct+0x60 only when FUN_08001094 (magic check) returns true AND FUN_08001164(6) (status bit 6 test) returns true. No writer for this specific field was present among the 115 decompiled functions in this workspace.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "ghidra/decompiled.c:781-799 (FUN_080137cc); absolute file offset not cross-referenceable against saves/*.sav because the base-address constant (_DAT_08013808) is opaque in this decompilation"
+    },
+    {
+      "name": "gated_field_plus_0x4d0",
+      "offset": null,
+      "size": 4,
+      "type": "unknown",
+      "ram_addr": "0x02... or 0x03... (RAM-resident struct pointer, base addresses _DAT_08013928/_DAT_08013968 not printed in ghidra/decompiled.c; absolute SRAM file offset therefore unresolvable)",
+      "writers": ["0x080138fc"],
+      "readers": ["0x08013930"],
+      "observed_values": {},
+      "update_mechanism": "Written via FUN_080138fc, bracketed by set-bit-6/clear-bit-6 (FUN_080010e4/FUN_08001124) as a transactional 'write in progress' guard. Read back via FUN_08013930 only when the same magic+bit-6 gate (as gated_field_plus_0x60) evaluates true.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "ghidra/decompiled.c:806-822 (FUN_080138fc writer) and ghidra/decompiled.c:829-847 (FUN_08013930 reader); absolute file offset not cross-referenceable against saves/*.sav because the base-address constants (_DAT_0801392c, _DAT_08013970) are opaque in this decompilation"
+    },
+    {
+      "name": "status_flag_bit6",
+      "offset": null,
+      "size": 1,
+      "type": "bitflags",
+      "ram_addr": "unknown (SRAM-resident byte addressed via opaque DAT constants _DAT_08001120/_DAT_08001160/_DAT_08001190, which may or may not alias the same byte)",
+      "writers": ["0x080010e4", "0x08001124"],
+      "readers": ["0x08001164"],
+      "observed_values": {
+        "saves/cap-00-future-0.sav": "unresolved file offset - byte value not independently observable",
+        "saves/cap-01-future-1.sav": "unresolved file offset - byte value not independently observable"
+      },
+      "update_mechanism": "Classic read-modify-write bit set/clear/test triad, always invoked with literal bit index 6. Set before and cleared after the gated_field_plus_0x4d0 write in FUN_080138fc; tested as a precondition for both gated field readers.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "ghidra/decompiled.c:438-493 (FUN_080010e4, FUN_08001124, FUN_08001164)"
+    }
+  ],
+  "fuzzing_targets": [
+    {
+      "offset": 0,
+      "size": 16,
+      "mutation": "flip one byte of the magic signature (e.g. byte 0 0x43 -> 0x00)",
+      "requires_checksum_repair": false,
+      "predicted_effect": "FUN_08001094 should return false on next load, gating off both traced field readers and likely triggering the FUN_08001004 bulk-restore/re-stamp path; if the game instead loads unaffected, the magic-gating hypothesis in Section 3 is falsified"
+    },
+    {
+      "offset": 6908,
+      "size": 1,
+      "mutation": "set byte 0x1AFC to 0x02, 0xFF, and 0x00 (extending the only previously-observed transition of 0x00->0x01)",
+      "requires_checksum_repair": false,
+      "predicted_effect": "No integrity rejection expected (no checksum found covering this byte, per Section 4.2, and the packet's own mutation probe at this offset reports integrity_check_confirmed=false); any visible gameplay/UI/RAM change from 0xFF specifically would newly reveal this byte's real value range, since only a 0->1 transition has been observed so far"
+    },
+    {
+      "offset": 16,
+      "size": 6892,
+      "mutation": "fill offsets 0x0010-0x1AFB (currently all-zero in both samples) with 0xFF",
+      "requires_checksum_repair": false,
+      "predicted_effect": "No checksum-based rejection expected; watch for whether an independent, currently-untraced blank-save heuristic (distinct from the magic check) triggers FUN_08001004's bulk-restore path despite an intact magic signature"
+    }
+  ],
+  "open_questions": [
+    "What are the literal values of the opaque DAT constants (_DAT_08013804, _DAT_08013808, _DAT_0801392c, _DAT_08013970, _DAT_0801396c, _DAT_08001120, _DAT_08001160, _DAT_08001190, _DAT_080010c4) that would resolve the gated_field_plus_0x60, gated_field_plus_0x4d0, and status_flag_bit6 fields to absolute SRAM file offsets? Requires a live memory/ROM-data dump beyond what ghidra/decompiled.c exposes.",
+    "Does any checksum/CRC exist over a region that happens to be all-zero in both current .sav samples, making it invisible to the byte-diff-based search in Section 4.2? Requires additional, more varied .sav captures with non-zero bytes outside offsets 0x0000-0x000F and 0x1AFC.",
+    "What is the semantic meaning of the single mutating byte at offset 0x1AFC (flag vs. monotonic counter vs. enum/index)? Requires paired .ss save states (currently absent for this cohort) and a longer multi-sample capture series.",
+    "Do _DAT_08013800, _DAT_08013928, and _DAT_08013968 (the three RAM struct base pointers used by FUN_080137cc/FUN_080138fc/FUN_08013930) alias the same in-RAM save struct, or are they three independent structures? Requires EWRAM/IWRAM memory-map evidence not present in this workspace.",
+    "Are FUN_080137cc, FUN_08013930, and FUN_08001004 actually reachable from gameplay in this title, given none of them have a traced caller in ghidra/callgraph.json? Requires either a larger decompilation window or runtime call-trace evidence beyond the 115-function excerpt provided."
+  ]
+}

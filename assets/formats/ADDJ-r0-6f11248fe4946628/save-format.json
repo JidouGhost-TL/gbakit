@@ -1,0 +1,531 @@
+{
+  "schema": "gbakit-save-research/1",
+  "release_key": "ADDJ-r0-6f11248fe4946628",
+  "display_name": "Diadroids World - Evil Teikoku no Yabou (Japan)",
+  "rom_sha256": "6f11248fe4946628153ab9142b8f2d4f1a18863c6a229eec9c1389305e64e4db",
+  "game_code": "ADDJ",
+  "header_family": "ADD",
+  "community_id": "",
+  "overall_confidence": "MEDIUM",
+  "media": {
+    "kind": "eeprom8k",
+    "size_bytes": 8192,
+    "sdk_tags": [],
+    "fill_byte": "0xff"
+  },
+  "slots_and_copies": [
+    {
+      "name": "slot_0",
+      "offset": 0,
+      "size": 560,
+      "redundancy_role": "primary",
+      "selection_rule": "Loaded first by FUN_0803cc8c via FUN_0803cce4(0); used if EEPROM read, DIABLK magic and sum8 checksum all pass"
+    },
+    {
+      "name": "slot_1",
+      "offset": 560,
+      "size": 560,
+      "redundancy_role": "backup",
+      "selection_rule": "Loaded by FUN_0803cc8c via FUN_0803cce4(70) only if slot_0 fails read/magic/checksum; no generation counter, copies are byte-identical"
+    },
+    {
+      "name": "unused_eeprom_tail",
+      "offset": 1120,
+      "size": 7072,
+      "redundancy_role": "unknown",
+      "selection_rule": "Never addressed by traced driver (only EEPROM blocks 0..139 used); all 0xFF in both samples (1120..8191; 0x460..0x1FFF)"
+    }
+  ],
+  "magic_signatures": [
+    {
+      "offset": 554,
+      "bytes_hex": "4b4c42414944",
+      "ascii": "KLBAID",
+      "verified_in_code": true,
+      "verified_in_sav": true,
+      "function_addrs": [
+        "0x0803c9b8",
+        "0x0803ca54"
+      ]
+    },
+    {
+      "offset": 1114,
+      "bytes_hex": "4b4c42414944",
+      "ascii": "KLBAID",
+      "verified_in_code": true,
+      "verified_in_sav": true,
+      "function_addrs": [
+        "0x0803c9b8",
+        "0x0803ca54"
+      ]
+    }
+  ],
+  "checksums": [
+    {
+      "name": "save_byte_sum_u16",
+      "algorithm": "sum16_le",
+      "formula_detail": "RAM image: u16_le at logical 0x22E = (sum of unsigned bytes logical 0x000..0x227, 552 bytes) mod 65536; written by FUN_0803c9b8, checked by FUN_0803ca54 (returns -2 on mismatch, -3 on magic mismatch). Raw .sav: each 8-byte block is byte-reversed, so stored bytes appear at raw copy offset 0x228 as 2C 0A (value 0x2C0A big-endian in raw order, 0A 2C after block reversal = u16_le). Sum is permutation-invariant so raw bytes 0x000..0x227 sum to the same value.",
+      "stored_offset": 552,
+      "stored_size": 2,
+      "covered_start": 0,
+      "covered_end": 552,
+      "function_addrs": [
+        "0x0803c9b8",
+        "0x0803ca54",
+        "0x0803cb3c",
+        "0x0803cce4"
+      ],
+      "verified_on_samples": [
+        {
+          "file": "saves/cap-01-future-1.sav",
+          "stored_hex": "2c0a",
+          "computed_hex": "2c0a",
+          "match": true
+        },
+        {
+          "file": "saves/cap-01-future-1.sav (copy1 at 0x230)",
+          "stored_hex": "2c0a",
+          "computed_hex": "2c0a",
+          "match": true
+        },
+        {
+          "file": "saves/cap-00-future-0.sav",
+          "stored_hex": "ffff",
+          "computed_hex": "ffff (all-FF blank, no magic)",
+          "match": false
+        }
+      ],
+      "confidence": "CONFIRMED_VERIFIED"
+    }
+  ],
+  "io_driver_functions": [
+    {
+      "addr": "0x080762e0",
+      "role": "serialize",
+      "callers": [
+        "0x08076360",
+        "0x08076410"
+      ],
+      "notes": "DMA3 setup: SAD=param1 DAD=param2 CNT=count|0x80000000 (DMA regs 0x040000D4 via literal pool), busy-wait on control high halfword; used for all transfers to/from 0x0D000000"
+    },
+    {
+      "addr": "0x08076360",
+      "role": "read",
+      "callers": [
+        "0x080764ec",
+        "0x0803cce4"
+      ],
+      "notes": "EEPROM read one 8-byte block: bounds check vs config block-count at cfg+4, sends start+address bitstream (addr bits at cfg+8) to 0x0D000000, receives 0x44 halfword bits, reassembles 4x u16 MSB-first in reverse word order (cause of per-8-byte-block reversal in raw .sav)"
+    },
+    {
+      "addr": "0x08076410",
+      "role": "write",
+      "callers": [
+        "0x0803cbd0"
+      ],
+      "notes": "EEPROM write one 8-byte block: expands address+4x16 data bits to 0x0D000000 (length addr_bits+0x43), calls FUN_08076214, polls EEPROM busy (0x0D000000 & 1), calls FUN_0807629c; returns 0 on success"
+    },
+    {
+      "addr": "0x080764ec",
+      "role": "read",
+      "callers": [
+        "0x0803cbd0"
+      ],
+      "notes": "EEPROM verify: re-reads block via FUN_08076360 and compares 4 halfwords; returns 0 or 0x8000"
+    },
+    {
+      "addr": "0x08076214",
+      "role": "write",
+      "callers": [
+        "0x08076410"
+      ],
+      "notes": "EEPROM/DMA write assist enable before busy polling; exact registers unknown (literal-pool values absent)"
+    },
+    {
+      "addr": "0x0807629c",
+      "role": "write",
+      "callers": [
+        "0x08076410"
+      ],
+      "notes": "EEPROM/DMA write assist disable after busy polling"
+    },
+    {
+      "addr": "0x0803c9b8",
+      "role": "checksum",
+      "callers": [
+        "0x0803cb3c"
+      ],
+      "notes": "Appends DIABLK magic and sum8-u16 checksum to final block of 560-byte serialization buffer"
+    },
+    {
+      "addr": "0x0803ca54",
+      "role": "checksum",
+      "callers": [
+        "0x0803cce4"
+      ],
+      "notes": "Validates DIABLK magic (else -3) and recomputed byte sum (else -2); returns 0 on success"
+    },
+    {
+      "addr": "0x0803cbd0",
+      "role": "write",
+      "callers": [
+        "0x0803cb3c"
+      ],
+      "notes": "Writes then read-back-verifies one whole 70-block copy via FUN_08076410/FUN_080764ec; returns -1 write fail, -2 verify fail"
+    },
+    {
+      "addr": "0x0803cce4",
+      "role": "read",
+      "callers": [
+        "0x0803cc8c"
+      ],
+      "notes": "Reads one whole 70-block copy via FUN_08076360, validates via FUN_0803ca54, on success CpuSet-copies buffer into RAM save mirror"
+    },
+    {
+      "addr": "0x0803cb3c",
+      "role": "serialize",
+      "callers": [],
+      "notes": "SAVE entry: alloc 560B buffer, CpuSet RAM mirror into it, FUN_0803c9b8 finalize, FUN_0803cbd0(0) then FUN_0803cbd0(70), free buffer. No static caller recovered"
+    },
+    {
+      "addr": "0x0803cc8c",
+      "role": "deserialize",
+      "callers": [],
+      "notes": "LOAD entry: FUN_0803cce4(0), fallback FUN_0803cce4(70) on failure. No static caller recovered"
+    },
+    {
+      "addr": "0x0803c974",
+      "role": "serialize",
+      "callers": [],
+      "notes": "Descriptor init: writes 0x224, derives desc+4 block count = ((0x224+8)>>3)+1 = 70 blocks (560 bytes); calls FUN_08076174(0x40)"
+    },
+    {
+      "addr": "0x0803cd88",
+      "role": "deserialize",
+      "callers": [
+        "0x0800028c"
+      ],
+      "notes": "Boot-time save-manager/heap init called from FUN_0800028c"
+    },
+    {
+      "addr": "0x08076160",
+      "role": "serialize",
+      "callers": [
+        "0x0803cb3c",
+        "0x0803cce4"
+      ],
+      "notes": "BIOS SWI 0x0B CpuSet wrapper used as memcpy for RAM mirror <-> serialization buffer"
+    }
+  ],
+  "caller_chains": [
+    {
+      "entry_caller": "0x0800028c",
+      "chain": [
+        "0x0800028c",
+        "0x0803cd88"
+      ],
+      "trigger_context": "Console boot/init (text call site decompiled.c:38)",
+      "ram_fields_updated": [
+        "save descriptor +4/+8 fields",
+        "heap state (FUN_0803ce8c base,0x3F000)"
+      ],
+      "how_mapped": "Direct func_0x0803cd88() call in FUN_0800028c body; also descriptor pattern (desc+4=block count, desc+8=buffer ptr) shared with FUN_0803c9b8/FUN_0803ca54/FUN_0803cb3c/FUN_0803cc8c"
+    },
+    {
+      "entry_caller": "0x0803cb3c",
+      "chain": [
+        "0x0803cb3c",
+        "0x0803c9b8",
+        "0x0803cbd0",
+        "0x08076410",
+        "0x080762e0"
+      ],
+      "trigger_context": "UNKNOWN - no static caller in callgraph.json or decompiled.c; presumed jump-table/function-pointer dispatch",
+      "ram_fields_updated": [
+        "none directly; CpuSet-copies live RAM mirror (552 payload bytes) into heap buffer, FUN_0803c9b8 appends magic+checksum in buffer only, then writes EEPROM blocks 0..69 and 70..139"
+      ],
+      "how_mapped": "Text call sites decompiled.c:1518-1526 and callgraph edges 0x0803cb3c->0x0803c9b8; FUN_0803cbd0 called with 0 and with *(desc+4)=70"
+    },
+    {
+      "entry_caller": "0x0803cc8c",
+      "chain": [
+        "0x0803cc8c",
+        "0x0803cce4",
+        "0x08076360",
+        "0x0803ca54"
+      ],
+      "trigger_context": "UNKNOWN - no static caller recovered; load at boot/continue presumed",
+      "ram_fields_updated": [
+        "On success FUN_0803cce4 CpuSet-copies validated 560B buffer into live RAM save mirror"
+      ],
+      "how_mapped": "Text call sites decompiled.c:1594-1597,1624,1635; fallback is explicit: second FUN_0803cce4(*(desc+4)) only if first returned non-zero"
+    },
+    {
+      "entry_caller": "0x0806fd78",
+      "chain": [
+        "0x0806fd78"
+      ],
+      "trigger_context": "UNKNOWN - no static caller recovered; HYPOTHESIS new-game/default initialization (seeds records from ROM table)",
+      "ram_fields_updated": [
+        "logical 0x1B4..0x223: four 28-byte records (u32 zero at +0, u16 copies from ROM 24-byte entries at +4..+0x16, OR mask at +0x18, zero at +0x1A per record)"
+      ],
+      "how_mapped": "Writer offsets base+0x1B4+i*0x1C in decompiled.c:1889-1925 match the four populated records at logical 0x1B4 in the block-reversed RAM image of cap-01 exactly (ids 0..3, values in fields)"
+    }
+  ],
+  "fields": [
+    {
+      "name": "payload_region_1_zero",
+      "offset": 0,
+      "size": 268,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [
+        "0x0803ca54"
+      ],
+      "observed_values": {
+        "cap-01-future-1.sav": "all 0x00 (both copies)",
+        "cap-00-future-0.sav": "all 0xFF (blank)"
+      },
+      "update_mechanism": "CpuSet-copied as part of 552-byte payload on save; no traced writer",
+      "confidence": "UNKNOWN",
+      "evidence": "Logical 0x000..0x10B all zero in block-reversed RAM image; no function in decompiled.c writes these offsets"
+    },
+    {
+      "name": "ff_padding_field",
+      "offset": 268,
+      "size": 32,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [
+        "0x0803ca54"
+      ],
+      "observed_values": {
+        "cap-01-future-1.sav": "all 0xFF (both copies)"
+      },
+      "update_mechanism": "Included in checksum (adds 8160) but never written by traced code; survives as 0xFF inside serialized image",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Logical 0x10C..0x12B = 32x 0xFF; PACKET candidate spans 0x10C/0x128 are this field's edges, not checksums"
+    },
+    {
+      "name": "payload_region_2_zero",
+      "offset": 300,
+      "size": 84,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [
+        "0x0803ca54"
+      ],
+      "observed_values": {
+        "cap-01-future-1.sav": "all 0x00"
+      },
+      "update_mechanism": "As payload_region_1",
+      "confidence": "UNKNOWN",
+      "evidence": "Logical 0x12C..0x17F all zero"
+    },
+    {
+      "name": "counter_at_0x180",
+      "offset": 384,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {
+        "cap-01-future-1.sav": 1
+      },
+      "update_mechanism": "Unknown writer outside traced set; raw 0x01 byte at raw copy offset 0x183 due to per-block reversal",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Logical bytes 01 00 00 00 at 0x180 in RAM image"
+    },
+    {
+      "name": "counter_at_0x184",
+      "offset": 388,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {
+        "cap-01-future-1.sav": 1
+      },
+      "update_mechanism": "As counter_at_0x180; raw 0x01 at raw 0x187",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Logical bytes 01 00 00 00 at 0x184"
+    },
+    {
+      "name": "reserved_zero_0x188",
+      "offset": 392,
+      "size": 44,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [
+        "0x0803ca54"
+      ],
+      "observed_values": {
+        "cap-01-future-1.sav": "all 0x00"
+      },
+      "update_mechanism": "Payload copy only",
+      "confidence": "UNKNOWN",
+      "evidence": "Logical 0x188..0x1B3 all zero"
+    },
+    {
+      "name": "record_array_4x28",
+      "offset": 436,
+      "size": 112,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [
+        "0x0806fd78"
+      ],
+      "readers": [],
+      "observed_values": {
+        "cap-01-future-1.sav": "4 records u16_le from +4: (0,20,100,20,100,0,10,8,7,10,0xFFFF,0,0),(1,16,100,16,100,0,4,10,6,9,0xFFFF,0,0),(2,12,100,12,100,0,3,9,10,4,0xFFFF,0,0),(3,20,100,20,100,0,10,10,10,10,0xFFFF,0,0) preceded by u32 0 per record"
+      },
+      "update_mechanism": "FUN_0806fd78 seeds each 28-byte record from a ROM 24-byte default entry (zeroes +0 u32 and +0x0E/+0x1A u16, ORs unknown mask into +0x18); persisted by FUN_0803cb3c",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "Writer pattern decompiled.c:1889-1925 (base+0x1B4+i*0x1C) matches logical 0x1B4..0x223 values exactly; base-pointer identity with save mirror is HYPOTHESIS (literal values absent)"
+    },
+    {
+      "name": "zero_padding_pre_trailer",
+      "offset": 548,
+      "size": 4,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [
+        "0x0803cb3c"
+      ],
+      "readers": [
+        "0x0803ca54"
+      ],
+      "observed_values": {
+        "cap-01-future-1.sav": "00 00 00 00"
+      },
+      "update_mechanism": "Tail of CpuSet-copied payload before final block",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "Logical 0x224..0x227 zero; 0x224 is also FUN_0803c974 payload-size constant"
+    },
+    {
+      "name": "magic_DIABLK_logical",
+      "offset": 552,
+      "size": 6,
+      "type": "ascii",
+      "ram_addr": null,
+      "writers": [
+        "0x0803c9b8"
+      ],
+      "readers": [
+        "0x0803ca54"
+      ],
+      "observed_values": {
+        "cap-01-future-1.sav": "DIABLK (RAM image); raw KLBAID at raw 0x22A and 0x45A"
+      },
+      "update_mechanism": "Appended to serialization buffer final block at save; checked byte-by-byte at load (fail = return -3)",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "FUN_0803c9b8 writes 0x44 0x49 0x41 0x42 0x4C 0x4B; FUN_0803ca54 compares D,I,A,B,L,K; block-reversed raw sav shows KLBAID at predicted offsets in both copies"
+    },
+    {
+      "name": "checksum_sum8_u16",
+      "offset": 558,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": [
+        "0x0803c9b8"
+      ],
+      "readers": [
+        "0x0803ca54"
+      ],
+      "observed_values": {
+        "cap-01-future-1.sav": "0x2C0A (RAM bytes 0A 2C; raw bytes 2C 0A at raw 0x228/0x458)"
+      },
+      "update_mechanism": "Recomputed every save as sum of logical bytes 0..551 mod 65536; verified at load (fail = return -2, fallback to other copy)",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Python: sum(ram[:0x228])&0xFFFF == 0x2C0A == stored u16_le in both copies of cap-01"
+    }
+  ],
+  "fuzzing_targets": [
+    {
+      "offset": 554,
+      "size": 6,
+      "mutation": "Change one raw magic byte (KLBAID) in copy 0 only (raw 0x22A..0x22F)",
+      "requires_checksum_repair": false,
+      "predicted_effect": "Loader rejects copy 0 (-3 from FUN_0803ca54) and silently loads identical copy 1; no visible change"
+    },
+    {
+      "offset": 554,
+      "size": 6,
+      "mutation": "Change one magic byte in both copies (raw 0x22A and 0x45A)",
+      "requires_checksum_repair": false,
+      "predicted_effect": "Both copies rejected; game shows no-save/new-game or load-error state"
+    },
+    {
+      "offset": 552,
+      "size": 2,
+      "mutation": "Flip stored checksum byte in copy 0 only (raw 0x228: 2C->2D)",
+      "requires_checksum_repair": false,
+      "predicted_effect": "Copy 0 fails checksum (-2); fallback to copy 1; normal load"
+    },
+    {
+      "offset": 268,
+      "size": 1,
+      "mutation": "Logical 0x10C FF->FE in both copies (replicates PACKET probe, which hit copy 0 only and saw no rejection)",
+      "requires_checksum_repair": true,
+      "predicted_effect": "With repair: loads normally if field is padding (falsifies padding hypothesis if gameplay changes). Without repair on one copy only: fallback masks it, explaining PACKET probe"
+    },
+    {
+      "offset": 384,
+      "size": 4,
+      "mutation": "Set logical u32 at 0x180 from 1 to 2 (raw 0x01 byte at raw 0x183/0x413) in both copies",
+      "requires_checksum_repair": true,
+      "predicted_effect": "One UI counter/flag increments by 1; identifies counter_at_0x180 semantics"
+    },
+    {
+      "offset": 388,
+      "size": 4,
+      "mutation": "Set logical u32 at 0x184 from 1 to 2 (raw at 0x187/0x417) in both copies",
+      "requires_checksum_repair": true,
+      "predicted_effect": "As above for counter_at_0x184; run separately from 0x180 mutation to disambiguate"
+    },
+    {
+      "offset": 442,
+      "size": 2,
+      "mutation": "Record 0 field +0x06 logical 0x1BA: 20 -> 99 in both copies",
+      "requires_checksum_repair": true,
+      "predicted_effect": "First record's displayed numeric attribute changes 20->99 if UI-backed; else no visible change"
+    },
+    {
+      "offset": 440,
+      "size": 2,
+      "mutation": "Record 0 index field +0x04 logical 0x1B8: 0 -> 7 in both copies",
+      "requires_checksum_repair": true,
+      "predicted_effect": "Record 0 type/icon/name changes or out-of-range glitch if ID field; no change if pure bookkeeping"
+    },
+    {
+      "offset": 1120,
+      "size": 8,
+      "mutation": "Zero copy 1 final block (raw 0x458..0x45F), keep copy 0, then trigger in-game save",
+      "requires_checksum_repair": false,
+      "predicted_effect": "Normal load from copy 0; after save both copies rewritten identically with fresh checksum (proves dual-write)"
+    },
+    {
+      "offset": 1120,
+      "size": 1,
+      "mutation": "Negative control: change one byte in unused tail raw 0x460",
+      "requires_checksum_repair": false,
+      "predicted_effect": "No observable change and byte survives in-game save untouched (driver only addresses blocks 0..139)"
+    }
+  ],
+  "open_questions": [
+    "Absolute RAM address of save mirror and descriptor struct (ROM literal-pool values absent from workspace); ram_addr is null for all fields",
+    "Trigger/callers of FUN_0803cb3c (save), FUN_0803cc8c (load) and FUN_0806fd78 (record init): no static callers in callgraph.json/decompiled.c, presumed jump-table/function-pointer dispatch",
+    "Semantics of payload 0x000..0x17F, counters at 0x180/0x184, and record sub-fields beyond FUN_0806fd78 writer pattern",
+    "EEPROM config global values (block count/address width at cfg+4/cfg+8) and registers programmed by FUN_08076214/FUN_0807629c/FUN_08076174/FUN_080761dc",
+    "Whether 0x10C..0x12B 0xFF field is erased-but-allocated data or deliberate padding (fuzz target F5)",
+    "Record +0x18 observed 0xFFFF may be pre-existing RAM rather than the OR mask written by FUN_0806fd78",
+    "No paired .ss save states in workspace (states/ empty); fuzzing predictions are for cold-boot reload observation"
+  ]
+}

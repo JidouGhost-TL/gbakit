@@ -1,0 +1,98 @@
+{
+  "schema": "gbakit-save-research/1",
+  "release_key": "AY8E-r0-b64014de39862621",
+  "display_name": "Yu-Gi-Oh! - Reshef of Destruction (USA)",
+  "rom_sha256": "b64014de3986262114d7c6797bf92b97938d8bf2464f2b96071b3b41c25f4b8f",
+  "game_code": "AY8E",
+  "header_family": "AY8",
+  "community_id": "comm-002",
+  "overall_confidence": "MEDIUM",
+  "media": {
+    "kind": "sram",
+    "size_bytes": 32768,
+    "sdk_tags": ["SRAM_F_V102"],
+    "fill_byte": "0xff"
+  },
+  "slots_and_copies": [
+    {"name": "slot_0", "offset": 0, "size": 8192, "redundancy_role": "primary", "selection_rule": "Only block carrying the header magic in cap-01; classifier FUN_0800ac64/FUN_08035444 selection rule unresolved (callees missing)"},
+    {"name": "slot_1", "offset": 8192, "size": 8192, "redundancy_role": "backup", "selection_rule": "Written identically by FUN_0800af68 at init; later role unknown"},
+    {"name": "slot_2", "offset": 16384, "size": 8192, "redundancy_role": "backup", "selection_rule": "Written identically by FUN_0800af68 at init; holds candidate u16 at 0x401E"},
+    {"name": "slot_3", "offset": 24576, "size": 8192, "redundancy_role": "backup", "selection_rule": "Written identically by FUN_0800af68 at init; holds candidate u16 at 0x7FFE"}
+  ],
+  "magic_signatures": [
+    {"offset": 1, "bytes_hex": "3032313032345f444d385f4b43454a", "ascii": "021024_DM8_KCEJ", "verified_in_code": true, "verified_in_sav": true, "function_addrs": ["0x0800b17c", "0x0800b194"]}
+  ],
+  "checksums": [
+    {
+      "name": "candidate_u16_at_0x401E",
+      "algorithm": "custom",
+      "formula_detail": "Hypothesis only: stored == (~sum16_le(covered bytes)) & 0xFFFF (one's complement). No checksum loop exists in the decompiled corpus; code integrity is write-verify memcmp in FUN_080588c4. Value 0xFFFF is also the erased sentinel, so zeroed data cannot distinguish the hypotheses.",
+      "stored_offset": 16414,
+      "stored_size": 2,
+      "covered_start": 16384,
+      "covered_end": 24576,
+      "function_addrs": ["0x0800b0ac", "0x0800b0c8", "0x080588c4"],
+      "verified_on_samples": [
+        {"file": "cap-01-future-1.sav", "stored_hex": "ffff", "computed_hex": "ffff", "match": true},
+        {"file": "cap-00-future-0.sav", "stored_hex": "ffff", "computed_hex": "21fd", "match": false}
+      ],
+      "confidence": "HYPOTHESIS"
+    },
+    {
+      "name": "candidate_u16_at_0x7FFE",
+      "algorithm": "custom",
+      "formula_detail": "Hypothesis only: same one's-complement sum16 candidate as 0x401E; trivially matches on zeroed data and equals erased value, so unverified.",
+      "stored_offset": 32766,
+      "stored_size": 2,
+      "covered_start": 24576,
+      "covered_end": 32766,
+      "function_addrs": ["0x0800b0ac", "0x0800b0c8", "0x080588c4"],
+      "verified_on_samples": [
+        {"file": "cap-01-future-1.sav", "stored_hex": "ffff", "computed_hex": "ffff", "match": true}
+      ],
+      "confidence": "HYPOTHESIS"
+    }
+  ],
+  "io_driver_functions": [
+    {"addr": "0x080587a0", "role": "write", "callers": ["0x080588c4"], "notes": "SRAM byte-copy loop; sets WAITCNT bits before copying"},
+    {"addr": "0x080588c4", "role": "write", "callers": [], "notes": "Verified SRAM write: byte-copy + memcmp via FUN_0805aac4, up to 3 retries; only SRAM writer primitive in corpus"},
+    {"addr": "0x08058754", "role": "serialize", "callers": ["0x080595c4", "0x08059880", "0x080599c4", "0x08059c4c"], "notes": "BIOS SWI 0x0B CpuSet RAM memcpy; RAM-side struct copies only"},
+    {"addr": "0x0800af68", "role": "write", "callers": ["0x08035444"], "notes": "Save (re)initialization: zeroes RAM image, writes 0x2000 bytes to 0x0E000000/0x2000/0x4000/0x6000, then header commit sequence"},
+    {"addr": "0x0800b194", "role": "read", "callers": [], "notes": "Magic validator: 15-byte compare, returns 1 on match"},
+    {"addr": "0x0800ac64", "role": "read", "callers": ["0x0800ad24", "0x08035444"], "notes": "Save classifier returning 0-3; depends on missing byte-readers FUN_0800b088/FUN_0800b0e4/FUN_0800b10c"},
+    {"addr": "0x0800b034", "role": "write", "callers": [], "notes": "Writes marker byte 0 at SRAM+0 (final commit state)"},
+    {"addr": "0x0800b050", "role": "write", "callers": [], "notes": "Writes marker byte 1 at SRAM+0"},
+    {"addr": "0x0800b06c", "role": "write", "callers": [], "notes": "Writes marker byte 2 at SRAM+0"},
+    {"addr": "0x0800b1e4", "role": "write", "callers": [], "notes": "Writes marker byte 3 at SRAM+0"},
+    {"addr": "0x0800b17c", "role": "write", "callers": [], "notes": "Writes 15-byte magic to SRAM (destination _DAT_ unresolved; lands at file offset 1 in cap-01)"}
+  ],
+  "caller_chains": [
+    {"entry_caller": "0x08035444", "chain": ["0x08035444", "0x0800ac64", "0x080354c0", "0x0800af68", "0x0800aff0", "0x080588c4", "0x080587a0"], "trigger_context": "Boot/title: no valid save detected, new-save creation path", "ram_fields_updated": ["ram_image_zeroed", "header_marker", "magic"], "how_mapped": "callgraph.json callers/callees cross-checked against decompiled.c bodies"},
+    {"entry_caller": "0x08035444", "chain": ["0x08035444", "0x0800ac64", "0x0800ace8", "0x0800adc4", "0x080354a8"], "trigger_context": "Boot: existing valid save load path (callee bodies missing from corpus)", "ram_fields_updated": [], "how_mapped": "callgraph.json + decompiled.c FUN_08035444 body; FUN_0800ace8/FUN_0800adc4 unresolved"},
+    {"entry_caller": "0x0800aff0", "chain": ["0x0800aff0", "0x0800759c", "0x08008cac", "0x0801d6c0", "0x0801d724", "0x08020168"], "trigger_context": "Fresh-save RAM default construction inside FUN_0800af68", "ram_fields_updated": ["struct+0x32", "struct+0x16a", "struct_defaults_0x640_0x48"], "how_mapped": "decompiled.c FUN_0800aff0 body; callees set constants / copy 0x321-byte struct"}
+  ],
+  "fields": [
+    {"name": "header_marker", "offset": 0, "size": 1, "type": "u8", "ram_addr": null, "writers": ["0x0800b050", "0x0800b06c", "0x0800b1e4", "0x0800b034"], "readers": ["0x0800ac64"], "observed_values": {"cap-00-future-0.sav": "0xff", "cap-01-future-1.sav": "0x00"}, "update_mechanism": "Commit-phase byte cycled 1->2->3->0 during FUN_0800af68 init via FUN_080588c4 single-byte writes at SRAM+0", "confidence": "CONFIRMED_STATIC", "evidence": "Four single-byte FUN_080588c4(...,0xe000000,1) writers with constants 0/1/2/3; cap-01 byte0=0x00 final state"},
+    {"name": "magic", "offset": 1, "size": 15, "type": "ascii", "ram_addr": null, "writers": ["0x0800b17c"], "readers": ["0x0800b194"], "observed_values": {"cap-01-future-1.sav": "021024_DM8_KCEJ"}, "update_mechanism": "Written once at init by FUN_0800b17c (length 0xf); validated by FUN_0800b194 15-byte compare", "confidence": "CONFIRMED_VERIFIED", "evidence": "Code length 0xf in both writer and reader; bytes present verbatim in cap-01 at offset 1"},
+    {"name": "save_payload_block0", "offset": 16, "size": 8176, "type": "bytes", "ram_addr": null, "writers": ["0x0800af68"], "readers": [], "observed_values": {"cap-01-future-1.sav": "all 0x00 (fresh save)"}, "update_mechanism": "8 KiB RAM image flushed verbatim via FUN_080588c4; gameplay mutators edit RAM struct first", "confidence": "UNKNOWN", "evidence": "No non-zero payload sample in workspace; semantics unmapped"},
+    {"name": "duelist_state_mode", "offset": 50, "size": 2, "type": "u16_le", "ram_addr": null, "writers": ["0x0800604c", "0x08005d1c", "0x080064f4"], "readers": ["0x08006958", "0x08006c60", "0x08006e84"], "observed_values": {"cap-01-future-1.sav": "0x0000"}, "update_mechanism": "RAM struct +0x32 transitions (values 2/3/5/6 in code) before SRAM flush; file offset assumes verbatim image mirror", "confidence": "HYPOTHESIS", "evidence": "Recurring +0x32 dereference in >=6 decompiled RAM functions; never non-zero in a .sav sample"},
+    {"name": "duelist_progress", "offset": 362, "size": 2, "type": "u16_le", "ram_addr": null, "writers": ["0x08005d1c", "0x08006764", "0x0800683c"], "readers": ["0x08006c60", "0x08006e84"], "observed_values": {"cap-01-future-1.sav": "0x0000"}, "update_mechanism": "RAM struct +0x16A reset to 0 on state change, adjusted by +/-0xB in FUN_08006764", "confidence": "HYPOTHESIS", "evidence": "Recurring +0x16A dereference with strlen-threshold compares (FUN_0805d1fc)"},
+    {"name": "candidate_integrity_0x401E", "offset": 16414, "size": 2, "type": "u16_le", "ram_addr": null, "writers": ["0x0800b0ac", "0x0800b0c8"], "readers": ["0x0800ac64"], "observed_values": {"cap-00-future-0.sav": "0xffff", "cap-01-future-1.sav": "0xffff"}, "update_mechanism": "One of the two u16 writes in FUN_0800af68 header sequence (destination _DAT_ unresolved)", "confidence": "HYPOTHESIS", "evidence": "Equals one's-complement sum16 of zeroed covered bytes (trivially) and erased 0xFFFF sentinel; no checksum loop in corpus"},
+    {"name": "candidate_integrity_0x7FFE", "offset": 32766, "size": 2, "type": "u16_le", "ram_addr": null, "writers": ["0x0800b0ac", "0x0800b0c8"], "readers": ["0x0800ac64"], "observed_values": {"cap-00-future-0.sav": "0xffff", "cap-01-future-1.sav": "0xffff"}, "update_mechanism": "One of the two u16 writes in FUN_0800af68 header sequence (destination _DAT_ unresolved)", "confidence": "HYPOTHESIS", "evidence": "Same trivial complement consistency as 0x401E; unverified"}
+  ],
+  "fuzzing_targets": [
+    {"offset": 5, "size": 1, "mutation": "flip one magic byte 0x30->0x31", "requires_checksum_repair": false, "predicted_effect": "FUN_0800b194 compare fails; save treated as absent; new-save re-init path taken"},
+    {"offset": 0, "size": 1, "mutation": "set marker to 0x01/0x02/0x03", "requires_checksum_repair": false, "predicted_effect": "Tests FUN_0800ac64 type classification and FUN_0800ad24 dispatch change"},
+    {"offset": 16414, "size": 2, "mutation": "set u16 to 0x0000 with data unchanged", "requires_checksum_repair": false, "predicted_effect": "Rejection/re-init would confirm checksum role; acceptance proves sentinel"},
+    {"offset": 256, "size": 1, "mutation": "write 0x01 then repair 0x401E to 0xFFFE per complement hypothesis", "requires_checksum_repair": true, "predicted_effect": "Acceptance supports one's-complement sum16 over block 2"},
+    {"offset": 50, "size": 2, "mutation": "set duelist_state_mode to 0x0005", "requires_checksum_repair": true, "predicted_effect": "Forces mode-5 branch (FUN_08006958) / altered duel UI state on load"},
+    {"offset": 8192, "size": 16, "mutation": "corrupt block 1 payload only", "requires_checksum_repair": false, "predicted_effect": "Successful load proves block 0 primary; failure proves cross-block mirroring"}
+  ],
+  "open_questions": [
+    "No sum/CRC checksum loop exists in the 169-function corpus: are 0x401E/0x7FFE checksums, sentinels, or the FUN_0800b0ac/FUN_0800b0c8 u16 value (destinations unresolved _DAT_)?",
+    "All Ghidra _DAT_ address constants are placeholders: absolute EWRAM/IWRAM mirror addresses of the save struct cannot be named from this corpus.",
+    "Callees FUN_0800b088, FUN_0800b0e4, FUN_0800b10c, FUN_0800ace8, FUN_0800adc4, FUN_0803525c, FUN_0800ae1c, FUN_0800ae70 are referenced but absent from decompiled.c, so copy-selection and load-deserialization rules are unresolved.",
+    "Only 2 of 6 corpus .sav files are present and both are blank/fresh: no populated save exists to map payload fields or test redundancy divergence.",
+    "states/ is empty: no paired save-state reload observation was possible; all fuzzing predictions are untested."
+  ]
+}

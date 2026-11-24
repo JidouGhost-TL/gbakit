@@ -1,0 +1,247 @@
+{
+  "schema": "gbakit-save-research/1",
+  "release_key": "A7HE-r0-1167fc07fdeb746a",
+  "display_name": "Harry Potter and the Chamber of Secrets (USA, Europe) (En,Fr,De,Es,It,Nl,Pt,Sv,No,Da)",
+  "rom_sha256": "1167fc07fdeb746a00dced2ca40342b6a177f0f187dee6d0c5ac8f7a1f1183ad",
+  "game_code": "A7HE",
+  "header_family": "A7H",
+  "community_id": "comm-004",
+  "overall_confidence": "MEDIUM",
+  "media": {
+    "kind": "eeprom512",
+    "size_bytes": 512,
+    "sdk_tags": ["EEPROM_V122@275928"],
+    "fill_byte": "0xff"
+  },
+  "slots_and_copies": [
+    {
+      "name": "slot_0",
+      "offset": 0,
+      "size": 24,
+      "redundancy_role": "primary",
+      "selection_rule": "Single fixed-offset record at EEPROM offset 0; no alternate slot, backup copy, or generation counter found in traced code (FUN_0800dce0/FUN_0800dddc always operate at absolute offset 0)."
+    }
+  ],
+  "magic_signatures": [],
+  "checksums": [
+    {
+      "name": "record_checksum",
+      "algorithm": "custom",
+      "formula_detail": "FUN_0800d9cc(ptr, len): backward byte-wise accumulator. uVar2=len-1; iVar4=0; pb=ptr+len-2; repeat len-1 times: uVar2 += buf[pb] + iVar4; iVar4 = uVar2>>8; uVar2 = (uVar2 & 0xff) ^ buf[pb+1]; pb-=1. Return low byte of uVar2 (upper byte always 0). Called as FUN_0800d9cc(record+2, 0x16) i.e. covers record bytes [0x02,0x18).",
+      "stored_offset": 0,
+      "stored_size": 2,
+      "covered_start": 2,
+      "covered_end": 24,
+      "function_addrs": ["0x0800d9cc", "0x0800dce0", "0x0800dddc"],
+      "verified_on_samples": [
+        {"file": "saves/cap-01-future-1.sav", "stored_hex": "0x0002", "computed_hex": "0x00a5", "match": false}
+      ],
+      "confidence": "CONFIRMED_STATIC"
+    }
+  ],
+  "io_driver_functions": [
+    {"addr": "0x080302e4", "role": "serialize", "callers": ["0x08003730", "0x08003798"], "notes": "AGB-style multi-backend save dispatcher: bounds-checks backend type 0-3 and fetches a 4-byte descriptor; both call sites pass type=3 (EEPROM)."},
+    {"addr": "0x080303e8", "role": "write", "callers": ["0x08030468", "0x08030518"], "notes": "Generic DMA3 (0x040000D4 region) transfer-and-busy-wait primitive used by both EEPROM read and write bit-stream drivers."},
+    {"addr": "0x0803031c", "role": "write", "callers": ["0x08030518"], "notes": "IME-style critical-section enter (disable) helper wrapping the EEPROM write bit-banging sequence."},
+    {"addr": "0x080303a4", "role": "write", "callers": ["0x08030518"], "notes": "IME-style critical-section exit (restore) helper, counterpart to 0x0803031c."},
+    {"addr": "0x08030468", "role": "read", "callers": ["0x080305f4", "0x08003798"], "notes": "EEPROM read primitive: serializes a 14-bit read address, issues DMA3 request to 0x0D000000, deserializes 64 bits back into 4x u16 words. Reads one 8-byte page."},
+    {"addr": "0x08030518", "role": "write", "callers": ["0x08003730"], "notes": "EEPROM write primitive: serializes address + 64-bit payload into a write-command bit-stream, issues via DMA3 to 0x0D000000, polls busy flag. Writes one 8-byte page. No static caller resolved in callgraph.json (indirect/jump-table call), identified by unique write-sequence behavior."},
+    {"addr": "0x080305f4", "role": "read", "callers": ["0x08003730"], "notes": "Write-verify: reads back a page via 0x08030468 and compares against expected data; returns 0 on match, 0x8000 on mismatch."},
+    {"addr": "0x08003730", "role": "write", "callers": ["0x0800dce0"], "notes": "SaveWriteBlock(offset,size): selects EEPROM backend via 0x080302e4, writes then verifies every 8-byte page in range. Called with (0, 0x18)."},
+    {"addr": "0x08003798", "role": "read", "callers": ["0x0800dddc"], "notes": "SaveReadBlock(offset,size): selects EEPROM backend via 0x080302e4, reads every 8-byte page in range into destination buffer. Called with (0, 0x18)."},
+    {"addr": "0x0800d9cc", "role": "checksum", "callers": ["0x0800dce0", "0x0800dddc"], "notes": "Byte-wise sum+XOR-with-carry accumulator, see checksums[0]."},
+    {"addr": "0x0800dce0", "role": "serialize", "callers": [], "notes": "Top-level WriteSaveRecord: builds 24-byte struct in RAM from live gameplay globals, computes checksum, flushes via 0x08003730. No static caller resolved (reached via indirect/jump-table dispatch, e.g. a save menu handler)."},
+    {"addr": "0x0800dddc", "role": "deserialize", "callers": [], "notes": "Top-level ReadSaveRecord: reads 24-byte struct via 0x08003798, verifies checksum then an offset-0x02 gate value against a fixed RAM constant, and only then deserializes into live gameplay globals. No static caller resolved."}
+  ],
+  "caller_chains": [
+    {
+      "entry_caller": "0x0800dce0",
+      "chain": ["0x0800dce0", "0x0800d9cc", "0x08003730", "0x080302e4", "0x08030518", "0x080303e8", "0x0803031c", "0x080303a4", "0x080305f4", "0x08030468"],
+      "trigger_context": "Unresolved (indirect call, likely a save-menu/checkpoint event handler not captured by static callgraph.json edges)",
+      "ram_fields_updated": ["EEPROM offset 0x00-0x17 (24 bytes)"],
+      "how_mapped": "Grep for direct callers of the EEPROM block-write function 0x08003730 in decompiled.c located exactly one call site at line ~2544, inside FUN_0800dce0, which also calls the checksum routine 0x0800d9cc immediately prior. Confirmed by matching the function's write offsets against the save profile's single active range 0x0000-0x0017."
+    },
+    {
+      "entry_caller": "0x0800dddc",
+      "chain": ["0x0800dddc", "0x08003798", "0x080302e4", "0x08030468", "0x080303e8", "0x0800d9cc", "0x080032b0"],
+      "trigger_context": "Unresolved (indirect call, likely a title-screen/continue-game handler)",
+      "ram_fields_updated": ["gameplay globals: unresolved puRam0800de90/de94/de98/de9c, iRam0800dea0 array, FUN_080032b0 index-select globals"],
+      "how_mapped": "Grep for direct callers of the EEPROM block-read function 0x08003798 located exactly one call site at line ~2580, inside FUN_0800dddc, which recomputes the checksum via 0x0800d9cc and gates all RAM writes behind the checksum-match and offset-0x02 constant-match checks."
+    }
+  ],
+  "fields": [
+    {
+      "name": "record_checksum",
+      "offset": 0,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": ["0x0800dce0"],
+      "readers": ["0x0800dddc"],
+      "observed_values": {"cap-01-future-1.sav": "0x0002"},
+      "update_mechanism": "Computed by FUN_0800d9cc over bytes [0x02,0x18) immediately before the 24-byte record is flushed to EEPROM.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "ghidra/decompiled.c lines ~2540-2544 (write), ~2580-2582 (read-compare); formula did not reproduce on the one real sample (see save-format.json checksums[0].verified_on_samples)."
+    },
+    {
+      "name": "gate_value",
+      "offset": 2,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": ["0x0800dce0"],
+      "readers": ["0x0800dddc"],
+      "observed_values": {"cap-01-future-1.sav": "0x0100"},
+      "update_mechanism": "Copied from an unresolved RAM source (_DAT_0800dd6c) on save; on load, compared for exact equality against a fixed RAM constant (uRam0800de8c) and gates whether the rest of the record is deserialized.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "ghidra/decompiled.c line 2505 (write), line 2583 (read-compare)."
+    },
+    {
+      "name": "index_selector",
+      "offset": 4,
+      "size": 2,
+      "type": "i16_le",
+      "ram_addr": null,
+      "writers": ["0x0800dce0"],
+      "readers": ["0x0800dddc"],
+      "observed_values": {"cap-01-future-1.sav": "0x2901"},
+      "update_mechanism": "Copied from unresolved RAM source (_DAT_0800dd70) on save; on load, passed to FUN_080032b0(idx) which stores idx and computes a pointer base+idx*8 (no bounds check observed).",
+      "confidence": "HYPOTHESIS",
+      "evidence": "ghidra/decompiled.c line 2506 (write), line 2584 (read) and FUN_080032b0 body at line 1245."
+    },
+    {
+      "name": "byte_field_6",
+      "offset": 6,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": ["0x0800dce0"],
+      "readers": ["0x0800dddc"],
+      "observed_values": {"cap-01-future-1.sav": "0x00"},
+      "update_mechanism": "Direct byte copy both directions, no transform.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "ghidra/decompiled.c line 2507 (write), line 2585 (read)."
+    },
+    {
+      "name": "byte_field_7_config_param",
+      "offset": 7,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": ["0x0800dce0"],
+      "readers": ["0x0800dddc"],
+      "observed_values": {"cap-01-future-1.sav": "0xee"},
+      "update_mechanism": "Direct byte copy on save; on load, passed as an argument into func_0x08002978 rather than stored directly (callee not traced in this corpus).",
+      "confidence": "HYPOTHESIS",
+      "evidence": "ghidra/decompiled.c line 2508 (write), line 2586 (read, passed to func_0x08002978)."
+    },
+    {
+      "name": "raw_array_8_12",
+      "offset": 8,
+      "size": 5,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": ["0x0800dce0"],
+      "readers": ["0x0800dddc"],
+      "observed_values": {"cap-01-future-1.sav": "00 00 00 2d 32"},
+      "update_mechanism": "Raw memcpy both directions (unresolved RAM source _DAT_0800dd88 on save, destination iRam0800dea8 on load); no checksum or transform applied to these bytes individually.",
+      "confidence": "HYPOTHESIS",
+      "evidence": "ghidra/decompiled.c lines ~2512-2518 (write loop), lines ~2602-2606 (read loop)."
+    },
+    {
+      "name": "byte_field_13",
+      "offset": 13,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": ["0x0800dce0"],
+      "readers": ["0x0800dddc"],
+      "observed_values": {"cap-01-future-1.sav": "0x28"},
+      "update_mechanism": "Direct byte copy both directions, no transform.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "ghidra/decompiled.c line 2510 (write), line 2588 (read)."
+    },
+    {
+      "name": "byte_field_14",
+      "offset": 14,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": ["0x0800dce0"],
+      "readers": ["0x0800dddc"],
+      "observed_values": {"cap-01-future-1.sav": "0x1e"},
+      "update_mechanism": "Direct byte copy both directions, no transform.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "ghidra/decompiled.c line 2511 (write), line 2589 (read)."
+    },
+    {
+      "name": "byte_field_15",
+      "offset": 15,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": ["0x0800dce0"],
+      "readers": ["0x0800dddc"],
+      "observed_values": {"cap-01-future-1.sav": "0x23"},
+      "update_mechanism": "Direct byte copy both directions, no transform.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "ghidra/decompiled.c line 2509 (write), line 2587 (read)."
+    },
+    {
+      "name": "packed_status_byte",
+      "offset": 16,
+      "size": 1,
+      "type": "bitflags",
+      "ram_addr": null,
+      "writers": ["0x0800dce0"],
+      "readers": ["0x0800dddc"],
+      "observed_values": {"cap-01-future-1.sav": "0x00"},
+      "update_mechanism": "On save: 4 unresolved u16 source values (_DAT_0800dd8c array) are each mapped to a 2-bit code (value 2 -> code 1, value 0x100 -> code 3, value 0x200 -> code 2, else -> code 0) and packed MSB-first into one byte. On load: each 2-bit sub-field indexes a 4-entry u16 lookup table, writing the result into RAM array iRam0800dea0.",
+      "confidence": "HYPOTHESIS",
+      "evidence": "ghidra/decompiled.c lines ~2519-2541 (pack, write side), lines ~2592-2601 (unpack, read side)."
+    },
+    {
+      "name": "reserved_padding_11_16",
+      "offset": 17,
+      "size": 6,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": ["0x0800dce0"],
+      "readers": [],
+      "observed_values": {"cap-01-future-1.sav": "00 00 00 00 00 00"},
+      "update_mechanism": "Zeroed implicitly by the leading memset in FUN_0800dce0; never individually written or read by any traced function.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "ghidra/decompiled.c line 2504 (memset(puVar2,0,0x18)); absence of any further write/read at offsets 0x11-0x16 confirmed by full-function read-through."
+    },
+    {
+      "name": "anomalous_tail_byte",
+      "offset": 23,
+      "size": 1,
+      "type": "unknown",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"cap-01-future-1.sav": "0xd2"},
+      "update_mechanism": "UNKNOWN. Covered by the checksum's declared range (bytes [0x02,0x18)) but never explicitly written by FUN_0800dce0 (which writes only offsets 0x00-0x10 and otherwise relies on the leading memset-to-zero) nor explicitly read by FUN_0800dddc. Its nonzero value in the real sample is unexplained by any function in this 181-function trace and may be the cause of the checksum-verification mismatch in checksums[0].",
+      "confidence": "UNKNOWN",
+      "evidence": "Hex comparison of saves/cap-01-future-1.sav offset 0x17 against full read-through of FUN_0800dce0 (ghidra/decompiled.c lines 2488-2557), which has no store to offset 0x17."
+    }
+  ],
+  "fuzzing_targets": [
+    {"offset": 0, "size": 2, "mutation": "flip bits in stored checksum, leave payload unchanged", "requires_checksum_repair": false, "predicted_effect": "Load aborts at the checksum-compare branch in FUN_0800dddc; no gameplay RAM written."},
+    {"offset": 2, "size": 2, "mutation": "set to 0x0000 (vs observed 0x0100), repair checksum", "requires_checksum_repair": true, "predicted_effect": "If this is genuinely a fixed version/magic gate, load aborts after checksum passes but before FUN_080032b0 runs; distinguishes gate field from ordinary gameplay data."},
+    {"offset": 4, "size": 2, "mutation": "set to 0x0000 and to 0x7fff, repair checksum", "requires_checksum_repair": true, "predicted_effect": "FUN_080032b0 computes base+idx*8 with no observed bounds check; large index may read/corrupt unrelated RAM, confirming the field is an unchecked table selector."},
+    {"offset": 8, "size": 5, "mutation": "set each byte to 0xff and 0x00 individually, repair checksum", "requires_checksum_repair": true, "predicted_effect": "Values should appear unmodified in RAM array iRam0800dea8 immediately after load, since this range has no pack/transform logic."},
+    {"offset": 16, "size": 1, "mutation": "cycle through 0x00/0x55/0xaa/0xff, repair checksum", "requires_checksum_repair": true, "predicted_effect": "Each 2-bit sub-field should independently select one of 4 discrete states via the unpack lookup table; expect 4 discrete, not continuous, behavior changes."},
+    {"offset": 17, "size": 6, "mutation": "set offsets 0x11-0x16 to non-zero garbage, repair checksum", "requires_checksum_repair": true, "predicted_effect": "If truly unused, post-load gameplay state should be bit-identical to a load with these bytes left at 0x00."},
+    {"offset": 23, "size": 1, "mutation": "set to 0x00 vs leave at captured 0xd2, in both cases recomputing checksum per the decompiled formula", "requires_checksum_repair": true, "predicted_effect": "Key counterfactual for the checksum-mismatch anomaly: determines whether the decompiled formula is correct and 0xd2 was written post-checksum by an untraced path, or whether the formula itself is wrong."}
+  ],
+  "open_questions": [
+    "Why does the real sample's stored checksum (0x0002) not match recomputation (0x00a5) under the fully-decompiled FUN_0800d9cc formula over bytes [0x02,0x18)?",
+    "What writes offset 0x17 (observed 0xd2), since no function in this 181-function trace touches it?",
+    "What are the real EWRAM/IWRAM addresses behind the unresolved _DAT_0800dd6c..dd8c and de90..dea8 literal-pool pointers?",
+    "What does the offset-0x04 table index (FUN_080032b0, base+idx*8) actually select, and is it range-checked anywhere outside the traced functions?",
+    "What gameplay-visible state corresponds to each of the 4 packed 2-bit codes at offset 0x10?",
+    "Is FUN_0800dce0/FUN_0800dddc reached via a save/load menu dispatch table, and if so, are there other entries representing a second, untraced save path?"
+  ]
+}

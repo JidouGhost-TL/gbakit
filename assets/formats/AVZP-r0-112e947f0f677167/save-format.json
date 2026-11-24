@@ -1,0 +1,258 @@
+{
+  "schema": "gbakit-save-research/1",
+  "release_key": "AVZP-r0-112e947f0f677167",
+  "display_name": "Super Bubble Pop (Europe) (En,Fr,De,Es,It,Nl,Pt,Sv)",
+  "rom_sha256": "112e947f0f6771670942d5a1a07561b0ae9d5edb31a456148758be0a600b27cf",
+  "game_code": "AVZP",
+  "header_family": "AVZ",
+  "community_id": "comm-003",
+  "overall_confidence": "MEDIUM",
+  "media": {
+    "kind": "eeprom512",
+    "size_bytes": 512,
+    "sdk_tags": [],
+    "fill_byte": "0xff"
+  },
+  "slots_and_copies": [
+    {
+      "name": "slot_0",
+      "offset": 0,
+      "size": 384,
+      "redundancy_role": "primary",
+      "selection_rule": "Only slot present; no mirror/backup copy observed. Game I/O loop bound (0x30 blocks x 8 bytes) only ever touches bytes 0x000-0x17F of the 512-byte EEPROM; bytes 0x180-0x1FF remain at erased fill (0xFF) in both samples and are not a second slot."
+    }
+  ],
+  "magic_signatures": [
+    {
+      "offset": 0,
+      "bytes_hex": "00003c50",
+      "ascii": "..<P",
+      "verified_in_code": true,
+      "verified_in_sav": true,
+      "function_addrs": ["0x08000214", "0x080003f0"]
+    },
+    {
+      "offset": 4,
+      "bytes_hex": "53504253",
+      "ascii": "SPBS",
+      "verified_in_code": true,
+      "verified_in_sav": true,
+      "function_addrs": ["0x08000214", "0x080003f0"]
+    }
+  ],
+  "checksums": [
+    {
+      "name": "none_identified",
+      "algorithm": "unknown",
+      "formula_detail": "No sum/XOR/CRC/complement routine exists in any of the 36 decompiled functions. The only integrity gate is the two-magic-word compare in FUN_08000214 (offsets 0x00 and 0x04 vs. a data constant and an unresolved indirect-call result respectively). Python verification of sum8/xor8/sum16le over the 360-byte body (offsets 0x18-0x17F) produced 0x52/0x9a/0xce98, none of which match any stored field in the file, confirming no body checksum exists anywhere else in the sample.",
+      "stored_offset": 0,
+      "stored_size": 0,
+      "covered_start": 0,
+      "covered_end": 0,
+      "function_addrs": ["0x08000214", "0x080003f0"],
+      "verified_on_samples": [
+        {"file": "cap-01-future-1.sav", "stored_hex": "n/a", "computed_hex": "sum8=0x52 xor8=0x9a sum16le=0xce98", "match": false}
+      ],
+      "confidence": "CONFIRMED_STATIC"
+    }
+  ],
+  "io_driver_functions": [
+    {
+      "addr": "0x080177b4",
+      "role": "read",
+      "callers": [],
+      "notes": "EEPROM 8-byte block read primitive. [MMIO-SEED] in ghidra/save_related_functions.c. Serializes block address to a 1-bit stream, DMA3-sends read command+address to 0x0D000000 via FUN_08017734, DMA3-receives 68 response bits, unpacks 4x16-bit words. No static caller recorded; the game's 0x30-iteration block-read loop in FUN_08000214 behaviorally matches this function's signature but calls through an unresolved function pointer (pcRam080003cc), so the link is a HYPOTHESIS, not a confirmed call edge."
+    },
+    {
+      "addr": "0x08017734",
+      "role": "write",
+      "callers": ["0x080177b4"],
+      "notes": "Generic DMA3 transfer trigger (source/dest/count+control via RAM-mirrored MMIO pointers, busy-polls before return). Called twice by FUN_080177b4: once to send the read command, once to receive the response. Only statically confirmed caller edge touching the save I/O stack."
+    },
+    {
+      "addr": "0x08000214",
+      "role": "deserialize",
+      "callers": [],
+      "notes": "High-level load entry point. Allocates/zeroes 384-byte heap buffer, device-select, 48x8-byte block read loop (unresolved pointer), two-magic-word validation, then copies out sub-fields at offsets 0x08 (1B), 0x09 (5B), 0x0E (8B), 0x18 (360B)."
+    },
+    {
+      "addr": "0x080003f0",
+      "role": "serialize",
+      "callers": [],
+      "notes": "High-level save entry point; exact mirror of FUN_08000214. Packs sub-fields into the 384-byte buffer, stores magic word A (constant) and magic word B (result of pcRam080005d0()), then 48x8-byte block write loop with a retry/fallback call on failure."
+    }
+  ],
+  "caller_chains": [
+    {
+      "entry_caller": "0x08000214",
+      "chain": ["0x08000214", "0x080001f0", "0x080001cc"],
+      "trigger_context": "Unknown gameplay trigger (no static caller recorded for 0x08000214 itself in ghidra/callgraph.json). Once invoked with any param_1, zero-fills a lazily-allocated 384-byte heap buffer, reads 48 EEPROM blocks through an unresolved function pointer, validates two magic words, and memcpy's out four sub-fields.",
+      "ram_fields_updated": ["0x02xxxxxx heap buffer (save struct mirror)"],
+      "how_mapped": "Full static decompilation of FUN_08000214 in ghidra/decompiled.c; callgraph.json confirms calls to FUN_080001cc/FUN_080001f0 (memcpy/memset) but shows no resolved edge to the EEPROM block-read primitive, which is inferred only by loop-shape/parameter-count matching against FUN_080177b4."
+    },
+    {
+      "entry_caller": "0x080003f0",
+      "chain": ["0x080003f0", "0x080001f0", "0x080001cc"],
+      "trigger_context": "Unknown gameplay trigger (no static caller recorded). Mirror of the load chain: packs the in-RAM save struct into the 384-byte buffer and writes 48 EEPROM blocks through an unresolved function pointer.",
+      "ram_fields_updated": ["0x02xxxxxx heap buffer (save struct mirror)", "0x0D000000 EEPROM MMIO window (via unresolved write primitive)"],
+      "how_mapped": "Full static decompilation of FUN_080003f0; same caveat as the load chain regarding the unresolved EEPROM write-block pointer."
+    },
+    {
+      "entry_caller": "0x080177b4",
+      "chain": ["0x080177b4", "0x08017734"],
+      "trigger_context": "Invoked (hypothesized) once per EEPROM block index during the FUN_08000214 load loop.",
+      "ram_fields_updated": ["EEPROM MMIO window 0x0D000000 (request bitstream)", "caller-provided 8-byte destination buffer"],
+      "how_mapped": "Full static decompilation; this is the only confirmed direct call edge (0x080177b4 -> 0x08017734) in ghidra/callgraph.json that touches the save I/O stack."
+    }
+  ],
+  "fields": [
+    {
+      "name": "magic_word_a",
+      "offset": 0,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": ["0x080003f0"],
+      "readers": ["0x08000214"],
+      "observed_values": {"cap-00-future-0.sav": "0xffffffff", "cap-01-future-1.sav": "0x503c0000"},
+      "update_mechanism": "Stored directly from global constant uRam080005c0 on save; compared against opaque data constant iRam080003d0 on load.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "FUN_080003f0: *puVar3 = uRam080005c0;  FUN_08000214: *piVar7 == iRam080003d0 gate."
+    },
+    {
+      "name": "magic_word_b_spbs",
+      "offset": 4,
+      "size": 4,
+      "type": "ascii",
+      "ram_addr": null,
+      "writers": ["0x080003f0"],
+      "readers": ["0x08000214"],
+      "observed_values": {"cap-00-future-0.sav": "0xffffffff", "cap-01-future-1.sav": "SPBS"},
+      "update_mechanism": "Stored from the return value of an unresolved indirect call pcRam080005d0() on save; compared against the return value of pcRam080003d4() on load.",
+      "confidence": "CONFIRMED_STATIC structure / HYPOTHESIS semantics",
+      "evidence": "FUN_080003f0: *(undefined4*)(iVar2+4) = (*pcRam080005d0)();  FUN_08000214: piVar7[1] == (*pcRam080003d4)() gate. ASCII decode is direct byte inspection of cap-01-future-1.sav."
+    },
+    {
+      "name": "header_flag_byte",
+      "offset": 8,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": ["0x080003f0"],
+      "readers": ["0x08000214"],
+      "observed_values": {"cap-01-future-1.sav": "0x00"},
+      "update_mechanism": "Single-byte copy, isolated from the surrounding header fields in both load and save functions.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "FUN_08000214: *puRam080003d8 = *(undefined1*)(iVar4+8); FUN_080003f0: *(undefined1*)(puVar3+2) = *puRam080005bc;"
+    },
+    {
+      "name": "header_block_5b",
+      "offset": 9,
+      "size": 5,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": ["0x080003f0"],
+      "readers": ["0x08000214"],
+      "observed_values": {"cap-01-future-1.sav": "0000000000"},
+      "update_mechanism": "Explicit 5-byte memcpy in both directions.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "FUN_08000214: FUN_080001cc(iVar4+9, uVar3, 5); FUN_080003f0: FUN_080001cc(uRam080005c4, iVar2+9, 5);"
+    },
+    {
+      "name": "header_block_8b",
+      "offset": 14,
+      "size": 8,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": ["0x080003f0"],
+      "readers": ["0x08000214"],
+      "observed_values": {"cap-01-future-1.sav": "0000ffff00000000"},
+      "update_mechanism": "Explicit 8-byte memcpy in both directions; contains 2 bytes (offset 0x10-0x11) that stayed at erased fill (0xff) across the one observed save event.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "FUN_08000214: FUN_080001cc(*piVar1+0xe, uRam080003e0, 8); FUN_080003f0: FUN_080001cc(uRam080005c8, iVar2+0xe, 8); byte-diff of saves/cap-00-future-0.sav vs cap-01-future-1.sav shows offsets 0x10-0x11 unchanged."
+    },
+    {
+      "name": "unused_gap_0x10",
+      "offset": 16,
+      "size": 2,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"cap-00-future-0.sav": "ffff", "cap-01-future-1.sav": "ffff"},
+      "update_mechanism": "No writer observed to actually change this sub-span of the 8-byte copy during the one captured save event; treated as reserved/padding for this build until contradicted by further samples.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Byte-by-byte diff in saves/hexdump_and_diffs.txt / direct Python diff of the two .sav files: only bytes 0x10 and 0x11 inside the active 384-byte region are unchanged between the blank and populated snapshot."
+    },
+    {
+      "name": "record_table",
+      "offset": 24,
+      "size": 360,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": ["0x080003f0"],
+      "readers": ["0x08000214"],
+      "observed_values": {"cap-01-future-1.sav": "see saves/hexdump_and_diffs.txt and SAVE-FORMAT-REPORT.md section 5.1"},
+      "update_mechanism": "Explicit 360-byte (0x168) memcpy in both directions. Internally, byte-pattern analysis (not externally sourced) suggests three repeating 120-byte segments of ten 12-byte slots each, each slot holding a big-endian u32 round-number field followed by two 4-byte space-padded ASCII tag fields (observed tags: US, MD, CIR, CMS, BOB, KIM, ZEJ, MOT, NOJ, DOR, WMR, VEK, TLD, RQ, 'W R') and a descending 4-step counter sequence (0x28..0x04) marking each 120-byte segment's ten slots. This internal typing is unverified.",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Span size/copy calls: CONFIRMED_STATIC from FUN_08000214/FUN_080003f0. Internal field typing: pure byte-pattern inference over saves/cap-01-future-1.sav (period-120 recurrence of byte 0x28 at absolute offsets 0x25/0x9d/0x115; BE32 round-number decode of leading 4-byte words; ASCII decode of trailing tag bytes)."
+    },
+    {
+      "name": "unused_eeprom_tail",
+      "offset": 384,
+      "size": 128,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"cap-00-future-0.sav": "ff * 128", "cap-01-future-1.sav": "ff * 128"},
+      "update_mechanism": "Never addressed: load/save block loops are bounded at 0x30 (48) blocks x 8 bytes = 384 bytes.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Loop bounds in FUN_08000214/FUN_080003f0 (uVar6 < 0x30); both .sav files have bytes 0x180-0x1FF entirely 0xFF."
+    }
+  ],
+  "fuzzing_targets": [
+    {
+      "offset": 0,
+      "size": 4,
+      "mutation": "Flip any bit in magic word A (0x503c0000)",
+      "requires_checksum_repair": false,
+      "predicted_effect": "Load rejected by FUN_08000214's first magic-word gate; expect fallback/new-game behavior, no crash."
+    },
+    {
+      "offset": 4,
+      "size": 4,
+      "mutation": "Zero out magic word B (currently ASCII SPBS / 0x53425053)",
+      "requires_checksum_repair": false,
+      "predicted_effect": "Load rejected by the second magic-word gate (compared against an unresolved indirect-call result)."
+    },
+    {
+      "offset": 16,
+      "size": 2,
+      "mutation": "Write 0x0000 into the observed-dead 0x10-0x11 gap (currently 0xffff, unchanged by the real save)",
+      "requires_checksum_repair": false,
+      "predicted_effect": "No observable gameplay/UI change expected if this is truly unused padding; any visible effect falsifies that classification."
+    },
+    {
+      "offset": 37,
+      "size": 1,
+      "mutation": "Change the hypothesized segment-leading counter byte 0x28 to 0x00 at absolute offset 0x25 (first 120-byte record-table segment)",
+      "requires_checksum_repair": false,
+      "predicted_effect": "If the 3x120-byte independent-table hypothesis is correct, only the first of three score/leaderboard tables should show a corrupted/zeroed top rank; the other two 120-byte segments should remain visually unaffected."
+    },
+    {
+      "offset": 28,
+      "size": 4,
+      "mutation": "Replace the ' US' tag bytes at offset 0x1c (00 20 55 53) with ' ZZ' (00 20 5a 5a)",
+      "requires_checksum_repair": false,
+      "predicted_effect": "If this is a 2-3 character name/initials tag field, the corresponding leaderboard row should display 'ZZ' instead of 'US' after reload."
+    }
+  ],
+  "open_questions": [
+    "What gameplay event(s) call FUN_08000214 (load) and FUN_080003f0 (save)? No static caller is recorded for either in ghidra/callgraph.json.",
+    "Where is the raw EEPROM write-block primitive (twin of read-side FUN_080177b4)? It is not present among the 36 decompiled functions.",
+    "What is the literal expected value of magic word A (iRam080003d0), and what does the indirect call behind magic word B (pcRam080003d4/pcRam080005d0) actually compute? Both are opaque data-segment/function-pointer references outside this extraction.",
+    "Is the 360-byte record table really three independent 120-byte segments of ten 12-byte slots, and are the leading 4-byte fields genuinely big-endian score values? This is an unverified structural hypothesis pending the fuzzing plan.",
+    "Only one populated .sav snapshot exists; a second distinct save event is needed to determine which header sub-fields (offsets 0x08, 0x09-0x0D, 0x0E-0x15) vary with game state versus staying fixed."
+  ]
+}

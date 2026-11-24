@@ -1,0 +1,676 @@
+{
+  "schema": "gbakit-save-research/1",
+  "release_key": "BADP-r0-f42b1216b27bc47f",
+  "display_name": "Aladdin (Europe) (En,Fr,De,Es)",
+  "rom_sha256": "f42b1216b27bc47fc4c6048102fef95adb2ce154f6a8efc60126cbac6f931b8a",
+  "game_code": "BADP",
+  "header_family": "BAD",
+  "community_id": "comm-076",
+  "overall_confidence": "MEDIUM",
+  "media": {
+    "kind": "eeprom512",
+    "size_bytes": 512,
+    "sdk_tags": [],
+    "fill_byte": "0xff"
+  },
+  "slots_and_copies": [
+    {
+      "name": "slot_0",
+      "offset": 0,
+      "size": 40,
+      "redundancy_role": "primary",
+      "selection_rule": "Only slot found. EEPROM block 0 is header/magic block; blocks 1-4 hold the single 32-byte RAM profile struct (index 0, stride 0x20 in FUN_0800931c/FUN_080093e4). Boot loader FUN_08008d1c accepts it if FUN_08008c38 header compare passes, otherwise FUN_08008ca4 reformats blocks 0-4. No backup copy, mirror, or generation counter was found in code or in the .sav samples; bytes 40-511 remain 0xFF."
+    },
+    {
+      "name": "reserved_eeprom_blocks_5_to_63",
+      "offset": 40,
+      "size": 472,
+      "redundancy_role": "unknown",
+      "selection_rule": "Never written in either sample (all 0xFF). FUN_08008f74 can address block groups starting at 1, 5, 9 and 13 for incremental 8-byte flushes of other RAM objects, so blocks 5-16 are potentially addressable for other categories, but no data, slot, or copy was observed there. Blocks 17-63 are not addressed by any traced caller."
+    }
+  ],
+  "magic_signatures": [
+    {
+      "offset": 0,
+      "bytes_hex": "0706050403020100",
+      "ascii": "",
+      "verified_in_code": true,
+      "verified_in_sav": true,
+      "function_addrs": [
+        "0x08008c38",
+        "0x08008ca4",
+        "0x08049350"
+      ]
+    }
+  ],
+  "checksums": [
+    {
+      "name": "profile_sum8_ram0x1f",
+      "algorithm": "sum8",
+      "formula_detail": "In RAM order (each 8-byte EEPROM block byte-reversed relative to the .sav file): stored = (sum of struct bytes RAM[0x00..0x1E], 31 bytes, as signed char accumulation modulo 256) at RAM+0x1F. Writer FUN_0800931c recomputes it after setting RAM+0x17 and RAM+0x19=1. Verifier FUN_080093e4 recomputes the same sum, returns 2 if RAM+0x18==0, 0 if sum equals RAM+0x1F, else 1. Covered range excludes the stored byte itself. No seed, complement, XOR, CRC, or endianness beyond the per-block byte reversal.",
+      "stored_offset": 32,
+      "stored_size": 1,
+      "covered_start": 8,
+      "covered_end": 40,
+      "function_addrs": [
+        "0x0800931c",
+        "0x080093e4"
+      ],
+      "verified_on_samples": [
+        {
+          "file": "cap-00-future-0.sav",
+          "stored_hex": "0x00",
+          "computed_hex": "0x00",
+          "match": true
+        },
+        {
+          "file": "cap-01-future-1.sav",
+          "stored_hex": "0x03",
+          "computed_hex": "0x03",
+          "match": true
+        }
+      ],
+      "confidence": "CONFIRMED_VERIFIED"
+    }
+  ],
+  "io_driver_functions": [
+    {
+      "addr": "0x08049158",
+      "role": "deserialize",
+      "callers": [
+        "0x08008d1c"
+      ],
+      "notes": "EEPROM type identify/select: accepts 4 (and 0x40), returns 0 on success, 1 otherwise. Called as FUN_08049158(4) by the boot loader, consistent with EEPROM 4K (512 bytes). Role label is closest schema value; it is a type-select, not a data transfer."
+    },
+    {
+      "addr": "0x080491c8",
+      "role": "deserialize",
+      "callers": [
+        "0x08008c38",
+        "0x08008ca4",
+        "0x08008d1c",
+        "0x08008f74"
+      ],
+      "notes": "Selects EEPROM descriptor entry (called with argument 2 before every high-level read/write) and returns the descriptor pointer through its out-parameter. Descriptor supplies block-count limit at +4 and address-bit count at +8 used by the read/write drivers. Closest schema role; it is configuration, not a data transfer."
+    },
+    {
+      "addr": "0x08049204",
+      "role": "write",
+      "callers": [
+        "0x08049400"
+      ],
+      "notes": "DMA/interrupt arming helper invoked by the EEPROM write driver after the serial bitstream DMA is queued; manipulates DMA channel registers via literal-pool pointers (exact register values unresolved in the trace-guided decompilation)."
+    },
+    {
+      "addr": "0x0804928c",
+      "role": "write",
+      "callers": [
+        "0x08049400"
+      ],
+      "notes": "DMA/interrupt teardown helper invoked at the end of the EEPROM write driver; clears the channel-enable bit (8 << type index) and restores state."
+    },
+    {
+      "addr": "0x080492d0",
+      "role": "read",
+      "callers": [
+        "0x08049350",
+        "0x08049400"
+      ],
+      "notes": "DMA3 transfer primitive: programs source/destination and count|0x80000000, busy-waits on the DMA busy bit. Used both to send the EEPROM address/command bitstream to 0x0D000000 and to receive the 64-bit data bitstream (0x44 halfword transfers). It is the only function touching 0x0D000000; role covers both directions."
+    },
+    {
+      "addr": "0x08049350",
+      "role": "read",
+      "callers": [
+        "0x08008c38",
+        "0x08008d1c",
+        "0x080494dc"
+      ],
+      "notes": "EEPROM read of one 8-byte block: block address must be < descriptor block count; builds address bitstream (start bits + address bits, MSB first), DMAs it to 0x0D000000, DMAs back 0x44 halfwords, reassembles 4x u16. Byte order in RAM is the reverse of the .sav file order within each 8-byte block (proven by checksum and magic). Returns 0 on success, error value (uRam0804936c, sign-bit style) if block out of range."
+    },
+    {
+      "addr": "0x08049400",
+      "role": "write",
+      "callers": [
+        "0x08049534"
+      ],
+      "notes": "EEPROM write of one 8-byte block (4x u16): expands data bits MSB-first into a stack bitstream, appends address bits, prefix 0/start bit, DMAs (address_bits + 0x43) halfwords to 0x0D000000, arms DMA via FUN_08049204, polls EEPROM ready bit at 0x0D000000 bit 0, tears down via FUN_0804928c."
+    },
+    {
+      "addr": "0x080494dc",
+      "role": "read",
+      "callers": [
+        "0x08049534"
+      ],
+      "notes": "EEPROM verify: reads the block back with FUN_08049350 into a stack buffer and compares all 4 shorts; returns 0 on match, 0x8000 on mismatch or out-of-range."
+    },
+    {
+      "addr": "0x08049534",
+      "role": "write",
+      "callers": [
+        "0x08008ca4",
+        "0x08008f74"
+      ],
+      "notes": "Write-with-retry wrapper: up to 3 attempts of FUN_08049400 write followed by FUN_080494dc verify, stopping on verify success. This is the write redundancy (retry), not a backup copy."
+    },
+    {
+      "addr": "0x08049350",
+      "role": "deserialize",
+      "callers": [
+        "0x08008c38",
+        "0x08008d1c"
+      ],
+      "notes": "Same read driver acting as the deserializer for the header block (FUN_08008c38) and for profile blocks 1-4 (FUN_08008d1c)."
+    },
+    {
+      "addr": "0x0800931c",
+      "role": "checksum",
+      "callers": [
+        "0x080074bc"
+      ],
+      "notes": "Profile commit/checksum writer for struct index 0: gated on a global state == 1; sets RAM+0x17 from a global/table-derived byte, sets RAM+0x19 = 1, recomputes sum8 over RAM[0..0x1E] into RAM+0x1F, and updates state bytes. Does not itself talk to EEPROM; the flush to EEPROM is via FUN_08008f74/FUN_08008ca4 paths."
+    },
+    {
+      "addr": "0x080093e4",
+      "role": "checksum",
+      "callers": [
+        "0x0801e928"
+      ],
+      "notes": "Profile checksum verifier for struct index 0: returns 2 if RAM+0x18 == 0, 0 if sum8(RAM[0..0x1E]) == RAM+0x1F, else 1."
+    },
+    {
+      "addr": "0x080498b0",
+      "role": "erase",
+      "callers": [
+        "0x08008d1c",
+        "0x08008f74"
+      ],
+      "notes": "memset (byte fill, word-optimised). Used to zero the two 32-byte RAM buffers in FUN_08008d1c before load/format and to zero 32-byte buffers in FUN_08008f74 on flush failure. It erases RAM only; EEPROM has no separate erase operation in the traced code (EEPROM overwrite is by block write)."
+    }
+  ],
+  "caller_chains": [
+    {
+      "entry_caller": "0x08008d1c",
+      "chain": [
+        "0x08008d1c",
+        "0x08008c38",
+        "0x08049350",
+        "0x080492d0"
+      ],
+      "trigger_context": "Boot/load (no static caller in callgraph.json; reached via state/jumptable dispatch not recovered as a direct call). Zeroes two 32-byte RAM buffers with FUN_080498b0, selects EEPROM type with FUN_08049158(4) and descriptor with FUN_080491c8(2), then verifies the header block.",
+      "ram_fields_updated": [],
+      "how_mapped": "Decompiled body of FUN_08008d1c in ghidra/decompiled.c calls func_0x080498b0(...,0,0x20) twice, func_0x080491c8(2,...), func_0x08049158(4), FUN_08008c38(); callgraph.json lists FUN_08008c38 as a callee of 0x08008d1c. FUN_08008c38 reads block 0 with func_0x08049350(0, buf) and compares 4 shorts against a second (expected) buffer."
+    },
+    {
+      "entry_caller": "0x08008d1c",
+      "chain": [
+        "0x08008d1c",
+        "0x08049350",
+        "0x080492d0"
+      ],
+      "trigger_context": "Boot/load happy path: if FUN_08008c38 returns 0 (header matches), reads profile blocks 1, 2, 3, 4 in a loop (func_0x08049350(block, ram_base + (block-1)*8)) into the 32-byte RAM struct, then calls FUN_0801e928 to validate/apply it.",
+      "ram_fields_updated": [
+        "profile RAM struct +0x00..+0x1F (all fields, from EEPROM blocks 1-4)"
+      ],
+      "how_mapped": "Loop in FUN_08008d1c: uVar6 = uVar5+1; func_0x08049350(uVar6, iVar2 + uVar5*8) for uVar6 in 1..4, breaking on sign-bit error. iVar2 is the 32-byte buffer zeroed at entry. File mapping: EEPROM block N (file offset N*8) byte-reversed gives RAM struct bytes (N-1)*8..(N-1)*8+7."
+    },
+    {
+      "entry_caller": "0x08008d1c",
+      "chain": [
+        "0x08008d1c",
+        "0x08008ca4",
+        "0x08049534",
+        "0x08049400",
+        "0x080492d0"
+      ],
+      "trigger_context": "Boot/load recovery: if FUN_08008c38 returns non-zero (header mismatch, e.g. blank/corrupt EEPROM), FUN_08008ca4 reformats: writes header block 0 and profile blocks 1-4 (from the zeroed RAM buffers) with write+verify, then FUN_0801e928 runs.",
+      "ram_fields_updated": [],
+      "how_mapped": "FUN_08008d1c else-branch calls FUN_08008ca4(); callgraph.json lists it as a callee. FUN_08008ca4 body calls func_0x08049534(0, header_buf) once and func_0x08049534(block, ram + (block-1)*8) in a 1..4 loop. This explains why a formatted save has blocks 1-4 as 0x00 (written zeros) while untouched blocks 5+ stay 0xFF."
+    },
+    {
+      "entry_caller": "0x08008ca4",
+      "chain": [
+        "0x08008ca4",
+        "0x08049534",
+        "0x08049400",
+        "0x08049204",
+        "0x0804928c",
+        "0x080492d0"
+      ],
+      "trigger_context": "Format/default-save creation (also the only whole-profile writer traced). Writes 5 blocks total (40 bytes) matching exactly the active range 0x00-0x27 in both .sav samples.",
+      "ram_fields_updated": [],
+      "how_mapped": "Decompiled FUN_08008ca4 plus callgraph.json callees of 0x08049534 (0x08049400, 0x080494dc) and of 0x08049400 (0x08049204, 0x0804928c, 0x080492d0) in ghidra/save_related_functions.c."
+    },
+    {
+      "entry_caller": "0x08008f74",
+      "chain": [
+        "0x08008f74",
+        "0x08049534",
+        "0x08049400",
+        "0x080494dc",
+        "0x08049350",
+        "0x080492d0"
+      ],
+      "trigger_context": "Incremental single-block flush (no static caller in callgraph.json; state-machine dispatch). Selects one of four block groups by flag tests (group starts 1, 5, 9, 13), takes that group's byte index, and writes one 8-byte chunk: func_0x08049534(index + group_start, ram_base_of_group + index*8). On non-zero result it zeroes two 32-byte RAM buffers. Only the group starting at block 1 corresponds to the observed profile struct; the other groups were never observed with data (blocks 5-16 are 0xFF in both samples).",
+      "ram_fields_updated": [],
+      "how_mapped": "Four near-identical branches in FUN_08008f74 decompiled body, each calling func_0x080491c8(2, ...) then func_0x08049534(bVar1 + 1 / +5 / +9 / +13, (uint)bVar1 * 8 + group_ram_base). Chunk pointer arithmetic (index*8) and 8-byte EEPROM block size give the group layout. Which RAM base belongs to which group cannot be resolved to absolute addresses because literal-pool values (_DAT_*/iRam*) are unresolved in the trace-guided decompilation."
+    },
+    {
+      "entry_caller": "0x08046b90",
+      "chain": [
+        "0x08046b90",
+        "0x080074bc",
+        "0x0800931c"
+      ],
+      "trigger_context": "Menu/selection confirm path: FUN_08046b90 checks FUN_08009424(0) (profile RAM+0x19). If the caller argument is 0 or RAM+0x19 == 0 (no committed profile), it runs its long menu sequence and calls FUN_080074bc, which in turn calls func_0x0800931c(0) to commit the profile struct. If RAM+0x19 != 0, it instead reads FUN_08009434(0) (profile RAM+0x17) and stores it as a byte variable and does not re-commit.",
+      "ram_fields_updated": [
+        "profile RAM +0x17 (set by FUN_0800931c from a global/table-derived byte; observed 0 -> 2)",
+        "profile RAM +0x19 (set to 1 by FUN_0800931c; observed 0 -> 1)",
+        "profile RAM +0x1F (recomputed sum8 by FUN_0800931c; observed 0x00 -> 0x03)"
+      ],
+      "how_mapped": "callgraph.json: 0x08046b90 callees include 0x080074bc, 0x08009424, 0x08009434; decompiled FUN_08046b90 shows the FUN_08009424(0) gate, the FUN_080074bc() call, and the else-branch FUN_08009434(0). Decompiled FUN_080074bc shows func_0x0800931c(0) in its middle (callgraph.json does not list 0x0800931c as a callee of 0x080074bc because the call appears as func_0x0800931c, i.e. trace/jumptable style; it was mapped by reading the decompiled body, not the graph alone). FUN_0800931c body shows the +0x17/+0x19 writes and the sum loop over 0x1F bytes stored at +0x1F. The three changed .sav bytes between the samples are exactly the file images of RAM+0x17, RAM+0x19 and RAM+0x1F under the per-block byte reversal."
+    },
+    {
+      "entry_caller": "0x08008d1c",
+      "chain": [
+        "0x08008d1c",
+        "0x0801e928",
+        "0x080093dc",
+        "0x080093e4"
+      ],
+      "trigger_context": "Post-load validation/apply: after load or format, FUN_0801e928 gets the profile base via FUN_080093dc(), checks whether the four u16 fields at RAM+10,+12,+14,+16 are all zero and calls FUN_080093e4(0); if the checksum verifier returns non-zero or all four u16s are zero it installs defaults (0x8000, 0x80, 0x20, 0x10), otherwise it copies the stored u16s out. It also consumes the byte at RAM+0x15 (zero selects a zero/default source, non-zero selects the stored byte as a value).",
+      "ram_fields_updated": [],
+      "how_mapped": "callgraph.json: 0x0801e928 callees are 0x080093dc and 0x080093e4; FUN_08008d1c decompiled body calls func_0x0801e928() on both the load and format paths. Field offsets are read directly from the FUN_0801e928 and FUN_080093e4 bodies. Absolute RAM base is unresolved (FUN_080093dc returns a literal-pool pointer value)."
+    }
+  ],
+  "fields": [
+    {
+      "name": "header_magic_block0",
+      "offset": 0,
+      "size": 8,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [
+        "0x08008ca4",
+        "0x08049534",
+        "0x08049400"
+      ],
+      "readers": [
+        "0x08008c38",
+        "0x08049350"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": "file 07 06 05 04 03 02 01 00; RAM order 00 01 02 03 04 05 06 07",
+        "cap-01-future-1.sav": "file 07 06 05 04 03 02 01 00; RAM order 00 01 02 03 04 05 06 07"
+      },
+      "update_mechanism": "Written once at format time by FUN_08008ca4 via write+verify of block 0 from a RAM header buffer; never changed between the two samples. Verified at every boot by FUN_08008c38, which reads block 0 with FUN_08049350 and compares its 4 shorts against an expected RAM buffer; mismatch triggers reformat.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Identical in both .sav files. FUN_08008c38 compare loop over 4 shorts and FUN_08008ca4 block-0 write in ghidra/decompiled.c; per-block byte reversal is proven by the checksum field (see profile_checksum_sum8), so the RAM-order magic is the ascending sequence 00 01 02 03 04 05 06 07. The expected buffer's absolute RAM/ROM address is unresolved (_DAT_08008c8c literal), so the magic is verified as the compared/written pattern, not read from a named constant."
+    },
+    {
+      "name": "profile_reserved_00_09",
+      "offset": 8,
+      "size": 10,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [
+        "0x08008ca4",
+        "0x08008f74"
+      ],
+      "readers": [
+        "0x080093e4"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": "RAM 00 00 00 00 00 00 00 00 00 00 (file 0x08-0x11 all 0x00)",
+        "cap-01-future-1.sav": "RAM 00 00 00 00 00 00 00 00 00 00 (file 0x08-0x11 all 0x00)"
+      },
+      "update_mechanism": "Part of the 32-byte profile struct loaded from EEPROM blocks 1-4 at boot and written at format/incremental flush. Covered by the sum8 checksum (read by FUN_080093e4 as part of RAM[0..0x1E]) but no individual writer/reader for these bytes was traced.",
+      "confidence": "UNKNOWN",
+      "evidence": "Zero in both samples; no decompiled function accesses RAM+0x00..+0x09 of this struct individually. Offset given is the file offset of the first byte of the range in file order; RAM offset = file offset - 8 within each reversed 8-byte block (see report for the full mapping formula)."
+    },
+    {
+      "name": "profile_u16_at_ram_0x0a",
+      "offset": 21,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": [
+        "0x08008ca4",
+        "0x08008f74"
+      ],
+      "readers": [
+        "0x0801e928"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": "0x0000",
+        "cap-01-future-1.sav": "0x0000"
+      },
+      "update_mechanism": "Read by FUN_0801e928 from the profile base returned by FUN_080093dc at +10; if the checksum verifier fails or all four u16s are zero, the consumer installs default 0x8000 instead of this stored value. No semantic writer traced; persisted as part of the 32-byte struct and covered by the checksum.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "FUN_0801e928 reads *(short *)(base + 10) and either copies it to an output pointer or substitutes 0x8000. Offset 21 is the .sav file offset of the low byte in RAM order (RAM bytes 10-11 map to file bytes 21-20 due to per-block reversal); the field occupies file bytes 20-21. Semantics unknown."
+    },
+    {
+      "name": "profile_u16_at_ram_0x0c",
+      "offset": 19,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": [
+        "0x08008ca4",
+        "0x08008f74"
+      ],
+      "readers": [
+        "0x0801e928"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": "0x0000",
+        "cap-01-future-1.sav": "0x0000"
+      },
+      "update_mechanism": "Same as the RAM+0x0A u16: read by FUN_0801e928 at +0x0C, default 0x80 substituted when the profile is invalid/empty. Covered by the checksum.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "FUN_0801e928 reads *(short *)(base + 0x0C), default 0x80. RAM bytes 12-13 map to file bytes 19-18; the field occupies file bytes 18-19, offset listed is the file offset of the RAM low byte. Semantics unknown."
+    },
+    {
+      "name": "profile_u16_at_ram_0x0e",
+      "offset": 17,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": [
+        "0x08008ca4",
+        "0x08008f74"
+      ],
+      "readers": [
+        "0x0801e928"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": "0x0000",
+        "cap-01-future-1.sav": "0x0000"
+      },
+      "update_mechanism": "Same pattern: read by FUN_0801e928 at +0x0E, default 0x20 substituted when invalid/empty. Covered by the checksum.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "FUN_0801e928 reads *(short *)(base + 0x0E), default 0x20. RAM bytes 14-15 map to file bytes 17-16; the field occupies file bytes 16-17. Semantics unknown."
+    },
+    {
+      "name": "profile_u16_at_ram_0x10",
+      "offset": 31,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": [
+        "0x08008ca4",
+        "0x08008f74"
+      ],
+      "readers": [
+        "0x0801e928"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": "0x0000",
+        "cap-01-future-1.sav": "0x0000"
+      },
+      "update_mechanism": "Same pattern: read by FUN_0801e928 at +0x10, default 0x10 substituted when invalid/empty. Covered by the checksum. Note the low byte (RAM+0x10) is the first byte of EEPROM block 3 in RAM order, i.e. the last byte of block 3 in file order.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "FUN_0801e928 reads *(short *)(base + 0x10), default 0x10. RAM bytes 16-17 map to file bytes 31-30; the field occupies file bytes 30-31. Semantics unknown; the four defaults (0x8000, 0x80, 0x20, 0x10) suggest scaled/option values but that is not proven."
+    },
+    {
+      "name": "profile_reserved_12_14",
+      "offset": 29,
+      "size": 3,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [
+        "0x08008ca4",
+        "0x08008f74"
+      ],
+      "readers": [
+        "0x080093e4"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": "RAM 00 00 00 (file bytes 27-29 all 0x00)",
+        "cap-01-future-1.sav": "RAM 00 00 00 (file bytes 27-29 all 0x00)"
+      },
+      "update_mechanism": "Persisted as part of the struct and covered by the checksum; no individual accessor traced.",
+      "confidence": "UNKNOWN",
+      "evidence": "RAM offsets 0x12-0x14 lie between the u16 at RAM+0x10 and the byte at RAM+0x15 consumed by FUN_0801e928. Zero in both samples."
+    },
+    {
+      "name": "profile_byte_at_ram_0x15",
+      "offset": 26,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": [
+        "0x08008ca4",
+        "0x08008f74"
+      ],
+      "readers": [
+        "0x0801e928"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": "0x00 (file offset 0x1A)",
+        "cap-01-future-1.sav": "0x00 (file offset 0x1A)"
+      },
+      "update_mechanism": "Read by FUN_0801e928: if zero it stores 0 through a computed pointer, otherwise it stores this byte's value through a different computed pointer (index/value selector). Covered by the checksum; no writer semantics traced.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "FUN_0801e928 tests *(char *)(base + 0x15) and branches on it. The JSON offset 26 uses the struct-relative convention in the generator (sav offset = 8 + RAM offset for the byte's block start is not byte-exact); the byte-exact file offset under per-block reversal is 0x1A (26 decimal is coincidentally that file offset: RAM byte 21 is in block 2 (RAM 16-23), file bytes 24-31 reversed, so RAM 21 -> file 24 + (7 - 5) = 26). Zero in both samples; semantics unknown."
+    },
+    {
+      "name": "profile_byte_at_ram_0x16",
+      "offset": 25,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": [
+        "0x08008ca4",
+        "0x08008f74"
+      ],
+      "readers": [
+        "0x080093e4"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": "0x00 (file offset 0x19)",
+        "cap-01-future-1.sav": "0x00 (file offset 0x19)"
+      },
+      "update_mechanism": "Persisted and checksum-covered only; no individual accessor traced. Sits between the FUN_0801e928 byte at +0x15 and the committed value at +0x17.",
+      "confidence": "UNKNOWN",
+      "evidence": "RAM offset 0x16 -> file offset 24 + (7 - 6) = 25 (0x19). Zero in both samples."
+    },
+    {
+      "name": "profile_selection_value_at_ram_0x17",
+      "offset": 24,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": [
+        "0x0800931c"
+      ],
+      "readers": [
+        "0x08009434",
+        "0x08046b90"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": "0 (file offset 0x18 = 0x00)",
+        "cap-01-future-1.sav": "2 (file offset 0x18 = 0x02)"
+      },
+      "update_mechanism": "Written by FUN_0800931c (called from FUN_080074bc, itself called from FUN_08046b90 when no committed profile exists) from a global/table-derived byte: *(char *)(struct + 0x17) = (char)*(undefined4 *)(table + global_state). Then the checksum is recomputed. Read back by FUN_08009434(0), whose result FUN_08046b90 stores as a byte variable when a committed profile already exists. This is one of only three bytes that change between the samples, and the change is exactly the file image of this RAM field.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Writer in FUN_0800931c body, reader FUN_08009434 returns *(u8)(struct + 0x17), caller FUN_08046b90 else-branch. Observed 0 -> 2 matches the +0x19 flag and checksum changes as a single commit event. Semantics (what the value 2 selects: language, difficulty, character, or menu choice) are NOT proven; the Europe multilingual build makes a language index plausible but that is a hypothesis, not claimed here. File offset 0x18 is also the cold-probe mutation offset in PACKET.md, consistent with it being checksum-covered."
+    },
+    {
+      "name": "profile_gate_byte_at_ram_0x18",
+      "offset": 39,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": [
+        "0x08008ca4",
+        "0x08008f74"
+      ],
+      "readers": [
+        "0x080093e4"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": "0 (file offset 0x27 = 0x00)",
+        "cap-01-future-1.sav": "0 (file offset 0x27 = 0x00)"
+      },
+      "update_mechanism": "Gate byte for the checksum verifier only: FUN_080093e4 returns 2 immediately if this byte is 0, regardless of the checksum result. No writer that sets it non-zero was traced; it is persisted and is itself inside the summed range.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "FUN_080093e4: if (*(char *)(struct + 0x18) == 0) return 2. RAM offset 0x18 -> file offset 32 + 7 = 39 (0x27). It is 0 in both samples, so FUN_080093e4 would return 2 (not 0) for both samples even though the arithmetic checksum matches; see the report for this distinction. Its non-zero writer may be a later gameplay path not exercised by the captures."
+    },
+    {
+      "name": "profile_committed_flag_at_ram_0x19",
+      "offset": 38,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": [
+        "0x0800931c"
+      ],
+      "readers": [
+        "0x08009424",
+        "0x08046b90"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": "0 (file offset 0x26 = 0x00)",
+        "cap-01-future-1.sav": "1 (file offset 0x26 = 0x01)"
+      },
+      "update_mechanism": "Set to exactly 1 by FUN_0800931c at commit time (before the checksum recompute, so the 1 is included in the sum). Read by FUN_08009424(0); FUN_08046b90 treats 0 as 'no committed profile' (run the menu/commit path) and non-zero as 'profile exists' (read the +0x17 value instead).",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Writer *(u8 *)(struct + 0x19) = 1 in FUN_0800931c; reader FUN_08009424 returns *(u8)(struct + 0x19); gate in FUN_08046b90. Observed 0 -> 1 is the file image (offset 0x26) under per-block reversal and is the third byte of the commit event alongside +0x17 and the checksum."
+    },
+    {
+      "name": "profile_reserved_1a_1e",
+      "offset": 33,
+      "size": 5,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [
+        "0x08008ca4",
+        "0x08008f74"
+      ],
+      "readers": [
+        "0x080093e4"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": "RAM 00 00 00 00 00 (file bytes 0x21-0x25 all 0x00)",
+        "cap-01-future-1.sav": "RAM 00 00 00 00 00 (file bytes 0x21-0x25 all 0x00)"
+      },
+      "update_mechanism": "Persisted and checksum-covered (RAM 0x1A-0x1E are the last summed bytes before the stored checksum at RAM+0x1F); no individual accessor traced.",
+      "confidence": "UNKNOWN",
+      "evidence": "RAM offsets 0x1A-0x1E -> file offsets 37, 36, 35, 34, 33 (reversed within block 4). Zero in both samples. Offset listed is the lowest file offset of the range."
+    },
+    {
+      "name": "profile_checksum_sum8",
+      "offset": 32,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": [
+        "0x0800931c"
+      ],
+      "readers": [
+        "0x080093e4",
+        "0x0801e928"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": "stored 0x00, computed 0x00 (file offset 0x20 = 0x00)",
+        "cap-01-future-1.sav": "stored 0x03, computed 0x03 (file offset 0x20 = 0x03)"
+      },
+      "update_mechanism": "Recomputed and stored by FUN_0800931c as the last step of a commit (sum of RAM[0..0x1E] after +0x17 and +0x19 have been updated). Verified by FUN_080093e4 and consumed indirectly by FUN_0801e928. In file terms it is the first byte of EEPROM block 4 (file offset 0x20) because RAM byte 31 is the first byte of block 4 in RAM order.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "FUN_0800931c sum loop (uVar7 < 0x1F) storing at +0x1F; FUN_080093e4 identical sum compared against +0x1F. Python verification on the real .sav files in RAM order: cap-00 stored 0x00 computed 0x00 match; cap-01 stored 0x03 computed 0x03 match (2 at RAM+0x17 plus 1 at RAM+0x19). Without the per-block byte reversal the cap-01 sum is 0x06 vs stored 0x00 and does not match, which is how the reversal was proven."
+    },
+    {
+      "name": "unused_eeprom_space",
+      "offset": 40,
+      "size": 472,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {
+        "cap-00-future-0.sav": "all 0xFF",
+        "cap-01-future-1.sav": "all 0xFF"
+      },
+      "update_mechanism": "Never written by any traced path in the observed gameplay. EEPROM erased/fill state. FUN_08008f74 could in principle write blocks 5-16 for other RAM objects, but no sample shows it and blocks 17-63 are not addressed by any traced caller.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Both 512-byte .sav files are 0xFF from offset 40 to 511 (472 bytes), matching the PACKET.md profile (active range only 0x00-0x27, dominant fill 0xFF)."
+    }
+  ],
+  "fuzzing_targets": [
+    {
+      "offset": 24,
+      "size": 1,
+      "mutation": "Set file offset 0x18 (RAM+0x17 selection value) from 0x02 to 0x00, 0x01, 0x03 in cap-01 without repairing the checksum.",
+      "requires_checksum_repair": false,
+      "predicted_effect": "Checksum verifier FUN_080093e4 computes a different sum than the stored RAM+0x1F, so FUN_0801e928 treats the profile as invalid and installs the defaults (0x8000, 0x80, 0x20, 0x10); the header still passes, so no reformat is expected. This is the PACKET.md cold-probe offset (0x18), where a visual delta and integrity confirmation were already observed."
+    },
+    {
+      "offset": 24,
+      "size": 1,
+      "mutation": "Set file offset 0x18 (RAM+0x17) to each of 0x00-0x03 and repair the checksum: recompute RAM-order sum8 over the 32-byte struct (reverse each file block of 8, sum RAM[0..30], write the result to file offset 0x20).",
+      "requires_checksum_repair": true,
+      "predicted_effect": "If the value is a selection index (e.g. language/menu choice), the FUN_08046b90 else-path (FUN_08009434) returns the new value on next boot and the corresponding UI/language/selection changes, with no other gameplay change. If nothing visible changes, the value is not a display selection and its semantics stay unknown. Gate byte RAM+0x18 is still 0, so FUN_080093e4 still returns 2; observe whether FUN_0801e928 defaults are applied regardless."
+    },
+    {
+      "offset": 38,
+      "size": 1,
+      "mutation": "Clear file offset 0x26 (RAM+0x19 committed flag) from 0x01 to 0x00 in cap-01 and repair the checksum (subtract 1: new stored sum at file 0x20 becomes 0x02, or recompute in RAM order).",
+      "requires_checksum_repair": true,
+      "predicted_effect": "FUN_08009424(0) returns 0, so FUN_08046b90 takes the no-profile branch on next boot: the commit/menu flow (FUN_080074bc -> FUN_0800931c) runs again as if no profile had been committed, even though the rest of the struct is intact."
+    },
+    {
+      "offset": 38,
+      "size": 1,
+      "mutation": "Set file offset 0x26 (RAM+0x19) to 0x02 (an undocumented flag value) and repair the checksum in RAM order.",
+      "requires_checksum_repair": true,
+      "predicted_effect": "Any non-zero value passes the FUN_08046b90 gate (it tests == 0 only), so behaviour should match the 0x01 case; a difference would prove the flag is compared against 1 somewhere not traced. No difference is the predicted outcome from the decompiled code."
+    },
+    {
+      "offset": 39,
+      "size": 1,
+      "mutation": "Set file offset 0x27 (RAM+0x18 gate byte) from 0x00 to 0x01 in cap-01 and repair the checksum in RAM order (recomputed sum increases by 1 to 0x04 at file 0x20).",
+      "requires_checksum_repair": true,
+      "predicted_effect": "FUN_080093e4 now passes its first gate and, with the repaired checksum, returns 0 (valid) for the first time; FUN_0801e928 then copies the stored u16s (all zero) instead of, or in addition to, the all-zero check. Because the stored u16s are zero, bVar1 in FUN_0801e928 is still true and defaults may still be installed; a visible change would isolate the checksum gate from the all-zero gate. Without checksum repair the same mutation must return 1 (mismatch) and keep defaults."
+    },
+    {
+      "offset": 32,
+      "size": 1,
+      "mutation": "Corrupt only the stored checksum at file offset 0x20 (RAM+0x1F), e.g. 0x03 -> 0x04 in cap-01, leaving all covered bytes unchanged.",
+      "requires_checksum_repair": false,
+      "predicted_effect": "FUN_080093e4 returns 1 if the RAM+0x18 gate is first satisfied, otherwise 2; in either case FUN_0801e928 installs defaults. The header magic is untouched, so FUN_08008c38 still passes and FUN_08008ca4 must NOT reformat: blocks 1-4 keep their values on the next save opportunity. A reformat here would falsify the traced load logic."
+    },
+    {
+      "offset": 0,
+      "size": 1,
+      "mutation": "Flip one header byte, e.g. file offset 0x00 from 0x07 to 0x08 (RAM-order magic byte 7), in cap-01.",
+      "requires_checksum_repair": false,
+      "predicted_effect": "FUN_08008c38 header compare fails at boot, so FUN_08008d1c calls FUN_08008ca4: the whole 40-byte save (blocks 0-4) is rewritten to the formatted default (header restored, profile zeroed, checksum 0x00) and the committed profile (RAM+0x17=2, RAM+0x19=1) is lost. This is the destructive-integrity path and should be observable as a reset to the cap-00-like state."
+    },
+    {
+      "offset": 8,
+      "size": 2,
+      "mutation": "Set a non-zero u16 in the profile, e.g. write RAM+0x0A = 0x1234 by setting file bytes 0x14=0x34, 0x15=0x12 (per-block reversal, low byte at the higher file offset), set RAM+0x18 gate (file 0x27) to 0x01, and repair the checksum in RAM order.",
+      "requires_checksum_repair": true,
+      "predicted_effect": "FUN_080093e4 returns 0 and the all-zero test in FUN_0801e928 becomes false, so the stored u16s are copied to their consumers instead of the defaults (0x8000, 0x80, 0x20, 0x10). Any resulting audio/option/gameplay change identifies what these four u16s control; no change means their consumers are not yet active in the captured state."
+    },
+    {
+      "offset": 40,
+      "size": 8,
+      "mutation": "Write non-FF garbage into EEPROM block 5 (file offsets 0x28-0x2F) in cap-01, leaving blocks 0-4 untouched.",
+      "requires_checksum_repair": false,
+      "predicted_effect": "No effect on boot or on the profile: no traced reader loads block 5 into the profile struct, and the profile checksum does not cover it. Any observable effect would prove an untraced reader (e.g. a FUN_08008f74 group for another object) is active and would require re-tracing that group."
+    }
+  ],
+  "open_questions": [
+    "Absolute RAM address of the 32-byte profile struct (and of the header/expected-magic buffers) is unresolved: the trace-guided decompilation leaves literal-pool values as _DAT_*/iRam* placeholders, and FUN_080093dc returns one such pointer. Only struct-relative offsets (+0x00..+0x1F) are proven.",
+    "Semantics of the committed value at RAM+0x17 (observed 2): written by FUN_0800931c from a global/table-derived byte and read via FUN_08009434 by FUN_08046b90, but what it selects (language, difficulty, menu choice, progress stage) is not proven by code or saves.",
+    "Semantics of the four u16 fields at RAM+10/+12/+14/+16 and of the byte at RAM+0x15 consumed by FUN_0801e928, including why the defaults are 0x8000, 0x80, 0x20, 0x10.",
+    "No writer that sets the gate byte RAM+0x18 non-zero was traced, yet FUN_080093e4 requires it non-zero to return 0 (valid). Both samples have it 0, so the fully-valid state was never observed; a later gameplay path may set it, or the byte is set by a FUN_08008f74 group flush not captured here.",
+    "Purpose of the three other FUN_08008f74 block groups (starts 5, 9, 13) and their RAM objects: addressable in code, never observed with data (blocks 5-16 are 0xFF in both samples). They may be other records, other worlds/categories, or dead/reserved paths; they are not save slots or backup copies on current evidence.",
+    "FUN_08008d1c, FUN_08008f74, FUN_0801e928 and FUN_08046b90 have no static callers in callgraph.json (dispatch is via unrecovered jumptables/state machines), so their exact trigger conditions (boot only, per-frame, menu events) are inferred from their bodies, not from a traced entry chain.",
+    "callgraph.json and the decompiled text disagree in places (calls written as func_0x........ are absent from the graph, e.g. FUN_080074bc -> FUN_0800931c); caller mapping therefore relied on reading the decompiled bodies, and any call made only through a function pointer remains potentially untraced.",
+    "EEPROM descriptor contents (block-count limit at +4, address-bit count at +8 for the entry selected by FUN_080491c8(2)) are not readable from the workspace files; the 64-block / 6-address-bit geometry for 512-byte EEPROM is inferred from the media type, the 512-byte .sav size, and the DMA lengths (0x44 halfwords read), not read from a descriptor value.",
+    "There are no paired emulator save states (.ss) in states/ for this cohort, so all reload predictions in the fuzzing plan are untested against live gameplay."
+  ]
+}

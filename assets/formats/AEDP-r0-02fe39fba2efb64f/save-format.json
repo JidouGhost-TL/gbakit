@@ -1,0 +1,721 @@
+{
+  "schema": "gbakit-save-research/1",
+  "release_key": "AEDP-r0-02fe39fba2efb64f",
+  "display_name": "Carrera Power Slide (Europe) (En,Fr,De,Es,It,Nl)",
+  "rom_sha256": "02fe39fba2efb64f19834398f0622e9f74286a09a0aff6e4b4bb35925bab1098",
+  "game_code": "AEDP",
+  "header_family": "AED",
+  "community_id": "comm-004",
+  "overall_confidence": "HIGH",
+  "media": {
+    "kind": "eeprom512",
+    "size_bytes": 512,
+    "sdk_tags": [
+      "EEPROM_V122@135944",
+      "EEPROM_V122@3143972"
+    ],
+    "fill_byte": "0x00"
+  },
+  "slots_and_copies": [
+    {
+      "name": "slot_0",
+      "offset": 3,
+      "size": 68,
+      "redundancy_role": "primary",
+      "selection_rule": "Only slot traced: FUN_08015590 writes slot 0, FUN_08015b74 reads slot 0. Indexed API computes stride*slot+3 with sentinel slot 0x400 = next slot; stride and max index are unresolved ROM-literal globals. No backup/mirror copy exists in either sample (logical 71-511 all zero). Header at logical 0-2 is global, outside the slot."
+    },
+    {
+      "name": "unused_space",
+      "offset": 71,
+      "size": 441,
+      "redundancy_role": "unknown",
+      "selection_rule": "All zero in both samples; hypothetical slot>=1 storage at stride*slot+3 (stride hypothesis 0x54 from FUN_08002830(0x54) argument, unproven)."
+    }
+  ],
+  "magic_signatures": [
+    {
+      "offset": 0,
+      "bytes_hex": "17",
+      "ascii": "",
+      "verified_in_code": true,
+      "verified_in_sav": true,
+      "function_addrs": [
+        "0x080026cc",
+        "0x08002830"
+      ]
+    }
+  ],
+  "checksums": [
+    {
+      "name": "outer_sum16_be",
+      "algorithm": "custom",
+      "formula_detail": "16-bit wrapping byte sum stored big-endian: stored_u16_BE at logical 1..2 == (sum of logical bytes 3..70 inclusive) & 0xFFFF. The summed range includes the inner CRC bytes at 3..6. Computed by FUN_0800271c (first read at offset 3 sums 5 bytes, then aligned 8-byte blocks from offset 8). Inclusion of logical byte 71 (zero in samples, summed only if whole block 0x40-0x47 is accumulated) is unresolved. Stored by FUN_08002798 via FUN_080025e4(1,&sum,2) with high byte first. NOTE: offsets are logical EEPROM offsets; file offset = (logical & ~7) | (7 - (logical & 7)) per 8-byte block reversal.",
+      "stored_offset": 1,
+      "stored_size": 2,
+      "covered_start": 3,
+      "covered_end": 70,
+      "function_addrs": [
+        "0x0800271c",
+        "0x08002798",
+        "0x08002830"
+      ],
+      "verified_on_samples": [
+        {
+          "file": "cap-00-future-0.sav",
+          "stored_hex": "06ab",
+          "computed_hex": "06ab",
+          "match": true
+        },
+        {
+          "file": "cap-01-future-1.sav",
+          "stored_hex": "0720",
+          "computed_hex": "0720",
+          "match": true
+        }
+      ],
+      "confidence": "CONFIRMED_VERIFIED"
+    },
+    {
+      "name": "inner_crc32_raw_no_final_xor",
+      "algorithm": "crc32",
+      "formula_detail": "Reflected CRC-32, polynomial 0xEDB88320 (proven by verification; literal _DAT_08016e54 not in C text), init 0xFFFFFFFF, NO final XOR (equals zlib crc32 ^ 0xFFFFFFFF). Per-byte step FUN_08016e3c. Stored little-endian u32 at logical 3..6 (record+0). Covers the 64-byte payload at logical 7..70 inclusive exactly; neighbouring windows do not match.",
+      "stored_offset": 3,
+      "stored_size": 4,
+      "covered_start": 7,
+      "covered_end": 70,
+      "function_addrs": [
+        "0x08016e3c",
+        "0x08015590",
+        "0x08015b74"
+      ],
+      "verified_on_samples": [
+        {
+          "file": "cap-00-future-0.sav",
+          "stored_hex": "6b0c03c2",
+          "computed_hex": "6b0c03c2",
+          "match": true
+        },
+        {
+          "file": "cap-01-future-1.sav",
+          "stored_hex": "c79ccb0a",
+          "computed_hex": "c79ccb0a",
+          "match": true
+        }
+      ],
+      "confidence": "CONFIRMED_VERIFIED"
+    }
+  ],
+  "io_driver_functions": [
+    {
+      "addr": "0x08019068",
+      "role": "write",
+      "callers": [
+        "0x080190e8",
+        "0x08019198"
+      ],
+      "notes": "DMA3 engine to/from 0x0D000000 EEPROM; count|0x80000000 enable; IRQ mask/restore; busy-wait. Also used for reads (direction via src/dst args)."
+    },
+    {
+      "addr": "0x080190e8",
+      "role": "read",
+      "callers": [
+        "0x08019274",
+        "0x08002528",
+        "0x080025e4"
+      ],
+      "notes": "EEPROM read one 8-byte cell: serial command bitstream via DMA3, reassembles 4x u16 bit-by-bit."
+    },
+    {
+      "addr": "0x08019198",
+      "role": "write",
+      "callers": [
+        "0x080025e4"
+      ],
+      "notes": "EEPROM write one 8-byte cell: expands 4x u16 + address to serial bitstream (addr_bits+0x43 halfwords), DMA to 0x0D000000, write-enable, poll bit0, disable."
+    },
+    {
+      "addr": "0x08019274",
+      "role": "read",
+      "callers": [
+        "0x08002528",
+        "0x080025e4"
+      ],
+      "notes": "Verify: readback via 0x080190e8 and compare 4 halfwords; returns 0x8000 on mismatch. Callgraph lists no callers; edges are runtime func_ calls in decompiled text."
+    },
+    {
+      "addr": "0x08018f9c",
+      "role": "write",
+      "callers": [
+        "0x08019198"
+      ],
+      "notes": "Write-enable helper (control register (8<<type) masks, 3-halfword command latch). Exact register unresolved ROM literal."
+    },
+    {
+      "addr": "0x08019024",
+      "role": "write",
+      "callers": [
+        "0x08019198"
+      ],
+      "notes": "Write-disable counterpart of 0x08018f9c."
+    },
+    {
+      "addr": "0x08018efc",
+      "role": "read",
+      "callers": [
+        "0x08002830"
+      ],
+      "notes": "EEPROM type select/identify; called with 4 at init; returns 0 for accepted types."
+    },
+    {
+      "addr": "0x08018f64",
+      "role": "read",
+      "callers": [
+        "0x08002830"
+      ],
+      "notes": "EEPROM geometry query type<=3; called with type 2 at init; address-bit count at type_struct+8 drives serial drivers."
+    },
+    {
+      "addr": "0x08002528",
+      "role": "read",
+      "callers": [
+        "0x0800271c",
+        "0x08002830",
+        "0x080028e0"
+      ],
+      "notes": "Byte-range read over 8-byte cells with read+verify retries (x3)."
+    },
+    {
+      "addr": "0x080025e4",
+      "role": "write",
+      "callers": [
+        "0x080026cc",
+        "0x08002798"
+      ],
+      "notes": "Byte-range write: per-block read-modify-write + write + verify retries (x3)."
+    },
+    {
+      "addr": "0x080026cc",
+      "role": "erase",
+      "callers": [
+        "0x08002830"
+      ],
+      "notes": "Format: block0 byte0=0x17 rest zero, then zero blocks 1..0x3F (512 bytes total)."
+    },
+    {
+      "addr": "0x0800271c",
+      "role": "checksum",
+      "callers": [
+        "0x08002798",
+        "0x08002830"
+      ],
+      "notes": "Outer sum16 computation; returns sum or -1 on read failure."
+    },
+    {
+      "addr": "0x08002798",
+      "role": "serialize",
+      "callers": [
+        "0x08015590"
+      ],
+      "notes": "Record writer: flush record at stride*slot+3, recompute outer sum from EEPROM, store BE sum at logical 1..2. Length arg at call into 0x080025e4 not recovered; 68 inferred+verified."
+    },
+    {
+      "addr": "0x080028e0",
+      "role": "deserialize",
+      "callers": [
+        "0x08015b74"
+      ],
+      "notes": "Record reader: read record from stride*slot+3. Length arg likewise inferred as 68."
+    },
+    {
+      "addr": "0x08002830",
+      "role": "read",
+      "callers": [
+        "0x080029b0"
+      ],
+      "notes": "Init: type select, geometry, header magic+sum check, format if magic absent. Called with 0x54."
+    },
+    {
+      "addr": "0x08016e3c",
+      "role": "checksum",
+      "callers": [
+        "0x08015590",
+        "0x08015b74"
+      ],
+      "notes": "CRC-32 one-byte bitwise step, poly via _DAT_08016e54 (verified as 0xEDB88320 behaviour)."
+    },
+    {
+      "addr": "0x08015590",
+      "role": "serialize",
+      "callers": [
+        "0x080029b0"
+      ],
+      "notes": "Pack RAM fields into 64-byte payload over 0xFF base, compute inner CRC, flush slot0 via 0x08002798, bracketed by guards 0x08003560/0x08003508."
+    },
+    {
+      "addr": "0x08015b74",
+      "role": "deserialize",
+      "callers": [
+        "0x080029b0"
+      ],
+      "notes": "Load slot0, verify inner CRC (*stored==computed gates all unpacking), unpack bit-fields to RAM. Also calls unrelated 0x080033dc(0x1EA,4) state setter, excluded from save path."
+    },
+    {
+      "addr": "0x08015e40",
+      "role": "serialize",
+      "callers": [
+        "0x080029b0"
+      ],
+      "notes": "Defaults installer on load failure: zero arrays, set 0x100 entries and 0xF scalar, then 0x08016d6c."
+    }
+  ],
+  "caller_chains": [
+    {
+      "entry_caller": "0x080029b0",
+      "chain": [
+        "0x080029b0",
+        "0x08002830",
+        "0x08002528",
+        "0x080190e8",
+        "0x08019068"
+      ],
+      "trigger_context": "Boot/cold load: EEPROM init and header validation (format via 0x080026cc if magic absent)",
+      "ram_fields_updated": [],
+      "how_mapped": "Direct FUN_ call in decompiled.c (FUN_08002830(0x54)) plus runtime func_ edges; callgraph agrees on 0x08002830 callees."
+    },
+    {
+      "entry_caller": "0x080029b0",
+      "chain": [
+        "0x080029b0",
+        "0x08015b74",
+        "0x080028e0",
+        "0x08002528",
+        "0x08019274",
+        "0x080190e8",
+        "0x08019068"
+      ],
+      "trigger_context": "Boot load of slot 0 with inner CRC verification and bit-field unpacking",
+      "ram_fields_updated": [
+        "packed payload unpacked into two halfword arrays plus scalar globals via _DAT_08015e00 struct (numeric RAM addr unresolved)"
+      ],
+      "how_mapped": "Runtime call func_0x08015b74 in FUN_080029b0 decompiled text; callgraph omits this edge (lists 0x08015b74 callers as none) - decompiled text trusted."
+    },
+    {
+      "entry_caller": "0x080029b0",
+      "chain": [
+        "0x080029b0",
+        "0x08015e40",
+        "0x08015590",
+        "0x08002798",
+        "0x080025e4",
+        "0x08019198",
+        "0x08019068"
+      ],
+      "trigger_context": "Load failure (CRC mismatch): install defaults then immediately pack and flush slot 0",
+      "ram_fields_updated": [
+        "defaults: zeroed 0x24-halfword array, 0x100 entries, scalar 0xF (FUN_08015e40)",
+        "status globals *_DAT_080029fc=1, *_DAT_08002a00=1, *_DAT_08002a04=5, *_DAT_08002a08=1, *_DAT_08002a0c=-1"
+      ],
+      "how_mapped": "Decompiled text of FUN_080029b0 (func_0x08015e40, func_0x08015590) and FUN_08015590 body; matches PACKET probe revert-to-blank + rewrite."
+    },
+    {
+      "entry_caller": "0x08015590",
+      "chain": [
+        "0x08015590",
+        "0x08016e3c",
+        "0x08003560",
+        "0x08002798",
+        "0x0800271c",
+        "0x08003508"
+      ],
+      "trigger_context": "Save/flush: pack fields, CRC, pre/post guards (0x08003560/0x08003508, no buffer mutation), outer sum commit",
+      "ram_fields_updated": [
+        "64-byte payload packed from puVar8/puVar9 RAM arrays and scalar globals over 0xFF-filled base",
+        "inner CRC stored at record+0"
+      ],
+      "how_mapped": "Direct calls in decompiled.c; callgraph lists 0x08015590 callees 0x08002798/0x08003508/0x08003560 (CRC helper is a runtime func_ edge). No other caller of 0x08015590 exists in callgraph - gameplay save triggers beyond boot-failure may use unrecovered jumptables (open question)."
+    }
+  ],
+  "fields": [
+    {
+      "name": "magic",
+      "offset": 0,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": [
+        "0x080026cc"
+      ],
+      "readers": [
+        "0x08002830"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": "0x17",
+        "cap-01-future-1.sav": "0x17"
+      },
+      "update_mechanism": "Written at format; checked at init; file offset 0x07",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "FUN_080026cc auStack_10[0]=0x17; FUN_08002830 cmp 0x17; logical byte0=0x17 both samples"
+    },
+    {
+      "name": "outer_sum16_be",
+      "offset": 1,
+      "size": 2,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [
+        "0x08002798"
+      ],
+      "readers": [
+        "0x08002830",
+        "0x0800271c"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": "06ab",
+        "cap-01-future-1.sav": "0720"
+      },
+      "update_mechanism": "Recomputed from EEPROM and rewritten after each record flush; big-endian store",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "FUN_08002798 stores >>8 first at offset1 len2; FUN_0800271c sums from offset3; verified both samples"
+    },
+    {
+      "name": "inner_crc32_raw_le",
+      "offset": 3,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": [
+        "0x08015590"
+      ],
+      "readers": [
+        "0x08015b74"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": "c2030c6b (LE 0x6b0c03c2)",
+        "cap-01-future-1.sav": "0acb9cc7 (LE 0xc79ccb0a)"
+      },
+      "update_mechanism": "Computed over 64-byte payload before flush, stored at record+0",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "FUN_08015590 loop 0x40 bytes via FUN_08016e3c init 0xffffffff no final xor; FUN_08015b74 *puVar3==uVar8; verified both samples"
+    },
+    {
+      "name": "payload_rec04_0a",
+      "offset": 7,
+      "size": 7,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [
+        "0x08015590"
+      ],
+      "readers": [
+        "0x08015b74"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": "00000000000000",
+        "cap-01-future-1.sav": "00000000000000"
+      },
+      "update_mechanism": "Packed bit-fields via mask/OR in FUN_08015590; mirrored unpack in FUN_08015b74",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "Pack/unpack sequences at record+4; zero in both samples; semantics unknown"
+    },
+    {
+      "name": "payload_rec0b_0c_const",
+      "offset": 14,
+      "size": 2,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [
+        "0x08015590"
+      ],
+      "readers": [
+        "0x08015b74"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": "0810",
+        "cap-01-future-1.sav": "0810"
+      },
+      "update_mechanism": "Packed bit-fields; constant across captures",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "Logical 0x0e-0x0f = 08 10 in both samples"
+    },
+    {
+      "name": "payload_rec0d_11",
+      "offset": 16,
+      "size": 5,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [
+        "0x08015590"
+      ],
+      "readers": [
+        "0x08015b74"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": "0000000000",
+        "cap-01-future-1.sav": "0000000000"
+      },
+      "update_mechanism": "Packed bit-fields",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "Zero in both samples"
+    },
+    {
+      "name": "payload_rec12_candidate",
+      "offset": 21,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": [
+        "0x08015590"
+      ],
+      "readers": [
+        "0x08015b74"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": "0x02",
+        "cap-01-future-1.sav": "0x02"
+      },
+      "update_mechanism": "Packed bit-field byte; sole nonzero byte in logical 0x10-0x38",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Value 2 constant; candidate count/level/flags; semantics unproven; fuzz F6"
+    },
+    {
+      "name": "payload_rec13_35",
+      "offset": 22,
+      "size": 35,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [
+        "0x08015590"
+      ],
+      "readers": [
+        "0x08015b74"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": "00*35",
+        "cap-01-future-1.sav": "00*35"
+      },
+      "update_mechanism": "Packed bit-fields (main field array)",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "Zero in both samples"
+    },
+    {
+      "name": "payload_rec36_37_const",
+      "offset": 57,
+      "size": 2,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [
+        "0x08015590"
+      ],
+      "readers": [
+        "0x08015b74"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": "8007",
+        "cap-01-future-1.sav": "8007"
+      },
+      "update_mechanism": "Packed tail field group",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "Logical 0x39-0x3a constant in both samples"
+    },
+    {
+      "name": "payload_rec38_3d",
+      "offset": 59,
+      "size": 6,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [
+        "0x08015590"
+      ],
+      "readers": [
+        "0x08015b74"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": "000000000000",
+        "cap-01-future-1.sav": "000000000000"
+      },
+      "update_mechanism": "Packed bit-fields",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "Zero in both samples"
+    },
+    {
+      "name": "payload_rec3e_changed",
+      "offset": 65,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": [
+        "0x08015590"
+      ],
+      "readers": [
+        "0x08015b74"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": "0x80",
+        "cap-01-future-1.sav": "0x00"
+      },
+      "update_mechanism": "Packed bit-field byte; changed between captures",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "One of two changed payload bytes; logical 0x41"
+    },
+    {
+      "name": "payload_rec3f_changed_probe_byte",
+      "offset": 66,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": [
+        "0x08015590"
+      ],
+      "readers": [
+        "0x08015b74"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": "0xaf",
+        "cap-01-future-1.sav": "0xa8"
+      },
+      "update_mechanism": "Packed bit-field byte; changed between captures",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "Logical 0x42 = file 0x45, the PACKET probe offset 0x45"
+    },
+    {
+      "name": "payload_rec40_43_tail",
+      "offset": 67,
+      "size": 4,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [
+        "0x08015590"
+      ],
+      "readers": [
+        "0x08015b74"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": "a2ffffff",
+        "cap-01-future-1.sav": "a2ffffff"
+      },
+      "update_mechanism": "Last packed bytes over 0xff pre-fill base",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "Logical 0x43-0x46; 0xff trio constant; fuzz F8 tests padding hypothesis"
+    },
+    {
+      "name": "byte_past_record_0x47",
+      "offset": 71,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [
+        "0x0800271c"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": "0x00",
+        "cap-01-future-1.sav": "0x00"
+      },
+      "update_mechanism": "Possibly included in outer sum via whole-block read; zero so unverifiable",
+      "confidence": "UNKNOWN",
+      "evidence": "FUN_0800271c sums whole 8-byte blocks; fuzz F9"
+    },
+    {
+      "name": "unused_or_future_slots",
+      "offset": 72,
+      "size": 440,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [
+        "0x080026cc"
+      ],
+      "readers": [],
+      "observed_values": {
+        "cap-00-future-0.sav": "all 0x00",
+        "cap-01-future-1.sav": "all 0x00"
+      },
+      "update_mechanism": "Zeroed at format; would host slot>=1 records at stride*slot+3 if ever used",
+      "confidence": "HYPOTHESIS",
+      "evidence": "All zero verified in both samples; indexed API in FUN_08002798/FUN_080028e0; only slot0 traced"
+    }
+  ],
+  "fuzzing_targets": [
+    {
+      "offset": 7,
+      "size": 1,
+      "mutation": "File offset 0x07 (logical 0x00): 0x17 -> 0x00 break magic only",
+      "requires_checksum_repair": false,
+      "predicted_effect": "Format branch: whole EEPROM zeroed + fresh 0x17 header; first-run boot."
+    },
+    {
+      "offset": 6,
+      "size": 1,
+      "mutation": "File offset 0x06 (logical 0x01): flip one bit in stored sum16 high byte",
+      "requires_checksum_repair": false,
+      "predicted_effect": "Decisive test for outer-sum comparison: reject/defaults if stored-vs-computed is compared; proceeds (CRC-gated) if only -1 sentinel is checked."
+    },
+    {
+      "offset": 69,
+      "size": 1,
+      "mutation": "File offset 0x45 (logical 0x42): 0xAF -> 0xAE without repair (probe replay)",
+      "requires_checksum_repair": false,
+      "predicted_effect": "CRC+sum break: defaults installed and save rewritten (reproduces PACKET probe)."
+    },
+    {
+      "offset": 69,
+      "size": 1,
+      "mutation": "File offset 0x45 (logical 0x42): 0xAF -> 0xAE with full repair (CRC then sum, in logical space)",
+      "requires_checksum_repair": true,
+      "predicted_effect": "Load succeeds; exactly one tail packed sub-field changes; observe which gameplay quantity moves."
+    },
+    {
+      "offset": 62,
+      "size": 1,
+      "mutation": "Logical 0x39 0x80 -> 0x81 (file 0x3E) with full repair",
+      "requires_checksum_repair": true,
+      "predicted_effect": "Load succeeds; one mid-tail sub-field toggles."
+    },
+    {
+      "offset": 18,
+      "size": 1,
+      "mutation": "Logical 0x15 0x02 -> 0x03 (file 0x12) with full repair",
+      "requires_checksum_repair": true,
+      "predicted_effect": "Candidate count/level field increments; check profile/level/unlock UI. No visible change downgrades hypothesis."
+    },
+    {
+      "offset": 9,
+      "size": 1,
+      "mutation": "Logical 0x0E 0x08 -> 0x09 (file 0x09) with full repair",
+      "requires_checksum_repair": true,
+      "predicted_effect": "Candidate mode/flag toggle; check options/mode screens."
+    },
+    {
+      "offset": 67,
+      "size": 1,
+      "mutation": "Logical 0x44 0xFF -> 0xFE (file 0x43) with full repair",
+      "requires_checksum_repair": true,
+      "predicted_effect": "No visible change predicted if 0xFF bits are unused pre-fill padding; any change refutes padding hypothesis."
+    },
+    {
+      "offset": 64,
+      "size": 1,
+      "mutation": "Logical 0x47 (file 0x40) 0x00 -> 0xFF; repair sum excluding byte 71",
+      "requires_checksum_repair": true,
+      "predicted_effect": "Boot validates iff byte 71 outside summed range (or sum unchecked - cross-check sum-flip target); reject proves byte 71 is summed."
+    },
+    {
+      "offset": 80,
+      "size": 68,
+      "mutation": "Write repaired record copy at hypothesised slot-1 logical offset 0x57 (stride 0x54 hypothesis), file block-mapped",
+      "requires_checksum_repair": true,
+      "predicted_effect": "No effect predicted (all traced loads use slot 0); any effect proves untraced multi-slot selection."
+    }
+  ],
+  "open_questions": [
+    "Semantic meaning of each packed payload sub-field (boundaries recovered from FUN_08015590/FUN_08015b74 mirror code; no labels in workspace). Fuzz targets F4-F7 are designed to identify the changed fields empirically.",
+    "Exact slot stride (*_DAT_08002820/*_DAT_08002934) and max slot index globals: values are ROM literals not present in decompiled C text. The 0x54 argument from FUN_080029b0 to FUN_08002830 is a stride/size hypothesis only.",
+    "Whether the outer sum covers logical byte 71 (whole-block sum in FUN_0800271c suggests yes; byte is 0x00 in both samples so data cannot decide). See fuzz target at file offset 0x40.",
+    "Exact stored-vs-computed comparison for the outer sum in FUN_08002830: decompilation renders it garbled as (uVar5 & uRam080028bc)==0xffffffff, which clearly rejects the -1 read-failure sentinel but may hide a stored-value comparison. See fuzz target at file offset 0x06.",
+    "Numeric RAM addresses of the save struct and field arrays: bases loaded via _DAT_08015984/_DAT_08015e00 etc., targets not in C text; ram_addr is null throughout.",
+    "Length argument (3rd) of FUN_08002528/FUN_080025e4 at the FUN_08002798/FUN_080028e0 call sites is not recovered in decompiled text; 68 bytes inferred from CRC/sum coverage and verified on samples.",
+    "Gameplay-triggered saves: FUN_08015590 has no caller besides FUN_080029b0 in callgraph+text; other triggers, if any, must arrive via unrecovered jumptables.",
+    "Why the .sav file byte-reverses each 8-byte block relative to logical EEPROM order (game bit-packing vs emulator dump convention) - layout itself is proven by magic+dual checksum verification, origin is not distinguishable from workspace files.",
+    "CRC polynomial literal _DAT_08016e54 value not in C text; standard 0xEDB88320 proven behaviourally by exact matches on both samples.",
+    "No paired .ss save states in this workspace (states/ empty); fuzz predictions are boot/UI/RAM outcomes to observe on reload."
+  ]
+}

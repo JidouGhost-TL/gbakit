@@ -1,0 +1,307 @@
+{
+  "schema": "gbakit-save-research/1",
+  "release_key": "A5DE-r0-919f99362d732528",
+  "display_name": "Disney Sports - Snowboarding (USA)",
+  "rom_sha256": "919f99362d7325283927286f2976a26edeae1e8bb00e2c08c2baa0a42a4a52e0",
+  "game_code": "A5DE",
+  "header_family": "A5D",
+  "community_id": "comm-009",
+  "overall_confidence": "MEDIUM",
+  "media": {
+    "kind": "eeprom512",
+    "size_bytes": 512,
+    "sdk_tags": ["EEPROM_V122"],
+    "fill_byte": "0xff"
+  },
+  "slots_and_copies": [
+    {
+      "name": "slot_0",
+      "offset": 0,
+      "size": 32,
+      "redundancy_role": "global_config",
+      "selection_rule": "Sole header; 16-byte magic at +0 gates validity (gate itself not recovered in code). No alternate copy exists."
+    },
+    {
+      "name": "slot_1",
+      "offset": 32,
+      "size": 64,
+      "redundancy_role": "primary",
+      "selection_rule": "Record 0: always present in completed saves; written first (already complete in mid-write sav-00). No backup selection."
+    },
+    {
+      "name": "slot_2",
+      "offset": 96,
+      "size": 64,
+      "redundancy_role": "primary",
+      "selection_rule": "Record 1: related second data set (Record 0 + positive deltas), not a backup; no generation/sequence selection."
+    },
+    {
+      "name": "slot_3",
+      "offset": 160,
+      "size": 168,
+      "redundancy_role": "unknown",
+      "selection_rule": "Periodic table (15-byte template x9 verbatim + diverging 10th) plus walking-bit trailer and candidate value at logical 0x140; always coexists with records, no selection."
+    },
+    {
+      "name": "slot_4",
+      "offset": 328,
+      "size": 160,
+      "redundancy_role": "unknown",
+      "selection_rule": "Zeroed reserved span (blocks 41-60); actively written as zeros during the save burst, erased 0xFF before it."
+    },
+    {
+      "name": "slot_5",
+      "offset": 488,
+      "size": 24,
+      "redundancy_role": "global_config",
+      "selection_rule": "Sparse tail blocks 61-63 (global scalars/flags hypothesis); written last in the save burst."
+    }
+  ],
+  "magic_signatures": [
+    {
+      "offset": 0,
+      "bytes_hex": "532059454e5349444452414f42574f4e",
+      "ascii": "DISNEY SNOWBOARD (logical order; raw .sav stores each 8-byte block reversed: block0 raw 532059454e534944 = 'S YENSID', block1 raw 44452414f42574f4e = 'DRAOBWON' byte-order reversed)",
+      "verified_in_code": false,
+      "verified_in_sav": true,
+      "function_addrs": []
+    }
+  ],
+  "checksums": [
+    {
+      "name": "no_verified_checksum",
+      "algorithm": "unknown",
+      "formula_detail": "No checksum verified. Tested sum8, sum16 (byte sum), sum of u16_le words, xor8, xor16, CRC16-MODBUS, CRC16-ARC, CRC16-CCITT (inits 0xFFFF/0x0000/0x1D0F) and CRC32 over header/record/table ranges in raw and per-block-reversed (logical) views of both saves (e.g. sum16 logical 0x20-0x58=0x1328, 0x60-0x98=0x14AF, 0xA0-0x140=0x3A8B vs candidate 0x03F7: all mismatch), plus a block-aligned brute force (2080 ranges x 5 algorithms x 4 views = 41600 tests) whose single hit (CRC16-CCITT-FFFF over logical 0x00-0x128 of sav-01 = 0x6494, the tail-block-63 byte pattern) is rejected as spurious: meaningless range end, no reproduction on sav-00, within chance expectation. No checksum routine exists among recovered save functions. Integrity appears to rest on the 16-byte magic alone.",
+      "stored_offset": 0,
+      "stored_size": 0,
+      "covered_start": 0,
+      "covered_end": 0,
+      "function_addrs": [],
+      "verified_on_samples": [
+        {"file": "sav-00-f1317.sav", "stored_hex": "", "computed_hex": "", "match": false},
+        {"file": "sav-01-f1351.sav", "stored_hex": "", "computed_hex": "", "match": false}
+      ],
+      "confidence": "UNKNOWN"
+    },
+    {
+      "name": "candidate_trailer_value_logical_0x140",
+      "algorithm": "unknown",
+      "formula_detail": "Unexplained u16_le 0x03F7 (1015) at logical offset 0x140 (raw stored bytes 03 F7 at raw 0x146-0x147, inside EEPROM block 40), immediately following walking-bit trailer bytes. Failed all standard checksum tests above; may be a count, packed bitfield continuation, or a non-standard integrity value whose routine was not recovered. Do not treat as a confirmed checksum.",
+      "stored_offset": 326,
+      "stored_size": 2,
+      "covered_start": 160,
+      "covered_end": 328,
+      "function_addrs": [],
+      "verified_on_samples": [
+        {"file": "sav-01-f1351.sav", "stored_hex": "03f7", "computed_hex": "", "match": false}
+      ],
+      "confidence": "HYPOTHESIS"
+    }
+  ],
+  "io_driver_functions": [
+    {"addr": "0x0809b67c", "role": "read", "callers": ["0x0809b6fc"], "notes": "DMA3 transfer primitive (src,dst,count): programs DMA3 SAD/DAD/CNT via literal-pool pointer cells, count|0x80000000 enable, polls CNT control halfword bit 0x8000, updates WAITCNT EEPROM timing from config+6. Used by the reader in BOTH directions (command clock-out to 0x0D000000 and data clock-in), so it is the bidirectional hardware layer; classified 'read' because its only recovered use is the read path. CONFIRMED_STATIC, role in reader CONFIRMED_VERIFIED."},
+    {"addr": "0x0809b6fc", "role": "read", "callers": [], "notes": "EEPROM read-one-block(block_address, dest): bounds-checks block < *(u16*)(config+4), builds serial start/read/address bitstream (address width = *(byte*)(config+8)), DMAs address_bits+3 halfwords to 0x0D000000 then 0x44 halfwords back, unpacks 64 bits MSB-first into 4 u16 stored reverse-order at dest+6,+4,+2,+0 (cause of raw .sav per-block byte reversal). No caller recoverable in callgraph.json or by textual FUN_/func_0x search; game-level caller and any write counterpart are absent from the 387-function corpus. CONFIRMED_VERIFIED."}
+  ],
+  "caller_chains": [
+    {
+      "entry_caller": "0x0809b6fc",
+      "chain": ["0x0809b6fc", "0x0809b67c"],
+      "trigger_context": "EEPROM 8-byte block read. External game-level entry caller NOT PRESENT in corpus: callgraph.json gives callers:[] and textual search finds the address only at its own definition. Trigger in time: a save write burst runs frames 1317-1351 per state metadata; read presumably runs at boot/title, unproven.",
+      "ram_fields_updated": [],
+      "how_mapped": "Three routes: (1) ghidra/callgraph.json (387 nodes/328 edges): FUN_0809b6fc callers=[], callees=[0x0809b67c]; FUN_0809b67c callers=[0x0809b6fc]. (2) Rebuilt textual edges from every FUN_080xxxxxx(/func_0x080xxxxxx( occurrence in ghidra/decompiled.c (catches func_0x-style edges the JSON misses): '0809b6fc' occurs only at its definition; '0xd000000' occurs exactly twice, both inside it. (3) Pattern search for a second DMA3 driver (count|0x80000000 store, &0x8000 poll, 64-block stride-8 loop, magic compare): no surviving candidate. Because no caller exists, no per-caller RAM-struct mutation can be honestly listed; the reader itself writes exactly dest..dest+7 from one EEPROM block."
+    }
+  ],
+  "fields": [
+    {
+      "name": "header_magic_disney_snowboard",
+      "offset": 0,
+      "size": 16,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": ["0x0809b6fc"],
+      "observed_values": {"sav-00-f1317.sav": "logical 'DISNEY SNOWBOARD'; raw 532059454e53494444452414f42574f4e", "sav-01-f1351.sav": "logical 'DISNEY SNOWBOARD'; raw 532059454e53494444452414f42574f4e"},
+      "update_mechanism": "Written with header blocks 0-1 (present even in mid-write sav-00); presumed compared at load, comparison code not recovered. Raw .sav stores each 8-byte block reversed, matching the reader's reverse-word-order unpack (dest+6..dest+0).",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Per-8-byte-block reversal of raw bytes yields ASCII DISNEY SNOWBOARD in both saves (Python: logical magic ok True/True); transform predicted by FUN_0809b6fc decompilation in ghidra/save_related_functions.c."
+    },
+    {
+      "name": "header_reserved_zero_0x10",
+      "offset": 16,
+      "size": 16,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": ["0x0809b6fc"],
+      "observed_values": {"sav-00-f1317.sav": "00 x16", "sav-01-f1351.sav": "00 x16"},
+      "update_mechanism": "Constant zero in both snapshots; written with header or never written after zero-init. Purpose unknown (padding vs reserved field).",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Bytes verified zero in both files; purpose UNKNOWN and stated as such."
+    },
+    {
+      "name": "record0_u16le_x30",
+      "offset": 32,
+      "size": 60,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": ["0x0809b6fc"],
+      "observed_values": {"sav-00-f1317.sav": "2f90,30fc,32ae,24b0,26ac,2822,1c86,1e98,209e,1d78,1f8c,2190,423e,445e,4670,3312,3584,37ec,3176,3402,367e,3764,39f0,3c6c,2780,296e,2b5c,3378,35ac,3804 (u16_le hex, logical)", "sav-01-f1351.sav": "identical to sav-00 (first 0x60 raw bytes byte-identical)"},
+      "update_mechanism": "Whole 64-byte record flush (with 4 zero tail bytes at offset 92); already complete in mid-write sav-00, so written before Record 1/table/tail. Trailing pair 35ac/3804 tested and rejected as checksum (continues series; 3804 recurs mid-array in Record 1). Semantic meaning (per-index quantities: scores/counts/times) unproven.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "30xu16_le parse + zero pad verified by Python on both files; checksum rejection in Section 4.3 of SAVE-FORMAT-REPORT.md. Meaning labeled HYPOTHESIS in report."
+    },
+    {
+      "name": "record0_zero_pad",
+      "offset": 92,
+      "size": 4,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": ["0x0809b6fc"],
+      "observed_values": {"sav-00-f1317.sav": "00000000", "sav-01-f1351.sav": "00000000"},
+      "update_mechanism": "Zero tail of Record 0's 64-byte block group; no checksum stored here.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Verified zero in both files; checksum candidates over the record do not land here (Section 4.3)."
+    },
+    {
+      "name": "record1_u16le_x30",
+      "offset": 96,
+      "size": 60,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": ["0x0809b6fc"],
+      "observed_values": {"sav-00-f1317.sav": "absent (erased 0xFF, not yet written)", "sav-01-f1351.sav": "2fb6,3124,32b8,24c6,26d4,2854,1ccc,1eb0,20ce,1dc0,1fa4,21c2,4258,44a2,4686,335e,3594,3804,31a2,344e,3694,3774,3a20,3cb6,2796,298c,2b84,33b8,35da,3832 (u16_le hex, logical)"},
+      "update_mechanism": "Written after Record 0 during the frames 1317-1351 burst. Each value = Record 0 value + delta (+38,+40,+10,+22,+40,+50,+70,+24,+48,+72,+24,+50,+26,+68,+22,+76,+16,+24,+44,+76,+22,+16,+48,+74,+22,+30,+40,+64,+46,+46; all positive), so a related later/greater data set, definitively not a backup copy.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Delta vector computed by Python over logical views; structure identical to Record 0 (30xu16_le + 4 zero bytes at offset 156). Meaning HYPOTHESIS."
+    },
+    {
+      "name": "record1_zero_pad",
+      "offset": 156,
+      "size": 4,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": ["0x0809b6fc"],
+      "observed_values": {"sav-00-f1317.sav": "absent (0xFF)", "sav-01-f1351.sav": "00000000"},
+      "update_mechanism": "Zero tail of Record 1's 64-byte block group.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Verified in sav-01; absent (erased) in sav-00 consistent with write order."
+    },
+    {
+      "name": "table_template_array_15byte_entries",
+      "offset": 160,
+      "size": 150,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": ["0x0809b6fc"],
+      "observed_values": {"sav-00-f1317.sav": "absent (0xFF)", "sav-01-f1351.sav": "template f804028140f88542a150f800000000 (hex, logical) repeated verbatim x9 at 0xA0-0x126; 10th copy at 0x127 matches 11 bytes then diverges f8c9240804 into trailer"},
+      "update_mechanism": "Default/empty per-item records initialized to a template (sub-structure: three 5-byte units f804028140 / f88542a1 50 / f800000000). Item count unresolved (9 vs 10x15-byte vs 30x5-byte); written after Record 1 in the burst.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Exact 15-byte periodicity proven by Python string compare (copies 0-8 byte-identical, copy 9 diverges). Entry semantics HYPOTHESIS."
+    },
+    {
+      "name": "walking_bit_trailer",
+      "offset": 310,
+      "size": 18,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": ["0x0809b6fc"],
+      "observed_values": {"sav-00-f1317.sav": "absent (0xFF)", "sav-01-f1351.sav": "logical 02814020100804bfdfef f70300000000000000 (hex); single-bit-walking bytes 08 04 02 81 40 20 10 08 04 then walking-zero bf df ef"},
+      "update_mechanism": "Bitfield/flags-area hypothesis in default state, continuous with the table's bit-packed appearance. Start offset 0x136 assumes 15-byte table stride; boundary uncertain.",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Byte-pattern analysis only; no code recovered for this region. Includes candidate value field broken out separately at raw offset 326."
+    },
+    {
+      "name": "candidate_trailer_value_u16",
+      "offset": 326,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": [],
+      "readers": ["0x0809b6fc"],
+      "observed_values": {"sav-00-f1317.sav": "absent (0xFF)", "sav-01-f1351.sav": "raw bytes 03 f7 at raw 0x146-0x147; logical u16_le 0x03F7 (1015)"},
+      "update_mechanism": "Unknown. Failed sum8/sum16/xor/CRC16/CRC32 tests over all plausible ranges; may be count, bitfield continuation (directly follows walking-zero F7 byte, so endianness claim is weak), or non-standard integrity value.",
+      "confidence": "UNKNOWN",
+      "evidence": "Negative checksum verification in SAVE-FORMAT-REPORT.md Section 4.3; single observation only."
+    },
+    {
+      "name": "reserved_zero_span_blocks41_60",
+      "offset": 328,
+      "size": 160,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": ["0x0809b6fc"],
+      "observed_values": {"sav-00-f1317.sav": "all 0xFF (never written)", "sav-01-f1351.sav": "all 0x00 (blocks 41-60)"},
+      "update_mechanism": "Actively zeroed during the frames 1317-1351 burst (FF->00 transition proves a write, not mere absence). Reserved expansion space; no internal structure detectable.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Python verified sav01 0x148-0x1E8 all zero and sav00 >=0x60 all 0xFF. Purpose UNKNOWN."
+    },
+    {
+      "name": "tail_block61_scalar_candidate",
+      "offset": 488,
+      "size": 8,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": ["0x0809b6fc"],
+      "observed_values": {"sav-00-f1317.sav": "absent (0xFF)", "sav-01-f1351.sav": "logical block61 1905000000000000 (first 4 bytes as u32_le = 0x00000519 = 1305); raw 0000000000000519"},
+      "update_mechanism": "Sparse tail block written last in burst. Global counter/settings-dword hypothesis only: 1305 is near but not equal to snapshot frames 1317/1351. Single observation.",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Byte observation only; no writer/reader semantics recovered."
+    },
+    {
+      "name": "tail_block62_flagbyte_candidate",
+      "offset": 496,
+      "size": 8,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": ["0x0809b6fc"],
+      "observed_values": {"sav-00-f1317.sav": "absent (0xFF)", "sav-01-f1351.sav": "logical block62 000000000000f000 (single 0xF0 at logical +6); raw 00f0000000000000"},
+      "update_mechanism": "Unknown; isolated 0xF0 suggests bitflags, but a misaligned multi-byte value spanning blocks 61-63 (raw stream ...0519 00f0 ... 9464) is an equally valid alternative.",
+      "confidence": "UNKNOWN",
+      "evidence": "Single-snapshot byte observation; cannot distinguish flags from packed spanning value."
+    },
+    {
+      "name": "tail_block63_bytes_candidate",
+      "offset": 504,
+      "size": 8,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": ["0x0809b6fc"],
+      "observed_values": {"sav-00-f1317.sav": "absent (0xFF)", "sav-01-f1351.sav": "logical block63 6494000000000000 (bytes 0x64,0x94); raw 0000000000009464"},
+      "update_mechanism": "Unknown; last EEPROM block. 0x64=100 invites percent/volume guess (not claimed); u16_le 0x9464 implausible as small counter, favoring two separate bytes or packed field.",
+      "confidence": "UNKNOWN",
+      "evidence": "Single-snapshot byte observation only."
+    }
+  ],
+  "fuzzing_targets": [
+    {"offset": 7, "size": 1, "mutation": "Flip raw byte 0x07 (= logical magic byte 0 'D', since block 0 is reversed in raw) to change logical magic D->X", "requires_checksum_repair": false, "predicted_effect": "Save treated as absent/blank (no continue/profile, blank-boot behavior, likely reformat on next save) if magic is the validity gate; no verified checksum exists to repair."},
+    {"offset": 23, "size": 1, "mutation": "Set header-reserved byte to 0x01 (raw 0x17 = logical 0x10, block 2 reversed; all bytes in this span are zero so any single-byte set tests the span)", "requires_checksum_repair": false, "predicted_effect": "No visible change if padding; load failure or behavior change would prove a real flags/version field."},
+    {"offset": 32, "size": 2, "mutation": "Set Record 0 u16_le[0] (logical 0x20) to 0x0000, then separately to 0xFFFF", "requires_checksum_repair": false, "predicted_effect": "Exactly one displayed quantity at index 0 goes min/max if the 30xu16_le parse is correct; crash would imply indices/pointers instead."},
+    {"offset": 96, "size": 64, "mutation": "Overwrite Record 1 (logical 0x60, 64 bytes) with an exact copy of Record 0", "requires_checksum_repair": false, "predicted_effect": "Record-1-fed display becomes identical to Record 0's (delta relationship collapses); no change would imply Record 1 is regenerated cache."},
+    {"offset": 326, "size": 2, "mutation": "Change candidate trailer value raw 03 F7 (logical 0x03F7) to 0x03F8 unrepaired, then with each candidate checksum recomputation (sum16/xor16/CRC16/CRC32 over logical 0xA0-0x140), then to 0x0000", "requires_checksum_repair": true, "predicted_effect": "If it is a checksum: unrepaired variants rejected/blank, correctly repaired variant loads (identifying algorithm+range). Universal acceptance kills the integrity hypothesis for this field."},
+    {"offset": 167, "size": 1, "mutation": "Zero first template byte of table copy 0 (raw 0xA7 = logical 0xA0 byte 0xF8, block 20 reversed); separately zero copy 5's first byte (logical 0xF3)", "requires_checksum_repair": false, "predicted_effect": "One list item blanks/defaults; affected item position reveals ordering and whether stride is 15 (items) or 5 (sub-units)."},
+    {"offset": 310, "size": 5, "mutation": "Set walking-bit trailer logical 0x136-0x13A to all 0xFF, then all 0x00", "requires_checksum_repair": false, "predicted_effect": "Unlock/flags-style UI change if bitfield; no change if alignment filler."},
+    {"offset": 488, "size": 8, "mutation": "Set tail block 61 (logical 0x1E8) u32 candidate to 0, then to 0x00010000 (edit logical bytes, re-reverse block)", "requires_checksum_repair": false, "predicted_effect": "A global counter/option changes if scalar; no change implies packed sub-fields (follow with single-byte probes)."},
+    {"offset": 502, "size": 1, "mutation": "Flip tail flag byte: logical 0x1F6 0xF0 -> 0x00 (raw offset 0x1F1); separately logical 0x1F8 byte 0x64 -> 0x65 (+1)", "requires_checksum_repair": false, "predicted_effect": "Option-screen values step if settings bytes; no effect favors misaligned spanning-value reading of blocks 61-63."},
+    {"offset": 328, "size": 1, "mutation": "Set reserved-span bytes at logical 0x148 and 0x1E0 to 0xAA", "requires_checksum_repair": false, "predicted_effect": "No effect if pure reserved; load failure or display change would reveal hidden sparse fields (then binary-search in 8-byte blocks)."}
+  ],
+  "open_questions": [
+    "Where is the EEPROM write function? Absent from the 387 decompiled functions by callgraph, textual-reference, and DMA-pattern searches; candidate location is the un-decompiled gap 0x0809b7ac-0x0809b920 or an indirect-only call path. Runtime DMA3 logging during a save (fuzzing F11) would identify it and the RAM mirror base in one run.",
+    "What is the RAM mirror address (0x02xxxxxx/0x03xxxxxx) of the save struct? The sole reader FUN_0809b6fc takes a caller-supplied dest pointer and no call site was recovered.",
+    "Who calls FUN_0809b6fc (boot/title load path, trigger context), and does the game compare the DISNEY SNOWBOARD magic there? No caller or string-compare routine exists in the corpus.",
+    "Does any integrity check exist beyond the magic? Candidate u16 0x03F7 at logical 0x140 failed sum8/sum16/xor8/xor16/CRC16(MODBUS/ARC/CCITT)/CRC32 over all plausible ranges in both views; is it a count, bitfield continuation, or a custom check whose routine was not recovered?",
+    "What do Record 0/Record 1's 30 u16_le values measure (scores/counts/times per index), and what are the 15-byte (or 5-byte) table entries, the walking-bit trailer, and tail blocks 61-63 semantically? Only one complete snapshot exists; fuzzing F3/F4/F6-F9 is designed to answer this.",
+    "What are the unresolved EEPROM config literal values (block limit at config+4, WAITCNT bits at +6, address width at +8) and the DMA3 register cells behind _DAT_0809b6dc.._DAT_0809b6f8? Roles are proven by access pattern; literal values are not in the corpus.",
+    "Are FUN_0809b510 (switch on 4/0x40) and FUN_0809b578 (range 0..3) related SDK mode setters for the save/media subsystem? Neither references 0x0D000000 or DMA3, so no save role is claimed.",
+    "Does normal gameplay rewrite the whole 512-byte image or only dirty blocks? Two snapshots of a single burst (frames 1317-1351) show full-layout completion but cannot distinguish full-image flush from sequential first-time formatting."
+  ]
+}

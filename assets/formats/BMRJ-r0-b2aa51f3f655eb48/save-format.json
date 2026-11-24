@@ -1,0 +1,559 @@
+{
+  "schema": "gbakit-save-research/1",
+  "release_key": "BMRJ-r0-b2aa51f3f655eb48",
+  "display_name": "Matantei Loki Ragnarok - Gensou no Labyrinth (Japan)",
+  "rom_sha256": "b2aa51f3f655eb48e0c62a0613b06d5f4d061a63e7f584ad0ec0358c462ef5e6",
+  "game_code": "BMRJ",
+  "header_family": "BMR",
+  "community_id": "comm-002",
+  "overall_confidence": "MEDIUM",
+  "media": {
+    "kind": "eeprom512",
+    "size_bytes": 512,
+    "sdk_tags": [
+      "EEPROM_V124@524712"
+    ],
+    "fill_byte": "0xff"
+  },
+  "slots_and_copies": [
+    {
+      "name": "slot_0",
+      "offset": 0,
+      "size": 176,
+      "redundancy_role": "primary",
+      "selection_rule": "Only slot. Written as 176 bytes (0xB0, 22 EEPROM blocks) at EEPROM block 0 and read back as 144 bytes (0x90). Accepted as committed only if logical u16[0x00]==0x1234 (checked in FUN_08015df4, buffer zeroed on mismatch) and logical u16[0x8E]==0x9797 (checked in FUN_08000408); on failure FUN_0801600c writes a cleared save (u16[0x8E]=0) and it is reloaded. No backup copy, mirror, generation counter, or A/B selection exists."
+    }
+  ],
+  "magic_signatures": [
+    {
+      "offset": 0,
+      "bytes_hex": "3412",
+      "ascii": "",
+      "verified_in_code": true,
+      "verified_in_sav": true,
+      "function_addrs": [
+        "0x08015eb8",
+        "0x08015df4"
+      ]
+    },
+    {
+      "offset": 142,
+      "bytes_hex": "9797",
+      "ascii": "",
+      "verified_in_code": true,
+      "verified_in_sav": true,
+      "function_addrs": [
+        "0x08015f98",
+        "0x0801600c",
+        "0x08000408"
+      ]
+    }
+  ],
+  "checksums": [
+    {
+      "name": "no_data_checksum_two_signature_validity",
+      "algorithm": "custom",
+      "formula_detail": "No sum/XOR/CRC over payload exists in any traced writer or reader. Integrity = header signature u16_le 0x1234 at logical 0x00 (stamped by FUN_08015eb8, compared by FUN_08015df4 which zeroes the buffer on mismatch) + validity signature u16_le at logical 0x8E (constant-stamped 0x9797 by FUN_08015f98, written 0x0000 by clear path FUN_0801600c, compared by FUN_08000408) + per-block read-back verify in FUN_080189c8 (stores nothing). Proof: both samples have identical payloads and identical computed candidates (sum16 byte=0x0051, sum16 u16=0x123F, xor8=0x2D, CRC16-CCITT(0)=0xDA9B, CRC16-CCITT(FFFF)=0x7CFE over logical 0x00..0x8D) yet different stored 0x8E values (0x0000 vs 0x9797) tracking writer path, so 0x8E cannot be a data checksum. Editors need no checksum repair; they must preserve the two signatures. NOTE: logical image = physical .sav with each 8-byte block byte-reversed.",
+      "stored_offset": 142,
+      "stored_size": 2,
+      "covered_start": 0,
+      "covered_end": 144,
+      "function_addrs": [
+        "0x08015f98",
+        "0x0801600c",
+        "0x08000408",
+        "0x08015eb8",
+        "0x08015df4",
+        "0x080189c8"
+      ],
+      "verified_on_samples": [
+        {
+          "file": "cap-00-future-0.sav",
+          "stored_hex": "0000",
+          "computed_hex": "0051",
+          "match": false
+        },
+        {
+          "file": "cap-01-future-1.sav",
+          "stored_hex": "9797",
+          "computed_hex": "0051",
+          "match": false
+        }
+      ],
+      "confidence": "CONFIRMED_VERIFIED"
+    }
+  ],
+  "io_driver_functions": [
+    {
+      "addr": "0x08018724",
+      "role": "write",
+      "callers": [
+        "0x080187a4",
+        "0x08018868"
+      ],
+      "notes": "DMA3 transfer primitive: programs DMA3 source/dest/count|0x80000000 via literal-pool registers, polls busy bit 0x8000, restores saved control. Moves serial bitstreams between RAM stack buffers and EEPROM at 0x0D000000. Both read and write directions."
+    },
+    {
+      "addr": "0x080187a4",
+      "role": "read",
+      "callers": [
+        "0x08015df4",
+        "0x080189c8"
+      ],
+      "notes": "EEPROM read one 8-byte block: bounds-checks block addr against EEPROM type +4, sends address bitstream (addr_bits+3 cells), clocks back 0x44 transfers, reassembles 4 u16 MSB-first into reverse word order. Causes verified per-8-byte reversal between logical image and .sav."
+    },
+    {
+      "addr": "0x08018868",
+      "role": "write",
+      "callers": [
+        "0x08018854"
+      ],
+      "notes": "EEPROM write one 8-byte block: expands 4 u16 into 64 serial bit cells plus address/start cells, sends addr_bits+0x43 cells via DMA3, then polls 0x0D000000&1 with timer timeout 0x88 ticks (timeout constant, not a save offset)."
+    },
+    {
+      "addr": "0x08018854",
+      "role": "write",
+      "callers": [
+        "0x08015eb8"
+      ],
+      "notes": "Thin wrapper: FUN_08018868(block, data, 1)."
+    },
+    {
+      "addr": "0x080189c8",
+      "role": "checksum",
+      "callers": [
+        "0x08015eb8"
+      ],
+      "notes": "Write-verify (not a stored checksum): re-reads block via FUN_080187a4 and compares 4 shorts; returns 0x8000 on mismatch, 0 on success. Caller passes block index as address, exact only because EEPROM base is always 0."
+    },
+    {
+      "addr": "0x08015df4",
+      "role": "read",
+      "callers": [
+        "0x08015f84"
+      ],
+      "notes": "Bulk read: len>>3 blocks via FUN_080187a4; if first u16 != header signature literal or any block read fails, zeroes the whole destination buffer. Audio/IRQ guard calls (FUN_08017324/0801785c/08017358/080178d8) bracket the transfer."
+    },
+    {
+      "addr": "0x08015eb8",
+      "role": "write",
+      "callers": [
+        "0x08015f98",
+        "0x0801600c"
+      ],
+      "notes": "Bulk write: stamps logical u16[0] header signature, writes len>>3 blocks via FUN_08018854, then verifies every block via FUN_080189c8."
+    },
+    {
+      "addr": "0x08015f84",
+      "role": "deserialize",
+      "callers": [
+        "0x08000408"
+      ],
+      "notes": "Load wrapper: FUN_08015df4(0, read_buffer, 0x90). Called twice on the boot invalid path (before and after clear-save)."
+    },
+    {
+      "addr": "0x08015f98",
+      "role": "serialize",
+      "callers": [
+        "0x08001384"
+      ],
+      "notes": "Serialize + committed save: copies game-state +0x76/+0x78/+0x7C and 125-byte blob into image, copies state+8 to 0x8C, constant-stamps validity signature at 0x8E, FUN_08015eb8(image, 0, 0xB0), post-save notify FUN_08017258(state+8)."
+    },
+    {
+      "addr": "0x0801600c",
+      "role": "serialize",
+      "callers": [
+        "0x08000408"
+      ],
+      "notes": "Clear + save: same image layout with header fields/blob zeroed and validity signature 0x0000; FUN_08015eb8(image, 0, 0xB0). Produces exactly the cap-00 image (header signature still stamped by the writer)."
+    },
+    {
+      "addr": "0x08015de4",
+      "role": "write",
+      "callers": [
+        "0x080010e8"
+      ],
+      "notes": "EEPROM init wrapper: calls SDK config FUN_080186dc(0x40) once at startup; 0x40 = 64 blocks = 512 bytes, matching media size."
+    },
+    {
+      "addr": "0x080186dc",
+      "role": "write",
+      "callers": [
+        "0x08015de4"
+      ],
+      "notes": "SDK EEPROM type/config selector (branches on size code 4 / 0x40 / other). Role label is approximate: no erase command exists for EEPROM; this configures the driver. Static-only, register names unexported. Not an erase routine."
+    },
+    {
+      "addr": "0x080003d4",
+      "role": "serialize",
+      "callers": [
+        "0x08000408"
+      ],
+      "notes": "RAM defaults init before load: zeroes 125-byte blob, sets game-state +8 = 0x000B and game-state +10 = literal. Supplies the default that appears at logical save 0x8C."
+    }
+  ],
+  "caller_chains": [
+    {
+      "entry_caller": "0x080010e8",
+      "chain": [
+        "0x080010e8",
+        "0x08015de4",
+        "0x080186dc"
+      ],
+      "trigger_context": "Startup, once before the main loop: configure EEPROM driver for 64 blocks (512 bytes).",
+      "ram_fields_updated": [],
+      "how_mapped": "Textual call func_0x08015de4() at decompiled.c:553 and func_0x080186dc(0x40) at decompiled.c:4641; callgraph edge 0x080010e8 callees include 0x08000408/0x08000f0c (the init call itself is a func_ stub absent from the graph)."
+    },
+    {
+      "entry_caller": "0x08000408",
+      "chain": [
+        "0x080010e8",
+        "0x08000408",
+        "0x080003d4",
+        "0x08015f84",
+        "0x08015df4",
+        "0x080187a4",
+        "0x08018724"
+      ],
+      "trigger_context": "Boot state: install RAM defaults, load save, and accept the 125-byte blob only if logical u16[0x8E] matches the expected validity signature.",
+      "ram_fields_updated": [
+        "blob (125 bytes, zeroed by 0x080003d4 then overwritten from read buffer +0x0C only on signature pass)",
+        "game-state +8 = 0x000B (default)",
+        "game-state +10 = literal (default)"
+      ],
+      "how_mapped": "FUN_08000408 body decompiled.c:152-166: FUN_080003d4(), func_0x08015f84(), compare *(u16*)(read_buf+0x8E)==_DAT_080004c8, 0x7D-byte copy loop. Callgraph confirms 0x080010e8->0x08000408 and 0x08000408->0x080003d4; load chain via textual calls decompiled.c:4773, 4678, 5898-5899."
+    },
+    {
+      "entry_caller": "0x08000408",
+      "chain": [
+        "0x08000408",
+        "0x0801600c",
+        "0x08015eb8",
+        "0x08018854",
+        "0x08018868",
+        "0x08018724",
+        "0x080189c8",
+        "0x080187a4"
+      ],
+      "trigger_context": "Boot invalid-signature path: write cleared save (validity signature 0), then reload via FUN_08015f84. Also the only traced clear-save trigger.",
+      "ram_fields_updated": [
+        "save image +0x02/+0x04/+0x08 = 0",
+        "save image blob 0x0C..0x88 = 0",
+        "save image +0x8C = game-state +8 (0x000B)",
+        "save image +0x8E = 0x0000"
+      ],
+      "how_mapped": "Textual calls decompiled.c:164-165 (func_0x0801600c, func_0x08015f84) and FUN_0801600c body decompiled.c:4830-4844 calling FUN_08015eb8(image,0,0xB0). Callgraph lists 0x0801600c->0x08015eb8."
+    },
+    {
+      "entry_caller": "0x08001b5c",
+      "chain": [
+        "0x08001b5c",
+        "0x08001384",
+        "0x08015f98",
+        "0x08015eb8",
+        "0x08018854",
+        "0x08018868",
+        "0x08018724",
+        "0x080189c8"
+      ],
+      "trigger_context": "Committed save: FUN_08001384 (mode/state setup reached from the FUN_08001b5c root loop) unconditionally calls the serializer on its fall-through path (decompiled.c:652). No isolated menu save command is identifiable in this export.",
+      "ram_fields_updated": [
+        "save image +0x02 = game-state +0x76",
+        "save image +0x04 = game-state +0x78",
+        "save image +0x08 = game-state +0x7C",
+        "save image 0x0C..0x88 = blob (125 bytes)",
+        "save image +0x8C = game-state +8",
+        "save image +0x8E = validity signature constant"
+      ],
+      "how_mapped": "Callgraph 0x08001b5c->0x08001384 and 0x08001384 callees; textual func_0x08015f98() at decompiled.c:652 and serializer body decompiled.c:4794-4810. Callgraph incompleteness for func_ stubs noted in report."
+    },
+    {
+      "entry_caller": "0x0800e3e8",
+      "chain": [
+        "0x0800e3e8"
+      ],
+      "trigger_context": "Game-state mutator feeding the serializer (entry via unrecovered jumptable dispatch; no static caller). Scales inputs by <<7 (fixed point), suggesting position/coordinate state. Does not call the save writer itself; values flush on the next FUN_08001384 -> FUN_08015f98 save.",
+      "ram_fields_updated": [
+        "game-state +0x76 = display_struct[0x23] (-> save 0x02)",
+        "game-state +0x78 = param_6[2] = param_2==-1 ? *(u32*)(ram+0xC) : param_2<<7 (-> save 0x04)",
+        "game-state +0x7C = param_6[3] = param_3==-1 ? *(u32*)(ram+0x10) : param_3<<7 (-> save 0x08)"
+      ],
+      "how_mapped": "Textual writes decompiled.c:3317-3319 match serializer reads decompiled.c:4796-4798 offset-for-offset (0x76/0x78/0x7C). Callgraph correctly shows no static callers for 0x0800e3e8, consistent with table dispatch."
+    }
+  ],
+  "fields": [
+    {
+      "name": "header_signature",
+      "offset": 0,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": [
+        "0x08015eb8"
+      ],
+      "readers": [
+        "0x08015df4"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": "0x1234",
+        "cap-01-future-1.sav": "0x1234"
+      },
+      "update_mechanism": "Stamped from literal-pool constant on every bulk write; reader zeroes the whole read buffer if it does not match. Physical .sav bytes are 12 34 at offset 0x06 due to per-8-byte block reversal.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "FUN_08015eb8 '*buf = (short)_DAT_08015f80' (decompiled.c:4730); FUN_08015df4 'if (*param_2 != _DAT_08015eb4)' zeroing branch (decompiled.c:4684-4692); de-reversed sav u16[0]=0x1234 in both files (Python verified)."
+    },
+    {
+      "name": "state_field_0x02",
+      "offset": 2,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": [
+        "0x08015f98",
+        "0x0800e3e8"
+      ],
+      "readers": [
+        "0x08015df4"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": "0x0000",
+        "cap-01-future-1.sav": "0x0000"
+      },
+      "update_mechanism": "Serializer copies game-state +0x76; that field is set by FUN_0800e3e8 from display_struct[0x23]. Cleared to 0 by FUN_0801600c.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "decompiled.c:4796 (copy 0x76->0x02) and decompiled.c:3317 (mutator). Zero in both samples; semantics unknown."
+    },
+    {
+      "name": "state_field_0x04",
+      "offset": 4,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": [
+        "0x08015f98",
+        "0x0800e3e8"
+      ],
+      "readers": [
+        "0x08015df4"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": "0x00000000",
+        "cap-01-future-1.sav": "0x00000000"
+      },
+      "update_mechanism": "Serializer copies game-state +0x78; FUN_0800e3e8 sets it from param_6[2] (param_2<<7 or RAM fallback), suggesting fixed-point data. Cleared by FUN_0801600c.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "decompiled.c:4797 and decompiled.c:3318/3232. Zero in both samples."
+    },
+    {
+      "name": "state_field_0x08",
+      "offset": 8,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": [
+        "0x08015f98",
+        "0x0800e3e8"
+      ],
+      "readers": [
+        "0x08015df4"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": "0x00000000",
+        "cap-01-future-1.sav": "0x00000000"
+      },
+      "update_mechanism": "Serializer copies game-state +0x7C; FUN_0800e3e8 sets it from param_6[3] (param_3<<7 or RAM fallback). Cleared by FUN_0801600c.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "decompiled.c:4798 and decompiled.c:3319/3240. Zero in both samples."
+    },
+    {
+      "name": "progress_blob_125",
+      "offset": 12,
+      "size": 125,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [
+        "0x08015f98",
+        "0x080003d4",
+        "0x0801600c"
+      ],
+      "readers": [
+        "0x08000408"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": "all 0x00 (125 bytes)",
+        "cap-01-future-1.sav": "all 0x00 (125 bytes)"
+      },
+      "update_mechanism": "Byte copy blob->image in serializer (0x7D loop); at boot, image+0x0C copied back to RAM blob only if validity signature passes; blob zeroed by FUN_080003d4 defaults and by clear path.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "Three matching 0x7D loops: decompiled.c:105 (zero), 4805 (save copy), 158-161 (load copy). Internal layout unknown; all-zero in samples."
+    },
+    {
+      "name": "gap_0x89_0x8b",
+      "offset": 137,
+      "size": 3,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {
+        "cap-00-future-0.sav": "0x00 0x00 0x00",
+        "cap-01-future-1.sav": "0x00 0x00 0x00"
+      },
+      "update_mechanism": "Never written by either serializer (copy ends at 0x88, next field at 0x8C); retains zeroed image-buffer content.",
+      "confidence": "UNKNOWN",
+      "evidence": "FUN_08015f98/FUN_0801600c bodies decompiled.c:4794-4808 and 4830-4844 show no store in 0x89..0x8B."
+    },
+    {
+      "name": "state_index_0x8c",
+      "offset": 140,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": [
+        "0x08015f98",
+        "0x0801600c",
+        "0x080003d4"
+      ],
+      "readers": [
+        "0x08015df4"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": "0x000B",
+        "cap-01-future-1.sav": "0x000B"
+      },
+      "update_mechanism": "Copied from game-state +8 by both serializers; game-state +8 defaulted to literal 0x000B by FUN_080003d4 before load, so even a cleared save carries 0x000B. Also passed to post-save notify FUN_08017258. Physical bytes 00 0B at 0x8A..0x8B via block reversal.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "decompiled.c:107 (default = 0xB), 4806/4840 (copy), 4810/4844 (notify); de-reversed sav u16[0x8C]=0x000B in both files (Python verified). Meaning of value 11 unknown."
+    },
+    {
+      "name": "validity_signature_0x8e",
+      "offset": 142,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": [
+        "0x08015f98",
+        "0x0801600c"
+      ],
+      "readers": [
+        "0x08000408"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": "0x0000",
+        "cap-01-future-1.sav": "0x9797"
+      },
+      "update_mechanism": "Constant stamp (literal load, no computation) by committed serializer; written 0 by clear serializer. Boot compares read buffer +0x8E against expected literal and only then accepts the blob; mismatch triggers clear-save + reload. Physical bytes at 0x88..0x89 (palindromic). Packet probe mutation at physical 0x88 reverted the save, corroborating this field.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "decompiled.c:4807 (stamp (short)_DAT_08016008), 4841 (clear = 0), 155 (boot compare _DAT_080004c8); Python: identical payloads, differing stored values, no sum/XOR/CRC candidate matches. Literal equality of the _DAT_ constants with 0x9797 is inferred from sav bytes (pool values unexported)."
+    },
+    {
+      "name": "trailing_written_area",
+      "offset": 144,
+      "size": 32,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [
+        "0x08015eb8"
+      ],
+      "readers": [],
+      "observed_values": {
+        "cap-00-future-0.sav": "all 0x00 (32 bytes)",
+        "cap-01-future-1.sav": "all 0x00 (32 bytes)"
+      },
+      "update_mechanism": "Written to EEPROM because bulk write length is 0xB0, but never populated by serializers and never read (bulk read length is 0x90).",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Length asymmetry FUN_08015eb8(...,0xB0) decompiled.c:4809/4843 vs FUN_08015df4(...,0x90) decompiled.c:4773. Purpose (buffer slack vs reserved) unverified."
+    },
+    {
+      "name": "unwritten_eeprom_tail",
+      "offset": 176,
+      "size": 336,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {
+        "cap-00-future-0.sav": "all 0xFF (336 bytes)",
+        "cap-01-future-1.sav": "all 0xFF (336 bytes)"
+      },
+      "update_mechanism": "Never addressed; EEPROM fill byte.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Python file inspection: bytes 0xB0..0x1FF are 336/336 0xFF in both files; drivers only address blocks 0..21."
+    }
+  ],
+  "fuzzing_targets": [
+    {
+      "offset": 7,
+      "size": 1,
+      "mutation": "Physical byte (logical 0x00 header signature high byte) 0x34 -> 0x35, no repair",
+      "requires_checksum_repair": false,
+      "predicted_effect": "FUN_08015df4 zeroes read buffer, boot validity test fails, FUN_0801600c rewrites cleared save; file converges to cap-00 pattern."
+    },
+    {
+      "offset": 136,
+      "size": 1,
+      "mutation": "Physical byte (logical 0x8F validity signature high byte) 0x97 -> 0x96, no repair (packet probe equivalent)",
+      "requires_checksum_repair": false,
+      "predicted_effect": "Save rejected at boot, cleared save rewritten, blank state retained. Already corroborated by packet probe at this offset."
+    },
+    {
+      "offset": 137,
+      "size": 1,
+      "mutation": "Physical byte (logical 0x8E validity signature low byte) 0x97 -> 0x00, no repair",
+      "requires_checksum_repair": false,
+      "predicted_effect": "Same rejection as mutating offset 136; asymmetry between the two would falsify the plain u16_le compare model."
+    },
+    {
+      "offset": 136,
+      "size": 2,
+      "mutation": "On cap-00, forge validity signature: physical 0x88..0x89 = 97 97 (logical u16[0x8E]=0x9797), keep header signature",
+      "requires_checksum_repair": false,
+      "predicted_effect": "Boot accepts the all-zero blob as a committed save; proves the signature is the only acceptance gate."
+    },
+    {
+      "offset": 139,
+      "size": 1,
+      "mutation": "Physical byte (logical 0x8C low byte) 0x0B -> 0x0C, keep both signatures (physical 0x06..0x07=12 34, 0x88..0x89=97 97)",
+      "requires_checksum_repair": false,
+      "predicted_effect": "Save still accepted (no reader compares 0x8C); watch post-save notify FUN_08017258(0x0C) and any mode/stage-like UI change on next save."
+    },
+    {
+      "offset": 11,
+      "size": 1,
+      "mutation": "Physical byte (logical 0x0C first blob byte) 0x00 -> 0x01, keep both signatures",
+      "requires_checksum_repair": false,
+      "predicted_effect": "Save accepted; mutated byte appears in RAM blob after boot load copy. Sweep logical 0x0C/0x20/0x40/0x60/0x88 (physical via block reversal) to bisect blob layout."
+    },
+    {
+      "offset": 5,
+      "size": 1,
+      "mutation": "Physical byte (logical 0x02) 0x00 -> 0x01, keep both signatures",
+      "requires_checksum_repair": false,
+      "predicted_effect": "Save accepted; check whether RAM game-state +0x76 reflects it after load (tests if field 0x02 is read back or write-only)."
+    },
+    {
+      "offset": 144,
+      "size": 1,
+      "mutation": "Any physical byte in trailing written area 0x90..0xAF: 0x00 -> 0xAA, keep both signatures",
+      "requires_checksum_repair": false,
+      "predicted_effect": "No effect predicted (reader fetches only blocks 0..17). Any gameplay change implies an untraced reader."
+    },
+    {
+      "offset": 176,
+      "size": 1,
+      "mutation": "Any physical byte in unwritten tail 0xB0..0x1FF: 0xFF -> 0x00, no repair",
+      "requires_checksum_repair": false,
+      "predicted_effect": "No effect predicted; guards against whole-file hashing theories."
+    }
+  ],
+  "open_questions": [
+    "Exact RAM addresses behind _DAT_08015f94, _DAT_08015ff8, _DAT_08015ffc, _DAT_08016000, _DAT_08016004, _DAT_080004c4 and iRam08000550: the Ghidra export does not include literal-pool values, so all ram_addr fields are null rather than guessed.",
+    "Are _DAT_08016008 and _DAT_080004c8 literally 0x9797 in ROM, or is 0x9797 produced from a RAM variable at stamp time? Decompiled shape (constant load) favours a literal.",
+    "Gameplay semantics of fields at logical 0x02, 0x04, 0x08 and 0x8C (value 0x000B), and the internal layout of the 125-byte blob at 0x0C..0x88: zero in both samples; a progressed save is required.",
+    "Why is the write length 0xB0 when the logical format and read length are 0x90? Fixed buffer slack, reserved expansion, or an unobserved reader of blocks 18..21.",
+    "Gameplay trigger names for FUN_08001384 (committed-save state) and FUN_0800e3e8 (game-state mutator): both are reached through unrecovered jumptable dispatch in this export.",
+    "Does FUN_080186dc(0x40) probe EEPROM presence/type at runtime? Its register writes are unexported; relevant to behaviour on 8Kbit parts.",
+    "The 0x88 tick timeout inside FUN_08018868 and the 0x88 physical probe offset are unrelated; confirm no other code reads physical 0x88 as data (none traced).",
+    "No paired .ss save states were provided (states/ is empty), so all fuzzing predictions are for cold-reload observation."
+  ]
+}

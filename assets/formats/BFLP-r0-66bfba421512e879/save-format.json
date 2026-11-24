@@ -1,0 +1,186 @@
+{
+  "schema": "gbakit-save-research/1",
+  "release_key": "BFLP-r0-66bfba421512e879",
+  "display_name": "Franklin's Great Adventures (Europe) (En,Fr,De,Es,It,Nl,Pt,Da)",
+  "rom_sha256": "66bfba421512e8795ea5c13e4be22dc918a6f202767d8dc699d2bcf73c6c81a7",
+  "game_code": "BFLP",
+  "header_family": "BFL",
+  "community_id": "comm-006",
+  "overall_confidence": "MEDIUM",
+  "media": {
+    "kind": "eeprom512",
+    "size_bytes": 512,
+    "sdk_tags": [],
+    "fill_byte": "0xff"
+  },
+  "slots_and_copies": [
+    {
+      "name": "slot_0_header",
+      "offset": 0,
+      "size": 8,
+      "redundancy_role": "global_config",
+      "selection_rule": "Single fixed header block (EEPROM block #0 of 64). Contains a 4-byte value checked against a ROM/IWRAM constant in FUN_08003960 (bytes 0x00-0x03), and a fixed 4-byte ASCII format stamp (bytes 0x04-0x07), stored byte-reversed in the raw EEPROM dump. No evidence of a second mirrored header or backup slot in either captured .sav."
+    },
+    {
+      "name": "slot_0_payload",
+      "offset": 8,
+      "size": 293,
+      "redundancy_role": "primary",
+      "selection_rule": "Main 0x125 (293)-byte progress struct referenced by FUN_08029eb0/FUN_08029e98 (load/save entry points) and zero-filled at the same 0x125 length in two other init sites. No backup copy observed; corruption recovery is by in-place factory-reset-and-rewrite (FUN_08029eb0), not by failing over to a mirrored slot."
+    }
+  ],
+  "magic_signatures": [
+    {
+      "offset": 4,
+      "bytes_hex": "4b44474e",
+      "ascii": "KDGN",
+      "verified_in_code": true,
+      "verified_in_sav": true,
+      "function_addrs": ["0x080038d0", "0x08003960"]
+    }
+  ],
+  "checksums": [
+    {
+      "name": "FUN_080037c8_sum_with_length_seed",
+      "algorithm": "sum8",
+      "formula_detail": "acc = len; for each byte b in data[0:len]: acc = (acc + b) & 0xffffffff. Implemented in FUN_080037c8(byte *data, int len); consumed by FUN_08003920 (commit) and FUN_08003960 (load/verify) as the stored 4-byte value at header offset 0x04-0x07.",
+      "stored_offset": 4,
+      "stored_size": 4,
+      "covered_start": 8,
+      "covered_end": 301,
+      "function_addrs": ["0x080037c8", "0x08003920", "0x08003960"],
+      "verified_on_samples": [
+        {
+          "file": "cap-01-future-1.sav",
+          "stored_hex": "4b44474e",
+          "computed_hex": "IMPOSSIBLE_FOR_ANY_LENGTH_0..504",
+          "match": false
+        }
+      ],
+      "confidence": "CONFIRMED_STATIC"
+    }
+  ],
+  "io_driver_functions": [
+    {"addr": "0x0803d8ac", "role": "read", "callers": ["0x0803d92c", "0x0803d9f0"], "notes": "Raw EEPROM serial bit-transfer primitive. Saves/restores an MMIO control value, writes three EEPROM-bus-control words, then busy-waits on a status bit at a pointer dereferenced through *_DAT_0803d918 before tail-calling an unresolved jump table. Consistent with the standard GBA EEPROM DMA3 (0x040000D4) serial-bus access pattern (0x0D000000 data port) referenced in the packet's hardware spec; exact MMIO literal addresses are not visible in the decompiled C text (only via-pointer DAT references) so addresses are HYPOTHESIS, mechanism is CONFIRMED_STATIC."},
+    {"addr": "0x0803d92c", "role": "write", "callers": ["0x0803db50", "0x080038d0 (via func_0x0803d92c)"], "notes": "Writes one 8-byte (64-bit) EEPROM block: builds a serial bitstream (block address bits + 64 data bits, built back-to-front into a stack buffer) and transfers it via two FUN_0803d8ac calls (write command, then a short status transfer). This back-to-front buffer construction is the mechanism behind the byte-reversal observed between code literals and the raw .sav bytes."},
+    {"addr": "0x0803d9f0", "role": "read", "callers": ["0x0803d9dc"], "notes": "Reads one EEPROM block: builds the read-address bitstream, issues the read command via FUN_0803d8ac, then polls a status/ready bit (uRam0d000000) with a bounded retry/timeout loop (threshold 0x88) before returning the next block's data or a timeout code."},
+    {"addr": "0x0803d9dc", "role": "read", "callers": ["0x0803dba8"], "notes": "Thin wrapper: func_0x0803d9f0(block, buf, 1) -- single-block read."},
+    {"addr": "0x0803db50", "role": "write", "callers": ["0x0803dba8"], "notes": "Write-then-read-back verify for one block: calls FUN_0803d92c to write, then compares the 4 stored halfwords against the intended data, returning 0 on match or 0x8000 on mismatch."},
+    {"addr": "0x0803dba8", "role": "write", "callers": [], "notes": "Top-level 'verified write' entry (no static callers resolved in callgraph.json; only reachable via an unresolved indirect jump table from FUN_08003848). Up to 3 attempts: reads the block first (FUN_0803d9dc); if that reports no-pending-change it performs write+verify (FUN_0803db50); breaks on success."},
+    {"addr": "0x08003848", "role": "write", "callers": ["0x08003920"], "notes": "SaveCommitRange(offset,data,len): byte-copies into a RAM save-mirror buffer at (*_DAT_080038a0 + offset), then flushes every touched 8-byte-aligned block to EEPROM via func_0x0803dba8. This is the central save-writer entry point used by both the header and payload writes inside FUN_08003920."},
+    {"addr": "0x080038a4", "role": "read", "callers": ["0x08003960"], "notes": "SaveReadRange(offset,dest,len): pure RAM-mirror read from (*_DAT_080038cc + offset). Does not itself touch EEPROM, so it depends on the mirror having already been populated (loader/bulk-read path not present among the save-related seed functions supplied in this packet -- OPEN QUESTION)."},
+    {"addr": "0x080037ec", "role": "write", "callers": ["0x080038d0", "0x08003920"], "notes": "Acquire save critical-section: busy-waits on a status flag at *_DAT_08003828+8 (bit 31), then clears specific bits in two 16-bit control words via AND-mask -- consistent with disabling a subset of IRQs around EEPROM access."},
+    {"addr": "0x08003834", "role": "write", "callers": ["0x080038d0", "0x08003920"], "notes": "Release save critical-section: sets a flag to 1 and calls an external routine (likely IRQ re-enable)."},
+    {"addr": "0x080038d0", "role": "write", "callers": [], "notes": "FormatBlankSave: writes 63 consecutive 8-byte blocks (block 0..62, 504 bytes) from a static RAM/IWRAM template at _DAT_08003918 using the unverified raw writer func_0x0803d92c (bypassing the RAM-mirror/verify path used by normal commits), then releases the lock and stores the literal bytes 0x4e,0x47,0x44,0x4b ('N','G','D','K') into the template buffer at _DAT_0800391c."},
+    {"addr": "0x080037c8", "role": "checksum", "callers": ["0x08003920", "0x08003960"], "notes": "Checksum8(data,len) = len + sum(data[0..len)). Proven (see checksums[] entry) NOT to be the source of the bytes actually observed at .sav offset 0x04-0x07 in this capture, because no length 0..504 can produce the stored 32-bit value; the observed bytes instead exactly equal FUN_080038d0's literal format stamp, byte-reversed."},
+    {"addr": "0x08003920", "role": "serialize", "callers": ["0x08029e98", "0x08029eb0"], "notes": "SaveCommit(data,len): builds an 8-byte header {headerWord=*_DAT_0800395c, checksum=FUN_080037c8(data,len)}, acquires the lock, writes the header at offset 0 and the payload at offset 8 via FUN_08003848, releases the lock."},
+    {"addr": "0x08003960", "role": "deserialize", "callers": ["0x08029eb0"], "notes": "SaveLoadVerify(dest,len): reads header word0 via the RAM mirror and compares it to *_DAT_080039b0 (ROM/IWRAM constant, value not visible in decompiled C); returns 2 on mismatch. Otherwise reads the stored checksum (word1), reads len bytes of payload into dest, recomputes the checksum over the just-read payload, and returns 1 on mismatch or 0 on success."}
+  ],
+  "caller_chains": [
+    {
+      "entry_caller": "0x08029e98",
+      "chain": ["0x08029e98", "0x08003920", "0x08003848", "0x0803dba8", "0x0803d9dc/0x0803db50", "0x0803d9f0/0x0803d92c", "0x0803d8ac"],
+      "trigger_context": "Player-facing 'save game now' entry point (FUN_08029e98 has no further static callers in callgraph.json; likely invoked from a menu/event handler not included in this packet's seed set).",
+      "ram_fields_updated": ["header word0 (*_DAT_0800395c copy)", "header checksum (computed over the 0x125-byte struct)", "the 0x125-byte progress struct pointed to by *_DAT_08029ea8"],
+      "how_mapped": "Traced statically via ghidra/callgraph.json caller/callee edges from the two EEPROM MMIO-seed functions (0x0803d92c, 0x0803d9f0) outward through 0x0803d8ac/0x0803db50/0x0803dba8 to the RAM-mirror writer 0x08003848, then found its sole caller 0x08003920 by text-searching decompiled.c for literal calls to 0x08003848, then found 0x08003920's two callers (0x08029e98, 0x08029eb0) the same way."
+    },
+    {
+      "entry_caller": "0x08029eb0",
+      "chain": ["0x08029eb0", "0x08003960", "0x080038a4", "0x08029eb0(reset branch)", "0x08003920", "0x08003848"],
+      "trigger_context": "Load-and-validate entry point, run at save-load time. On checksum failure (return code 1) it zero-fills the 0x125-byte struct in RAM and immediately re-commits it via FUN_08003920, i.e. a factory-reset-on-corruption recovery path rather than falling back to a mirrored backup slot.",
+      "ram_fields_updated": ["0x125-byte progress struct (zeroed on recovery)", "a 1-byte UI/status flag written via FUN_08029de0(0xff,2) before the load attempt"],
+      "how_mapped": "Found by grepping decompiled.c for literal callers of 0x08003960 and 0x08003920."
+    }
+  ],
+  "fields": [
+    {
+      "name": "header_word0_version_or_reserved",
+      "offset": 0,
+      "size": 4,
+      "type": "bytes",
+      "ram_addr": "0x03xxxxxx (RAM save-mirror base, exact address not resolvable without ROM symbol data)",
+      "writers": ["0x08003920"],
+      "readers": ["0x08003960"],
+      "observed_values": {"cap-00-future-0.sav": "ffffffff (unformatted/erased EEPROM)", "cap-01-future-1.sav": "00000125"},
+      "update_mechanism": "Copied verbatim from *_DAT_0800395c inside FUN_08003920 and compared against a separate ROM/IWRAM constant *_DAT_080039b0 inside FUN_08003960 on load; mismatch yields load-return-code 2. Observed bytes 0x02-0x03 == 0x0125 (293) are suggestively identical to the 0x125 struct-size constant used at 3 other code sites (FUN_08029eb0 reset loop, FUN_08029a74-region init loop, FUN_08003960 caller args), but this is not proven by the decompiled code -- the DAT pointer's actual stored value is never shown as a literal.",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Bytes 0x02-0x03 = 01 25 (big-endian reading = 0x0125 = 293) coincide with the 0x125-byte struct length seen at FUN_08029eb0 line (`uVar5 < 0x125`) and the earlier default-init zero-fill loop (`uVar4 < 0x125`)."
+    },
+    {
+      "name": "format_magic_stamp",
+      "offset": 4,
+      "size": 4,
+      "type": "ascii",
+      "ram_addr": "0x03xxxxxx + 4 (template buffer _DAT_08003918/_DAT_0800391c)",
+      "writers": ["0x080038d0"],
+      "readers": [],
+      "observed_values": {"cap-00-future-0.sav": "ffffffff (unformatted)", "cap-01-future-1.sav": "4b44474e (ASCII 'KDGN')"},
+      "update_mechanism": "FUN_080038d0 writes the four literal bytes 0x4e('N'),0x47('G'),0x44('D'),0x4b('K') into a RAM template at increasing addresses during blank-EEPROM formatting; those same 63 blocks are flushed to EEPROM via the raw (unverified) writer FUN_0803d92c, whose internal bitstream construction builds each halfword back-to-front (confirmed by code inspection of FUN_0803d92c's decrementing pointer loop). The net effect, confirmed by exact byte match on the real .sav, is that this 4-byte field is stored reversed in the EEPROM image: logical 'NGDK' -> physical 'KDGN'.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Python verification: stamp_forward=4e47444b ('NGDK'); stamp_forward[::-1]=4b44474e ('KDGN'); cap-01-future-1.sav bytes[4:8]=4b44474e. Exact match. Also ruled out as being FUN_080037c8's checksum output, since the maximum value that checksum can produce for any length 0..504 is 0x1f800, far below the stored 0x4e47444b."
+    },
+    {
+      "name": "progress_struct_blank_region",
+      "offset": 8,
+      "size": 288,
+      "type": "bytes",
+      "ram_addr": "0x03xxxxxx + 8",
+      "writers": ["0x080038d0 (format-time zero source)"],
+      "readers": ["0x080038a4", "0x08003960"],
+      "observed_values": {"cap-01-future-1.sav": "all 0x00 for offsets 0x008-0x127 (296 bytes)"},
+      "update_mechanism": "Zero-filled by the format routine's static template; no gameplay-specific write to this sub-range observed in the 2 available snapshots.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "hexdump shows 0x0008-0x0127 as uniform 0x00, consistent with a freshly-formatted, not-yet-played struct."
+    },
+    {
+      "name": "unknown_block_0x25_marker",
+      "offset": 296,
+      "size": 8,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"cap-01-future-1.sav": "00 00 00 00 00 00 00 ff (per-byte: 0x128-0x12a=ff,ff,ff then 0x12b-0x12f=00,00,00,00,00; see evidence)"},
+      "update_mechanism": "UNKNOWN. This is EEPROM block #37 (0x128 / 8 = 37), the only non-zero block inside the otherwise fully-zeroed progress struct in this capture. No caller/writer in the supplied save_related_functions.c / decompiled.c excerpt was traced writing specifically to this block; it may be an artifact of the static format template itself (i.e. baked into the ROM blank-save image rather than written at runtime) or a distinct sub-field (e.g. a slot-active flag array) not covered by the 2-hop seed trace.",
+      "confidence": "UNKNOWN",
+      "evidence": "saves/hexdump_and_diffs.txt active-range dump: '000120: 00 00 00 00 00 00 00 00 ff ff ff 00 00 00 00 00' -- the three 0xff bytes sit at absolute file offsets 0x128-0x12a, inside this struct but outside any field this trace could attribute to a specific instruction."
+    }
+  ],
+  "fuzzing_targets": [
+    {
+      "offset": 4,
+      "size": 4,
+      "mutation": "Flip one bit in the format stamp (e.g. 0x4b -> 0x4a at offset 7) and reload.",
+      "requires_checksum_repair": false,
+      "predicted_effect": "If this field is read anywhere as a magic check (not currently proven -- no reader was traced), corrupting it should force re-formatting / data loss on next load. If it is truly write-only (format-time stamp with no reader), gameplay should be unaffected -- this test directly resolves the current UNKNOWN of whether the stamp is ever verified."
+    },
+    {
+      "offset": 0,
+      "size": 4,
+      "mutation": "Overwrite offset 0x00-0x03 with 0xFFFFFFFF (simulate erased/blank header) while leaving the rest of the save intact.",
+      "requires_checksum_repair": false,
+      "predicted_effect": "FUN_08003960's magic comparison against *_DAT_080039b0 should fail, returning code 2. Per the traced load path (FUN_08029eb0), this capture does not show an explicit auto-reset for code 2 (only code 1 triggers the zero-and-rewrite recovery), so the predicted observable effect is either a stall/soft-lock on load, or a fallback to a full FUN_080038d0 reformat performed by code outside this packet's traced set -- useful to distinguish which."
+    },
+    {
+      "offset": 296,
+      "size": 8,
+      "mutation": "Change block 0x25 (file offset 0x128-0x12F) from 00 00 00 00 00 00 00 ff pattern to all-zero, then to all-0xff, and reload.",
+      "requires_checksum_repair": false,
+      "predicted_effect": "Resolves the open 'unknown_block_0x25_marker' field: if gameplay/UI state changes (e.g. a flag, slot-active indicator, or tutorial-seen bit flips), this is a live gameplay field; if nothing changes, it is most likely a static formatting artifact from the blank-save template."
+    },
+    {
+      "offset": 8,
+      "size": 293,
+      "mutation": "Mutate a single byte inside the 0x125-byte progress struct (e.g. offset 0x10) without touching the header, then reload.",
+      "requires_checksum_repair": true,
+      "predicted_effect": "FUN_08003960 should recompute checksum over the mutated payload and detect a mismatch against the still-stale header checksum, returning code 1, which per FUN_08029eb0 triggers a full zero-fill-and-rewrite of the struct (observable as a lost/reset save rather than a corrupted-but-loaded one). To make the mutation 'stick' without triggering reset, the header checksum at offset 0x04-0x07 would need to be recomputed as len(0x125) + sum(mutated 293 bytes) and written back -- but note this contradicts the CONFIRMED_VERIFIED finding that offset 0x04-0x07 in the current samples actually holds the reversed format stamp, not a live checksum; this fuzz test is also the most direct way to force FUN_08003920's commit path to execute at least once and observe its real checksum output for comparison."
+    }
+  ],
+  "open_questions": [
+    "Does FUN_08003920 (the real per-save checksum-writing commit path) ever execute in these 2 captures, or did both snapshots only ever pass through FUN_080038d0 (format)? The checksum-impossibility proof suggests the latter for cap-01.",
+    "What is the actual stored value of *_DAT_080039b0 (the load-time magic constant) and *_DAT_0800395c (the header word0 source)? Not visible in decompiled C text; would require either a ROM binary read at the referenced address or a live-RAM trace at save-commit time.",
+    "What populates the RAM save-mirror before FUN_080038a4 (SaveReadRange) is ever called? No bulk EEPROM->RAM loader was present among the supplied save-related seed functions; only per-block FUN_0803d9dc reads were traced, called solely from FUN_0803dba8's write-verify retry logic, not from an obvious bulk-load site.",
+    "What writes EEPROM block #37 (file offset 0x128-0x12F), and is it a live gameplay field or a static template artifact? No caller was traced touching this specific block.",
+    "Only 2 .sav snapshots were available (blank-erased and one post-boot state); no fresh/restore-repeat pair or confirmed deliberate in-game save action was captured, limiting checksum and redundancy verification to static-code-only confidence for most of the payload region."
+  ]
+}

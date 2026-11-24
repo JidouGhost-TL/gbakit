@@ -1,0 +1,874 @@
+{
+  "schema": "gbakit-save-research/1",
+  "release_key": "B4OX-r0-ff7ba5c9a372373c",
+  "display_name": "Sims 2, The - Pets (Europe) (En,Fr,De,Es,It,Nl)",
+  "rom_sha256": "ff7ba5c9a372373cf2c223fb87b00ddb8d1f3914a077c96076db1f594e4c0d9f",
+  "game_code": "B4OX",
+  "header_family": "B4O",
+  "community_id": "comm-015",
+  "overall_confidence": "MEDIUM",
+  "media": {
+    "kind": "flash512",
+    "size_bytes": 65536,
+    "sdk_tags": [],
+    "fill_byte": "0xff"
+  },
+  "slots_and_copies": [
+    {
+      "name": "global_header",
+      "offset": 0,
+      "size": 24,
+      "redundancy_role": "global_config",
+      "selection_rule": "Always at flash offset 0; validated first on load (magic + header checksum). Not a save slot."
+    },
+    {
+      "name": "slot_0",
+      "offset": 24,
+      "size": 3936,
+      "redundancy_role": "unknown",
+      "selection_rule": "Independent save slot 0 (index field=0). No backup/generation selection in traced code; all 4 slots are checksum-validated together on load and any failure resets all."
+    },
+    {
+      "name": "slot_1",
+      "offset": 3960,
+      "size": 3936,
+      "redundancy_role": "unknown",
+      "selection_rule": "Independent save slot 1 (index field=1). See slot_0."
+    },
+    {
+      "name": "slot_2",
+      "offset": 7896,
+      "size": 3936,
+      "redundancy_role": "unknown",
+      "selection_rule": "Independent save slot 2 (index field=2). See slot_0."
+    },
+    {
+      "name": "slot_3",
+      "offset": 11832,
+      "size": 3936,
+      "redundancy_role": "unknown",
+      "selection_rule": "Independent save slot 3 (index field=3). See slot_0."
+    }
+  ],
+  "magic_signatures": [
+    {
+      "offset": 10,
+      "bytes_hex": "41324d37",
+      "ascii": "A2M7",
+      "verified_in_code": true,
+      "verified_in_sav": true,
+      "function_addrs": [
+        "0x08054ec8",
+        "0x08054f88"
+      ]
+    },
+    {
+      "offset": 1464,
+      "bytes_hex": "5741464659",
+      "ascii": "WAFFY",
+      "verified_in_code": true,
+      "verified_in_sav": true,
+      "function_addrs": [
+        "0x08054a8c"
+      ]
+    }
+  ],
+  "checksums": [
+    {
+      "name": "header_sum16",
+      "algorithm": "sum16_le",
+      "formula_detail": "FUN_08054f18: s=(s+(u8)buf[i]) mod 65536 for i in [0,0x18); stored u16_le at header+0 with field zeroed before recompute (FUN_08054f6c: *hdr=0; *hdr=sum16(hdr,0x18)). Stored field is little-endian in file.",
+      "stored_offset": 0,
+      "stored_size": 2,
+      "covered_start": 0,
+      "covered_end": 24,
+      "function_addrs": [
+        "0x08054f18",
+        "0x08054f6c",
+        "0x08054ec8"
+      ],
+      "verified_on_samples": [
+        {
+          "file": "cap-00-future-0.sav",
+          "stored_hex": "0x067B",
+          "computed_hex": "0x067B",
+          "match": true
+        },
+        {
+          "file": "cap-01-future-1.sav",
+          "stored_hex": "0x0726",
+          "computed_hex": "0x0726",
+          "match": true
+        }
+      ],
+      "confidence": "CONFIRMED_VERIFIED"
+    },
+    {
+      "name": "slot_sum16",
+      "algorithm": "sum16_le",
+      "formula_detail": "FUN_08054f44(slot_index,slot_ptr): stored_u16le[header+2+index*2]=FUN_08054f18(slot_ptr,0xF60)=sum of all 3936 slot bytes mod 65536. Verified separately for all 4 slots in both files.",
+      "stored_offset": 2,
+      "stored_size": 8,
+      "covered_start": 24,
+      "covered_end": 3960,
+      "function_addrs": [
+        "0x08054f18",
+        "0x08054f44",
+        "0x08054e50"
+      ],
+      "verified_on_samples": [
+        {
+          "file": "cap-00-future-0.sav",
+          "stored_hex": "slot0:0x08D8,slot1:0x08D9,slot2:0x08DA,slot3:0x08DB",
+          "computed_hex": "slot0:0x08D8,slot1:0x08D9,slot2:0x08DA,slot3:0x08DB",
+          "match": true
+        },
+        {
+          "file": "cap-01-future-1.sav",
+          "stored_hex": "slot0:0x08D8,slot1:0x08D9,slot2:0x08DA,slot3:0x08DB",
+          "computed_hex": "slot0:0x08D8,slot1:0x08D9,slot2:0x08DA,slot3:0x08DB",
+          "match": true
+        }
+      ],
+      "confidence": "CONFIRMED_VERIFIED"
+    }
+  ],
+  "io_driver_functions": [
+    {
+      "addr": "0x08054f18",
+      "role": "checksum",
+      "callers": [
+        "0x08054e50",
+        "0x08054ec8",
+        "0x08054f44",
+        "0x08054f6c"
+      ],
+      "notes": "sum16 of unsigned bytes, length masked to u16. Textual call-site mapping; see report."
+    },
+    {
+      "addr": "0x08054f44",
+      "role": "checksum",
+      "callers": [
+        "0x08054fbc"
+      ],
+      "notes": "Computes slot sum16 (0xF60) and stores at header+2+index*2."
+    },
+    {
+      "addr": "0x08054f6c",
+      "role": "checksum",
+      "callers": [
+        "0x08054d74",
+        "0x08054fbc"
+      ],
+      "notes": "Zeroes header+0 then stores sum16(header,0x18). Callers via func_ thunk in 0x08054d74 (callgraph lists only 0x08054fbc)."
+    },
+    {
+      "addr": "0x08054f88",
+      "role": "serialize",
+      "callers": [
+        "0x08054fbc"
+      ],
+      "notes": "Initialises 24-byte header: memset 0, memcpy 4 bytes to +0x0A (A2M7), bytes +0x11/+0x12=0xFF."
+    },
+    {
+      "addr": "0x08054a8c",
+      "role": "serialize",
+      "callers": [
+        "0x08054a60",
+        "0x08054fbc"
+      ],
+      "notes": "Default-initialises one 0xF60 slot: index at +0x10, 0x640 at +0x0C, WAFFY at +0x5A0, bitfield at +0xF0C, 0xFF stride-4 array near +0xF4F."
+    },
+    {
+      "addr": "0x08054ec8",
+      "role": "deserialize",
+      "callers": [
+        "0x08054e50"
+      ],
+      "notes": "Verify header: compares 4 bytes at +0x0A against expected (A2M7) and recomputes header sum16."
+    },
+    {
+      "addr": "0x08054e50",
+      "role": "deserialize",
+      "callers": [
+        "0x08054a60"
+      ],
+      "notes": "Load+validate whole save from flash offset 0; on any failure calls 0x08054fbc reset."
+    },
+    {
+      "addr": "0x08054fbc",
+      "role": "write",
+      "callers": [
+        "0x08054e50"
+      ],
+      "notes": "Blank-reset: init header+4 slots, recompute all checksums, flush whole buffer via 0x08058cd4."
+    },
+    {
+      "addr": "0x08054d74",
+      "role": "write",
+      "callers": [],
+      "notes": "Header-only flush: 0x08054f6c then 0x08058cd4(header,0,0x18). No textual/callgraph caller found; entry via unrecovered jumptable/function pointer."
+    },
+    {
+      "addr": "0x08054a60",
+      "role": "deserialize",
+      "callers": [
+        "0x0805b0d0"
+      ],
+      "notes": "Boot save init: default-init slot buffer then load/validate (0x08054e50)."
+    },
+    {
+      "addr": "0x08058b78",
+      "role": "read",
+      "callers": [
+        "0x08054e50"
+      ],
+      "notes": "Flash identify/init wrapper: calls 0x0806e18c, checks chip descriptor, sets mode via 0x0806dd74."
+    },
+    {
+      "addr": "0x08058bc4",
+      "role": "read",
+      "callers": [
+        "0x08054e50"
+      ],
+      "notes": "Sector-buffered flash read (RAM dst, flash offset, length). Allocates EWRAM sector buffer via 0x08055794."
+    },
+    {
+      "addr": "0x08058cd4",
+      "role": "write",
+      "callers": [
+        "0x08054d74",
+        "0x08054fbc"
+      ],
+      "notes": "Sector-buffered flash write, read-modify-write per sector via 0x08058e0c/0x08058e68."
+    },
+    {
+      "addr": "0x08058e0c",
+      "role": "read",
+      "callers": [
+        "0x08058bc4",
+        "0x08058cd4"
+      ],
+      "notes": "Load one flash sector into buffer: 0x0806df04 then up to 3x 0x0806e068."
+    },
+    {
+      "addr": "0x08058e68",
+      "role": "write",
+      "callers": [
+        "0x08058cd4"
+      ],
+      "notes": "Flush sector buffer to flash via 0x0806e100, retry once on failure."
+    },
+    {
+      "addr": "0x0806dcb0",
+      "role": "read",
+      "callers": [
+        "0x0806e18c"
+      ],
+      "notes": "Flash ID read: 0xAA/0x55/0x90 unlock at 0x0E000000 window, byte reads via 0x0806e610 stub, 0xF0 reset. Returns (id1<<8)|id2."
+    },
+    {
+      "addr": "0x0806e18c",
+      "role": "read",
+      "callers": [
+        "0x08058b78"
+      ],
+      "notes": "IdentifyFlash/SetFlash: match ID (entry+0x28) in chip table, install descriptor (size/sector shift)."
+    },
+    {
+      "addr": "0x0806e31c",
+      "role": "erase",
+      "callers": [],
+      "notes": "EraseFlashSector: sector<16, 0xAA/0x55/0x80/0xAA/0x55/0x30 sequence + wait via 0x0806e608 stub. No traced caller."
+    },
+    {
+      "addr": "0x0806e3b8",
+      "role": "write",
+      "callers": [],
+      "notes": "ProgramFlashByte: 0xAA/0x55/0xA0 unlock then single byte program + wait/verify stub. No traced caller."
+    },
+    {
+      "addr": "0x0806df04",
+      "role": "read",
+      "callers": [
+        "0x08058e0c"
+      ],
+      "notes": "Flash sector core A (bank switch if chip size 0x20000); core loop in unrecovered 0x0806e608 stub."
+    },
+    {
+      "addr": "0x0806e068",
+      "role": "write",
+      "callers": [
+        "0x08058e0c"
+      ],
+      "notes": "Flash sector core B called in 3x retry loop by 0x08058e0c; exact read/program split inside stub unresolved."
+    },
+    {
+      "addr": "0x0806dfd0",
+      "role": "write",
+      "callers": [
+        "0x0806e100"
+      ],
+      "notes": "ProgramFlashSector core passed RAM buffer + flash address in 0x0E000000 window."
+    },
+    {
+      "addr": "0x0806e100",
+      "role": "write",
+      "callers": [
+        "0x08058e68"
+      ],
+      "notes": "Program sector wrapper: verify stub 0x0806e604 then 0x0806dfd0, up to 3 attempts."
+    },
+    {
+      "addr": "0x0806dea0",
+      "role": "read",
+      "callers": [
+        "0x0806dcb0",
+        "0x0806e31c"
+      ],
+      "notes": "Copies relocatable flash-polling stub to stack/RAM before touching flash."
+    },
+    {
+      "addr": "0x0806db98",
+      "role": "serialize",
+      "callers": [
+        "0x08054f88"
+      ],
+      "notes": "memcpy (word+byte tail)."
+    },
+    {
+      "addr": "0x0806dbfc",
+      "role": "serialize",
+      "callers": [
+        "0x08054a8c",
+        "0x08054fbc"
+      ],
+      "notes": "memset (byte replicated to word). Also many non-save callers."
+    },
+    {
+      "addr": "0x080356d8",
+      "role": "serialize",
+      "callers": [
+        "0x08054a8c"
+      ],
+      "notes": "Set bit (1<<(i&7)) in byte at ptr+(i>>3). Used 20x to build slot bitfield at +0xF0C."
+    }
+  ],
+  "caller_chains": [
+    {
+      "entry_caller": "0x0805b0d0",
+      "chain": [
+        "0x0805b0d0",
+        "0x08054a60",
+        "0x08054a8c",
+        "0x08054e50",
+        "0x08058b78",
+        "0x0806e18c",
+        "0x0806dcb0"
+      ],
+      "trigger_context": "Boot/init sequence (0x0805b0d0 calls 0x08054a60 at decompiled.c:5348 among many subsystem inits).",
+      "ram_fields_updated": [
+        "slot template defaulted before load (index,0x640,WAFFY,bitfield)",
+        "then RAM save buffer overwritten by flash load"
+      ],
+      "how_mapped": "Textual grep for FUN_/func_0x08054a60 etc in decompiled.c plus callgraph.json cross-check (callgraph records 0x08054a60 caller=0x0805b0d0)."
+    },
+    {
+      "entry_caller": "0x08054e50",
+      "chain": [
+        "0x08054e50",
+        "0x08058bc4",
+        "0x08058e0c",
+        "0x0806df04",
+        "0x0806e068"
+      ],
+      "trigger_context": "Load whole save: read RAM buffer at flash offset 0 (length via unresolved _DAT, sav geometry 0x3D98), then verify.",
+      "ram_fields_updated": [
+        "whole 0x3D98 RAM mirror (header+4 slots) filled from flash"
+      ],
+      "how_mapped": "Textual call sites at decompiled.c:1610-1619; callgraph lists callees 0x08055794/0x08055870 only, so textual func_ calls are authoritative."
+    },
+    {
+      "entry_caller": "0x08054e50",
+      "chain": [
+        "0x08054e50",
+        "0x08054ec8",
+        "0x08054f18"
+      ],
+      "trigger_context": "Header validation after load: magic A2M7 at +0x0A (4 bytes) + header sum16 (0x18).",
+      "ram_fields_updated": [],
+      "how_mapped": "Textual call sites decompiled.c:1615-1665; FUN_08054ec8 compares bytes at hdr+10..13 and recomputes sum."
+    },
+    {
+      "entry_caller": "0x08054e50",
+      "chain": [
+        "0x08054e50",
+        "0x08054f18",
+        "0x08054fbc",
+        "0x08054f88",
+        "0x08054a8c",
+        "0x08054f44",
+        "0x08054f6c",
+        "0x08058cd4"
+      ],
+      "trigger_context": "Validation failure (identify/read/magic/header/slot checksum) resets entire save to blank defaults and rewrites flash.",
+      "ram_fields_updated": [
+        "header zeroed+magic+FF sentinels",
+        "each slot memset+default-init",
+        "slot checksums at header+2+i*2",
+        "header checksum at +0"
+      ],
+      "how_mapped": "Textual call sites decompiled.c:1618-1630,1775-1786. Slot loop at 1618 pre-increments stored-checksum pointer so slot i compares header+2+i*2."
+    },
+    {
+      "entry_caller": "0x08054d74",
+      "chain": [
+        "0x08054d74",
+        "0x08054f6c",
+        "0x08058cd4",
+        "0x08058e0c",
+        "0x08058e68",
+        "0x0806e100",
+        "0x0806dfd0"
+      ],
+      "trigger_context": "Header-only save flush (24 bytes at flash offset 0). Upstream caller not found in textual search or callgraph; inferred jumptable entry. Consistent with cap-00->cap-01 diff touching only header byte +0x13 and its checksum.",
+      "ram_fields_updated": [
+        "unknown upstream mutation (observed: header +0x13)",
+        "header checksum recomputed at +0"
+      ],
+      "how_mapped": "Function body decompiled.c:1581-1591 is the only 0x18-byte 0x08058cd4 write in corpus; exhaustive grep for 0x08058cd4/0x08054d74 found no caller."
+    },
+    {
+      "entry_caller": "0x08058cd4",
+      "chain": [
+        "0x08058cd4",
+        "0x08055794",
+        "0x08058e0c",
+        "0x08058e68",
+        "0x0806e100"
+      ],
+      "trigger_context": "Generic sector-buffered write used by both header-only and full-save flushes.",
+      "ram_fields_updated": [],
+      "how_mapped": "Textual call sites decompiled.c:3627-3656; EWRAM allocator 0x08055794 uses 0x02000000-based heap."
+    }
+  ],
+  "fields": [
+    {
+      "name": "header_checksum",
+      "offset": 0,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": [
+        "0x08054f6c"
+      ],
+      "readers": [
+        "0x08054ec8"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": "0x067B",
+        "cap-01-future-1.sav": "0x0726"
+      },
+      "update_mechanism": "Zeroed then recomputed as sum16 over header[0:0x18) by FUN_08054f6c before every flush (FUN_08054d74/FUN_08054fbc).",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "FUN_08054f18/FUN_08054f6c decompiled.c:1678-1736; python sum matches stored in both files (see report)."
+    },
+    {
+      "name": "slot_checksums[4]",
+      "offset": 2,
+      "size": 8,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [
+        "0x08054f44"
+      ],
+      "readers": [
+        "0x08054e50"
+      ],
+      "observed_values": {
+        "both": "slot0=0x08D8,slot1=0x08D9,slot2=0x08DA,slot3=0x08DB"
+      },
+      "update_mechanism": "FUN_08054f44(i,slot) stores sum16(slot,0xF60) at header+2+i*2; header checksum then covers them.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "decompiled.c:1704-1711; python per-slot sums match all 8 stored values."
+    },
+    {
+      "name": "magic_A2M7",
+      "offset": 10,
+      "size": 4,
+      "type": "ascii",
+      "ram_addr": null,
+      "writers": [
+        "0x08054f88"
+      ],
+      "readers": [
+        "0x08054ec8"
+      ],
+      "observed_values": {
+        "both": "A2M7"
+      },
+      "update_mechanism": "Written by memcpy(dst=hdr+0x0A,src=ROM expected,4) in FUN_08054f88; compared byte-wise in FUN_08054ec8.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "decompiled.c:1644-1662,1745-1755; bytes 41 32 4D 37 at 0x0A in both .sav."
+    },
+    {
+      "name": "header_reserved_0E",
+      "offset": 14,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": [
+        "0x08054f88"
+      ],
+      "readers": [],
+      "observed_values": {
+        "both": "0x0000"
+      },
+      "update_mechanism": "Zeroed by header memset; no other traced writer.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "FUN_08054f88 memset 0x18; zero in both samples."
+    },
+    {
+      "name": "header_byte_10",
+      "offset": 16,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": [
+        "0x08054f88"
+      ],
+      "readers": [],
+      "observed_values": {
+        "both": "0x00"
+      },
+      "update_mechanism": "Zeroed by header memset; semantics unknown (grouping with +0x11..0x13 as u32 also possible).",
+      "confidence": "UNKNOWN",
+      "evidence": "Zero in both samples; no traced writer beyond memset."
+    },
+    {
+      "name": "header_sentinel_11",
+      "offset": 17,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": [
+        "0x08054f88"
+      ],
+      "readers": [],
+      "observed_values": {
+        "both": "0xFF"
+      },
+      "update_mechanism": "Set to 0xFF explicitly after memset in FUN_08054f88.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "decompiled.c:1754; 0xFF in both samples (and byte is not file fill - inside header)."
+    },
+    {
+      "name": "header_sentinel_12",
+      "offset": 18,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": [
+        "0x08054f88"
+      ],
+      "readers": [],
+      "observed_values": {
+        "both": "0xFF"
+      },
+      "update_mechanism": "Set to 0xFF explicitly after memset in FUN_08054f88.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "decompiled.c:1755; 0xFF in both samples."
+    },
+    {
+      "name": "header_value_13",
+      "offset": 19,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [
+        "0x08054ec8 (via header checksum)"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": "0x00",
+        "cap-01-future-1.sav": "0xAB"
+      },
+      "update_mechanism": "Unknown upstream writer mutates RAM header byte; FUN_08054f6c then recomputes checksum and FUN_08054d74 flushes 0x18 bytes. Sole gameplay-visible diff between samples.",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Byte diff 0x00->0xAB at 0x13 plus exactly +0xAB header checksum delta; covered by header sum. No writer found by exhaustive grep/callgraph."
+    },
+    {
+      "name": "header_reserved_14",
+      "offset": 20,
+      "size": 4,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [
+        "0x08054f88"
+      ],
+      "readers": [],
+      "observed_values": {
+        "both": "00 00 00 00"
+      },
+      "update_mechanism": "Zeroed by header memset; no traced writer.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "Zero in both samples."
+    },
+    {
+      "name": "slot_reserved_00",
+      "offset": 24,
+      "size": 12,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [
+        "0x08054a8c (memset)",
+        "0x08054fbc (memset)"
+      ],
+      "readers": [],
+      "observed_values": {
+        "both_slots": "all zero"
+      },
+      "update_mechanism": "Slot memset to 0 in FUN_08054fbc/FUN_08054a8c; sub-fields unknown.",
+      "confidence": "UNKNOWN",
+      "evidence": "All zero in 4 slots x 2 files. File offset is slot_0; slot i adds i*0xF60 (slot-relative +0x0)."
+    },
+    {
+      "name": "slot_field_0C_640",
+      "offset": 36,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": [
+        "0x08054a8c"
+      ],
+      "readers": [],
+      "observed_values": {
+        "both_slots": "0x00000640 (1600)"
+      },
+      "update_mechanism": "Set to constant 0x640 in FUN_08054a8c default init; semantics unknown (points/currency hypothesis only).",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "decompiled.c:1516 *(param+0xC)=0x640; bytes 40 06 00 00 in every slot. File offset is slot_0; slot i adds i*0xF60 (slot-relative +0xC)."
+    },
+    {
+      "name": "slot_index",
+      "offset": 40,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": [
+        "0x08054a8c"
+      ],
+      "readers": [],
+      "observed_values": {
+        "both_slots": "slot_i = i (0,1,2,3)"
+      },
+      "update_mechanism": "FUN_08054a8c(param=slot, param2=index) stores param2 at +0x10; reset loop passes loop counter.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "decompiled.c:1512,1781-1782; values 0..3 match position in both files. Not a generation counter. File offset is slot_0; slot i adds i*0xF60 (slot-relative +0x10)."
+    },
+    {
+      "name": "slot_bulk_14_59F",
+      "offset": 44,
+      "size": 1420,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [
+        "0x08054a8c (partial zero loops, unresolved offsets)"
+      ],
+      "readers": [],
+      "observed_values": {
+        "both_slots": "all zero"
+      },
+      "update_mechanism": "Mostly zero in near-blank samples; default loops in FUN_08054a8c zero 0x47 u32s and other arrays at unresolved slot-relative offsets inside this span. Individual fields unmapped.",
+      "confidence": "UNKNOWN",
+      "evidence": "83 nonzero bytes total in whole active save; none in this span in either file. No other traced writer. File offset is slot_0; slot i adds i*0xF60 (slot-relative +0x14)."
+    },
+    {
+      "name": "slot_name_WAFFY",
+      "offset": 1464,
+      "size": 5,
+      "type": "ascii",
+      "ram_addr": null,
+      "writers": [
+        "0x08054a8c"
+      ],
+      "readers": [],
+      "observed_values": {
+        "both_slots": "WAFFY (followed by 0x00 terminator at +0x5A5)"
+      },
+      "update_mechanism": "Written byte-by-byte W/A/F/F/Y at +0x5A0..+0x5A4 in FUN_08054a8c (0x57,0x41,0x46,0x46,0x59). String length/buffer size beyond 5+terminator unknown.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "decompiled.c:1562-1567; 'WAFFY' at slot+0x5A0 in all 8 slot instances. Default name string, not a load-checked magic. File offset is slot_0; slot i adds i*0xF60 (slot-relative +0x5A0)."
+    },
+    {
+      "name": "slot_bulk_5A5_F0B",
+      "offset": 1469,
+      "size": 2407,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {
+        "both_slots": "all zero"
+      },
+      "update_mechanism": "Zero in near-blank samples; semantics unknown.",
+      "confidence": "UNKNOWN",
+      "evidence": "No nonzero bytes and no resolved traced writer in this span. File offset is slot_0; slot i adds i*0xF60 (slot-relative +0x5A5)."
+    },
+    {
+      "name": "slot_bitfield_F0C",
+      "offset": 3876,
+      "size": 5,
+      "type": "bitflags",
+      "ram_addr": null,
+      "writers": [
+        "0x08054a8c via 0x080356d8"
+      ],
+      "readers": [],
+      "observed_values": {
+        "both_slots": "46 3F F0 E2 C2"
+      },
+      "update_mechanism": "FUN_080356d8 sets bits 1,2,6,8,9,10,11,12,13,20,21,22,23,25,29,30,31,33,38,39 at slot+0xF0C (inferred base); byte encoding bit i -> byte i>>3, bit i&7 matches sav exactly.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "decompiled.c:1520-1539,392-403; python reconstruction of 20 indices yields 46 3F F0 E2 C2 in all slots. File offset is slot_0; slot i adds i*0xF60 (slot-relative +0xF0C)."
+    },
+    {
+      "name": "slot_bulk_F11_F4E",
+      "offset": 3881,
+      "size": 62,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {
+        "both_slots": "all zero"
+      },
+      "update_mechanism": "Zero in near-blank samples; semantics unknown.",
+      "confidence": "UNKNOWN",
+      "evidence": "No nonzero bytes in this span. File offset is slot_0; slot i adds i*0xF60 (slot-relative +0xF11)."
+    },
+    {
+      "name": "slot_ff_stride_array",
+      "offset": 3943,
+      "size": 17,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [
+        "0x08054a8c"
+      ],
+      "readers": [],
+      "observed_values": {
+        "both_slots": "FF at +0xF4F,+0xF53,+0xF57,+0xF5B; intervening bytes 0x00"
+      },
+      "update_mechanism": "Loop in FUN_08054a8c writes (u8)0xFF at param+base+i*4 for i in 0..3; base inferred as +0xF4F from sav. Likely 4 records with a 0xFF sentinel byte each.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "decompiled.c:1540-1545; sav FF stride-4 pattern at exactly those offsets in all slots. File offset is slot_0; slot i adds i*0xF60 (slot-relative +0xF4F)."
+    },
+    {
+      "name": "slot_tail_F5C",
+      "offset": 3956,
+      "size": 4,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [
+        "0x08054a8c (memset)"
+      ],
+      "readers": [],
+      "observed_values": {
+        "both_slots": "00 00 00 00"
+      },
+      "update_mechanism": "Zero tail of 0xF60 slot; semantics unknown.",
+      "confidence": "UNKNOWN",
+      "evidence": "Zero in all slots; slot size proven by FUN_08054f44 length 0xF60 and file geometry. File offset is slot_0; slot i adds i*0xF60 (slot-relative +0xF5C)."
+    },
+    {
+      "name": "unused_flash_tail",
+      "offset": 15792,
+      "size": 47768,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {
+        "both": "all 0xFF"
+      },
+      "update_mechanism": "Never written/read by traced save paths (load/write length stops at 0x3D98). Erased flash fill.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "All bytes 0xFF from 0x3D98 to 0xFFFF in both files (python check). File offset is slot_0; slot i adds i*0xF60 (slot-relative +0x3D98)."
+    }
+  ],
+  "fuzzing_targets": [
+    {
+      "offset": 0,
+      "size": 2,
+      "mutation": "Flip one byte of header checksum (e.g. 0x7B->0x7C), no repair",
+      "requires_checksum_repair": false,
+      "predicted_effect": "Header sum mismatch in 0x08054ec8 -> 0x08054fbc blank reset and full rewrite; matches PACKET cold-reload probe (offset 0 mutation reverted to blank, save rewritten)."
+    },
+    {
+      "offset": 10,
+      "size": 1,
+      "mutation": "Change 'A' of A2M7 to 'X', then repair header sum16 at +0",
+      "requires_checksum_repair": true,
+      "predicted_effect": "Isolates magic check: even with valid checksum, 0x08054ec8 magic compare fails -> blank reset/rewrite."
+    },
+    {
+      "offset": 2,
+      "size": 2,
+      "mutation": "Change stored slot_0 checksum, then repair header sum16 at +0",
+      "requires_checksum_repair": true,
+      "predicted_effect": "Slot_0 sum (0x08054f18 over 0xF60) != stored -> blank reset of all slots (no per-slot recovery)."
+    },
+    {
+      "offset": 19,
+      "size": 1,
+      "mutation": "Set header +0x13 to 0xAB (as in cap-01) with header sum16 repaired, slots untouched",
+      "requires_checksum_repair": true,
+      "predicted_effect": "Accepted on load (all checks pass; already observed in cap-01). In-game effect of +0x13 unknown - candidate global value/counter; monitor UI/RAM for change vs 0x00 control."
+    },
+    {
+      "offset": 1464,
+      "size": 1,
+      "mutation": "Change slot_0 WAFFY 'W'->'M' at file 0x5B8, repair slot_0 sum in header+2 and header sum",
+      "requires_checksum_repair": true,
+      "predicted_effect": "If name field is displayed (pet/Sim name), renamed string appears where WAFFY was shown; no reset if both checksums repaired."
+    },
+    {
+      "offset": 3876,
+      "size": 1,
+      "mutation": "Clear one bit in slot_0 bitfield at file 0xF24 (0x46->0x44), repair slot+header sums",
+      "requires_checksum_repair": true,
+      "predicted_effect": "One of 20 default-set flags (indices 1,2,6,8-13,20-23,25,29-31,33,38,39) cleared; predicted loss of corresponding unlock/feature/state - identify by toggling single bits."
+    },
+    {
+      "offset": 36,
+      "size": 4,
+      "mutation": "Set slot_0 +0x0C u32 0x640->0x641, repair slot+header sums",
+      "requires_checksum_repair": true,
+      "predicted_effect": "Tests semantics of constant 1600 field (currency/points/score hypothesis); watch numeric UI tied to slot."
+    },
+    {
+      "offset": 40,
+      "size": 4,
+      "mutation": "Set slot_0 index +0x10 from 0->1 (duplicate), repair slot+header sums",
+      "requires_checksum_repair": true,
+      "predicted_effect": "If loader trusts index, slot ordering/identity confusion; if position wins, no effect. Distinguishes index-as-identity vs index-as-data."
+    },
+    {
+      "offset": 15768,
+      "size": 1,
+      "mutation": "Write 0x00 at 0x3D98 (first byte past active save, in 0xFF tail)",
+      "requires_checksum_repair": false,
+      "predicted_effect": "No effect predicted: never read (load length stops at 0x3D98) and no checksum covers it. Control for fuzzing harness."
+    }
+  ],
+  "open_questions": [
+    "Absolute RAM mirror address of save buffer (header base) is unresolved: every _DAT_080xxxxx literal in decompiled.c lacks its value, so ram_addr is null throughout. Slot RAM base is referenced as _DAT_08055010 with header at slot0-0x18.",
+    "Semantics of header byte +0x13 (0x00 in cap-00, 0xAB in cap-01): only observed mutation besides checksums; writer and gameplay meaning unknown. Not a simple +1 counter (delta +0xAB).",
+    "Upstream caller/trigger of header-only flush FUN_08054d74 and of any gameplay slot writer: no textual or callgraph caller exists; entry is via unrecovered jumptable/function pointer, and no slot-sized (0xF60) flash write call site exists in the traced corpus besides full reset.",
+    "Exact core loops of AgbFlash stubs FUN_0806e604/0806e608/0806e610 and chip sector size/shift (descriptor fields at +4/+8) are in unrecovered jumptables; read/program/verify split between FUN_0806df04 and FUN_0806e068 is inferred from call context only.",
+    "Length arguments passed via unresolved _DAT literals in FUN_08054e50 read, FUN_08054fbc write and FUN_08054e50 slot-check (uRam08054ec0) are inferred as 0x3D98/0xF60 from sav geometry and FUN_08054f44, not read from literals.",
+    "Most slot payload bytes (0x14-0x59F, 0x5A5-0xF0B, 0xF11-0xF4E, 0xF5F-0xF5F tail) are zero in both near-blank samples and have no traced writer besides memset/default loops with unresolved offsets; their field semantics are UNKNOWN.",
+    "No paired .ss save states are present (states/ is empty), so fuzzing plan must use cold .sav reload in an emulator rather than state-paired reload."
+  ]
+}

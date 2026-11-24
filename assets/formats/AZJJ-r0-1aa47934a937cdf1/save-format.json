@@ -1,0 +1,396 @@
+{
+  "schema": "gbakit-save-research/1",
+  "release_key": "AZJJ-r0-1aa47934a937cdf1",
+  "display_name": "Dragon Ball Z - Bukuu Tougeki (Japan)",
+  "rom_sha256": "1aa47934a937cdf13b2536ad35d391262202d53f8797db11335fc43f12374596",
+  "game_code": "AZJJ",
+  "header_family": "AZJ",
+  "community_id": "",
+  "overall_confidence": "LOW",
+  "media": {
+    "kind": "eeprom512",
+    "size_bytes": 512,
+    "sdk_tags": [],
+    "fill_byte": "0xff"
+  },
+  "slots_and_copies": [
+    {
+      "name": "block_00_magic_header",
+      "offset": 0,
+      "size": 16,
+      "redundancy_role": "global_config",
+      "selection_rule": "Not determined; no selection/validation code found. Contains magic bytes (offset 0) and a header/tag word (offset 8)."
+    },
+    {
+      "name": "record_group_A",
+      "offset": 16,
+      "size": 40,
+      "redundancy_role": "primary",
+      "selection_rule": "Hypothesis: primary copy of 5 records; no code-confirmed selection rule found."
+    },
+    {
+      "name": "record_group_B",
+      "offset": 56,
+      "size": 40,
+      "redundancy_role": "backup",
+      "selection_rule": "Hypothesis: byte-for-byte duplicate of record_group_A (first 7 of 8 bytes per record match exactly); trailer byte differs. No code-confirmed selection/compare rule found."
+    },
+    {
+      "name": "block_12_13_tail",
+      "offset": 96,
+      "size": 16,
+      "redundancy_role": "unknown",
+      "selection_rule": "Unclassified; does not match the record_group_A/B pattern."
+    },
+    {
+      "name": "unused_blocks_14_63",
+      "offset": 112,
+      "size": 400,
+      "redundancy_role": "unknown",
+      "selection_rule": "All 0xFF (blank EEPROM fill) in this sample; never written by the observed capture."
+    }
+  ],
+  "magic_signatures": [
+    {
+      "offset": 0,
+      "bytes_hex": "34626477736b7261",
+      "ascii": "4bdwskra",
+      "verified_in_code": false,
+      "verified_in_sav": true,
+      "function_addrs": []
+    }
+  ],
+  "checksums": [
+    {
+      "name": "header_candidate_0x0c",
+      "algorithm": "unknown",
+      "formula_detail": "Brute-forced sum8/sum16(LE+BE)/xor8/xor16(LE)/crc32 over 9 candidate coverage ranges (magic-only, header, records, magic+records, all-active 0x00-0x70, records-first-half, records-second-half, tail 0x60-0x70, whole 512 bytes). No computed value matched stored bytes 0x9b90, 0x9b09, or their 32-bit/byte-swapped combinations.",
+      "stored_offset": 12,
+      "stored_size": 4,
+      "covered_start": 0,
+      "covered_end": 112,
+      "function_addrs": [],
+      "verified_on_samples": [
+        {
+          "file": "saves/cap-00-future-0.sav",
+          "stored_hex": "909b099b",
+          "computed_hex": "no_match_any_tested_range",
+          "match": false
+        }
+      ],
+      "confidence": "UNKNOWN"
+    }
+  ],
+  "io_driver_functions": [
+    {
+      "addr": "0x080492b4",
+      "role": "write",
+      "callers": ["0x08049334", "0x080493f8"],
+      "notes": "Generic DMA3 transfer-and-wait primitive (src, dst, count|0x80000000) used by BOTH the write path (0x08049334) and the read path (0x080493f8) to pump bits through 0x0D000000. Not write-specific in practice; schema forced a single role value."
+    },
+    {
+      "addr": "0x08049334",
+      "role": "write",
+      "callers": [],
+      "notes": "EEPROM block write: bounds-checks block address against configured max, serializes 2-bit write opcode + N address bits + 64 data bits MSB-first, kicks two DMA3 transfers via 0x080492b4. No static caller found anywhere in the 110-function decompiled set or callgraph.json."
+    },
+    {
+      "addr": "0x080493e4",
+      "role": "read",
+      "callers": [],
+      "notes": "One-line blocking wrapper: calls 0x080493f8(addr, buf, retry_forever=1). No static caller found."
+    },
+    {
+      "addr": "0x080493f8",
+      "role": "read",
+      "callers": ["0x080493e4"],
+      "notes": "EEPROM block read: sends 2-bit read opcode + address bits via 0x080492b4, then polls the EEPROM ready line at 0x0D000000 with a software timeout/retry loop. Returns 0 on success, error code on timeout."
+    }
+  ],
+  "caller_chains": [
+    {
+      "entry_caller": "0x08049334",
+      "chain": ["0x08049334", "0x080492b4"],
+      "trigger_context": "UNKNOWN - no caller of 0x08049334 exists in the decompiled set; this chain only documents the internal DMA sub-call, not the game-level trigger for a save.",
+      "ram_fields_updated": [],
+      "how_mapped": "Static read of decompiled.c lines 3906-3957 plus callgraph.json cross-check confirming 0x080492b4's callers list includes 0x08049334."
+    },
+    {
+      "entry_caller": "0x080493e4",
+      "chain": ["0x080493e4", "0x080493f8", "0x080492b4"],
+      "trigger_context": "UNKNOWN - no caller of 0x080493e4 exists in the decompiled set; this chain only documents the internal read sub-calls, not the game-level trigger for a load.",
+      "ram_fields_updated": [],
+      "how_mapped": "Static read of decompiled.c lines 3962-3973 (0x080493e4) and 3980-4066 (0x080493f8) plus callgraph.json cross-check."
+    }
+  ],
+  "fields": [
+    {
+      "name": "magic_header_tag",
+      "offset": 0,
+      "size": 8,
+      "type": "ascii",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"hex": "34626477736b7261", "ascii": "4bdwskra"},
+      "update_mechanism": "unknown - no writer function found in the decompiled set",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Only non-blank, printable-ASCII block at address 0 of 64; presumed magic tag by position, not confirmed by code."
+    },
+    {
+      "name": "header_capacity_or_format_tag",
+      "offset": 8,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"hex": "00100000", "value_le": 4096},
+      "update_mechanism": "unknown",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Little-endian value equals 4096, the EEPROM capacity in bits (4Kbit); plausible self-describing tag, not code-proven."
+    },
+    {
+      "name": "header_checksum_or_counter_candidate",
+      "offset": 12,
+      "size": 4,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"hex": "909b099b", "u16_le_lo": "0x9b90", "u16_le_hi": "0x9b09"},
+      "update_mechanism": "unknown - exhaustive sum/xor/crc search against 9 byte ranges found no match",
+      "confidence": "UNKNOWN",
+      "evidence": "See checksums[] entry header_candidate_0x0c and report section 4.3."
+    },
+    {
+      "name": "record_slotA_0",
+      "offset": 16,
+      "size": 8,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"hex": "0007a120ffff0500"},
+      "update_mechanism": "unknown",
+      "confidence": "HYPOTHESIS",
+      "evidence": "First 7 bytes identical to record_slotB_0 at offset 0x38; only trailer byte differs (0x00 vs 0x10). Internal guess: u8 flag, u8 id=7, u16be val=0xa120, u16=0xffff sentinel, u8 cat=5, u8 tag."
+    },
+    {
+      "name": "record_slotA_1",
+      "offset": 24,
+      "size": 8,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"hex": "00061a80ffff0504"},
+      "update_mechanism": "unknown",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Mirrors record_slotB_1 at offset 0x40 (identical first 7 bytes, trailer 0x04 vs 0x14)."
+    },
+    {
+      "name": "record_slotA_2",
+      "offset": 32,
+      "size": 8,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"hex": "000493e0ffff0408"},
+      "update_mechanism": "unknown",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Mirrors record_slotB_2 at offset 0x48 (identical first 7 bytes, trailer 0x08 vs 0x18)."
+    },
+    {
+      "name": "record_slotA_3",
+      "offset": 40,
+      "size": 8,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"hex": "00030d40ffff0409"},
+      "update_mechanism": "unknown",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Mirrors record_slotB_3 at offset 0x50 (identical first 7 bytes, trailer 0x09 vs 0x1c - irregular gap vs the otherwise +4 trailer pattern)."
+    },
+    {
+      "name": "record_slotA_4",
+      "offset": 48,
+      "size": 8,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"hex": "000186a0ffff030c"},
+      "update_mechanism": "unknown",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Mirrors record_slotB_4 at offset 0x58 (identical first 7 bytes, trailer 0x0c vs 0x20)."
+    },
+    {
+      "name": "record_slotB_0",
+      "offset": 56,
+      "size": 8,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"hex": "0007a120ffff0510"},
+      "update_mechanism": "unknown",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Duplicate of record_slotA_0 except trailer byte."
+    },
+    {
+      "name": "record_slotB_1",
+      "offset": 64,
+      "size": 8,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"hex": "00061a80ffff0514"},
+      "update_mechanism": "unknown",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Duplicate of record_slotA_1 except trailer byte."
+    },
+    {
+      "name": "record_slotB_2",
+      "offset": 72,
+      "size": 8,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"hex": "000493e0ffff0418"},
+      "update_mechanism": "unknown",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Duplicate of record_slotA_2 except trailer byte."
+    },
+    {
+      "name": "record_slotB_3",
+      "offset": 80,
+      "size": 8,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"hex": "00030d40ffff041c"},
+      "update_mechanism": "unknown",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Duplicate of record_slotA_3 except trailer byte."
+    },
+    {
+      "name": "record_slotB_4",
+      "offset": 88,
+      "size": 8,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"hex": "000186a0ffff0320"},
+      "update_mechanism": "unknown",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Duplicate of record_slotA_4 except trailer byte."
+    },
+    {
+      "name": "block_12_unclassified",
+      "offset": 96,
+      "size": 8,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"hex": "0000012cff050101"},
+      "update_mechanism": "unknown",
+      "confidence": "UNKNOWN",
+      "evidence": "No twin record elsewhere; does not fit the record_slotA/B pattern."
+    },
+    {
+      "name": "block_13_unclassified",
+      "offset": 104,
+      "size": 8,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"hex": "ffff010000000000"},
+      "update_mechanism": "unknown",
+      "confidence": "UNKNOWN",
+      "evidence": "No twin record elsewhere; begins with sentinel-like 0xffff."
+    },
+    {
+      "name": "unused_blocks_14_63",
+      "offset": 112,
+      "size": 400,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"fill": "0xff"},
+      "update_mechanism": "none observed in this sample",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Direct byte observation (all 0xFF) is consistent with the driver's 64-block addressable space and blank/unprogrammed EEPROM default; blocks 14-63 are never written in this capture."
+    }
+  ],
+  "fuzzing_targets": [
+    {
+      "offset": 0,
+      "size": 1,
+      "mutation": "flip byte 0x34 -> 0x35 in the magic string",
+      "requires_checksum_repair": false,
+      "predicted_effect": "If the loader validates this literal, reload should fall back to a blank/default save; if the save still loads with save_preserved_on_load=true, the magic is not validated at boot."
+    },
+    {
+      "offset": 8,
+      "size": 4,
+      "mutation": "change 00 10 00 00 (4096) to 00 00 00 00",
+      "requires_checksum_repair": false,
+      "predicted_effect": "Tests whether this is a hard device/format validation constant; a mismatch should either be ignored or force reinitialization of the save."
+    },
+    {
+      "offset": 12,
+      "size": 4,
+      "mutation": "flip all bits of 90 9b 09 9b",
+      "requires_checksum_repair": false,
+      "predicted_effect": "No checksum formula was confirmed, so this tests whether the field is checked at all; unaffected loading implies inert/unused data rather than a real checksum."
+    },
+    {
+      "offset": 18,
+      "size": 2,
+      "mutation": "change record_slotA_0's big value field a1 20 to 00 00",
+      "requires_checksum_repair": false,
+      "predicted_effect": "If reflected in-game (e.g. a displayed stat tied to this record), the on-screen value should visibly change; no change implies an unused/reserved field."
+    },
+    {
+      "offset": 56,
+      "size": 8,
+      "mutation": "zero out the entire record_slotB_0 block (duplicate of record_slotA_0)",
+      "requires_checksum_repair": false,
+      "predicted_effect": "If dual-copy redundancy is real, the game should silently recover using the intact A-copy; if the save is instead flagged corrupt, the copies are not independent redundancy."
+    },
+    {
+      "offset": 96,
+      "size": 8,
+      "mutation": "mutate bytes 2-3 (01 2c) of the unclassified block_12_unclassified record",
+      "requires_checksum_repair": false,
+      "predicted_effect": "Observe for any UI/gameplay change to determine this block's role, since it has no twin to compare against."
+    },
+    {
+      "offset": 112,
+      "size": 16,
+      "mutation": "write non-0xFF garbage into the first currently-blank block (block 14)",
+      "requires_checksum_repair": false,
+      "predicted_effect": "If the game only ever touches blocks 0-13, no effect should be observed; otherwise this may surface new in-game state or corruption, revealing unused save capacity."
+    }
+  ],
+  "open_questions": [
+    "No static caller of the EEPROM write entry point (0x08049334) or the EEPROM read entry points (0x080493e4 / 0x080493f8) exists anywhere in the 110-function decompiled trace or callgraph.json; the save-manager/serialization/checksum code that fills the 8-byte block buffers and triggers saves/loads was not captured and remains unidentified.",
+    "Checksum/integrity algorithm for header bytes 0x0C-0x0F is unknown; an exhaustive sum8/16/xor8/16/crc32 search over 9 plausible ranges on the single available .sav sample produced no match. A second differing .sav sample is required to attempt reverse-deriving a formula.",
+    "Semantic meaning of the five repeated 7-byte record patterns (offsets 0x10-0x5F) is unknown; plausible guesses (per-stage/character best-time or score entries) are unconfirmed without gameplay correlation or multiple .sav diffs.",
+    "Purpose of FUN_0804926c (branches on selector values 4 / 0x40) is unknown; it plausibly installs a save-media driver table (SRAM vs EEPROM vs Flash) but no evidence ties either value specifically to EEPROM.",
+    "Blocks 12 (0x60) and 13 (0x68) do not match the record_slotA/B pattern seen in blocks 2-11 and remain unclassified.",
+    "No paired .ss save states exist for this legacy checkpoint cohort (states/ is empty), so the mandatory pre/post save-state tracing policy could not be applied; all fuzzing_targets predictions are untested hypotheses pending a capture run that supplies paired states.",
+    "ghidra/save_related_functions.c tags 0x0804a3f0 as an MMIO-SEED, but full inspection shows it is a generic unsigned 32-bit division routine with zero hardware-register references - a false positive in the seed-selection heuristic, noted here so it is not mistaken for a save-I/O function in future passes."
+  ]
+}

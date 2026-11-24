@@ -1,0 +1,369 @@
+{
+  "schema": "gbakit-save-research/1",
+  "release_key": "BRRE-r0-08f5dc54324dd7e9",
+  "display_name": "Bratz - Rock Angelz (USA, Europe)",
+  "rom_sha256": "08f5dc54324dd7e9cc3fb50bfa1e39e2f6ff7a94ce4c907fc84f88d076df9c0e",
+  "game_code": "BRRE",
+  "header_family": "BRR",
+  "community_id": "comm-001",
+  "overall_confidence": "LOW",
+  "media": {
+    "kind": "eeprom512",
+    "size_bytes": 512,
+    "sdk_tags": [
+      "EEPROM_V124"
+    ],
+    "fill_byte": "0xff"
+  },
+  "slots_and_copies": [
+    {
+      "name": "slot_0",
+      "offset": 0,
+      "size": 512,
+      "redundancy_role": "primary",
+      "selection_rule": "Single EEPROM image read as 64 blocks x 8 bytes from block 0 by FUN_0802458c via FUN_08024704; no slot index, backup copy, or generation counter is traced. Validity is recorded as a boolean at RAM struct +0x23 by FUN_080247e4; no fallback copy exists in the traced code."
+    }
+  ],
+  "magic_signatures": [],
+  "checksums": [
+    {
+      "name": "save_payload_sum8",
+      "algorithm": "sum8",
+      "formula_detail": "computed = (sum of bytes[0x04..0x11F] inclusive, 284 bytes) & 0xFF; 8-bit char accumulator, no seed/complement/XOR. Stored byte at 0x121 must equal computed; result recorded as bool at RAM struct +0x23 (FUN_080247e4, decompiled.c:2374-2381). Sample match is vacuous (all-zero payload).",
+      "stored_offset": 289,
+      "stored_size": 1,
+      "covered_start": 4,
+      "covered_end": 288,
+      "function_addrs": [
+        "0x080247e4"
+      ],
+      "verified_on_samples": [
+        {
+          "file": "sav-00-f1473.sav",
+          "stored_hex": "0x00",
+          "computed_hex": "0x00",
+          "match": true
+        }
+      ],
+      "confidence": "CONFIRMED_STATIC"
+    }
+  ],
+  "io_driver_functions": [
+    {
+      "addr": "0x0804c6dc",
+      "role": "write",
+      "callers": [
+        "0x0804c75c"
+      ],
+      "notes": "Generic DMA3 transfer engine: writes src/dst/count|0x80000000 to DMA register triple (pattern of 0x040000D4 block; concrete regs behind unresolved _DAT literals) and busy-waits on bit 0x8000. Used for both EEPROM command-out and data-in transfers; role covers DMA write+read, EEPROM writer itself is NOT traced."
+    },
+    {
+      "addr": "0x0804c75c",
+      "role": "read",
+      "callers": [
+        "0x0802458c"
+      ],
+      "notes": "EEPROM single-block read of 8 bytes: builds MSB-first address bitstream with two leading 1 bits on stack, DMAs command to 0x0D000000 (addr_bits+3 halfwords), DMAs 0x44 halfwords back, reassembles 64 bits MSB-first into 4 ushorts written backwards from param_2+6. Bounds-checks block against descriptor field +4, address-bit count from descriptor byte +8. Sole caller via C-text func_0x0804c75c (callgraph lists no callers)."
+    },
+    {
+      "addr": "0x0804c694",
+      "role": "read",
+      "callers": [
+        "0x0802457c"
+      ],
+      "notes": "EEPROM type/descriptor selector; traced call passes 4 from FUN_0802457c, selecting descriptor consulted by FUN_0804c75c (block count +4, addr bits +8). Mapping of arg 4 to 4Kbit is hypothesis; selection role is CONFIRMED_STATIC."
+    },
+    {
+      "addr": "0x0802457c",
+      "role": "read",
+      "callers": [
+        "0x08024704"
+      ],
+      "notes": "EEPROM presence/type probe: returns func_0x0804c694(4) result via unrecovered jumptable; non-zero skips the read in FUN_08024704."
+    },
+    {
+      "addr": "0x0802458c",
+      "role": "read",
+      "callers": [
+        "0x08024704"
+      ],
+      "notes": "Full-image reader: loops 64 blocks x 8B via FUN_0804c75c into RAM buffer, aborts on first failure, on success calls FUN_080247e4(buffer,1). Bracketed by FUN_08024560 (before) and FUN_08024530 (after, both paths)."
+    },
+    {
+      "addr": "0x08024704",
+      "role": "deserialize",
+      "callers": [],
+      "notes": "Top-level load entry (no traced caller): zero-pre-fills 512B buffer via BIOS MemCopy FUN_0804c664 (SWI 0x0B), probes EEPROM via FUN_0802457c, reads via FUN_0802458c(0xff, buffer, 1)."
+    },
+    {
+      "addr": "0x080247e4",
+      "role": "checksum",
+      "callers": [
+        "0x0802458c"
+      ],
+      "notes": "Validator/deserializer: copies byte0 to RAM struct+0x22, memcpy 284B payload from offset 4 via FUN_0804e900, recomputes sum8 over [4,0x120), compares to byte 0x121 -> bool at struct+0x23, applies 'Z'(0x5A) substitution from byte 0x120, stores 0x53 to unresolved pointer. Also serialize-side checksum writer is NOT traced, so this entry is read-side checksum only."
+    },
+    {
+      "addr": "0x0804e900",
+      "role": "deserialize",
+      "callers": [
+        "0x080247e4"
+      ],
+      "notes": "Word-optimized memcpy (16B unrolled + tail); copies payload [0x04,0x120) to unresolved RAM dest _DAT_08024858. Generic, also used by unrelated functions."
+    },
+    {
+      "addr": "0x08024560",
+      "role": "read",
+      "callers": [
+        "0x0802458c"
+      ],
+      "notes": "Pre-read hook: clears *_DAT_08024578; FUN_08001dc8 branch not taken for traced arg 0xff. Semantics unknown (jumptable tail)."
+    },
+    {
+      "addr": "0x08024530",
+      "role": "read",
+      "callers": [
+        "0x0802458c"
+      ],
+      "notes": "Post-read hook (both success/failure paths): sets *_DAT_08024558=1; FUN_08001ddc/FUN_08001fe4 branch not taken for traced arg 0xff. Semantics unknown."
+    }
+  ],
+  "caller_chains": [
+    {
+      "entry_caller": "0x08024704",
+      "chain": [
+        "0x08024704",
+        "0x0804c664",
+        "0x0802457c",
+        "0x0804c694",
+        "0x0802458c",
+        "0x08024560",
+        "0x0804c75c",
+        "0x0804c6dc",
+        "0x080247e4",
+        "0x0804e900",
+        "0x08024530"
+      ],
+      "trigger_context": "Cold load of save image: zero-fill buffer, probe EEPROM type (arg 4), read 64x8B blocks if probe==0, validate+deserialize on success. No traced caller above 0x08024704.",
+      "ram_fields_updated": [
+        "RAM save struct +0x22 (copy of EEPROM byte 0, possibly substituted from EEPROM byte 0x120)",
+        "RAM save struct +0x23 (bool: stored sum8 at 0x121 == computed sum8 over [0x04,0x120))",
+        "284-byte RAM payload destination (_DAT_08024858, unresolved) copied from EEPROM [0x04,0x120)",
+        "512-byte staging buffer (zero-filled, then filled from EEPROM)"
+      ],
+      "how_mapped": "Direct FUN_/func_ call sites in ghidra/decompiled.c cross-checked against ghidra/callgraph.json callers/callees; C-text-only edges (func_0x0804c75c, func_0x080247e4, func_0x0804c694) flagged because callgraph omits indirect jumptable calls."
+    },
+    {
+      "entry_caller": "0x0802458c",
+      "chain": [
+        "0x0802458c",
+        "0x0804c75c",
+        "0x0804c6dc"
+      ],
+      "trigger_context": "Per-block EEPROM read inside full-image load: 64 iterations, dest advances 8 bytes, abort to post-hook on first non-zero status.",
+      "ram_fields_updated": [
+        "512-byte staging buffer (8 bytes per block, written by FUN_0804c75c reassembly at dest..dest+8)"
+      ],
+      "how_mapped": "Loop body at decompiled.c:2307-2316 (uVar3<0x40, iVar4+=8) plus FUN_0804c75c body at decompiled.c:4181-4231; callgraph confirms 0x0804c75c -> 0x0804c6dc."
+    }
+  ],
+  "fields": [
+    {
+      "name": "byte0_sentinel_field",
+      "offset": 0,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [
+        "0x080247e4"
+      ],
+      "observed_values": {
+        "sav-00-f1473.sav": "0x00"
+      },
+      "update_mechanism": "Copied by FUN_080247e4 to RAM struct +0x22 (base _DAT_08024850 unresolved); if RAM copy == 0x5A ('Z') it is replaced in RAM by EEPROM byte 0x120; value also published to _DAT_08024874 global. EEPROM-side writer not traced.",
+      "confidence": "HYPOTHESIS",
+      "evidence": "decompiled.c:2369 (*puVar4=*param_1), 2378-2379 ('Z' compare/substitution), 2382 (shadow store). Semantics of the field and of 'Z' unknown; not a proven magic byte."
+    },
+    {
+      "name": "header_gap_0x001_0x003",
+      "offset": 1,
+      "size": 3,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {
+        "sav-00-f1473.sav": "00 00 00"
+      },
+      "update_mechanism": "Never read or written by any traced function; gap between byte-0 field and payload copy start at offset 4.",
+      "confidence": "UNKNOWN",
+      "evidence": "FUN_080247e4 copies only param_1[0], param_1[4..0x11F], param_1[0x120], param_1[0x121]; no other traced access."
+    },
+    {
+      "name": "save_payload_284b",
+      "offset": 4,
+      "size": 284,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [
+        "0x080247e4",
+        "0x0804e900"
+      ],
+      "observed_values": {
+        "sav-00-f1473.sav": "all 0x00 (284 bytes)"
+      },
+      "update_mechanism": "Copied verbatim to RAM by FUN_080247e4 via FUN_0804e900 memcpy (dest _DAT_08024858 unresolved) and summed for checksum; no per-field consumer or writer traced, so internal structure is unmapped and not subdivided.",
+      "confidence": "HYPOTHESIS",
+      "evidence": "decompiled.c:2370 memcpy length 0x11C from param_1+4; checksum loop decompiled.c:2373-2377 over same range. Extent is CONFIRMED_STATIC; contents UNKNOWN (blank sample)."
+    },
+    {
+      "name": "byte0_extension_0x120",
+      "offset": 288,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [
+        "0x080247e4"
+      ],
+      "observed_values": {
+        "sav-00-f1473.sav": "0x00"
+      },
+      "update_mechanism": "Read by FUN_080247e4 only when byte 0 == 'Z' (0x5A), then substituted into RAM struct +0x22. Not covered by checksum. EEPROM-side writer not traced.",
+      "confidence": "HYPOTHESIS",
+      "evidence": "decompiled.c:2378-2379. Read mechanics CONFIRMED_STATIC; semantics unknown."
+    },
+    {
+      "name": "payload_checksum_sum8",
+      "offset": 289,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [
+        "0x080247e4"
+      ],
+      "observed_values": {
+        "sav-00-f1473.sav": "0x00"
+      },
+      "update_mechanism": "Compared by FUN_080247e4 against sum8 over [0x04,0x120); equality stored as bool at RAM struct +0x23. Writer-side computation not traced (presumed same sum8, unproven). Fuzz repair: recompute sum8 and store here.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "decompiled.c:2374-2381 loop and comparison. Sample match 0x00==0x00 is vacuous; see report section 4.3."
+    },
+    {
+      "name": "unknown_region_0x122_0x19f",
+      "offset": 290,
+      "size": 126,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {
+        "sav-00-f1473.sav": "all 0x00 (126 bytes)"
+      },
+      "update_mechanism": "Never accessed by traced reader/validator (validator stops at 0x121). Purpose unknown.",
+      "confidence": "UNKNOWN",
+      "evidence": "Absence of any access >=0x122 in FUN_080247e4 and callers; region lies between checksum byte and 0xFF tail."
+    },
+    {
+      "name": "erased_tail_0x1a0_0x1ff",
+      "offset": 416,
+      "size": 96,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {
+        "sav-00-f1473.sav": "all 0xFF (96 bytes, EEPROM blocks 52-63)"
+      },
+      "update_mechanism": "Never consumed by traced validator; 0xFF is EEPROM erased state, most plausibly never-written cells. Whether the untraced writer touches it is unknown.",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Python scan: 0xFF range [0x1A0,0x200); hexdump_and_diffs.txt lists it as sole active range vs 0x00 background."
+    }
+  ],
+  "fuzzing_targets": [
+    {
+      "offset": 289,
+      "size": 1,
+      "mutation": "Stored checksum 0x00 -> 0x01 on blank image, no other change",
+      "requires_checksum_repair": false,
+      "predicted_effect": "Checksum mismatch: RAM struct +0x23 bool false; game predicted to treat save as invalid/absent (blank-boot behavior). Control experiment."
+    },
+    {
+      "offset": 4,
+      "size": 1,
+      "mutation": "First payload byte 0x00 -> 0x01 without repair",
+      "requires_checksum_repair": false,
+      "predicted_effect": "Computed sum 0x01 vs stored 0x00 -> invalid bool, as with stored-byte mutation; confirms offset 4 is inside covered range."
+    },
+    {
+      "offset": 4,
+      "size": 1,
+      "mutation": "First payload byte 0x00 -> 0x01 with checksum repair at 0x121",
+      "requires_checksum_repair": true,
+      "predicted_effect": "Validity restored; mutated payload byte live in RAM. Sweep across payload offsets to discover responsive fields by observable gameplay/UI delta vs blank boot."
+    },
+    {
+      "offset": 287,
+      "size": 1,
+      "mutation": "Last covered byte (0x11F) 0x00 -> 0xFF with repair over [0x04,0x120)",
+      "requires_checksum_repair": true,
+      "predicted_effect": "Load stays valid if 0x11F is inside covered range as coded; breakage despite correct repair refutes range mapping."
+    },
+    {
+      "offset": 288,
+      "size": 1,
+      "mutation": "Extension byte 0x120: 0x00 -> 0x41 ('A') with byte 0 left 0x00",
+      "requires_checksum_repair": false,
+      "predicted_effect": "No observable effect: 0x120 read only under 'Z' branch and not checksummed. Any effect refutes branch mapping."
+    },
+    {
+      "offset": 0,
+      "size": 1,
+      "mutation": "Byte 0 := 0x5A ('Z') and byte 0x120 := 0x41 ('A')",
+      "requires_checksum_repair": false,
+      "predicted_effect": "Load valid; RAM struct +0x22 becomes 0x41 instead of 0x5A (substitution). Observe byte-0-driven behavior difference; also test byte0=0x53 ('S') with predicted no special behavior."
+    },
+    {
+      "offset": 1,
+      "size": 3,
+      "mutation": "Gap bytes 0x01-0x03 := 42 52 52",
+      "requires_checksum_repair": false,
+      "predicted_effect": "No observable effect (never read, not checksummed). Any effect reveals an untraced header/magic check."
+    },
+    {
+      "offset": 290,
+      "size": 1,
+      "mutation": "Unknown region byte 0x122 := 0x01; separately zero EEPROM block 52 at 0x1A0",
+      "requires_checksum_repair": false,
+      "predicted_effect": "No observable effect (never read). Tests unused-tail hypothesis for both zero region and 0xFF tail."
+    },
+    {
+      "offset": 4,
+      "size": 284,
+      "mutation": "Fill entire payload with 0xFF, repair checksum to 0x44 at 0x121",
+      "requires_checksum_repair": true,
+      "predicted_effect": "Valid-checksum maximal image: rich divergence, crash/garbage, or clean rejection each discriminates a different payload-validation architecture. Emulator-only with pre-state recovery."
+    },
+    {
+      "offset": 0,
+      "size": 512,
+      "mutation": "Present truncated (256B) or extended (1024B) image as EEPROM",
+      "requires_checksum_repair": false,
+      "predicted_effect": "Reader always issues 64 block reads; short image predicted to abort in FUN_0802458c without calling validator (blank-boot behavior), confirming fixed 512B geometry."
+    }
+  ],
+  "open_questions": [
+    "Where is the EEPROM writer? Absent from the 154-function trace-guided corpus: no write bitstream to 0x0D000000 exists in ghidra/decompiled.c or ghidra/callgraph.json. Its address, serialization order, and stored-checksum computation are unknown.",
+    "What are the semantics of byte 0x000, the 'Z' (0x5A) substitution from byte 0x120 in FUN_080247e4, and the unconditional 0x53 ('S') store to unresolved _DAT_08024854 in the same function?",
+    "What is the internal field structure of the 284-byte payload at 0x004-0x11F? No writer or per-field consumer was traced and the only .sav sample is blank, so no sub-field can be mapped without fabrication.",
+    "What are the concrete RAM addresses behind _DAT_08024850 (save struct base), _DAT_08024858 (payload destination), _DAT_08024874 and _DAT_08024854? Literal-pool values are unresolved in the text decompilation, so RAM mirror addresses are null.",
+    "What consumes the checksum-valid boolean at RAM struct +0x23, and does it gate gameplay, show an error, or ignore invalid saves? The validator only records it; note the blank image passes the checksum, so presence detection must live elsewhere.",
+    "What are bytes 0x001-0x003, 0x122-0x19F and the 0xFF tail at 0x1A0-0x1FF for? No traced code reads them.",
+    "Can sum8 be promoted from CONFIRMED_STATIC to CONFIRMED_VERIFIED? The blank sample match (0x00==0x00) is vacuous; a non-blank game-written save (e.g. induced between sav-00-pre frame 1439 and sav-00-post frame 1473) is required.",
+    "What do FUN_08024560/FUN_08024530 hooks and the FUN_0804c694(4) descriptor fields (+4 block count, +8 address bits) resolve to, and what is the second argument passed to FUN_080247e4 by FUN_0802458c?",
+    "Is the 0x1A0-0x1FF 0xFF region ever written by the game, or are blocks 52-63 simply never-touched EEPROM cells?"
+  ]
+}

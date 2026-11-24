@@ -1,0 +1,318 @@
+{
+  "schema": "gbakit-save-research/1",
+  "release_key": "APYJ-r0-c6c5c6d73329d4af",
+  "display_name": "Minna de Puyo Puyo (Japan) (En,Ja)",
+  "rom_sha256": "c6c5c6d73329d4af28d9a52ab0a000fdb6038c60969a0a0fce6b4a0ee3a7cc19",
+  "game_code": "APYJ",
+  "header_family": "APY",
+  "community_id": "comm-002",
+  "overall_confidence": "MEDIUM",
+  "media": {
+    "kind": "eeprom512",
+    "size_bytes": 512,
+    "sdk_tags": [],
+    "fill_byte": "0xff"
+  },
+  "slots_and_copies": [
+    {
+      "name": "record_0",
+      "offset": 0,
+      "size": 480,
+      "redundancy_role": "primary",
+      "selection_rule": "only_record_present; no second mirrored copy observed in 512-byte space"
+    },
+    {
+      "name": "unwritten_tail_blocks",
+      "offset": 480,
+      "size": 32,
+      "redundancy_role": "unknown",
+      "selection_rule": "never written (0xFF) in both samples; EEPROM blocks 60-63 of 64"
+    }
+  ],
+  "magic_signatures": [
+    {
+      "offset": 2,
+      "bytes_hex": "314d4f595550",
+      "ascii": "1MOYUP",
+      "verified_in_code": false,
+      "verified_in_sav": true,
+      "function_addrs": []
+    }
+  ],
+  "checksums": [
+    {
+      "name": "header_candidate_0x0C",
+      "algorithm": "unknown",
+      "formula_detail": "Positional candidate only (immediately follows magic). sum8/sum16(le/be)/xor8/xor16(le/be) over 5 plausible covered ranges (0x0-0x1BE, 0x8-0x1BE, 0x10-0x1BE, 0x0-0x1C0, 0x10-0xA8) tested in Python against stored value 0x2E55(BE)/0x552E(LE); none matched.",
+      "stored_offset": 12,
+      "stored_size": 2,
+      "covered_start": 0,
+      "covered_end": 446,
+      "function_addrs": [],
+      "verified_on_samples": [
+        {"file": "cap-01-future-1.sav", "stored_hex": "2e55", "computed_hex": "a7a4", "match": false}
+      ],
+      "confidence": "UNKNOWN"
+    },
+    {
+      "name": "header_candidate_0x0E",
+      "algorithm": "unknown",
+      "formula_detail": "Same methodology as header_candidate_0x0C against stored value 0x10A5(BE)/0xA510(LE); no match found across tested ranges/algorithms.",
+      "stored_offset": 14,
+      "stored_size": 2,
+      "covered_start": 0,
+      "covered_end": 446,
+      "function_addrs": [],
+      "verified_on_samples": [
+        {"file": "cap-01-future-1.sav", "stored_hex": "10a5", "computed_hex": "a7a4", "match": false}
+      ],
+      "confidence": "UNKNOWN"
+    },
+    {
+      "name": "trailer_candidate_0x1BE",
+      "algorithm": "unknown",
+      "formula_detail": "Positional candidate only (last 2 bytes before the 0x1C0 padding gap). sum8/sum16(le/be)/xor8/xor16(le/be) tested against stored value 0x7EFF(BE)/0xFF7E(LE) over 5 ranges; none matched.",
+      "stored_offset": 446,
+      "stored_size": 2,
+      "covered_start": 0,
+      "covered_end": 446,
+      "function_addrs": [],
+      "verified_on_samples": [
+        {"file": "cap-01-future-1.sav", "stored_hex": "7eff", "computed_hex": "a7a4", "match": false}
+      ],
+      "confidence": "UNKNOWN"
+    }
+  ],
+  "io_driver_functions": [
+    {"addr": "0x08023624", "role": "serialize", "callers": ["0x080236a4", "0x08023754"], "notes": "Raw DMA3 transfer primitive; busy-waits on DMA status; both callers target MMIO address 0x0D000000 (EEPROM data port)."},
+    {"addr": "0x08023558", "role": "write", "callers": ["0x08023754"], "notes": "Arms DMA-complete IRQ mask bit and queues a 3-word transfer descriptor before an EEPROM write."},
+    {"addr": "0x080235e0", "role": "write", "callers": ["0x08023754"], "notes": "Disarms the DMA-complete IRQ mask bit and clears the queued descriptor after an EEPROM write."},
+    {"addr": "0x080236a4", "role": "read", "callers": ["0x08023830"], "notes": "EEPROM block read: bounds-checks block index, serializes read-opcode+address bitstream via FUN_08023624, unpacks 64 returned serial bits into 4 big-endian u16 words (8 data bytes)."},
+    {"addr": "0x08023754", "role": "write", "callers": ["0x08023888"], "notes": "EEPROM block write: bounds-checks block index, serializes write-opcode+address+64 data bits in one FUN_08023624 transfer, arms/disarms DMA IRQ, polls EEPROM busy bit."},
+    {"addr": "0x08023830", "role": "checksum", "callers": ["0x08023888"], "notes": "Read-back verification: reads the just-written block via FUN_080236a4 and compares word-by-word against the expected 8 bytes; not a checksum algorithm, a direct byte/word comparison."},
+    {"addr": "0x08023888", "role": "write", "callers": [], "notes": "Top-level write-with-retry entry point (up to 3 attempts of write+verify). No caller present anywhere in the traced 112-function callgraph; this is the save-flush API boundary of this packet's trace."}
+  ],
+  "caller_chains": [
+    {
+      "entry_caller": "0x08023888",
+      "chain": ["0x08023888", "0x08023754", "0x08023624"],
+      "trigger_context": "unknown (no caller of 0x08023888 present in ghidra/callgraph.json)",
+      "ram_fields_updated": [],
+      "how_mapped": "Traced bottom-up from the two MMIO-seed functions (0x080236a4, 0x08023754) flagged in ghidra/save_related_functions.c, following ghidra/callgraph.json caller/callee edges up to the single entry point 0x08023888, which has an empty callers list — the trace boundary. No game-specific RAM-buffer-building caller was found anywhere in the 112-function decompiled set; the other functions present (0x0801e3e8-0x0801fd40 family) were checked by MMIO-address grep and do not reference 0x0D000000, DMA3, or any FUN_08023xxx symbol, so they were excluded as save-path candidates."
+    }
+  ],
+  "fields": [
+    {
+      "name": "slot_valid_flag",
+      "offset": 0,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"cap-00-future-0.sav": "0xff", "cap-01-future-1.sav": "0x01"},
+      "update_mechanism": "unknown",
+      "confidence": "HYPOTHESIS",
+      "evidence": "First record byte; 0xFF in the fully-blank/erased sample, 0x01 in the populated sample. No writer/reader found in traced code."
+    },
+    {
+      "name": "header_pad_0x01",
+      "offset": 1,
+      "size": 1,
+      "type": "unknown",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"cap-01-future-1.sav": "0x00"},
+      "update_mechanism": "unknown",
+      "confidence": "UNKNOWN",
+      "evidence": "Always zero in the only populated sample; insufficient data to type further."
+    },
+    {
+      "name": "magic_1MOYUP",
+      "offset": 2,
+      "size": 6,
+      "type": "ascii",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"cap-01-future-1.sav": "1MOYUP", "cap-00-future-0.sav": "(absent, all 0xFF)"},
+      "update_mechanism": "unknown",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Directly observed ASCII bytes 0x31 0x4d 0x4f 0x59 0x55 0x50 at offset 0x02 in cap-01-future-1.sav; matches packet metadata ascii_magic_strings. No code-side string-compare located (builder outside trace), so verification is byte-level only."
+    },
+    {
+      "name": "pad_0x08",
+      "offset": 8,
+      "size": 2,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"cap-01-future-1.sav": "0000"},
+      "update_mechanism": "unknown",
+      "confidence": "UNKNOWN",
+      "evidence": "Zero in the only sample."
+    },
+    {
+      "name": "header_value_0x0A",
+      "offset": 10,
+      "size": 2,
+      "type": "u16_be",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"cap-01-future-1.sav": 5000},
+      "update_mechanism": "unknown",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Round-number value (multiple of 1000) matching the value domain of the adjacent score table at 0x10; could be a pulled-forward or duplicate table entry."
+    },
+    {
+      "name": "header_checksum_candidate_0x0C",
+      "offset": 12,
+      "size": 2,
+      "type": "unknown",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"cap-01-future-1.sav_be": "0x2e55", "cap-01-future-1.sav_le": "0x552e"},
+      "update_mechanism": "unknown",
+      "confidence": "UNKNOWN",
+      "evidence": "Tested as sum8/sum16/xor8/xor16 (both endiannesses) over 5 plausible ranges against this stored value in Python; no match. See checksums[].name=header_candidate_0x0C."
+    },
+    {
+      "name": "header_checksum_candidate_0x0E",
+      "offset": 14,
+      "size": 2,
+      "type": "unknown",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"cap-01-future-1.sav_be": "0x10a5", "cap-01-future-1.sav_le": "0xa510"},
+      "update_mechanism": "unknown",
+      "confidence": "UNKNOWN",
+      "evidence": "Tested as sum8/sum16/xor8/xor16 (both endiannesses) over 5 plausible ranges against this stored value in Python; no match. See checksums[].name=header_candidate_0x0E."
+    },
+    {
+      "name": "score_or_threshold_table",
+      "offset": 16,
+      "size": 152,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"cap-01-future-1.sav_u32be_array": [3000,4000,1000,2000,8000,10000,4000,6000,10000,2000,6000,8000,2000,4000,12000,15000,6000,9000,20000,2000,12000,16000,4000,8000,20000,25000,10000,15000,10000,5000,6000,8000,2000,4000,8000,10000,4000,6000]},
+      "update_mechanism": "unknown",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "38 contiguous big-endian u32 values from offset 0x10 to 0xA7, every value an exact multiple of 1000 in range [1000,25000]. Pattern confirmed by direct Python decode of cap-01-future-1.sav; semantic meaning (score table vs. threshold table) not derivable from these files alone."
+    },
+    {
+      "name": "small_int_array_0xA8",
+      "offset": 168,
+      "size": 40,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"cap-01-future-1.sav_hex": "01020203000007d00304020203030401030304040502020305060703040505060501020304050304"},
+      "update_mechanism": "unknown",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Mostly single-digit byte values (0x01-0x07) with one embedded big-endian u16=0x07D0 (2000, matching the score table's value domain) at 0xAE-0xAF. Boundary inferred from value-domain shift, not from code."
+    },
+    {
+      "name": "index_array_0xD0",
+      "offset": 208,
+      "size": 208,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"cap-01-future-1.sav_value_domain": "0x01-0x1a (1-26 decimal)"},
+      "update_mechanism": "unknown",
+      "confidence": "HYPOTHESIS",
+      "evidence": "208-byte contiguous array whose every observed byte falls in 1-26; candidate index/id table into an external fixed-size lookup set not present in this packet."
+    },
+    {
+      "name": "packed_flags_0x1A0",
+      "offset": 416,
+      "size": 30,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"cap-01-future-1.sav_hex": "000100010001000300c1000000000000000100000001000000000001000"},
+      "update_mechanism": "unknown",
+      "confidence": "UNKNOWN",
+      "evidence": "Mostly 0x00/0x01 bytes with two outliers (0x03 at 0x1A7, 0xC1 at 0x1A9) that break a simple bitfield-array hypothesis."
+    },
+    {
+      "name": "trailer_checksum_candidate_0x1BE",
+      "offset": 446,
+      "size": 2,
+      "type": "unknown",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"cap-01-future-1.sav_be": "0x7eff", "cap-01-future-1.sav_le": "0xff7e"},
+      "update_mechanism": "unknown",
+      "confidence": "UNKNOWN",
+      "evidence": "Tested as sum8/sum16/xor8/xor16 (both endiannesses) over 5 plausible ranges; no match. See checksums[].name=trailer_candidate_0x1BE."
+    },
+    {
+      "name": "reserved_pad_0x1C0",
+      "offset": 448,
+      "size": 27,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"cap-01-future-1.sav": "all 0x00"},
+      "update_mechanism": "unknown",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "All-zero in the only populated sample, sitting between the main record and the 0x1DB tail field."
+    },
+    {
+      "name": "tail_field_0x1DB",
+      "offset": 475,
+      "size": 5,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"cap-01-future-1.sav_hex": "0100000001"},
+      "update_mechanism": "unknown",
+      "confidence": "UNKNOWN",
+      "evidence": "Nonzero bookend bytes (0x01 at 0x1DB and 0x1DF) around three zero bytes; no strong hypothesis."
+    },
+    {
+      "name": "unwritten_eeprom_blocks_0x1E0",
+      "offset": 480,
+      "size": 32,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"cap-00-future-0.sav": "all 0xff", "cap-01-future-1.sav": "all 0xff"},
+      "update_mechanism": "unknown",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "Identical to blank-EEPROM fill value in both samples (EEPROM blocks 60-63 of 64, 8 bytes each); never written in this 2-sample corpus."
+    }
+  ],
+  "fuzzing_targets": [
+    {"offset": 2, "size": 1, "mutation": "flip one byte inside the '1MOYUP' magic (e.g. 0x02: 0x31->0x30)", "requires_checksum_repair": false, "predicted_effect": "if magic is load-gating, boot treats slot as corrupt/new-game (visual delta on load); if unchanged, magic is cosmetic at load time"},
+    {"offset": 12, "size": 2, "mutation": "flip one low bit of the 0x0C candidate", "requires_checksum_repair": false, "predicted_effect": "if this is a real checksum, load is rejected/reset; if not, data loads unchanged and round-trips back out on next save"},
+    {"offset": 14, "size": 2, "mutation": "flip one low bit of the 0x0E candidate", "requires_checksum_repair": false, "predicted_effect": "same methodology as the 0x0C candidate probe"},
+    {"offset": 16, "size": 4, "mutation": "zero the first score-table entry (0x00000BB8 -> 0x00000000)", "requires_checksum_repair": false, "predicted_effect": "if table is actively read/displayed, corresponding UI value becomes 0; if transient/regenerated, value silently reverts on next save"},
+    {"offset": 208, "size": 1, "mutation": "set one byte of the 0xD0 index array to 0xFF (outside observed 1-26 domain)", "requires_checksum_repair": false, "predicted_effect": "visible corruption/garbage or a game-side clamp/reset if this is a bounds-checked lookup index; no visible change if untouched by the probed code path"},
+    {"offset": 475, "size": 1, "mutation": "flip 0x1DB from 0x01 to 0x00", "requires_checksum_repair": false, "predicted_effect": "no visible change if redundant with the 0x000 flag; observable corrupt-save handling if it independently gates loading"},
+    {"offset": 480, "size": 32, "mutation": "write non-0xFF sentinel bytes into the never-written tail blocks 0x1E0-0x1FF", "requires_checksum_repair": false, "predicted_effect": "no behavior change if truly unused; next in-game save overwrites or ignores them if genuinely dead bytes, vs. revealing a second slot/unlock condition if not"}
+  ],
+  "open_questions": [
+    "What in-RAM struct/address range does the save-record builder populate before calling FUN_08023888? Not present in this packet's trace (ghidra/callgraph.json shows 0x08023888 with no callers).",
+    "Is there a checksum/CRC at all? Three positional candidates (0x0C, 0x0E, 0x1BE) were tested against sum8/16 and xor8/16 over 5 ranges with no match; algorithm and covered range remain unknown.",
+    "Are EEPROM blocks 60-63 (0x1E0-0x1FF) ever written (second save slot, unlock flag, etc.), or permanently reserved/unused? Both available samples show them as 0xFF.",
+    "What is the byte-order and semantic meaning of the two tables at 0xA8-0xCF and 0xD0-0x19F?",
+    "Does the 1-byte field at offset 0x000 gate loading, or is it cosmetic?",
+    "Only one non-blank .sav sample is available in this packet; a second independent mutation is required before any checksum/field hypothesis can move from UNKNOWN/HYPOTHESIS to CONFIRMED."
+  ]
+}

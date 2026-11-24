@@ -1,0 +1,275 @@
+{
+  "schema": "gbakit-save-research/1",
+  "release_key": "BDSP-r0-6362b9ea3f4c9955",
+  "display_name": "Digimon - Battle Spirit 2 (Europe) (En,Fr,De,Es,It)",
+  "rom_sha256": "6362b9ea3f4c9955076953779635101111b3ac37ea43b7cdf22185b494e53495",
+  "game_code": "BDSP",
+  "header_family": "BDS",
+  "community_id": "comm-011",
+  "overall_confidence": "MEDIUM",
+  "media": {
+    "kind": "eeprom512",
+    "size_bytes": 512,
+    "sdk_tags": [],
+    "fill_byte": "0xff"
+  },
+  "slots_and_copies": [
+    {
+      "name": "slot_0",
+      "offset": 0,
+      "size": 144,
+      "redundancy_role": "primary",
+      "selection_rule": "Single copy. Accepted iff FUN_0801262c sum+complement verification over [0x00,0x88) passes and FUN_080172e8 16-byte header template comparison passes; otherwise the RAM struct is rewritten via FUN_080125b4. No backup, mirror, or generation counter exists; bytes 0x90-0x1FF are 0xFF fill."
+    }
+  ],
+  "magic_signatures": [
+    {
+      "offset": 0,
+      "bytes_hex": "50532053",
+      "ascii": "PS S",
+      "verified_in_code": true,
+      "verified_in_sav": true,
+      "function_addrs": ["0x080172e8"]
+    },
+    {
+      "offset": 8,
+      "bytes_hex": "30303020412d5452",
+      "ascii": "000 A-TR",
+      "verified_in_code": true,
+      "verified_in_sav": true,
+      "function_addrs": ["0x080172e8"]
+    },
+    {
+      "offset": 4,
+      "bytes_hex": "504d4944",
+      "ascii": "PMID",
+      "verified_in_code": false,
+      "verified_in_sav": true,
+      "function_addrs": ["0x080172e8"]
+    }
+  ],
+  "checksums": [
+    {
+      "name": "payload_sum32_and_complement",
+      "algorithm": "sum32_le",
+      "formula_detail": "sum = sum of unsigned bytes over [0x00,0x88) (136 bytes, header included) in a 32-bit accumulator; complement = ~sum (32-bit). Code stores sum as LE u32 at RAM offset 0x88 and ~sum as LE u32 at RAM offset 0x8C (FUN_080125b4 writes, FUN_0801262c compares, return 0 iff both match else -1). In the raw .sav the 8-byte block at 0x88 is byte-reversed: 0x88 holds ~sum as BE u32, 0x8C holds sum as BE u32, i.e. sav[0x88:0x90] == reverse(pack('<I',sum)+pack('<I',~sum)). Delta between samples (+298) exactly equals the byte-sum of the inserted 'PMID' word.",
+      "stored_offset": 136,
+      "stored_size": 8,
+      "covered_start": 0,
+      "covered_end": 136,
+      "function_addrs": ["0x080125b4", "0x0801262c"],
+      "verified_on_samples": [
+        {"file": "cap-00-future-0.sav", "stored_hex": "fffff8be00000741", "computed_hex": "00000741fffff8be", "match": true},
+        {"file": "cap-01-future-1.sav", "stored_hex": "fffff7940000086b", "computed_hex": "0000086bfffff794", "match": true}
+      ],
+      "confidence": "CONFIRMED_VERIFIED"
+    }
+  ],
+  "io_driver_functions": [
+    {"addr": "0x08369fc8", "role": "write", "callers": ["0x0836a048", "0x0836a0f8"], "notes": "DMA3 raw transfer helper: programs SAD/DAD/CNT (CNT = len|0x80000000), spins on CNT bit15, restores IRQ mask. Used for every EEPROM bitstream transfer to/from 0x0D000000."},
+    {"addr": "0x0836a048", "role": "read", "callers": ["0x0836a1d4"], "notes": "EEPROM read one 8-byte block: MSB-first address bitstream DMA-written to 0x0D000000 (addr_bits+3 halfwords), then 0x44 halfwords DMA-read back and reassembled MSB-first into 4 u16 stored in reverse word order. Device block-count guard at type_ptr+4."},
+    {"addr": "0x0836a0f8", "role": "write", "callers": [], "notes": "EEPROM write one 8-byte block: 64 data bits + address bits DMA-written to 0x0D000000 (addr_bits+0x43 halfwords), completion via FUN_08369efc, polls uRam0d000000 bit0, teardown FUN_08369f84. No recovered direct caller; reached via inferred thunk 0x0836a3a0."},
+    {"addr": "0x0836a1d4", "role": "read", "callers": [], "notes": "EEPROM read-and-compare one block via FUN_0836a048; returns 0 on match, 0x8000 on mismatch. Possibly the body behind thunk 0x0836a3ac or a verify-after-write step."},
+    {"addr": "0x0836a3a0", "role": "write", "callers": ["0x080125b4"], "notes": "Unrecovered jump-table thunk; inferred EEPROM write-block (block_index, ptr). Called 18 times by the serializer (17 payload blocks + checksum block), ptr stepping 8 bytes."},
+    {"addr": "0x0836a3ac", "role": "read", "callers": ["0x0801262c"], "notes": "Unrecovered jump-table thunk; inferred EEPROM read-block (block_index, ptr). Called 18 times by the verifier, ptr stepping 8 bytes."},
+    {"addr": "0x080125b4", "role": "serialize", "callers": ["0x080172e8", "0x08017410"], "notes": "Serializer + checksum writer: writes payload blocks 0..16 via 0x0836a3a0, computes byte sum over [0x00,0x88), stores sum at +0x88 and ~sum at +0x8C, writes block 17."},
+    {"addr": "0x0801262c", "role": "deserialize", "callers": ["0x080172e8", "0x08017410"], "notes": "Loader + verifier: reads blocks 0..17 via 0x0836a3ac, recomputes sum over [0x00,0x88), returns 0 iff stored sum and complement both match, else -1."},
+    {"addr": "0x080172e8", "role": "deserialize", "callers": ["0x08016dbc"], "notes": "Validate-or-rewrite: mode 0 loads+verifies via FUN_0801262c, compares 16-byte header against ROM template 0x08017378 (4 u32 words); on failure sets status and rewrites via FUN_080008b0 DMA + FUN_080125b4. Also reached from untraced jump-table callers."},
+    {"addr": "0x0801744c", "role": "serialize", "callers": ["0x08017410"], "notes": "Sanitizer: copies source struct, clamps 3x8B records at +0x10, 11 u16 at +0x48 to <=9, counter at +0x70, mode bytes at +0x78/0x79 to 0..2, byte at +0x80 to <=4. Base pointer is a different literal slot than the serializer base; sav-offset mapping is hypothesized."},
+    {"addr": "0x080008b0", "role": "write", "callers": ["0x080172e8"], "notes": "Generic DMA3 copy helper (CNT_H 0x8400), not EEPROM-specific; used by the validate-or-rewrite path for a RAM transfer before rewriting."}
+  ],
+  "caller_chains": [
+    {
+      "entry_caller": "0x08000368",
+      "chain": ["0x08000368", "0x08000494", "0x0801195c", "0x08011734", "0x08012578"],
+      "trigger_context": "Boot/init sequencer: hardware init, control-block clear + generic DMA3, periodic DMA start, EEPROM-config stub. Does not itself load the save; traced load entry is FUN_08016dbc/FUN_080172e8 via unrecovered jump tables.",
+      "ram_fields_updated": [],
+      "how_mapped": "Read FUN_08000368 body in ghidra/decompiled.c and cross-checked callgraph.json edges; callees read in full. FUN_08012578/FUN_08012594 EEPROM-config role is static inference from the 0x0836a388/0x0836a394 stub calls."
+    },
+    {
+      "entry_caller": "0x08016dbc",
+      "chain": ["0x08016dbc", "0x080172e8", "0x0801262c", "0x0836a3ac"],
+      "trigger_context": "Load-or-initialize on game/profile init: defaults are set, FUN_080172e8 loads and verifies the EEPROM image and header; afterwards five fields are copied from the loaded struct area (+0x68/0x6A/0x6C/0x78/0x79) into live game state (+0x1C/+0x19/+0x18/+0x10/+0xF).",
+      "ram_fields_updated": ["loaded struct +0x68..+0x79 copied to live struct +0x10..+0x1C (source identity hypothesized)"],
+      "how_mapped": "Read FUN_08016dbc and FUN_080172e8 bodies; callgraph.json confirms FUN_08016dbc has no recovered caller and FUN_080172e8 is called as func_0x080172e8 thunk. Literal pointer values unrecovered, so struct identity is stated as hypothesis."
+    },
+    {
+      "entry_caller": "0x080172e8",
+      "chain": ["0x080172e8", "0x080008b0", "0x080125b4", "0x0836a3a0"],
+      "trigger_context": "Rewrite path taken when verification or the 16-byte header template comparison fails (mode 0 sets status 0xFFFFFFFF, else 1): DMA3 transfer then full re-serialization with fresh checksums. Matches PACKET.md mutation probe at offset 0x4 (integrity confirmed, save rewritten).",
+      "ram_fields_updated": ["struct +0x88 sum recomputed", "struct +0x8C complement recomputed"],
+      "how_mapped": "Read FUN_080172e8 body: FUN_0801262c call, 4-word compare against ROM 0x08017378, status store, FUN_080008b0 call, trailing FUN_080125b4 call."
+    },
+    {
+      "entry_caller": "0x08017410",
+      "chain": ["0x08017410", "0x0801744c", "0x0801760c", "0x080125b4", "0x0836a3a0"],
+      "trigger_context": "Explicit save via dispatcher (stack argument 0): sanitize working struct, bubble-sort the three 8-byte records by their +6 u16 key, then recompute checksums and write all 18 EEPROM blocks.",
+      "ram_fields_updated": ["records +0x10..+0x27 clamped/reordered (hypothesized sav offsets)", "counters/mode bytes clamped +0x48/+0x70/+0x78/+0x79/+0x80 (hypothesized)", "struct +0x88/+0x8C checksums recomputed"],
+      "how_mapped": "Read FUN_08017410, FUN_0801744c, FUN_0801760c bodies and callgraph.json edges (FUN_08017410 -> FUN_080125b4/FUN_0801262c). Noted conflict: sanitizer byte+1 clamp would rewrite observed 0xF4 at file offset 0x11, so this chain may sanitize a working copy rather than the flushed struct."
+    },
+    {
+      "entry_caller": "0x08017410",
+      "chain": ["0x08017410", "0x0801262c", "0x0836a3ac"],
+      "trigger_context": "Load/verify via dispatcher (stack argument non-zero): read all 18 blocks and verify checksums; result returned to untraced caller, no field mutation.",
+      "ram_fields_updated": [],
+      "how_mapped": "Read FUN_08017410 else-branch and FUN_0801262c body; callgraph.json edge FUN_08017410 -> FUN_0801262c."
+    },
+    {
+      "entry_caller": "0x08017054",
+      "chain": ["0x08017054", "0x08016dbc", "0x08011990", "0x08000d34"],
+      "trigger_context": "Sequencer: profile init/load (FUN_08016dbc chain) followed by enqueueing a DMA3 transfer descriptor (FUN_08011990, length 0x48). No recovered caller; likely frame/state-transition invocation via jump table.",
+      "ram_fields_updated": [],
+      "how_mapped": "Read FUN_08017054 body (two calls) and callgraph.json (callers: none; callees FUN_08011990, FUN_08016dbc via FUN_08017054 entry). FUN_08011990/FUN_08000d34 are generic DMA3, not EEPROM."
+    }
+  ],
+  "fields": [
+    {
+      "name": "header_magic_prefix",
+      "offset": 0,
+      "size": 4,
+      "type": "ascii",
+      "ram_addr": null,
+      "writers": ["0x080125b4"],
+      "readers": ["0x080172e8", "0x0801262c"],
+      "observed_values": {"cap-00-future-0.sav": "50 53 20 53 'PS S'", "cap-01-future-1.sav": "50 53 20 53 'PS S'"},
+      "update_mechanism": "Part of 16-byte header compared word-wise against ROM template 0x08017378 by FUN_080172e8 after load; included in checksum. Written only as part of whole-image serialization.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Identical in both valid .sav files; FUN_080172e8 4xu32 compare loop over struct base; checksum covers offset 0 and verifies."
+    },
+    {
+      "name": "header_variable_word",
+      "offset": 4,
+      "size": 4,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": ["0x080125b4"],
+      "readers": ["0x080172e8", "0x0801262c"],
+      "observed_values": {"cap-00-future-0.sav": "00 00 00 00", "cap-01-future-1.sav": "50 4d 49 44 'PMID'"},
+      "update_mechanism": "Proven mutation site between the two retained snapshots (+298 sum delta exactly equals 'PMID' byte sum); covered by checksum bytes 0x8A-0x8B/0x8E-0x8F. Semantic trigger unknown. PACKET.md probe mutated offset 0x4 and triggered rewrite, proving integrity protection, not semantics.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Only differing payload word between samples (hexdump_and_diffs.txt offsets 0x04-0x07); cannot be fixed magic because both saves were retained/loaded; code role beyond template comparison unknown."
+    },
+    {
+      "name": "header_magic_suffix",
+      "offset": 8,
+      "size": 8,
+      "type": "ascii",
+      "ram_addr": null,
+      "writers": ["0x080125b4"],
+      "readers": ["0x080172e8", "0x0801262c"],
+      "observed_values": {"cap-00-future-0.sav": "30 30 30 20 41 2d 54 52 '000 A-TR'", "cap-01-future-1.sav": "30 30 30 20 41 2d 54 52 '000 A-TR'"},
+      "update_mechanism": "Words 2-3 of the FUN_080172e8 ROM-template comparison; included in checksum; written only via whole-image serialization.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Identical in both valid .sav files and inside the compared 16-byte range; interpreted as constant data/framework identifier, not gameplay state."
+    },
+    {
+      "name": "records_x3",
+      "offset": 16,
+      "size": 24,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": ["0x0801744c", "0x0801760c", "0x080125b4"],
+      "readers": ["0x0801262c"],
+      "observed_values": {"cap-00-future-0.sav": "01 f4 00 4e 45 4b 00 00 | 01 90 00 4f 59 52 01 01 | 01 2c 00 45 45 4c 02 00", "cap-01-future-1.sav": "01 f4 00 4e 45 4b 00 00 | 01 90 00 4f 59 52 01 01 | 01 2c 00 45 45 4c 02 00"},
+      "update_mechanism": "Hypothesized three 8-byte records (stride 8 from +0x10, count 3) clamped by FUN_0801744c and bubble-sorted by FUN_0801760c on the +6 u16 key before FUN_080125b4 flushes. Contains 3-char ASCII fragments at record bytes +3..+5 (NEK/OYR/EEL) and u16-LE-like values at +1 (0x00F4/0x0090/0x002C). Sanitizer byte+1 clamp conflicts with observed 0xF4, so mapping may describe a working copy, not the flushed struct.",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Record stride/count and sort key from FUN_0801744c/FUN_0801760c bodies (static, different literal base); byte layout and ASCII fragments observed identically in both .sav files; no sample variation to verify semantics."
+    },
+    {
+      "name": "zero_region_a",
+      "offset": 40,
+      "size": 64,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": ["0x080125b4"],
+      "readers": ["0x0801262c", "0x08016dbc"],
+      "observed_values": {"cap-00-future-0.sav": "all 0x00 (0x28-0x67)", "cap-01-future-1.sav": "all 0x00 (0x28-0x67)"},
+      "update_mechanism": "No traced writer other than whole-image serialization. FUN_0801744c hypothesized u16 clamp range +0x48..+0x5D (<=9) lies inside this region and is consistent with zeros. FUN_08016dbc copies source +0x68 onward, just above this field.",
+      "confidence": "UNKNOWN",
+      "evidence": "All zero in both samples; only static sanitizer overlap (hypothesized base) suggests reserved counters/flags. Distinguished from 0xFF fill: these zeros are inside the checksummed, written payload (EEPROM-written zeros, not erased state)."
+    },
+    {
+      "name": "tail_fields_and_settings_hypothesis",
+      "offset": 104,
+      "size": 24,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": ["0x0801744c", "0x080125b4"],
+      "readers": ["0x0801262c", "0x08016dbc"],
+      "observed_values": {"cap-00-future-0.sav": "0x68-0x7D all 0x00; 0x7E=0x01; 0x7F=0x01", "cap-01-future-1.sav": "0x68-0x7D all 0x00; 0x7E=0x01; 0x7F=0x01"},
+      "update_mechanism": "Hypothesized: clamped counter at +0x70, mode bytes at +0x78/0x79 (range 0..2) per FUN_0801744c; FUN_08016dbc copies +0x68/0x6A/0x6C/0x78/0x79 into live state after load. Observed 0x7E/0x7F=01 01 have no traced writer.",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Offsets from FUN_0801744c/FUN_08016dbc bodies (static, unrecovered literal bases); values in both .sav files are in-range zeros except 0x7E/0x7F. No variation between samples."
+    },
+    {
+      "name": "zero_region_b",
+      "offset": 128,
+      "size": 8,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": ["0x0801744c", "0x080125b4"],
+      "readers": ["0x0801262c"],
+      "observed_values": {"cap-00-future-0.sav": "00 00 00 00 00 00 00 00", "cap-01-future-1.sav": "00 00 00 00 00 00 00 00"},
+      "update_mechanism": "Last payload bytes before the integrity block. Hypothesized byte at +0x80 clamped to <=4 by FUN_0801744c; observed 0x00 satisfies the clamp. Otherwise reserved/zero.",
+      "confidence": "UNKNOWN",
+      "evidence": "Inside checksummed payload and written by FUN_080125b4; all zero in both samples; only static clamp hypothesis touches +0x80."
+    },
+    {
+      "name": "checksum_complement_be",
+      "offset": 136,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": ["0x080125b4"],
+      "readers": ["0x0801262c"],
+      "observed_values": {"cap-00-future-0.sav": "ff ff f8 be (BE 0xfffff8be = ~0x00000741)", "cap-01-future-1.sav": "ff ff f7 94 (BE 0xfffff794 = ~0x0000086b)"},
+      "update_mechanism": "FUN_080125b4 stores ~sum as LE u32 at RAM +0x8C after storing sum at +0x88; serial EEPROM transfer byte-reverses the block, so the raw .sav holds ~sum big-endian at 0x88. FUN_0801262c requires ~computed == stored word (RAM comparison). Never edit without recomputing both words.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Python recomputation matches stored BE value on both files; sav[0x88:0x90] == reverse(pack('<I',sum)+pack('<I',~sum)) verified true on both."
+    },
+    {
+      "name": "checksum_sum_be",
+      "offset": 140,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": ["0x080125b4"],
+      "readers": ["0x0801262c"],
+      "observed_values": {"cap-00-future-0.sav": "00 00 07 41 (BE 0x00000741 = 1857)", "cap-01-future-1.sav": "00 00 08 6b (BE 0x0000086b = 2155)"},
+      "update_mechanism": "FUN_080125b4 stores sum of bytes [0x00,0x88) as LE u32 at RAM +0x88; byte-reversed into BE at .sav 0x8C by the EEPROM transfer. FUN_0801262c requires computed == stored word (RAM comparison). Repair rule: recompute sum, write BE sum here and BE complement at 0x88.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Python: computed 0x00000741/0x0000086b equals stored BE on both files; inter-sample delta +298 equals 'PMID' insertion byte sum."
+    },
+    {
+      "name": "unused_eeprom_fill",
+      "offset": 144,
+      "size": 368,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"cap-00-future-0.sav": "all 0xFF (0x90-0x1FF)", "cap-01-future-1.sav": "all 0xFF (0x90-0x1FF)"},
+      "update_mechanism": "Never read or written by any traced function (serializer/verifier stop at block 17). Erased EEPROM state retained by the emulator dump.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Byte scan: zero non-0xFF bytes at >=0x90 in both files; no call site references block indices >=18."
+    }
+  ],
+  "fuzzing_targets": [
+    {"offset": 4, "size": 4, "mutation": "Replace 00 00 00 00 with PMID (cap-00 -> cap-01 direction) and vice versa; repair checksums per rule", "requires_checksum_repair": true, "predicted_effect": "With repair: save retained (proven by sample pair); observe what gameplay/UI state, if any, tracks this word to identify the field. Without repair: rewrite/blank behavior per probe."},
+    {"offset": 4, "size": 1, "mutation": "Flip one byte (e.g. 0x00 -> 0x01) with no checksum repair", "requires_checksum_repair": false, "predicted_effect": "FUN_0801262c returns -1; FUN_080172e8 rewrites via FUN_080125b4; emulated save reverts toward blank/default and visual state changes. Control proving the integrity gate (mirrors PACKET.md probe at 0x4)."},
+    {"offset": 0, "size": 1, "mutation": "Corrupt header prefix byte 0x50 -> 0x51, with checksum repair", "requires_checksum_repair": true, "predicted_effect": "Checksum passes but FUN_080172e8 16-byte ROM-template comparison fails; save rejected/rewritten despite valid sum. Isolates the header gate from the checksum gate."},
+    {"offset": 136, "size": 4, "mutation": "Corrupt complement word only (sav 0x88 BE ~sum), leave sum word intact", "requires_checksum_repair": false, "predicted_effect": "FUN_0801262c second comparison (~computed == stored) fails; load rejected/rewritten. Proves the complement is independently checked, not decorative."},
+    {"offset": 17, "size": 1, "mutation": "Change record byte 0x11 (0xF4 -> 0x05, inside hypothesized records_x3), with checksum repair", "requires_checksum_repair": true, "predicted_effect": "If FUN_0801744c sanitizes the flushed struct, the value is forced to 0 or clamped on next save (re-flushed .sav shows the rewrite); if it persists, the sanitizer acts on a different working copy. Directly resolves the Section 5 static-mapping conflict."},
+    {"offset": 126, "size": 2, "mutation": "Set 0x7E/0x7F from 01 01 to 00 00, 02 02, and FF FF in separate trials, with checksum repair", "requires_checksum_repair": true, "predicted_effect": "Observe settings-like behavior (language/sound/difficulty) or clamping on re-save; identifies the only non-zero tail bytes. FF FF tests whether any clamp (hypothesized 0..2 at +0x78/0x79, offset by two) touches these offsets."},
+    {"offset": 144, "size": 16, "mutation": "Write non-FF pattern at 0x90-0x9F, no checksum change", "requires_checksum_repair": false, "predicted_effect": "No observable effect and bytes never read back into RAM; confirms the unused-fill boundary at 0x90 and that no hidden second slot exists."}
+  ],
+  "open_questions": [
+    "RAM mirror address of the save struct: literal-pool pointer values at ROM slots 0x08012628/0x080126a4/0x08017330/0x080175f4/0x080175f8 were not recovered in the workspace decompilation, so all ram_addr entries are null.",
+    "ROM template bytes at 0x08017378 compared by FUN_080172e8 (especially word 1): the ROM is not in the workspace, so whether the template tolerates the 00 00 00 00 vs PMID variation or one sample was rewritten post-capture cannot be decided.",
+    "Bodies of jump-table thunks 0x0836a3a0/0x0836a3ac/0x0836a388/0x0836a394 and siblings at 0x0836a340-0x0836a3d0: write/read-block roles are inferred from call sites; exact wrappers and the FUN_08012594 EEPROM detect/configure argument semantics remain static hypotheses.",
+    "Whether FUN_0801744c/FUN_0801760c sanitize/sort the flushed save struct or a distinct working copy: their literal base differs from the serializer base and the byte+1 clamp conflicts with observed 0xF4 at offset 0x11.",
+    "Semantics of payload fields: records at 0x10-0x27 (score/name-like layout unproven), field at 0x04-0x07 (only proven mutation), tail bytes 0x7E/0x7F, and the zero regions 0x28-0x87, which barely vary across the two snapshots.",
+    "Untraced callers of FUN_080172e8/FUN_08017410/FUN_08017054 (invoked via unrecovered jump tables): exact gameplay triggers for save/load cannot be named from the workspace files.",
+    "No paired .ss save states exist in states/ (0 states in PACKET.md), so the Section 6 reload predictions could not be executed in this pass."
+  ]
+}

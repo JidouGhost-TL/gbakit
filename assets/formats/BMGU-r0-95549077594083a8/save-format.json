@@ -1,0 +1,340 @@
+{
+  "schema": "gbakit-save-research/1",
+  "release_key": "BMGU-r0-95549077594083a8",
+  "display_name": "Mario Golf - Advance Tour (Australia)",
+  "rom_sha256": "95549077594083a84cfe10c93bcc0be1599390d23cf0987dfb226cbb0987f757",
+  "game_code": "BMGU",
+  "header_family": "BMG",
+  "community_id": "comm-046",
+  "overall_confidence": "MEDIUM",
+  "media": {
+    "kind": "sram",
+    "size_bytes": 32768,
+    "sdk_tags": [],
+    "fill_byte": "0x00"
+  },
+  "slots_and_copies": [
+    {
+      "name": "slot_sig_0x00",
+      "offset": 0,
+      "size": 224,
+      "redundancy_role": "global_config",
+      "selection_rule": "Fixed offset 0x0000. 4-byte block header [u16 size=0x00DC][u16 checksum] + 220-byte payload whose first 16 bytes hold the clean-room-observed ASCII signature 'MarioGolfGBABUD\\0'. Read/validated by FUN_080181c8 as the format-integrity marker: if the first 16 payload bytes mismatch a ROM-resident reference string, FUN_08018180 performs a full 8x0x1000 erase of the entire 0x8000 SRAM chip and FUN_080181c8 rewrites this block plus all others from scratch."
+    },
+    {
+      "name": "slot_main_0x41",
+      "offset": 3840,
+      "size": 1244,
+      "redundancy_role": "primary",
+      "selection_rule": "Fixed offset 0x0F00 in this sample. 4-byte header [u16 size=0x04D8][u16 checksum] + 1240-byte payload. Written by FUN_080181c8 via FUN_080180e4(0x41, buf, 0x4d8) as part of the same format/reset routine as slot_sig_0x00; contents in this sample are default/sentinel template data (par/hole-count/0xFF-sentinel 8-byte records and 4-byte sentinel records), not confirmed live gameplay data."
+    },
+    {
+      "name": "course_record_0",
+      "offset": 5088,
+      "size": 124,
+      "redundancy_role": "unknown",
+      "selection_rule": "First of 7 consecutive 128-byte-spaced record blocks observed at file offsets 0x13E0, 0x1460, 0x14E0, 0x1560, 0x15E0, 0x1660, 0x16E0. Each is a 4-byte header [u16 size=0x0078][u16 checksum] + 120-byte payload. FUN_080181c8's reset path writes up to 20 such 120-byte blocks (2 outer x 2 mid x 5 inner loop, slot IDs 9..28+) via repeated FUN_080180e4 calls with size 0x78; only 7 are present/non-zero in this single sample, so the exact slot-ID-to-offset correspondence for the remaining ~13 is HYPOTHESIS only."
+    }
+  ],
+  "magic_signatures": [
+    {
+      "offset": 4,
+      "bytes_hex": "4d6172696f476f6c6647424142554400",
+      "ascii": "MarioGolfGBABUD\u0000",
+      "verified_in_code": true,
+      "verified_in_sav": true,
+      "function_addrs": ["0x080181c8"]
+    }
+  ],
+  "checksums": [
+    {
+      "name": "block_header_sum16",
+      "algorithm": "sum16_le",
+      "formula_detail": "For a block with 4-byte header at offset B: size = u16_le(B+0..B+1); stored_checksum = u16_le(B+2..B+3); payload = bytes[B+4 : B+4+size]. computed = running 16-bit truncating sum ( (acc + word) & 0xFFFF ) of payload interpreted as little-endian u16 words (odd trailing byte, if any, added as its own byte value). Verified identical in both writer (FUN_08017fc0, variable iVar6) and reader (FUN_08017ec4, variable uVar7) decompiled loops.",
+      "stored_offset": 2,
+      "stored_size": 2,
+      "covered_start": 4,
+      "covered_end": -1,
+      "function_addrs": ["0x08017ec4", "0x08017fc0", "0x0801811c", "0x080180e4"],
+      "verified_on_samples": [
+        {"file": "saves/cap-00-future-0.sav", "stored_hex": "5ccb", "computed_hex": "5ccb", "match": true},
+        {"file": "saves/cap-00-future-0.sav", "stored_hex": "19b4", "computed_hex": "19b4", "match": true},
+        {"file": "saves/cap-00-future-0.sav", "stored_hex": "28ae", "computed_hex": "28ae", "match": true},
+        {"file": "saves/cap-00-future-0.sav", "stored_hex": "26b3", "computed_hex": "26b3", "match": true},
+        {"file": "saves/cap-00-future-0.sav", "stored_hex": "28b4", "computed_hex": "28b4", "match": true},
+        {"file": "saves/cap-00-future-0.sav", "stored_hex": "2bb4", "computed_hex": "2bb4", "match": true},
+        {"file": "saves/cap-00-future-0.sav", "stored_hex": "30b7", "computed_hex": "30b7", "match": true},
+        {"file": "saves/cap-00-future-0.sav", "stored_hex": "30b5", "computed_hex": "30b5", "match": true},
+        {"file": "saves/cap-00-future-0.sav", "stored_hex": "2fbb", "computed_hex": "2fbb", "match": true}
+      ],
+      "confidence": "CONFIRMED_VERIFIED"
+    }
+  ],
+  "io_driver_functions": [
+    {"addr": "0x0801e27c", "role": "read", "callers": ["0x0801e350"], "notes": "Raw byte-copy loop, param_1(src)->param_2(dst), param_3 bytes; used as the SRAM-side half of the verify-on-write cycle."},
+    {"addr": "0x0801e2ec", "role": "read", "callers": ["0x0801e350"], "notes": "Second raw byte-copy loop used as the read-back/verify half after a write; returns comparison-ready buffer via func_0x08022bf4."},
+    {"addr": "0x0801e350", "role": "write", "callers": ["0x08017fc0"], "notes": "Write-then-verify-then-retry loop: calls FUN_0801e27c (write pass) and FUN_0801e2ec (read-back pass) up to 3 times until the result matches; standard SRAM robust-write pattern, no SRAM-specific bank/command bytes (0x5555/0x2AAA) observed anywhere in the traced code, ruling out Flash media."},
+    {"addr": "0x0801e218", "role": "read", "callers": ["0x08017ec4"], "notes": "Low-level SRAM/byte-addressable read primitive used by the block reader; no DMA3/EEPROM bit-serial pattern present."},
+    {"addr": "0x08017ea0", "role": "read", "callees": [], "callers": ["0x08017ec4", "0x08017fc0"], "notes": "Slot-ID lookup: scans a ROM-resident table (terminator byte 0x63/'99') matching the low byte of param_1 against each entry, returning a pointer whose +2 halfword is the SRAM byte offset for that slot. Table contents themselves are in ROM and not present in this workspace, so slot-ID -> offset mapping beyond the 3 directly-observed blocks is HYPOTHESIS."},
+    {"addr": "0x08017ec4", "role": "deserialize", "callers": ["0x0801811c"], "notes": "Generic block reader: resolves slot via FUN_08017ea0, reads 4-byte header via FUN_0801e218, validates size < 0x1200, reads payload, computes sum16 checksum, compares to stored checksum, returns success/failure code."},
+    {"addr": "0x08017fc0", "role": "serialize", "callers": ["0x080180e4", "0x0801811c"], "notes": "Generic block writer: resolves slot via FUN_08017ea0, computes sum16 checksum over payload, assembles 4-byte header (size | checksum<<16), writes header+payload via FUN_0801e350."},
+    {"addr": "0x080180e4", "role": "write", "callers": ["0x080181c8"], "notes": "Wrapper that calls FUN_08017fc0 twice: once for the plain slot id and once for (slot id | 0x100), i.e. writes a block and a second mirrored/alternate-base copy for redundancy."},
+    {"addr": "0x0801811c", "role": "read", "callers": ["0x080181c8", "0x080c9554"], "notes": "Wrapper that reads the plain slot via FUN_08017ec4, then reads the (slot|0x100) mirror via FUN_08017ec4 again, and if both succeed re-writes the plain slot via FUN_08017fc0 -- a read+repair/resync routine."},
+    {"addr": "0x08018180", "role": "erase", "callers": ["0x080181c8"], "notes": "Fills 8 x 0x1000-byte IWRAM buffers via an indirect function pointer (_DAT_080181c4, presumed memset-style fill) and writes each through func_0x0801e350 at offsets 0x0000, 0x1000, ... 0x7000 -- a full 0x8000 (32KB) SRAM erase/format pass."},
+    {"addr": "0x080181c8", "role": "write", "callers": ["0x080c9554"], "notes": "Top-level format/integrity-check routine. Reads slot 0x00 and compares its first 16 payload bytes against a ROM-resident reference string; on mismatch it calls FUN_08018180 (full erase), then rewrites slot 0x00 (signature), slot 0x41 (main 1240-byte blob), and up to 20 per-record 120-byte blocks (slot ids derived from nested 2x2x5 loop counters + 9)."},
+    {"addr": "0x080c9554", "role": "read", "callers": [], "notes": "Highest traced caller of the save subsystem in this workspace; no caller found within the 205 sampled functions, so its invocation context (boot-time load vs. menu save) is UNKNOWN. Calls FUN_080181c8 (format check/repair) then FUN_0801811c(5, ...) to read slot 5, and copies resulting bytes into engine-state globals (sound/option byte flags) -- behavior consistent with a save-load-and-apply routine rather than a save-write routine."}
+  ],
+  "caller_chains": [
+    {
+      "entry_caller": "0x080c9554",
+      "chain": ["0x080c9554", "0x080181c8", "0x08018180", "0x0801811c", "0x08017ec4", "0x08017fc0", "0x080180e4", "0x0801e350", "0x0801e27c", "0x0801e2ec", "0x0801e218"],
+      "trigger_context": "UNKNOWN -- no caller of 0x080c9554 found in the traced 205-function set; likely invoked from boot/title-screen or save-select menu code outside this workspace's slice.",
+      "ram_fields_updated": ["iRam080c95e8+0x00..0xff (engine option/sound state struct)"],
+      "how_mapped": "Traced statically via ghidra/callgraph.json caller/callee edges starting from the 25 MMIO seed functions in ghidra/save_related_functions.c, following the chain upward (FUN_0801e218/e27c/e2ec/e350 -> FUN_08017ec4/fc0 -> FUN_080180e4/0801811c -> FUN_08018180/080181c8 -> FUN_080c9554) and downward (which of these are themselves called by anything else in the callgraph)."
+    },
+    {
+      "entry_caller": "0x081a7978",
+      "chain": ["0x081a7978", "0x08017d68", "0x08017a5c", "0x080179e4", "0x08015f0c"],
+      "trigger_context": "HYPOTHESIS: in-round record/scorecard update path. FUN_08017a5c builds an in-IWRAM record struct at iRam03000064 (comparing the current course id iRam080000ac against up to 8 known course ids) and FUN_08015f0c stores a (course_id, value) pair into a 0x18-entry lookup table; this precedes but is not itself shown to call the SRAM writer functions in this workspace's traced set, so the final flush-to-SRAM link for this chain is UNKNOWN.",
+      "ram_fields_updated": ["iRam03000064 (+0x00,+0x02,+0x0a,+0x0b,+0x1f) record/scorecard staging struct", "0x18-entry (id,value) table at _DAT_08015f74"],
+      "how_mapped": "Traced via callgraph.json callee edges from FUN_081a7978 downward through FUN_08017d68/08017a5c/080179e4/08015f0c; cross-referenced against decompiled.c field offsets."
+    }
+  ],
+  "fields": [
+    {
+      "name": "slot0_block_size",
+      "offset": 0,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": ["0x08017fc0"],
+      "readers": ["0x08017ec4"],
+      "observed_values": {"cap-00-future-0.sav": 220},
+      "update_mechanism": "Set by FUN_08017fc0 to the exact byte length passed by its caller (FUN_080180e4(0,buf,0xdc)) whenever slot 0 is (re)written during the format/repair path in FUN_080181c8.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Decompiled FUN_08017fc0/08017ec4 header layout + Python readback matches size 0xDC used in FUN_080181c8 call FUN_08016afc(0xdc)."
+    },
+    {
+      "name": "slot0_block_checksum",
+      "offset": 2,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": ["0x08017fc0"],
+      "readers": ["0x08017ec4"],
+      "observed_values": {"cap-00-future-0.sav": "0x5ccb"},
+      "update_mechanism": "sum16_le of the 220-byte payload at offset 4.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Python verification: sum16(bytes[4:224]) == 0x5ccb for cap-00-future-0.sav."
+    },
+    {
+      "name": "format_signature_ascii",
+      "offset": 4,
+      "size": 16,
+      "type": "ascii",
+      "ram_addr": null,
+      "writers": ["0x080181c8"],
+      "readers": ["0x080181c8"],
+      "observed_values": {"cap-00-future-0.sav": "MarioGolfGBABUD\\0"},
+      "update_mechanism": "Copied byte-for-byte from a ROM-resident reference string (_DAT_080182f0) by FUN_080181c8 whenever the save is (re)formatted; compared against the same reference on every load to decide whether a full-chip erase + reformat is required.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "decompiled.c FUN_080181c8 16-byte compare loop; literal bytes read back from saves/cap-00-future-0.sav offset 0x4."
+    },
+    {
+      "name": "slot0_payload_tail",
+      "offset": 20,
+      "size": 204,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": ["0x080181c8"],
+      "readers": [],
+      "observed_values": {"cap-00-future-0.sav": "all 0x00"},
+      "update_mechanism": "Zero-filled remainder of the 220-byte slot-0 payload; purpose beyond the signature is UNKNOWN (no non-zero bytes observed in this sample, no decompiled code sets it beyond the initial 16-byte signature copy within the traced function set).",
+      "confidence": "UNKNOWN",
+      "evidence": "Hexdump of saves/cap-00-future-0.sav offsets 0x14-0xDF, all zero."
+    },
+    {
+      "name": "slot_0x41_block_size",
+      "offset": 3840,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": ["0x08017fc0"],
+      "readers": ["0x08017ec4"],
+      "observed_values": {"cap-00-future-0.sav": 1240},
+      "update_mechanism": "Set to 0x4d8 by FUN_080181c8 -> FUN_080180e4(0x41, buf, 0x4d8) during format/repair.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Matches literal 0x4d8 allocation size in FUN_080181c8 decompiled source."
+    },
+    {
+      "name": "slot_0x41_block_checksum",
+      "offset": 3842,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": ["0x08017fc0"],
+      "readers": ["0x08017ec4"],
+      "observed_values": {"cap-00-future-0.sav": "0x19b4"},
+      "update_mechanism": "sum16_le of the 1240-byte payload at offset 3844.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Python verification against saves/cap-00-future-0.sav."
+    },
+    {
+      "name": "slot_0x41_zero_header_region",
+      "offset": 3844,
+      "size": 212,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"cap-00-future-0.sav": "all 0x00"},
+      "update_mechanism": "UNKNOWN; zero in this sample, no traced writer sets this sub-range specifically.",
+      "confidence": "UNKNOWN",
+      "evidence": "Hexdump offsets 0xF04-0xFD3."
+    },
+    {
+      "name": "slot_0x41_record_array_8b",
+      "offset": 4056,
+      "size": 416,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": ["0x080181c8 (initial fill only, via zero-init allocator)"],
+      "readers": [],
+      "observed_values": {"cap-00-future-0.sav": "52 repeats of bytes 7f 4f 12 00 48 00 ff 00"},
+      "update_mechanism": "HYPOTHESIS: 52 x 8-byte records, each containing little-endian u16 fields [0x4f7f, 0x0012(=18), 0x0048(=72), 0x00ff]; the constant values 18 and 72 strongly resemble a golf 'holes per course' / 'par' default template rather than live play data, since FUN_08016afc-allocated buffers are not shown being zero/pattern-filled by any traced writer -- this array's contents may instead originate from a bulk memcpy of a ROM default-template blob that is outside the 205 traced functions.",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Byte-pattern analysis of saves/cap-00-future-0.sav offset 0xFD4-0x1173; matches hexdump_and_diffs.txt active range 0x0fd4-0x1272."
+    },
+    {
+      "name": "slot_0x41_record_array_4b",
+      "offset": 4472,
+      "size": 144,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"cap-00-future-0.sav": "36 repeats of bytes 00 ff 00 00"},
+      "update_mechanism": "HYPOTHESIS: second default-template array immediately following slot_0x41_record_array_8b; semantic meaning unknown.",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Byte-pattern analysis of saves/cap-00-future-0.sav offset 0x1178-0x1207."
+    },
+    {
+      "name": "slot_0x41_trailer_array",
+      "offset": 5016,
+      "size": 72,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"cap-00-future-0.sav": "9 repeats of bytes 00 ff 00 ff ff 06 07 00"},
+      "update_mechanism": "HYPOTHESIS: third default-template array ending exactly at the slot's declared size boundary (offset 0x13DC); semantic meaning unknown.",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Byte-pattern analysis of saves/cap-00-future-0.sav offset 0x1394-0x13DB; matches hexdump_and_diffs.txt active range."
+    },
+    {
+      "name": "course_record_N_block_size",
+      "offset": 5088,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": ["0x08017fc0"],
+      "readers": ["0x08017ec4"],
+      "observed_values": {"cap-00-future-0.sav": 120},
+      "update_mechanism": "Written as 0x78 by FUN_080181c8's nested 2x2x5 loop via FUN_080180e4(slot_id, buf, 0x78); repeats identically at the 6 other observed 128-byte-spaced offsets (0x1460, 0x14E0, 0x1560, 0x15E0, 0x1660, 0x16E0).",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Matches literal 0x78 allocation size in FUN_080181c8 decompiled source; Python verification of all 7 headers in saves/cap-00-future-0.sav."
+    },
+    {
+      "name": "course_record_N_checksum",
+      "offset": 5090,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": ["0x08017fc0"],
+      "readers": ["0x08017ec4"],
+      "observed_values": {
+        "cap-00-future-0.sav_rec0_0x13e0": "0x28ae",
+        "cap-00-future-0.sav_rec1_0x1460": "0x26b3",
+        "cap-00-future-0.sav_rec2_0x14e0": "0x28b4",
+        "cap-00-future-0.sav_rec3_0x1560": "0x2bb4",
+        "cap-00-future-0.sav_rec4_0x15e0": "0x30b7",
+        "cap-00-future-0.sav_rec5_0x1660": "0x30b5",
+        "cap-00-future-0.sav_rec6_0x16e0": "0x2fbb"
+      },
+      "update_mechanism": "sum16_le of each record's 120-byte payload.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Python verification: all 7 checksums match computed sum16 over their respective 120-byte payloads."
+    },
+    {
+      "name": "course_record_N_leading_marker",
+      "offset": 5096,
+      "size": 4,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"rec0": "00 00 00 00", "rec_header_abs_0x13e8_sample": "90 00 00 00"},
+      "update_mechanism": "HYPOTHESIS: possibly a per-record counter/best-value field (observed value 0x90=144 appears immediately after some record headers in the hexdump, e.g. absolute offset 0x13e8); not independently confirmed against a second gameplay sample in this workspace (only one .sav file is available).",
+      "confidence": "HYPOTHESIS",
+      "evidence": "hexdump_and_diffs.txt / Python extraction of record payload bytes 0x08-0x0b."
+    },
+    {
+      "name": "course_record_N_difficulty_or_hole_array",
+      "offset": 5212,
+      "size": 40,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"rec0": "f3 ff 05 ff 03 03 03 04 03 04 04 02 03 04 04 02 03 03 04 04 02 04 01 01 01 01 01 01 01 01 01 02 01 01 01 01 01 02 01 01"},
+      "update_mechanism": "HYPOTHESIS: array of small (1-4) per-hole values preceded by two 0xFFFF/0xFF05 sentinel u16 words; plausibly a per-hole par/type table similar in spirit to the slot_0x41 par/hole-count sentinel record, but no decompiled code in this workspace writes or reads this specific sub-range by name.",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Matches hexdump_and_diffs.txt active range 0x1420-0x1448 exactly (byte-identical)."
+    }
+  ],
+  "fuzzing_targets": [
+    {
+      "offset": 0,
+      "size": 2,
+      "mutation": "Corrupt slot0_block_size (e.g. set to 0xFFFF or 0x0000) while leaving checksum and payload untouched.",
+      "requires_checksum_repair": false,
+      "predicted_effect": "On next load, FUN_08017ec4's bounds check (`0x10 < uVar2` / `uVar2 < 0x1200` family of guards in the sibling 0x08015cf4-style readers, and the explicit size<0x1200 guard in FUN_08017ec4) should reject the block as invalid, triggering FUN_080181c8's mismatch path: a full 0x8000 SRAM erase and reformat of slots 0x00, 0x41, and the 7 course-record blocks. Verifiable by diffing a paired pre/post .ss save state and confirming all active ranges revert to the fresh-format pattern documented above."
+    },
+    {
+      "offset": 4,
+      "size": 1,
+      "mutation": "Flip one byte of the 'MarioGolfGBABUD\\0' signature at offset 4 (e.g. offset 4 0x4d -> 0x00), leaving the stored checksum at offset 2 untouched (now stale/mismatched).",
+      "requires_checksum_repair": false,
+      "predicted_effect": "Checksum mismatch AND signature mismatch both fail; FUN_080181c8 should take its erase+reformat branch exactly as above. Distinguishing this from the pure-signature-mismatch-with-valid-checksum case (next target) isolates whether the checksum check or the signature compare is the actual gating condition in the live binary."
+    },
+    {
+      "offset": 4,
+      "size": 1,
+      "mutation": "Flip the same signature byte at offset 4 but recompute and rewrite the stored checksum at offset 2 to match (sum16 over the mutated 220-byte payload).",
+      "requires_checksum_repair": true,
+      "predicted_effect": "If the engine's format check at FUN_080181c8 relies solely on the 16-byte signature compare (not the generic block checksum), this should still trigger the erase+reformat path even though the checksum now validates -- confirming the signature compare is an independent, additional integrity gate beyond the generic sum16 block checksum."
+    },
+    {
+      "offset": 3844,
+      "size": 8,
+      "mutation": "Overwrite the first 8-byte record of slot_0x41_record_array_8b (offset 0xfd4) with an out-of-range sentinel, e.g. holes field 0x0012 -> 0x0063 (99), leaving size/checksum stale.",
+      "requires_checksum_repair": true,
+      "predicted_effect": "After repairing the slot_0x41 checksum, reload and observe (via paired .ss state RAM inspection) whether any code path reads this record into a bounded loop counter; an out-of-range 'holes' value could produce an observable out-of-bounds read/crash or a clamped default, falsifying or confirming the 'holes-per-course' hypothesis for this field."
+    },
+    {
+      "offset": 5088,
+      "size": 2,
+      "mutation": "Set course_record_0's block size (offset 0x13E0) to 0x0000 while leaving its checksum stale.",
+      "requires_checksum_repair": false,
+      "predicted_effect": "FUN_08017ec4 treats a decoded size of 0 as an error (`if (uVar2 == 0) iVar6 = 9;`), causing the read to fail for this specific record only; predict a localized reset of only this one 120-byte record on next relevant UI access (e.g. opening a course-select/records screen), NOT a full-chip erase, since this is a secondary slot distinct from slot 0x00's format-gate check in FUN_080181c8. This distinguishes 'local record corruption' handling from 'global format corruption' handling observed in targets above."
+    }
+  ],
+  "open_questions": [
+    "The ROM-resident slot-ID lookup table read by FUN_08017ea0 is not present in this workspace; without it the mapping from numeric slot IDs (0x00, 0x41, and the ~20 course-record IDs computed in FUN_080181c8's nested loop) to the exact SRAM byte offsets is inferred only from the single available .sav file's byte layout, not proven from ROM data.",
+    "FUN_0801811c reads each slot twice -- once at the plain slot id and once at (slot id | 0x100) -- implying a second, alternate-base mirror copy of at least some blocks exists somewhere in the 32KB SRAM address space; this workspace's one .sav sample does not let us locate that mirror region, since the mirror's base offset (_DAT_08017fb8-style literals) is an unresolved ROM constant in the decompilation.",
+    "Only one real .sav file (saves/cap-00-future-0.sav) is present despite the packet's save-profile metadata mentioning 6 total_sav_files; cross-sample diffing (needed to confirm which fields change with actual gameplay vs. stay fixed as format template) could not be performed and is the single highest-value next step.",
+    "No paired .ss save states are present in this workspace (states/ is empty), so no RAM-mirror-to-SRAM-flush timing could be observed; the exact trigger event (course completion? menu confirm? auto-save?) that invokes FUN_080c9554 / the write path remains unconfirmed.",
+    "Semantic meaning of slot_0x41's three repeating template arrays (8-byte x52, 4-byte x36, 8-byte x9) and of the course-record 40-byte 1-4 value array is HYPOTHESIS only; no decompiled function in this workspace's 205-function sample names or indexes these specific sub-ranges by field.",
+    "FUN_080c9554 (the highest traced entry point into the save subsystem) has no caller within the 205 sampled functions, so whether it runs at boot, at save-file-select, or on an explicit in-game save action is UNKNOWN."
+  ]
+}

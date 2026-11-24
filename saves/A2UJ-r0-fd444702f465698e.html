@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Mother 1+2 (Japan) Save Format — gbakit GBA Reference</title>
+  <link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+  <header>
+    <div class="brand"><a href="../index.html" style="color:inherit">gbakit GBA Reference <span class="badge badge-emerald">v2.0</span></a></div>
+    <nav>
+      <a href="../index.html">Games</a>
+      <a href="../saves/index.html">Save Formats</a>
+      <a href="../patches/index.html">Debug Patches</a>
+      <a href="../assets/index.html">Assets &amp; Audio</a>
+      <a href="../engines/index.html">Engines &amp; Hardware</a>
+      <a href="../families/index.html">Families</a>
+      <a href="../gbakit/index.html">Using gbakit</a>
+    </nav>
+  </header>
+  <main>
+<p class="meta"><a href="index.html">&larr; Save Formats</a> &middot; <a href="../titles/A2UJ-r0-fd444702f465698e.html">Mother 1+2 (Japan)</a></p>
+<h1>Mother 1+2 (Japan) — Save Format Specification</h1>
+<p><span class="badge badge-indigo">Confidence: MEDIUM</span> <span class="badge badge-blue">9 Fields</span> <span class="badge badge-emerald">2 Verified Checksum(s)</span> <span class='badge badge-blue'>Repaired Save Accepted</span> <span class='badge badge-emerald'>gbakit Built-In</span></p>
+<p><a class='btn' href='../assets/saves/A2UJ-r0-fd444702f465698e/A2UJ-r0-fd444702f465698e.sav' download>Download Sample .sav (32,768 B)</a><a class='btn btn-secondary' href='../assets/formats/A2UJ-r0-fd444702f465698e/save-format.json' download>Download save-format.json</a><a class='btn btn-secondary' href='../titles/A2UJ-r0-fd444702f465698e.html'>View Game Page</a></p>
+
+<div class="callout">
+  <strong>Use directly with <code>gbakit</code> (built-in definition <code>A2UJ</code>):</strong>
+  <pre><code>gbakit save verify A2UJ save.sav
+gbakit save decode A2UJ save.sav
+gbakit save fix    A2UJ damaged.sav -o repaired.sav</code></pre>
+</div>
+
+<div class='md-body'>
+<h2>Clean-Room Save Format Report: Mother 1+2 (Japan) — <code>A2UJ-r0-fd444702f465698e</code></h2>
+<p>All findings below are derived exclusively from this workspace: the two <code>.sav</code> binaries in <code>saves/</code>, the trace-guided decompilation in <code>ghidra/decompiled.c</code> (158 functions), <code>ghidra/callgraph.json</code>, <code>ghidra/save_related_functions.c</code>, and standard/public GBA hardware specs (SRAM <code>0x0E000000</code>, Flash, EEPROM via DMA3 <code>0x040000D4</code>, EWRAM <code>0x02000000</code>, IWRAM <code>0x03000000</code>, WAITCNT <code>0x04000204</code>). No third-party game-specific wiki, decompilation, or cheat-table was consulted.</p>
+<h2>1. Executive Summary &amp; Overall Confidence</h2>
+<p><strong>Overall confidence: MEDIUM.</strong></p>
+<p>A small, 16-byte &quot;selection&quot; record (magic <code>&quot;MOTSEL12&quot;</code>) is <strong>fully verified</strong>: its magic bytes, its additive checksum algorithm, its mirrored (×2) redundancy layout, its exact writer function (<code>FUN_0801278c</code>), its exact validator/reader functions (<code>FUN_080125b0</code> read-side, <code>FUN_080124c4</code> caller with mirror fallback), and its on-disk bytes in <code>saves/cap-01-future-1.sav</code> all agree byte-for-byte with a Python re-implementation of the checksum formula (§4). This is the only region of the 32 KB SRAM image that differs from the blank/erased state across the two supplied snapshots, so it is the only region that can be <strong>CONFIRMED_VERIFIED</strong>.</p>
+<p>A second, much larger record format (magic <code>&quot;MOT2&quot;</code>, record size <code>0x7C0</code> = 1984 bytes, same additive-checksum family) is <strong>CONFIRMED_STATIC only</strong>: its validator (<code>FUN_0801256c</code>) and its mirrored-slot reader (<code>FUN_08012460</code>) are fully decompiled and self-consistent, and very likely hold the actual game-progress save, but neither supplied <code>.sav</code> file contains non-erased bytes outside the 32-byte <code>0x7F00–0x7F1F</code> window, so this format&#x27;s physical offset, full field layout, and its writer function cannot be verified against real bytes — they remain HYPOTHESIS/UNKNOWN.</p>
+<p>Every low-level byte-copy &quot;driver&quot; function that both of the above call through (<code>FUN_080f482c</code>, <code>FUN_080f4890</code>, <code>FUN_080f4900</code>, <code>FUN_080f49a8</code>) is explicitly flagged by the decompiler itself (&quot;Globals starting with <code>_</code> overlap smaller symbols at the same address&quot; / &quot;Could not recover jumptable&quot;) as unreliable in its recovered body. The <em>call sites</em> (argument count, argument ordering, and argument sizes matching record sizes) are trustworthy evidence; the</p>
+<p><em>internal mechanics shown</em> (loop bounds, the exact hardware register touched) are not asserted as fact — they are flagged HYPOTHESIS, consistent only in shape with the standard GBA &quot;set wait-state bits, then access SRAM&quot; idiom.</p>
+<p><code>ghidra/callgraph.json</code> resolved <strong>zero</strong> static call edges for every function this report discusses (all entries queried returned <code>{&quot;callers&quot;: [], &quot;callees&quot;: []}</code>). All caller/callee chains below were established by manually reading argument addresses and global symbol names in <code>ghidra/decompiled.c</code>, not from the callgraph. This is stated explicitly in §3 for every chain.</p>
+<h2>2. Physical Media, Slot Geometry &amp; Redundancy</h2>
+<ul><li><strong>Media:</strong> SRAM, 32,768 bytes (32 KB / 256 Kbit) — both supplied <code>.sav</code> files are exactly</li></ul>
+<p>32768 bytes, matching the packet&#x27;s declared <code>SRAM 256K</code> media tag. Standard GBA SRAM is mapped at <code>0x0E000000</code> and is only byte-addressable (8-bit bus); no literal <code>0x0E000000</code> constant appears anywhere in the 158-function decompiled corpus, so the exact CPU-side base address is</p>
+<p><strong>not independently verified</strong> here — it is the standard mapping for this media kind.</p>
+<ul><li><strong>No SDK save-library tags detected</strong> in the ROM (per packet metadata); the save code appears</li></ul>
+<p>to be a bespoke, hand-rolled driver (see §3).</p>
+<ul><li><strong>Observed non-erased region:</strong> only <code>0x7F00</code>–<code>0x7F1F</code> (32 bytes) differs from the</li></ul>
+<p>all-<code>0xFF</code> erased state in either supplied <code>.sav</code>. Everything else in the 32 KB image is <code>0xFF</code> in both files (confirmed by exhaustive Python scan, see §4).</p>
+<ul><li><strong>Slot/copy geometry — small &quot;selection&quot; record (CONFIRMED_VERIFIED):</strong></li><li>Record size: 16 bytes (<code>0x10</code>).</li><li>Two <strong>identical, fully mirrored</strong> copies: <code>0x7F00–0x7F0F</code> and <code>0x7F10–0x7F1F</code>.</li><li>Verified byte-for-byte identical in <code>cap-01-future-1.sav</code>.</li><li><strong>Selection rule (read path, <code>FUN_080124c4</code>):</strong> try mirror A first (copy SRAM→RAM via</li></ul>
+<p><code>FUN_080f482c</code>, validate via <code>FUN_080125b0</code>); if invalid, try mirror B; if both invalid, report failure (<code>*param_1 = 0xFFFFFFFF</code>). This is a simple &quot;primary, then backup&quot; fallback, not a round-robin/newest-wins scheme — there is no sequence counter in this record.</p>
+<ul><li><strong>Write path (<code>FUN_0801278c</code>):</strong> builds the record once in a RAM scratch buffer, computes the</li></ul>
+<p>checksum, then writes it to <strong>both</strong> mirror destinations in turn, each via a write (<code>func_0x080f4890</code>) immediately followed by a verify/read-back-and-retry loop (<code>func_0x080f4900</code>, up to 5 attempts) — a write-verify-retry idiom consistent with SRAM&#x27;s reputation for unreliable writes on some cartridges/emulators.</p>
+<ul><li><strong>Slot/copy geometry — large &quot;MOT2&quot; record (CONFIRMED_STATIC):</strong></li><li>Record size: <code>0x7C0</code> = 1984 bytes.</li><li>Reader <code>FUN_08012460</code> computes two destination offsets from a caller-supplied slot index</li></ul>
+<p><code>iVar4</code>: mirror A at <code>iVar4 * 0xF80 + base</code>, mirror B at <code>(iVar4*2 + 1) * 0x7C0 + base</code> (<code>base</code> = <code>_DAT_080124b4</code>/<code>iVar1</code>, an un-resolved global in this corpus). This is again a &quot;try A, else try B&quot; fallback with <strong>no visible sequence/generation counter</strong> field in the validator.</p>
+<ul><li><strong>Not observed in either supplied <code>.sav</code></strong> — this slot&#x27;s absolute SRAM offset therefore</li></ul>
+<p>cannot be cross-checked against real bytes and is <strong>UNKNOWN</strong>.</p>
+<ul><li>No writer function for this record was found among the 158 extracted functions — **UNKNOWN /</li></ul>
+<p>open question** (see §6).</p>
+<h2>3. Save Writer, Reader &amp; Caller-Chain Architecture</h2>
+<p>All addresses below are ROM (<code>0x08xxxxxx</code>) function entry points from <code>ghidra/decompiled.c</code>. <code>ghidra/callgraph.json</code> returned empty <code>callers</code>/<code>callees</code> arrays for every one of them (checked individually); every chain below was instead reconstructed by hand from matching argument addresses/global symbol names across functions, as the inline comments indicate.</p>
+<h3>3.1 Low-level hardware I/O &quot;drivers&quot;</h3>
+<table><thead><tr><th>Addr</th><th>Role</th><th>Notes</th></tr></thead><tbody><tr><td><code>0x080f482c</code> <code>FUN_080f482c(dst,src,len)</code></td><td>byte-range copy, used for the <strong>large <code>0x7C0</code> record</strong> (both directions — see call sites in §3.3)</td><td>Body begins <code>*_DAT_080f4858 = *_DAT_080f4858 &amp; (ushort)_DAT_080f485c \| 3;</code> — a 16-bit read-mask-OR-3 on a fixed hardware/global address, structurally identical to the idiom for setting GBA <code>WAITCNT</code> (<code>0x04000204</code>) SRAM wait-control bits to <code>3</code> (slowest/safest) before touching SRAM. The exact register address is <strong>not</strong> independently confirmed (no literal <code>0x04000204</code> appears in this corpus) — <strong>HYPOTHESIS</strong>. The copy-loop body itself is Ghidra-flagged unreliable (&quot;Globals starting with <code>_</code> overlap smaller symbols at the same address&quot;), so its recovered loop bound is <strong>not</strong> trusted as literal fact.</td></tr><tr><td><code>0x080f4890</code> <code>FUN_080f4890(src,dst,len)</code></td><td>byte copy for the <strong>small 16-byte record</strong>, called from the writer <code>0x0801278c</code></td><td>Same <code>&amp;mask\|3</code> idiom preceding a straightforward <code>*dst++ = *src++</code> loop; the loop itself (unlike <code>0x080f482c</code>&#x27;s) is <strong>not</strong> flagged with the overlap warning, so the byte-copy <em>shape</em> is more trustworthy here, though the preceding register write&#x27;s identity is still HYPOTHESIS.</td></tr><tr><td><code>0x080f4900</code> <code>FUN_080f4900(...)</code></td><td>verify/compare counterpart to <code>0x080f4890</code>, called immediately after each write in <code>0x0801278c</code>&#x27;s retry loop (max 5 attempts)</td><td>Delegates to <code>func_0x080f49a8</code> (undecompiled stub, <code>UNRECOVERED_JUMPTABLE</code>-only body) for the actual comparison. Classic write-then-read-back-and-retry pattern.</td></tr><tr><td><code>0x080f49a8</code></td><td>compare primitive (stub)</td><td>Body not recovered (indirect jump table).</td></tr></tbody></table>
+<h3>3.2 Small &quot;selection&quot; record (<code>&quot;MOTSEL12&quot;</code>) — CONFIRMED_VERIFIED chain</h3>
+<p><strong>Writer: <code>FUN_0801278c(param_1)</code></strong> (<code>ghidra/decompiled.c:1393</code>)</p>
+<pre><code>puVar1 = _DAT_080127cc;                 // RAM scratch buffer for the 16-byte record
+*_DAT_080127cc = 0x4d; puVar1[1]=0x4f; puVar1[2]=0x54; puVar1[3]=0x53;
+puVar1[4]=0x45; puVar1[5]=0x4c; puVar1[6]=0x31; puVar1[7]=0x32;   // &quot;MOTSEL12&quot;
+*(undefined4*)(puVar1+0xc) = param_1;   // offset 0xC: caller-supplied 4-byte field
+*(undefined4*)(puVar1+8)   = 0;         // offset 8: zero the checksum field before summing
+uVar3 = func_0x0801296c(puVar1,0x10);   // sum all 16 bytes (checksum field currently 0)
+*(undefined4*)(puVar1+8)   = uVar3;     // store the sum back into the checksum field
+// ... then write puVar1 to BOTH mirror destinations, each via func_0x080f4890
+//     write + func_0x080f4900 verify/retry (up to 5 attempts), to _DAT_080127d4 and _DAT_08012800</code></pre>
+<p><code>param_1</code> is passed in by this function&#x27;s caller. <strong>No caller of <code>0x0801278c</code> exists among the 158 extracted functions</strong> — the value of <code>param_1</code> actually used in production code is therefore unknown; the only observed instance (<code>0x00000000</code>) comes from the <code>.sav</code> byte evidence itself, not from tracing a caller. This is noted as an <strong>open question</strong> in §6.</p>
+<p><strong>Checksum primitive: <code>FUN_0801296c(ptr,len)</code></strong> (<code>ghidra/decompiled.c:1442</code>) — a plain additive loop, <code>iVar1 += *ptr++</code> for <code>len</code> iterations, returned as a 32-bit (unbounded, non-modulo) sum. No XOR, no CRC polynomial, no seed — the simplest possible checksum.</p>
+<p><strong>Validator/reader: <code>FUN_080125b0(void)</code></strong> (<code>ghidra/decompiled.c:1353</code>), operating on buffer <code>_DAT_080125e8</code>:</p>
+<pre><code>if (bytes[0..7] == &quot;MOTSEL12&quot;) {
+    iVar4 = *(int*)(bytes+8);         // read stored checksum
+    bytes[8..11] = 0;                 // zero it in place
+    iVar3 = func_0x0801296c(bytes, 0x10);  // recompute sum over all 16 bytes
+    return (iVar4 == iVar3) ? 0 /*OK*/ : 1 /*checksum mismatch*/;
+} else {
+    return 2; // bad magic
+}</code></pre>
+<p>This is the <strong>exact inverse</strong> of the writer&#x27;s checksum construction — proof that <code>0x080125b0</code> is the matching reader for records built by <code>0x0801278c</code>.</p>
+<p><strong>Reader caller / mirror-fallback: <code>FUN_080124c4(param_1)</code></strong> (<code>ghidra/decompiled.c:1281</code>):</p>
+<pre><code>*param_1 = 0xFFFFFFFF;
+func_0x080f482c(_DAT_080124f8, _DAT_080124fc, 0x10);   // copy mirror A into RAM buffer
+if (func_0x080125b0() != 0) {                           // validate mirror A
+    func_0x080f482c(_DAT_08012500, uVar2/*=_DAT_080124fc*/, 0x10); // copy mirror B
+    if (func_0x080125b0() != 0) { return 1 /*both failed*/; }
+}
+*param_1 = *(undefined4*)(iRam08012514 + 0xc);          // success: return the 0xC field
+return 0;</code></pre>
+<p>How this caller was mapped: it calls <code>func_0x080125b0()</code> by literal name match with zero arguments (consistent with the validator&#x27;s <code>void</code> signature operating on the fixed global buffer <code>_DAT_080125e8</code>), and its copy sizes (<code>0x10</code>) and destination global (<code>_DAT_080124f8</code>) match the record size and scratch-buffer convention used by the writer side. This is how it mutates no save bytes (it is read-only) but populates the in-RAM mirror <code>iRam08012514</code> from whichever SRAM mirror validated successfully.</p>
+<h3>3.3 Large &quot;MOT2&quot; record (<code>0x7C0</code> bytes) — CONFIRMED_STATIC chain (no <code>.sav</code> byte evidence)</h3>
+<p><strong>Validator: <code>FUN_0801256c(void)</code></strong> (<code>ghidra/decompiled.c:1314</code>), operating on buffer <code>_DAT_0801258c</code>:</p>
+<pre><code>if (bytes[0..3] == &quot;MOT2&quot;) {
+    iVar4 = *(int*)(bytes+4);          // stored checksum
+    bytes[4..7] = 0;                   // zero it
+    iVar3 = func_0x0801296c(bytes, 0x7c0); // sum the WHOLE 1984-byte record
+    return (iVar4==iVar3) ? 0 : 1;
+} else return 2;</code></pre>
+<p>Same checksum family as the small record (<code>func_0x0801296c</code>), but magic is only 4 bytes (<code>&quot;MOT2&quot;</code>) and the checksum field sits at offset 4 instead of 8, covering the <strong>entire</strong> record rather than just a 16-byte header.</p>
+<p><strong>Reader / mirror-fallback caller: <code>FUN_08012460(void)</code></strong> (<code>ghidra/decompiled.c:1246</code>):</p>
+<pre><code>iVar1 = _DAT_080124b0;                               // source struct base
+iVar4 = *(short*)(_DAT_080124b0 + 10);               // slot index, read from offset 10 of source struct
+func_0x080f482c(iVar4*0xf80 + _DAT_080124b4, _DAT_080124b0, 0x7c0);  // copy mirror A -&gt; RAM
+if (func_0x0801256c(iVar4) != 0) {                   // validate mirror A
+    func_0x080f482c((iVar4*2+1)*0x7c0 + _DAT_080124b4, iVar1, 0x7c0); // copy mirror B -&gt; RAM
+    if (func_0x0801256c(iVar4) != 0) { return 0 /*both failed*/; }
+}
+*(short*)(iVar1 + 8) = (short)_DAT_080124b8;
+return 1; // success</code></pre>
+<p>How this caller was mapped: it calls <code>func_0x0801256c(iVar4)</code> by literal name, with the slot index as argument (matching the validator&#x27;s implicit per-slot buffer selection), and its copy length (<code>0x7c0</code>) matches the record size asserted by the validator and by the init routine below.</p>
+<p><strong>No writer for this record exists among the 158 extracted functions.</strong> It mutates the in-RAM struct at <code>iVar1 + 8</code> (a 2-byte field) on success, copying from global <code>_DAT_080124b8</code> — the meaning of this field is <strong>UNKNOWN</strong> (likely a &quot;last slot loaded OK&quot; flag or cached value, but unverified).</p>
+<p><strong>Init: <code>FUN_08012444(void)</code></strong> (<code>ghidra/decompiled.c:1233</code>):</p>
+<pre><code>*_DAT_08012454 = 0x7c0;          // record size constant, confirms 0x7C0 elsewhere
+*_DAT_08012458 = _DAT_0801245c;  // base pointer setup</code></pre>
+<p>Confirms <code>0x7C0</code> as a named constant independently of the validator/reader, reducing the risk that <code>0x7c0</code> is a coincidental literal.</p>
+<h2>4. Magic Signatures &amp; Checksum / Integrity Algorithm</h2>
+<h3>Magic signatures</h3>
+<table><thead><tr><th>Record</th><th>Offset</th><th>Bytes (hex)</th><th>ASCII</th><th>Verified in code</th><th>Verified in <code>.sav</code></th></tr></thead><tbody><tr><td>Small &quot;selection&quot; record</td><td>0x0</td><td><code>4D 4F 54 53 45 4C 31 32</code></td><td><code>MOTSEL12</code></td><td>Yes (<code>FUN_0801278c</code> writer, <code>FUN_080125b0</code> validator)</td><td>Yes, both mirrors in <code>cap-01-future-1.sav</code></td></tr><tr><td>Large &quot;MOT2&quot; record</td><td>0x0</td><td><code>4D 4F 54 32</code></td><td><code>MOT2</code></td><td>Yes (<code>FUN_0801256c</code> validator)</td><td><strong>No</strong> — region not present/non-erased in either supplied <code>.sav</code></td></tr></tbody></table>
+<p><strong>Important correction to the packet&#x27;s pre-computed profile:</strong> the packet&#x27;s <code>ascii_magic_strings</code> field reports <code>&quot;MOTSEL127&quot;</code> (9 characters) for the active range. This is a naive printable-ASCII-run scan. The decompiled code proves the true magic is only the first</p>
+<p><strong>8</strong> bytes, <code>&quot;MOTSEL12&quot;</code>; the 9th byte (<code>0x37</code>, ASCII <code>&#x27;7&#x27;</code>) is actually the <strong>low byte of the 32-bit checksum field</strong> (<code>0x00000237</code>) and only looks like a printable magic character by coincidence. This is called out explicitly so the distinction between tool-generated heuristic metadata and code-verified fact is not lost.</p>
+<h3>Checksum algorithm — small &quot;selection&quot; record (CONFIRMED_VERIFIED)</h3>
+<ul><li><strong>Algorithm:</strong> plain unsigned additive sum (<code>sum32</code>), implemented by <code>FUN_0801296c</code>:</li></ul>
+<p><code>checksum = Σ byte[i] for i in 0..len-1</code>, no modulo/wraparound masking observed, no seed, no XOR, no CRC polynomial, no bit rotation.</p>
+<ul><li><strong>Covered range:</strong> the full 16-byte record (<code>offset 0x0</code>–<code>0xF</code>), **with the 4-byte checksum</li></ul>
+<p>field itself (<code>offset 0x8</code>–<code>0xB</code>) temporarily zeroed** during the summation (both in the writer <code>FUN_0801278c</code> and the validator <code>FUN_080125b0</code> — proven identical on both sides).</p>
+<ul><li><strong>Stored offset / size:</strong> offset <code>0x8</code>, 4 bytes, little-endian (ARM/Thumb native word store).</li><li><strong>Endianness:</strong> little-endian (GBA ARM7TDMI native).</li></ul>
+<p><strong>Python verification against the actual <code>.sav</code> files</strong> (script run in this workspace):</p>
+<pre><code>import struct
+def verify(path):
+    data = open(path,&#x27;rb&#x27;).read()
+    for off in (0x7f00, 0x7f10):
+        rec = data[off:off+16]
+        magic = rec[0:8]
+        stored_chk = struct.unpack_from(&#x27;&lt;I&#x27;, rec, 8)[0]
+        zeroed = bytearray(rec); zeroed[8:12] = b&#x27;\x00\x00\x00\x00&#x27;
+        computed = sum(zeroed)
+        print(off, magic, hex(stored_chk), hex(computed), stored_chk==computed)</code></pre>
+<p><strong>Output:</strong></p>
+<pre><code>=== saves/cap-00-future-0.sav (32768 bytes) ===
+ offset 0x7f00: magic=b&#x27;\xff\xff\xff\xff\xff\xff\xff\xff&#x27; stored_checksum=0xffffffff computed_checksum=0x00000bf4 match=False field_0xc=0xffffffff
+ offset 0x7f10: magic=b&#x27;\xff\xff\xff\xff\xff\xff\xff\xff&#x27; stored_checksum=0xffffffff computed_checksum=0x00000bf4 match=False field_0xc=0xffffffff
+=== saves/cap-01-future-1.sav (32768 bytes) ===
+ offset 0x7f00: magic=b&#x27;MOTSEL12&#x27; stored_checksum=0x00000237 computed_checksum=0x00000237 match=True field_0xc=0x00000000
+ offset 0x7f10: magic=b&#x27;MOTSEL12&#x27; stored_checksum=0x00000237 computed_checksum=0x00000237 match=True field_0xc=0x00000000</code></pre>
+<ul><li><code>cap-00-future-0.sav</code> is fully erased (<code>0xFF</code> fill) at this offset; the checksum &quot;mismatch&quot; there</li></ul>
+<p>is expected and matches the validator&#x27;s magic-rejection branch (return code <code>2</code>, &quot;bad magic&quot;) — the validator never even reaches the checksum comparison for erased data in real code, since the magic check fails first. The Python script&#x27;s unconditional recompute is shown for both files purely to demonstrate the magic check would also reject it.</p>
+<ul><li><code>cap-01-future-1.sav</code> matches exactly (<code>0x237 == 0x237</code>) in <strong>both</strong> mirror copies, and</li></ul>
+<p><code>0x237 = 567 = 77+79+84+83+69+76+49+50</code> — the literal sum of the ASCII bytes <code>M(0x4D)+O(0x4F)+T(0x54)+S(0x53)+E(0x45)+L(0x4C)+1(0x31)+2(0x32)</code> plus <code>0</code> for the (then-zeroed) checksum field and <code>0</code> for the offset-0xC field — proving the checksum covers exactly those 16 bytes with the checksum field zeroed, no more, no less.</p>
+<h3>Checksum algorithm — large &quot;MOT2&quot; record (CONFIRMED_STATIC, unverified against bytes)</h3>
+<ul><li>Same <code>sum32</code> primitive (<code>FUN_0801296c</code>), same &quot;zero the checksum field, sum the whole record&quot;</li></ul>
+<p>pattern, but over <code>0x7C0</code> (1984) bytes with the checksum field at offset <code>0x4</code>–<code>0x7</code> (not <code>0x8</code>).</p>
+<ul><li><strong>Cannot be verified against real bytes</strong> — this region is not present (still <code>0xFF</code>-filled) in</li></ul>
+<p>either supplied <code>.sav</code>. Confidence: CONFIRMED_STATIC (code-only).</p>
+<h2>5. Complete Field Map Table</h2>
+<table><thead><tr><th>Offset (hex)</th><th>Size</th><th>Type / Endianness</th><th>RAM Mirror Addr</th><th>Writers</th><th>Readers</th><th>Observed Values in <code>.sav</code></th><th>Confidence</th><th>How Mapped &amp; Updated</th></tr></thead><tbody><tr><td><code>0x7F00</code> / <code>0x7F10</code> (mirror B)</td><td>8</td><td>ASCII</td><td><code>_DAT_080127cc</code> (write scratch) / <code>_DAT_080125e8</code>, <code>_DAT_0801258c</code> (read scratch, small record only)</td><td><code>0x0801278c</code></td><td><code>0x080125b0</code></td><td><code>4D 4F 54 53 45 4C 31 32</code> (<code>&quot;MOTSEL12&quot;</code>) in both mirrors of <code>cap-01-future-1.sav</code>; <code>FF</code>×8 in <code>cap-00-future-0.sav</code></td><td><strong>CONFIRMED_VERIFIED</strong></td><td>Writer hard-codes these 8 literal byte stores; validator compares the same 8 bytes; both match real <code>.sav</code> bytes exactly.</td></tr><tr><td><code>0x7F08</code> / <code>0x7F18</code></td><td>4</td><td><code>u32_le</code> (checksum)</td><td>same scratch buffers, offset <code>+8</code></td><td><code>0x0801278c</code> (via <code>0x0801296c</code>)</td><td><code>0x080125b0</code> (via <code>0x0801296c</code>)</td><td><code>0x00000237</code> in both mirrors of <code>cap-01-future-1.sav</code>; <code>0xFFFFFFFF</code> in <code>cap-00-future-0.sav</code></td><td><strong>CONFIRMED_VERIFIED</strong></td><td>Python re-sum of bytes <code>0x0</code>–<code>0xF</code> (with <code>0x8</code>–<code>0xB</code> zeroed) == stored value in both mirrors; see §4.</td></tr><tr><td><code>0x7F0C</code> / <code>0x7F1C</code></td><td>4</td><td><code>u32_le</code></td><td>scratch buffer offset <code>+0xC</code>; mirrored to <code>iRam08012514 + 0xc</code> on successful read</td><td><code>0x0801278c</code> (<code>param_1</code>, caller unknown)</td><td><code>0x080124c4</code> (returns this field to its own caller on success)</td><td><code>0x00000000</code> in both mirrors of <code>cap-01-future-1.sav</code></td><td><strong>HYPOTHESIS</strong> (field exists and is proven to round-trip; its game-semantic meaning is unknown — single sample, value <code>0</code>, likely a &quot;selection index&quot; given the <code>MOTSEL</code> (&quot;Mother SELect&quot;?) magic, but this is speculation, not proof)</td><td>Writer stores caller-supplied <code>param_1</code> here before checksumming; reader returns it. No caller of the writer was found in this corpus, so the real range of values is unknown.</td></tr><tr><td><code>0x7F20</code>–<code>0x7FFF</code> (and all of <code>0x0</code>–<code>0x7EFF</code>)</td><td>—</td><td>unknown</td><td>—</td><td><strong>unknown</strong> (no writer found with offsets in this range)</td><td>—</td><td><code>FF</code> (erased) in both supplied <code>.sav</code> files</td><td><strong>UNKNOWN</strong></td><td>Never observed as non-erased; the large <code>&quot;MOT2&quot;</code> / <code>0x7C0</code>-byte record (§3.3) almost certainly lives somewhere in this space (slot formula <code>iVar4*0xf80 + base</code> / <code>(iVar4*2+1)*0x7c0 + base</code>), but <code>base</code> (<code>_DAT_080124b4</code>) is an unresolved global in this corpus, so its absolute offset cannot be computed without further tracing.</td></tr><tr><td><code>0x0</code>–<code>0x3</code> of the (unlocated) large record</td><td>4</td><td>ASCII</td><td><code>_DAT_0801258c</code> (read scratch)</td><td><strong>no writer found</strong></td><td><code>0x0801256c</code></td><td>not observed</td><td><strong>CONFIRMED_STATIC</strong></td><td>Validator compares these 4 bytes to <code>&quot;MOT2&quot;</code> literal-by-literal.</td></tr><tr><td><code>0x4</code>–<code>0x7</code> of the (unlocated) large record</td><td>4</td><td><code>u32_le</code> (checksum)</td><td>same</td><td><strong>no writer found</strong></td><td><code>0x0801256c</code> (via <code>0x0801296c</code>, length <code>0x7c0</code>)</td><td>not observed</td><td><strong>CONFIRMED_STATIC</strong></td><td>Validator zeroes these 4 bytes, sums all <code>0x7C0</code> bytes, compares to original value read from this field.</td></tr><tr><td><code>0x8</code>–<code>0x7BF</code> of the (unlocated) large record</td><td>1976</td><td>unknown (payload)</td><td>—</td><td><strong>no writer found</strong></td><td>implicitly covered by checksum only</td><td>not observed</td><td><strong>UNKNOWN</strong></td><td>Covered by the whole-record checksum but no field-level structure recovered; likely the actual game-progress data (party, flags, position, etc.) but zero bytes of evidence exist in this corpus to subdivide it further.</td></tr><tr><td>offset <code>+10</code> (<code>0xA</code>) of the large-record <strong>source struct</strong> (RAM, not the SRAM record itself)</td><td>2</td><td><code>s16_le</code></td><td><code>_DAT_080124b0 + 0xA</code></td><td>not traced</td><td><code>0x08012460</code> (slot-index selector)</td><td>n/a (RAM struct, not SRAM)</td><td><strong>CONFIRMED_STATIC</strong></td><td><code>FUN_08012460</code> reads this as the &quot;which slot&quot; index used to compute both mirror offsets; this is an in-RAM caller struct field, not itself part of the on-disk <code>.sav</code> format.</td></tr></tbody></table>
+<h2>6. Save Fuzzing &amp; Counterfactual Verification Plan</h2>
+<p>All mutations below should be applied to a copy of <code>cap-01-future-1.sav</code> (the only sample with a live record), loaded as a <code>.sav</code> paired with an emulator save state, since this workspace&#x27;s <code>states/</code> directory is empty for this legacy checkpoint cohort (no paired <code>.ss</code> files were supplied — this is itself an open item; see below). All offsets are absolute file offsets.</p>
+<ol><li><strong>Checksum-field corruption, no repair (negative control).</strong></li></ol>
+<ul><li>Mutation: flip one bit in <code>0x7F08</code> (e.g. XOR <code>0x01</code>) in mirror A only, leave mirror B intact.</li><li>Requires checksum repair: No (this <em>is</em> the corruption test).</li><li>Predicted effect: <code>FUN_080124c4</code>&#x27;s mirror-A validation (<code>FUN_080125b0</code>) returns <code>1</code></li></ul>
+<p>(checksum mismatch); it should fall through to mirror B, which still validates, and the game should behave exactly as if nothing were corrupted (silent self-heal via redundancy). This tests the &quot;primary fails, backup succeeds&quot; path with zero game-visible symptom — the key observable is that the <em>next write</em> should rewrite mirror A to match (since the writer always writes both), which can be confirmed by re-dumping the <code>.sav</code> after one more save event.</p>
+<ol><li><strong>Checksum-field corruption in BOTH mirrors (true failure injection).</strong></li></ol>
+<ul><li>Mutation: corrupt <code>0x7F08</code> and <code>0x7F18</code> identically (e.g. set both to <code>0x00000000</code>).</li><li>Requires checksum repair: No.</li><li>Predicted effect: both mirror validations fail; <code>FUN_080124c4</code> returns failure</li></ul>
+<p>(<code>*param_1 = 0xFFFFFFFF</code>). Observable prediction: whatever UI consumes this &quot;selection&quot; value should fall back to a default (likely &quot;no selection&quot; / slot-picker shown), since no valid record exists. If the game instead crashes or silently proceeds with garbage, that would falsify the &quot;selection record, soft-fail design&quot; hypothesis.</p>
+<ol><li><strong>Magic-byte corruption (bad-magic path, return code <code>2</code>).</strong></li></ol>
+<ul><li>Mutation: change <code>0x7F00</code> from <code>0x4D</code> (<code>&#x27;M&#x27;</code>) to any other byte, in mirror A only.</li><li>Requires checksum repair: No (magic check happens before checksum check and short-circuits).</li><li>Predicted effect: identical observable behavior to test 1 (silent fallback to mirror B) —</li></ul>
+<p>this distinguishes &quot;bad magic&quot; (return <code>2</code>) from &quot;bad checksum&quot; (return <code>1</code>) at the code level, but both should be externally indistinguishable via gameplay, since <code>FUN_080124c4</code> only checks <code>!= 0</code>, not the specific error code. If gameplay <em>does</em> distinguish these two cases, that falsifies this reading of the caller.</p>
+<ol><li><strong>Field <code>0x7F0C</code> (the unidentified <code>param_1</code> field) sweep, with checksum repair.</strong></li></ol>
+<ul><li>Mutation: set <code>0x7F0C</code>–<code>0x7F0F</code> (and the matching mirror <code>0x7F1C</code>–<code>0x7F1F</code>) to <code>0x00000001</code>,</li></ul>
+<p><code>0x00000002</code>, <code>0x00000003</code>, etc., one value per test run.</p>
+<ul><li>Requires checksum repair: <strong>Yes</strong> — recompute</li></ul>
+<p><code>sum(bytes[0:16] with bytes[8:12]=0)</code> after each mutation and write the new sum (little-endian) into <code>0x7F08</code>/<code>0x7F18</code>.</p>
+<ul><li>Predicted effect: this is the key falsifiable test for the <code>0x7F0C</code> field&#x27;s semantics. If it</li></ul>
+<p>selects a save slot / character / difficulty, the title screen or load menu should visibly change its default selection or highlighted entry when reloading from a save state taken at the title screen. If no observable change occurs for any tested value, that is evidence this field is unused/reserved in the shipped game logic reachable from this entry point, which would narrow (not confirm) the HYPOTHESIS in §5.</p>
+<ol><li><strong>Fresh vs. restore repeat (determinism control).</strong></li></ol>
+<ul><li>Procedure: from a blank SRAM (<code>cap-00-future-0.sav</code>), trigger whatever in-game action produced</li></ul>
+<p><code>cap-01-future-1.sav</code>&#x27;s write twice in a row (fresh boot each time), and diff the two resulting <code>.sav</code> files byte-for-byte.</p>
+<ul><li>Predicted effect: if the write is purely deterministic (no RNG/timestamp in this record), the</li></ul>
+<p>two resulting files should be byte-identical, confirming there is no hidden counter/seed field this report missed. Any difference would directly falsify the &quot;fully mapped, 16 fixed-meaning bytes&quot; claim in §5 and point at an unmapped dynamic field.</p>
+<ol><li><strong>Large &quot;MOT2&quot; record discovery probe (addresses the biggest open gap).</strong></li></ol>
+<ul><li>Procedure: since no writer was found in this corpus and the record was never observed</li></ul>
+<p>non-erased, the only clean-room way to locate it is a <strong>controlled gameplay capture</strong>: perform an in-game action expected to trigger a &quot;real&quot; game save (not just the title-screen selection captured here), then re-dump SRAM and diff against the blank baseline, exactly as was done to produce <code>cap-01-future-1.sav</code> for the small record.</p>
+<ul><li>Predicted effect: a new non-erased range of exactly <code>0x7C0</code> bytes (or two ranges, <code>0x7C0</code></li></ul>
+<p>apart per the mirror-offset formula in §3.3) should appear, beginning with ASCII <code>&quot;MOT2&quot;</code> and containing a valid <code>sum32</code> checksum at offset <code>+4</code> per §4&#x27;s algorithm. This is the single highest-value next capture for closing this report&#x27;s largest UNKNOWN region.</p>
+<p><strong>Open questions carried to §6 explicitly (not resolved by this corpus):</strong></p>
+<ul><li>Real-world value range and semantic meaning of the <code>0x7F0C</code> field (writer&#x27;s <code>param_1</code>); no</li></ul>
+<p>caller of <code>FUN_0801278c</code> exists in the 158 extracted functions.</p>
+<ul><li>Absolute SRAM offset of the <code>&quot;MOT2&quot;</code> large record (<code>base</code> global <code>_DAT_080124b4</code> unresolved).</li><li>Full byte-level field layout of the large record&#x27;s 1976-byte payload (<code>0x8</code>–<code>0x7BF</code>).</li><li>Exact hardware register touched by the <code>&amp;mask|3</code> idiom in <code>FUN_080f482c</code>/<code>FUN_080f4890</code></li></ul>
+<p>(structurally consistent with <code>WAITCNT</code> SRAM wait-control bits, but not literally confirmed — no literal <code>0x04000204</code> constant appears in this corpus).</p>
+<ul><li>No paired <code>.ss</code> emulator save states were supplied for this release (<code>states/</code> is empty for this</li></ul>
+<p>legacy checkpoint cohort), so the fuzzing plan above cannot be executed from this workspace as-is — it requires a follow-up capture that includes paired pre/post save states.</p>
+</div>
+</main>
+  <footer>gbakit GBA Format Reference &middot; <a href="https://github.com/JidouGhost-TL/gbakit">GitHub: JidouGhost-TL/gbakit</a> &middot; Clean-room GBA binary format specs &amp; Rust toolkit.</footer>
+</body>
+</html>

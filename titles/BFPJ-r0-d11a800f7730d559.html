@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Futari wa Pretty Cure - Arienaai! Yume no Sono wa Daimeikyuu (Japan) — gbakit GBA Reference</title>
+  <link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+  <header>
+    <div class="brand"><a href="../index.html" style="color:inherit">gbakit GBA Reference <span class="badge badge-emerald">v2.0</span></a></div>
+    <nav>
+      <a href="../index.html">Games</a>
+      <a href="../saves/index.html">Save Formats</a>
+      <a href="../patches/index.html">Debug Patches</a>
+      <a href="../assets/index.html">Assets &amp; Audio</a>
+      <a href="../engines/index.html">Engines &amp; Hardware</a>
+      <a href="../families/index.html">Families</a>
+      <a href="../gbakit/index.html">Using gbakit</a>
+    </nav>
+  </header>
+  <main>
+<p class="meta"><a href="../index.html">&larr; Games</a> &middot; Family <code>BFP</code></p>
+<h1>Futari wa Pretty Cure - Arienaai! Yume no Sono wa Daimeikyuu (Japan)</h1>
+<p><span class='badge badge-slate'>EEPROM 4K</span> <span class='badge badge-amber'>Debug Menu Patch</span></p>
+
+<h2>Cartridge Identity</h2>
+<dl class="kv">
+  <dt>Game Code</dt><dd><code>BFPJ</code> (Family <code>BFP</code>)</dd>
+  <dt>Header Title</dt><dd><code>PURIYUMESONO</code></dd>
+  <dt>Maker / Revision</dt><dd><code>B2</code> / rev <code>0</code></dd>
+  <dt>ROM Size</dt><dd>4.0 MiB (4,194,304 B)</dd>
+  <dt>Save Media</dt><dd><code>EEPROM 4K</code></dd>
+  <dt>SHA-256</dt><dd><code>d11a800f7730d559987f9ac2b6eb7125324fbf2877d29d56fc8d65f761cddf74</code></dd>
+  <dt>Engine / SDK Group</dt><dd><a href='../engines/index.html#comm-001'><code>comm-001</code></a> (196 families)</dd>
+</dl>
+<h2>Screenshots</h2><div class='gallery'><figure><img src='../assets/thumbs/BFPJ-r0-d11a800f7730d559-boot.png' alt='Boot Screen' loading='lazy'><figcaption>Boot Screen</figcaption></figure><figure><img src='../assets/thumbs/BFPJ-r0-d11a800f7730d559-loaded.png' alt='Loaded Save' loading='lazy'><figcaption>Loaded Save</figcaption></figure></div>
+
+<h2>Debug Menu Re-Enablement Patch (<code>.ips</code>)</h2>
+<p><a class="btn" href="../assets/patches/BFPJ-r0-d11a800f7730d559/BFPJ-debug.ips" download>Download BFPJ-debug.ips (17 B IPS / 4 B delta)</a></p>
+<dl class="kv">
+  <dt>Hook Mechanism</dt><dd><code>scene_descriptor_ptr_redirect</code> &middot; Patch initial scene descriptor literal at 0x08003d70 (0x0802ac3c -&gt; 0x0802a714) to boot precure debug menu</dd>
+  <dt>IPS SHA-256</dt><dd><code>8750299b18d2e25f52778354effe73cd645a6467fc3492ae7ce6549995295ac7</code></dd>
+</dl>
+<pre><code>gbakit patch apply BFPJ-debug.ips original.gba patched-debug.gba</code></pre>
+<div class='gallery'><figure><img src='../assets/patches/BFPJ-r0-d11a800f7730d559/boot-patched.png' alt='Re-enabled debug menu' loading='lazy'><figcaption>Re-Enabled Debug Menu</figcaption></figure><figure><img src='../assets/patches/BFPJ-r0-d11a800f7730d559/after-input.png' alt='Interactive debug menu navigation' loading='lazy'><figcaption>After D-Pad / A Input</figcaption></figure></div>
+
+
+
+<h2>Observed Battery Save Layout</h2>
+<dl class="kv">
+  <dt>Fill Byte &amp; Active Size</dt><dd><code>0xFF</code> fill &middot; 66–66 / 512 B active (entropy 1.47 bits/B)</dd>
+  <dt>Active Offset Ranges</dt><dd><code>0x0–0x1F</code>, <code>0x27</code>, <code>0x88–0xA7</code>, <code>0xAF</code> (4 total)</dd>
+  <dt>ASCII Magic / Headers</dt><dd><code>RCRP</code></dd>
+  <dt>Observed Variable Regions</dt><dd>0 bytes across 0 spans: None</dd>
+  <dt>Candidate Checksum/Counter Spans</dt><dd>None</dd>
+  
+</dl>
+
+<h2>ROM Assets, Compression &amp; Audio</h2><dl class='kv'><dt>BIOS Compression</dt><dd>LZ77 (<code>0x10</code>): <strong>806</strong> streams &middot; RLE (<code>0x30</code>): <strong>0</strong> streams</dd><dt>ROM Pointer Tables</dt><dd>48 tables (10 pointing to validated compressed streams)</dd><dt>SDK Backup Tags</dt><dd><code>EEPROM_V124</code>, <code>EEPROM_V124</code></dd></dl>
+
+
+</main>
+  <footer>gbakit GBA Format Reference &middot; <a href="https://github.com/JidouGhost-TL/gbakit">GitHub: JidouGhost-TL/gbakit</a> &middot; Clean-room GBA binary format specs &amp; Rust toolkit.</footer>
+</body>
+</html>

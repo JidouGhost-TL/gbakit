@@ -1,0 +1,218 @@
+{
+  "schema": "gbakit-save-research/1",
+  "release_key": "BRAP-r0-af12ef0d39364078",
+  "display_name": "Racing Gears Advance (Europe) (En,Fr,De,Es,It)",
+  "rom_sha256": "af12ef0d393640784705d261139262345c7d2a65c523d65c9ad604fc36f54923",
+  "game_code": "BRAP",
+  "header_family": "BRA",
+  "community_id": "comm-004",
+  "overall_confidence": "MEDIUM",
+  "media": {
+    "kind": "eeprom512",
+    "size_bytes": 512,
+    "sdk_tags": [],
+    "fill_byte": "0xff"
+  },
+  "slots_and_copies": [
+    {
+      "name": "eeprom_image",
+      "offset": 0,
+      "size": 512,
+      "redundancy_role": "primary",
+      "selection_rule": "single image, no A/B redundancy; validity gated by magic field at 0x04 and a checksum-shaped field at 0x0C whose algorithm is unverified"
+    }
+  ],
+  "magic_signatures": [
+    {
+      "offset": 4,
+      "bytes_hex": "644e6f42",
+      "ascii": "dNoB",
+      "verified_in_code": true,
+      "verified_in_sav": true,
+      "function_addrs": ["0x0801cd14", "0x0801ccb8"]
+    }
+  ],
+  "checksums": [
+    {
+      "name": "global_checksum_field",
+      "algorithm": "unknown",
+      "formula_detail": "FUN_0801c224(0,0) compares GetBits(bit=0x40,width=0x20) to XorFoldWords(bit=0x60,range_param=0x73); XorFoldWords (0x080221f0) XORs 32-bit mirror words from the word containing bit_offset through an end word computed as ((range_param*0x800 + UNRESOLVED_CONST) >> 0x10) - start_word + 1. UNRESOLVED_CONST (_DAT_08022224) could not be read from the decompiled text, so the exact covered byte range is unknown.",
+      "stored_offset": 12,
+      "stored_size": 4,
+      "covered_start": 16,
+      "covered_end": null,
+      "function_addrs": ["0x0801c224", "0x0801c278", "0x080221f0", "0x080221b0", "0x080220fc"],
+      "verified_on_samples": [
+        {"file": "cap-01-future-1.sav", "stored_hex": "aab40000", "computed_hex": "00000000", "match": false}
+      ],
+      "confidence": "HYPOTHESIS"
+    },
+    {
+      "name": "per_slot_checksum_field",
+      "algorithm": "xor16_le",
+      "formula_detail": "FUN_0801c224(1,n) compares GetBits(bit=0x80+n*0x140,width=0x20) to XorFoldWords(bit=(0x80+n*0x140)|0x20, range_param=(0x80+n*0x140)+0x140) for n=0..11, i.e. claimed to be the XOR-fold of the 36 data bytes immediately following each slot's 4-byte checksum field. Offset/stride formula confirmed exactly against real .sav; the XOR-fold itself was never exercised in the one available sample (all 12 fields are still the ResetAllSlots() sentinel 0xFFFFFFFF, never recomputed), so the algorithm is unverified.",
+      "stored_offset": 20,
+      "stored_size": 4,
+      "covered_start": 24,
+      "covered_end": 60,
+      "function_addrs": ["0x0801c224", "0x0801c278", "0x080221f0", "0x0801ccb8"],
+      "verified_on_samples": [
+        {"file": "cap-01-future-1.sav", "stored_hex": "ffffffff", "computed_hex": "00000000", "match": false}
+      ],
+      "confidence": "HYPOTHESIS"
+    }
+  ],
+  "io_driver_functions": [
+    {"addr": "0x0802ee18", "role": "write", "callers": ["0x0802ee98", "0x0802ef5c"], "notes": "DmaEepromXfer: IME-guarded DMA3-style transfer of a bitstream to/from EEPROM port 0x0D000000, busy-wait on completion. Shared primitive for both EEPROM read and write records."},
+    {"addr": "0x0802ee98", "role": "read", "callers": ["0x0802f0bc"], "notes": "EepromReadRecord(index,dst8bytes): builds a 2-bit read opcode + 6-bit address bitstream, sends via FUN_0802ee18, clocks 68 bits back, packs 64 data bits into 4x16-bit words at dst. Also called directly 64x from FUN_080220b4 (text-only call edge, not present in callgraph.json)."},
+    {"addr": "0x0802ef5c", "role": "write", "callers": ["0x0802ef48"], "notes": "EepromWriteRecord(index,src8bytes,retry): builds write opcode+address+64 data bits, single DMA burst via FUN_0802ee18, polls EEPROM busy bit with a scanline-count software timeout (wraps at 0xE4=228), returns error code on timeout."},
+    {"addr": "0x0802ef48", "role": "write", "callers": ["0x08022078"], "notes": "Thin wrapper calling FUN_0802ef5c(param_1,param_2,1)."},
+    {"addr": "0x0802f0bc", "role": "read", "callers": [], "notes": "EepromVerifyRecord(index,expected8bytes): calls FUN_0802ee98 to re-read the record, compares all 4 words to expected, returns 0x8000 on mismatch."},
+    {"addr": "0x0802edd0", "role": "write", "callers": [], "notes": "EEPROM geometry/backend selector; mode=4 selects the 512-byte/64-record backend actually used (called from FUN_080222c8 before every load)."}
+  ],
+  "caller_chains": [
+    {
+      "entry_caller": "0x08022268",
+      "chain": ["0x08022268", "0x08022078", "0x0802ef48", "0x0802ef5c", "0x0802ee18"],
+      "trigger_context": "SaveAll(): untraced caller (game/menu logic) -> for each of 64 records, if dirty-bitmap bit set -> WriteRecordVerified -> EepromWriteRecord -> DMA3 transfer",
+      "ram_fields_updated": ["dirty_bitmap (mirror+0x200, cleared after flush)"],
+      "how_mapped": "Traced via grep of ghidra/decompiled.c for literal func_0x... call-site text at lines documented in SAVE-FORMAT-REPORT.md section 3.2; cross-checked caller edge 0x08022078->0x08022268 against ghidra/callgraph.json."
+    },
+    {
+      "entry_caller": "0x08022268",
+      "chain": ["0x08022268", "0x08022078", "0x0802f0bc", "0x0802ee98", "0x0802ee18"],
+      "trigger_context": "Same WriteRecordVerified call also performs the read-back verify half (EepromVerifyRecord -> EepromReadRecord) before retrying up to 3x on failure.",
+      "ram_fields_updated": [],
+      "how_mapped": "Text trace of FUN_08022078 body: calls func_0x0802ef48 then func_0x0802f0bc in a 3-iteration retry loop."
+    },
+    {
+      "entry_caller": "0x080222c8",
+      "chain": ["0x080222c8", "0x0802edd0", "0x080220b4", "0x0802ee98", "0x0802ee18"],
+      "trigger_context": "Load(): untraced caller -> select EEPROM geometry -> LoadAll() reads all 64 records unconditionally (no verify) into the RAM mirror",
+      "ram_fields_updated": ["ram_mirror[0..0x1FF]", "dirty_bitmap (mirror+0x200, cleared after load)"],
+      "how_mapped": "Text trace of FUN_080220b4 body (64-iteration loop calling func_0x0802ee98) plus callgraph.json edge 0x080220b4->0x080222c8 caller."
+    },
+    {
+      "entry_caller": "0x0801cd14",
+      "chain": ["0x0801cd14", "0x080222c8", "0x0801c224", "0x0801ccb8", "0x080220fc", "0x0802222c"],
+      "trigger_context": "BootCheck(): Load() the EEPROM, then GetBits(0,0x20) magic check against a fixed constant; on mismatch calls ResetAllSlots() which marks every record dirty, rewrites the magic, and invalidates the global + all 12 per-slot checksum fields.",
+      "ram_fields_updated": ["magic@bit0(file 0x04)", "global_checksum@bit0x40(file 0x0C)", "12x per_slot_checksum@bit(0x80+n*0x140)", "dirty_bitmap (all set)"],
+      "how_mapped": "callgraph.json confirms 0x0801cd14 callees include 0x0801c224 and 0x0801ccb8; body text of 0x0801ccb8 shows the SetBits call sequence with the exact bit-offset arithmetic matched against the observed 0x14+n*0x28 pattern in saves/cap-01-future-1.sav."
+    },
+    {
+      "entry_caller": "0x0801cd14",
+      "chain": ["0x0801cd14", "0x0801c224", "0x080221b0", "0x080221f0"],
+      "trigger_context": "Independently of the magic check, BootCheck also runs VerifyChecksum(0,0); on failure it applies default settings (0x0801c3e0) rather than a full slot reset.",
+      "ram_fields_updated": [],
+      "how_mapped": "callgraph.json edge 0x0801cd14->0x0801c224; FUN_0801c224 body text shows the param_1==0 branch bit-offset constants (0x40,0x60,0x73)."
+    }
+  ],
+  "fields": [
+    {
+      "name": "unknown_header_prefix",
+      "offset": 0,
+      "size": 4,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"cap-00-future-0.sav": "ffffffff", "cap-01-future-1.sav": "00000000"},
+      "update_mechanism": "unknown; falls before ram_mirror_base (file offset 0x04) and is never targeted by a traced GetBits/SetBits call",
+      "confidence": "UNKNOWN",
+      "evidence": "Byte comparison of the two real .sav files only; no corresponding code reference found"
+    },
+    {
+      "name": "magic_signature",
+      "offset": 4,
+      "size": 4,
+      "type": "ascii",
+      "ram_addr": "mirror+0x00 (bit)",
+      "writers": ["0x0801ccb8"],
+      "readers": ["0x0801cd14"],
+      "observed_values": {"cap-00-future-0.sav": "ffffffff", "cap-01-future-1.sav": "644e6f42 (\"dNoB\")"},
+      "update_mechanism": "SetBits(0,0x20,CONST) inside ResetAllSlots, run when the stored value fails the GetBits(0,0x20)==CONST check at boot",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Code read/write call sites in ghidra/decompiled.c (FUN_0801cd14, FUN_0801ccb8) plus exact byte match in saves/cap-01-future-1.sav; blank in saves/cap-00-future-0.sav"
+    },
+    {
+      "name": "mirrored_stat_low",
+      "offset": 8,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"cap-01-future-1.sav": "aab40000"},
+      "update_mechanism": "unknown traced writer; inferred to mirror 0x0C based on identical observed value",
+      "confidence": "HYPOTHESIS",
+      "evidence": "saves/cap-01-future-1.sav: bytes 0x08-0x0B == bytes 0x0C-0x0F, both 0xAAB40000"
+    },
+    {
+      "name": "global_checksum_or_stat",
+      "offset": 12,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": "mirror+0x40 (bit)",
+      "writers": ["0x0801ccb8 (reset to 0xFFFFFFFF)", "0x0801c278 via 0x0801c2c0/0x0801c434 (recompute)"],
+      "readers": ["0x0801c224"],
+      "observed_values": {"cap-01-future-1.sav": "aab40000"},
+      "update_mechanism": "SetBits(0x40,0x20,XorFoldWords(0x60,0x73)); algorithm unverified against real byte value (see checksums[0])",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Code call graph in ghidra/decompiled.c; Python XOR-fold recomputation against saves/cap-01-future-1.sav did not reproduce the stored value"
+    },
+    {
+      "name": "per_slot_checksum[n] (n=0..11)",
+      "offset": 20,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": "mirror+(0x80+n*0x140) (bit)",
+      "writers": ["0x0801ccb8 (reset to 0xFFFFFFFF)"],
+      "readers": ["0x0801c224", "0x0801cc40"],
+      "observed_values": {"cap-01-future-1.sav": "all 12 slots = ffffffff at file offsets 0x14,0x3c,0x64,0x8c,0xb4,0xdc,0x104,0x12c,0x154,0x17c,0x1a4,0x1cc"},
+      "update_mechanism": "SetBits(0x80+n*0x140,0x20,0xFFFFFFFF) sentinel on reset; expected to be recomputed by an untraced gameplay call to RecomputeChecksum(1,n) once a slot is populated",
+      "confidence": "CONFIRMED_VERIFIED (offset/stride and sentinel), HYPOTHESIS (checksum algorithm)",
+      "evidence": "Offset formula from FUN_0801ccb8/FUN_0801c224 text, matched byte-for-byte (all 12 positions, exact stride 0x28) against saves/cap-01-future-1.sav"
+    },
+    {
+      "name": "per_slot_body[n] (n=0..11)",
+      "offset": 24,
+      "size": 36,
+      "type": "bytes",
+      "ram_addr": "mirror+(0x80+n*0x140)+0x20 (bit)",
+      "writers": [],
+      "readers": ["0x080221f0 (as XorFoldWords input range)"],
+      "observed_values": {"cap-01-future-1.sav": "all zero in all 12 slots (never populated in this sample)"},
+      "update_mechanism": "unknown specific writer in the 187-function trace; coverage range inferred from the checksum-verify arithmetic",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Bit-range arithmetic in FUN_0801c224's is_slot branch; content semantics (e.g. leaderboard entry) not proven, only plausible given genre"
+    },
+    {
+      "name": "dirty_bitmap",
+      "offset": null,
+      "size": 8,
+      "type": "bitflags",
+      "ram_addr": "mirror+0x200 (RAM-only, not part of the 512-byte EEPROM image)",
+      "writers": ["0x080220fc (per-field set on change)", "0x0802222c (force-all)", "0x08022268/0x080220b4 (clear after flush/load)"],
+      "readers": ["0x08022268"],
+      "observed_values": {},
+      "update_mechanism": "One bit per 8-byte EEPROM record; SetBits sets the bit for the record containing any field it just changed, iff the underlying word actually changed value",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "Direct arithmetic in ghidra/decompiled.c FUN_080220fc/FUN_0802222c/FUN_08022268; not observable in the .sav files since it is RAM-only state"
+    }
+  ],
+  "fuzzing_targets": [
+    {"offset": 4, "size": 4, "mutation": "flip any bit of the \"dNoB\" magic", "requires_checksum_repair": false, "predicted_effect": "BootCheck triggers ResetAllSlots: magic restored, all 12 per-slot checksums reset to 0xFFFFFFFF, dirty bitmap forced all-set, full 64-record EEPROM flush on next SaveAll"},
+    {"offset": 12, "size": 4, "mutation": "set to a value different from the field at offset 8", "requires_checksum_repair": false, "predicted_effect": "Resolves whether 0x0C is a checksum (VerifyChecksum(0,0) fails -> defaults branch) or a mirrored stat (some other system reads 0x08/0x0C as redundant copies) -- the two hypotheses predict different observable branches"},
+    {"offset": 20, "size": 4, "mutation": "set any per-slot checksum field to a non-0xFFFFFFFF, non-zero value while its 36-byte body stays all-zero", "requires_checksum_repair": true, "predicted_effect": "VerifyChecksum(1,n) should fail (computed XOR-fold of an all-zero body is 0, not the injected value), excluding the slot from FUN_0801cc40's best-of-N scan; repair by setting the field to 0x00000000 and re-testing for acceptance"},
+    {"offset": 24, "size": 36, "mutation": "populate a slot body via actual gameplay, then flip one byte", "requires_checksum_repair": true, "predicted_effect": "Requires a fresh capture (not available in this workspace) to first derive the exact XorFoldWords constant, then confirm the game flags/ignores the corrupted slot after repair of the checksum field"}
+  ],
+  "open_questions": [
+    "Exact value of the unresolved global constant feeding XorFoldWords' end-word computation (_DAT_08022224), needed to pin the global checksum's exact covered byte range.",
+    "Whether the field at file offset 0x0C is actually a checksum (per FUN_0801c224's read/write call sites) or a mirrored stat duplicate of offset 0x08 (per the observed identical byte value) -- the two hypotheses were not distinguished by the single available non-blank sample.",
+    "Identity/semantics of the per-slot 36-byte body (offsets 24, 64, ... within each 40-byte slot) -- plausibly a best-times/leaderboard entry for a racing title, but unproven; no traced writer was found for it.",
+    "Identity of bytes 0x00-0x03 (before the magic field) -- never targeted by any traced GetBits/SetBits call.",
+    "Exact semantics of FUN_0801c2c0 / FUN_0801c3e0 / FUN_0801c434 settings fields at mirror offsets 0x60-0x73, 0x100, 0x1ae-0x1ba -- traced as writes/defaults but their game meaning is unknown.",
+    "The write-verify-retry EEPROM timing behavior (0x0802ef5c's scanline-count timeout) cannot be fuzz-tested from .sav bytes alone; would require emulator-level EEPROM-busy-bit fault injection.",
+    "Only one non-blank .sav sample exists in this workspace; a second populated sample (ideally with at least one non-empty leaderboard slot) is required to actually verify the XOR-fold checksum algorithm rather than just its offset arithmetic."
+  ]
+}

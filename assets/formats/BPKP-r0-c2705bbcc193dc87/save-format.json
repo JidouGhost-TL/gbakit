@@ -1,0 +1,664 @@
+{
+  "schema": "gbakit-save-research/1",
+  "release_key": "BPKP-r0-c2705bbcc193dc87",
+  "display_name": "Payback (Europe) (En,Fr,De,Es,It)",
+  "rom_sha256": "c2705bbcc193dc872ac481ea9c98c8f96ebee0dbcbbe44322226f0eff60665f1",
+  "game_code": "BPKP",
+  "header_family": "BPK",
+  "community_id": "",
+  "overall_confidence": "MEDIUM",
+  "media": {
+    "kind": "eeprom512",
+    "size_bytes": 512,
+    "sdk_tags": [],
+    "fill_byte": "0xff"
+  },
+  "slots_and_copies": [
+    {
+      "name": "header_and_journal",
+      "offset": 0,
+      "size": 48,
+      "redundancy_role": "global_config",
+      "selection_rule": "Word0 magic 'Payback.' decides save existence; word1 journal header (FFx8=idle, else 4x(dest_word,block_count)) decides boot replay of staging words 2..5; no slot selection"
+    },
+    {
+      "name": "journal_staging",
+      "offset": 16,
+      "size": 32,
+      "redundancy_role": "backup",
+      "selection_rule": "Staging words 2..5; consumed only when word1 journal header validates (dest 6..62, count 1..4, all 4 repeats agree) at boot in FUN_08027c68; otherwise ignored"
+    },
+    {
+      "name": "slot_0",
+      "offset": 48,
+      "size": 464,
+      "redundancy_role": "primary",
+      "selection_rule": "Single logical save at EEPROM words 6..63; game logical byte L at file (6+L//8)*8+(7-L%8) (reversed per 8-byte word); no generation counter or A/B selection"
+    }
+  ],
+  "magic_signatures": [
+    {
+      "offset": 0,
+      "bytes_hex": "5061796261636b2e",
+      "ascii": "Payback.",
+      "verified_in_code": true,
+      "verified_in_sav": true,
+      "function_addrs": [
+        "0x08027c68"
+      ]
+    }
+  ],
+  "checksums": [
+    {
+      "name": "journal_header_repetition_check",
+      "algorithm": "custom",
+      "formula_detail": "No arithmetic checksum exists. Integrity = journal header at EEPROM word 1: driver-buffer bytes [dest_word,count] repeated 4x; valid iff 6<=dest_word<=62, 1<=count<=4 and all 4 dest copies and all 4 count copies agree (FUN_08027c68). Armed by FUN_080277a4 phase 2, cleared to FFx8 after commit/replay. Payload also protected by write read-back verify FUN_0807c698 retried 3x in FUN_0807c6f0 and by per-field validation in FUN_08028134. PACKET candidate byte file 0x37 is logical offset 0 (validated selector), not a checksum; sum8/xor8/crc32 over logical bytes (cap00 4a/c8/bc17aae5, cap01 4c/36/51b6ca45) match no stored byte and no code computes them.",
+      "stored_offset": 8,
+      "stored_size": 8,
+      "covered_start": 16,
+      "covered_end": 48,
+      "function_addrs": [
+        "0x08027c68",
+        "0x080277a4"
+      ],
+      "verified_on_samples": [
+        {
+          "file": "cap-00-future-0.sav",
+          "stored_hex": "ffffffffffffffff",
+          "computed_hex": "ffffffffffffffff",
+          "match": true
+        },
+        {
+          "file": "cap-01-future-1.sav",
+          "stored_hex": "ffffffffffffffff",
+          "computed_hex": "ffffffffffffffff",
+          "match": true
+        }
+      ],
+      "confidence": "CONFIRMED_VERIFIED"
+    }
+  ],
+  "io_driver_functions": [
+    {
+      "addr": "0x0807c3ac",
+      "role": "serialize",
+      "callers": [
+        "0x08027c68"
+      ],
+      "notes": "EEPROM init called as FUN_0807c3ac(4) at boot; selects descriptor whose +4=word count, +8=address-bit count are read by drivers; literal 4 semantics unresolved"
+    },
+    {
+      "addr": "0x0807c3f4",
+      "role": "write",
+      "callers": [
+        "0x0807c474",
+        "0x0807c538"
+      ],
+      "notes": "DMA3 helper: stores src/dst/count|0x80000000 via literal-pool regs matching DMA3 0x040000D4/D8/DC, polls busy bit 0x8000"
+    },
+    {
+      "addr": "0x0807c474",
+      "role": "read",
+      "callers": [
+        "0x0807c698",
+        "0x080277a4",
+        "0x08027a2c",
+        "0x08027b6c",
+        "0x08027c68"
+      ],
+      "notes": "EEPROM word read: address bits MSB-first + two 1 bits DMA to 0x0D000000 (len addr_bits+3), then 0x44 halfwords back; reassembles 4 u16 (8 bytes)"
+    },
+    {
+      "addr": "0x0807c538",
+      "role": "write",
+      "callers": [
+        "0x0807c524"
+      ],
+      "notes": "EEPROM word write: 64 data bits + address bits + bits 0,1 DMA to 0x0D000000 (len addr_bits+0x43); optional write-complete poll on 0x0D000000 bit0 with 0xE4-wrap timer, abort after 0x88 ticks"
+    },
+    {
+      "addr": "0x0807c524",
+      "role": "write",
+      "callers": [
+        "0x0807c6f0"
+      ],
+      "notes": "Write wrapper: calls FUN_0807c538(addr,data,wait=1), returns low 16 bits"
+    },
+    {
+      "addr": "0x0807c698",
+      "role": "checksum",
+      "callers": [
+        "0x0807c6f0"
+      ],
+      "notes": "Write verifier (integrity, not arithmetic checksum): re-reads word via FUN_0807c474, compares 4 u16, returns 0 or 0x8000"
+    },
+    {
+      "addr": "0x0807c6f0",
+      "role": "write",
+      "callers": [
+        "0x080277a4",
+        "0x08027a2c",
+        "0x08027c68"
+      ],
+      "notes": "Verified word write: up to 3 attempts of FUN_0807c524 write + FUN_0807c698 verify"
+    },
+    {
+      "addr": "0x08027b6c",
+      "role": "read",
+      "callers": [
+        "0x08028134"
+      ],
+      "notes": "Logical reader: byte offset/count, bound end<=0x1D0, word=(off>>3)+6, read-modify via FUN_0807c474, returns 0/0xFFFFFFFF"
+    },
+    {
+      "addr": "0x08027a2c",
+      "role": "write",
+      "callers": [
+        "0x08027f90"
+      ],
+      "notes": "Direct logical writer (no journal): count 1..0x18, read-modify-write same dest word via FUN_0807c474+FUN_0807c6f0"
+    },
+    {
+      "addr": "0x080277a4",
+      "role": "write",
+      "callers": [
+        "0x08028134",
+        "0x080294c4"
+      ],
+      "notes": "Journalling logical writer: stage to words 2.., arm word1 with 4x(dest,count), commit to words 6.., clear word1 to FFx8; count cap 0x18 bounds txn to 4 staging words"
+    },
+    {
+      "addr": "0x08027c68",
+      "role": "read",
+      "callers": [],
+      "notes": "Boot probe/recovery/creation: FUN_0807c3ac(4), magic check, journal replay, else clear word1 + FUN_08027f90 defaults + write magic"
+    },
+    {
+      "addr": "0x08027f90",
+      "role": "serialize",
+      "callers": [
+        "0x08027c68"
+      ],
+      "notes": "Defaults writer via FUN_08027a2c: logical 1..4, 11x24B entries at 5..268, zero flags at 269/308/347/386/425; then non-save hardware init"
+    },
+    {
+      "addr": "0x08028134",
+      "role": "deserialize",
+      "callers": [],
+      "notes": "Load/validate/repair via FUN_08027b6c reads and FUN_080277a4 repairs; sole reader caller; entry point"
+    },
+    {
+      "addr": "0x080294c4",
+      "role": "serialize",
+      "callers": [
+        "0x08027f90"
+      ],
+      "notes": "Menu: on confirm journalling-writes 1 byte at logical 0 via FUN_080277a4; rest is text/sprite rendering, no EEPROM access"
+    }
+  ],
+  "caller_chains": [
+    {
+      "entry_caller": "0x08027c68",
+      "chain": [
+        "0x08027c68",
+        "0x0807c474",
+        "0x0807c3f4"
+      ],
+      "trigger_context": "Boot: EEPROM init, magic word0 read",
+      "ram_fields_updated": [],
+      "how_mapped": "Direct func_0x0807c474 call in FUN_08027c68 body; callgraph lists no caller for 0x08027c68 (boot entry)"
+    },
+    {
+      "entry_caller": "0x08027c68",
+      "chain": [
+        "0x08027c68",
+        "0x0807c6f0",
+        "0x0807c524",
+        "0x0807c538",
+        "0x0807c3f4"
+      ],
+      "trigger_context": "Boot journal replay (staging words 2+i -> dest+i) and first-boot word0/word1 writes",
+      "ram_fields_updated": [],
+      "how_mapped": "Direct read/write pairs in FUN_08027c68 replay loop and else branch; verified against callgraph edges 0x0807c6f0->0x0807c524->0x0807c538"
+    },
+    {
+      "entry_caller": "0x08027c68",
+      "chain": [
+        "0x08027c68",
+        "0x08027f90",
+        "0x08027a2c",
+        "0x0807c6f0",
+        "0x0807c524",
+        "0x0807c538",
+        "0x0807c3f4"
+      ],
+      "trigger_context": "First boot (magic absent): write all defaults directly without journal",
+      "ram_fields_updated": [
+        "logical_1_4_u32",
+        "entry_table_5_268",
+        "record_flags_269_308_347_386_425"
+      ],
+      "how_mapped": "FUN_08027c68 else-branch calls FUN_08027f90; FUN_08027f90 is sole caller of FUN_08027a2c (text search of decompiled.c)"
+    },
+    {
+      "entry_caller": "0x08028134",
+      "chain": [
+        "0x08028134",
+        "0x08027b6c",
+        "0x0807c474",
+        "0x0807c3f4"
+      ],
+      "trigger_context": "Load: reads logical 0, 1..4, record flags/names, all 66 entry fields",
+      "ram_fields_updated": [
+        "selector_halfword",
+        "decoded_nibbles_x8",
+        "record_flag_bytes_x5",
+        "record_name_buffers_x5",
+        "entry_ref_bytes",
+        "entry_value_u32s"
+      ],
+      "how_mapped": "FUN_08028134 is sole caller of FUN_08027b6c; each FUN_08027b6c call site read in body; RAM targets are unresolved literal pools (_DAT_080281c4/_DAT_080281d8/_DAT_080283cc/_DAT_080283d0), numeric addresses unknown"
+    },
+    {
+      "entry_caller": "0x08028134",
+      "chain": [
+        "0x08028134",
+        "0x080277a4",
+        "0x0807c6f0",
+        "0x0807c524",
+        "0x0807c538",
+        "0x0807c3f4"
+      ],
+      "trigger_context": "Load repair only when validation fails: selector>4, nibble invalid (2/3/>9), flag>2, unterminated name, entry ref to empty record, ref 5..13",
+      "ram_fields_updated": [
+        "selector_halfword",
+        "decoded_nibbles_x8",
+        "record_flag_bytes_x5",
+        "entry_ref_bytes"
+      ],
+      "how_mapped": "Four FUN_080277a4 call sites in FUN_08028134 body, each guarded by the stated validation; on samples no repair fires"
+    },
+    {
+      "entry_caller": "0x080294c4",
+      "chain": [
+        "0x080294c4",
+        "0x080277a4",
+        "0x0807c6f0",
+        "0x0807c524",
+        "0x0807c538",
+        "0x0807c3f4"
+      ],
+      "trigger_context": "Menu confirm: commit 1-byte selection at logical offset 0 (explains cap00 FF -> cap01 01 at file 0x37 plus staging residue)",
+      "ram_fields_updated": [
+        "selector_halfword"
+      ],
+      "how_mapped": "Single FUN_080277a4(0,psVar13,1) on confirm path in FUN_080294c4; staging word2==word6 in cap01 is its fingerprint"
+    }
+  ],
+  "fields": [
+    {
+      "name": "magic_payback",
+      "offset": 0,
+      "size": 8,
+      "type": "ascii",
+      "ram_addr": null,
+      "writers": [
+        "0x08027c68"
+      ],
+      "readers": [
+        "0x08027c68"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": "FF FF FF FF FF FF FF FF (absent)",
+        "cap-01-future-1.sav": "50 61 79 62 61 63 6B 2E 'Payback.'"
+      },
+      "update_mechanism": "Physical EEPROM word 0 (file 0x00). Written once on first boot via FUN_0807c6f0 after defaults; compared in driver-buffer (reversed) order at every boot",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "FUN_08027c68 byte compares + write; present in cap01, absent in cap00"
+    },
+    {
+      "name": "journal_header",
+      "offset": 8,
+      "size": 8,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [
+        "0x080277a4",
+        "0x08027c68"
+      ],
+      "readers": [
+        "0x08027c68"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": "FFx8 idle",
+        "cap-01-future-1.sav": "FFx8 idle"
+      },
+      "update_mechanism": "Physical word 1 (file 0x08). FUN_080277a4 arms 4x(dest_word,count), clears to FFx8 after commit; FUN_08027c68 replays valid header then clears",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "FUN_080277a4 uStack_4c..45 build + FUN_0807c6f0(1,..); FUN_08027c68 range/repetition checks; both samples idle"
+    },
+    {
+      "name": "journal_staging",
+      "offset": 16,
+      "size": 32,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [
+        "0x080277a4"
+      ],
+      "readers": [
+        "0x08027c68"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": "FFx32",
+        "cap-01-future-1.sav": "word2=07a1207698451001 (=word6), words3-5 FF"
+      },
+      "update_mechanism": "Physical words 2..5 (file 0x10). FUN_080277a4 phase 1 writes merged words via FUN_0807c6f0(2+index); never cleared after commit",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "FUN_080277a4 staging loop; cap01 word2==word6 fingerprint of the logical-0 commit"
+    },
+    {
+      "name": "selector_language",
+      "offset": 0,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": [
+        "0x080294c4",
+        "0x08028134"
+      ],
+      "readers": [
+        "0x08028134"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": "0xFF (file 0x37)",
+        "cap-01-future-1.sav": "0x01 (file 0x37)"
+      },
+      "update_mechanism": "Logical offset 0; file byte (6+0)*8+7=0x37. Menu confirm journalling-writes via FUN_080277a4(0,..,1) in FUN_080294c4; load repair via FUN_080277a4 in FUN_08028134 when >4. FUN_08027f90 never writes it",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "FUN_08028134 FUN_08027b6c(0,..,1) + >4 check + 20-byte-stride table index (5 languages En/Fr/De/Es/It); FUN_080294c4 commit; PACKET probe offset 0x37 is this byte, not a checksum. Language semantic HYPOTHESIS, range/role verified"
+    },
+    {
+      "name": "nibble_field_u32",
+      "offset": 1,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": [
+        "0x08027f90",
+        "0x08028134"
+      ],
+      "readers": [
+        "0x08028134"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": "bytes 10 45 98 76, u32 0x76984510",
+        "cap-01-future-1.sav": "bytes 10 45 98 76, u32 0x76984510"
+      },
+      "update_mechanism": "Logical 1..4 (file 0x36..0x33 reversed). Default _DAT_08028090 via FUN_08027a2c in FUN_08027f90; decoded to 8 halfwords (mask _DAT_080281c0) in FUN_08028134; whole-field journalling repair via FUN_080277a4(1,..,4) if any nibble >9 or ==2 or ==3",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "FUN_08028134 nibble split/validate/repair; nibbles LSB-first 0,1,5,4,8,9,6,7 valid in both samples; gameplay meaning UNKNOWN"
+    },
+    {
+      "name": "entry_table",
+      "offset": 5,
+      "size": 264,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [
+        "0x08027f90",
+        "0x08028134"
+      ],
+      "readers": [
+        "0x08028134"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": "11 identical entries 20a107e040420fe060e316e080841ee0a02526e0c0c62de0",
+        "cap-01-future-1.sav": "11 identical entries 20a107e040420fe060e316e080841ee0a02526e0c0c62de0"
+      },
+      "update_mechanism": "Logical 5..268 = 11 entries x 24B (6 x u32_le). Defaults _DAT_08028094..a8 via FUN_08027a2c in FUN_08027f90 loop i<0xB stride 0x18; per-field journalling repair in FUN_08028134",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "FUN_08027f90 six writes/entry; FUN_08028134 reads every field at (i*6+j)*4+5; observed identical defaults"
+    },
+    {
+      "name": "entry_field_ref_value",
+      "offset": 5,
+      "size": 4,
+      "type": "bitflags",
+      "ram_addr": null,
+      "writers": [
+        "0x08027f90",
+        "0x08028134"
+      ],
+      "readers": [
+        "0x08028134"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": "ref 0xE, values 007a120/00f4240/016e360/01e8480/02625a0/02dc6c0 repeating",
+        "cap-01-future-1.sav": "ref 0xE, values 007a120/00f4240/016e360/01e8480/02625a0/02dc6c0 repeating"
+      },
+      "update_mechanism": "Repeating 4B field x66 in entry_table: top nibble (>>0x1C) = record ref, low bits (& _DAT_080283dc, inferred 28 bits) = value. Load: ref<5 with empty record -> 0xF repair; ref 5..13 -> 0xE + recomputed value repair; 0xE/0xF no repair (FUN_08028134)",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "Shift/mask and both repair branches in FUN_08028134; mask literal unresolved so 28-bit width inferred from >>0x1C; value meaning UNKNOWN"
+    },
+    {
+      "name": "record0_flag",
+      "offset": 269,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": [
+        "0x08027f90",
+        "0x08028134"
+      ],
+      "readers": [
+        "0x08028134"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": "0x00 (file 0x13A)",
+        "cap-01-future-1.sav": "0x00 (file 0x13A)"
+      },
+      "update_mechanism": "Logical 269 (0x10D), stride-39 record 0 flag. Zero default via FUN_08027a2c in FUN_08027f90 (literal inferred: resolved literals 0x134/0x182 fix progression 269,308,347,386,425); load: >2 zeroed+repaired, 0=empty suppresses name read, unterminated name clears flag (FUN_08028134)",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "FUN_08028134 i*0x27+0x10D reads; file 0x13A=0x00 in both samples; FUN_08027f90 literal for this record inferred"
+    },
+    {
+      "name": "record1_flag",
+      "offset": 308,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": [
+        "0x08027f90",
+        "0x08028134"
+      ],
+      "readers": [
+        "0x08028134"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": "0x00 (file 0x163)",
+        "cap-01-future-1.sav": "0x00 (file 0x163)"
+      },
+      "update_mechanism": "Logical 308 (0x134, resolved FUN_08027f90 literal). Same validation as record0_flag",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "FUN_08027f90 FUN_08027a2c(0x134,..,1)=0; isolated 0x00 at file 0x163 in hexdump_and_diffs.txt"
+    },
+    {
+      "name": "record2_flag",
+      "offset": 347,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": [
+        "0x08027f90",
+        "0x08028134"
+      ],
+      "readers": [
+        "0x08028134"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": "0x00 (file 0x18C)",
+        "cap-01-future-1.sav": "0x00 (file 0x18C)"
+      },
+      "update_mechanism": "Logical 347 (0x15B inferred literal). Same validation as record0_flag",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "FUN_08028134 stride; isolated 0x00 at file 0x18C; FUN_08027f90 literal inferred"
+    },
+    {
+      "name": "record3_flag",
+      "offset": 386,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": [
+        "0x08027f90",
+        "0x08028134"
+      ],
+      "readers": [
+        "0x08028134"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": "0x00 (file 0x1B5)",
+        "cap-01-future-1.sav": "0x00 (file 0x1B5)"
+      },
+      "update_mechanism": "Logical 386 (0x182, resolved FUN_08027f90 literal). Same validation as record0_flag",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "FUN_08027f90 FUN_08027a2c(0x182,..,1)=0; isolated 0x00 at file 0x1B5"
+    },
+    {
+      "name": "record4_flag",
+      "offset": 425,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": [
+        "0x08027f90",
+        "0x08028134"
+      ],
+      "readers": [
+        "0x08028134"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": "0x00 (file 0x1DE)",
+        "cap-01-future-1.sav": "0x00 (file 0x1DE)"
+      },
+      "update_mechanism": "Logical 425 (0x1A9 inferred literal). Same validation as record0_flag",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "FUN_08028134 stride; isolated 0x00 at file 0x1DE; FUN_08027f90 literal inferred"
+    },
+    {
+      "name": "record_names",
+      "offset": 270,
+      "size": 20,
+      "type": "ascii",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [
+        "0x08028134"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": "FFx20 in all 5 records (never read, flags=0)",
+        "cap-01-future-1.sav": "FFx20 in all 5 records (never read, flags=0)"
+      },
+      "update_mechanism": "Logical 270+39*i (20B each, next at 309/348/387/426). Read via FUN_08027b6c(...,0x14) only if flag nonzero; scanned for 0x00 terminator; unterminated clears flag via FUN_080277a4. No writer in traced set (presumed untraced profile flow). Non-contiguous: field covers first record; others at +39 stride",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "FUN_08028134 name read/terminator scan; encoding unproven (no non-FF sample). Writer UNKNOWN"
+    },
+    {
+      "name": "record_tails",
+      "offset": 290,
+      "size": 18,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {
+        "cap-00-future-0.sav": "FFx18 in all 5 records",
+        "cap-01-future-1.sav": "FFx18 in all 5 records"
+      },
+      "update_mechanism": "Logical 290+39*i (18B each): 39B record = 1 flag + 20 name + 18 tail, filling 269..463=0x1D0 bound exactly. No writer/reader in traced set. Non-contiguous: covers first record; others at +39 stride",
+      "confidence": "UNKNOWN",
+      "evidence": "Arithmetic only: record stride 0x27 in FUN_08028134 minus flag/name sizes; content meaning unknown"
+    }
+  ],
+  "fuzzing_targets": [
+    {
+      "offset": 55,
+      "size": 1,
+      "mutation": "File 0x37 (logical 0): set to 0x05 out-of-range",
+      "requires_checksum_repair": false,
+      "predicted_effect": "Load (FUN_08028134) resets selector to ROM default and journalling-rewrites it; sav changes on load, journal returns to FFx8; no checksum repair ever (none exists)"
+    },
+    {
+      "offset": 55,
+      "size": 1,
+      "mutation": "File 0x37 (logical 0): set to 0x02 in-range",
+      "requires_checksum_repair": false,
+      "predicted_effect": "No repair, sav unchanged; language/selection becomes index 2"
+    },
+    {
+      "offset": 0,
+      "size": 1,
+      "mutation": "File 0x00: change 'P' 0x50 to 0x51 (break magic)",
+      "requires_checksum_repair": false,
+      "predicted_effect": "FUN_08027c68 recreates save: word1 cleared, all defaults rewritten, word0 rewritten as Payback.; progress lost"
+    },
+    {
+      "offset": 8,
+      "size": 8,
+      "mutation": "File 0x08: arm journal dest=6 count=1 (file bytes 01 06 01 06 01 06 01 06) with patterned staging word2 at file 0x10",
+      "requires_checksum_repair": false,
+      "predicted_effect": "Boot replays staging word2 into word6 (file 0x30..37) and clears word1 to FFx8"
+    },
+    {
+      "offset": 8,
+      "size": 8,
+      "mutation": "File 0x08: corrupt one of four repeated (dest,count) copies",
+      "requires_checksum_repair": false,
+      "predicted_effect": "Header validation fails; FUN_08027c68 ignores header, no replay, header left as mutated"
+    },
+    {
+      "offset": 54,
+      "size": 1,
+      "mutation": "File 0x36 (logical 1): 0x10 -> 0x12 so a nibble becomes 2",
+      "requires_checksum_repair": false,
+      "predicted_effect": "FUN_08028134 rejects whole u32 field and journalling-writes ROM replacement at logical 1..4"
+    },
+    {
+      "offset": 355,
+      "size": 1,
+      "mutation": "File 0x163 (logical 308, record1 flag): set to 0x03",
+      "requires_checksum_repair": false,
+      "predicted_effect": "Load zeroes flag (repair write); entry fields referencing record1 rewritten to ref 0xF in same pass"
+    },
+    {
+      "offset": 355,
+      "size": 21,
+      "mutation": "File 0x163 flag=0x01 plus record1 name (logical 309..328, per-word reversed file bytes) filled with 20 non-zero bytes",
+      "requires_checksum_repair": false,
+      "predicted_effect": "Load reads name, finds no terminator, clears flag in RAM and repairs EEPROM flag to 0; name bytes untouched. With a 0x00 terminator instead, record accepted and name shown"
+    },
+    {
+      "offset": 51,
+      "size": 1,
+      "mutation": "File 0x33 (logical 8, entry0 field0 byte3): 0x76 -> 0x16 (ref 0xE -> 1, record1 empty)",
+      "requires_checksum_repair": false,
+      "predicted_effect": "Load sets ref to 0xF and journalling-writes field; file 0x33 becomes 0xF6. Setting 0x56 (ref5) instead triggers ref->0xE plus recomputed value rewrite"
+    },
+    {
+      "offset": 290,
+      "size": 18,
+      "mutation": "Logical 290..307 (record0 tail, per-word reversed file bytes): fill with 0x00",
+      "requires_checksum_repair": false,
+      "predicted_effect": "No traced reader/writer: predicted no repair and no visible effect; any change identifies an untraced tail consumer"
+    }
+  ],
+  "open_questions": [
+    "Semantic meaning of logical 1..4 nibble field, the 66 entry low-28-bit values, and 18-byte record tails",
+    "Writer of record names and tails: no traced function writes them; untraced profile/gameplay flow presumed",
+    "Meanings of record flag values 1 and 2, and distinction between entry references 0xE and 0xF",
+    "Numeric RAM mirror addresses: blocked on unresolved literal pools (_DAT_080281c4, _DAT_080281d8, _DAT_080283cc, _DAT_080283d0, _DAT_080283dc mask value, _DAT_080280ac/b0/b4 flag literals inferred as 269/347/425)",
+    "FUN_0807c3ac(4) literal semantics and EEPROM descriptor values (word count at +4, address bits at +8); 64-word geometry itself is verified from files and journal range check",
+    "No paired .ss save states in workspace: all fuzzing predictions are unexecuted and require emulator reload testing"
+  ]
+}

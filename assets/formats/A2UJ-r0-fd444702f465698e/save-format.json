@@ -1,0 +1,366 @@
+{
+  "schema": "gbakit-save-research/1",
+  "release_key": "A2UJ-r0-fd444702f465698e",
+  "display_name": "Mother 1+2 (Japan)",
+  "rom_sha256": "fd444702f465698e8608e3034b68a65d59b538febb5aec371370435e9fea6e7a",
+  "game_code": "A2UJ",
+  "header_family": "A2U",
+  "community_id": "",
+  "overall_confidence": "MEDIUM",
+  "media": {
+    "kind": "sram",
+    "size_bytes": 32768,
+    "sdk_tags": [],
+    "fill_byte": "0xff"
+  },
+  "slots_and_copies": [
+    {
+      "name": "selection_record_mirror_a",
+      "offset": 32512,
+      "size": 16,
+      "redundancy_role": "primary",
+      "selection_rule": "FUN_080124c4: copy to RAM via FUN_080f482c, validate with FUN_080125b0; used first, fall back to mirror B only if validation fails (magic or checksum mismatch)"
+    },
+    {
+      "name": "selection_record_mirror_b",
+      "offset": 32528,
+      "size": 16,
+      "redundancy_role": "backup",
+      "selection_rule": "FUN_080124c4: tried only if mirror A fails magic or checksum validation"
+    },
+    {
+      "name": "main_save_record_slot_mirror_a",
+      "offset": null,
+      "size": 1984,
+      "redundancy_role": "primary",
+      "selection_rule": "FUN_08012460: offset = slot_index*0xf80 + base (base global _DAT_080124b4 unresolved in this corpus); validated with FUN_0801256c; never observed non-erased in supplied .sav files"
+    },
+    {
+      "name": "main_save_record_slot_mirror_b",
+      "offset": null,
+      "size": 1984,
+      "redundancy_role": "backup",
+      "selection_rule": "FUN_08012460: offset = (slot_index*2+1)*0x7c0 + base; tried only if mirror A fails validation; never observed non-erased in supplied .sav files"
+    }
+  ],
+  "magic_signatures": [
+    {
+      "offset": 32512,
+      "bytes_hex": "4d4f5453454c3132",
+      "ascii": "MOTSEL12",
+      "verified_in_code": true,
+      "verified_in_sav": true,
+      "function_addrs": ["0x0801278c", "0x080125b0"]
+    },
+    {
+      "offset": 32528,
+      "bytes_hex": "4d4f5453454c3132",
+      "ascii": "MOTSEL12",
+      "verified_in_code": true,
+      "verified_in_sav": true,
+      "function_addrs": ["0x0801278c", "0x080125b0"]
+    },
+    {
+      "offset": 0,
+      "bytes_hex": "4d4f5432",
+      "ascii": "MOT2",
+      "verified_in_code": true,
+      "verified_in_sav": false,
+      "function_addrs": ["0x0801256c"]
+    }
+  ],
+  "checksums": [
+    {
+      "name": "selection_record_checksum",
+      "algorithm": "sum32_le",
+      "formula_detail": "Unsigned additive sum of all 16 record bytes (offsets 0x0-0xF relative to record start) computed with the 4-byte checksum field (relative offset 0x8-0xB) temporarily zeroed; stored back into that field as a little-endian u32. No modulo/wraparound masking, no XOR, no CRC, no seed. Implemented by FUN_0801296c; constructed by FUN_0801278c; verified by FUN_080125b0.",
+      "stored_offset": 32520,
+      "stored_size": 4,
+      "covered_start": 32512,
+      "covered_end": 32528,
+      "function_addrs": ["0x0801278c", "0x080125b0", "0x0801296c"],
+      "verified_on_samples": [
+        {"file": "saves/cap-00-future-0.sav", "stored_hex": "0xffffffff", "computed_hex": "0x00000bf4", "match": false},
+        {"file": "saves/cap-01-future-1.sav", "stored_hex": "0x00000237", "computed_hex": "0x00000237", "match": true}
+      ],
+      "confidence": "CONFIRMED_VERIFIED"
+    },
+    {
+      "name": "selection_record_checksum_mirror_b",
+      "algorithm": "sum32_le",
+      "formula_detail": "Identical algorithm and field layout as selection_record_checksum, applied to the second mirror copy at offset 0x7F10.",
+      "stored_offset": 32536,
+      "stored_size": 4,
+      "covered_start": 32528,
+      "covered_end": 32544,
+      "function_addrs": ["0x0801278c", "0x080125b0", "0x0801296c"],
+      "verified_on_samples": [
+        {"file": "saves/cap-00-future-0.sav", "stored_hex": "0xffffffff", "computed_hex": "0x00000bf4", "match": false},
+        {"file": "saves/cap-01-future-1.sav", "stored_hex": "0x00000237", "computed_hex": "0x00000237", "match": true}
+      ],
+      "confidence": "CONFIRMED_VERIFIED"
+    },
+    {
+      "name": "main_save_record_checksum",
+      "algorithm": "sum32_le",
+      "formula_detail": "Same additive-sum primitive (FUN_0801296c) as the selection record, but covering the entire 0x7C0 (1984) byte record with the 4-byte checksum field at relative offset 0x4-0x7 zeroed during summation. Verified by FUN_0801256c. Not observed as non-erased in either supplied .sav; cannot be verified against real bytes.",
+      "stored_offset": 4,
+      "stored_size": 4,
+      "covered_start": 0,
+      "covered_end": 1984,
+      "function_addrs": ["0x0801256c", "0x0801296c"],
+      "verified_on_samples": [],
+      "confidence": "CONFIRMED_STATIC"
+    }
+  ],
+  "io_driver_functions": [
+    {
+      "addr": "0x080f482c",
+      "role": "read",
+      "callers": ["0x08012460", "0x080124c4"],
+      "notes": "Copy primitive used for both the small (0x10) and large (0x7c0) record reads; call-site argument ordering/sizes trusted, but the decompiled loop body is explicitly flagged by the tool as unreliable due to overlapping-global-symbol corruption. Preceded by a 16-bit read-mask-OR-3 register write structurally consistent with (but not literally confirmed as) GBA WAITCNT SRAM wait-state configuration."
+    },
+    {
+      "addr": "0x080f4890",
+      "role": "write",
+      "callers": ["0x0801278c"],
+      "notes": "Byte-copy write primitive for the small 16-byte record, RAM scratch buffer -> SRAM mirror destination. Same &mask|3 register idiom precedes the copy loop; this loop body is not flagged with the overlap warning, so its shape is more trusted than 0x080f482c's."
+    },
+    {
+      "addr": "0x080f4900",
+      "role": "read",
+      "callers": ["0x0801278c"],
+      "notes": "Write-verify readback counterpart to 0x080f4890, invoked immediately after each write in a retry loop (max 5 attempts); delegates comparison to func_0x080f49a8 (undecompiled stub)."
+    },
+    {
+      "addr": "0x0801296c",
+      "role": "checksum",
+      "callers": ["0x0801278c", "0x080125b0", "0x0801256c"],
+      "notes": "The sole checksum primitive in this corpus: unsigned additive sum of len bytes starting at ptr, returned as an unmasked 32-bit value. Used identically by both the small and large record formats."
+    },
+    {
+      "addr": "0x0801278c",
+      "role": "serialize",
+      "callers": [],
+      "notes": "Writer for the small 16-byte 'MOTSEL12' selection record. No caller of this function exists among the 158 extracted functions in this corpus, so the real-world value(s) of its param_1 argument (stored at relative offset 0xC) are unknown."
+    },
+    {
+      "addr": "0x080125b0",
+      "role": "deserialize",
+      "callers": ["0x080124c4"],
+      "notes": "Validator/reader for the small 16-byte record: checks 'MOTSEL12' magic, zeroes the checksum field, recomputes the sum via 0x0801296c, compares to the stored value. Returns 0=ok, 1=checksum mismatch, 2=bad magic."
+    },
+    {
+      "addr": "0x080124c4",
+      "role": "read",
+      "callers": [],
+      "notes": "Top-level reader for the small record: tries mirror A, falls back to mirror B on validation failure, returns the record's offset-0xC field on success or 0xFFFFFFFF on total failure. No caller found in this corpus."
+    },
+    {
+      "addr": "0x0801256c",
+      "role": "deserialize",
+      "callers": ["0x08012460"],
+      "notes": "Validator/reader for the large 0x7C0-byte record: checks 'MOT2' magic, zeroes the 4-byte checksum field, recomputes sum via 0x0801296c over the whole record, compares to stored value."
+    },
+    {
+      "addr": "0x08012460",
+      "role": "read",
+      "callers": [],
+      "notes": "Top-level reader for the large record: computes two mirror SRAM offsets from a slot index read from a RAM source struct, tries mirror A then mirror B, returns success/failure. No caller found in this corpus. No writer for this record was found anywhere in the 158 extracted functions."
+    },
+    {
+      "addr": "0x08012444",
+      "role": "serialize",
+      "callers": [],
+      "notes": "Initializes globals for the large-record subsystem: stores the 0x7C0 record-size constant and a base pointer. Not itself a writer of record bytes."
+    }
+  ],
+  "caller_chains": [
+    {
+      "entry_caller": "0x0801278c",
+      "chain": ["0x0801278c", "0x0801296c", "0x080f4890", "0x080f4900", "0x080f49a8"],
+      "trigger_context": "Unknown — no caller of 0x0801278c exists in this 158-function corpus; observed only via its effect on real .sav bytes.",
+      "ram_fields_updated": ["selection_record scratch buffer at _DAT_080127cc (offsets 0x0-0xF)"],
+      "how_mapped": "Traced by reading argument addresses and global symbol names directly in ghidra/decompiled.c (callgraph.json returned empty caller/callee arrays for every function in this chain). The writer's checksum construction was proven to be the exact algorithmic inverse of the reader's validation logic, and both were proven byte-exact against saves/cap-01-future-1.sav via an independent Python re-implementation."
+    },
+    {
+      "entry_caller": "0x080124c4",
+      "chain": ["0x080124c4", "0x080f482c", "0x080125b0", "0x0801296c"],
+      "trigger_context": "Unknown — no caller of 0x080124c4 exists in this corpus.",
+      "ram_fields_updated": ["iRam08012514 (+0xc), populated only on successful validation of either mirror"],
+      "how_mapped": "Traced via literal function-name call sites (func_0x080125b0, func_0x080f482c) and matching copy-size (0x10) / destination-global conventions shared with the writer chain."
+    },
+    {
+      "entry_caller": "0x08012460",
+      "chain": ["0x08012460", "0x080f482c", "0x0801256c", "0x0801296c"],
+      "trigger_context": "Unknown — no caller of 0x08012460 exists in this corpus; triggered presumably by an in-game 'load game' action not captured in either supplied .sav.",
+      "ram_fields_updated": ["source struct at _DAT_080124b0 (+0x8), a 2-byte field, set only on successful load"],
+      "how_mapped": "Traced via literal call to func_0x0801256c with the slot index as its argument, and matching 0x7c0 copy length shared with the FUN_08012444 init routine's declared record-size constant."
+    }
+  ],
+  "fields": [
+    {
+      "name": "selection_magic_mirror_a",
+      "offset": 32512,
+      "size": 8,
+      "type": "ascii",
+      "ram_addr": "0x080127cc",
+      "writers": ["0x0801278c"],
+      "readers": ["0x080125b0"],
+      "observed_values": {"cap-00-future-0.sav": "FFFFFFFFFFFFFFFF", "cap-01-future-1.sav": "4D4F5453454C3132"},
+      "update_mechanism": "8 literal byte stores in FUN_0801278c; compared byte-by-byte in FUN_080125b0",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Decompiled writer literal stores and validator literal comparison both match the real .sav bytes exactly."
+    },
+    {
+      "name": "selection_checksum_mirror_a",
+      "offset": 32520,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": "0x080127cc+8",
+      "writers": ["0x0801278c"],
+      "readers": ["0x080125b0"],
+      "observed_values": {"cap-00-future-0.sav": "0xffffffff", "cap-01-future-1.sav": "0x00000237"},
+      "update_mechanism": "sum32 over the 16-byte record with this field zeroed during the sum (FUN_0801296c)",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Python re-sum of real .sav bytes (zeroing this field first) equals the stored value exactly: 0x237 == 77+79+84+83+69+76+49+50."
+    },
+    {
+      "name": "selection_field_0xc_mirror_a",
+      "offset": 32524,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": "0x080127cc+0xc",
+      "writers": ["0x0801278c"],
+      "readers": ["0x080124c4"],
+      "observed_values": {"cap-00-future-0.sav": "0xffffffff", "cap-01-future-1.sav": "0x00000000"},
+      "update_mechanism": "Set directly from writer's param_1 argument before checksumming; returned directly by reader on success",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Field's existence and round-trip (write param_1 -> read same value back) is proven by code; its game-semantic meaning is unknown because no caller of the writer exists in this corpus and only a single sample value (0) has been observed."
+    },
+    {
+      "name": "selection_magic_mirror_b",
+      "offset": 32528,
+      "size": 8,
+      "type": "ascii",
+      "ram_addr": null,
+      "writers": ["0x0801278c"],
+      "readers": ["0x080125b0"],
+      "observed_values": {"cap-00-future-0.sav": "FFFFFFFFFFFFFFFF", "cap-01-future-1.sav": "4D4F5453454C3132"},
+      "update_mechanism": "Identical mirrored write of the same in-RAM record to a second SRAM destination",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Byte-identical to mirror A in saves/cap-01-future-1.sav."
+    },
+    {
+      "name": "selection_checksum_mirror_b",
+      "offset": 32536,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": ["0x0801278c"],
+      "readers": ["0x080125b0"],
+      "observed_values": {"cap-00-future-0.sav": "0xffffffff", "cap-01-future-1.sav": "0x00000237"},
+      "update_mechanism": "Same sum32 as mirror A, written a second time",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Byte-identical to mirror A in saves/cap-01-future-1.sav; independently verified in Python."
+    },
+    {
+      "name": "selection_field_0xc_mirror_b",
+      "offset": 32540,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": ["0x0801278c"],
+      "readers": ["0x080124c4"],
+      "observed_values": {"cap-00-future-0.sav": "0xffffffff", "cap-01-future-1.sav": "0x00000000"},
+      "update_mechanism": "Same as mirror A's 0xC field, written a second time",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Byte-identical to mirror A; semantic meaning unknown for the same reasons as selection_field_0xc_mirror_a."
+    },
+    {
+      "name": "main_save_magic",
+      "offset": null,
+      "size": 4,
+      "type": "ascii",
+      "ram_addr": null,
+      "writers": [],
+      "readers": ["0x0801256c"],
+      "observed_values": {},
+      "update_mechanism": "No writer found in this corpus",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "FUN_0801256c compares bytes 0-3 of its buffer to 'MOT2' literal-by-literal; absolute SRAM offset unknown, never observed non-erased."
+    },
+    {
+      "name": "main_save_checksum",
+      "offset": null,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": [],
+      "readers": ["0x0801256c"],
+      "observed_values": {},
+      "update_mechanism": "No writer found in this corpus",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "FUN_0801256c zeroes this field and recomputes sum32 over the full 0x7C0 record via FUN_0801296c."
+    },
+    {
+      "name": "main_save_payload",
+      "offset": null,
+      "size": 1976,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {},
+      "update_mechanism": "Unknown; covered only by the whole-record checksum, no field-level structure recovered in this corpus",
+      "confidence": "UNKNOWN",
+      "evidence": "No function in the 158-function corpus reads or writes individual sub-fields of this range; only its aggregate checksum coverage is proven."
+    }
+  ],
+  "fuzzing_targets": [
+    {
+      "offset": 32520,
+      "size": 4,
+      "mutation": "Flip one bit (e.g. XOR 0x01) in mirror A's checksum only, leave mirror B intact",
+      "requires_checksum_repair": false,
+      "predicted_effect": "Mirror A fails FUN_080125b0 validation (checksum mismatch, code 1); FUN_080124c4 falls back to mirror B, which still validates; no externally observable change expected until the next write resynchronizes both mirrors."
+    },
+    {
+      "offset": 32520,
+      "size": 4,
+      "mutation": "Zero out the checksum field in BOTH mirrors (0x7F08 and 0x7F18)",
+      "requires_checksum_repair": false,
+      "predicted_effect": "Both mirror validations fail; FUN_080124c4 returns total failure (*param_1 = 0xFFFFFFFF); downstream UI consuming the selection value should fall back to a default/no-selection state."
+    },
+    {
+      "offset": 32512,
+      "size": 1,
+      "mutation": "Change the first magic byte (0x7F00, 'M') to any other value, mirror A only",
+      "requires_checksum_repair": false,
+      "predicted_effect": "Mirror A fails validation with bad-magic code (2) instead of checksum-mismatch code (1); both should be externally indistinguishable since the caller only checks != 0, falling back to mirror B."
+    },
+    {
+      "offset": 32524,
+      "size": 4,
+      "mutation": "Sweep the 0xC field (both mirrors) through 0x00000001, 0x00000002, 0x00000003, ... with checksum repair",
+      "requires_checksum_repair": true,
+      "predicted_effect": "If this field selects a save slot/character/difficulty, the title screen or load menu should visibly change its default selection when reloading from a title-screen save state; no observable change for any value would narrow (not confirm) the field's hypothesized role."
+    },
+    {
+      "offset": null,
+      "size": 1984,
+      "mutation": "Perform an in-game action expected to trigger a real game save (not just the title-screen selection captured here), then re-dump SRAM and diff against the blank baseline",
+      "requires_checksum_repair": false,
+      "predicted_effect": "A new non-erased 0x7C0-byte range (or two, 0x7C0/0xF80 apart per the mirror-offset formula) should appear, beginning with ASCII 'MOT2' and containing a valid sum32 checksum at relative offset +4, locating the large record for the first time."
+    }
+  ],
+  "open_questions": [
+    "Real-world value range and semantic meaning of the selection record's offset-0xC field (writer's param_1); no caller of FUN_0801278c exists in the 158 extracted functions.",
+    "Absolute SRAM offset of the large 'MOT2' / 0x7C0-byte record; base global _DAT_080124b4 is unresolved in this corpus.",
+    "Full byte-level field layout of the large record's 1976-byte payload (relative offsets 0x8-0x7BF); only its aggregate checksum coverage is proven.",
+    "No writer function for the large 'MOT2' record was found among the 158 extracted functions; it is CONFIRMED_STATIC as a read/validate format only.",
+    "Exact hardware register touched by the repeated '&mask|3' idiom in FUN_080f482c/FUN_080f4890 is structurally consistent with GBA WAITCNT SRAM wait-state bits but not literally confirmed; no literal 0x04000204 constant appears in this corpus.",
+    "ghidra/callgraph.json resolved zero static call edges for every function discussed in this report; all caller/callee relationships were reconstructed manually from ghidra/decompiled.c, which introduces human-tracing risk despite the byte-level checksum cross-check.",
+    "No paired .ss emulator save states were supplied for this release (states/ is empty for this legacy checkpoint cohort), so the fuzzing plan's predicted gameplay/UI effects have not been executed, only specified."
+  ]
+}

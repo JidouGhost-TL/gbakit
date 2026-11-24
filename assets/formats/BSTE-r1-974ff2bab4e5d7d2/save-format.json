@@ -1,0 +1,738 @@
+{
+  "schema": "gbakit-save-research/1",
+  "release_key": "BSTE-r1-974ff2bab4e5d7d2",
+  "display_name": "Spyro Orange - The Cortex Conspiracy (USA) (Rev 1)",
+  "rom_sha256": "974ff2bab4e5d7d20e42184ab4c179cf3d0beda247648ad102d4a3b80b0dd3c9",
+  "game_code": "BSTE",
+  "header_family": "BST",
+  "community_id": "comm-005",
+  "overall_confidence": "MEDIUM",
+  "media": {
+    "kind": "eeprom512",
+    "size_bytes": 512,
+    "sdk_tags": [],
+    "fill_byte": "0xff"
+  },
+  "slots_and_copies": [
+    {
+      "name": "global_config",
+      "offset": 0,
+      "size": 8,
+      "redundancy_role": "global_config",
+      "selection_rule": "Always loaded at FUN_080191a0; header-checked by FUN_08022c3c, re-initialised by FUN_08022c50 on mismatch. Logical offset 0; file bytes are the block-reversed form."
+    },
+    {
+      "name": "slot_0",
+      "offset": 8,
+      "size": 160,
+      "redundancy_role": "primary",
+      "selection_rule": "Selected by explicit index via FUN_080191fc(0); valid iff FUN_08022bb4 header+CRC pass, else re-initialised empty by FUN_08022c04 or populated by FUN_080226dc. Logical offset 8 (0xA0 stride)."
+    },
+    {
+      "name": "slot_1",
+      "offset": 168,
+      "size": 160,
+      "redundancy_role": "primary",
+      "selection_rule": "Selected by explicit index via FUN_080191fc(1); same validation as slot_0. Logical offset 168."
+    },
+    {
+      "name": "slot_2",
+      "offset": 328,
+      "size": 160,
+      "redundancy_role": "primary",
+      "selection_rule": "Selected by explicit index via FUN_080191fc(2); same validation as slot_0. Logical offset 328; ends at 488, followed by 24 bytes of 0xFF unwritten EEPROM."
+    }
+  ],
+  "magic_signatures": [
+    {
+      "offset": 0,
+      "bytes_hex": "1d61dec0",
+      "ascii": "",
+      "verified_in_code": true,
+      "verified_in_sav": true,
+      "function_addrs": [
+        "0x08022c50",
+        "0x08022c3c"
+      ]
+    },
+    {
+      "offset": 8,
+      "bytes_hex": "2d61dec0",
+      "ascii": "",
+      "verified_in_code": true,
+      "verified_in_sav": true,
+      "function_addrs": [
+        "0x080226dc",
+        "0x08022bb4"
+      ]
+    },
+    {
+      "offset": 8,
+      "bytes_hex": "d29e213f",
+      "ascii": "",
+      "verified_in_code": true,
+      "verified_in_sav": true,
+      "function_addrs": [
+        "0x08022c04",
+        "0x08022bb4"
+      ]
+    }
+  ],
+  "checksums": [
+    {
+      "name": "profile_crc16_xmodem_seed0",
+      "algorithm": "crc16",
+      "formula_detail": "CRC-16 MSB-first poly 0x1021 init 0x0000 no reflection no final XOR (XMODEM params, zero seed): crc=(crc<<8)^table[((crc>>8)^byte)]; computed by FUN_08031520(0, profile, 0x9C) via FUN_08022bf0; stored u16le at profile+0x9C. Offsets given for slot_0; covered/stored shift by +0xA0 per slot. File image is byte-reversed within each 8-byte block, so slot_0 stored bytes appear at file 0xA2-0xA3 swapped.",
+      "stored_offset": 164,
+      "stored_size": 2,
+      "covered_start": 8,
+      "covered_end": 164,
+      "function_addrs": [
+        "0x08031520",
+        "0x08022bf0",
+        "0x08022bb4",
+        "0x08022c04",
+        "0x080226dc"
+      ],
+      "verified_on_samples": [
+        {
+          "file": "cap-00-future-0.sav",
+          "stored_hex": "0x0ff8",
+          "computed_hex": "0x0ff8",
+          "match": true
+        },
+        {
+          "file": "cap-01-retained-3.sav",
+          "stored_hex": "0xbb87",
+          "computed_hex": "0xbb87",
+          "match": true
+        }
+      ],
+      "confidence": "CONFIRMED_VERIFIED"
+    }
+  ],
+  "io_driver_functions": [
+    {
+      "addr": "0x0803b020",
+      "role": "write",
+      "callers": [
+        "0x0803b0a0",
+        "0x0803b164"
+      ],
+      "notes": "DMA3 engine: programs src/dst/count|0x80000000 via pointer globals, busy-waits, restores IRQ state. Used for both EEPROM directions."
+    },
+    {
+      "addr": "0x0803b0a0",
+      "role": "read",
+      "callers": [
+        "0x0803b2c4",
+        "0x0800a850",
+        "0x0800a8d0"
+      ],
+      "notes": "EEPROM read one 8-byte block: address bitstream DMA to 0x0D000000, DMA read 0x44 halfwords, reassemble 4xu16 MSB-first. Callers 0x0800a850/0x0800a8d0 via func_ alias (not in callgraph.json)."
+    },
+    {
+      "addr": "0x0803b164",
+      "role": "write",
+      "callers": [
+        "0x0803b150"
+      ],
+      "notes": "EEPROM write one 8-byte block: data+address bitstream DMA to 0x0D000000 (addr_bits+0x43 halfwords), then EEPROM busy poll with timer timeout 0x88."
+    },
+    {
+      "addr": "0x0803b150",
+      "role": "write",
+      "callers": [
+        "0x0803b31c"
+      ],
+      "notes": "Wrapper: FUN_0803b164(addr, buf, wait=1)."
+    },
+    {
+      "addr": "0x0803b2c4",
+      "role": "read",
+      "callers": [
+        "0x0803b31c"
+      ],
+      "notes": "Verify: EEPROM-read block and compare 4xu16 vs RAM; returns 0x8000 on mismatch."
+    },
+    {
+      "addr": "0x0803b31c",
+      "role": "write",
+      "callers": [
+        "0x0800a850"
+      ],
+      "notes": "Verified write: up to 3x write (0x0803b150) + verify (0x0803b2c4). Caller via func_ alias."
+    },
+    {
+      "addr": "0x0800a8d0",
+      "role": "read",
+      "callers": [
+        "0x080190c0"
+      ],
+      "notes": "Load: sequential EEPROM block reads (func_0x0803b0a0) into save buffer+0xC, +8 bytes per block."
+    },
+    {
+      "addr": "0x0800a850",
+      "role": "write",
+      "callers": [
+        "0x08018fa0"
+      ],
+      "notes": "Flush: per block EEPROM-read-compare vs RAM; write+verify (0x0803b31c) only on mismatch (write-if-dirty)."
+    },
+    {
+      "addr": "0x08031520",
+      "role": "checksum",
+      "callers": [
+        "0x08022bb4",
+        "0x08022bf0"
+      ],
+      "notes": "Table-driven CRC-16 MSB-first; profile call sites pass seed 0, len 0x9C. Callers via func_ alias for 0x08022bf0 path."
+    },
+    {
+      "addr": "0x08022bf0",
+      "role": "checksum",
+      "callers": [
+        "0x08022c04",
+        "0x080226dc"
+      ],
+      "notes": "Returns (u16)FUN_08031520(0, profile, 0x9C)."
+    },
+    {
+      "addr": "0x08022bb4",
+      "role": "deserialize",
+      "callers": [
+        "0x08022be4"
+      ],
+      "notes": "Validate profile: header==occupied magic AND CRC(profile[0:0x9C])==u16 at +0x9C."
+    },
+    {
+      "addr": "0x080226dc",
+      "role": "serialize",
+      "callers": [
+        "0x08013420"
+      ],
+      "notes": "Game state -> profile (all field writers, header, CRC). Caller via func_ alias (decompiled.c:1511)."
+    },
+    {
+      "addr": "0x080228a8",
+      "role": "deserialize",
+      "callers": [
+        "0x08013420",
+        "0x08028f60"
+      ],
+      "notes": "Profile -> game state (inverse of 0x080226dc)."
+    }
+  ],
+  "caller_chains": [
+    {
+      "entry_caller": "0x08032f18",
+      "chain": [
+        "0x08032f18",
+        "0x080191fc",
+        "0x080191a0",
+        "0x080190c0",
+        "0x0800a8d0",
+        "0x0803b0a0",
+        "0x0803b020"
+      ],
+      "trigger_context": "Boot/first-use load: lazy init on first FUN_080191fc/FUN_0801922c call; EEPROM loaded into save buffer+0xC, then global+profiles validated/re-initialised",
+      "ram_fields_updated": [
+        "global header (re-init if bad)",
+        "profile headers/CRCs (empty re-init if bad)"
+      ],
+      "how_mapped": "callgraph.json edges 0x080191a0->{0x0800a90c,0x080190c0}, 0x080190c0->0x0800a8d0; textual func_0x0803b0a0 at decompiled.c:1016 (callgraph omits func_ aliases)"
+    },
+    {
+      "entry_caller": "0x08013420",
+      "chain": [
+        "0x08013420",
+        "0x080191fc",
+        "0x080226dc",
+        "0x08018fa0",
+        "0x0800a850",
+        "0x0803b31c",
+        "0x0803b150",
+        "0x0803b164",
+        "0x0803b020"
+      ],
+      "trigger_context": "Gameplay save for a slot: profile obtained via FUN_080191fc(slot); if FUN_08022be4 reports invalid, serialize game state into profile then flush (valid branch instead deserializes via FUN_080228a8 without flushing)",
+      "ram_fields_updated": [
+        "profile +0x00 header",
+        "profile +0x04..+0x10 u32s",
+        "profile +0x14 region (via 0x08022b10)",
+        "profile +0x28..+0x3D bytes",
+        "profile +0x44 block (6 units)",
+        "profile +0x60 block (14 units)",
+        "profile +0x9C CRC"
+      ],
+      "how_mapped": "Textual func_0x080191fc/func_0x080226dc/func_0x08018fa0 at decompiled.c:1496-1512; callgraph confirms 0x08018fa0->0x0800a850; seed file confirms 0x0803b31c->0x0803b150->0x0803b164->0x0803b020"
+    },
+    {
+      "entry_caller": "0x08028f60",
+      "chain": [
+        "0x08028f60",
+        "0x080191fc",
+        "0x08022be4",
+        "0x08022bb4",
+        "0x080228a8"
+      ],
+      "trigger_context": "Slot-select/load screen: iterate slots 0..2, validate each, deserialize valid slots into scratch game state",
+      "ram_fields_updated": [],
+      "how_mapped": "callgraph.json 0x08028f60->{0x080191fc,0x08022be4,0x080228a8}; loop bound 3 at decompiled.c:4516"
+    },
+    {
+      "entry_caller": "0x08032f18",
+      "chain": [
+        "0x08032f18",
+        "0x080314c4",
+        "0x0801922c",
+        "0x08022c38",
+        "0x08022c34",
+        "0x08018fa0",
+        "0x0800a850",
+        "0x0803b31c"
+      ],
+      "trigger_context": "Global counter update + flush: read global+4, write incremented value, flush whole save image",
+      "ram_fields_updated": [
+        "global +0x04 counter byte"
+      ],
+      "how_mapped": "callgraph.json 0x08032f18->0x080314c4, 0x080314c4->{0x0801922c,0x08022c38,0x08022c34,0x08018fa0} (decompiled.c:5349-5354, 5880)"
+    }
+  ],
+  "fields": [
+    {
+      "name": "global_header_magic",
+      "offset": 0,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": [
+        "0x08022c50"
+      ],
+      "readers": [
+        "0x08022c3c"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": "0xc0de611d",
+        "cap-01-retained-3.sav": "0xc0de611d"
+      },
+      "update_mechanism": "Written on init in FUN_080191a0; validated on load",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Logical offset 0; both files hold 0xC0DE611D; FUN_08022c50 writes it (decompiled.c:4265), FUN_08022c3c checks it (decompiled.c:4254). File offset is block-reversed (bytes at file 0x04-0x07 reversed order)."
+    },
+    {
+      "name": "global_counter_byte",
+      "offset": 4,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": [
+        "0x08022c34"
+      ],
+      "readers": [
+        "0x08022c38"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": 1,
+        "cap-01-retained-3.sav": 1
+      },
+      "update_mechanism": "FUN_080314c4 writes FUN_0800026a(old+1,0x18) then flushes via FUN_08018fa0",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "FUN_08022c34/08022c38 access global+4 (decompiled.c:4233/4243); caller FUN_080314c4 (decompiled.c:5349-5354). Value semantics unproven from two samples."
+    },
+    {
+      "name": "global_record_padding",
+      "offset": 5,
+      "size": 3,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {
+        "cap-00-future-0.sav": "ffffff",
+        "cap-01-retained-3.sav": "ffffff"
+      },
+      "update_mechanism": "No traced writer",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Always 0xFF; never written by traced code; likely unused padding in 8-byte global record."
+    },
+    {
+      "name": "slot_header_magic",
+      "offset": 8,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": [
+        "0x080226dc",
+        "0x08022c04"
+      ],
+      "readers": [
+        "0x08022bb4"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": "0x3f219ed2 (empty, all slots)",
+        "cap-01-retained-3.sav": "slot0 0xc0de612d; slot1/2 0x3f219ed2"
+      },
+      "update_mechanism": "0x080226dc writes occupied header before CRC; 0x08022c04 writes empty header",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "FUN_08022bb4 header+CRC check (decompiled.c:4177); empty init FUN_08022c04 (decompiled.c:4221). Slots 1/2 repeat at logical 168/328. Whether occupied value varies by slot is unknown (only slot0 occupied)."
+    },
+    {
+      "name": "profile_u32_04",
+      "offset": 12,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": [
+        "0x080226dc"
+      ],
+      "readers": [
+        "0x080228a8"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": 0,
+        "cap-01-retained-3.sav": 0
+      },
+      "update_mechanism": "Copied game<->profile: FUN_08014e14 (game +0x14/+0x1E8 gated by FUN_08014e04)",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "FUN_080226dc decompiled.c:3845-3850; FUN_080228a8 decompiled.c:3922. Slot0 offset shown; +0xA0 per slot."
+    },
+    {
+      "name": "profile_u32_08",
+      "offset": 16,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": [
+        "0x080226dc"
+      ],
+      "readers": [
+        "0x080228a8"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": 0,
+        "cap-01-retained-3.sav": 0
+      },
+      "update_mechanism": "Copied game<->profile: FUN_08014e10 = game +0x18",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "FUN_080226dc decompiled.c:3849; FUN_080228a8 decompiled.c:3923."
+    },
+    {
+      "name": "profile_u32_0c",
+      "offset": 20,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": [
+        "0x080226dc"
+      ],
+      "readers": [
+        "0x080228a8"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": 0,
+        "cap-01-retained-3.sav": 0
+      },
+      "update_mechanism": "Copied game<->profile: FUN_08014bd8 = game +0x20",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "FUN_080226dc (FUN_08014bd8 decompiled.c:1829); FUN_080228a8 decompiled.c:3924."
+    },
+    {
+      "name": "profile_u32_10",
+      "offset": 24,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": [
+        "0x080226dc"
+      ],
+      "readers": [
+        "0x080228a8"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": 0,
+        "cap-01-retained-3.sav": 0
+      },
+      "update_mechanism": "Copied game<->profile: FUN_08014e08 = game +0x30",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "FUN_080226dc (FUN_08014e08 decompiled.c:1965); FUN_080228a8 decompiled.c:3925."
+    },
+    {
+      "name": "profile_region_14",
+      "offset": 28,
+      "size": 20,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [
+        "0x08022b10"
+      ],
+      "readers": [
+        "0x08022a6c"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": "all zero",
+        "cap-01-retained-3.sav": "20 80 00 00 00 80 00 00 00 80 00 00 00 80 00 00 00 00 00 00"
+      },
+      "update_mechanism": "Table-driven copy (5 groups x <=15 entries) via FUN_08022b10/FUN_08022a6c",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "FUN_08022b10 decompiled.c:4124-4162; FUN_08022a6c decompiled.c:4052-4090. Internal entry semantics unknown."
+    },
+    {
+      "name": "profile_bytes_28",
+      "offset": 40,
+      "size": 8,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [
+        "0x080226dc"
+      ],
+      "readers": [
+        "0x080228a8"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": "all zero",
+        "cap-01-retained-3.sav": "all zero"
+      },
+      "update_mechanism": "Per-index bytes via FUN_080149b8(game,0..7) and func_0x080149c4 setters",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "FUN_080226dc profile+0x28..0x2F; FUN_080228a8 decompiled.c:3929-3943."
+    },
+    {
+      "name": "profile_bytes_30",
+      "offset": 48,
+      "size": 10,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [
+        "0x080226dc"
+      ],
+      "readers": [
+        "0x080228a8"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": "all zero",
+        "cap-01-retained-3.sav": "all zero"
+      },
+      "update_mechanism": "Paired bytes via FUN_08014994(game,pairs 0..4 x 0/1)",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "FUN_080226dc profile+0x30..0x39; FUN_080228a8 decompiled.c:3944-3969."
+    },
+    {
+      "name": "profile_bytes_3a",
+      "offset": 58,
+      "size": 2,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [
+        "0x080226dc"
+      ],
+      "readers": [
+        "0x080228a8"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": "00 00",
+        "cap-01-retained-3.sav": "00 00"
+      },
+      "update_mechanism": "Byte pair via FUN_08014978(game,0/1) / func_0x08014984",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "FUN_080226dc profile+0x3A..0x3B; FUN_080228a8 decompiled.c:3970-3975."
+    },
+    {
+      "name": "profile_bytes_3c",
+      "offset": 60,
+      "size": 2,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [
+        "0x08022a38"
+      ],
+      "readers": [
+        "0x08022a14"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": "00 00",
+        "cap-01-retained-3.sav": "0c 0c"
+      },
+      "update_mechanism": "Values (func_0x08029ab4/0x08029ab0 >>4) at save; <<4 restored at load",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "FUN_08022a38 decompiled.c:4011-4017; FUN_08022a14 decompiled.c:3992-3994. Appears at file 0x42-0x43 in cap-01 (block-reversed)."
+    },
+    {
+      "name": "profile_region_3e_43",
+      "offset": 62,
+      "size": 6,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {
+        "cap-00-future-0.sav": "all zero",
+        "cap-01-retained-3.sav": "all zero"
+      },
+      "update_mechanism": "No traced writer; CRC-covered",
+      "confidence": "UNKNOWN",
+      "evidence": "Zero in all samples; inside CRC range but no writer found in corpus."
+    },
+    {
+      "name": "profile_block_44",
+      "offset": 68,
+      "size": 24,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [
+        "0x080226dc"
+      ],
+      "readers": [
+        "0x080228a8"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": "all zero",
+        "cap-01-retained-3.sav": "all zero"
+      },
+      "update_mechanism": "6-unit copy FUN_08001e48(game+0xC, profile+0x44, 6); reverse FUN_08001ea4",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "FUN_080226dc (FUN_08001e48); FUN_080228a8 decompiled.c:3926. Unit size not stated in corpus."
+    },
+    {
+      "name": "profile_block_60",
+      "offset": 96,
+      "size": 56,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [
+        "0x080226dc"
+      ],
+      "readers": [
+        "0x080228a8"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": "all zero",
+        "cap-01-retained-3.sav": "u32 pattern 0x04280001 at +0x60/+0x7C, 0x0F byte at +0x6B/+0x87"
+      },
+      "update_mechanism": "14-unit copy via FUN_08007214/FUN_08007238 with count 0x0E (game +0x19C)",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "FUN_080226dc FUN_08007214(...,profile+0x18,0xE) = byte +0x60; FUN_080228a8 decompiled.c:3978. Cap-01 sets sub-offsets +0x60,+0x62,+0x63,+0x6B,+0x7C,+0x7E,+0x7F,+0x87."
+    },
+    {
+      "name": "profile_tail_98_9b",
+      "offset": 152,
+      "size": 4,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {
+        "cap-00-future-0.sav": "all zero",
+        "cap-01-retained-3.sav": "all zero"
+      },
+      "update_mechanism": "No traced writer; CRC-covered",
+      "confidence": "UNKNOWN",
+      "evidence": "Zero in all samples; last 4 CRC-covered bytes."
+    },
+    {
+      "name": "profile_crc16",
+      "offset": 156,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": [
+        "0x08022c04",
+        "0x080226dc"
+      ],
+      "readers": [
+        "0x08022bb4"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": "0x0ff8 (all slots)",
+        "cap-01-retained-3.sav": "slot0 0xbb87; slot1/2 0x0ff8"
+      },
+      "update_mechanism": "Recomputed via FUN_08022bf0 -> FUN_08031520(0, profile, 0x9C) after any serialization/init",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Verified 6/6 in Python (see report section 4). Slot0 stored at file 0xA2-0xA3 block-reversed; slot1 file 0x142, slot2 file 0x1E2."
+    },
+    {
+      "name": "profile_post_crc_9e",
+      "offset": 158,
+      "size": 2,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {
+        "cap-00-future-0.sav": "00 00",
+        "cap-01-retained-3.sav": "00 00"
+      },
+      "update_mechanism": "Outside CRC; no traced writer",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Always zero; likely padding to 0xA0 stride."
+    },
+    {
+      "name": "unwritten_tail",
+      "offset": 488,
+      "size": 24,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {
+        "cap-00-future-0.sav": "0xFF x24",
+        "cap-01-retained-3.sav": "0xFF x24"
+      },
+      "update_mechanism": "Never written",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "File bytes 0x1E8-0x1FF are 0xFF in both samples; layout ends at 488."
+    }
+  ],
+  "fuzzing_targets": [
+    {
+      "offset": 164,
+      "size": 2,
+      "mutation": "Set slot0 CRC to 0x0000 without touching payload (apply in logical image, then re-reverse blocks into file form)",
+      "requires_checksum_repair": false,
+      "predicted_effect": "Load validation FUN_08022bb4 fails; slot treated as empty/default and rewritten (packet probe at file 0xC already showed this reversion pattern). RAM: profile re-initialised by FUN_08022c04."
+    },
+    {
+      "offset": 8,
+      "size": 4,
+      "mutation": "Set slot0 header to occupied value bytes 2D 61 DE C0 in an empty slot, then repair CRC over +0x00..+0x9B",
+      "requires_checksum_repair": true,
+      "predicted_effect": "Empty slot becomes valid-but-zero profile; load path deserializes zeroed fields via FUN_080228a8 instead of treating slot as empty."
+    },
+    {
+      "offset": 60,
+      "size": 2,
+      "mutation": "Increment slot0 profile bytes +0x3C/+0x3D (logical 60/61; file 0x43/0x42) by 1, repair CRC",
+      "requires_checksum_repair": true,
+      "predicted_effect": "Restored values shifted <<4 by FUN_08022a14 differ; expect changed timing/display state fed by func_0x08029ab4/0x08029ab0 counterparts with no other field changes."
+    },
+    {
+      "offset": 28,
+      "size": 20,
+      "mutation": "Set a single byte in profile +0x14 region (logical 28..47), repair CRC",
+      "requires_checksum_repair": true,
+      "predicted_effect": "One entry in the 5x15 table copy (FUN_08022a6c) changes in game state after load; observable as a single inventory/entry difference vs control load."
+    },
+    {
+      "offset": 4,
+      "size": 1,
+      "mutation": "Set global counter byte (logical 4) to 0x17, no checksum exists on global record",
+      "requires_checksum_repair": false,
+      "predicted_effect": "Next FUN_080314c4 increments it (mod-like bound 0x18 in FUN_0800026a call); observe wrap/reset behaviour to confirm modulus semantics."
+    },
+    {
+      "offset": 96,
+      "size": 56,
+      "mutation": "Zero the profile +0x60 14-unit block (logical 96..151), repair CRC",
+      "requires_checksum_repair": true,
+      "predicted_effect": "Load restores zeroed block to game +0x19C via FUN_08007238; gameplay state fed from that block resets while +0x44 block state is preserved."
+    }
+  ],
+  "open_questions": [
+    "Gameplay semantics of profile fields: which game concepts the FUN_08014exx/FUN_080149xx/FUN_08014994 getters represent is not recoverable from this corpus (opaque offsets used throughout).",
+    "Exact EEPROM block count in *_DAT_0800a880/*_DAT_0800a908: at least 61 blocks (488 bytes) are meaningful; FUN_0800a90c(0x1000) storing 64 hints the driver may transfer 64 blocks including the 0xFF tail.",
+    "Absolute EWRAM address of the save buffer: *_DAT_080xxxxx literal-pool targets are not present in the corpus, so RAM mirrors are reported relative to buffer base +0xC.",
+    "Whether the occupied profile header 0xC0DE612D varies by slot index (only slot 0 is occupied in both samples) and the exact semantics/modulus of the global counter byte at +4 (both samples show 0x01).",
+    "Unit size of the 6-unit copy at profile +0x44 (FUN_08001e48) and entry semantics of the 5x15 table region at profile +0x14 and the 14-unit block at profile +0x60.",
+    "No paired .ss save states exist in this corpus (states/ is empty), so all load predictions in the fuzzing plan remain untested against emulation."
+  ]
+}

@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Metroid Fusion (Europe) (En,Fr,De,Es,It) (Beta) (2002-09-11) Save Format — gbakit GBA Reference</title>
+  <link rel="stylesheet" href="../assets/style.css">
+</head>
+<body>
+  <header>
+    <div class="brand"><a href="../index.html" style="color:inherit">gbakit GBA Reference <span class="badge badge-emerald">v2.0</span></a></div>
+    <nav>
+      <a href="../index.html">Games</a>
+      <a href="../saves/index.html">Save Formats</a>
+      <a href="../patches/index.html">Debug Patches</a>
+      <a href="../assets/index.html">Assets &amp; Audio</a>
+      <a href="../engines/index.html">Engines &amp; Hardware</a>
+      <a href="../families/index.html">Families</a>
+      <a href="../gbakit/index.html">Using gbakit</a>
+    </nav>
+  </header>
+  <main>
+<p class="meta"><a href="index.html">&larr; Save Formats</a> &middot; <a href="../titles/METJ-r0-5277658adc0f5f68.html">Metroid Fusion (Europe) (En,Fr,De,Es,It) (Beta) (2002-09-11)</a></p>
+<h1>Metroid Fusion (Europe) (En,Fr,De,Es,It) (Beta) (2002-09-11) — Save Format Specification</h1>
+<p><span class="badge badge-indigo">Confidence: MEDIUM</span> <span class="badge badge-blue">14 Fields</span> <span class="badge badge-emerald">1 Verified Checksum(s)</span> <span class='badge badge-emerald'>gbakit Built-In</span></p>
+<p><a class='btn' href='../assets/saves/METJ-r0-5277658adc0f5f68/METJ-r0-5277658adc0f5f68.sav' download>Download Sample .sav (32,768 B)</a><a class='btn btn-secondary' href='../assets/formats/METJ-r0-5277658adc0f5f68/save-format.json' download>Download save-format.json</a><a class='btn btn-secondary' href='../titles/METJ-r0-5277658adc0f5f68.html'>View Game Page</a></p>
+
+<div class="callout">
+  <strong>Use directly with <code>gbakit</code> (built-in definition <code>METJ</code>):</strong>
+  <pre><code>gbakit save verify METJ save.sav
+gbakit save decode METJ save.sav
+gbakit save fix    METJ damaged.sav -o repaired.sav</code></pre>
+</div>
+
+<div class='md-body'>
+<h2>Clean-Room Save Format Report — Metroid Fusion (Europe) (En,Fr,De,Es,It) (Beta) (2002-09-11)</h2>
+<p><strong>Release key:</strong> <code>METJ-r0-5277658adc0f5f68</code></p>
+<p><strong>ROM SHA-256:</strong> <code>5277658adc0f5f681065bf11e163b3cbb4b53b3afa6180d35f124419f6fb7883</code> (as supplied; see PACKET.md)</p>
+<p>All findings below are derived exclusively from the files in this workspace: the two real <code>.sav</code> binaries in <code>saves/</code>, the pre-computed hexdump/diff file, and the trace-guided Ghidra decompilation/callgraph in <code>ghidra/</code>. No third-party game-specific research was consulted.</p>
+<hr>
+<h2>1. Executive Summary &amp; Overall Confidence</h2>
+<p><strong>Overall confidence: MEDIUM.</strong></p>
+<p>What is <strong>proven</strong> (decompiled code + <code>.sav</code> bytes agree, byte-exact Python verification):</p>
+<ul><li>The cartridge uses a flat <strong>32 KiB battery-backed SRAM</strong> at <code>0x0E000000</code>. No EEPROM (DMA3</li></ul>
+<p><code>0x040000D4</code>) or Flash command-sequence (<code>0x5555</code>/<code>0x2AAA</code>) code paths exist anywhere in the 100-function decompilation — the literal <code>0xe000000</code> address appears in exactly 3 places, all of which are plain byte-copy calls, matching the packet&#x27;s declared <code>SRAM 256K</code> media type.</p>
+<ul><li>A 128-byte header/config block occupies SRAM offset <code>0x00–0x7F</code>. It carries a running</li></ul>
+<p><strong>one&#x27;s-complement-pair checksum</strong> (<code>sum32</code> at <code>0x00</code>, <code>~sum32</code> at <code>0x04</code>) over all 32 words of the block, a two-byte tag <code>&quot;01&quot;</code> at <code>0x08–0x09</code>, a flag byte at <code>0x0B</code>, and a fixed 20-byte ASCII build tag <code>&quot;AGBMetroid_USVerE003&quot;</code> at <code>0x0C–0x1F</code>. The checksum formula was reproduced in Python against <strong>both</strong> <code>.sav</code> files and matches exactly (see §4).</p>
+<ul><li>A write-verification (&quot;can this cart actually save?&quot;) probe routine exists</li></ul>
+<p>(<code>FUN_0807d3d4</code> @ <code>0x0807d3d4</code>) that writes 16 bytes to SRAM, reads them back, mutates them, rewrites, and compares — a classic SRAM-presence self-test, independent of the header block.</p>
+<ul><li>A 16-byte footer at <code>0x7FF0–0x7FFF</code> contains the ASCII tag <code>&quot;METDSAVE\x00\x00&quot;</code> followed by 6</li></ul>
+<p>bytes of <code>0xFF</code> fill, identical and byte-for-byte unchanged across both captured <code>.sav</code> files.</p>
+<p>What remains <strong>open / unresolved</strong> (flagged explicitly below, not asserted as fact):</p>
+<ul><li>The exact trigger/caller of the top-level dispatcher <code>FUN_0807cb60</code> (no caller edge exists in</li></ul>
+<p><code>ghidra/callgraph.json</code>; it is almost certainly reached through an un-recovered jump table from the save/options menu, which is outside this workspace&#x27;s decompiled set).</p>
+<ul><li>Whether <code>FUN_0807cc34</code>&#x27;s second candidate buffer (RAM offset <code>+0x80</code> words relative to its first</li></ul>
+<p>argument) corresponds to a genuine second physical SRAM copy, or to a RAM-resident template used only for repair/compare. No second populated 128-byte block was observed anywhere in either <code>.sav</code> file.</p>
+<ul><li>The nature of the literal ASCII strings <code>&quot;fSTARTKEYLANGUAGE&quot;</code> / <code>&quot;ENDKEY_LANGUAGE_&quot;</code> found at</li></ul>
+<p>SRAM <code>0x7045–0x7066</code> in <code>cap-01-future-1.sav</code> only. This text does <strong>not</strong> appear anywhere in <code>ghidra/decompiled.c</code>, so it cannot be attributed to any traced save-writer. It is flagged as a</p>
+<p><strong>HYPOTHESIS</strong>, most plausibly explained by the full-SRAM bulk-copy writer (<code>FUN_08000d74</code>, §3) flushing an entire 32 KiB RAM mirror in one <code>0x8000</code>-byte DMA — if that mirror buffer was not fully re-initialized before the copy, stale developer/debug text already resident in EWRAM (this is a <em>Beta</em> ROM) could leak through at a fixed relative offset without ever being deliberately &quot;written&quot; by a field-level save routine.</p>
+<ul><li>The purpose of the zero-filled 256-byte block at <code>0x0100–0x01FF</code>. No decompiled function</li></ul>
+<p>references this absolute SRAM offset; it is zero (not <code>0xFF</code>) in both captures, which is enough to say it is <em>deliberately cleared</em> rather than untouched, but not enough to say by what.</p>
+<hr>
+<h2>2. Physical Media, Slot Geometry &amp; Redundancy</h2>
+<table><thead><tr><th>Property</th><th>Value</th><th>Evidence</th></tr></thead><tbody><tr><td>Media</td><td>SRAM, 32 KiB (<code>0x8000</code> bytes) flat, mapped at <code>0x0E000000</code></td><td><code>FUN_08000d74</code> writes exactly <code>0x8000</code> bytes to <code>0xe000000</code>; packet declares <code>SRAM 256K</code>(kbit) = 32 KiB</td></tr><tr><td>SDK save tag in ROM</td><td>none detected</td><td>packet metadata</td></tr><tr><td>Dominant fill byte</td><td><code>0xFF</code></td><td>both <code>.sav</code> files; erased-SRAM default</td></tr><tr><td>Populated regions</td><td><code>0x0000–0x007F</code> (header/config, checksummed), <code>0x0100–0x01FF</code> (zero-filled, purpose unresolved), <code>0x7040–0x70BF</code> (volatile/unexplained region, see §1), <code>0x7FF0–0x7FFF</code> (footer tag)</td><td><code>saves/hexdump_and_diffs.txt</code></td></tr><tr><td>Slots / copies</td><td><strong>One</strong> confirmed populated 128-byte header block (<code>0x00–0x7F</code>). A second RAM-side candidate is referenced by validator code (<code>FUN_0807cc34(1)</code>) but no second populated 128-byte block exists on disk in either capture — region <code>0x80–0xFF</code> is <code>0xFF</code> fill in both files.</td><td>Python scan of both <code>.sav</code> files (§4); <code>FUN_0807cc34</code></td></tr><tr><td>Redundancy mechanism</td><td>Checksum-pair self-consistency (<code>sum32</code> + <code>~sum32</code> at <code>0x00/0x04</code>), <em>not</em> a second full backup copy in the SRAM region we can observe</td><td><code>FUN_0807caf4</code>, <code>FUN_0807cc34</code></td></tr><tr><td>Selection rule</td><td><code>FUN_0807cb60</code> calls <code>FUN_0807cc34(0)</code> and <code>FUN_0807cc34(1)</code> and branches on whether each returns <code>0</code> (valid). If slot 0 is valid, its data is kept; otherwise slot/backup-candidate logic in the <code>else</code> branch is taken. The exact fallback semantics are only partially recoverable because several intermediate RAM globals (<code>_DAT_0807cbb8/bc/c0/c4/c8</code>) are opaque in this trace.</td><td><code>FUN_0807cb60</code> (<code>ghidra/save_related_functions.c:116</code>)</td></tr><tr><td>Generation/sequence counter</td><td>None identified. No monotonically-incrementing field was found; the only numeric header fields are the checksum pair and a static <code>&quot;01&quot;</code> tag.</td><td>Field map (§5)</td></tr></tbody></table>
+<hr>
+<h2>3. Save Writer, Reader &amp; Caller-Chain Architecture</h2>
+<h3>3.1 Low-level hardware I/O primitives</h3>
+<p>No raw SRAM byte-copy loop, Flash bank-select/command sequence, or EEPROM DMA3 bitstream code exists in the decompiled set. All SRAM access instead goes through two generic copy wrappers that happen to be called with the literal SRAM base <code>0x0E000000</code> as one argument:</p>
+<ul><li><strong><code>func_0x08004dc8(src, dst, len)</code></strong> — generic memory copy, used as the <strong>SRAM WRITE</strong> primitive</li></ul>
+<p>whenever <code>dst == 0xe000000</code> (seen at <code>decompiled.c:205,222</code>). It is also used elsewhere in the ROM (<code>decompiled.c:239,257,311,331,349</code>) with non-SRAM destinations, confirming it is a general-purpose copier, not an SRAM-specific driver — the save semantics come entirely from the literal <code>0xe000000</code> argument at the three seed call sites.</p>
+<ul><li><strong><code>func_0x08004c90(src, dst, len)</code></strong> — same shape, used as the <strong>SRAM READ</strong> primitive when</li></ul>
+<p><code>src == 0xe000000</code> (<code>decompiled.c:292</code>). Also reused elsewhere with unrelated addresses (<code>decompiled.c:275</code>, copying <code>0x7f00</code> bytes — almost certainly a graphics/tilemap buffer, not save-related; excluded from this analysis).</p>
+<ul><li><strong><code>func_0x080030a0(mode, fill_or_src, dst, len, align)</code></strong> — a CpuSet/memset-like utility used to</li></ul>
+<p>stage the RAM-side mirror buffer immediately before a full 32 KiB flush (<code>decompiled.c:204</code>) and elsewhere for unrelated BSS/VRAM clears (<code>decompiled.c:112-114</code>). It is <strong>not</strong> SRAM-specific; its role here is purely to prepare the source buffer passed to <code>func_0x08004dc8</code>.</p>
+<h3>3.2 The three confirmed SRAM MMIO seed functions</h3>
+<table><thead><tr><th>Addr</th><th>Role</th><th>Call</th><th>Bytes</th><th>Confidence</th></tr></thead><tbody><tr><td><code>0x08000d74</code></td><td><strong>Full-SRAM writer</strong> — flushes the entire 32 KiB RAM mirror to SRAM in one shot</td><td><code>func_0x080030a0(3, src, dst, 0x8000, 0x10)</code> then <code>func_0x08004dc8(dst, 0xe000000, 0x8000)</code></td><td><code>0x8000</code> (32768)</td><td>CONFIRMED_STATIC</td></tr><tr><td><code>0x08000dac</code></td><td><strong>Header-block writer</strong> — writes just the 128-byte checksummed header</td><td><code>func_0x08004dc8(src, 0xe000000, 0x80)</code></td><td><code>0x80</code> (128)</td><td>CONFIRMED_VERIFIED (size matches checksum-covered region exactly)</td></tr><tr><td><code>0x08000e50</code></td><td><strong>Boot-time reader</strong> — loads the first 256 bytes of SRAM (header block + the always-blank <code>0x80–0xFF</code> span) into RAM</td><td><code>func_0x08004c90(0xe000000, dst, 0x100)</code></td><td><code>0x100</code> (256)</td><td>CONFIRMED_STATIC</td></tr></tbody></table>
+<h3>3.3 Serialization / checksum routine</h3>
+<p><strong><code>FUN_0807caf4</code></strong> (<code>0x0807caf4</code>) is the header-block serializer. It:</p>
+<ol><li>Writes byte <code>0x30</code> (<code>&#x27;0&#x27;</code>) at struct offset <code>0x08</code> and <code>0x31</code> (<code>&#x27;1&#x27;</code>) at offset <code>0x09</code>.</li><li>Writes one byte from <code>*_DAT_0807cb58</code> at offset <code>0x0A</code>, and the constant <code>1</code> at offset <code>0x0B</code>.</li><li>Copies 20 bytes from a fixed source (<code>_DAT_0807cb5c</code>) into offsets <code>0x0C–0x1F</code> — this is the</li></ol>
+<p><code>&quot;AGBMetroid_USVerE003&quot;</code> build tag.</p>
+<ol><li>Zeroes the first word (offset <code>0x00</code>) and sets the second word to <code>0xFFFFFFFF</code> (offset <code>0x04</code>) as</li></ol>
+<p>checksum placeholders.</p>
+<ol><li>Sums all 32 little-endian 32-bit words of the 128-byte block (loop over 8 groups of 4 words) into</li></ol>
+<p><code>uVar3</code>.</p>
+<ol><li>Stores <code>uVar3</code> at offset <code>0x00</code> and <code>~uVar3</code> at offset <code>0x04</code>.</li><li>Calls <code>FUN_08000dac</code> to flush the finished 128-byte block to SRAM.</li></ol>
+<p>This is a <strong>sum32 / one&#x27;s-complement-pair</strong> checksum: <code>stored_sum + stored_complement == 0xFFFFFFFF</code> always holds by construction, giving the validator a cheap internal-consistency check independent of recomputing the sum.</p>
+<h3>3.4 Validator / reader-side integrity check</h3>
+<p><strong><code>FUN_0807cc34(param_1)</code></strong> (<code>0x0807cc34</code>) validates a 128-byte candidate block (<code>param_1==0</code> selects the block at a base pointer; <code>param_1==1</code> selects base pointer <code>+ 0x80</code> bytes). It:</p>
+<ol><li>Recomputes the same 32-word sum and compares it against the stored sum (bit <code>0x1</code> of the result</li></ol>
+<p>if mismatched).</p>
+<ol><li>Compares the 20-byte build tag against a reference string <code>_DAT_0807cca4</code> byte-by-byte (bit</li></ol>
+<p><code>0x2</code> if any byte differs).</p>
+<ol><li>Checks <code>stored_sum == ~stored_complement</code> (bit <code>0x4</code> if the pair is inconsistent).</li></ol>
+<p>A return value of <code>0</code> means &quot;fully valid.&quot; <code>FUN_0807cb60</code> calls this twice (<code>param_1=0,1</code>) and uses the results to choose which in-RAM candidate becomes the active save state before any further mutation.</p>
+<h3>3.5 Caller chain — how each caller reaches the hardware</h3>
+<pre><code>FUN_0807cb60            (0x0807cb60)  — top-level save-menu entry; no static/traced caller
+ ├─ func_0x0807d3d4()                 — SRAM presence self-test (write/read/mutate/verify, 16 B)
+ ├─ if (*_DAT_0807cbb4 == 0)
+ │    └─ FUN_08000e50() → func_0x08004c90(0xe000000, ram_mirror, 0x100)   [READ 256 B]
+ ├─ FUN_0807cc34(0)                   — validate candidate slot A
+ ├─ FUN_0807cc34(1)                   — validate candidate slot B (RAM +0x80)
+ ├─ (branch on validity) mutates in-RAM struct fields at 0x02xxxxxx/0x03xxxxxx
+ │    (exact RAM target addresses are opaque _DAT_0807cbbc/_DAT_0807cbb8/etc. in this trace)
+ └─ if a save is due:
+      ├─ FUN_08000d74()  → func_0x08004dc8(ram_mirror, 0xe000000, 0x8000)  [WRITE full 32 KiB]
+      └─ FUN_0807caf4()  — recompute checksum + build tag, then
+           └─ FUN_08000dac() → func_0x08004dc8(header, 0xe000000, 0x80)   [WRITE 128 B header]</code></pre>
+<p><code>FUN_0807caf4</code> is the only traced caller of <code>FUN_08000dac</code> besides <code>FUN_0807cb60</code> itself (<code>ghidra/callgraph.json</code>: <code>&quot;0x08000dac&quot;: {&quot;callers&quot;: [&quot;0x0807caf4&quot;, &quot;0x0807cb60&quot;]}</code>), i.e. the 128-byte header is only ever written immediately after the checksum is (re)computed — there is no path that writes stale/unchecksummed header bytes.</p>
+<p><code>FUN_0807cb60</code> has <strong>zero</strong> recorded callers in <code>ghidra/callgraph.json</code>. The decompiler could not recover the indirect jump table at <code>0x0807cc2c</code>/<code>0x0807cae4</code> that reaches it, so the actual trigger (save-menu confirm, auto-save-on-exit, etc.) is outside this workspace&#x27;s visibility and is left as an open question.</p>
+<hr>
+<h2>4. Magic Signatures &amp; Checksum / Integrity Algorithm</h2>
+<h3>4.1 Checksum algorithm</h3>
+<ul><li><strong>Algorithm:</strong> <code>sum32</code> over 32 little-endian 32-bit words (128 bytes), stored as a</li></ul>
+<p>sum/one&#x27;s-complement pair.</p>
+<ul><li><strong>Covered range:</strong> SRAM <code>0x00–0x7F</code> inclusive (the full header block), <em>including</em> the two</li></ul>
+<p>checksum words themselves, which are forced to <code>0x00000000</code> and <code>0xFFFFFFFF</code> respectively before the sum is taken (<code>FUN_0807caf4</code>, steps 4–6 above).</p>
+<ul><li><strong>Stored offset:</strong> sum at <code>0x00</code> (4 bytes, LE), complement at <code>0x04</code> (4 bytes, LE).</li><li><strong>Endianness:</strong> little-endian (ARM default / matches raw byte order in both <code>.sav</code> files).</li><li><strong>Decompiled proof:</strong> <code>FUN_0807caf4</code> / <code>ghidra/decompiled.c:2676-2708</code> (identical copy also in</li></ul>
+<p><code>ghidra/save_related_functions.c:63-109</code>).</p>
+<h3>4.2 Python verification against the real <code>.sav</code> files</h3>
+<pre><code>import struct, hashlib
+for fn in [&quot;saves/cap-00-future-0.sav&quot;, &quot;saves/cap-01-future-1.sav&quot;]:
+    data = open(fn, &quot;rb&quot;).read()
+    blk = data[0:0x80]
+    stored_sum  = struct.unpack_from(&quot;&lt;I&quot;, blk, 0)[0]
+    stored_comp = struct.unpack_from(&quot;&lt;I&quot;, blk, 4)[0]
+    words = list(struct.unpack_from(&quot;&lt;32I&quot;, blk, 0))
+    words[0], words[1] = 0, 0xFFFFFFFF          # placeholders forced by FUN_0807caf4 before summing
+    total = sum(words) &amp; 0xFFFFFFFF
+    comp  = (~total) &amp; 0xFFFFFFFF
+    print(fn, &quot;sum match:&quot;, stored_sum == total, &quot;comp match:&quot;, stored_comp == comp)</code></pre>
+<p><strong>Actual output (re-run in this workspace):</strong></p>
+<pre><code>saves/cap-00-future-0.sav sum match: True comp match: True   (stored_sum=0xb8a9d7be)
+saves/cap-01-future-1.sav sum match: True comp match: True   (stored_sum=0xb8a9d7be, identical)</code></pre>
+<p>Both samples verify <strong>exactly</strong>. The checksum is identical across both captures because the checksummed region (<code>0x00–0x7F</code>) did not change between captures — all 39 bytes that differ between <code>cap-00</code> and <code>cap-01</code> live at <code>0x7040–0x7066</code>, entirely outside the checksum&#x27;s covered range. This also means this checksum provides <strong>no integrity coverage whatsoever</strong> for the volatile <code>0x7040</code> region or the <code>0x100–0x1FF</code> block — no second checksum routine covering those regions was found anywhere in the 100-function decompilation.</p>
+<h3>4.3 Magic / signature strings</h3>
+<table><thead><tr><th>Offset</th><th>Bytes (hex)</th><th>ASCII</th><th>Verified in code</th><th>Verified in <code>.sav</code></th><th>Notes</th></tr></thead><tbody><tr><td><code>0x0C</code></td><td><code>41 47 42 4d 65 74 72 6f 69 64 5f 55 53 56 65 72 45 30 30 33</code></td><td><code>AGBMetroid_USVerE003</code></td><td>Yes — literal 20-byte copy source in <code>FUN_0807caf4</code></td><td>Yes, identical in both files</td><td>CONFIRMED_VERIFIED — genuine build-tag magic</td></tr><tr><td><code>0x7FF0</code></td><td><code>4d 45 54 44 53 41 56 45 00 00</code></td><td><code>METDSAVE\0\0</code></td><td><strong>No</strong> — string not present in any decompiled function; not produced by any traced writer</td><td>Yes, identical in both files</td><td>CONFIRMED_STATIC (bytes proven) but <strong>writer unknown</strong> — likely written by a cartridge-header/linker-embedded constant outside the traced function set, or by the opaque RAM-mirror source buffer consumed by <code>FUN_08000d74</code>&#x27;s full-SRAM flush</td></tr><tr><td><code>0x06-0x09</code></td><td><code>56 47 30 31</code></td><td><code>VG01</code></td><td>Coincidental</td><td>present, identical in both files</td><td><strong>Not a real independent magic.</strong> <code>0x06-0x07</code> are the top two bytes of the checksum-complement word (value happens to be <code>0x47562841</code> → bytes <code>41 28 56 47</code>, so bytes 6-7 render as ASCII <code>VG</code>); <code>0x08-0x09</code> are the genuine static <code>&quot;01&quot;</code> tag written by <code>FUN_0807caf4</code> step 1. The scanner&#x27;s &quot;VG01&quot; is an artifact of concatenating a checksum byte-pair with an adjacent real tag, not a single designed 4-byte magic.</td></tr></tbody></table>
+<hr>
+<h2>5. Complete Field Map Table</h2>
+<table><thead><tr><th>Offset (hex)</th><th>Size</th><th>Type / Endianness</th><th>RAM Mirror Addr</th><th>Writers / Callers</th><th>Readers</th><th>Observed Values in <code>.sav</code></th><th>Confidence</th><th>How Mapped &amp; Updated</th></tr></thead><tbody><tr><td><code>0x00</code></td><td>4</td><td>u32_le</td><td>unresolved (<code>_DAT_0807cb54</code> base, opaque abs. addr)</td><td><code>FUN_0807caf4</code> (step 6)</td><td><code>FUN_0807cc34</code> (checksum re-sum, <code>!= stored</code> test)</td><td><code>0xb8a9d7be</code> (both files, identical)</td><td>CONFIRMED_VERIFIED</td><td>Decompiled checksum-store instruction; byte-exact Python re-derivation matches both <code>.sav</code> files (§4.2)</td></tr><tr><td><code>0x04</code></td><td>4</td><td>u32_le</td><td>same struct, <code>+4</code></td><td><code>FUN_0807caf4</code> (step 6, <code>~uVar3</code>)</td><td><code>FUN_0807cc34</code> (<code>stored_sum == ~stored_comp</code> test)</td><td><code>0x47562841</code> (both files, identical)</td><td>CONFIRMED_VERIFIED</td><td>Same as above; <code>sum+comp==0xFFFFFFFF</code> proven in Python</td></tr><tr><td><code>0x08</code></td><td>1</td><td>ascii <code>&#x27;0&#x27;</code> (<code>0x30</code>)</td><td>struct <code>+8</code></td><td><code>FUN_0807caf4</code> step 1</td><td>—</td><td><code>0x30</code> both files</td><td>CONFIRMED_VERIFIED</td><td>Literal immediate store in decompiled code, byte matches <code>.sav</code></td></tr><tr><td><code>0x09</code></td><td>1</td><td>ascii <code>&#x27;1&#x27;</code> (<code>0x31</code>)</td><td>struct <code>+9</code></td><td><code>FUN_0807caf4</code> step 1</td><td>—</td><td><code>0x31</code> both files</td><td>CONFIRMED_VERIFIED</td><td>Literal immediate store, byte matches <code>.sav</code></td></tr><tr><td><code>0x0A</code></td><td>1</td><td>u8 / unknown semantic</td><td>struct <code>+0xA</code></td><td><code>FUN_0807caf4</code> step 2, source <code>*_DAT_0807cb58</code> (opaque global)</td><td>—</td><td><code>0x00</code> both files</td><td>CONFIRMED_STATIC</td><td>Store instruction decompiled; source global not resolvable to a named field in this trace — value happens to be <code>0x00</code> in both captures</td></tr><tr><td><code>0x0B</code></td><td>1</td><td>u8 flag, constant <code>1</code></td><td>struct <code>+0xB</code></td><td><code>FUN_0807caf4</code> step 2 (literal <code>1</code>)</td><td>—</td><td><code>0x01</code> both files</td><td>CONFIRMED_VERIFIED</td><td>Literal immediate store, byte matches <code>.sav</code></td></tr><tr><td><code>0x0C-0x1F</code></td><td>20</td><td>ascii, fixed</td><td>struct <code>+0xC..+0x1F</code></td><td><code>FUN_0807caf4</code> step 3 (byte-copy loop, source <code>_DAT_0807cb5c</code>)</td><td><code>FUN_0807cc34</code> step 2 (byte-compare loop vs <code>_DAT_0807cca4</code>)</td><td><code>AGBMetroid_USVerE003</code> both files</td><td>CONFIRMED_VERIFIED</td><td>Copy-loop and compare-loop both decompiled; string matches <code>.sav</code> exactly</td></tr><tr><td><code>0x20-0x7F</code></td><td>96</td><td>bytes, reserved/unused</td><td>struct <code>+0x20..+0x7F</code></td><td>not written by any traced function (included in checksum sum only because the loop covers all 32 words)</td><td>included in checksum sum</td><td><code>0xFF</code> fill, both files</td><td>CONFIRMED_STATIC</td><td>No writer found for these bytes individually; they are swept into the checksum sum as-is</td></tr><tr><td><code>0x80-0xFF</code></td><td>128</td><td>bytes, candidate &quot;slot B&quot; / unused</td><td>second <code>FUN_0807cc34(1)</code> RAM candidate (+0x80 words from arg)</td><td>not observed to be written</td><td><code>FUN_0807cc34(1)</code> validator path</td><td><code>0xFF</code> fill, both files (i.e. never populated on disk)</td><td>HYPOTHESIS</td><td>Validator code explicitly checks a second 128-byte candidate; no evidence the second copy is ever materialized at this absolute SRAM offset in practice</td></tr><tr><td><code>0x100-0x1FF</code></td><td>256</td><td>bytes, unknown</td><td>n/a</td><td>none found (no code references absolute offset <code>0x100</code> within SRAM)</td><td><code>FUN_08000e50</code> reads SRAM <code>0x00-0xFF</code>, <strong>not</strong> this range, despite the active-range scanner flagging it</td><td><code>0x00</code> fill, both files</td><td>UNKNOWN</td><td>Flagged purely by the active-byte scanner (zero vs. surrounding <code>0xFF</code>); no decompiled function was found to explain why it is zeroed specifically</td></tr><tr><td><code>0x7040-0x7044</code></td><td>5</td><td>bytes, unknown (counter/seed-shaped)</td><td>n/a</td><td>not found in decompiled set</td><td>not found</td><td><code>cap-00</code>: <code>00 00 00 00 00</code>; <code>cap-01</code>: <code>1f 01 0a 99 f5</code></td><td>UNKNOWN</td><td>Present only in the diff; no writer traced. Byte pattern is not ASCII and does not match the checksum shape used elsewhere (not a sum/complement pair)</td></tr><tr><td><code>0x7045-0x7066</code></td><td>34</td><td>ascii</td><td>n/a</td><td>not found in decompiled set</td><td>not found</td><td><code>cap-00</code>: all <code>0x00</code>; <code>cap-01</code>: <code>fSTARTKEYLANGUAGE\x02ENDKEY_LANGUAGE_</code></td><td>HYPOTHESIS</td><td>Text does not appear in <code>ghidra/decompiled.c</code>. Most plausible explanation given the traced architecture: leaked through the full-32KiB bulk writer <code>FUN_08000d74</code> (§3.2) from an uninitialized region of its RAM-mirror source buffer, rather than deliberately written field data. Treated as <strong>not a verified game save field.</strong></td></tr><tr><td><code>0x7067-0x70BF</code></td><td>89</td><td>bytes, unused</td><td>n/a</td><td>n/a</td><td>n/a</td><td><code>0x00</code> fill, both files</td><td>CONFIRMED_STATIC</td><td>Zero padding surrounding the <code>0x7040</code> anomaly</td></tr><tr><td><code>0x7FF0-0x7FF7</code></td><td>8</td><td>ascii, fixed</td><td>n/a</td><td>not found in decompiled set</td><td>not found</td><td><code>METDSAVE</code> both files</td><td>CONFIRMED_STATIC</td><td>Bytes proven identical in both <code>.sav</code> files; no traced writer function produces this string, so it cannot be attributed to a specific <code>0x08xxxxxx</code> address from this workspace</td></tr><tr><td><code>0x7FF8-0x7FF9</code></td><td>2</td><td>bytes, fixed <code>0x0000</code></td><td>n/a</td><td>—</td><td>—</td><td><code>00 00</code> both files</td><td>CONFIRMED_STATIC</td><td>Part of the same unexplained footer</td></tr><tr><td><code>0x7FFA-0x7FFF</code></td><td>6</td><td>bytes, fill</td><td>n/a</td><td>—</td><td>—</td><td><code>0xFF</code> fill both files</td><td>CONFIRMED_STATIC</td><td>Erased-SRAM default, trailing the footer tag</td></tr></tbody></table>
+<hr>
+<h2>6. Save Fuzzing &amp; Counterfactual Verification Plan</h2>
+<p>All mutations below target the paired pre/post <code>.ss</code> emulator save states that should accompany future capture rounds (per the project&#x27;s mandatory paired-save-state rule); none currently exist in <code>states/</code> for this legacy checkpoint cohort, so these are <strong>predictions to run</strong>, not results.</p>
+<ol><li><strong>Checksum-sum corruption (negative control).</strong></li></ol>
+<ul><li>Mutate <code>0x00</code> (one byte, e.g. <code>+1</code>) without touching <code>0x04</code>.</li><li>Do <strong>not</strong> repair.</li><li>Predicted effect: <code>FUN_0807cc34(0)</code> returns a non-zero validity mask (bit <code>0x1</code> set) on next</li></ul>
+<p>boot; <code>FUN_0807cb60</code>&#x27;s slot-selection branch should treat candidate 0 as invalid and fall back to whatever its <code>else</code> branch resolves to. Observable: boot-time save should be rejected (reset-to-default build tag / fresh-file behavior), confirming the checksum is load-bearing.</p>
+<ol><li><strong>Checksum-repaired build-tag corruption.</strong></li></ol>
+<ul><li>Mutate one byte inside <code>0x0C-0x1F</code> (the <code>&quot;AGBMetroid_USVerE003&quot;</code> tag), then recompute and</li></ul>
+<p>rewrite the sum/complement pair at <code>0x00/0x04</code> so the checksum passes.</p>
+<ul><li>Predicted effect: <code>FUN_0807cc34</code> bit <code>0x1</code> clears (checksum now &quot;valid&quot;) but bit <code>0x2</code> sets</li></ul>
+<p>(tag mismatch) — this is the test that distinguishes &quot;checksum algorithm correctly implemented&quot; from &quot;the whole 128-byte block, including the tag, is actually enforced on load.&quot;</p>
+<ol><li><strong>Complement-consistency-only corruption.</strong></li></ol>
+<ul><li>Set <code>0x04</code> to some value <code>!= ~stored_sum</code> while leaving <code>0x00</code> and its true sum relationship</li></ul>
+<p>intact (i.e., break only the self-consistency check, not the recompute check).</p>
+<ul><li>Predicted effect: bit <code>0x4</code> sets in <code>FUN_0807cc34</code>&#x27;s result even though the recomputed sum at</li></ul>
+<p><code>0x00</code> still matches. Confirms the two checks are independent, not derived from the same comparison.</p>
+<ol><li><strong><code>0x7040</code> region clear/repeat.</strong></li></ol>
+<ul><li>From a state where <code>0x7040-0x7066</code> is populated (as in <code>cap-01</code>), force it back to all-zero</li></ul>
+<p>and reload under the emulator, then step forward the same number of frames as the original capture.</p>
+<ul><li>Predicted effect, if the HYPOTHESIS in §5 is correct (uninitialized-buffer leak): the region</li></ul>
+<p>stays zero indefinitely unless the same full-buffer flush (<code>FUN_08000d74</code>) runs again with a differently-uninitialized mirror — i.e. the content should <strong>not</strong> be deterministically reproducible gameplay data. If instead this turns out to be a real field, repeated identical play sessions from the same <code>.ss</code> should reproduce the <em>same</em> bytes at <code>0x7040</code> every time; any non-reproducibility across repeat runs is strong evidence for the leak hypothesis.</p>
+<ol><li><strong><code>0x100-0x1FF</code> perturbation.</strong></li></ol>
+<ul><li>Fill <code>0x100-0x1FF</code> with a non-zero marker pattern, reload, and observe whether any boot-time</li></ul>
+<p>reader (only <code>FUN_08000e50</code>, which reads <code>0x00-0xFF</code>, was traced touching nearby SRAM) ever reads or re-zeroes this block.</p>
+<ul><li>Predicted effect: since no traced function references this absolute offset, the marker pattern</li></ul>
+<p>should persist unchanged through a boot/save cycle if this analysis is complete; any observed change would prove an untraced writer exists and should prompt re-running the Ghidra trace with a wider function set.</p>
+<ol><li><strong>Footer tag corruption.</strong></li></ol>
+<ul><li>Mutate <code>0x7FF0</code> (<code>&#x27;M&#x27;</code> → any other byte).</li><li>Predicted effect unknown by design (no writer/reader traced) — this test is purely to discover</li></ul>
+<p>whether any boot-time code path depends on this tag at all (e.g. cartridge/region validation), since none was found in the available 100-function decompilation.</p>
+<p><strong>Checksum repair helper (for tests 2 &amp; 3 above):</strong></p>
+<pre><code>import struct
+def repair_checksum(path):
+    data = bytearray(open(path, &quot;rb&quot;).read())
+    words = list(struct.unpack_from(&quot;&lt;32I&quot;, data, 0))
+    words[0], words[1] = 0, 0xFFFFFFFF
+    total = sum(words) &amp; 0xFFFFFFFF
+    struct.pack_into(&quot;&lt;I&quot;, data, 0x00, total)
+    struct.pack_into(&quot;&lt;I&quot;, data, 0x04, (~total) &amp; 0xFFFFFFFF)
+    open(path, &quot;wb&quot;).write(data)</code></pre>
+<h3>Open questions carried into <code>save-format.json</code></h3>
+<ul><li>Who calls <code>FUN_0807cb60</code> (unresolved jump table)?</li><li>What RAM-absolute addresses do <code>_DAT_0807cbbc/_DAT_0807cbb8/_DAT_0807cbc0/_DAT_0807cbc4/_DAT_0807cbc8</code> refer to, and do they correspond to real in-RAM save-struct mirrors at <code>0x02xxxxxx</code>/<code>0x03xxxxxx</code>?</li><li>Is there a second physical 128-byte header slot anywhere in the 32 KiB SRAM that simply wasn&#x27;t populated in these two captures, or is <code>FUN_0807cc34(1)</code>&#x27;s second candidate purely RAM-side?</li><li>What writes <code>&quot;METDSAVE&quot;</code> at <code>0x7FF0</code>, and what (if anything) reads it back?</li><li>Is the <code>0x7040</code> text block genuine leaked debug content from this Beta build, or a real (as-yet-unidentified) save field?</li><li>What (un-traced) code clears <code>0x100-0x1FF</code> to zero, and why does it differ from the <code>0xFF</code> fill used everywhere else?</li></ul>
+</div>
+</main>
+  <footer>gbakit GBA Format Reference &middot; <a href="https://github.com/JidouGhost-TL/gbakit">GitHub: JidouGhost-TL/gbakit</a> &middot; Clean-room GBA binary format specs &amp; Rust toolkit.</footer>
+</body>
+</html>

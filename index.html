@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Games Catalog — gbakit GBA Reference</title>
+  <link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+  <header>
+    <div class="brand"><a href="index.html" style="color:inherit">gbakit GBA Reference <span class="badge badge-emerald">v2.0</span></a></div>
+    <nav>
+      <a href="index.html">Games</a>
+      <a href="saves/index.html">Save Formats</a>
+      <a href="patches/index.html">Debug Patches</a>
+      <a href="assets/index.html">Assets &amp; Audio</a>
+      <a href="engines/index.html">Engines &amp; Hardware</a>
+      <a href="families/index.html">Families</a>
+      <a href="gbakit/index.html">Using gbakit</a>
+    </nav>
+  </header>
+  <main>
+<h1>Game Boy Advance Format Reference</h1>
+<p class="meta">Clean-room GBA cartridge metadata, battery save specifications, BIOS asset scans, VRAM tile sheets, DirectSound PCM samples, and shared engine groups &middot; Companion reference for <a href="gbakit/index.html"><code>gbakit</code></a>.</p>
+<div class="grid">
+  <div class="card"><div class="val">3,236</div><div class="lbl">GBA Releases (1,706 families)</div></div>
+  <div class="card"><div class="val">1,543</div><div class="lbl">Battery-Saving Cartridges</div></div>
+  <div class="card"><div class="val">1,693</div><div class="lbl">Stateless / Passcode Titles</div></div>
+  <div class="card"><div class="val"><a href="saves/index.html" style="color:inherit">336</a></div><div class="lbl">Save Specs (110 Families)</div></div>
+  <div class="card"><div class="val"><a href="gbakit/index.html#builtin-saves" style="color:inherit">100</a></div><div class="lbl">gbakit Built-In Saves</div></div>
+  <div class="card"><div class="val"><a href="patches/index.html" style="color:inherit">15</a></div><div class="lbl">Debug Menu Patches</div></div>
+</div>
+
+<h2>Browse &amp; Filter 3,236 Games</h2>
+<div class="controls">
+  <input id="q" type="search" placeholder="Search by title, game code (e.g. BPEE, AHRE), or family...">
+  <select id="arch">
+    <option value="">All Storage Architectures (3,236)</option>
+    <option value="saving">Battery-Saving Only (1,543)</option>
+    <option value="stateless">Stateless / Passcode Only (1,693)</option>
+  </select>
+  <select id="media">
+    <option value="">All save media</option>
+    <option value='EEPROM 4K'>EEPROM 4K (707)</option><option value='SRAM 256K'>SRAM 256K (480)</option><option value='EEPROM 64K'>EEPROM 64K (229)</option><option value='Flash 512K'>Flash 512K (149)</option><option value='Flash 1M'>Flash 1M (30)</option>
+  </select>
+  <select id="output">
+    <option value="">All Reference Outputs</option>
+    <option value="spec">Has Save Spec (Direct or Family: 336)</option>
+    <option value="direct_spec">Direct Reverse-Engineered Spec (110)</option>
+    <option value="gbakit">gbakit Built-In Save (100)</option>
+    <option value="debug">Has Debug Menu Patch (15)</option>
+    <option value="vram">Has VRAM Tile Sheet (91)</option>
+    <option value="audio">Has DirectSound PCM (70)</option>
+  </select>
+  <select id="limit">
+    <option value="100">Show 100</option>
+    <option value="250">Show 250</option>
+    <option value="1000">Show 1,000</option>
+    <option value="5000">Show all</option>
+  </select>
+</div>
+<p class="meta" id="match-count">Loading game catalog...</p>
+<table>
+  <thead>
+    <tr>
+      <th>Title</th>
+      <th>Code</th>
+      <th>Family</th>
+      <th>Storage / Media</th>
+      <th>ROM Size</th>
+      <th>Reference Outputs</th>
+    </tr>
+  </thead>
+  <tbody id="tbody"></tbody>
+</table>
+
+<script>
+let DATA = [];
+const qEl = document.getElementById('q');
+const archEl = document.getElementById('arch');
+const medEl = document.getElementById('media');
+const outEl = document.getElementById('output');
+const limEl = document.getElementById('limit');
+const tbody = document.getElementById('tbody');
+const countEl = document.getElementById('match-count');
+
+function esc(s) {
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+function render() {
+  const q = qEl.value.trim().toLowerCase();
+  const arch = archEl.value;
+  const med = medEl.value;
+  const out = outEl.value;
+  const lim = parseInt(limEl.value, 10) || 100;
+  const matched = [];
+  for (let i = 0; i < DATA.length; i++) {
+    const r = DATA[i];
+    if (arch === 'saving' && r[11] !== 1) continue;
+    if (arch === 'stateless' && r[11] !== 0) continue;
+    if (med && r[4] !== med) continue;
+    if (out === 'spec' && !r[6]) continue;
+    if (out === 'direct_spec' && r[6] !== 1) continue;
+    if (out === 'gbakit' && !r[7]) continue;
+    if (out === 'debug' && !r[12]) continue;
+    if (out === 'vram' && !r[8]) continue;
+    if (out === 'audio' && !r[9]) continue;
+    if (q && !(r[1].toLowerCase().includes(q) || r[2].toLowerCase().includes(q) || r[3].toLowerCase().includes(q) || r[0].toLowerCase().includes(q))) continue;
+    matched.push(r);
+  }
+  countEl.textContent = `Showing ${Math.min(matched.length, lim).toLocaleString()} of ${matched.length.toLocaleString()} matching games (total ${DATA.length.toLocaleString()})`;
+  const slice = matched.slice(0, lim);
+  tbody.innerHTML = slice.map(r => {
+    const badges = [];
+    if (r[6] === 1) badges.push(`<a href="saves/${encodeURIComponent(r[0])}.html"><span class="badge badge-emerald">Save Spec</span></a>`);
+    else if (r[6] === 2 && r[13]) badges.push(`<a href="saves/${encodeURIComponent(r[13])}.html"><span class="badge badge-emerald">Family Spec</span></a>`);
+    if (r[7]) badges.push(`<span class="badge badge-emerald">gbakit</span>`);
+    if (r[12]) badges.push(`<a href="patches/index.html"><span class="badge badge-amber">Debug Patch</span></a>`);
+    if (r[8]) badges.push(`<span class="badge badge-blue">VRAM</span>`);
+    if (r[9]) badges.push(`<span class="badge badge-indigo">Audio</span>`);
+    if (r[10]) badges.push(`<a href="engines/index.html#${encodeURIComponent(r[10])}"><span class="badge badge-slate">${esc(r[10])}</span></a>`);
+    const mediaBadge = r[11] === 0
+      ? '<span class="badge badge-zinc">Stateless / Passcode</span>'
+      : (r[4] ? '<code>' + esc(r[4]) + '</code>' : '<span class="meta">—</span>');
+    return `<tr>
+      <td><a href="titles/${encodeURIComponent(r[0])}.html">${esc(r[1])}</a></td>
+      <td><code>${esc(r[2])}</code></td>
+      <td><code>${esc(r[3])}</code></td>
+      <td>${mediaBadge}</td>
+      <td>${esc(r[5])}</td>
+      <td>${badges.length ? badges.join(' ') : '<span class="meta">—</span>'}</td>
+    </tr>`;
+  }).join('');
+}
+
+fetch('assets/corpus-index.json').then(r => r.json()).then(d => {
+  DATA = d;
+  render();
+});
+qEl.addEventListener('input', render);
+archEl.addEventListener('change', render);
+medEl.addEventListener('change', render);
+outEl.addEventListener('change', render);
+limEl.addEventListener('change', render);
+</script>
+</main>
+  <footer>gbakit GBA Format Reference &middot; <a href="https://github.com/JidouGhost-TL/gbakit">GitHub: JidouGhost-TL/gbakit</a> &middot; Clean-room GBA binary format specs &amp; Rust toolkit.</footer>
+</body>
+</html>

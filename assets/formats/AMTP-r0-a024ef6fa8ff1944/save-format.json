@@ -1,0 +1,254 @@
+{
+  "schema": "gbakit-save-research/1",
+  "release_key": "AMTP-r0-a024ef6fa8ff1944",
+  "display_name": "Metroid Fusion (Europe) (En,Fr,De,Es,It)",
+  "rom_sha256": "a024ef6fa8ff19444bc6c31a714eb6cab44464b39227fcd434e409fca1cd8198",
+  "game_code": "AMTP",
+  "header_family": "AMT",
+  "community_id": "comm-047",
+  "overall_confidence": "LOW",
+  "media": {
+    "kind": "sram",
+    "size_bytes": 32768,
+    "sdk_tags": [],
+    "fill_byte": "0xff"
+  },
+  "slots_and_copies": [
+    {
+      "name": "header_copy_a",
+      "offset": 0,
+      "size": 32,
+      "redundancy_role": "unknown",
+      "selection_rule": "unknown - no traced code reads and compares both header copies; byte-identical to header_copy_b in both samples"
+    },
+    {
+      "name": "tag_record_block",
+      "offset": 28736,
+      "size": 128,
+      "redundancy_role": "unknown",
+      "selection_rule": "unknown - candidate 128-byte slot structurally between the two header copies; does not match the checksum invariant of the only traced 128-byte slot writer/reader pair (FUN_0807eebc/FUN_0807f078)"
+    },
+    {
+      "name": "header_copy_b",
+      "offset": 28928,
+      "size": 32,
+      "redundancy_role": "unknown",
+      "selection_rule": "unknown - byte-identical to header_copy_a in both samples; may act as a trailing bracket/sentinel for the record between 0x0000 and 0x7120"
+    }
+  ],
+  "magic_signatures": [
+    {
+      "offset": 0,
+      "bytes_hex": "bed7a9b941285646303100014147424d6574726f69645f555356657245303034",
+      "ascii": "..A(VF01..AGBMetroid_USVerE004",
+      "verified_in_code": false,
+      "verified_in_sav": true,
+      "function_addrs": []
+    },
+    {
+      "offset": 6,
+      "bytes_hex": "56463031",
+      "ascii": "VF01",
+      "verified_in_code": true,
+      "verified_in_sav": true,
+      "function_addrs": []
+    },
+    {
+      "offset": 12,
+      "bytes_hex": "4147424d6574726f69645f555356657245303034",
+      "ascii": "AGBMetroid_USVerE004",
+      "verified_in_code": true,
+      "verified_in_sav": true,
+      "function_addrs": []
+    },
+    {
+      "offset": 28934,
+      "bytes_hex": "56463031",
+      "ascii": "VF01",
+      "verified_in_code": true,
+      "verified_in_sav": true,
+      "function_addrs": []
+    },
+    {
+      "offset": 28940,
+      "bytes_hex": "4147424d6574726f69645f555356657245303034",
+      "ascii": "AGBMetroid_USVerE004",
+      "verified_in_code": true,
+      "verified_in_sav": true,
+      "function_addrs": []
+    },
+    {
+      "offset": 28736,
+      "bytes_hex": "1f010a99f56653544152544b45594c414e475541474502454e444b45595f4c414e47554147455f",
+      "ascii": "fSTARTKEYLANGUAGE\u0002ENDKEY_LANGUAGE_",
+      "verified_in_code": true,
+      "verified_in_sav": true,
+      "function_addrs": []
+    }
+  ],
+  "checksums": [
+    {
+      "name": "self_complement_wordsum_candidate",
+      "algorithm": "sum32_le",
+      "formula_detail": "Decompiled from FUN_0807eebc/FUN_0807f078: zero word0, set word1=0xFFFFFFFF, sum all 32 u32 words (little-endian, plain 32-bit wraparound add, no carry-out) of a 128-byte buffer, store sum at word0 and ~sum at word1. Self-checking invariant: word1 must equal ~word0, and re-summing all 32 stored words must reproduce word0. PROVEN NOT TO MATCH the actual bytes at 0x7040 in saves/cap-01-future-1.sav (word0=0x990a011f, word1=0x545366f5, ~word0=0x66f5fee0 != word1).",
+      "stored_offset": 28736,
+      "stored_size": 8,
+      "covered_start": 28736,
+      "covered_end": 28864,
+      "function_addrs": ["0x0807eebc", "0x0807f078"],
+      "verified_on_samples": [
+        {"file": "cap-00-future-0.sav", "stored_hex": "0000000000000000", "computed_hex": "ffffffffffffffff", "match": false},
+        {"file": "cap-01-future-1.sav", "stored_hex": "1f010a99545366f5", "computed_hex": "n/a - invariant word1==~word0 fails", "match": false}
+      ],
+      "confidence": "UNKNOWN"
+    }
+  ],
+  "io_driver_functions": [
+    {"addr": "0x08004bf0", "role": "write", "callers": ["0x0807fae0"], "notes": "Hardware wait-state register read-modify-write (bits forced to 3) then a copy loop and tail-call into an unresolved function; plausible WAITCNT-class setup before SRAM access."},
+    {"addr": "0x08004c54", "role": "write", "callers": ["0x08004d28", "0x08000c60"], "notes": "Raw byte-copy loop (*dst++ = *src++) after the same register fixup. Called with destination literal 0xe000000 (SRAM base) and size 0x8000 (full 32KB) from FUN_08000c60 - the primary full-save-flush driver."},
+    {"addr": "0x08004cc4", "role": "read", "callers": ["0x08004d28"], "notes": "Same structural shape as 0x08004c54 but with distinct globals; used as the read-back/verify half of the write-verify-retry wrapper."},
+    {"addr": "0x08004d28", "role": "write", "callers": ["0x0807fae0", "0x080045a8", "0x0807fdb0"], "notes": "Write (08004c54) then verify (08004cc4), retry up to 3 times. Also reused for non-save DMA/graphics buffer copies elsewhere in the binary - not save-exclusive."},
+    {"addr": "0x08000c60", "role": "write", "callers": ["0x0807ef28"], "notes": "Enqueues a generic DMA job then calls FUN_08004c54(src, 0xe000000, 0x8000) - flushes the entire 32,768-byte RAM save mirror to SRAM."},
+    {"addr": "0x08000c98", "role": "write", "callers": ["0x0807eebc", "0x0807ef28"], "notes": "Two FUN_08004d28 calls of size 0x80 (128 bytes) each, matching the exact size of the 0x7040-0x70BF block observed in the .sav files. Likely the 128-byte-slot I/O routine, though its target buffer could not be statically resolved to 0x7040."},
+    {"addr": "0x08000da8", "role": "read", "callers": ["0x0807ef28"], "notes": "Two FUN_08004bf0 calls (sizes 0x100 and 0x80). Only invoked from FUN_0807ef28 on a first-run flag; plausible one-time boot init read."},
+    {"addr": "0x0807eebc", "role": "serialize", "callers": ["0x0807ef28"], "notes": "Serializes fixed/copied bytes into a 128-byte buffer and computes the self-complement word-sum checksum described above, then calls 0x08000c98 to flush. Proven in SAVE-FORMAT-REPORT.md Section 4.3 not to match the actual 0x7040 block bytes."},
+    {"addr": "0x0807f078", "role": "checksum", "callers": [], "notes": "Validates one of 3 candidate 128-byte slots (param 0/1/2), recomputing the same word-sum and returning a 3-bit failure mask (sum mismatch / 20-byte sub-block mismatch / complement mismatch). No callers resolved in the static trace."},
+    {"addr": "0x0807ef28", "role": "read", "callers": [], "notes": "Top-level save-slot dispatcher: validates 3 redundant candidate slots via 0x0807f078(0|1|2), then triggers repair (0x08000c60 full flush + 0x0807eebc re-serialize) if any slot was invalid. No callers resolved (reached via unrecovered jump table)."}
+  ],
+  "caller_chains": [
+    {
+      "entry_caller": "0x0807eea4",
+      "chain": ["0x0807eea4", "0x0807ef28", "0x0807f078", "0x0807eebc", "0x08000c98", "0x08004d28", "0x08004c54", "0x08004cc4"],
+      "trigger_context": "Save-subsystem umbrella entry point; calls the slot dispatcher among 3 other subsystem calls (0807fb84, 080800f4, 08080264) that do not appear save-related (DMA sizes 0x1200 consistent with graphics/OBJ transfers).",
+      "ram_fields_updated": ["unresolved IWRAM/EWRAM slot-candidate buffers (_DAT_0807ef1c, puRam0807f040-family globals)"],
+      "how_mapped": "Traced via ghidra/callgraph.json callees list for 0x0807eea4 and ghidra/decompiled.c bodies for each listed function; confirmed call arguments/sizes by reading each decompiled function body directly."
+    },
+    {
+      "entry_caller": "0x0807ef28",
+      "chain": ["0x0807ef28", "0x08000c60", "0x08004c54"],
+      "trigger_context": "Full 32KB SRAM flush path taken when the slot dispatcher decides a full rewrite is needed.",
+      "ram_fields_updated": ["entire 32,768-byte SRAM-mirror buffer (address unresolved)"],
+      "how_mapped": "Traced via callgraph.json callees for 0807ef28 and 08000c60, cross-checked against the literal 0x8000/0xe000000 arguments visible in ghidra/decompiled.c."
+    }
+  ],
+  "fields": [
+    {
+      "name": "header_opaque_prefix",
+      "offset": 0,
+      "size": 4,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"cap-00-future-0.sav": "bed7a9b9", "cap-01-future-1.sav": "bed7a9b9"},
+      "update_mechanism": "unknown - static across both samples, no writer traced",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "Direct hex inspection of both .sav files at offset 0x0000 and mirrored offset 0x7100."
+    },
+    {
+      "name": "header_version_tag_VF01",
+      "offset": 6,
+      "size": 4,
+      "type": "ascii",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"cap-00-future-0.sav": "VF01", "cap-01-future-1.sav": "VF01"},
+      "update_mechanism": "unknown - static across both samples, no writer traced",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "Direct hex/ASCII decode; also present in ROM-wide ASCII string scan per packet metadata ascii_magic_strings."
+    },
+    {
+      "name": "header_build_string",
+      "offset": 12,
+      "size": 20,
+      "type": "ascii",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"cap-00-future-0.sav": "AGBMetroid_USVerE004", "cap-01-future-1.sav": "AGBMetroid_USVerE004"},
+      "update_mechanism": "unknown - static across both samples, no writer traced",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "Direct hex/ASCII decode; also present in ROM-wide ASCII string scan per packet metadata ascii_magic_strings."
+    },
+    {
+      "name": "header_mirror_copy",
+      "offset": 28928,
+      "size": 32,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"cap-00-future-0.sav": "identical to offset 0", "cap-01-future-1.sav": "identical to offset 0"},
+      "update_mechanism": "unknown - byte-for-byte identical to the 0x0000 header in both samples; no code found that compares or selects between the two copies",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Python equality check data[0:0x20] == data[0x7100:0x7120] -> True for both files."
+    },
+    {
+      "name": "tag_block_opaque_prefix",
+      "offset": 28736,
+      "size": 6,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"cap-00-future-0.sav": "000000000000", "cap-01-future-1.sav": "1f010a99f566"},
+      "update_mechanism": "unknown - written at the same time as the STARTKEYLANGUAGE tag; tested against sum8/sum16/sum32 of the tag payload with no match",
+      "confidence": "UNKNOWN",
+      "evidence": "Byte diff between the two samples (saves/hexdump_and_diffs.txt) plus Python checksum-candidate brute force producing no match."
+    },
+    {
+      "name": "startkeylanguage_tag",
+      "offset": 28742,
+      "size": 16,
+      "type": "ascii",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"cap-00-future-0.sav": "0000000000000000000000000000000000", "cap-01-future-1.sav": "STARTKEYLANGUAGE"},
+      "update_mechanism": "unknown writer outside the 88-function trace set",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "Byte diff + ASCII decode; str.find() located the literal tag at absolute offset 0x7046."
+    },
+    {
+      "name": "language_index_candidate",
+      "offset": 28758,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"cap-00-future-0.sav": 0, "cap-01-future-1.sav": 2},
+      "update_mechanism": "unknown - single byte sandwiched between STARTKEYLANGUAGE and ENDKEY_LANGUAGE_ tags",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Byte position directly between the two ASCII tag strings; value 2 plausibly maps to a 0-indexed EFIGS language list (En=0,Fr=1,De=2,Es=3,It=4) for this multi-language release, but only one non-blank sample exists so this cannot be cross-validated."
+    },
+    {
+      "name": "endkeylanguage_tag",
+      "offset": 28759,
+      "size": 16,
+      "type": "ascii",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"cap-00-future-0.sav": "0000000000000000000000000000000000", "cap-01-future-1.sav": "ENDKEY_LANGUAGE_"},
+      "update_mechanism": "unknown writer outside the 88-function trace set",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "Byte diff + ASCII decode; str.find() located the literal tag at absolute offset 0x7057."
+    }
+  ],
+  "fuzzing_targets": [
+    {"offset": 28758, "size": 1, "mutation": "cycle through 0x00-0x04 (all 5 EFIGS indices)", "requires_checksum_repair": false, "predicted_effect": "If the language-index hypothesis is correct, in-game text language changes on next load; if not, no observable change and the engine may simply overwrite the value verbatim on next save."},
+    {"offset": 28736, "size": 6, "mutation": "zero, then randomize the 6 opaque bytes preceding the STARTKEYLANGUAGE tag", "requires_checksum_repair": false, "predicted_effect": "If this is a guarded length/counter field, the game should detect corruption and re-initialize or skip the block; if inert, no observable effect."},
+    {"offset": 28736, "size": 128, "mutation": "fill the entire 128-byte block with 0xFF, restoring it to the cap-00 blank appearance", "requires_checksum_repair": false, "predicted_effect": "Tests whether the game tolerates loss of this block (falls back to default language) or treats it as fatal; also probes whether this offset is one of the 3 redundant candidate slots validated by FUN_0807ef28/FUN_0807f078."},
+    {"offset": 6, "size": 4, "mutation": "flip header 'VF01' tag to 'VF00' at offset 0x0000 only, leaving the 0x7100 mirror intact", "requires_checksum_repair": false, "predicted_effect": "If a selection/fallback rule between the two header copies exists, the game should still boot using the intact 0x7100 copy and potentially repair the corrupted one on next save; if not, this is the first evidence the two copies are never cross-validated at runtime."}
+  ],
+  "open_questions": [
+    "Does FUN_0807ef28's 3-way redundant checksum/slot-repair scheme (FUN_0807f078/FUN_0807eebc) protect the 0x7040-0x70BF block observed in these samples, or an entirely different, not-yet-populated SRAM offset? The one's-complement self-check invariant fails against the actual bytes at 0x7040, so this is unresolved.",
+    "What writer produces the STARTKEYLANGUAGE/ENDKEY_LANGUAGE_ tag block, since it lies outside the 88-function/5-seed Ghidra trace set entirely?",
+    "Is the opaque 4-byte header prefix (0xBE 0xD7 0xA9 0xB9) a fixed build-time constant, or does it vary across cartridge instances/other release builds? Only one cartridge instance was sampled here.",
+    "Is the 0x02 byte between the STARTKEYLANGUAGE/ENDKEY_LANGUAGE_ tags actually a language selector, or merely a coincidentally-named debug variable? Requires a second non-blank sample with a different selected language to confirm.",
+    "Does a selection/fallback rule exist between the two byte-identical header copies at 0x0000 and 0x7100, or are they simply always kept in sync and never independently validated at runtime?",
+    "Are there additional save fields entirely outside the 3 active ranges identified here (i.e. further into the game, more SRAM regions would become non-blank)? Only 2 early sequential checkpoint captures were available for this release key."
+  ]
+}

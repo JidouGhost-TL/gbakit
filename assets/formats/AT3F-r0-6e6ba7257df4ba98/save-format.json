@@ -1,0 +1,442 @@
+{
+  "schema": "gbakit-save-research/1",
+  "release_key": "AT3F-r0-6e6ba7257df4ba98",
+  "display_name": "Tony Hawk's Pro Skater 3 (France)",
+  "rom_sha256": "6e6ba7257df4ba98a69a87aca3101ed12a366aa438d4124c79cd1c5062406394",
+  "game_code": "AT3F",
+  "header_family": "AT3",
+  "community_id": "comm-008",
+  "overall_confidence": "MEDIUM",
+  "media": {
+    "kind": "eeprom8k",
+    "size_bytes": 8192,
+    "sdk_tags": [],
+    "fill_byte": "0xff"
+  },
+  "slots_and_copies": [
+    {
+      "name": "slot_0",
+      "offset": 0,
+      "size": 8192,
+      "redundancy_role": "primary",
+      "selection_rule": "Single image only; no backup/mirror found in code or bytes. FUN_080218bc (0x080218bc) returns 0=valid,1=bad magic,2=bad sum32 checksum; load path FUN_08021e98/FUN_08021e28 accepts only on EEPROM read success + FUN_080218bc result via FUN_080218bc(param,0), sets RAM+0x2080=1 on success. Write path re-stamps magic+checksum if invalid before flush."
+    }
+  ],
+  "magic_signatures": [
+    {
+      "offset": 2,
+      "bytes_hex": "1e3353504854",
+      "ascii": "(raw) ..3SPHT ; logical rev-per-8-byte-block: 54485053331e = THPS3\\x1e",
+      "verified_in_code": true,
+      "verified_in_sav": true,
+      "function_addrs": [
+        "0x080218bc"
+      ]
+    }
+  ],
+  "checksums": [
+    {
+      "name": "sum32_le_image_checksum_FUN_080218bc",
+      "algorithm": "sum32_le",
+      "formula_detail": "Static (FUN_080218bc): iVar5 = word0 + _DAT_08021b10 + word1 + word2; loop from word3 adding 4x u32 LE per iteration while iVar3=_DAT_08021b14 counts down by 4; compare to u32 LE stored at byte offset _DAT_08021b18; on write (param3!=0) and invalid, store computed sum LE at that offset and mark 4 bytes dirty via FUN_0800a648. Literal-pool values _DAT_08021b10/_14/_18 are NOT resolved in workspace (no ROM), so seed/addend, loop count and stored offset are unresolved. Python test on logical rev8 image: sum32(0..0x1ffb)=0xc4d220da vs candidate stored u32@logical 0x1ffc=0x7ee72cda (match=False); sum32 all=0x43b94db4; raw-file sum32 all=0x3965d698 vs raw u32@0x1ffc=0xffffffff (match=False); CRC32(0..0x1ffb) rev=0x85e3c8fd, raw=0xf874e6e0 (neither equals candidate). Therefore NOT verified on samples.",
+      "stored_offset": 0,
+      "stored_size": 4,
+      "covered_start": 0,
+      "covered_end": 0,
+      "function_addrs": [
+        "0x080218bc"
+      ],
+      "verified_on_samples": [
+        {
+          "file": "cap-01-future-1.sav",
+          "stored_hex": "0x7ee72cda (candidate logical @0x1ffc)",
+          "computed_hex": "0xc4d220da (sum32_le logical rev8 0..0x1ffb)",
+          "match": false
+        },
+        {
+          "file": "cap-00-future-0.sav",
+          "stored_hex": "0xffffffff (blank)",
+          "computed_hex": "0x00000000-style blank - no valid magic",
+          "match": false
+        }
+      ],
+      "confidence": "CONFIRMED_STATIC"
+    }
+  ],
+  "io_driver_functions": [
+    {
+      "addr": "0x08049838",
+      "role": "write",
+      "callers": [
+        "0x080498b8",
+        "0x08049968"
+      ],
+      "notes": "DMA3 driver: saves/restores DMA enable, sets DMA3SAD=param1, DMA3DAD=param2, DMA3CNT=param3&0xffff|0x80000000, polls CNT busy bit 0x8000 (0x040000D4 block per PACKET hardware spec). Used both RAM->0x0D000000 and 0x0D000000->RAM."
+    },
+    {
+      "addr": "0x080498b8",
+      "role": "read",
+      "callers": [
+        "0x08049a44",
+        "0x0800a7ac"
+      ],
+      "notes": "EEPROM read one 8-byte block: block addr param1 (< limit at EEPROM-descriptor+4), expands address bits (descriptor byte+8 bits, +3 with start bits 1,1) DMA to 0x0D000000, DMA back 0x44 halfwords, repacks 64 bits (uVar4<<1|bit) into 4x u16 at param2+6 descending - explains per-8-byte reversal between RAM logical image and raw .sav."
+    },
+    {
+      "addr": "0x08049968",
+      "role": "write",
+      "callers": [
+        "0x08049a9c"
+      ],
+      "notes": "EEPROM write one 8-byte block: expands 4x u16 data + address bits into bit stack, DMA (addr_bits+0x43) to 0x0D000000, FUN_0804976c enables write latch/timer, polls uRam0d000000 bit0 / busy byte, FUN_080497f4 disables. Returns 0 on success."
+    },
+    {
+      "addr": "0x08049a44",
+      "role": "read",
+      "callers": [
+        "0x08049a9c"
+      ],
+      "notes": "Verify: FUN_080498b8 read-back into stack, compare 4x s16 to intended; return 0 match, 0x8000 mismatch."
+    },
+    {
+      "addr": "0x08049a9c",
+      "role": "write",
+      "callers": [
+        "0x0800a564"
+      ],
+      "notes": "Write+verify wrapper (called as func_0x08049a9c in FUN_0800a564, callgraph lists no callers - jumptable alias gap): up to 3 attempts of FUN_08049968 then FUN_08049a44, break on verify 0."
+    },
+    {
+      "addr": "0x0804976c",
+      "role": "write",
+      "callers": [
+        "0x08049968"
+      ],
+      "notes": "EEPROM write-enable/latch sequencing via descriptor registers (sets bit 8<<addr_bit_pos), copies param 3x u16 descriptor."
+    },
+    {
+      "addr": "0x080497f4",
+      "role": "write",
+      "callers": [
+        "0x08049968"
+      ],
+      "notes": "EEPROM write disable / cleanup counterpart to FUN_0804976c."
+    },
+    {
+      "addr": "0x0800a7ac",
+      "role": "read",
+      "callers": [
+        "0x08021e28"
+      ],
+      "notes": "Bulk read: for block 0..(len>>3)-1 FUN_080498b8(block, buf); buf+=8. Called with len 0x2000."
+    },
+    {
+      "addr": "0x0800a564",
+      "role": "write",
+      "callers": [
+        "0x08021b20"
+      ],
+      "notes": "Dirty-block flush: FUN_0800a414 finds first set bit in 0x80-byte bitmap at RAM struct+0x2000, func_0x08049a9c(block, block*8+image_base), FUN_0800a4bc advances to next set bit, clears bit, loops until byte index 0x80. Also FUN_080496cc(0x40)/FUN_08049734(2) configure EEPROM type first."
+    },
+    {
+      "addr": "0x080218bc",
+      "role": "checksum",
+      "callers": [
+        "0x08021b20",
+        "0x08021e28"
+      ],
+      "notes": "Magic (6B) + sum32 checksum validate; in write mode stamps magic, recomputes/stores checksum, marks bytes dirty via FUN_0800a648, recurses in read mode."
+    },
+    {
+      "addr": "0x0800a648",
+      "role": "serialize",
+      "callers": [
+        "0x080218bc",
+        "0x0802234c",
+        "0x08022450"
+      ],
+      "notes": "Dirty-bitmap setter: for each byte in [ptr,ptr+len) set bit 0x80>>(off>>3&7) in bitmap byte off>>6 relative to bitmap base (=RAM+0x2000) - i.e. 1 bit per image byte, 0x80 bytes bitmap per 0x2000 image (grouped per 8-byte EEPROM block by FUN_0800a414/4bc)."
+    }
+  ],
+  "caller_chains": [
+    {
+      "entry_caller": "0x08021e98",
+      "chain": [
+        "0x08021e98",
+        "0x08021e28",
+        "0x0800a7ac",
+        "0x080498b8",
+        "0x08049838"
+      ],
+      "trigger_context": "Load (once, guarded by byte at struct+_DAT_08021ec0): FUN_08021e28 reads 0x2000 EEPROM bytes into image (=struct base param2=param1), then FUN_080218bc(...,0) validates magic/sum; success sets struct+0x2080=1. Mapped via callgraph callers of 0x08021e98 + decompiled bodies.",
+      "ram_fields_updated": [
+        "image 0x0000-0x1FFF filled from EEPROM",
+        "struct+0x2080 loaded flag"
+      ],
+      "how_mapped": "callgraph.json 0x08021e98->{0x08021e28}, 0x08021e28 callees {0x0800a7ac,0x080218bc}; decompiled lines 17441-17438 (FUN_08021e98/08021e28)"
+    },
+    {
+      "entry_caller": "0x08021b20",
+      "chain": [
+        "0x0802234c/0x08022450",
+        "0x08021b20",
+        "0x080218bc",
+        "0x0800a564",
+        "0x08049a9c",
+        "0x08049968",
+        "0x08049838"
+      ],
+      "trigger_context": "Save flush: only if dirty byte (struct+_DAT_08021c4c)!=0 and other flag==0; FUN_080218bc(...,1) stamps header/checksum, FUN_0800a564 flushes dirty 8B blocks with 3x write+verify. Clears dirty byte on success.",
+      "ram_fields_updated": [
+        "header magic+checksum in image",
+        "dirty bitmap at +0x2000 consumed/cleared per block"
+      ],
+      "how_mapped": "callgraph 0x08021b20 callers {0x0802234c,0x08022450}; decompiled FUN_08021b20 lines 17271-17346, FUN_0800a564 lines 4955-5005"
+    },
+    {
+      "entry_caller": "0x08022450",
+      "chain": [
+        "0x080418d4",
+        "0x08022254",
+        "0x08021e98"
+      ],
+      "trigger_context": "FUN_080418d4: FUN_08022254 ensures load (FUN_08021e98) then func_0x0802171c deserializes sub-struct; if that returns 0, FUN_08022450 serializes 0x55-byte record via FUN_08021560 (fields from struct+0x24/4/8/0x64/0x68/0x83../0xd3../0xe4../0x104/0x108/0x11c), FUN_08022114 memcmp vs image at struct+_DAT_080224cc, on diff memcpy (func_0x0804a030), set dirty flag, FUN_0800a648 mark 0x55 bytes, then if param3!=0 FUN_08021b20 flush.",
+      "ram_fields_updated": [
+        "0x55-byte serialized record in image at unresolved base _DAT_080224cc"
+      ],
+      "how_mapped": "decompiled FUN_08022450 lines 17697-17730, FUN_08021560 lines 17108-17187, FUN_080418d4 lines 26182-26199; callgraph matches"
+    },
+    {
+      "entry_caller": "0x0802234c",
+      "chain": [
+        "0x0802234c",
+        "0x08021eec",
+        "0x08022114",
+        "0x0800a648",
+        "0x08021b20"
+      ],
+      "trigger_context": "9-byte field (name/id) update: FUN_08021eec copies 9B, FUN_08022114 compares to image at struct+_DAT_080223c8, on diff memcpy+dirty+FUN_0800a648(...,9), optional FUN_08021b20 flush.",
+      "ram_fields_updated": [
+        "9-byte field in image at unresolved base _DAT_080223c8"
+      ],
+      "how_mapped": "decompiled FUN_0802234c lines 17657-17690"
+    },
+    {
+      "entry_caller": "0x08022280",
+      "chain": [
+        "0x08022280",
+        "0x08021e98",
+        "0x08021208"
+      ],
+      "trigger_context": "Large record set deserialize/serialize (body of func_0x08021208 unrecovered): after load, copies param2 records (src stride 0x60, +0x60/+0xc0/+0x120/+0x180...) to image/struct dst stride 0x66 (17 iterations x4) plus FUN_08022080/FUN_08022038 tail fields. Consistent with 0x66-stride records observed at logical 0x14a8.",
+      "ram_fields_updated": [
+        "~0x66-stride record array (hypothesis: logical image 0x14a8..)"
+      ],
+      "how_mapped": "decompiled FUN_08022280 lines 17617-17650; callgraph callees {0x08021e98} only (func_ calls are jumptable aliases absent from graph)"
+    },
+    {
+      "entry_caller": "0x080224e8",
+      "chain": [
+        "0x080224e8",
+        "0x0800a79c",
+        "0x0800a72c"
+      ],
+      "trigger_context": "Reset/new-game: FUN_0800a79c/FUN_0800a72c zero 0x80-byte dirty bitmap at struct+0x2000, clear +0x2080/+0x2081/+0x2083, set flags - does NOT itself write EEPROM (no writer call traced).",
+      "ram_fields_updated": [
+        "bitmap +0x2000..0x207F zeroed",
+        "flags +0x2080/81/83"
+      ],
+      "how_mapped": "decompiled FUN_080224e8 lines 17737-17755"
+    }
+  ],
+  "fields": [
+    {
+      "name": "header_magic_raw_block0",
+      "offset": 2,
+      "size": 6,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [
+        "0x080218bc",
+        "0x08021b20",
+        "0x0800a564"
+      ],
+      "readers": [
+        "0x080218bc",
+        "0x08021e28"
+      ],
+      "observed_values": {
+        "cap-01-future-1.sav": "cap-01: raw 1e3353504854; rev8 logical 54485053331e = 'THPS3\\x1e'; cap-00 all 0xFF",
+        "cap-00-future-0.sav": "all 0xFF (blank)"
+      },
+      "update_mechanism": "0x080218bc compares buffer[0..5] in RAM (logical order THPS3 1e); raw .sav block0 is per-8-byte reversed, so file bytes at 2..7 are 1e 33 53 50 48 54",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "cap-01: raw 1e3353504854; rev8 logical 54485053331e = 'THPS3\\x1e'; cap-00 all 0xFF"
+    },
+    {
+      "name": "reserved_erased_gap_logical",
+      "offset": 8,
+      "size": 5278,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [
+        "0x080218bc",
+        "0x08021e28"
+      ],
+      "observed_values": {
+        "cap-01-future-1.sav": "cap-01 logical rev8: 0xFF from 0x06 to 0x14a5 except 0x00 at 0x14a6",
+        "cap-00-future-0.sav": "all 0xFF (blank)"
+      },
+      "update_mechanism": "gap 0xFF in both logical and raw (except block-boundary effects); no writer traced to specific sub-struct",
+      "confidence": "UNKNOWN",
+      "evidence": "cap-01 logical rev8: 0xFF from 0x06 to 0x14a5 except 0x00 at 0x14a6"
+    },
+    {
+      "name": "candidate_checksum_or_counter_raw_14a0",
+      "offset": 5280,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [
+        "0x080218bc",
+        "0x08021e28"
+      ],
+      "observed_values": {
+        "cap-01-future-1.sav": "cap-01 raw 0000, logical u32@0x14a4=0x0000ffff - does NOT fit sum32; see checksum section",
+        "cap-00-future-0.sav": "all 0xFF (blank)"
+      },
+      "update_mechanism": "packet candidate span; in logical rev8 these are bytes at 0x14a6..0x14a7 = 00 00 (high bytes if u32 at logical 0x14a4)",
+      "confidence": "HYPOTHESIS",
+      "evidence": "cap-01 raw 0000, logical u32@0x14a4=0x0000ffff - does NOT fit sum32; see checksum section"
+    },
+    {
+      "name": "main_records_066",
+      "offset": 5288,
+      "size": 1820,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [
+        "0x080218bc",
+        "0x08021e28"
+      ],
+      "observed_values": {
+        "cap-01-future-1.sav": "logical rev8: u32 LE 3 at 0x1504,0x156a,0x15d0,...0x1b64 (18 hits, 17 full 0x66 steps to ~0x1ba4)",
+        "cap-00-future-0.sav": "all 0xFF (blank)"
+      },
+      "update_mechanism": "stride 0x66 (102) records inferred from FUN_08022280 (dst stride 0x66, src stride 0x60 via func_0x08021208) and repeated u32=3 at logical 0x1504+ n*0x66",
+      "confidence": "HYPOTHESIS",
+      "evidence": "logical rev8: u32 LE 3 at 0x1504,0x156a,0x15d0,...0x1b64 (18 hits, 17 full 0x66 steps to ~0x1ba4)"
+    },
+    {
+      "name": "name_score_records_24",
+      "offset": 7080,
+      "size": 1032,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [
+        "0x080218bc",
+        "0x08021e28"
+      ],
+      "observed_values": {
+        "cap-01-future-1.sav": "logical rev8 strings every 0x18 from 0x1baa; ~42 records to 0x1fa8; trailing bytes include u16/u32 score-like values - semantics not decompiled (func_0x08021208/0802171c bodies unrecovered)",
+        "cap-00-future-0.sav": "all 0xFF (blank)"
+      },
+      "update_mechanism": "stride 0x18 (24) records; ASCII name at logical +2 (e.g. Geoff Rowley, Elissa Steamer, Rune Glifberg, Bam Margera, Eric Koston, Tony Hawk, 'Skater Perso' at 0x1fa3)",
+      "confidence": "HYPOTHESIS",
+      "evidence": "logical rev8 strings every 0x18 from 0x1baa; ~42 records to 0x1fa8; trailing bytes include u16/u32 score-like values - semantics not decompiled (func_0x08021208/0802171c bodies unrecovered)"
+    },
+    {
+      "name": "tail_config_block",
+      "offset": 8112,
+      "size": 72,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [
+        "0x080218bc",
+        "0x08021e28"
+      ],
+      "observed_values": {
+        "cap-01-future-1.sav": "cap-01 logical values quoted in report",
+        "cap-00-future-0.sav": "all 0xFF (blank)"
+      },
+      "update_mechanism": "logical: 08 06 04 02..., descending even bytes 0x18,0x16,... at 0x1fb8, 00 03 02 01 at 0x1fe9 etc. Likely options/controller config via FUN_08022198/func_0x08021ec4",
+      "confidence": "HYPOTHESIS",
+      "evidence": "cap-01 logical values quoted in report"
+    },
+    {
+      "name": "last_word_candidate",
+      "offset": 8184,
+      "size": 8,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [
+        "0x080218bc",
+        "0x08021e28"
+      ],
+      "observed_values": {
+        "cap-01-future-1.sav": "see Python verification in report",
+        "cap-00-future-0.sav": "all 0xFF (blank)"
+      },
+      "update_mechanism": "logical block: ff ff ff ff da 2c e7 7e; u32 LE at logical 0x1ffc = 0x7ee72cda. Candidate checksum stored word - NOT verified (computed sum32 0..0x1ffb = 0xc4d220da)",
+      "confidence": "HYPOTHESIS",
+      "evidence": "see Python verification in report"
+    }
+  ],
+  "fuzzing_targets": [
+    {
+      "offset": 2,
+      "size": 1,
+      "mutation": "Raw: flip one magic byte in block0 (e.g. file[2]^=1); Logical: flip 'T' in THPS3. No checksum repair possible until stored offset resolved - also repair by re-running game save if it re-stamps.",
+      "requires_checksum_repair": true,
+      "predicted_effect": "FUN_080218bc returns 1 (bad magic); load sets +0x2080=0, game treats save as absent/new; write path re-stamps magic."
+    },
+    {
+      "offset": 8188,
+      "size": 4,
+      "mutation": "Flip candidate stored word (logical 0x7ee72cda).",
+      "requires_checksum_repair": false,
+      "predicted_effect": "If this is stored checksum, load returns 2 and save rejected; if it is data, gameplay/score changes - discriminates checksum location."
+    },
+    {
+      "offset": 5288,
+      "size": 8,
+      "mutation": "Zero first main 0x66 record block (logical).",
+      "requires_checksum_repair": true,
+      "predicted_effect": "First 0x66 record (likely skater/level progress) resets; other records unchanged on reload."
+    },
+    {
+      "offset": 7082,
+      "size": 12,
+      "mutation": "Change logical name 'Geoff Rowley' to 'Geoff Xowley' (same length).",
+      "requires_checksum_repair": true,
+      "predicted_effect": "High-score/name table shows edited name if record is live; no change if names are default roster constants re-derived from ROM."
+    },
+    {
+      "offset": 5380,
+      "size": 4,
+      "mutation": "Set logical u32=3 at 0x1504 to 0 or 99.",
+      "requires_checksum_repair": true,
+      "predicted_effect": "Count/flag field of first 0x66 record changes (unlock/level count hypothesis); observe UI."
+    },
+    {
+      "offset": 8,
+      "size": 16,
+      "mutation": "Write non-FF bytes into erased gap logical 0x08..0x17.",
+      "requires_checksum_repair": true,
+      "predicted_effect": "No visible effect predicted if gap is unused/reserved; effect would reveal hidden sub-struct."
+    }
+  ],
+  "open_questions": [
+    "Literal-pool constants _DAT_08021b10 (seed/addend), _DAT_08021b14 (sum loop count/covered length), _DAT_08021b18 (stored checksum byte offset) and _DAT_080218e0/_08021b1c (magic pointer) are unresolved in decompiled.c and ROM is not in workspace - checksum formula is static-confirmed but stored offset/coverage could not be verified on cap-01 (all simple sum32/CRC candidates mismatch, quoted in report).",
+    "Serializer bodies func_0x08021208, func_0x0802171c, func_0x08021ec4, func_0x08022038, func_0x08022080 are called via unrecovered jumptables and absent from decompiled.c/callgraph - sub-struct image offsets (iRam08022274/08022340/080224cc/080223c8) and field semantics inside 0x66/0x55/9-byte records remain hypotheses.",
+    "RAM base address of save-manager struct (param_1) is not recoverable from workspace (all _DAT/iRam bases unresolved); fields are therefore reported as struct-relative (+0x2000 bitmap, +0x2080 loaded, etc.), not absolute 0x02/0x03 addresses.",
+    "Only one non-blank sample (cap-01) and one blank (cap-00, all 0xFF); no paired .ss states (states/ empty) - counterfactual/fuzzing predictions are untested and generation/selection behaviour with two competing saves cannot be observed.",
+    "EEPROM descriptor (address-bit count at descriptor+8, max block at +4) values unresolved; eeprom8k inferred from 8192-byte file, 0x2000 bulk read/write length and PACKET 'EEPROM 64K', not from descriptor bytes."
+  ]
+}

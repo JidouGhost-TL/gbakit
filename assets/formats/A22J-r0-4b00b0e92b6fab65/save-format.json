@@ -1,0 +1,203 @@
+{
+  "schema": "gbakit-save-research/1",
+  "release_key": "A22J-r0-4b00b0e92b6fab65",
+  "display_name": "EZ-Talk - Shokyuu Hen 1 (Japan)",
+  "rom_sha256": "4b00b0e92b6fab65376c6c6731d94e68ea28491b88f2754422d79ff19ae447ed",
+  "game_code": "A22J",
+  "header_family": "A22",
+  "community_id": "comm-011",
+  "overall_confidence": "MEDIUM",
+  "media": {
+    "kind": "sram",
+    "size_bytes": 32768,
+    "sdk_tags": ["SRAM_V110@4147608"],
+    "fill_byte": "0xff"
+  },
+  "slots_and_copies": [
+    {
+      "name": "slot_0",
+      "offset": 0,
+      "size": 8192,
+      "redundancy_role": "primary",
+      "selection_rule": "Only slot/copy in the image: a single 0x2000-byte block at SRAM offset 0 is transferred by the sole 0x0E000000 call site (FUN_08015154 from FUN_0801a6a8). No backup copy, mirroring, or generation counter exists; bytes 0x2000..0x7FFF are never written. Validity is hypothesised to be gated by the magic at offset 0."
+    }
+  ],
+  "magic_signatures": [
+    {
+      "offset": 0,
+      "bytes_hex": "504f4b454d4f4e5f54414b4153484932",
+      "ascii": "POKEMON_TAKASHI2",
+      "verified_in_code": false,
+      "verified_in_sav": true,
+      "function_addrs": ["0x08015154", "0x08019f1c"]
+    }
+  ],
+  "checksums": [
+    {
+      "name": "none_found_candidate_u32_at_0x28_rejected",
+      "algorithm": "unknown",
+      "formula_detail": "No stored checksum exists in the populated sample. The only candidate word (u32_le at 0x28 = 0x084A1097) was tested against sum8, sum16, sum32, xor8, CRC32, sum of u16_le words and sum of u32_le words over the full 0x2000 block and sub-ranges (0x10..0x2000, 0x20..0x2000, 0x2C..0x2000, 0x00..0x28, and full block excluding the candidate word); no computed value matches any stored byte/word in the block. The candidate value's top byte 0x08 places it in the GBA ROM window, i.e. it reads as a persisted ROM pointer, not a digest. Post-transfer integrity in code is read-back verification via FUN_0801ccbc, not a stored digest. verified_on_samples below records the CRC32 test as the representative falsification.",
+      "stored_offset": 40,
+      "stored_size": 4,
+      "covered_start": 0,
+      "covered_end": 8192,
+      "function_addrs": ["0x0801ccbc", "0x0801520c", "0x080151d0"],
+      "verified_on_samples": [
+        {
+          "file": "saves/cap-01-future-1.sav",
+          "stored_hex": "0x084a1097",
+          "computed_hex": "0x47f0d428",
+          "match": false
+        },
+        {
+          "file": "saves/cap-00-future-0.sav",
+          "stored_hex": "0xffffffff",
+          "computed_hex": "0xb4293435",
+          "match": false
+        }
+      ],
+      "confidence": "CONFIRMED_VERIFIED"
+    }
+  ],
+  "io_driver_functions": [
+    {"addr": "0x0801a6a8", "role": "deserialize", "callers": ["0x08000234"], "notes": "Boot orchestrator (MMIO seed). Zeroes a large RAM work struct, calls FUN_08015154(0x0E000000, _DAT_0801a818, 0x2000), then initialises subsystems (FUN_08019774, FUN_08019dd8, FUN_0801a3ac, FUN_08013e38, FUN_08014028(0), FUN_08015af0(0), FUN_0800310c(0)). Read-at-boot direction is a strong hypothesis; payload direction unrecovered."},
+    {"addr": "0x08015154", "role": "serialize", "callers": ["0x0801a6a8"], "notes": "Transfer-descriptor setup: stores {addr_a, addr_b, len} into *_DAT_080151bc, calls FUN_0801520c, then strcmp-like FUN_08019f1c (args dropped by Ghidra); on mismatch strcpy FUN_08019ee8 into descriptor+0x10 and sets descriptor words [0xc]=[0xd]=1; sets halfword flag at descriptor+0xC."},
+    {"addr": "0x0801520c", "role": "read", "callers": ["0x08015154"], "notes": "Transfer via RAM-copied payload FUN_0801cb44(desc[0], desc[1], desc[2]), then verify pass FUN_0801ccbc(desc[1], desc[0], 0x94); on non-zero result stores status and strcpys an error label. Called via func_ spelling, so absent from callgraph.json callees."},
+    {"addr": "0x080151d0", "role": "write", "callers": [], "notes": "Sibling flush path: byte copy FUN_0801cc1c(desc[1], desc[0], desc[2]) then the same FUN_0801ccbc verify + error handling. FUN_0801cc1c provably copies param1->param2, so with the boot descriptor values this is RAM->SRAM. NO static caller in callgraph.json; reachable only via unrecovered jumptable dispatch."},
+    {"addr": "0x0801cc1c", "role": "write", "callers": ["0x080151d0"], "notes": "Byte-at-a-time copy: param1=src, param2=dst, param3=count (proven from body). Correct primitive for 8-bit SRAM bus."},
+    {"addr": "0x0801cb44", "role": "read", "callers": ["0x0801520c"], "notes": "SRAM wrapper: read-modify-write of a wait-state register (& mask | 3, consistent with WAITCNT 0x04000204), copies a halfword code block from ROM (address ^1) onto the stack, tail-calls FUN_0801cda4(p1, p2, p3, stack+1). Discards result."},
+    {"addr": "0x0801ccbc", "role": "checksum", "callers": ["0x080151d0", "0x0801520c"], "notes": "Same RAM-copied-payload wrapper as FUN_0801cb44 but returns FUN_0801cda4's result; used as the post-transfer verify/read-back pass (third argument 0x94, meaning unknown). Role recorded as checksum in the sense of integrity verification; it computes no stored digest."},
+    {"addr": "0x0801cda4", "role": "read", "callers": ["0x0801cb44", "0x0801ccbc"], "notes": "RAM-copied SRAM payload executed from the stack. Body is an UNRECOVERED_JUMPTABLE in Ghidra; copy-vs-compare semantics and direction convention UNKNOWN from the workspace text."},
+    {"addr": "0x08019ee8", "role": "serialize", "callers": ["0x08015154", "0x080151d0", "0x0801520c"], "notes": "strcpy (returns length). Used in the save cluster for descriptor string/error-label handling, not for save payload fields."},
+    {"addr": "0x08019f1c", "role": "deserialize", "callers": ["0x08015154"], "notes": "strcmp-like byte compare (0=equal, 1=differ). Invoked by FUN_08015154 immediately after the transfer with arguments dropped by Ghidra; hypothesised to be the magic-string validity check."}
+  ],
+  "caller_chains": [
+    {
+      "entry_caller": "0x08000234",
+      "chain": ["0x08000234", "0x0801a6a8", "0x08015154", "0x0801520c", "0x0801cb44", "0x0801cda4"],
+      "trigger_context": "Boot/reset: FUN_08000234 calls FUN_0801a6a8 before task registration. Loads the 0x2000-byte SRAM block at 0x0E000000 into the RAM mirror, then runs subsystem initialisers FUN_08019774, FUN_08019dd8 (stub), FUN_0801a3ac, FUN_08013e38, FUN_08014028(0), FUN_08015af0(0), FUN_0800310c(0).",
+      "ram_fields_updated": ["work struct head zeroed (*puVar1=0, bytes +4/+5, halfword +6)", "~24 scattered bytes at literal-derived offsets zeroed", "five 4-entry halfword arrays zeroed", "FUN_0801a9a4 default pattern (0x100/0 halfwords)", "descriptor {0x0E000000, RAM_BUF, 0x2000} written by FUN_08015154"],
+      "how_mapped": "Seed FUN_0801a6a8 taken from ghidra/save_related_functions.c; edges cross-checked between ghidra/callgraph.json and the func_-spelled call sites in ghidra/decompiled.c (the JSON systematically misses func_-spelled edges, e.g. 0x08000234->0x0801a6a8 and 0x08015154->0x0801520c); every reached body read in full. Identity of the zeroed work struct (_DAT_0801a7e4) with the save mirror (_DAT_0801a818) is UNPROVEN (literal values absent from workspace) and is recorded as hypothesis, not fact."
+    },
+    {
+      "entry_caller": "0x080151d0",
+      "chain": ["0x080151d0", "0x0801cc1c", "0x0801ccbc", "0x0801cda4"],
+      "trigger_context": "Write/flush path (gameplay save trigger UNKNOWN): byte-copies the RAM mirror to SRAM at 0x0E000000 and verifies. No static caller exists in ghidra/callgraph.json; the ROM ends most functions with UNRECOVERED_JUMPTABLE dispatch, so the triggering caller cannot be closed from the given files.",
+      "ram_fields_updated": [],
+      "how_mapped": "Found by reading the descriptor-sharing siblings FUN_080151d0/FUN_0801520c in ghidra/decompiled.c and proving FUN_0801cc1c's direction from its body (param1 read, param2 written). Absence of callers confirmed by exhaustive query of ghidra/callgraph.json (147 nodes) and grep of ghidra/decompiled.c."
+    }
+  ],
+  "fields": [
+    {
+      "name": "magic_POKEMON_TAKASHI2",
+      "offset": 0,
+      "size": 16,
+      "type": "ascii",
+      "ram_addr": null,
+      "writers": ["0x080151d0", "0x0801cc1c"],
+      "readers": ["0x0801a6a8", "0x08015154", "0x08019f1c"],
+      "observed_values": {"cap-00-future-0.sav": "ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff (blank)", "cap-01-future-1.sav": "POKEMON_TAKASHI2"},
+      "update_mechanism": "Written only as part of the whole-block (0x2000-byte) verbatim flush of the RAM struct; presumed present in RAM from struct initialisation. Hypothesised load-time validity gate via strcmp-like FUN_08019f1c called from FUN_08015154 (arguments unrecovered).",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Bytes present verbatim in saves/cap-01-future-1.sav offset 0 and absent (0xFF) in blank saves/cap-00-future-0.sav (Python scan); sole SRAM transfer covers offset 0. Code-side gate is HYPOTHESIS: string literal does not appear in decompiled text; only the strcmp/strcpy machinery in FUN_08015154 supports the role."
+    },
+    {
+      "name": "header_padding_zero",
+      "offset": 16,
+      "size": 16,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": ["0x080151d0", "0x0801cc1c"],
+      "readers": ["0x0801a6a8", "0x08015154"],
+      "observed_values": {"cap-00-future-0.sav": "0xff x16 (blank)", "cap-01-future-1.sav": "0x00 x16"},
+      "update_mechanism": "Whole-block flush; plausibly NUL terminator plus reserved tail of the magic string field in the RAM struct.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "All zero in the only populated sample (Python nonzero-byte scan: no non-zero bytes between 0x10 and 0x1F)."
+    },
+    {
+      "name": "header_word_0x20",
+      "offset": 32,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": ["0x080151d0", "0x0801cc1c"],
+      "readers": ["0x0801a6a8", "0x08015154"],
+      "observed_values": {"cap-00-future-0.sav": "0xffffffff (blank)", "cap-01-future-1.sav": "0x00000001"},
+      "update_mechanism": "Whole-block flush of the RAM struct. Field-level gameplay writer unknown: no function in the corpus can be tied to this offset because the RAM mirror base (_DAT_0801a818) is unresolved.",
+      "confidence": "HYPOTHESIS",
+      "evidence": "struct.unpack('<I') at 0x20 in cap-01 gives 1. Semantics UNKNOWN: candidates are format version (=1) or a save-present/initialised flag; a generation counter is not supported (single sample, single copy, no selection logic in code)."
+    },
+    {
+      "name": "header_word_0x24",
+      "offset": 36,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": ["0x080151d0", "0x0801cc1c"],
+      "readers": ["0x0801a6a8", "0x08015154"],
+      "observed_values": {"cap-00-future-0.sav": "0xffffffff (blank)", "cap-01-future-1.sav": "0x00000001"},
+      "update_mechanism": "Whole-block flush of the RAM struct. Field-level gameplay writer unknown (unresolved RAM mirror base).",
+      "confidence": "HYPOTHESIS",
+      "evidence": "struct.unpack('<I') at 0x24 in cap-01 gives 1. Semantics UNKNOWN: second version/flag word, slot state, or boolean stored as u32."
+    },
+    {
+      "name": "header_word_0x28_rom_pointer_like",
+      "offset": 40,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": ["0x080151d0", "0x0801cc1c"],
+      "readers": ["0x0801a6a8", "0x08015154"],
+      "observed_values": {"cap-00-future-0.sav": "0xffffffff (blank)", "cap-01-future-1.sav": "0x084a1097"},
+      "update_mechanism": "Whole-block flush; most plausibly a RAM struct field holding a ROM address at flush time, incidentally persisted by the verbatim copy. Field-level writer unknown.",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Value 0x084A1097 lies in the GBA ROM window (0x08000000.., ROM offset 0x4A1097). Rejected as a checksum: sum8=0xAA, sum16=0x05AA, sum32=0x05AA, xor8=0xB8, crc32=0x47F0D428, crc32-excluding-word=0x411A96A0, sum-u16le=0x5954, sum-u32le=0x207838DD over the cap-01 block - none equals 0x084A1097 (Python, both files, multiple ranges)."
+    },
+    {
+      "name": "payload_body_zero_in_sample",
+      "offset": 44,
+      "size": 8148,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": ["0x080151d0", "0x0801cc1c"],
+      "readers": ["0x0801a6a8", "0x08015154"],
+      "observed_values": {"cap-00-future-0.sav": "0xff (blank)", "cap-01-future-1.sav": "0x00 (all 8148 bytes zero; 8170 zero bytes total in the block)"},
+      "update_mechanism": "Whole-block flush of the RAM struct. Internal sub-fields (presumed lesson/progress/settings members) cannot be delineated: every byte is at its zero value in the only populated sample.",
+      "confidence": "UNKNOWN",
+      "evidence": "Python scan: only 22 non-zero bytes exist in the populated 0x2000 block (magic + offsets 0x20, 0x24, 0x28..0x2B). Claiming finer fields here would be fabrication."
+    },
+    {
+      "name": "unused_sram_tail",
+      "offset": 8192,
+      "size": 24576,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"cap-00-future-0.sav": "0xff (all)", "cap-01-future-1.sav": "0xff (all)"},
+      "update_mechanism": "Never transferred: outside the sole 0x2000-byte transfer at the only 0x0E000000 call site. Physically could hold three more 8 KiB blocks, but no code references them.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Python: bytes 0x2000..0x7FFF are all 0xFF in both files; grep of ghidra/decompiled.c finds exactly one SRAM address literal (0xe000000 at FUN_0801a6a8's call)."
+    }
+  ],
+  "fuzzing_targets": [
+    {"offset": 0, "size": 1, "mutation": "Change magic byte 'P' (0x50) to 'Q' (0x51)", "requires_checksum_repair": false, "predicted_effect": "If the magic is the load gate (FUN_08019f1c in FUN_08015154): save treated as absent, boot as blank. Unchanged behaviour falsifies the gate hypothesis. No checksum repair exists to apply."},
+    {"offset": 0, "size": 16, "mutation": "Fill magic with 0xFF, leave body intact", "requires_checksum_repair": false, "predicted_effect": "Erased-header save: same prediction as single-byte magic corruption; still loading would move the validity gate to header word 0x20/0x24."},
+    {"offset": 32, "size": 4, "mutation": "u32 1 -> 0, then 1 -> 2, then 1 -> 0xFFFFFFFF (separate runs)", "requires_checksum_repair": false, "predicted_effect": "Version word: 2/0xFFFFFFFF rejected or migrated. Present-flag: 0 boots as no-save, 2 loads. Distinguishes semantics of header_word_0x20."},
+    {"offset": 36, "size": 4, "mutation": "u32 1 -> 0, then 1 -> 2 (separate runs)", "requires_checksum_repair": false, "predicted_effect": "Distinguishes flag vs counter vs second version word for header_word_0x24; no visible change in the near-empty save is the prediction for a pure flag."},
+    {"offset": 40, "size": 4, "mutation": "0x084A1097 -> 0x08000000, then -> 0x00000000, then -> 0x084A1096", "requires_checksum_repair": false, "predicted_effect": "If a dereferenced ROM pointer: null/wrong target crashes, hangs, or corrupts first use; ROM-start pointer changes data read. No change under all three demotes it to an opaque persisted word (still not a checksum unless rejection is also seen)."},
+    {"offset": 44, "size": 8148, "mutation": "Fill zero body with 0xFF; separately fill with repeating 0x01", "requires_checksum_repair": false, "predicted_effect": "Range-checked fields: unlock/corrupt lesson state or sanitised on load (post-session re-dump shows clamping). Identical boot + verbatim re-dump of the mutated body proves blind trust in the block."},
+    {"offset": 4096, "size": 16, "mutation": "Write ASCII SECOND_SLOT_TEST at block midpoint", "requires_checksum_repair": false, "predicted_effect": "Survives load untouched under the single-struct model; wiped by any save flush (whole-block rewrite). A half-only overwrite would reveal sub-block structure."},
+    {"offset": 8192, "size": 8192, "mutation": "Copy the whole populated block (magic included) to offset 0x2000", "requires_checksum_repair": false, "predicted_effect": "Ignored under the single-slot conclusion. If used after slot-0 magic corruption, a fallback slot exists and the geometry conclusion must be revised."}
+  ],
+  "open_questions": [
+    "RAM mirror base address: referenced only as _DAT_0801a818, whose literal value is absent from ghidra/decompiled.c. Closable in one step by searching EWRAM/IWRAM for 'POKEMON_TAKASHI2' after a boot load, or by resolving the literal pool at 0x0801a818 in the ROM.",
+    "Direction/semantics of the RAM-copied payload FUN_0801cda4 (UNRECOVERED_JUMPTABLE): is FUN_0801520c read or write, and is FUN_0801ccbc's second pass a byte-compare verify, and what does its third argument 0x94 mean?",
+    "Write trigger: FUN_080151d0 has no static caller in ghidra/callgraph.json. Which gameplay event (lesson completion, menu, autosave) flushes the save, and who sets the descriptor for that path? Closable with an SRAM write breakpoint at 0x0E000000 during play.",
+    "Semantics of header words at 0x20 (=1), 0x24 (=1) and 0x28 (=0x084A1097): version/flag/pointer readings are hypotheses; needs a non-empty save produced by real play (report fuzzing target F9) to resolve.",
+    "Internal layout of the 8148-byte zero body (offset 0x2C..0x1FFF): undelineable from a sample in which every byte is zero.",
+    "Is the work struct zeroed by FUN_0801a6a8 (_DAT_0801a7e4) the same RAM struct as the save mirror (_DAT_0801a818)? If yes, exactly which of its zeroed offsets correspond to save fields?",
+    "Packet profile summary mentions 6 .sav files but only 2 (one blank, one near-empty) are present in saves/; findings rest on those 2 and should be re-checked against richer populated saves if they become available.",
+    "No paired emulator save states (.ss) exist in states/ for this title, so all fuzzing predictions are specified for cold-boot reload of mutated .sav images rather than save-state reload."
+  ]
+}

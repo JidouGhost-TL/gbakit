@@ -1,0 +1,754 @@
+{
+  "schema": "gbakit-save-research/1",
+  "release_key": "AQWE-r0-8166a4d8a307999d",
+  "display_name": "Game & Watch Gallery 4 (USA)",
+  "rom_sha256": "8166a4d8a307999d8d37843a9b7ebc9cfbc18bd2a4376b2832daa08104ccb6ee",
+  "game_code": "AQWE",
+  "header_family": "AQW",
+  "community_id": "comm-011",
+  "overall_confidence": "MEDIUM",
+  "media": {
+    "kind": "sram",
+    "size_bytes": 32768,
+    "sdk_tags": [],
+    "fill_byte": "0xff"
+  },
+  "slots_and_copies": [
+    {
+      "name": "slot_0",
+      "offset": 0,
+      "size": 1072,
+      "redundancy_role": "primary",
+      "selection_rule": "Single contiguous save at SRAM offset 0. Accepted iff bytes 0x00-0x0D == 'GBGforAGB 0.9.' AND byte[0x0E]==byte[0x0F] (FUN_0803f00c); otherwise FUN_0803f074 erases/reinitialises. No second slot/copy, no generation counter found in the 168-function corpus."
+    },
+    {
+      "name": "aux_record_0x2000",
+      "offset": 8192,
+      "size": 48,
+      "redundancy_role": "unknown",
+      "selection_rule": "Single 0x30-byte record read by FUN_0803f748 at SRAM 0x2000; all-0xFF in both samples, no writer found in corpus, selection/validity (string compare + fields at +0x20/+0x2C) unresolved."
+    }
+  ],
+  "magic_signatures": [
+    {
+      "offset": 0,
+      "bytes_hex": "474247666f7241474220302e392e",
+      "ascii": "GBGforAGB 0.9.",
+      "verified_in_code": true,
+      "verified_in_sav": true,
+      "function_addrs": [
+        "0x0803f00c",
+        "0x0803f074"
+      ]
+    }
+  ],
+  "checksums": [
+    {
+      "name": "duplicated_guard_byte_0x0E_0x0F_write_transaction_token",
+      "algorithm": "custom",
+      "formula_detail": "NOT a data checksum. FUN_0803f2c0 (decompiled.c:2075-2091): b=FUN_08043830() low byte (LCG: state=state*_DAT_08043844+1, return state>>16; constants unresolved in export); write b at SRAM 0x0E, write payload, write same b at 0x0F. Validation FUN_0803f00c (1938-1951) only checks magic and byte[0x0E]==byte[0x0F] (with an unresolved '2'/0 legacy exception). Falsified as sum/xor/CRC over payload: cap-00 payload sum8=0x03 xor8=0x01 crc32_lo=0x88 vs stored 0x88 (coincidence) but cap-01 sum8=0x06 xor8=0x00 crc32_lo=0x07 vs stored 0xB4; stored delta +0x2C while payload byte-sum delta is +3 (three 0->1 flags). See SAVE-FORMAT-REPORT.md sec.4 for full Python table.",
+      "stored_offset": 14,
+      "stored_size": 1,
+      "covered_start": 0,
+      "covered_end": 1072,
+      "function_addrs": [
+        "0x0803f2c0",
+        "0x08043830",
+        "0x0803f00c"
+      ],
+      "verified_on_samples": [
+        {
+          "file": "cap-00-future-0.sav",
+          "stored_hex": "0x88 (0x0E)=0x88 (0x0F)",
+          "computed_hex": "equality_check: 0x88==0x88",
+          "match": true
+        },
+        {
+          "file": "cap-01-future-1.sav",
+          "stored_hex": "0xB4 (0x0E)=0xB4 (0x0F)",
+          "computed_hex": "equality_check: 0xB4==0xB4",
+          "match": true
+        }
+      ],
+      "confidence": "CONFIRMED_VERIFIED"
+    }
+  ],
+  "io_driver_functions": [
+    {
+      "addr": "0x0803fd90",
+      "role": "write",
+      "callers": [
+        "0x0803f2c0",
+        "0x0803fd50"
+      ],
+      "notes": "SRAM write wrapper: if len!=0 call FUN_080c3fa4(src, offset|0x0E000000, len) write-with-verify; clears *_DAT_0803fdcc first. Tail-call (UNRECOVERED_JUMPTABLE) so callgraph callees are empty; callers from textual grep of decompiled.c."
+    },
+    {
+      "addr": "0x0803fdd0",
+      "role": "read",
+      "callers": [
+        "0x0803f00c",
+        "0x0803f30c",
+        "0x0803f390",
+        "0x0803f67c",
+        "0x0803f6a0",
+        "0x0803f6c4",
+        "0x0803f6e8",
+        "0x0803f70c",
+        "0x0803f734",
+        "0x0803f748"
+      ],
+      "notes": "SRAM read wrapper: func_0x080c61a8(offset|0x0E000000, dst, len, *_DAT_0803fdfc). Same tail-call caveat."
+    },
+    {
+      "addr": "0x080c3fa4",
+      "role": "write",
+      "callers": [
+        "0x0803fd90"
+      ],
+      "notes": "Write-with-verify, up to 3 attempts: FUN_080c3e80 byte-copy to SRAM then func_0x080c61a8 compare; break on match (decompiled.c:4804-4819)."
+    },
+    {
+      "addr": "0x080c3e80",
+      "role": "write",
+      "callers": [
+        "0x080c3fa4"
+      ],
+      "notes": "Byte-at-a-time SRAM copy *dst++=*src++; first masks/sets WAITCNT-like *_DAT_080c3eb8 with |3 (decompiled.c:4748-4763). No Flash 0x5555/0x2AAA sequence and no EEPROM DMA3 bitstream anywhere in corpus."
+    },
+    {
+      "addr": "0x080c61a8",
+      "role": "read",
+      "callers": [
+        "0x0803fdd0",
+        "0x080c3fa4"
+      ],
+      "notes": "ROM-library SRAM read/compare thunk at 0x080C61A8; body not recovered (jumptable stub, decompiled.c:5834-5845), role inferred from both call sites. Confidence CONFIRMED_STATIC for role, UNKNOWN for internals."
+    },
+    {
+      "addr": "0x0803fd50",
+      "role": "erase",
+      "callers": [
+        "0x0803f074"
+      ],
+      "notes": "Erase: fills all 0x8000 SRAM bytes with 0xFF in 8-byte FUN_0803fd90 writes (2430-2451). Proves 32768-byte media and fill byte."
+    },
+    {
+      "addr": "0x0803f2c0",
+      "role": "serialize",
+      "callers": [
+        "0x0803f668",
+        "0x0803f68c",
+        "0x0803f6b0",
+        "0x0803f6d4",
+        "0x0803f6f8",
+        "0x0803f720"
+      ],
+      "notes": "Transactional writer: guard byte at 0x0E, payload at (offset,len), same guard at 0x0F. Every sub-block flush goes through it."
+    },
+    {
+      "addr": "0x08043830",
+      "role": "checksum",
+      "callers": [
+        "0x0803f2c0"
+      ],
+      "notes": "Guard-byte generator, LCG state=state*mult+1, return state>>16 (3927-3935). NOT a checksum over data. Multiplier/seed DAT constants not resolved in this Ghidra export, so exact byte sequence cannot be recomputed from .sav alone."
+    },
+    {
+      "addr": "0x0803f00c",
+      "role": "deserialize",
+      "callers": [],
+      "notes": "Boot validation/load entry (no caller in callgraph or grep; likely reached via function pointer/jumptable outside the 168 traced functions). Reads 16B header, checks magic+E==F, else calls FUN_0803f074."
+    },
+    {
+      "addr": "0x0803f074",
+      "role": "serialize",
+      "callers": [
+        "0x0803f00c"
+      ],
+      "notes": "Format/initialise: erase (0803fd50), write+verify magic, write default sub-blocks A-F, else error via func_0x080b0e50."
+    },
+    {
+      "addr": "0x0803fd20",
+      "role": "deserialize",
+      "callers": [
+        "0x08003df8",
+        "0x080432c8",
+        "0x080437d0",
+        "0x080438bc"
+      ],
+      "notes": "Lazy save-context init (once-flag *_DAT_0803fd44, calls func_0x080c3f0c); its 8-byte stack token (auStack_18) is passed as param_1 to every read/write wrapper. It is a handle, not a proven EWRAM/IWRAM mirror address."
+    }
+  ],
+  "caller_chains": [
+    {
+      "entry_caller": "0x0803f00c",
+      "chain": [
+        "0x0803f00c",
+        "0x0803fdd0",
+        "0x0803f074",
+        "0x0803fd50",
+        "0x0803f2c0"
+      ],
+      "trigger_context": "Boot/load validation: header or guard mismatch triggers full erase+default rewrite. Matches packet probe: mutating 0x0E breaks E==F and the save is rewritten/reverted.",
+      "ram_fields_updated": [
+        "none proven: buffers are stack copies; no fixed 0x02xxxxxx/0x03xxxxxx mirror is resolved in the export"
+      ],
+      "how_mapped": "Direct read of decompiled.c:1929-2070 plus callgraph (callgraph lists no callers/callees for the tail-call functions, so textual func_0x0803fdd0/FUN_0803f074 references were used)."
+    },
+    {
+      "entry_caller": "0x08003df8",
+      "chain": [
+        "0x0800621a",
+        "0x08003df8",
+        "0x0803fd20",
+        "0x0803f6e8",
+        "0x0803f70c",
+        "0x0803f6a0",
+        "0x0803f734",
+        "0x080437d0",
+        "0x0803f6d4",
+        "0x0803f6f8",
+        "0x0803f68c",
+        "0x0803f720"
+      ],
+      "trigger_context": "Progression/unlock evaluation (callgraph: FUN_0800621a calls it when unaff_r9==0). Reads D/E/A/F stack buffers, computes total score via FUN_080437d0, sets flag bytes in the stack copies at score thresholds (1,3,6,9,14,24,29,39,44,54,59,69, etc. in decompiled.c:746-1165), flushes each dirty block once via its wrapper.",
+      "ram_fields_updated": [
+        "stack D buffer (SRAM 0x388 block): bytes incl. +0x4B set to 1 at threshold",
+        "stack E buffer (inferred SRAM 0x424, 8B): bytes 0-3 set to 1 (in_stack_0000009c._1_/_2_/_3_)",
+        "stack A buffer (SRAM 0x328, 36B): words/bytes via puRam pointers at thresholds 9/14/24/29/39/44/54/59",
+        "stack F buffer (inferred SRAM 0x42C, 4B): bytes 1-2 set at thresholds 0xA9/0xDB"
+      ],
+      "how_mapped": "callgraph.json 0x08003df8 callers=[0x0800621a] (callees empty due tail calls) + textual grep lines 350-355,388,743,774,804,834,864,891-1080,1158-1164. Stack layout proof: D buffer stack 0x00-0x9B (0x9C B), E at 0x9C (8B), A at 0xA4 (0x24 B, ends at ctx 0xC8), F at 0xD0 (4B). No fixed RAM mirror proven."
+    },
+    {
+      "entry_caller": "0x080438bc",
+      "chain": [
+        "0x080438bc",
+        "0x080436bc",
+        "0x0803fd20",
+        "0x0803f67c",
+        "0x0803f668",
+        "0x0803f2c0"
+      ],
+      "trigger_context": "Unlock/mark-seen: if *_DAT_08043910==0, look up param_1 (u16 code) in a 25-entry table (FUN_080436bc, 3828-3851), read B block (0x34C), set byte[idx]=1, write B back; then FUN_0801798c sound/UI side effect.",
+      "ram_fields_updated": [
+        "stack B buffer byte[idx]=1 (idx<0x19); maps to observed cap-01 byte 0x35D = B+0x11 if idx=17"
+      ],
+      "how_mapped": "Direct read decompiled.c:3958-3986 + callgraph callees=[0x0801798c,0x0803f668,0x0803f67c,0x0803fd20,0x080436bc]."
+    },
+    {
+      "entry_caller": "0x080437d0",
+      "chain": [
+        "0x080437d0",
+        "0x0803fd20",
+        "0x0803f390",
+        "0x08043744"
+      ],
+      "trigger_context": "Score tally (reader, no flush): loops idx 0..0x15, reads only idx<0xD 28-byte records at SRAM 0xC0+idx*0x1C, sums record bytes +0x14..0x17 skipping 0xFF (FUN_08043744). Return is iVar6 used as the threshold total in FUN_08003df8.",
+      "ram_fields_updated": [],
+      "how_mapped": "Direct read decompiled.c:3886-3920,3856-3879 + callgraph."
+    },
+    {
+      "entry_caller": "0x080432c8",
+      "chain": [
+        "0x080432c8",
+        "0x0803fd20",
+        "0x0803f30c",
+        "0x08016c68",
+        "0x08016ab8",
+        "0x08017924"
+      ],
+      "trigger_context": "Boot/init path: FUN_0803f30c reads one 8-byte record at SRAM 0x10+idx*8 (idx=*_DAT_080432f8); if empty it defaults record bytes [1]=1,[4]=1 (2096-2122), and FUN_080432c8 sets RAM flags from record byte. Also configures display/sound via FUN_08016c68/08016ab8 (not save fields).",
+      "ram_fields_updated": [
+        "8-byte stack record uStack_10 only; no proven fixed RAM mirror"
+      ],
+      "how_mapped": "Direct read decompiled.c:3795-3821,2096-2122 + callgraph callees."
+    }
+  ],
+  "fields": [
+    {
+      "name": "magic_ascii",
+      "offset": 0,
+      "size": 14,
+      "type": "ascii",
+      "ram_addr": null,
+      "writers": [
+        "0x0803f074"
+      ],
+      "readers": [
+        "0x0803f00c",
+        "0x0803f074"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": "GBGforAGB 0.9.",
+        "cap-01-future-1.sav": "GBGforAGB 0.9."
+      },
+      "update_mechanism": "Written once at format time via FUN_0803f2c0(param,0,magic,0x0E); re-read and byte-compared on every load/format.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "decompiled.c:1986-1994,1940-1944; both .sav first 14 bytes exactly 47 42 47 66 6F 72 41 47 42 20 30 2E 39 2E."
+    },
+    {
+      "name": "guard_byte_copy1",
+      "offset": 14,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": [
+        "0x0803f2c0",
+        "0x08043830"
+      ],
+      "readers": [
+        "0x0803f00c"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": "0x88",
+        "cap-01-future-1.sav": "0xB4"
+      },
+      "update_mechanism": "First write of every FUN_0803f2c0 transaction: fresh LCG low byte written at 0x0E before payload.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "decompiled.c:2082-2086 (0803f2c0), 3932-3934 (LCG), 1946-1951 (equality validation); both samples have [0x0E]==[0x0F]; packet probe at 0x0E reverts save."
+    },
+    {
+      "name": "guard_byte_copy2",
+      "offset": 15,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": [
+        "0x0803f2c0"
+      ],
+      "readers": [
+        "0x0803f00c"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": "0x88",
+        "cap-01-future-1.sav": "0xB4"
+      },
+      "update_mechanism": "Same byte rewritten at 0x0F after payload; equality of the pair proves the transaction completed.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "decompiled.c:2086; samples identical pairs 88/88 and B4/B4."
+    },
+    {
+      "name": "record_8b_at_0x10_plus_idx8",
+      "offset": 16,
+      "size": 8,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [
+        "0x0803f30c",
+        "0x080432c8"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": "FF FF FF FF FF FF FF FF (erased)",
+        "cap-01-future-1.sav": "FF FF FF FF FF FF FF FF (erased)"
+      },
+      "update_mechanism": "Read at 0x10+(idx&0xFF)*8 len 8; if first byte 0 the caller defaults bytes [1]=1,[4]=1 in its stack copy (no flush found in corpus). Extent/number of records unknown - only the addressed record is mapped.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "decompiled.c:2104-2116,3805. Writer and total record count UNKNOWN: no FUN_0803f2c0 call targets 0x10 in corpus."
+    },
+    {
+      "name": "records_28b_at_0xC0",
+      "offset": 192,
+      "size": 364,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [
+        "0x0803f390",
+        "0x080437d0",
+        "0x08043744"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": "all 0xFF (13 records x 28B, 0xC0-0x22B)",
+        "cap-01-future-1.sav": "all 0xFF"
+      },
+      "update_mechanism": "Reader-only in corpus: 13 records (idx<0xD) at 0xC0+idx*0x1C, bytes +0x14..0x17 summed if !=0xFF. 0xFF therefore means absent/empty in this tally.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "decompiled.c:2132,3908-3915,3863-3874. No writer in the 168-function corpus; semantic labels UNKNOWN."
+    },
+    {
+      "name": "gap_0x22C_0x327",
+      "offset": 556,
+      "size": 252,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [
+        "0x0803fd50"
+      ],
+      "readers": [],
+      "observed_values": {
+        "cap-00-future-0.sav": "all 0xFF",
+        "cap-01-future-1.sav": "all 0xFF"
+      },
+      "update_mechanism": "Only touched by full erase. May be tail of the 0xC0 record array (22 iterations in FUN_080437d0, only 13 read) or unused padding - do not allocate fields here.",
+      "confidence": "UNKNOWN",
+      "evidence": "Active-range scan of both .sav; decompiled.c:3914 loop bound 0x16 vs 0xD read guard."
+    },
+    {
+      "name": "block_A_0x328",
+      "offset": 808,
+      "size": 36,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [
+        "0x0803f68c",
+        "0x0803f074",
+        "0x08003df8"
+      ],
+      "readers": [
+        "0x0803f6a0",
+        "0x08003df8"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": "u32le[0]=1, rest 0",
+        "cap-01-future-1.sav": "u32le[0]=1, rest 0"
+      },
+      "update_mechanism": "FUN_0803f68c=FUN_0803f2c0(...,0x328,buf,0x24); FUN_0803f6a0 reads it. Init default: u32[0]=1 rest 0 (auStack_f0). FUN_08003df8 mutates its stack copy at score thresholds and flushes it (lines 891-1080).",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "decompiled.c:2177,2192,2005-2011,891-1080; sav A block exactly matches init default in both samples. Individual byte semantics UNKNOWN."
+    },
+    {
+      "name": "block_A_word0",
+      "offset": 808,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": [
+        "0x0803f074"
+      ],
+      "readers": [
+        "0x0803f6a0"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": "1",
+        "cap-01-future-1.sav": "1"
+      },
+      "update_mechanism": "Set to 1 by factory init (auStack_f0[0]=1); never changed between samples.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "decompiled.c:2010-2011; both savs."
+    },
+    {
+      "name": "block_B_0x34C_flag_array",
+      "offset": 844,
+      "size": 28,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [
+        "0x0803f668",
+        "0x0803f074",
+        "0x080438bc"
+      ],
+      "readers": [
+        "0x0803f67c",
+        "0x080438bc"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": "byte[0]=1, rest 0",
+        "cap-01-future-1.sav": "byte[0]=1, byte[0x11]=1, rest 0"
+      },
+      "update_mechanism": "FUN_0803f668=FUN_0803f2c0(...,0x34C,buf,0x1C); read by FUN_0803f67c. FUN_080438bc sets byte[idx]=1 (idx = code lookup, <25) and rewrites whole block. Init zeroes (first 25 bytes cleared).",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "decompiled.c:2147,2162,3971-3975,2004; cap-01 gain at 0x35D=B+0x11 is exactly the set-one-byte pattern of FUN_080438bc."
+    },
+    {
+      "name": "block_B_flag_0x11",
+      "offset": 861,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": [
+        "0x080438bc"
+      ],
+      "readers": [
+        "0x0803f67c"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": "0",
+        "cap-01-future-1.sav": "1"
+      },
+      "update_mechanism": "Set 0->1 by FUN_080438bc if its u16 code maps to index 17 in the 25-entry FUN_080436bc table; which game object that code denotes is UNKNOWN (table contents are unresolved DAT).",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "Diff 0x35D 0->1; decompiled.c:3969-3975. Index-to-object mapping is HYPOTHESIS without the table values."
+    },
+    {
+      "name": "block_C_0x368",
+      "offset": 872,
+      "size": 32,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [
+        "0x0803f6b0",
+        "0x0803f074"
+      ],
+      "readers": [
+        "0x0803f6c4"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": "all 0",
+        "cap-01-future-1.sav": "byte[0x1C]=1 (0x384), rest 0"
+      },
+      "update_mechanism": "FUN_0803f6b0=FUN_0803f2c0(...,0x368,buf,0x20); read by FUN_0803f6c4. Init zeroes it. No non-init writer exists in the corpus - the cap-01 change at +0x1C must come from a function outside the 168 traced functions.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "decompiled.c:2207,2222,2019; diff 0x384. Writer/semantics UNKNOWN - flagged as the largest open gap."
+    },
+    {
+      "name": "block_C_byte_0x1C",
+      "offset": 900,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [
+        "0x0803f6c4"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": "0",
+        "cap-01-future-1.sav": "1"
+      },
+      "update_mechanism": "0->1 between snapshots; pattern matches the other progression flags but no writer was traced.",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Byte diff only; do not name a gameplay meaning."
+    },
+    {
+      "name": "block_D_0x388",
+      "offset": 904,
+      "size": 156,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [
+        "0x0803f6d4",
+        "0x0803f074",
+        "0x08003df8"
+      ],
+      "readers": [
+        "0x0803f6e8",
+        "0x08003df8"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": "byte[4]=1, rest 0",
+        "cap-01-future-1.sav": "byte[1]=1, byte[4]=1, rest 0"
+      },
+      "update_mechanism": "FUN_0803f6d4=FUN_0803f2c0(...,0x388,buf,0x9C); read by FUN_0803f6e8. Init sets byte[4]=1 (auStack_cc[4]=1, decompiled.c:2030,2051). FUN_08003df8 thresholds mutate its stack copy (stack 0x00-0x9B) and flush (lines 388,743). NOTE on observed offset: 0x389 is D+1 and 0x38C is D+4 - see report sec.5; cap-01 byte at 0x389 (D+1)=1 is new, D+4=1 in both.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "decompiled.c:2237,2252,2030-2051; stack-layout proof in FUN_08003df8 (D buffer 0x00-0x9B). Individual byte semantics UNKNOWN."
+    },
+    {
+      "name": "block_D_byte_4",
+      "offset": 908,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": [
+        "0x0803f074"
+      ],
+      "readers": [
+        "0x0803f6e8"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": "1",
+        "cap-01-future-1.sav": "1"
+      },
+      "update_mechanism": "Factory default auStack_cc[4]=1 written by FUN_0803f6d4 at init; unchanged between samples.",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "decompiled.c:2030,2051; both savs have 01 at 0x38C."
+    },
+    {
+      "name": "block_D_byte_1",
+      "offset": 905,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": [
+        "0x08003df8"
+      ],
+      "readers": [
+        "0x0803f6e8"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": "0",
+        "cap-01-future-1.sav": "1"
+      },
+      "update_mechanism": "0->1 between snapshots. FUN_08003df8 is the only traced non-init D writer; its early branches test stack D bytes (in_stack_00000000._1_1_ etc., lines 358-417) consistent with low D bytes being progression flags, but the exact branch that sets D+1 is obscured by unresolved DAT pointers.",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Diff 0x389; decompiled.c:351 (read), 388/743 (flush). Exact setter branch not proven."
+    },
+    {
+      "name": "block_E_inferred_0x424",
+      "offset": 1060,
+      "size": 8,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [
+        "0x0803f6f8",
+        "0x0803f074",
+        "0x08003df8"
+      ],
+      "readers": [
+        "0x0803f70c",
+        "0x08003df8"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": "all 0",
+        "cap-01-future-1.sav": "all 0"
+      },
+      "update_mechanism": "FUN_0803f6f8=FUN_0803f2c0(...,*_DAT_0803f708,buf,8); FUN_0803f70c reads same DAT offset. Offset value itself is an unresolved DAT, inferred as 0x424 because A-D blocks are contiguous 0x328-0x423 and E(8B)+F(4B) exactly fill the observed active range to 0x430, and FUN_08003df8 stack buffers are laid out D(0x9C)/E(8)/A(0x24)/ctx/F(4) back-to-back.",
+      "confidence": "HYPOTHESIS",
+      "evidence": "decompiled.c:2269,2286; active range ends 0x430=0x424+8+4; stack layout lines 350-355. Offset arithmetic is strong but the DAT literal was not in the export."
+    },
+    {
+      "name": "block_F_inferred_0x42C",
+      "offset": 1068,
+      "size": 4,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [
+        "0x0803f720",
+        "0x0803f074",
+        "0x08003df8"
+      ],
+      "readers": [
+        "0x0803f734",
+        "0x08003df8"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": "00 00 00 00",
+        "cap-01-future-1.sav": "00 00 00 00"
+      },
+      "update_mechanism": "FUN_0803f720=FUN_0803f2c0(...,*_DAT_0803f730,buf,4); read by FUN_0803f734. FUN_08003df8 sets its stack bytes 1-2 at score thresholds 0xA9/0xDB and flushes (lines 1158-1164). Offset inferred as above (0x424+8).",
+      "confidence": "HYPOTHESIS",
+      "evidence": "decompiled.c:2303,2320,1153-1165; active-range end."
+    },
+    {
+      "name": "unused_0x430_0x1FFF",
+      "offset": 1072,
+      "size": 7152,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [
+        "0x0803fd50"
+      ],
+      "readers": [],
+      "observed_values": {
+        "cap-00-future-0.sav": "all 0xFF",
+        "cap-01-future-1.sav": "all 0xFF"
+      },
+      "update_mechanism": "Erase-only. No read/write wrapper targets this span in the corpus (except the 0x2000 record inside it - listed separately; this field covers 0x430-0x1FFF only).",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "Both savs all-FF; grep of all FUN_0803f2c0/0803fdd0 offsets."
+    },
+    {
+      "name": "record_0x2000",
+      "offset": 8192,
+      "size": 48,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [
+        "0x0803f748"
+      ],
+      "observed_values": {
+        "cap-00-future-0.sav": "all 0xFF",
+        "cap-01-future-1.sav": "all 0xFF"
+      },
+      "update_mechanism": "Read at SRAM 0x2000 len 0x30; FUN_0803f748 string-compares it to a DAT string terminated by '\\n', and if int at +0x2C is 0x16/0xFF or the string mismatches it rewrites stack defaults (+0x2C=0x16, +0x20=1) - no flush found. Semantics UNKNOWN.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "decompiled.c:2340-2372. No writer/caller in corpus; never populated in samples."
+    },
+    {
+      "name": "unused_0x2030_0x7FFF",
+      "offset": 8240,
+      "size": 24512,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [
+        "0x0803fd50"
+      ],
+      "readers": [],
+      "observed_values": {
+        "cap-00-future-0.sav": "all 0xFF",
+        "cap-01-future-1.sav": "all 0xFF"
+      },
+      "update_mechanism": "Erase-only tail of the 32 KiB SRAM.",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "Both savs all-FF from 0x430 to 0x8000 except header/payload (active-range scan)."
+    }
+  ],
+  "fuzzing_targets": [
+    {
+      "offset": 14,
+      "size": 1,
+      "mutation": "Change only byte 0x0E (leave 0x0F)",
+      "requires_checksum_repair": false,
+      "predicted_effect": "E!=F -> FUN_0803f00c rejects -> FUN_0803f074 erases and rewrites defaults. Already confirmed by packet probe (reverted_to_blank, save_rewritten). No repair possible: setting 0x0F to the same value is the repair."
+    },
+    {
+      "offset": 15,
+      "size": 1,
+      "mutation": "Set 0x0E=0x0F=0x00 (pair changed together)",
+      "requires_checksum_repair": false,
+      "predicted_effect": "Equality holds, so header check passes regardless of value; predicts save loads unchanged - the decisive test that the byte is a transaction token, not a data checksum. If it instead resets, a hidden data check exists outside the traced corpus."
+    },
+    {
+      "offset": 0,
+      "size": 1,
+      "mutation": "Corrupt one magic byte, e.g. 0x00 'G'->'X'",
+      "requires_checksum_repair": false,
+      "predicted_effect": "Magic mismatch in FUN_0803f00c -> full erase + factory defaults (all payload zero except A+0=1, D+4=1)."
+    },
+    {
+      "offset": 861,
+      "size": 1,
+      "mutation": "Set B flag 0x35D (B+0x11) 1->0 in cap-01, keep E==F",
+      "requires_checksum_repair": false,
+      "predicted_effect": "Save must load (guard only needs E==F); exactly the FUN_080438bc unlock indexed 17 should disappear in UI/progression. Restore 0->1 to confirm reversibility."
+    },
+    {
+      "offset": 900,
+      "size": 1,
+      "mutation": "Set C byte 0x384 (C+0x1C) 1->0 in cap-01, keep E==F",
+      "requires_checksum_repair": false,
+      "predicted_effect": "Isolates the untraced C writer's field: whichever gallery/progression element reverts identifies its meaning; if nothing changes visibly, check RAM/score tally on load."
+    },
+    {
+      "offset": 905,
+      "size": 1,
+      "mutation": "Set D byte 0x389 (D+1) 1->0 and separately D+4 (0x38C) 1->0 in cap-01",
+      "requires_checksum_repair": false,
+      "predicted_effect": "D+1 revert should remove the newest progression flag from FUN_08003df8; D+4 is a factory default, clearing it may be re-set to 1 on next init/threshold pass - watch whether the game rewrites it without a reset."
+    },
+    {
+      "offset": 808,
+      "size": 4,
+      "mutation": "Set A word0 (0x328) 1->0, keep E==F",
+      "requires_checksum_repair": false,
+      "predicted_effect": "Tests whether A+0 is a validity/version word: if the game treats the save as new or re-initialises A, it is a sentinel; if it persists 0, it is ordinary data."
+    },
+    {
+      "offset": 192,
+      "size": 28,
+      "mutation": "Write a non-0xFF 28-byte record at 0xC0 with bytes +0x14..0x17 = 1,2,3,4, keep E==F (note: these records are outside the FUN_0803f2c0 payload, guard unchanged)",
+      "requires_checksum_repair": false,
+      "predicted_effect": "FUN_080437d0 total rises by 10; if FUN_08003df8 thresholds are crossed (e.g. >1,>3,>6,>9) new E/A/D flags should be set and flushed on the next progression pass - proves the tally drives unlocks and that 0xC0 records are live data, not padding."
+    },
+    {
+      "offset": 8192,
+      "size": 48,
+      "mutation": "Populate 0x2000 record: byte0 != 0xFF, int32 at +0x2C = 0x16, keep rest 0",
+      "requires_checksum_repair": false,
+      "predicted_effect": "Exercises FUN_0803f748: if its string check passes no defaults are forced; observe any mode/name UI tied to this record. A reset or default rewrite means the DAT string at _DAT_0803f7a0 must match byte-for-byte."
+    }
+  ],
+  "open_questions": [
+    "FUN_08043830 LCG multiplier (*_DAT_08043844), state address/seed (*_DAT_08043840) and exact byte extraction (extraout_var) are unresolved DAT in this export, so the guard-byte sequence cannot be recomputed or predicted; only its equality role is proven.",
+    "Block E (8B) and F (4B) SRAM offsets are inferred (0x424/0x42C) from contiguity + FUN_08003df8 stack layout; the literal *_DAT_0803f708/*_DAT_0803f730 values were not in the export.",
+    "Block C (0x368, 32B) changed at +0x1C between samples but has no non-init writer in the 168-function trace-guided corpus; its writer and all C semantics are unknown - the corpus is a subset, not the whole ROM.",
+    "No fixed EWRAM (0x02xxxxxx) or IWRAM (0x03xxxxxx) save-struct mirror could be proven: every traced caller mutates stack copies (in_stack buffers in FUN_08003df8/FUN_080438bc/FUN_0803f074) and flushes whole blocks; the param_1 handle from FUN_0803fd20 is opaque. Any report claiming a RAM base would be guessing.",
+    "Records at 0x10+idx*8 (FUN_0803f30c), 0xC0+idx*0x1C x13 (FUN_0803f390) and 0x2000 (FUN_0803f748) have readers but no writers in the corpus and are all-0xFF in both samples; their producers, record counts (0x10 region extent) and semantics are unknown.",
+    "FUN_080436bc's 25-entry code table and FUN_080438bc's param_1 codes are unresolved DAT, so B-flag indices (including observed B+0x11) cannot be named after specific gallery items without further ROM data extraction.",
+    "FUN_0803f00c's legacy exception (cStack_a=='2' && cStack_9=='\\0' bypasses E==F) is unexplained - possibly an old-version header migration - and untested on real samples (neither sample uses it).",
+    "FUN_080c61a8 (SRAM read/compare) and FUN_080c3f0c bodies are jumptable stubs; WAITCNT details in FUN_080c3e80 (*_DAT_080c3eb8 |3) could not be resolved to a named register value.",
+    "The two samples differ by only three flag bytes and both are near-factory state; high-value fields (scores, timers, multi-byte counters inside A/C/D) cannot be distinguished from padding without a more progressed save."
+  ]
+}

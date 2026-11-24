@@ -1,0 +1,225 @@
+{
+  "schema": "gbakit-save-research/1",
+  "release_key": "BAQP-r0-3160bd19a4794fe1",
+  "display_name": "Premier Action Soccer (Europe) (En,Fr,De,Es,It)",
+  "rom_sha256": "3160bd19a4794fe1f9c755830dcb30836877f93b10ea3fdabfb583677eefeadf",
+  "game_code": "BAQP",
+  "header_family": "BAQ",
+  "community_id": "comm-006",
+  "overall_confidence": "MEDIUM",
+  "media": {
+    "kind": "eeprom8k",
+    "size_bytes": 8192,
+    "sdk_tags": ["EEPROM_V124@7929260"],
+    "fill_byte": "0xff"
+  },
+  "slots_and_copies": [
+    {
+      "name": "slot_0_primary_record",
+      "offset": 0,
+      "size": 64,
+      "redundancy_role": "primary",
+      "selection_rule": "unknown - only one record observed in captures; no slot-selection/rotation logic traced"
+    },
+    {
+      "name": "footer_block_0x3ff",
+      "offset": 8184,
+      "size": 8,
+      "redundancy_role": "unknown",
+      "selection_rule": "fixed last EEPROM block address (0x3FF); not confirmed as a backup copy of slot_0 (differs in size/structure)"
+    }
+  ],
+  "magic_signatures": [
+    {
+      "offset": 4,
+      "bytes_hex": "1337c0de",
+      "ascii": "",
+      "verified_in_code": false,
+      "verified_in_sav": true,
+      "function_addrs": []
+    }
+  ],
+  "checksums": [
+    {
+      "name": "footer_block_0x3ff_tail",
+      "algorithm": "unknown",
+      "formula_detail": "Trialed sum8/sum16/sum32/xor8/crc32/two's-complement-sum32 over block 0 (offset 0x0-0x3F) against stored bytes 0x1FFC-0x1FFF (both LE and BE u32 interpretations); no trial matched. Only one non-blank .sav sample exists, so no formula can be statistically confirmed.",
+      "stored_offset": 8188,
+      "stored_size": 4,
+      "covered_start": 0,
+      "covered_end": 64,
+      "function_addrs": [],
+      "verified_on_samples": [
+        {"file": "cap-01-future-1.sav", "stored_hex": "2ebc66d6", "computed_hex": "e8 (sum32, 4 LSB shown: 000001e8)", "match": false}
+      ],
+      "confidence": "UNKNOWN"
+    }
+  ],
+  "io_driver_functions": [
+    {
+      "addr": "0x0805cf48",
+      "role": "write",
+      "callers": ["0x0805cfc8", "0x0805d08c"],
+      "notes": "Generic DMA3 transfer primitive shared by both read and write paths: saves/restores IME, programs SAD/DAD/CNT registers (src=param1, dst=param2, count|0x80000000=param3), polls CNT_H enable bit (0x8000) until the transfer completes."
+    },
+    {
+      "addr": "0x0805cfc8",
+      "role": "read",
+      "callers": ["0x0805d1ec"],
+      "notes": "EEPROM 8-byte block read: clocks an address-request bitstream out via FUN_0805cf48, clocks 68 response bits back in, unpacks into 4x16-bit words (MSB-first) written to the caller's output buffer in reverse word order."
+    },
+    {
+      "addr": "0x0805d08c",
+      "role": "write",
+      "callers": ["0x0805d078"],
+      "notes": "EEPROM 8-byte block write: serializes request+payload(4x u16)+address bitstream, clocks it out via FUN_0805cf48, then busy-waits on EEPROM write-ready bit using VCOUNT (0xE4 scanline wraparound) with a bounded timeout; param_3 selects retry-forever vs. single-timeout behavior."
+    },
+    {
+      "addr": "0x0805d078",
+      "role": "write",
+      "callers": [],
+      "notes": "Thin wrapper forcing FUN_0805d08c's blocking-retry flag to 1. Not present as an edge in ghidra/callgraph.json (missing edge found only by grep of decompiled.c). No caller of this wrapper was found anywhere in the traced 43-function set - the save trigger is outside visibility."
+    },
+    {
+      "addr": "0x0805d1ec",
+      "role": "read",
+      "callers": [],
+      "notes": "Read-and-verify: calls FUN_0805cfc8 to read a block, compares all 4 words against an expected buffer, returns 0x8000 on mismatch else 0. No caller found in the traced set (confirmed empty in callgraph.json and by grep)."
+    }
+  ],
+  "caller_chains": [
+    {
+      "entry_caller": "0x0805d078",
+      "chain": ["0x0805d078", "0x0805d08c", "0x0805cf48"],
+      "trigger_context": "unknown - no caller of 0x0805d078 found in the traced decompilation; game-specific save trigger is outside the available function set",
+      "ram_fields_updated": [],
+      "how_mapped": "Found by grep of ghidra/decompiled.c for 'func_0x0805d08c' inside FUN_0805d078's body; this edge is NOT present in ghidra/callgraph.json, which lists both addresses with empty callers/callees arrays - a confirmed gap in the provided callgraph."
+    },
+    {
+      "entry_caller": "0x0805d1ec",
+      "chain": ["0x0805d1ec", "0x0805cfc8", "0x0805cf48"],
+      "trigger_context": "unknown - no caller of 0x0805d1ec found in the traced decompilation",
+      "ram_fields_updated": [],
+      "how_mapped": "Confirmed via ghidra/callgraph.json edge 0x0805cfc8.callers=[0x0805d1ec], cross-checked against the call site in ghidra/decompiled.c (FUN_0805d1ec body calls FUN_0805cfc8)."
+    }
+  ],
+  "fields": [
+    {
+      "name": "block0_word0",
+      "offset": 0,
+      "size": 4,
+      "type": "u32",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"cap-00-future-0.sav": "ffffffff", "cap-01-future-1.sav": "00000000"},
+      "update_mechanism": "unknown - writer not present in traced function set; position inferred from 8-byte EEPROM block boundary (block 0x000)",
+      "confidence": "UNKNOWN",
+      "evidence": "saves/hexdump_and_diffs.txt active range 0x0000-0x0040; verify_save.py output"
+    },
+    {
+      "name": "block0_magic_candidate",
+      "offset": 4,
+      "size": 4,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"cap-00-future-0.sav": "ffffffff", "cap-01-future-1.sav": "1337c0de"},
+      "update_mechanism": "unknown - writer/comparator not present in traced function set; value is distinctive and non-zero within an otherwise all-zero 56-byte record, suggesting a deliberate validity magic",
+      "confidence": "HYPOTHESIS",
+      "evidence": "saves/hexdump_and_diffs.txt; grep of ghidra/decompiled.c for literal '1337'/'c0de' found no code-side match; verify_save.py output"
+    },
+    {
+      "name": "block0_reserved",
+      "offset": 8,
+      "size": 56,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"cap-00-future-0.sav": "all 0xff", "cap-01-future-1.sav": "all 0x00"},
+      "update_mechanism": "unknown - all-zero in the only non-blank sample; could be an unused/padding tail of the primary record or a default-state payload that happens to be all-zero",
+      "confidence": "HYPOTHESIS",
+      "evidence": "saves/hexdump_and_diffs.txt; verify_save.py output"
+    },
+    {
+      "name": "block_0x3ff_first_half",
+      "offset": 8184,
+      "size": 4,
+      "type": "u32",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"cap-00-future-0.sav": "ffffffff", "cap-01-future-1.sav": "ffffffff"},
+      "update_mechanism": "unknown - identical to erased fill in both samples, so cannot distinguish 'deliberately written as 0xFFFFFFFF' from 'never rewritten'; part of the same 8-byte DMA3 block as block_0x3ff_footer",
+      "confidence": "UNKNOWN",
+      "evidence": "saves/hexdump_and_diffs.txt hexdump of 0x1ff0-0x2000; verify_save.py output"
+    },
+    {
+      "name": "block_0x3ff_footer",
+      "offset": 8188,
+      "size": 4,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"cap-00-future-0.sav": "ffffffff", "cap-01-future-1.sav": "2ebc66d6"},
+      "update_mechanism": "unknown - candidate footer/generation-counter/ID field in the EEPROM's last block (0x3FF); no sum8/sum16/sum32/xor8/crc32 formula over block 0 reproduces this value (see checksums[] and verify_save.py)",
+      "confidence": "HYPOTHESIS",
+      "evidence": "saves/hexdump_and_diffs.txt; verify_save.py output (all trial formulas mismatched)"
+    },
+    {
+      "name": "unused_middle_region",
+      "offset": 64,
+      "size": 8119,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": [],
+      "observed_values": {"cap-00-future-0.sav": "all 0xff", "cap-01-future-1.sav": "all 0xff"},
+      "update_mechanism": "none observed - EEPROM blocks 0x008-0x3FE never non-blank in either capture",
+      "confidence": "UNKNOWN",
+      "evidence": "saves/hexdump_and_diffs.txt (no active ranges reported in this span)"
+    }
+  ],
+  "fuzzing_targets": [
+    {
+      "offset": 4,
+      "size": 4,
+      "mutation": "flip one byte of the candidate magic (e.g. 0x13 -> 0x00)",
+      "requires_checksum_repair": false,
+      "predicted_effect": "If this is a validity magic, game should treat the save as absent/corrupt and boot as if from the blank cap-00 state; no change would falsify the magic hypothesis"
+    },
+    {
+      "offset": 8,
+      "size": 56,
+      "mutation": "write non-zero bytes into the currently all-zero reserved region, leaving the magic untouched",
+      "requires_checksum_repair": false,
+      "predicted_effect": "If this region is a real payload field, UI/title-screen/save-select state should visibly differ; if it is padding, no observable change is expected"
+    },
+    {
+      "offset": 8188,
+      "size": 4,
+      "mutation": "flip one byte of the footer (e.g. 0x2e -> 0x2f)",
+      "requires_checksum_repair": true,
+      "predicted_effect": "If consumed as a checksum/integrity field on load, game should reject/reset the save like a magic failure; if it's an unchecked counter/ID, no observable difference"
+    },
+    {
+      "offset": 8184,
+      "size": 4,
+      "mutation": "write a distinguishable non-erased value (e.g. 0xAAAAAAAA) then force another in-game save event",
+      "requires_checksum_repair": false,
+      "predicted_effect": "If the game always writes the full 8-byte block 0x3FF together, a subsequent save should restore 0xFFFFFFFF there, proving it's an actively managed field rather than untouched erased space"
+    }
+  ],
+  "open_questions": [
+    "No caller of FUN_0805d078 (blocking EEPROM write wrapper) or FUN_0805d1ec (read+verify) was found anywhere in the traced 43-function decompilation - the game-specific save trigger, target block-address selection, and in-RAM save-struct population logic are completely outside this trace's visibility.",
+    "ghidra/callgraph.json is missing at least one real call edge (0x0805d078 -> 0x0805d08c), found only by manual grep of decompiled.c; treat the provided callgraph as a lower bound, not exhaustive.",
+    "The 0x1337C0DE magic candidate at offset 0x0004 has no located writer or comparator in code; it is inferred purely from being the only distinctive non-zero value in an otherwise all-zero 64-byte record.",
+    "The footer bytes at offset 0x1FFC-0x1FFF do not match any trialed sum/xor/crc32 formula over the candidate header region; with only one non-blank .sav sample, no checksum hypothesis can be statistically confirmed either way.",
+    "Whether the first half of EEPROM block 0x3FF (offset 0x1FF8-0x1FFB, currently 0xFFFFFFFF) was deliberately written or never touched cannot be determined from the available samples.",
+    "EEPROM blocks 0x008-0x3FE are blank in all available captures; whether/how they are ever used by the game is unknown.",
+    "The runtime EEPROM address bit-width (6-bit vs 14-bit protocol variant), read from *(byte*)(ptr+8) in both FUN_0805cfc8 and FUN_0805d08c, could not be resolved to a concrete constant because the backing _DAT_* pointers' initialization is not present in the traced function set."
+  ]
+}

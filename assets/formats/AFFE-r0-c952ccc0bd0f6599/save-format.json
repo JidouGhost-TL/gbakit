@@ -1,0 +1,316 @@
+{
+  "schema": "gbakit-save-research/1",
+  "release_key": "AFFE-r0-c952ccc0bd0f6599",
+  "display_name": "Final Fight One (USA)",
+  "rom_sha256": "c952ccc0bd0f65990db2c6ad0f309484d790691fcbdbae23d2cb29af4aa27989",
+  "game_code": "AFFE",
+  "header_family": "AFF",
+  "community_id": "",
+  "overall_confidence": "MEDIUM",
+  "media": {
+    "kind": "eeprom512",
+    "size_bytes": 512,
+    "sdk_tags": [],
+    "fill_byte": "0xff"
+  },
+  "slots_and_copies": [
+    {
+      "name": "slot_0",
+      "offset": 0,
+      "size": 256,
+      "redundancy_role": "primary",
+      "selection_rule": "Validated first by FUN_08045a58 via FUN_08045958(0)+FUN_0804599c; copied to live struct (memcpy 0x74) if valid. Kept over slot 1 when slot 1's first-u16 minus live first-u16 >= 0x40. Only populated slot in sample."
+    },
+    {
+      "name": "slot_1",
+      "offset": 256,
+      "size": 256,
+      "redundancy_role": "backup",
+      "selection_rule": "Read by FUN_08045958(1) (EEPROM blocks 32-63) and validated by FUN_0804599c; replaces slot 0 in live struct if valid and (no valid slot 0 or (ushort)(slot1_first_u16 - slot0_first_u16) < 0x40). All 0xFF (invalid) in sample."
+    }
+  ],
+  "magic_signatures": [
+    {
+      "offset": 250,
+      "bytes_hex": "55a6",
+      "ascii": "",
+      "verified_in_code": true,
+      "verified_in_sav": true,
+      "function_addrs": ["0x0804599c"]
+    }
+  ],
+  "checksums": [
+    {
+      "name": "slot_sum16_zero",
+      "algorithm": "sum16_le",
+      "formula_detail": "In RAM/logical image (each 8-byte .sav block reversed): stored u16LE at logical 254 (0xFE, word 127) == (-(sum of u16LE words 0..126, logical 0x00..0xFB plus magic word 126)) & 0xFFFF; equivalently sum of all 128 u16LE words over logical 0..255 & 0xFFFF == 0. Validator FUN_0804599c gates on word126==constant (0x55A6 observed) then requires (sum & mask)==0 with mask inferred 0x0000FFFF (literal unresolved; sample sum is 0x00420000). Raw-file equivalent: sum of u16BE over file slot bytes & 0xFFFF == 0. Stored file bytes are at slot file offset 248 (DA 6F) due to per-8-byte block reversal; magic file bytes 55 A6 at slot file offset 250.",
+      "stored_offset": 248,
+      "stored_size": 2,
+      "covered_start": 0,
+      "covered_end": 256,
+      "function_addrs": ["0x0804599c", "0x08045958"],
+      "verified_on_samples": [
+        {"file": "sav-00-f1157.sav", "stored_hex": "da6f", "computed_hex": "da6f", "match": true}
+      ],
+      "confidence": "CONFIRMED_VERIFIED"
+    }
+  ],
+  "io_driver_functions": [
+    {"addr": "0x0806b200", "role": "write", "callers": ["0x0806b280"], "notes": "DMA3 driver (src,dst,count): writes DMA3 SAD/DAD/CNT in 0x040000D4 block (register literals unresolved), sets count|0x80000000, polls busy bit 0x8000, suspends/restores DMA3. Used for both EEPROM command write and data read transfers."},
+    {"addr": "0x0806b280", "role": "read", "callers": ["0x08045958"], "notes": "EEPROM read of one 8-byte block: sends two leading 1 bits + address bits MSB-first via DMA to 0x0D000000, DMAs back 0x44 halfwords (4 dummy + 64 data bits, 1 bit per halfword), reconstructs 4 u16 MSB-first and stores them descending at dst+6,+4,+2,+0. This is why each 8-byte .sav block is reversed vs RAM. No EEPROM write counterpart exists in the 172 traced functions."},
+    {"addr": "0x08045958", "role": "read", "callers": ["0x08045a58"], "notes": "Slot reader: slot param <<5 gives starting EEPROM block (slot0:0, slot1:32); loops 32 blocks x 8B = 256B into staging buffer; brackets with FUN_0800a868/FUN_0800a874 (audio DMA pause/resume via 0x0806a2c0/0x0806a33c). Returns 0 or 0xFFFFFFFF."},
+    {"addr": "0x0804599c", "role": "checksum", "callers": ["0x08045a58"], "notes": "Validator: gate word126 at logical 0xFC == constant (0x55A6 observed), then sum of 128 u16 from word126-126 must satisfy (sum & mask)==0, mask inferred 0xFFFF."},
+    {"addr": "0x08045a58", "role": "deserialize", "callers": ["0x08045820"], "notes": "Load/select/commit: reads+validates slot0 then slot1, memcpy (FUN_0806b7d8) 0x74 bytes staging->live per selection rule, then FUN_080457a8 apply. Returns 0 if any slot valid else 0xFFFFFFFF. Caller via func_0x08045a58 (missing from callgraph.json FUN-only edges)."},
+    {"addr": "0x0806b7d8", "role": "serialize", "callers": ["0x08045a58", "0x0800db5c"], "notes": "memcpy (dst,src,n). In save path copies 0x74-byte payload staging->live. Role label serialize is structural only; it does not write EEPROM."},
+    {"addr": "0x080457a8", "role": "deserialize", "callers": ["0x08045a58", "0x0800db5c"], "notes": "Apply live struct: calls FUN_0800b9ac which writes 4 u16s from a byte-indexed table. Does not touch EEPROM."},
+    {"addr": "0x0804576c", "role": "write", "callers": ["0x08045820"], "notes": "UNRESOLVED external func_0x0804576c, body absent from corpus. Called after FUN_08045820 sets live byte 0x6B=0xFF. Candidate flush/save writer - HYPOTHESIS only, not verified."}
+  ],
+  "caller_chains": [
+    {
+      "entry_caller": "0x08045820",
+      "chain": ["0x08045820", "0x08045a58", "0x08045958", "0x0806b280", "0x0806b200"],
+      "trigger_context": "Boot/load: FUN_08045820 (no traced caller, jumptable entry) calls func_0x08045a58; on success increments first u16 of live buffer and tests byte 0x6B != 0xFF before FUN_0804568c game-init calls; on failure sets byte 0x6B=0xFF and calls unresolved func_0x0804576c",
+      "ram_fields_updated": ["live_first_u16@logical_0x00 (incremented)", "flag@logical_0x6b (=0xFF on failure path)"],
+      "how_mapped": "Decompiled text search for func_0x08045a58/func_0x0804576c merged with callgraph.json (callgraph omits func_ edges and lists only FUN_0800a880/FUN_0804568c as callees of 0x08045820)"
+    },
+    {
+      "entry_caller": "0x08045a58",
+      "chain": ["0x08045a58", "0x08045958", "0x0804599c", "0x0806b7d8", "0x080457a8", "0x0800b9ac"],
+      "trigger_context": "Save load and slot selection at boot; also the validator/reader sub-chain 0x08045958 -> func_0x0806b280 -> FUN_0806b200 with audio pause/resume FUN_0800a868/FUN_0800a874",
+      "ram_fields_updated": ["live_struct logical 0x00..0x73 (memcpy 0x74 from validated staging)"],
+      "how_mapped": "callgraph.json callees of 0x08045a58 (0x080457a8,0x08045958,0x0804599c) plus text-only func_0x0806b7d8 memcpy calls with length 0x74"
+    },
+    {
+      "entry_caller": "0x0800db5c",
+      "chain": ["0x0800db5c", "0x0806b7d8", "0x080457a8", "0x0800b9ac"],
+      "trigger_context": "Unknown (no traced caller): copies 8x u32 between two buffers, memcpy 0x74 bytes, then applies struct. Candidate defaults/reset initializer; source buffer unresolved, no EEPROM access proven",
+      "ram_fields_updated": ["ram_struct logical 0x00..0x73 (memcpy 0x74, source unresolved)", "separate 32-byte struct (8x u32 copy)"],
+      "how_mapped": "Text search for func_0x0806b7d8 with length 0x74 and func_0x080457a8; callgraph.json has no callers for 0x0800db5c"
+    },
+    {
+      "entry_caller": "0x08045958",
+      "chain": ["0x08045958", "0x0800a868", "0x0806a2c0", "0x0806b280", "0x0806b200", "0x0800a874", "0x0806a33c"],
+      "trigger_context": "Per-slot EEPROM read with audio DMA suspended (FUN_0800a868->func_0x0806a2c0, FUN_0800a874->func_0x0806a33c)",
+      "ram_fields_updated": ["staging logical 0x00..0xff (32 blocks x 8B)"],
+      "how_mapped": "Decompiled text: FUN_08045958 calls FUN_0800a868/FUN_0800a874 (in callgraph) and func_0x0806b280 (text only, callgraph lists 0x0806b280 callers as none)"
+    }
+  ],
+  "fields": [
+    {
+      "name": "header_zero",
+      "offset": 0,
+      "size": 4,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": ["0x0804599c", "0x08045a58"],
+      "observed_values": {"sav-00-f1157.sav": "00 00 00 00 (logical); first u16=0x0000"},
+      "update_mechanism": "First u16 compared by selector FUN_08045a58 and incremented by FUN_08045820 after successful load (buffer pointer unresolved, offset assumed base+0); EEPROM writer absent from corpus",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Logical bytes after per-8-byte block reversal of sav slot 0; FUN_08045a58 (ushort)(*staging-*live)<0x40 compare and FUN_08045820 *psRam=*psRam+1. Absolute RAM base unresolved (_DAT literals), ram_addr null. Generation-counter meaning is HYPOTHESIS."
+    },
+    {
+      "name": "record0_numeric_a",
+      "offset": 4,
+      "size": 4,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": ["0x0804599c"],
+      "observed_values": {"sav-00-f1157.sav": "logical 00 00 00 05; records at 0x04/0x14/0x24/0x34/0x44 have last byte 5/3/1/0/0"},
+      "update_mechanism": "Part of 16-byte record stride (records at logical 0x04+16*n, name at +8); no individual reader/writer in corpus; EEPROM writer absent",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Record framing forced by five name starts every 16 bytes (logical 0x0C,0x1C,0x2C,0x3C,0x4C) after 4-byte header. Could be u8 at +3 or u32BE; semantics unknown."
+    },
+    {
+      "name": "record_numeric_b_u32le",
+      "offset": 8,
+      "size": 4,
+      "type": "u32_le",
+      "ram_addr": null,
+      "writers": [],
+      "readers": ["0x0804599c"],
+      "observed_values": {"sav-00-f1157.sav": "record offsets 0x08/0x18/0x28/0x38/0x48 logical u32LE = 0/0/0/8/6"},
+      "update_mechanism": "Record +4 field; no individual reader in corpus; EEPROM writer absent",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Logical u32LE values; nonzero only for A-CODY (8) and A-GUY (6) records, equals record +14 u16 for those records."
+    },
+    {
+      "name": "record_name_0_cody",
+      "offset": 12,
+      "size": 6,
+      "type": "ascii",
+      "ram_addr": null,
+      "writers": [],
+      "readers": ["0x0804599c"],
+      "observed_values": {"sav-00-f1157.sav": "CODY  "},
+      "update_mechanism": "Record +8 name field (6 chars, space padded); EEPROM writer absent; display reader outside corpus",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "ASCII only after reversing each 8-byte sav block (raw sav shows YDOC fragments), matching FUN_0806b280 descending u16 store. Meaning as ranking/name entry is hypothesis; bytes verified."
+    },
+    {
+      "name": "record_name_1_haggar",
+      "offset": 28,
+      "size": 6,
+      "type": "ascii",
+      "ram_addr": null,
+      "writers": [],
+      "readers": ["0x0804599c"],
+      "observed_values": {"sav-00-f1157.sav": "HAGGAR"},
+      "update_mechanism": "Record 1 (logical base 0x14) +8 name field; EEPROM writer absent",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Logical ASCII after block reversal; raw sav fragments at file 0x16..0x27."
+    },
+    {
+      "name": "record_name_2_guy",
+      "offset": 44,
+      "size": 6,
+      "type": "ascii",
+      "ram_addr": null,
+      "writers": [],
+      "readers": ["0x0804599c"],
+      "observed_values": {"sav-00-f1157.sav": "GUY   "},
+      "update_mechanism": "Record 2 (logical base 0x24) +8 name field; EEPROM writer absent",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Logical ASCII after block reversal."
+    },
+    {
+      "name": "record_name_3_a_cody",
+      "offset": 60,
+      "size": 6,
+      "type": "ascii",
+      "ram_addr": null,
+      "writers": [],
+      "readers": ["0x0804599c"],
+      "observed_values": {"sav-00-f1157.sav": "A-CODY"},
+      "update_mechanism": "Record 3 (logical base 0x34) +8 name field; EEPROM writer absent",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Logical ASCII after block reversal; A- prefix observed only."
+    },
+    {
+      "name": "record_name_4_a_guy",
+      "offset": 76,
+      "size": 6,
+      "type": "ascii",
+      "ram_addr": null,
+      "writers": [],
+      "readers": ["0x0804599c"],
+      "observed_values": {"sav-00-f1157.sav": "A-GUY "},
+      "update_mechanism": "Record 4 (logical base 0x44) +8 name field, ends at logical 0x51; EEPROM writer absent",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Logical ASCII after block reversal."
+    },
+    {
+      "name": "record_numeric_c_u16le",
+      "offset": 18,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": [],
+      "readers": ["0x0804599c"],
+      "observed_values": {"sav-00-f1157.sav": "record +14 at logical 0x12/0x22/0x32/0x42/0x52 = 2/4/0/8/6"},
+      "update_mechanism": "Record +14 field; no individual reader in corpus; EEPROM writer absent",
+      "confidence": "HYPOTHESIS",
+      "evidence": "Logical u16LE values per record; correlation with record +4 u32 for A- records (8/6)."
+    },
+    {
+      "name": "config_tail",
+      "offset": 84,
+      "size": 32,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": ["0x0800db5c"],
+      "readers": ["0x0804599c", "0x08045820"],
+      "observed_values": {"sav-00-f1157.sav": "logical 0x54..0x73: 02 02 06 00 00 00 01 02 03 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 03 00 06 00 00 00 00 00"},
+      "update_mechanism": "Within 0x74-byte live payload copied by FUN_08045a58/FUN_0800db5c memcpy; byte 0x6B individually read/written by FUN_08045820 (see flag field); other bytes have no individual traced reader; EEPROM writer absent",
+      "confidence": "UNKNOWN",
+      "evidence": "Non-zero bytes at logical 0x54=02,0x55=02,0x56=06,0x5A..0x5C=01 02 03,0x6C=03,0x6E=06. Writer 0x0800db5c is only via wholesale 0x74 memcpy, not per-field."
+    },
+    {
+      "name": "flag_0x6b",
+      "offset": 107,
+      "size": 1,
+      "type": "u8",
+      "ram_addr": null,
+      "writers": ["0x08045820"],
+      "readers": ["0x08045820"],
+      "observed_values": {"sav-00-f1157.sav": "0x00 (logical)"},
+      "update_mechanism": "FUN_08045820 tests (char)byte != -1 (0xFF) before FUN_0804568c calls; on failure path writes 0xFF then calls unresolved func_0x0804576c",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "Decompiled FUN_08045820: *(char*)((int)psVar1+0x6b) != -1 and *(char*)((int)psVar1+0x6b) = -1. Buffer identity with live struct is by pointer-cluster proximity, absolute addr unresolved."
+    },
+    {
+      "name": "padding_e5",
+      "offset": 116,
+      "size": 136,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": ["0x0804599c", "0x08045958"],
+      "observed_values": {"sav-00-f1157.sav": "all 0xE5 logical 0x74..0xFB"},
+      "update_mechanism": "Not copied to live struct (memcpy length 0x74 in FUN_08045a58); transferred and checksum-covered only; EEPROM writer absent",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Python: all(logical[0x74:0xFC]==0xE5) true; covered by sum16 (fuzzing test 8 in report)."
+    },
+    {
+      "name": "magic_55a6",
+      "offset": 252,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": [],
+      "readers": ["0x0804599c"],
+      "observed_values": {"sav-00-f1157.sav": "logical u16LE 0x55A6 (bytes A6 55); sav file bytes 55 A6 at slot offset 250"},
+      "update_mechanism": "Fixed trailer word 126; EEPROM writer absent must store constant; validator gate *_DAT_080459ac == constant (constant literal unresolved, value observed)",
+      "confidence": "CONFIRMED_STATIC",
+      "evidence": "FUN_0804599c pointer arithmetic: sum starts at gated word -126 words and runs 128 words, fixing gated word at logical 252 in a 256-byte slot."
+    },
+    {
+      "name": "checksum_sum16",
+      "offset": 254,
+      "size": 2,
+      "type": "u16_le",
+      "ram_addr": null,
+      "writers": [],
+      "readers": ["0x0804599c"],
+      "observed_values": {"sav-00-f1157.sav": "logical u16LE 0xDA6F; sav file bytes DA 6F at slot offset 248"},
+      "update_mechanism": "Must equal (-sum(u16LE words 0..126)) & 0xFFFF; EEPROM writer absent, repair formula verified in Python",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Python: sum words0..126 low=0x2591, negated=0xDA6F matches stored; total sum 0x00420000 &0xFFFF=0. See checksums[0]."
+    },
+    {
+      "name": "slot1_erased",
+      "offset": 256,
+      "size": 256,
+      "type": "bytes",
+      "ram_addr": null,
+      "writers": [],
+      "readers": ["0x08045958", "0x0804599c", "0x08045a58"],
+      "observed_values": {"sav-00-f1157.sav": "all 0xFF"},
+      "update_mechanism": "EEPROM blocks 32..63; never written in sample; fails magic+checksum so selector keeps slot 0",
+      "confidence": "CONFIRMED_VERIFIED",
+      "evidence": "Python all(file[256:]==0xFF); FUN_08045958 address = slot*32+block."
+    }
+  ],
+  "fuzzing_targets": [
+    {"offset": 12, "size": 6, "mutation": "Logical: replace record0 name CODY__ with AAAAAA, then repair checksum (word127 = (-sum words0..126)&0xFFFF at logical 254, magic 0x55A6 at 252) and reverse each 8-byte block into .sav", "requires_checksum_repair": true, "predicted_effect": "Name display for record 0 shows AAAAAA; falsifies record framing if unchanged"},
+    {"offset": 7, "size": 1, "mutation": "Logical byte 0x07: 0x05 -> 0x09, repair checksum", "requires_checksum_repair": true, "predicted_effect": "Record 0 associated numeric (score tier/stage) changes; no effect keeps field unknown"},
+    {"offset": 107, "size": 1, "mutation": "Logical flag 0x6B: 0x00 -> 0xFF, repair checksum", "requires_checksum_repair": true, "predicted_effect": "FUN_08045820 skips its FUN_0804568c pair on load; boot/title flow differs from sav-00-post control state"},
+    {"offset": 0, "size": 2, "mutation": "Logical first u16 slot0 0->1; create valid slot1 copy with first u16=2, then =0x50, then =0xFFFF, repair both checksums", "requires_checksum_repair": true, "predicted_effect": "Selector (FUN_08045a58) picks slot1 for differences <0x40 and keeps slot0 at 0x50, testing generation/selection rule"},
+    {"offset": 252, "size": 2, "mutation": "Logical magic 0x55A6 -> 0x55A7, no checksum repair", "requires_checksum_repair": false, "predicted_effect": "Slot rejected by FUN_0804599c; no-save/default boot behaviour"},
+    {"offset": 128, "size": 1, "mutation": "Logical padding 0x80: 0xE5 -> 0xE6, first without then with checksum repair", "requires_checksum_repair": true, "predicted_effect": "Without repair slot rejected (padding is covered); with repair loads identically (padding carries no payload)"},
+    {"offset": 254, "size": 2, "mutation": "Flip one bit in logical checksum word, no other change", "requires_checksum_repair": false, "predicted_effect": "Slot rejected and selector falls back to erased slot1 / no-save behaviour, proving sum16 not CRC"},
+    {"offset": 256, "size": 256, "mutation": "Copy valid slot0 to file offset 256 (slot1) and erase slot0 to 0xFF", "requires_checksum_repair": false, "predicted_effect": "Same data loads from slot1, proving slot geometry (EEPROM blocks 32-63); then corrupting slot1 magic yields no-save behaviour"}
+  ],
+  "open_questions": [
+    "EEPROM writer absent: no write-opcode function in 172 traced functions. Is unresolved func_0x0804576c (called from FUN_08045820 after setting byte 0x6B=0xFF) the flush/save routine? Its body and all out-of-trace writers are unknown.",
+    "Absolute RAM addresses of staging and live buffers are unresolved (_DAT_080xxxxx literal pools not decoded in decompiled.c); all fields are staging/live base + logical offset. Are the FUN_08045a58, FUN_08045820 and FUN_0800db5c buffers the same live struct?",
+    "Exact EEPROM address-bit count and device block limit (bytes at *_DAT_0806b334+8 and *_DAT_0806b298+4 in FUN_0806b280) are unresolved constants; 64 blocks x 8B inferred from FUN_08045958 loop and 512B file.",
+    "Checksum mask literal uRam080459d4 in FUN_0804599c is unresolved; 0x0000FFFF inferred because sample sum is 0x00420000 (bits 17 and 22 set, so any mask containing them would fail).",
+    "Magic constant _DAT_080459b0 is unresolved; 0x55A6 is the observed word 126 value, not a decoded literal.",
+    "Semantics of record numeric fields (logical record +0 bytes, +4 u32LE, +14 u16LE) and config tail bytes (0x54..0x73 except flag 0x6B) are unknown; only bytes/ASCII verified. Single sample cannot show variation.",
+    "Generation/selection: is first u16 (logical 0x00, value 0 in sample, incremented by FUN_08045820) truly a sequence counter? Only one populated slot exists; slot1 comparison behaviour is static-only.",
+    "Record framing (4-byte header + five 16-byte records at logical 0x04) is forced by name spacing but no code in corpus indexes records by stride; per-field readers (display/options code) are outside the traced set.",
+    "When is saving triggered in gameplay (option change, ranking entry, game over)? Not exercised by the frame 1106-1157 paired states; writer hunt requires runtime watch on 0x0D000000 writes."
+  ]
+}
