@@ -16,4 +16,5 @@ pub use gba_ereader as ereader;
 pub use mobiclip;
 pub mod joybus;
 pub mod link;
+pub mod link_bridge;
 pub mod multiboot;

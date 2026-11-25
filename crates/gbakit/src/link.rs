@@ -389,10 +389,140 @@ pub fn rfu_command_name(cmd_id: u16) -> &'static str {
     }
 }
 
-/// Dissect a captured SIO JSON stream and generate an in-depth protocol analysis report.
+/// Parse either a single JSON capture object or a newline-delimited JSONL stream
+/// (such as the live capture log produced by `gbakit link bridge --log`).
+fn parse_raw_capture(input: &str) -> Result<RawCapture, String> {
+    let trimmed = input.trim();
+    if trimmed.is_empty() {
+        return Err("Failed to parse SIO capture JSON: input is empty".to_string());
+    }
+
+    if let Ok(raw) = serde_json::from_str::<RawCapture>(trimmed) {
+        // Distinguish a single JSONL transfer line from a full capture envelope:
+        // if it has no envelope fields and no transfers list, try JSONL parsing below.
+        let has_envelope = raw.transfers.is_some()
+            || raw.packet_traffic_summary.is_some()
+            || raw.rfu_frames.is_some()
+            || raw.rfu_transfers.is_some()
+            || raw.joybus_frames.is_some()
+            || raw.joybus_transfers.is_some()
+            || raw.target.is_some()
+            || raw.tunnel_configuration.is_some()
+            || raw.schema.is_some();
+        if has_envelope {
+            return Ok(raw);
+        }
+    }
+
+    // Fallback: parse as JSONL (one JSON object per non-empty line).
+    let mut schema: Option<String> = None;
+    let mut game_title: Option<String> = None;
+    let mut game_code: Option<String> = None;
+    let mut transport: Option<String> = None;
+    let mut baud_rate_bps: Option<u32> = None;
+    let mut arbitration_mode: Option<String> = None;
+    let mut transfer_latency_cycles: Option<u32> = None;
+    let mut transfers: Vec<RawTransfer> = Vec::new();
+
+    for (line_idx, line) in trimmed.lines().enumerate() {
+        let line = line.trim();
+        if line.is_empty() {
+            continue;
+        }
+        let val: serde_json::Value = serde_json::from_str(line).map_err(|e| {
+            format!(
+                "Failed to parse SIO capture JSON/JSONL at line {}: {e}",
+                line_idx + 1
+            )
+        })?;
+        let obj = val.as_object().ok_or_else(|| {
+            format!(
+                "Failed to parse SIO capture JSONL at line {}: expected JSON object",
+                line_idx + 1
+            )
+        })?;
+
+        let is_transfer_record = obj.contains_key("master_word")
+            || obj.contains_key("master_send")
+            || obj.contains_key("slave_word")
+            || obj.contains_key("slave_send")
+            || obj.contains_key("multi_registers")
+            || obj.contains_key("command_word")
+            || obj.contains_key("command_id")
+            || obj.contains_key("command");
+
+        if let Some(s) = obj.get("schema").and_then(|v| v.as_str()) {
+            schema.get_or_insert_with(|| s.to_string());
+        }
+        if let Some(s) = obj.get("game_title").and_then(|v| v.as_str()) {
+            game_title.get_or_insert_with(|| s.to_string());
+        }
+        if let Some(s) = obj.get("game_code").and_then(|v| v.as_str()) {
+            game_code.get_or_insert_with(|| s.to_string());
+        }
+        if let Some(s) = obj.get("transport").and_then(|v| v.as_str()) {
+            transport.get_or_insert_with(|| s.to_string());
+        }
+        if let Some(b) = obj.get("baud_rate_bps").and_then(|v| v.as_u64()) {
+            baud_rate_bps.get_or_insert(b as u32);
+        }
+        if let Some(s) = obj.get("arbitration_mode").and_then(|v| v.as_str()) {
+            arbitration_mode.get_or_insert_with(|| s.to_string());
+        }
+        if let Some(c) = obj
+            .get("transfer_latency_cycles")
+            .or_else(|| obj.get("transfer_cycles"))
+            .and_then(|v| v.as_u64())
+        {
+            transfer_latency_cycles.get_or_insert(c as u32);
+        }
+
+        if is_transfer_record {
+            let rt: RawTransfer = serde_json::from_value(val).map_err(|e| {
+                format!(
+                    "Failed to parse SIO transfer JSONL at line {}: {e}",
+                    line_idx + 1
+                )
+            })?;
+            transfers.push(rt);
+        }
+    }
+
+    if transfers.is_empty() && schema.is_none() {
+        return Err("Failed to parse SIO capture JSON: no capture envelope or JSONL transfer records found".to_string());
+    }
+
+    Ok(RawCapture {
+        schema,
+        target: None,
+        game_title,
+        game_code,
+        tunnel_configuration: Some(RawTunnelConfig {
+            transport: transport.clone().or_else(|| Some("tcp_link_bridge".to_string())),
+            baud_rate_bps,
+            arbitration_mode: arbitration_mode.or_else(|| Some("multiplayer_16bit".to_string())),
+            transfer_latency_cycles,
+        }),
+        packet_traffic_summary: None,
+        transfers: Some(transfers),
+        rfu_frames: None,
+        rfu_transfers: None,
+        joybus_frames: None,
+        joybus_transfers: None,
+        baud_rate: None,
+        baud_rate_bps,
+        transport,
+    })
+}
+
+/// Alias for [`dissect_sio_capture`] supporting both JSON and JSONL captures.
+pub fn dissect_link_capture(json_str: &str) -> Result<DissectionReport, String> {
+    dissect_sio_capture(json_str)
+}
+
+/// Dissect a captured SIO JSON or JSONL stream and generate an in-depth protocol analysis report.
 pub fn dissect_sio_capture(json_str: &str) -> Result<DissectionReport, String> {
-    let raw: RawCapture = serde_json::from_str(json_str)
-        .map_err(|e| format!("Failed to parse SIO capture JSON: {e}"))?;
+    let raw = parse_raw_capture(json_str)?;
 
     let game_code = raw.target.as_ref()
         .and_then(|t| t.game_code.clone())

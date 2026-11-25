@@ -91,7 +91,8 @@ fn usage() {
            gbakit audio export <rom.gba> [-o <out_dir>] [--song <id>]\n  \
            gbakit audio soundfont <rom.gba> [-o <out.sf2>] [--json]\n  \
            gbakit audio replace <rom.gba> --offset <hex|dec> --wav <in.wav> -o <out.gba> [--codec pcm8|dpcm|pcm8-unsigned|ima-adpcm|ima-adpcm-arm] [--rate <hz>] [--loop-start <n>] [--raw-capacity <bytes>] [--allow-relocate] [--json]\n  \
-           gbakit link dissect <capture.json> [--json] [--rfu] [--joybus]\n  \
+           gbakit link dissect <capture.json|capture.jsonl> [--json] [--rfu] [--joybus]\n  \
+           gbakit link bridge [--listen 127.0.0.1:5000] [--players 2] [--log <capture.jsonl>] [--max-transfers <n>] [--idle-timeout-ms <ms>] [--game-code <code>] [--game-title <title>] [--json]\n  \
            gbakit gfx rip     <rom.gba> [-o <out_dir>] [--palettes] [--tilesets] [--tilemaps] [--sprites] [--json]\n  \
            gbakit gfx tile4   <file> --offset <hex> --palette <hex> -o <out.ppm>\n  \
            gbakit gfx replace <rom.gba> --offset <hex|dec> --image <in.png|ppm> -o <out.gba> [--bpp 4|8] [--palette-offset <n>] [--write-palette] [--compression auto|raw|lz77-vram|lz77-wram|rle|huff4|huff8] [--capacity <bytes>] [--allow-relocate] [--pad-byte <n>] [--json]\n  \
@@ -3380,6 +3381,49 @@ fn main() -> ExitCode {
                 Some(path) => link::cmd_link_dissect(Path::new(path), as_json, rfu, joybus),
                 None => Err("missing required <capture.json> for `link dissect`".into()),
             }
+        }
+        "link" if args.len() >= 2 && args[1] == "bridge" => (|| -> Result<(), String> {
+            let sub = &args[2..];
+            let as_json = sub.iter().any(|a| a == "--json");
+            let listen = parse_flag_value(sub, &["--listen"])
+                .unwrap_or("127.0.0.1:5000")
+                .to_string();
+            let players: u8 = match parse_flag_value(sub, &["--players"]) {
+                Some(s) => s
+                    .parse::<u8>()
+                    .map_err(|e| format!("invalid --players '{s}': {e}"))?,
+                None => 2,
+            };
+            let log_path = parse_flag_value(sub, &["--log"]).map(PathBuf::from);
+            let max_transfers: Option<u64> = match parse_flag_value(sub, &["--max-transfers"]) {
+                Some(s) => Some(
+                    s.parse::<u64>()
+                        .map_err(|e| format!("invalid --max-transfers '{s}': {e}"))?,
+                ),
+                None => None,
+            };
+            let idle_timeout_ms: Option<u64> = match parse_flag_value(sub, &["--idle-timeout-ms"]) {
+                Some(s) => Some(
+                    s.parse::<u64>()
+                        .map_err(|e| format!("invalid --idle-timeout-ms '{s}': {e}"))?,
+                ),
+                None => None,
+            };
+            let game_code = parse_flag_value(sub, &["--game-code"]).map(str::to_string);
+            let game_title = parse_flag_value(sub, &["--game-title"]).map(str::to_string);
+            link::cmd_link_bridge(
+                listen,
+                players,
+                log_path,
+                max_transfers,
+                idle_timeout_ms,
+                game_code,
+                game_title,
+                as_json,
+            )
+        })(),
+        "link" => {
+            Err("usage: `gbakit link dissect <capture.json|capture.jsonl> [--json] [--rfu] [--joybus]` or `gbakit link bridge [--listen 127.0.0.1:5000] [--players 2] [--log <capture.jsonl>] [--max-transfers <n>] [--idle-timeout-ms <ms>] [--json]`".into())
         }
         "gfx" if args.len() >= 3 && args[1] == "replace" => modding::cmd_gfx_replace(&args[2..]),
         "gfx" if args.len() >= 3 && args[1] == "replace-map" => {

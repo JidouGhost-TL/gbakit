@@ -3,9 +3,95 @@
 #![deny(unsafe_code)]
 
 use std::fs;
-use std::path::Path;
+use std::io::Write;
+use std::path::{Path, PathBuf};
 
 use gbakit::link::{dissect_sio_capture, LinkProtocolKind};
+use gbakit::link_bridge::{LinkBridgeConfig, LinkBridgeServer};
+
+/// Start a live TCP GBA SIO Multi-Play Link-Cable Relay/Bridge Server.
+#[allow(clippy::too_many_arguments)]
+pub fn cmd_link_bridge(
+    listen_addr: String,
+    players: u8,
+    log_path: Option<PathBuf>,
+    max_transfers: Option<u64>,
+    idle_timeout_ms: Option<u64>,
+    game_code: Option<String>,
+    game_title: Option<String>,
+    as_json: bool,
+) -> Result<(), String> {
+    let cfg = LinkBridgeConfig {
+        listen_addr,
+        players,
+        log_path: log_path.clone(),
+        max_transfers,
+        idle_timeout_ms,
+        game_code,
+        game_title,
+    };
+
+    let server = LinkBridgeServer::bind(cfg)?;
+    let bound_addr = server.local_addr();
+
+    if as_json {
+        eprintln!("gbakit link bridge listening on {bound_addr} (players={players})");
+        let _ = std::io::stderr().flush();
+    } else {
+        println!("================================================================================");
+        println!(" GBA SIO MULTI-PLAY TCP LINK BRIDGE (GBALINK1)");
+        println!("================================================================================");
+        println!(" Listening:       {bound_addr}");
+        println!(" Players:         {players} (Slot 0: Master, Slots 1..{}: Slaves)", players - 1);
+        if let Some(ref lp) = log_path {
+            println!(" Capture Log:     {}", lp.display());
+        }
+        if let Some(cap) = max_transfers {
+            println!(" Max Transfers:   {cap}");
+        }
+        if let Some(ms) = idle_timeout_ms {
+            println!(" Idle Timeout:    {ms} ms");
+        }
+        println!(" Waiting for {players} players to connect...");
+        let _ = std::io::stdout().flush();
+    }
+
+    let summary = server.run_with_callback(|slot| {
+        let role = if slot == 0 { "Master" } else { "Slave" };
+        if as_json {
+            eprintln!("player slot {slot} ({role}) connected");
+            let _ = std::io::stderr().flush();
+        } else {
+            println!(" [+] Player slot {slot} ({role}) connected");
+            let _ = std::io::stdout().flush();
+        }
+    })?;
+
+    if as_json {
+        let json_out = serde_json::to_string_pretty(&summary)
+            .map_err(|e| format!("Failed to serialize bridge summary: {e}"))?;
+        println!("{json_out}");
+    } else {
+        println!("--------------------------------------------------------------------------------");
+        println!(" BRIDGE SESSION SUMMARY");
+        println!("--------------------------------------------------------------------------------");
+        println!(" Listen Address:  {}", summary.listen_addr);
+        println!(
+            " Players:         {} / {} connected",
+            summary.players_connected, summary.players_expected
+        );
+        println!(" Transfers:       {} relayed ({} both non-0xFFFF)", summary.transfers_relayed, summary.both_non_ff_transfers);
+        println!(" Frame Syncs:     {}", summary.frame_syncs_relayed);
+        println!(" Elapsed:         {} ms", summary.elapsed_ms);
+        println!(" Stop Reason:     {}", summary.stop_reason);
+        if let Some(ref lp) = summary.log_path {
+            println!(" Capture Log:     {lp}");
+        }
+        println!("================================================================================");
+    }
+
+    Ok(())
+}
 
 /// Dissect a recorded SIO packet capture JSON file and display protocol analysis and statistics.
 pub fn cmd_link_dissect(path: &Path, as_json: bool, rfu_mode: bool, joybus_mode: bool) -> Result<(), String> {
