@@ -7,13 +7,14 @@ use std::io::Write;
 use std::path::{Path, PathBuf};
 
 use gbakit::link::{dissect_sio_capture, LinkProtocolKind};
-use gbakit::link_bridge::{LinkBridgeConfig, LinkBridgeServer};
+use gbakit::link_bridge::{LinkBridgeConfig, LinkBridgeMode, LinkBridgeServer};
 
-/// Start a live TCP GBA SIO Multi-Play Link-Cable Relay/Bridge Server.
+/// Start a live TCP GBA SIO Multi-Play or Wireless Adapter (`AGB-015` RFU) Link Bridge Server.
 #[allow(clippy::too_many_arguments)]
 pub fn cmd_link_bridge(
     listen_addr: String,
     players: u8,
+    mode: LinkBridgeMode,
     log_path: Option<PathBuf>,
     max_transfers: Option<u64>,
     idle_timeout_ms: Option<u64>,
@@ -24,6 +25,7 @@ pub fn cmd_link_bridge(
     let cfg = LinkBridgeConfig {
         listen_addr,
         players,
+        mode,
         log_path: log_path.clone(),
         max_transfers,
         idle_timeout_ms,
@@ -33,16 +35,21 @@ pub fn cmd_link_bridge(
 
     let server = LinkBridgeServer::bind(cfg)?;
     let bound_addr = server.local_addr();
+    let mode_label = match mode {
+        LinkBridgeMode::Multi => "multi (16-bit Multi-Play + Normal SPI)",
+        LinkBridgeMode::Rfu => "rfu (AGB-015 Wireless Adapter 32-bit Virtual RF Ether)",
+    };
 
     if as_json {
-        eprintln!("gbakit link bridge listening on {bound_addr} (players={players})");
+        eprintln!("gbakit link bridge listening on {bound_addr} (players={players}, mode={mode_label})");
         let _ = std::io::stderr().flush();
     } else {
         println!("================================================================================");
-        println!(" GBA SIO MULTI-PLAY TCP LINK BRIDGE (GBALINK1)");
+        println!(" GBA SIO TCP LINK BRIDGE (GBALINK1)");
         println!("================================================================================");
         println!(" Listening:       {bound_addr}");
-        println!(" Players:         {players} (Slot 0: Master, Slots 1..{}: Slaves)", players - 1);
+        println!(" Mode:            {mode_label}");
+        println!(" Players:         {players} (Slot 0: Master/Host, Slots 1..{}: Slaves/Clients)", players - 1);
         if let Some(ref lp) = log_path {
             println!(" Capture Log:     {}", lp.display());
         }
@@ -76,12 +83,14 @@ pub fn cmd_link_bridge(
         println!(" BRIDGE SESSION SUMMARY");
         println!("--------------------------------------------------------------------------------");
         println!(" Listen Address:  {}", summary.listen_addr);
+        println!(" Mode:            {}", summary.mode);
         println!(
             " Players:         {} / {} connected",
             summary.players_connected, summary.players_expected
         );
         println!(" Transfers:       {} relayed ({} both non-0xFFFF)", summary.transfers_relayed, summary.both_non_ff_transfers);
         println!(" Normal SPI:      {} relayed", summary.normal_transfers_relayed);
+        println!(" RFU Commands:    {} relayed ({} handshakes)", summary.rfu_commands_relayed, summary.rfu_handshakes);
         println!(" Frame Syncs:     {}", summary.frame_syncs_relayed);
         println!(" Elapsed:         {} ms", summary.elapsed_ms);
         println!(" Stop Reason:     {}", summary.stop_reason);

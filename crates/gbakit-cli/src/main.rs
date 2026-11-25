@@ -3411,9 +3411,17 @@ fn main() -> ExitCode {
             };
             let game_code = parse_flag_value(sub, &["--game-code"]).map(str::to_string);
             let game_title = parse_flag_value(sub, &["--game-title"]).map(str::to_string);
+            let mode = match parse_flag_value(sub, &["--mode"]) {
+                None | Some("multi") | Some("multiplayer") => gbakit::link_bridge::LinkBridgeMode::Multi,
+                Some("rfu") | Some("wireless") => gbakit::link_bridge::LinkBridgeMode::Rfu,
+                Some(other) => {
+                    return Err(format!("invalid --mode '{other}': expected 'multi' or 'rfu'"));
+                }
+            };
             link::cmd_link_bridge(
                 listen,
                 players,
+                mode,
                 log_path,
                 max_transfers,
                 idle_timeout_ms,
@@ -3423,7 +3431,7 @@ fn main() -> ExitCode {
             )
         })(),
         "link" => {
-            Err("usage: `gbakit link dissect <capture.json|capture.jsonl> [--json] [--rfu] [--joybus]` or `gbakit link bridge [--listen 127.0.0.1:5000] [--players 2] [--log <capture.jsonl>] [--max-transfers <n>] [--idle-timeout-ms <ms>] [--json]`".into())
+            Err("usage: `gbakit link dissect <capture.json|capture.jsonl> [--json] [--rfu] [--joybus]` or `gbakit link bridge [--listen 127.0.0.1:5000] [--players 2] [--mode multi|rfu] [--log <capture.jsonl>] [--max-transfers <n>] [--idle-timeout-ms <ms>] [--json]`".into())
         }
         "gfx" if args.len() >= 3 && args[1] == "replace" => modding::cmd_gfx_replace(&args[2..]),
         "gfx" if args.len() >= 3 && args[1] == "replace-map" => {

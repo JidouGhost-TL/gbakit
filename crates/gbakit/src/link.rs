@@ -359,32 +359,40 @@ pub fn compute_rfu_crc16(header: u32, slot_mask: u8, payload: &[u32]) -> u16 {
     crc.finish()
 }
 
-/// Translate standard RFU 16-bit command opcodes into canonical names.
+/// Translate standard RFU 16-bit command opcodes into canonical AGB-015 names.
 pub fn rfu_command_name(cmd_id: u16) -> &'static str {
     match cmd_id {
+        0x8001 | 0xB0BB => "RFU_HANDSHAKE",
         0x0010 => "SYSTEM_RESET",
-        0x0011 => "SYSTEM_STATUS",
-        0x0012 => "SYSTEM_CONFIG",
-        0x0013 => "SYSTEM_SLEEP",
-        0x0014 => "SYSTEM_WAKEUP",
+        0x0011 => "LINK_STATUS",
+        0x0012 => "VERSION_STATUS",
+        0x0013 => "SYSTEM_STATUS",
+        0x0014 => "SLOT_STATUS",
         0x0015 => "BROADCAST_BEACON_START",
-        0x0016 => "BROADCAST_SEARCH",
-        0x0017 => "CONNECT_REQUEST",
+        0x0016 => "CONFIG_STATUS",
+        0x0017 => "SET_BROADCAST_DATA",
         0x0018 => "CONNECT_ACCEPT",
-        0x0019 => "CONNECT_REJECT",
-        0x001A => "CONNECT_STATUS",
-        0x0020 => "DATA_SEND_READY",
-        0x0024 => "BROADCAST_BEACON",
-        0x0025 => "DATA_RECV",
-        0x0026 => "DATA_FLUSH",
-        0x0027 => "SCAN_RESPONSE",
+        0x0019 => "START_BROADCAST",
+        0x001A => "START_SEARCH",
+        0x001B => "POLL_SEARCH",
+        0x001C => "END_SEARCH",
+        0x001D => "GET_BROADCAST_DATA",
+        0x001E => "START_CONNECT",
+        0x001F => "POLL_CONNECT",
+        0x0020 => "END_CONNECT",
+        0x0021 => "SEND_DATA_READY",
+        0x0024 => "SEND_DATA",
+        0x0025 => "SEND_DATA_AND_WAIT",
+        0x0026 => "RECV_DATA",
+        0x0027 => "WAIT_HEARTBEAT",
         0x0028 => "CONNECT_HANDSHAKE",
         0x0029 => "DISCONNECT_NOTICE",
-        0x0030 => "UNION_ROOM_SYNC",
+        0x0030 => "DISCONNECT",
         0x0031 => "MULTIBOOT_HEADER_SEND",
         0x0032 => "MULTIBOOT_PAYLOAD_SEND",
         0x0033 => "MULTIBOOT_EXEC",
-        0x003D => "DISCONNECT_COMPLETE",
+        0x003D => "SHUTDOWN",
+        0x0090..=0x00BD => crate::rfu::rfu_opcode_name(cmd_id as u8),
         _ => "RFU_CUSTOM_CMD",
     }
 }
@@ -771,6 +779,9 @@ pub fn dissect_sio_capture(json_str: &str) -> Result<DissectionReport, String> {
                     data_len = ((cw >> 8) & 0xFF) as u8;
                     (cw, (cw & 0xFF) as u16)
                 }
+                (Some(cw), _) if cw == crate::rfu::RFU_HANDSHAKE_PING || cw == crate::rfu::RFU_HANDSHAKE_PONG => {
+                    (cw, (cw & 0xFFFF) as u16)
+                }
                 (Some(_cw), Some(cid)) => {
                     (0x9966_0000 | ((data_len as u32) << 8) | (cid as u32), cid)
                 }
@@ -803,7 +814,13 @@ pub fn dissect_sio_capture(json_str: &str) -> Result<DissectionReport, String> {
             if data_len == 0 && !payload.is_empty() {
                 data_len = payload.len() as u8;
             }
-            let final_cmd_word = (cmd_word & 0xFFFF_00FF) | ((data_len as u32) << 8);
+            let final_cmd_word = if cmd_word == crate::rfu::RFU_HANDSHAKE_PING
+                || cmd_word == crate::rfu::RFU_HANDSHAKE_PONG
+            {
+                cmd_word
+            } else {
+                (cmd_word & 0xFFFF_00FF) | ((data_len as u32) << 8)
+            };
 
             let expected_crc = compute_rfu_crc16(final_cmd_word, slot_mask, &payload);
             let given_crc = parse_u16_val(&rt.crc);

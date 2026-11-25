@@ -18,3 +18,4 @@ pub mod joybus;
 pub mod link;
 pub mod link_bridge;
 pub mod multiboot;
+pub mod rfu;

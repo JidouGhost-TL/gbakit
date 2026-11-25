@@ -82,6 +82,7 @@ use std::time::{Duration, Instant};
 use serde::{Deserialize, Serialize};
 
 use crate::link::{BAUD_115200, BAUD_38400, BAUD_57600, BAUD_9600, CYCLES_115200_1SLAVE};
+use crate::rfu::{RfuVirtualEther, RFU_STATUS_OK};
 
 /// Magic header for Client -> Server Hello (`GBAL`).
 pub const PROTOCOL_MAGIC_HELLO: [u8; 4] = *b"GBAL";
@@ -364,6 +365,26 @@ impl NormalTransferResponse {
     }
 }
 
+/// Operating mode for [`LinkBridgeServer`].
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum LinkBridgeMode {
+    /// Standard GBA Link-Cable relay (16-bit Multi-Play + 8/32-bit Normal Mode SPI).
+    #[default]
+    Multi,
+    /// GBA Wireless Adapter (`AGB-015` / `RFU_Vxxxx`) 32-bit Virtual RF Ether relay.
+    Rfu,
+}
+
+impl LinkBridgeMode {
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            Self::Multi => "multi",
+            Self::Rfu => "rfu",
+        }
+    }
+}
+
 /// Configuration for [`LinkBridgeServer`].
 #[derive(Debug, Clone)]
 pub struct LinkBridgeConfig {
@@ -371,6 +392,8 @@ pub struct LinkBridgeConfig {
     pub listen_addr: String,
     /// Number of players (`2..=4`).
     pub players: u8,
+    /// Bridge operating mode (`Multi` or `Rfu`).
+    pub mode: LinkBridgeMode,
     /// Optional path to write a live JSONL SIO capture compatible with `gbakit link dissect`.
     pub log_path: Option<PathBuf>,
     /// Optional transfer cap; server exits cleanly after relaying this many rounds.
@@ -388,6 +411,7 @@ impl Default for LinkBridgeConfig {
         Self {
             listen_addr: "127.0.0.1:5000".to_string(),
             players: 2,
+            mode: LinkBridgeMode::Multi,
             log_path: None,
             max_transfers: None,
             idle_timeout_ms: None,
@@ -401,11 +425,14 @@ impl Default for LinkBridgeConfig {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LinkBridgeSummary {
     pub listen_addr: String,
+    pub mode: String,
     pub players_expected: u8,
     pub players_connected: u8,
     pub transfers_relayed: u64,
     pub both_non_ff_transfers: u64,
     pub normal_transfers_relayed: u64,
+    pub rfu_commands_relayed: u64,
+    pub rfu_handshakes: u64,
     pub frame_syncs_relayed: u64,
     pub elapsed_ms: u64,
     pub stop_reason: String,
@@ -567,12 +594,17 @@ impl LinkBridgeServer {
                 let file = File::create(path)
                     .map_err(|e| format!("failed to create log file '{}': {e}", path.display()))?;
                 let mut bw = BufWriter::new(file);
+                let (arb_mode, baud_bps) = match self.config.mode {
+                    LinkBridgeMode::Multi => ("multiplayer_16bit", BAUD_115200),
+                    LinkBridgeMode::Rfu => ("rfu_wireless_32bit", 2_000_000),
+                };
                 let header = serde_json::json!({
                     "schema": "gbakit.link-bridge.capture/1",
                     "game_code": self.config.game_code.as_deref().unwrap_or("LIVE"),
                     "game_title": self.config.game_title.as_deref().unwrap_or("GBA Live TCP Link Bridge Session"),
                     "transport": "tcp_link_bridge",
-                    "arbitration_mode": "multiplayer_16bit",
+                    "arbitration_mode": arb_mode,
+                    "baud_rate_bps": baud_bps,
                     "players": self.config.players,
                 });
                 writeln!(bw, "{header}")
@@ -649,6 +681,8 @@ impl LinkBridgeServer {
         let mut pending_transfers: [Option<TransferRequest>; 4] = [None; 4];
         let mut pending_normal: [Option<NormalTransferRequest>; 2] = [None; 2];
         let mut pending_frames: [Option<u32>; 4] = [None; 4];
+        let mut rfu_ether = RfuVirtualEther::new(players);
+        let mut rfu_step: u64 = 0;
         let mut transfers_relayed: u64 = 0;
         let mut both_non_ff_transfers: u64 = 0;
         let mut normal_transfers_relayed: u64 = 0;
@@ -764,7 +798,76 @@ impl LinkBridgeServer {
                     }
                 }
                 ClientEvent::NormalTransfer { slot, req } => {
-                    if slot < 2 {
+                    if self.config.mode == LinkBridgeMode::Rfu {
+                        let outcome = rfu_ether.transfer_word(slot, req.siocnt, req.tx_word, req.frame);
+                        if outcome.status == RFU_STATUS_OK {
+                            normal_transfers_relayed += 1;
+                        }
+                        let seq = (normal_transfers_relayed & 0xFFFF_FFFF) as u32;
+                        let resp_bytes = NormalTransferResponse {
+                            status: outcome.status,
+                            width_bits: 32,
+                            rx_word: outcome.rx_word,
+                            seq,
+                        }
+                        .to_bytes();
+
+                        let mut write_failed = false;
+                        if let Some(w) = writers[slot].as_mut() {
+                            if w.write_all(&resp_bytes).is_err() {
+                                write_failed = true;
+                            }
+                        }
+
+                        if let Some(audit) = outcome.audit {
+                            rfu_step += 1;
+                            if let Some(bw) = log_writer.as_mut() {
+                                let payload_hex: Vec<String> = audit
+                                    .payload
+                                    .iter()
+                                    .map(|w| format!("0x{w:08X}"))
+                                    .collect();
+                                let resp_payload_hex: Vec<String> = audit
+                                    .response_payload
+                                    .iter()
+                                    .map(|w| format!("0x{w:08X}"))
+                                    .collect();
+                                let record = serde_json::json!({
+                                    "step": rfu_step,
+                                    "frame": audit.frame,
+                                    "slot": audit.slot,
+                                    "phase": audit.phase,
+                                    "command_word": format!("0x{:08X}", audit.command_word),
+                                    "command_id": format!("0x{:04X}", audit.command_id),
+                                    "command_name": audit.command_name,
+                                    "data_length": audit.data_length,
+                                    "slot_mask": format!("0x{:02X}", audit.slot_mask),
+                                    "payload": payload_hex,
+                                    "response_word": format!("0x{:08X}", audit.response_word),
+                                    "response_payload": resp_payload_hex,
+                                    "crc": format!("0x{:04X}", audit.crc),
+                                    "crc_valid": true,
+                                    "description": audit.description,
+                                });
+                                if let Err(e) = writeln!(bw, "{record}") {
+                                    return Err(format!(
+                                        "failed to write JSONL RFU record: {e}"
+                                    ));
+                                }
+                            }
+                        }
+
+                        if write_failed {
+                            stop_reason = "client_write_error".to_string();
+                            break;
+                        }
+                        if let Some(cap) = self.config.max_transfers {
+                            if transfers_relayed + normal_transfers_relayed >= cap {
+                                stop_reason = "max_transfers_reached".to_string();
+                                break;
+                            }
+                        }
+                    } else if slot < 2 {
                         pending_normal[slot] = Some(req);
 
                         // If P0 (Master) initiated Normal SPI and P1 (Slave) has FLAG_SLAVE_POLL
@@ -904,11 +1007,14 @@ impl LinkBridgeServer {
 
         Ok(LinkBridgeSummary {
             listen_addr: self.local_addr.to_string(),
+            mode: self.config.mode.as_str().to_string(),
             players_expected: self.config.players,
             players_connected: connected as u8,
             transfers_relayed,
             both_non_ff_transfers,
             normal_transfers_relayed,
+            rfu_commands_relayed: rfu_ether.total_commands(),
+            rfu_handshakes: rfu_ether.total_handshakes(),
             frame_syncs_relayed,
             elapsed_ms: start.elapsed().as_millis() as u64,
             stop_reason,
@@ -936,6 +1042,7 @@ mod tests {
         let cfg = LinkBridgeConfig {
             listen_addr: "127.0.0.1:0".to_string(),
             players: 2,
+            mode: LinkBridgeMode::Multi,
             log_path: Some(log_path.clone()),
             max_transfers: Some(4),
             idle_timeout_ms: Some(5_000),
@@ -1055,6 +1162,7 @@ mod tests {
         let cfg = LinkBridgeConfig {
             listen_addr: "127.0.0.1:0".to_string(),
             players: 2,
+            mode: LinkBridgeMode::Multi,
             log_path: None,
             max_transfers: Some(2),
             idle_timeout_ms: Some(5_000),
@@ -1159,6 +1267,7 @@ mod tests {
         let cfg = LinkBridgeConfig {
             listen_addr: "127.0.0.1:0".to_string(),
             players: 2,
+            mode: LinkBridgeMode::Multi,
             log_path: Some(log_path.clone()),
             max_transfers: Some(4),
             idle_timeout_ms: Some(5_000),
@@ -1261,6 +1370,159 @@ mod tests {
         assert!(lines[2].contains("\"mode\":\"normal_8\""));
         assert!(lines[3].contains("\"mode\":\"normal_32\""));
         assert!(lines[4].contains("\"mode\":\"normal_32\""));
+
+        let _ = std::fs::remove_file(&log_path);
+    }
+
+    #[test]
+    fn test_live_tcp_bridge_rfu_mode_and_jsonl_dissect() {
+        use crate::link::LinkProtocolKind;
+        use crate::rfu::{
+            encode_rfu_header, RFU_ACK_WORD, RFU_CMD_DISCONNECT, RFU_CMD_POLL_CONNECT,
+            RFU_CMD_POLL_SEARCH, RFU_CMD_RECV_DATA, RFU_CMD_SEND_DATA, RFU_CMD_SET_BROADCAST_DATA,
+            RFU_CMD_START_BROADCAST, RFU_CMD_START_CONNECT, RFU_CMD_START_SEARCH,
+            RFU_CMD_SYSTEM_RESET, RFU_HANDSHAKE_PING, RFU_HANDSHAKE_PONG,
+        };
+
+        let log_path = std::env::temp_dir().join(format!(
+            "gbakit_link_bridge_rfu_test_{}.jsonl",
+            std::process::id()
+        ));
+        let _ = std::fs::remove_file(&log_path);
+
+        let cfg = LinkBridgeConfig {
+            listen_addr: "127.0.0.1:0".to_string(),
+            players: 2,
+            mode: LinkBridgeMode::Rfu,
+            log_path: Some(log_path.clone()),
+            max_transfers: None,
+            idle_timeout_ms: Some(5_000),
+            game_code: Some("BPRE".to_string()),
+            game_title: Some("Pokemon FireRed Wireless Adapter".to_string()),
+        };
+
+        let server = LinkBridgeServer::bind(cfg).expect("bind rfu bridge");
+        let addr = server.local_addr();
+        let server_handle = thread::spawn(move || server.run());
+
+        let mut c0 = TcpStream::connect(addr).expect("connect host");
+        let mut c1 = TcpStream::connect(addr).expect("connect client");
+        let _ = c0.set_nodelay(true);
+        let _ = c1.set_nodelay(true);
+
+        c0.write_all(
+            &HelloPacket {
+                version: PROTOCOL_VERSION,
+                requested_slot: 0,
+                flags: 0,
+            }
+            .to_bytes(),
+        )
+        .unwrap();
+        c1.write_all(
+            &HelloPacket {
+                version: PROTOCOL_VERSION,
+                requested_slot: 1,
+                flags: 0,
+            }
+            .to_bytes(),
+        )
+        .unwrap();
+
+        let mut wbuf = [0u8; 8];
+        c0.read_exact(&mut wbuf).unwrap();
+        c1.read_exact(&mut wbuf).unwrap();
+
+        let send_word = |stream: &mut TcpStream, slot: u8, siocnt: u16, tx_word: u32, frame: u32| -> NormalTransferResponse {
+            stream
+                .write_all(
+                    &NormalTransferRequest {
+                        slot,
+                        width_bits: 32,
+                        siocnt,
+                        tx_word,
+                        frame,
+                    }
+                    .to_bytes(),
+                )
+                .unwrap();
+            let mut rbuf = [0u8; 12];
+            stream.read_exact(&mut rbuf).unwrap();
+            NormalTransferResponse::from_bytes(rbuf).unwrap()
+        };
+
+        let exec_cmd = |stream: &mut TcpStream, slot: u8, cmd: u8, params: &[u32], frame: u32| -> Vec<u32> {
+            let hdr = encode_rfu_header(cmd, params.len());
+            let r = send_word(stream, slot, 0x5081, hdr, frame);
+            assert_eq!(r.status, 0);
+            assert_eq!(r.rx_word, RFU_ACK_WORD);
+            for &p in params {
+                let pr = send_word(stream, slot, 0x5081, p, frame);
+                assert_eq!(pr.status, 0);
+                assert_eq!(pr.rx_word, RFU_ACK_WORD);
+            }
+            // Clock out response with external clock (SIOCNT bit 0 = 0).
+            let rh = send_word(stream, slot, 0x5080, RFU_ACK_WORD, frame);
+            assert_eq!(rh.status, 0);
+            assert_eq!((rh.rx_word & 0xFF) as u8, cmd | 0x80);
+            let rlen = ((rh.rx_word >> 8) & 0xFF) as usize;
+            let mut out = Vec::with_capacity(rlen);
+            for _ in 0..rlen {
+                let rw = send_word(stream, slot, 0x5080, RFU_ACK_WORD, frame);
+                assert_eq!(rw.status, 0);
+                out.push(rw.rx_word);
+            }
+            out
+        };
+
+        // 1. Handshakes on both Host & Client
+        assert_eq!(send_word(&mut c0, 0, 0x5081, RFU_HANDSHAKE_PING, 1).rx_word, RFU_HANDSHAKE_PONG);
+        assert_eq!(send_word(&mut c1, 1, 0x5081, RFU_HANDSHAKE_PING, 1).rx_word, RFU_HANDSHAKE_PONG);
+
+        // 2. Reset, Host sets broadcast data + starts broadcast
+        exec_cmd(&mut c0, 0, RFU_CMD_SYSTEM_RESET, &[], 2);
+        exec_cmd(&mut c1, 1, RFU_CMD_SYSTEM_RESET, &[], 2);
+        let beacon = [0x4250_5245, 0x5245_4400];
+        exec_cmd(&mut c0, 0, RFU_CMD_SET_BROADCAST_DATA, &beacon, 3);
+        exec_cmd(&mut c0, 0, RFU_CMD_START_BROADCAST, &[], 4);
+
+        // 3. Client searches & discovers Host's live broadcast packet
+        exec_cmd(&mut c1, 1, RFU_CMD_START_SEARCH, &[], 5);
+        let found = exec_cmd(&mut c1, 1, RFU_CMD_POLL_SEARCH, &[], 6);
+        assert_eq!(found.len(), 3);
+        let host_id = found[0] & 0xFFFF;
+        assert_eq!(host_id, 0x1001);
+        assert_eq!(&found[1..], &beacon);
+
+        // 4. Client connects & exchanges data with Host
+        exec_cmd(&mut c1, 1, RFU_CMD_START_CONNECT, &[host_id], 7);
+        let conn = exec_cmd(&mut c1, 1, RFU_CMD_POLL_CONNECT, &[], 8);
+        assert_eq!(conn, vec![0x0000_1001]);
+
+        exec_cmd(&mut c0, 0, RFU_CMD_SEND_DATA, &[0x1234_5678, 0x9ABC_DEF0], 9);
+        let rx_client = exec_cmd(&mut c1, 1, RFU_CMD_RECV_DATA, &[], 10);
+        assert_eq!(rx_client, vec![0x1234_5678, 0x9ABC_DEF0]);
+
+        exec_cmd(&mut c1, 1, RFU_CMD_DISCONNECT, &[0x01], 11);
+
+        // Clean disconnect via MSG_BYE
+        c0.write_all(&[MSG_BYE]).unwrap();
+
+        let summary = server_handle.join().unwrap().unwrap();
+        assert_eq!(summary.mode, "rfu");
+        assert_eq!(summary.rfu_handshakes, 2);
+        assert_eq!(summary.rfu_commands_relayed, 11);
+
+        // Verify JSONL capture decodes cleanly via dissect_link_capture!
+        let jsonl = std::fs::read_to_string(&log_path).expect("read rfu jsonl");
+        let report = dissect_link_capture(&jsonl).expect("dissect rfu jsonl");
+        assert_eq!(report.protocol, LinkProtocolKind::PokemonWirelessUnionRoom);
+        assert_eq!(report.rfu_frames.len(), 13); // 2 handshakes + 11 commands
+        assert_eq!(report.rfu_frames[0].command_name, "RFU_HANDSHAKE");
+        assert_eq!(report.rfu_frames[4].command_name, "SET_BROADCAST_DATA");
+        assert_eq!(report.rfu_frames[7].command_name, "POLL_SEARCH");
+        assert_eq!(report.rfu_frames[10].command_name, "SEND_DATA");
+        assert_eq!(report.rfu_frames[11].command_name, "RECV_DATA");
 
         let _ = std::fs::remove_file(&log_path);
     }
