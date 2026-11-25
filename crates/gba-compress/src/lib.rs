@@ -217,6 +217,12 @@ pub fn decode_hudson_lz(input: &[u8], max_output: usize) -> Result<DecodeOutcome
         }) => Err(Error::Malformed(format!(
             "Hudson LZ token overshoot: produced {produced} + token {token_len} > expected {expected}"
         ))),
+        Err(formatkit_codec::okumura::OkumuraDecodeError::InvalidInitialCursor {
+            initial_cursor,
+        }) => Err(Error::InvalidField {
+            what: "hudson_lz_initial_cursor",
+            value: initial_cursor as u64,
+        }),
     }
 }
 
