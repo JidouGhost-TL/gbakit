@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Late-Game Saves &amp; Boundary Fuzzing — gbakit GBA Reference</title>
+  <link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+  <header>
+    <div class="brand"><a href="index.html" style="color:inherit">gbakit GBA Reference <span class="badge badge-emerald">v2.0</span></a></div>
+    <nav>
+      <a href="index.html">Games</a>
+      <a href="saves/index.html">Save Formats</a>
+      <a href="late-game-saves.html">Late-Game Saves</a>
+      <a href="patches/index.html">Debug Patches</a>
+      <a href="debug-menus.html">Debug Gallery</a>
+      <a href="non-retail-cartridges.html">Non-Retail</a>
+      <a href="cartridge-hardware.html">Cartridge Hardware</a>
+      <a href="link-multiplayer.html">Link &amp; Multiplayer</a>
+      <a href="multiboot-museum.html">MultiBoot Museum</a>
+      <a href="assets/index.html">Assets &amp; Audio</a>
+      <a href="text-and-fonts.html">Text &amp; Fonts</a>
+      <a href="modding-showcase.html">Modding Showcase</a>
+      <a href="engines/index.html">Engines &amp; Hardware</a>
+      <a href="families/index.html">Families</a>
+      <a href="gbakit/index.html">Using gbakit</a>
+    </nav>
+  </header>
+  <main>
+<h1>Clean-Room Late-Game Battery Saves, Hidden Unlocks &amp; Boundary Fuzzing</h1>
+<p class="meta">Zero ROM patching &middot; Verified live in headless <code>libmgba.so.0.10</code> across all 5 GBA cartridge save media types &middot; <a href="saves/index.html">Save Formats Index</a> &middot; <a href="modding-showcase.html">Modding Showcase</a></p>
+
+<div class="grid">
+  <div class="card"><div class="val">8</div><div class="lbl">Deep In-Game Late-Stage Warps</div></div>
+  <div class="card"><div class="val">6</div><div class="lbl">Hidden &amp; Post-Game Unlocks</div></div>
+  <div class="card"><div class="val">13</div><div class="lbl">All-5-Media Late-Game Saves</div></div>
+  <div class="card"><div class="val">1,766</div><div class="lbl">Boundary Fuzz Trials (85 Titles)</div></div>
+  <div class="card"><div class="val">25</div><div class="lbl">Applied Schema v2 Constraints</div></div>
+</div>
+
+<div class="callout">
+  <strong>Zero ROM Patching:</strong> Every downloadable <code>.sav</code> below is a clean-room battery save synthesized directly against retail cartridge save formats and checksums. Booting unmodified retail ROMs in headless <code>libmgba.so.0.10</code> confirms <code>persisted_clean=True</code> with live gameplay and unlock visual diffs.
+</div>
+
+<h2>1. Deep In-Game Late-Stage Warps (8 Flagship Titles)</h2>
+
+<div class="card" style="text-align:left;margin-bottom:1.1rem;padding:1rem">
+  <div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:.5rem;margin-bottom:.45rem">
+    <div><strong><a href='titles/ASOE-r0-afc29e3325baf68a.html'><strong>Sonic Advance (USA) (En,Ja)</strong></a></strong> <code>ASOE</code> &middot; <span class="badge badge-blue">Flash 512K (64 KiB)</span> <span class="badge badge-emerald">persisted_clean</span></div>
+    <div><a href="assets/saves/late-game/asoe_deep.sav" download><strong>Download <code>asoe_deep.sav</code></strong></a> (64 KiB)</div>
+  </div>
+  <p style="margin:.2rem 0 .6rem"><strong>Reached State:</strong> All 7 Chaos Emeralds + Extra Zone unlocked -&gt; LIVE Super Sonic gameplay on The Moon Zone (Earth visible in starry sky, 43 rings) &middot; Checksum: <code>sum32_le (0x042C over [0x0000..0x042C))</code> &middot; Visual diff: <strong>93.71%</strong></p>
+  <div class="gallery">
+    <figure><img src="images/late-game-saves/asoe_baseline.png" alt="ASOE Baseline" loading="lazy"><figcaption>Baseline (Fresh Save)</figcaption></figure>
+    <figure><img src="images/late-game-saves/asoe_ingame.png" alt="ASOE Deep In-Game" loading="lazy"><figcaption>Deep In-Game Warp (Live <code>libmgba</code>)</figcaption></figure>
+  </div>
+</div>
+
+<div class="card" style="text-align:left;margin-bottom:1.1rem;padding:1rem">
+  <div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:.5rem;margin-bottom:.45rem">
+    <div><strong><a href='titles/BMXE-r0-fc94f65380b65b87.html'><strong>Metroid: Zero Mission (USA)</strong></a></strong> <code>BMXE</code> &middot; <span class="badge badge-blue">SRAM (32 KiB)</span> <span class="badge badge-emerald">persisted_clean</span></div>
+    <div><a href="assets/saves/late-game/bmxe_deep.sav" download><strong>Download <code>bmxe_deep.sav</code></strong></a> (32 KiB)</div>
+  </div>
+  <p style="margin:.2rem 0 .6rem"><strong>Reached State:</strong> Unlocked Sound Test, Gallery, Hard Mode &amp; Original NES Metroid -&gt; LIVE playable 1986 NES Metroid in Brinstar &middot; Checksum: <code>sum32_le_with_complement (0x0000 primary + 0x6D40 backup)</code> &middot; Visual diff: <strong>6.33%</strong></p>
+  <div class="gallery">
+    <figure><img src="images/late-game-saves/bmxe_baseline.png" alt="BMXE Baseline" loading="lazy"><figcaption>Baseline (Fresh Save)</figcaption></figure>
+    <figure><img src="images/late-game-saves/bmxe_ingame.png" alt="BMXE Deep In-Game" loading="lazy"><figcaption>Deep In-Game Warp (Live <code>libmgba</code>)</figcaption></figure>
+  </div>
+</div>
+
+<div class="card" style="text-align:left;margin-bottom:1.1rem;padding:1rem">
+  <div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:.5rem;margin-bottom:.45rem">
+    <div><strong><a href='titles/BPRE-r0-3d0c79f1627022e1.html'><strong>Pokemon - FireRed Version (USA, Europe)</strong></a></strong> <code>BPRE</code> &middot; <span class="badge badge-blue">Flash 1M (128 KiB)</span> <span class="badge badge-emerald">persisted_clean</span></div>
+    <div><a href="assets/saves/late-game/bpre_deep.sav" download><strong>Download <code>bpre_deep.sav</code></strong></a> (128 KiB)</div>
+  </div>
+  <p style="margin:.2rem 0 .6rem"><strong>Reached State:</strong> CONTINUE shows RED / 99:59 / 8 BADGES -&gt; LIVE in-game Trainer Card displaying all 8 Kanto Gym Badges, 999,999 Pokedollars, 100:00 play time &middot; Checksum: <code>gen3_14sector_folded_sum32 (magic 0x08012025, +0xFF6 u16_le)</code> &middot; Visual diff: <strong>1.82%</strong></p>
+  <div class="gallery">
+    <figure><img src="images/late-game-saves/bpre_baseline.png" alt="BPRE Baseline" loading="lazy"><figcaption>Baseline (Fresh Save)</figcaption></figure>
+    <figure><img src="images/late-game-saves/bpre_ingame.png" alt="BPRE Deep In-Game" loading="lazy"><figcaption>Deep In-Game Warp (Live <code>libmgba</code>)</figcaption></figure>
+  </div>
+</div>
+
+<div class="card" style="text-align:left;margin-bottom:1.1rem;padding:1rem">
+  <div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:.5rem;margin-bottom:.45rem">
+    <div><strong><a href='titles/A3AE-r0-a8bb331a6f0ff7af.html'><strong>Super Mario Advance 3: Yoshi&#x27;s Island (USA)</strong></a></strong> <code>A3AE</code> &middot; <span class="badge badge-blue">EEPROM 64K (8 KiB)</span> <span class="badge badge-emerald">persisted_clean</span></div>
+    <div><a href="assets/saves/late-game/a3ae_deep.sav" download><strong>Download <code>a3ae_deep.sav</code></strong></a> (8 KiB)</div>
+  </div>
+  <p style="margin:.2rem 0 .6rem"><strong>Reached State:</strong> Secret starry nighttime title + FILE A: CLEAR + 99 lives -&gt; LIVE playable World 3-EXTRA (More Monkey Madness) gameplay &middot; Checksum: <code>sum16_le_over_rev8_logical_slot (0x0104 + 0x0284)</code> &middot; Visual diff: <strong>31.53%</strong></p>
+  <div class="gallery">
+    <figure><img src="images/late-game-saves/a3ae_baseline.png" alt="A3AE Baseline" loading="lazy"><figcaption>Baseline (Fresh Save)</figcaption></figure>
+    <figure><img src="images/late-game-saves/a3ae_ingame.png" alt="A3AE Deep In-Game" loading="lazy"><figcaption>Deep In-Game Warp (Live <code>libmgba</code>)</figcaption></figure>
+  </div>
+</div>
+
+<div class="card" style="text-align:left;margin-bottom:1.1rem;padding:1rem">
+  <div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:.5rem;margin-bottom:.45rem">
+    <div><strong><a href='titles/AA2E-r0-63d9fff04c635990.html'><strong>Super Mario Advance 2: Super Mario World (USA, Australia)</strong></a></strong> <code>AA2E</code> &middot; <span class="badge badge-blue">EEPROM 64K (8 KiB)</span> <span class="badge badge-emerald">persisted_clean</span></div>
+    <div><a href="assets/saves/late-game/aa2e_deep.sav" download><strong>Download <code>aa2e_deep.sav</code></strong></a> (8 KiB)</div>
+  </div>
+  <p style="margin:.2rem 0 .6rem"><strong>Reached State:</strong> 96-exit Post-Game EXTRA mode unlocked -&gt; LIVE Autumn/Fall-palette Dinosaur Land overworld with all paths unlocked &middot; Checksum: <code>sum16_le_over_rev8_logical_slot (0x0104 + 0x0284)</code> &middot; Visual diff: <strong>25.07%</strong></p>
+  <div class="gallery">
+    <figure><img src="images/late-game-saves/aa2e_baseline.png" alt="AA2E Baseline" loading="lazy"><figcaption>Baseline (Fresh Save)</figcaption></figure>
+    <figure><img src="images/late-game-saves/aa2e_ingame.png" alt="AA2E Deep In-Game" loading="lazy"><figcaption>Deep In-Game Warp (Live <code>libmgba</code>)</figcaption></figure>
+  </div>
+</div>
+
+<div class="card" style="text-align:left;margin-bottom:1.1rem;padding:1rem">
+  <div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:.5rem;margin-bottom:.45rem">
+    <div><strong><a href='titles/AZWP-r0-c298d2b040ad4f2c.html'><strong>WarioWare, Inc.: Minigame Mania (Europe)</strong></a></strong> <code>AZWP</code> &middot; <span class="badge badge-blue">SRAM (32 KiB)</span> <span class="badge badge-emerald">persisted_clean</span></div>
+    <div><a href="assets/saves/late-game/azwp_deep.sav" download><strong>Download <code>azwp_deep.sav</code></strong></a> (32 KiB)</div>
+  </div>
+  <p style="margin:.2rem 0 .6rem"><strong>Reached State:</strong> Full 200+ microgame grid &amp; 999 high scores unlocked -&gt; LIVE unpaused gameplay in secret post-game PYORO minigame (HIGH SCORE 000999) &middot; Checksum: <code>dual_bank_sum32_le_words (verified by gbakit save verify)</code> &middot; Visual diff: <strong>99.50%</strong></p>
+  <div class="gallery">
+    <figure><img src="images/late-game-saves/azwp_baseline.png" alt="AZWP Baseline" loading="lazy"><figcaption>Baseline (Fresh Save)</figcaption></figure>
+    <figure><img src="images/late-game-saves/azwp_ingame.png" alt="AZWP Deep In-Game" loading="lazy"><figcaption>Deep In-Game Warp (Live <code>libmgba</code>)</figcaption></figure>
+  </div>
+</div>
+
+<div class="card" style="text-align:left;margin-bottom:1.1rem;padding:1rem">
+  <div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:.5rem;margin-bottom:.45rem">
+    <div><strong><a href='titles/BE8E-r0-a106b01154fd72e9.html'><strong>Fire Emblem: The Sacred Stones (USA, Australia)</strong></a></strong> <code>BE8E</code> &middot; <span class="badge badge-blue">SRAM (32 KiB)</span> <span class="badge badge-emerald">persisted_clean</span></div>
+    <div><a href="assets/saves/late-game/be8e_deep.sav" download><strong>Download <code>be8e_deep.sav</code></strong></a> (32 KiB)</div>
+  </div>
+  <p style="margin:.2rem 0 .6rem"><strong>Reached State:</strong> Eirika/Ephraim/Difficult cleared + Creature Campaign -&gt; Support Conversation unlocked in Extras and Sound Room entered live &middot; Checksum: <code>sum16_plus_xor16_le (0x0060 over [0x0000..0x0050))</code> &middot; Visual diff: <strong>99.89%</strong></p>
+  <div class="gallery">
+    <figure><img src="images/late-game-saves/be8e_baseline.png" alt="BE8E Baseline" loading="lazy"><figcaption>Baseline (Fresh Save)</figcaption></figure>
+    <figure><img src="images/late-game-saves/be8e_ingame.png" alt="BE8E Deep In-Game" loading="lazy"><figcaption>Deep In-Game Warp (Live <code>libmgba</code>)</figcaption></figure>
+  </div>
+</div>
+
+<div class="card" style="text-align:left;margin-bottom:1.1rem;padding:1rem">
+  <div style="display:flex;flex-wrap:wrap;justify-content:space-between;align-items:baseline;gap:.5rem;margin-bottom:.45rem">
+    <div><strong><a href='titles/AE7E-r0-0dd1ebbe907e6683.html'><strong>Fire Emblem (USA, Australia)</strong></a></strong> <code>AE7E</code> &middot; <span class="badge badge-blue">SRAM (32 KiB)</span> <span class="badge badge-emerald">persisted_clean</span></div>
+    <div><a href="assets/saves/late-game/ae7e_deep.sav" download><strong>Download <code>ae7e_deep.sav</code></strong></a> (32 KiB)</div>
+  </div>
+  <p style="margin:.2rem 0 .6rem"><strong>Reached State:</strong> Campaign completed + Hector/Hard clear flags -&gt; hidden Extras menu revealed and post-game Sound Room entered live &middot; Checksum: <code>sum16_plus_xor16_le (0x0060 over [0x0000..0x0050))</code> &middot; Visual diff: <strong>17.66%</strong></p>
+  <div class="gallery">
+    <figure><img src="images/late-game-saves/ae7e_baseline.png" alt="AE7E Baseline" loading="lazy"><figcaption>Baseline (Fresh Save)</figcaption></figure>
+    <figure><img src="images/late-game-saves/ae7e_ingame.png" alt="AE7E Deep In-Game" loading="lazy"><figcaption>Deep In-Game Warp (Live <code>libmgba</code>)</figcaption></figure>
+  </div>
+</div>
+
+
+<h2>2. Hidden &amp; Post-Game Mode Unlocks (6 Titles)</h2>
+<p class="meta">Includes playable 1986 NES <em>Metroid</em> in <code>BMXE</code>, Star-Crowned World 6 in <code>A3AE</code>, Sonic Stage Select / Moon Zone in <code>ASOE</code>, Fire Emblem Sound Rooms in <code>AE7E</code>/<code>BE8E</code>, and Golden <code>EXTRA - WORLD 1</code> in <code>AA2E</code>.</p>
+<table>
+  <thead><tr><th>Title &amp; Code</th><th>Media &amp; Checksum</th><th>Unlocked Modes</th><th>Save File</th><th>Locked</th><th>Unlocked / Mode</th></tr></thead>
+  <tbody><tr><td><strong><a href='titles/BMXE-r0-fc94f65380b65b87.html'><strong>Metroid: Zero Mission (USA)</strong></a></strong><br><code>BMXE</code></td><td><code>SRAM (32 KiB)</code><br><code>sum32_le_with_complement</code></td><td>&bull; Original NES Metroid (1986) playable ROM<br>&bull; Sound Test<br>&bull; Image Gallery (Zero Mission + Fusion)<br>&bull; Time Attack &amp; Hard Mode</td><td><a href='assets/saves/late-game/bmxe_unlocked.sav' download><code>bmxe_unlocked.sav</code></a><br><span class='meta'>32 KiB</span></td><td><img src='images/late-game-saves/bmxe_locked.png' alt='BMXE Locked' style='width:144px;image-rendering:pixelated' loading='lazy'></td><td><img src='images/late-game-saves/bmxe_mode.png' alt='BMXE Unlocked' style='width:144px;image-rendering:pixelated' loading='lazy'></td></tr><tr><td><strong><a href='titles/AE7E-r0-0dd1ebbe907e6683.html'><strong>Fire Emblem (USA, Australia)</strong></a></strong><br><code>AE7E</code></td><td><code>SRAM (32 KiB)</code><br><code>sum16_plus_xor16_le</code></td><td>&bull; Extras Menu (hidden on fresh save)<br>&bull; Sound Room<br>&bull; Support Conversation Viewer<br>&bull; Hector Mode / Hard Mode flags</td><td><a href='assets/saves/late-game/ae7e_unlocked.sav' download><code>ae7e_unlocked.sav</code></a><br><span class='meta'>32 KiB</span></td><td><img src='images/late-game-saves/ae7e_locked.png' alt='AE7E Locked' style='width:144px;image-rendering:pixelated' loading='lazy'></td><td><img src='images/late-game-saves/ae7e_mode.png' alt='AE7E Unlocked' style='width:144px;image-rendering:pixelated' loading='lazy'></td></tr><tr><td><strong><a href='titles/BE8E-r0-a106b01154fd72e9.html'><strong>Fire Emblem: The Sacred Stones (USA, Australia)</strong></a></strong><br><code>BE8E</code></td><td><code>SRAM (32 KiB)</code><br><code>sum16_plus_xor16_le</code></td><td>&bull; Support Conversation Viewer in Extras<br>&bull; Sound Room (The Valiant)<br>&bull; Creature Campaign / Difficult Mode clear flags</td><td><a href='assets/saves/late-game/be8e_unlocked.sav' download><code>be8e_unlocked.sav</code></a><br><span class='meta'>32 KiB</span></td><td><img src='images/late-game-saves/be8e_locked.png' alt='BE8E Locked' style='width:144px;image-rendering:pixelated' loading='lazy'></td><td><img src='images/late-game-saves/be8e_mode.png' alt='BE8E Unlocked' style='width:144px;image-rendering:pixelated' loading='lazy'></td></tr><tr><td><strong><a href='titles/ASOE-r0-afc29e3325baf68a.html'><strong>Sonic Advance (USA) (En,Ja)</strong></a></strong><br><code>ASOE</code></td><td><code>Flash 512K (64 KiB)</code><br><code>sum32_le</code></td><td>&bull; Full Stage Select Menu (Zone 1 Act 1 through X-Zone &amp; The Moon Zone)<br>&bull; All 7 Chaos Emeralds (Super Sonic / Extra Zone unlocked)<br>&bull; All 4 Characters Cleared</td><td><a href='assets/saves/late-game/asoe_unlocked.sav' download><code>asoe_unlocked.sav</code></a><br><span class='meta'>64 KiB</span></td><td><img src='images/late-game-saves/asoe_locked.png' alt='ASOE Locked' style='width:144px;image-rendering:pixelated' loading='lazy'></td><td><img src='images/late-game-saves/asoe_unlocked.png' alt='ASOE Unlocked' style='width:144px;image-rendering:pixelated' loading='lazy'></td></tr><tr><td><strong><a href='titles/A3AE-r0-a8bb331a6f0ff7af.html'><strong>Super Mario Advance 3: Yoshi&#x27;s Island (USA)</strong></a></strong><br><code>A3AE</code></td><td><code>EEPROM 64K (8 KiB)</code> <span class='badge badge-purple'>eeprom_rev8</span><br><code>sum16_le_over_rev8_logical_slot</code></td><td>&bull; Secret Star-Crowned Nighttime World 6 Title Screen<br>&bull; All 6 Worlds + Secret &amp; Extra Stages Cleared (100 pts)<br>&bull; FILE A: CLEAR Golden Badge</td><td><a href='assets/saves/late-game/a3ae_unlocked.sav' download><code>a3ae_unlocked.sav</code></a><br><span class='meta'>8 KiB</span></td><td><img src='images/late-game-saves/a3ae_locked.png' alt='A3AE Locked' style='width:144px;image-rendering:pixelated' loading='lazy'></td><td><img src='images/late-game-saves/a3ae_mode.png' alt='A3AE Unlocked' style='width:144px;image-rendering:pixelated' loading='lazy'></td></tr><tr><td><strong><a href='titles/AA2E-r0-63d9fff04c635990.html'><strong>Super Mario Advance 2: Super Mario World (USA, Australia)</strong></a></strong><br><code>AA2E</code></td><td><code>EEPROM 64K (8 KiB)</code> <span class='badge badge-purple'>eeprom_rev8</span><br><code>sum16_le_over_rev8_logical_slot</code></td><td>&bull; Hidden Post-Game EXTRA Mode (Special World / Fall Palette)<br>&bull; Choose a File: `File A ... EXTRA - WORLD 1` golden italic badge</td><td><a href='assets/saves/late-game/aa2e_unlocked.sav' download><code>aa2e_unlocked.sav</code></a><br><span class='meta'>8 KiB</span></td><td><img src='images/late-game-saves/aa2e_locked.png' alt='AA2E Locked' style='width:144px;image-rendering:pixelated' loading='lazy'></td><td><img src='images/late-game-saves/aa2e_unlocked.png' alt='AA2E Unlocked' style='width:144px;image-rendering:pixelated' loading='lazy'></td></tr></tbody>
+</table>
+
+<h2>3. All-5-Media-Type Late-Game Save Matrix (13 Titles, 9 Checksum Algorithms)</h2>
+<table>
+  <thead><tr><th>Title &amp; Code</th><th>Media</th><th>Checksum</th><th>Synthesized Late-Game State</th><th>Save File</th><th>Late-Game Capture</th></tr></thead>
+  <tbody><tr><td><strong><a href='titles/AX4P-r0-8f5f0f3dc8dc2cc5.html'><strong>Super Mario Advance 4: Super Mario Bros. 3</strong></a></strong> <code>AX4P</code></td><td><code>Flash 1M (128 KiB)</code></td><td><code>sum16_le</code></td><td>Unlocked SMB3 World 1-8 progression flags, e-Reader record array, and maxed header state with verified sum16_le checksum.</td><td><a href='assets/saves/late-game/ax4p_lategame.sav' download><code>ax4p_lategame.sav</code></a><br><span class='meta'>128 KiB</span></td><td><img src='images/late-game-saves/ax4p_late_05_stage_gameplay.png' alt='AX4P Late-Game' style='width:144px;image-rendering:pixelated' loading='lazy'></td></tr><tr><td><strong><a href='titles/AWRP-r0-9cc6db0832d7b725.html'><strong>Advance Wars</strong></a></strong> <code>AWRP</code></td><td><code>Flash 512K (64 KiB)</code></td><td><code>sum8_inv</code></td><td>Maxed session counter, War Room / Battle Map unlock flags, and sparse stride progression table with verified sum8_inv guard checksum.</td><td><a href='assets/saves/late-game/awrp_lategame.sav' download><code>awrp_lategame.sav</code></a><br><span class='meta'>64 KiB</span></td><td><img src='images/late-game-saves/awrp_late_04_battlefield.png' alt='AWRP Late-Game' style='width:144px;image-rendering:pixelated' loading='lazy'></td></tr><tr><td><strong><a href='titles/ASOP-r0-a57c8c1a3e19a65b.html'><strong>Sonic Advance</strong></a></strong> <code>ASOP</code></td><td><code>Flash 512K (64 KiB)</code></td><td><code>sum32_le_words</code></td><td>Unlocked all Zones, 7 Chaos Emeralds, Sound Test &amp; Extra Mode flags, and top Time Attack records with verified sum32_le_words checksum.</td><td><a href='assets/saves/late-game/asop_lategame.sav' download><code>asop_lategame.sav</code></a><br><span class='meta'>64 KiB</span></td><td><img src='images/late-game-saves/asop_late_03_zone_gameplay.png' alt='ASOP Late-Game' style='width:144px;image-rendering:pixelated' loading='lazy'></td></tr><tr><td><strong><a href='titles/A3VP-r0-cdf6ec7b755dd42d.html'><strong>Sonic Pinball Party</strong></a></strong> <code>A3VP</code></td><td><code>Flash 512K (64 KiB)</code></td><td><code>sum16_be</code></td><td>Unlocked all pinball boards (Sonic, NiGHTS, Samba de Amigo), maxed Casinopolis counter &amp; leaderboard scores with verified sum16_be checksum.</td><td><a href='assets/saves/late-game/a3vp_lategame.sav' download><code>a3vp_lategame.sav</code></a><br><span class='meta'>64 KiB</span></td><td><img src='images/late-game-saves/a3vp_late_03_pinball_mode.png' alt='A3VP Late-Game' style='width:144px;image-rendering:pixelated' loading='lazy'></td></tr><tr><td><strong><a href='titles/ALUP-r0-8725f545f19362b1.html'><strong>Super Monkey Ball Jr.</strong></a></strong> <code>ALUP</code></td><td><code>EEPROM 64K (8 KiB)</code></td><td><code>crc16_xmodem</code></td><td>Set all 25 progress bitfield bytes to 0xFF (unlocking Master Mode, Expert Extra, and Party Games) plus 999,999 high score with verified CRC16-XMODEM.</td><td><a href='assets/saves/late-game/alup_lategame.sav' download><code>alup_lategame.sav</code></a><br><span class='meta'>8 KiB</span></td><td><img src='images/late-game-saves/alup_late_03_stage_gameplay.png' alt='ALUP Late-Game' style='width:144px;image-rendering:pixelated' loading='lazy'></td></tr><tr><td><strong><a href='titles/B3YP-r0-0dc54e9f679d2dd6.html'><strong>The Legend of Spyro: A New Beginning</strong></a></strong> <code>B3YP</code></td><td><code>EEPROM 64K (8 KiB)</code></td><td><code>rol32_add_le</code></td><td>Activated Slot 0 with maxed breath/upgrade stats and progression counters across 4 verified rol32_add_le checksums.</td><td><a href='assets/saves/late-game/b3yp_lategame.sav' download><code>b3yp_lategame.sav</code></a><br><span class='meta'>8 KiB</span></td><td><img src='images/late-game-saves/b3yp_late_04_stage_action.png' alt='B3YP Late-Game' style='width:144px;image-rendering:pixelated' loading='lazy'></td></tr><tr><td><strong><a href='titles/BHTE-r0-f596a7b90af7504c.html'><strong>Harry Potter and the Prisoner of Azkaban</strong></a></strong> <code>BHTE</code></td><td><code>EEPROM 64K (8 KiB)</code></td><td><code>sum16_be_neg</code></td><td>Populated global Folio Bruti / Wizard Card collection and progression flags with dual verified sum16_be_neg checksums.</td><td><a href='assets/saves/late-game/bhte_lategame.sav' download><code>bhte_lategame.sav</code></a><br><span class='meta'>8 KiB</span></td><td><img src='images/late-game-saves/bhte_late_03_status_menu.png' alt='BHTE Late-Game' style='width:144px;image-rendering:pixelated' loading='lazy'></td></tr><tr><td><strong><a href='titles/AFFE-r0-c952ccc0bd0f6599.html'><strong>Final Fight One</strong></a></strong> <code>AFFE</code></td><td><code>EEPROM 4K (512 B)</code></td><td><code>sum16_be_neg</code></td><td>Unlocked Alpha Cody, Alpha Guy, maxed 9,999,999 high-score records and custom leaderboard entries with verified sum16_be_neg checksum.</td><td><a href='assets/saves/late-game/affe_lategame.sav' download><code>affe_lategame.sav</code></a><br><span class='meta'>512 B</span></td><td><img src='images/late-game-saves/affe_late_03_street_brawl.png' alt='AFFE Late-Game' style='width:144px;image-rendering:pixelated' loading='lazy'></td></tr><tr><td><strong><a href='titles/BD4E-r0-ef59bc4de5806ba1.html'><strong>Crash Bandicoot Purple: Ripto&#x27;s Rampage</strong></a></strong> <code>BD4E</code></td><td><code>EEPROM 4K (512 B)</code></td><td><code>crc16_xmodem</code></td><td>Set all 56 bytes of world/card/minigame unlock bitsets and maxed Wumpa/gem counters with 3 verified CRC16-XMODEM slot checksums.</td><td><a href='assets/saves/late-game/bd4e_lategame.sav' download><code>bd4e_lategame.sav</code></a><br><span class='meta'>512 B</span></td><td><img src='images/late-game-saves/bd4e_late_03_portal_run.png' alt='BD4E Late-Game' style='width:144px;image-rendering:pixelated' loading='lazy'></td></tr><tr><td><strong><a href='titles/BSTE-r0-66f015ab78f4065b.html'><strong>Spyro Orange: The Cortex Conspiracy</strong></a></strong> <code>BSTE</code></td><td><code>EEPROM 4K (512 B)</code></td><td><code>crc16_xmodem</code></td><td>Unlocked all Dragon Realms portals, trading card decks, and maxed gem/counter fields with verified CRC16-XMODEM profile checksum.</td><td><a href='assets/saves/late-game/bste_lategame.sav' download><code>bste_lategame.sav</code></a><br><span class='meta'>512 B</span></td><td><img src='images/late-game-saves/bste_late_03_dragon_realms.png' alt='BSTE Late-Game' style='width:144px;image-rendering:pixelated' loading='lazy'></td></tr><tr><td><strong><a href='titles/AZWP-r0-c298d2b040ad4f2c.html'><strong>WarioWare, Inc.: Minigame Mania</strong></a></strong> <code>AZWP</code></td><td><code>SRAM (32 KiB)</code></td><td><code>sum32_le_words</code></td><td>Unlocked the full WarioWare character roster, 200+ microgame Grid (0x200 table), bonus minigames, and 999 high scores with verified dual-bank sum32_le_words checksum.</td><td><a href='assets/saves/late-game/azwp_lategame.sav' download><code>azwp_lategame.sav</code></a><br><span class='meta'>32 KiB</span></td><td><img src='images/late-game-saves/azwp_late_02_microgame_action.png' alt='AZWP Late-Game' style='width:144px;image-rendering:pixelated' loading='lazy'></td></tr><tr><td><strong><a href='titles/BFZJ-r0-d07edbe5ef2af76f.html'><strong>F-Zero: Falcon Densetsu (GP Legend)</strong></a></strong> <code>BFZJ</code></td><td><code>SRAM (32 KiB)</code></td><td><code>sum32_le</code></td><td>Unlocked Master class, Platinum Cup, Story pilots, and F-Zero machines across 4 verified dual-bank sum32_le checksums.</td><td><a href='assets/saves/late-game/bfzj_lategame.sav' download><code>bfzj_lategame.sav</code></a><br><span class='meta'>32 KiB</span></td><td><img src='images/late-game-saves/bfzj_late_02_race_grid.png' alt='BFZJ Late-Game' style='width:144px;image-rendering:pixelated' loading='lazy'></td></tr><tr><td><strong><a href='titles/AAME-r0-ad9fabaf4398e0f4.html'><strong>Castlevania: Circle of the Moon</strong></a></strong> <code>AAME</code></td><td><code>SRAM (32 KiB)</code></td><td><code>sum8</code></td><td>Populated Dracula&#x27;s Castle late-game save slot (DSS cards, map exploration, Nathan Graves progression) with verified sum8 slot checksum.</td><td><a href='assets/saves/late-game/aame_lategame.sav' download><code>aame_lategame.sav</code></a><br><span class='meta'>32 KiB</span></td><td><img src='images/late-game-saves/aame_late_02_file_select_loaded.png' alt='AAME Late-Game' style='width:144px;image-rendering:pixelated' loading='lazy'></td></tr></tbody>
+</table>
+
+<h2>4. Counterfactual Boundary Fuzzing (85 Titles &middot; 1,766 Trials)</h2>
+<div class="callout">
+  <strong>Empirical Safety Bounds:</strong> Fuzzing <strong>372 fields</strong> across <strong>85 rich titles</strong> in headless <code>libmgba</code> uncovered <strong>19 <code>CRASH_OR_HANG</code></strong> states, <strong>93 <code>CLAMPED_OR_NORMALIZED</code></strong> fields, and <strong>460 <code>REJECTED_OR_RESET</code></strong> thresholds — yielding <strong>25 empirically proven Schema v2 <code>FieldConstraint</code>s</strong> applied across <strong>21 <code>gba-saves</code> definitions</strong> (commit <code>6e30b97d</code>).
+</div>
+<table>
+  <thead><tr><th>Game &amp; Code</th><th>Media</th><th>Field &amp; Offset</th><th>Type</th><th>Verdict</th><th>Proven Constraint</th><th>Observed Trigger / Notes</th></tr></thead>
+  <tbody><tr><td><strong><a href='titles/BOCE-r0-60ee5a1720b5a61f.html'><strong>Urbz, The - Sims in the City (USA, Europe) (En,Fr,De,Es,It,Nl)</strong></a></strong> <code>BOCE</code></td><td><code>flash512</code></td><td><code>language_id</code> @ <code>0xA</code></td><td><code>u8</code></td><td><span class='badge badge-rose'>CRASH_OR_HANG</span></td><td><code>[0..=91]</code></td><td><code>crash_or_hang=[99, 255, 92]; visual_delta=[1, 50, 74, 86, 89, 90]; ghidra_funcs=[&#x27;FUN_0806ba34&#x27;, ...</code></td></tr><tr><td><strong><a href='titles/ALUP-r0-8725f545f19362b1.html'><strong>Super Monkey Ball Jr. (Europe) (En,Fr,De,Es,It)</strong></a></strong> <code>ALUP</code></td><td><code>eeprom8k</code></td><td><code>header_byte_33_persisted_setting</code> @ <code>0x33</code></td><td><code>u8</code></td><td><span class='badge badge-rose'>CRASH_OR_HANG</span></td><td><code>[0..=67]</code></td><td><code>crash_or_hang=[99, 74, 68]; ghidra_funcs=[&#x27;FUN_08008da4&#x27;, &#x27;FUN_08035420&#x27;]</code></td></tr><tr><td><strong><a href='titles/ALPE-r0-0c74d49252fce1e7.html'><strong>Lord of the Rings, The - The Two Towers (USA, Europe) (En,Fr,De,Es,It,Nl)</strong></a></strong> <code>ALPE</code></td><td><code>eeprom512</code></td><td><code>header_settings_byte</code> @ <code>0x17</code></td><td><code>u8</code></td><td><span class='badge badge-rose'>CRASH_OR_HANG</span></td><td><code>[0..=241]</code></td><td><code>crash_or_hang=[255, 245, 242]; visual_delta=[235, 240]; ghidra_funcs=[&#x27;FUN_0804c80c&#x27;, &#x27;FUN_0804c8...</code></td></tr><tr><td><strong><a href='titles/BU7P-r0-85dbd52c64339fa2.html'><strong>Legend of Spyro, The - The Eternal Night (Europe) (En,Fr,De,Es,It,Nl)</strong></a></strong> <code>BU7P</code></td><td><code>eeprom512</code></td><td><code>header_bits6_7</code> @ <code>0xD</code></td><td><code>bitflags</code></td><td><span class='badge badge-rose'>CRASH_OR_HANG</span></td><td><code>mask 0x01</code></td><td><code>crash_or_hang=[15, 255]; visual_delta=[1]; ghidra_funcs=[&#x27;FUN_080016e8&#x27;, &#x27;FUN_080031b8&#x27;]</code></td></tr><tr><td><strong><a href='titles/BLYX-r0-135e13f36b883066.html'><strong>Lemony Snicket&#x27;s A Series of Unfortunate Events (Europe) (Fr,Es)</strong></a></strong> <code>BLYX</code></td><td><code>eeprom512</code></td><td><code>header_counter_candidate</code> @ <code>0xC</code></td><td><code>u16_le</code></td><td><span class='badge badge-blue'>REJECTED_OR_RESET</span></td><td><code>[1..=518]</code></td><td><code>rejected_values=[0]; crash_or_hang=[999, 65535, 751, 627, 565, 534, 519]; visual_delta=[504]; ghi...</code></td></tr><tr><td><strong><a href='titles/AX4P-r0-8f5f0f3dc8dc2cc5.html'><strong>Super Mario Advance 4 - Super Mario Bros. 3 (Europe) (En,Fr,De,Es,It)</strong></a></strong> <code>AX4P</code></td><td><code>flash1m</code></td><td><code>sma4_header_u32_at_0x10</code> @ <code>0x10</code></td><td><code>u32_le</code></td><td><span class='badge badge-blue'>REJECTED_OR_RESET</span></td><td><code>[0..=40960]</code></td><td><code>rejected_values=[4294967295, 2147488647, 1073749323, 536879661, 268444830, 134227414, 67118706]; ...</code></td></tr><tr><td><strong><a href='titles/BMGU-r0-95549077594083a8.html'><strong>Mario Golf - Advance Tour (Australia)</strong></a></strong> <code>BMGU</code></td><td><code>sram</code></td><td><code>slot0_block_size</code> @ <code>0x0</code></td><td><code>u16_le</code></td><td><span class='badge badge-blue'>REJECTED_OR_RESET</span></td><td><code>[1..=4608]</code></td><td><code>rejected_values=[0, 65535, 33267, 17133, 9066, 5032]; ghidra_funcs=[&#x27;FUN_0801494c&#x27;, &#x27;FUN_080156e0&#x27;]</code></td></tr><tr><td><strong><a href='titles/A4NE-r0-ca6cebe7211b6f26.html'><strong>Harvest Moon - Friends of Mineral Town (USA)</strong></a></strong> <code>A4NE</code></td><td><code>sram</code></td><td><code>stamp_a</code> @ <code>0x20</code></td><td><code>u32_le</code></td><td><span class='badge badge-blue'>REJECTED_OR_RESET</span></td><td><code>[0..=128]</code></td><td><code>rejected_values=[9999, 4294967295, 5000, 2500, 1250, 625, 313, 157]; visual_delta=[1]; ghidra_fun...</code></td></tr><tr><td><strong><a href='titles/BHTE-r0-f596a7b90af7504c.html'><strong>Harry Potter and the Prisoner of Azkaban (USA, Europe) (En,Fr,De,Es,It,Nl,Da)</strong></a></strong> <code>BHTE</code></td><td><code>eeprom8k</code></td><td><code>header_byte_0x0D</code> @ <code>0xD</code></td><td><code>u8</code></td><td><span class='badge badge-blue'>REJECTED_OR_RESET</span></td><td><code>[0..=10]</code></td><td><code>rejected_values=[99, 54, 32, 21, 15, 12, 11]; visual_delta=[0, 1, 255]; ghidra_funcs=[&#x27;FUN_08049f...</code></td></tr><tr><td><strong><a href='titles/AHRE-r0-9532eeccbeeb09e3.html'><strong>Harry Potter and the Sorcerer&#x27;s Stone (USA, Europe) (En,Fr,De,Es,It,Nl,Pt,Sv,No,Da)</strong></a></strong> <code>AHRE</code></td><td><code>eeprom512</code></td><td><code>counter_u16_at_0e</code> @ <code>0xE</code></td><td><code>u16_le</code></td><td><span class='badge badge-blue'>REJECTED_OR_RESET</span></td><td><code>[1..=256]</code></td><td><code>rejected_values=[0, 999, 65535, 504, 257]; ghidra_funcs=[&#x27;FUN_08001044&#x27;, &#x27;FUN_080396f4&#x27;]</code></td></tr></tbody>
+</table>
+
+<h2>5. Reproduce &amp; Inspect with <code>gbakit</code></h2>
+<pre><code># Inspect decoded fields, media type, and checksum regions:
+gbakit save inspect ASOP asop_lategame.sav
+
+# Verify checksums and Schema v2 FieldConstraints:
+gbakit save verify ALUP alup_lategame.sav --json
+
+# Safely mutate a field (enforcing empirical FieldConstraints) and auto-repair checksums:
+gbakit save set ALUP alup_lategame.sav --field score_entry_score --value 999999 -o alup_custom.sav</code></pre>
+</main>
+  <footer>gbakit GBA Format Reference &middot; <a href="https://github.com/JidouGhost-TL/gbakit">GitHub: JidouGhost-TL/gbakit</a> &middot; Clean-room GBA binary format specs &amp; Rust toolkit.</footer>
+</body>
+</html>
