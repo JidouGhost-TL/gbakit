@@ -10,7 +10,13 @@
 
 #![deny(unsafe_code)]
 
-use formatkit_core::{Error, Result};
+use formatkit_core::{Endian, Error, Result};
+use formatkit_layout::{
+    pack_counted_offset_array, pack_fixed_record_table, parse_counted_offset_array_metadata,
+    parse_fixed_record_table_counted, CountedOffsetArraySpec, FixedRecordInput,
+    FixedRecordTableSpec, IntFieldSpec, IntWidth, LayoutError, NameEncoding, NameFieldSpec,
+    OffsetBase, PackPolicy, SizeMode, TableTermination,
+};
 use serde::{Deserialize, Serialize};
 
 use crate::relocate::{find_free_space_prefer_ff, patch_rom_pointers};
@@ -301,71 +307,74 @@ fn parse_offset_toc_archive(
         });
     }
 
-    let mut offsets = Vec::with_capacity(count + 1);
-    for i in 0..count {
-        let off = read_u32_le(slice, toc_start + i * 4) as usize;
-        if off < toc_end_no_sentinel || off > slice.len() {
-            return Err(Error::InvalidField {
-                what: "archive_toc_offset",
-                value: off as u64,
-            });
-        }
-        if let Some(&prev) = offsets.last() {
-            if off < prev {
-                return Err(Error::Malformed(format!(
-                    "non-monotonic archive TOC offset at entry {i}: {off} < {prev}"
-                )));
-            }
-        }
-        offsets.push(off);
-    }
-
-    // Check for an explicit (count + 1)-th end-of-archive sentinel offset.
+    let first_off = read_u32_le(slice, toc_start) as usize;
+    let last_off = read_u32_le(slice, toc_start + (count - 1) * 4) as usize;
     let toc_end_with_sentinel = toc_end_no_sentinel + 4;
-    let mut has_end_sentinel = false;
-    if offsets[0] >= toc_end_with_sentinel && toc_end_with_sentinel <= slice.len() {
-        let sentinel = read_u32_le(slice, toc_end_no_sentinel) as usize;
-        let last = offsets[count - 1];
-        if sentinel >= last && sentinel <= slice.len() && (sentinel > offsets[0] || count == 1) {
-            offsets.push(sentinel);
-            has_end_sentinel = true;
-        }
-    }
+    let has_end_sentinel = first_off >= toc_end_with_sentinel
+        && toc_end_with_sentinel <= slice.len()
+        && {
+            let sentinel = read_u32_le(slice, toc_end_no_sentinel) as usize;
+            sentinel >= last_off && sentinel <= slice.len() && (sentinel > first_off || count == 1)
+        };
 
-    let total_size = if has_end_sentinel {
-        *offsets.last().unwrap_or(&toc_end_with_sentinel)
+    let carrier_len = if has_end_sentinel {
+        slice.len()
     } else if scanning {
         // Without a sentinel during a ROM scan, avoid greedy consumption of the entire rest of the ROM.
         // Require at least 2 entries with strictly increasing offsets so random false positives are rejected.
-        if count < 2 || offsets[count - 1] <= offsets[0] {
+        if count < 2 || last_off <= first_off {
             return Err(Error::Malformed(
                 "unbounded archive without sentinel failed scan plausibility check".into(),
             ));
         }
         // Bound the trailing entry to a reasonable estimate (last offset + average entry size, clamped to slice).
-        let span = offsets[count - 1] - offsets[0];
+        let span = last_off - first_off;
         let avg = (span / (count - 1)).max(4);
-        (offsets[count - 1].saturating_add(avg)).min(slice.len())
+        (last_off.saturating_add(avg)).min(slice.len())
     } else {
         slice.len()
     };
 
-    let mut entries = Vec::with_capacity(count);
-    for i in 0..count {
-        let start = offsets[i];
-        let end = if i + 1 < offsets.len() {
-            offsets[i + 1]
-        } else {
-            total_size
-        };
-        let size = end.saturating_sub(start);
-        entries.push(ArchiveEntry {
-            index: i,
-            name: format!("entry_{i:04}"),
-            offset: start,
-            size,
+    let spec = CountedOffsetArraySpec {
+        array_offset: toc_start,
+        count,
+        count_adjust: i32::from(has_end_sentinel),
+        entry_width: IntWidth::U32,
+        endian: Endian::Little,
+        offset_base: OffsetBase::Absolute,
+        offset_unit: 1,
+        trailing_zero_trim: false,
+        has_eof_sentinel: has_end_sentinel,
+        require_monotonic: true,
+        max_entries: MAX_ARCHIVE_ENTRIES + 1,
+    };
+    let spans = parse_counted_offset_array_metadata(slice, &spec, carrier_len as u64)
+        .map_err(|err| map_toc_layout_error(err, rom_offset))?;
+    if spans[0].offset < toc_end_no_sentinel as u64 {
+        return Err(Error::InvalidField {
+            what: "archive_toc_offset",
+            value: spans[0].offset,
         });
     }
+
+    let total_size = if has_end_sentinel {
+        spans
+            .last()
+            .and_then(|s| s.end())
+            .map_or(toc_end_with_sentinel, |end| end as usize)
+    } else {
+        carrier_len
+    };
+
+    let entries = spans
+        .into_iter()
+        .map(|span| ArchiveEntry {
+            index: span.index,
+            name: format!("entry_{:04}", span.index),
+            offset: span.offset as usize,
+            size: span.size as usize,
+        })
+        .collect();
 
     Ok(ParsedArchive {
         format,
@@ -374,6 +383,32 @@ fn parse_offset_toc_archive(
         has_end_sentinel,
         entries,
     })
+}
+
+fn map_toc_layout_error(err: LayoutError, rom_offset: usize) -> Error {
+    match err {
+        LayoutError::Truncated {
+            offset,
+            needed,
+            available,
+        } => Error::Truncated {
+            offset: rom_offset + offset,
+            needed,
+            available,
+        },
+        LayoutError::OutOfBounds { offset, .. } => Error::InvalidField {
+            what: "archive_toc_offset",
+            value: offset,
+        },
+        LayoutError::NonMonotonic {
+            index,
+            previous,
+            current,
+        } => Error::Malformed(format!(
+            "non-monotonic archive TOC offset at entry {index}: {current} < {previous}"
+        )),
+        other => Error::Malformed(other.to_string()),
+    }
 }
 
 /// Parse an `SFCD` (`.mmstr`) archive.
@@ -490,6 +525,16 @@ fn parse_sfcd_variable(slice: &[u8], rom_offset: usize) -> Result<ParsedArchive>
     })
 }
 
+const SFCD_FIXED_SPEC: FixedRecordTableSpec = FixedRecordTableSpec::new(
+    16,
+    8,
+    MAX_ARCHIVE_ENTRIES,
+    Some(IntFieldSpec::u32_le(8)),
+    SizeMode::Stored(IntFieldSpec::u32_le(12)),
+    TableTermination::Counted(0),
+)
+.with_name_field(NameFieldSpec::new(0, 8, NameEncoding::Ascii));
+
 /// Parse a fixed 16-byte-entry `SFCD` archive:
 /// `b"SFCD"` + `u32 count` + `count * (8-byte name + u32 offset + u32 size)`.
 fn parse_sfcd_fixed(slice: &[u8], rom_offset: usize) -> Result<ParsedArchive> {
@@ -511,46 +556,59 @@ fn parse_sfcd_fixed(slice: &[u8], rom_offset: usize) -> Result<ParsedArchive> {
             what: "sfcd_dir_size",
             value: count as u64,
         })?;
-    if dir_end > slice.len() {
-        return Err(Error::Truncated {
-            offset: rom_offset + 8,
-            needed: dir_end - 8,
-            available: slice.len().saturating_sub(8),
-        });
-    }
+    let rows = parse_fixed_record_table_counted(slice, &SFCD_FIXED_SPEC, count).map_err(|err| {
+        match err {
+            LayoutError::Truncated {
+                offset,
+                needed,
+                available,
+            } => Error::Truncated {
+                offset: rom_offset + offset,
+                needed,
+                available,
+            },
+            LayoutError::OutOfBounds {
+                offset,
+                size,
+                data_len,
+                ..
+            } => Error::Truncated {
+                offset: rom_offset + offset as usize,
+                needed: size as usize,
+                available: (data_len as usize).saturating_sub(offset as usize),
+            },
+            LayoutError::InvalidName { index } => Error::Malformed(format!(
+                "non-ASCII bytes in SFCD directory entry {index} name"
+            )),
+            other => Error::Malformed(other.to_string()),
+        }
+    })?;
 
-    let mut entries = Vec::with_capacity(count);
+    let mut entries = Vec::with_capacity(rows.len());
     let mut max_end = dir_end;
-
-    for i in 0..count {
-        let rec_off = 8 + i * 16;
-        let name_raw = &slice[rec_off..rec_off + 8];
-        let name = parse_sfcd_name(name_raw, i)?;
-        let offset = read_u32_le(slice, rec_off + 8) as usize;
-        let size = read_u32_le(slice, rec_off + 12) as usize;
-
+    for row in rows {
+        let name_bytes = row.name.as_deref().unwrap_or(&[]);
+        if !name_bytes.iter().all(|&b| (0x20..=0x7E).contains(&b)) {
+            return Err(Error::Malformed(format!(
+                "non-ASCII bytes in SFCD directory entry {} name",
+                row.index
+            )));
+        }
+        let name = match row.name_str() {
+            Some(s) if !s.is_empty() => s.to_string(),
+            _ => format!("entry_{:04}", row.index),
+        };
+        let offset = row.offset as usize;
+        let size = row.size as usize;
         if size > 0 && offset < dir_end {
             return Err(Error::InvalidField {
                 what: "sfcd_entry_offset",
-                value: offset as u64,
+                value: row.offset,
             });
         }
-        let end = offset.checked_add(size).ok_or(Error::InvalidField {
-            what: "sfcd_entry_end",
-            value: offset as u64,
-        })?;
-        if end > slice.len() {
-            return Err(Error::Truncated {
-                offset: rom_offset + offset,
-                needed: size,
-                available: slice.len().saturating_sub(offset),
-            });
-        }
-        if end > max_end {
-            max_end = end;
-        }
+        max_end = max_end.max(offset + size);
         entries.push(ArchiveEntry {
-            index: i,
+            index: row.index,
             name,
             offset,
             size,
@@ -564,24 +622,6 @@ fn parse_sfcd_fixed(slice: &[u8], rom_offset: usize) -> Result<ParsedArchive> {
         has_end_sentinel: false,
         entries,
     })
-}
-
-fn parse_sfcd_name(raw: &[u8], index: usize) -> Result<String> {
-    let nul_pos = raw.iter().position(|&b| b == 0).unwrap_or(raw.len());
-    let name_bytes = &raw[..nul_pos];
-    if !name_bytes.iter().all(|&b| (0x20..=0x7E).contains(&b)) {
-        return Err(Error::Malformed(format!(
-            "non-ASCII bytes in SFCD directory entry {index} name"
-        )));
-    }
-    let trimmed = std::str::from_utf8(name_bytes)
-        .map_err(|_| Error::Malformed(format!("invalid UTF-8 in SFCD entry {index} name")))?
-        .trim_end();
-    if trimmed.is_empty() {
-        Ok(format!("entry_{index:04}"))
-    } else {
-        Ok(trimmed.to_string())
-    }
 }
 
 // -----------------------------------------------------------------------------
@@ -611,104 +651,87 @@ pub fn pack_archive(format: ArchiveFormat, entries: &[(&str, &[u8])]) -> Result<
 
 fn pack_offset_toc(magic: &[u8], entries: &[(&str, &[u8])]) -> Result<Vec<u8>> {
     let count = entries.len();
-    let header_len = magic.len() + 4 + (count + 1) * 4;
-    let mut cursor = align_up(header_len, DEFAULT_ARCHIVE_ALIGN);
+    let mut header = Vec::with_capacity(magic.len() + 4);
+    header.extend_from_slice(magic);
+    header.extend_from_slice(&(count as u32).to_le_bytes());
 
-    let mut offsets = Vec::with_capacity(count + 1);
-    for &(_, payload) in entries {
-        offsets.push(cursor);
-        cursor = align_up(
-            cursor.checked_add(payload.len()).ok_or(Error::ResourceLimit {
-                resource: "archive_size",
-                requested: u64::MAX,
-                limit: u32::MAX as u64,
-            })?,
-            DEFAULT_ARCHIVE_ALIGN,
-        );
-    }
-    let total_size = cursor;
-    if total_size > u32::MAX as usize {
-        return Err(Error::ResourceLimit {
-            resource: "archive_size",
-            requested: total_size as u64,
-            limit: u32::MAX as u64,
-        });
-    }
-    offsets.push(total_size);
-
-    let mut out = vec![0u8; total_size];
-    out[..magic.len()].copy_from_slice(magic);
-    out[magic.len()..magic.len() + 4].copy_from_slice(&(count as u32).to_le_bytes());
-
-    let toc_start = magic.len() + 4;
-    for (i, &off) in offsets.iter().enumerate() {
-        let pos = toc_start + i * 4;
-        out[pos..pos + 4].copy_from_slice(&(off as u32).to_le_bytes());
-    }
-
-    for (i, &(_, payload)) in entries.iter().enumerate() {
-        let start = offsets[i];
-        out[start..start + payload.len()].copy_from_slice(payload);
-    }
-
-    Ok(out)
+    let spec = CountedOffsetArraySpec {
+        array_offset: header.len(),
+        count,
+        count_adjust: 1,
+        entry_width: IntWidth::U32,
+        endian: Endian::Little,
+        offset_base: OffsetBase::Absolute,
+        offset_unit: 1,
+        trailing_zero_trim: false,
+        has_eof_sentinel: true,
+        require_monotonic: true,
+        max_entries: MAX_ARCHIVE_ENTRIES + 1,
+    };
+    let policy = PackPolicy {
+        data_alignment: DEFAULT_ARCHIVE_ALIGN,
+        pad_final_entry: true,
+        ..PackPolicy::TIGHT
+    };
+    let payloads: Vec<&[u8]> = entries.iter().map(|&(_, p)| p).collect();
+    pack_counted_offset_array(&spec, &policy, &header, &payloads).map_err(map_pack_layout_error)
 }
 
 fn pack_sfcd(entries: &[(&str, &[u8])]) -> Result<Vec<u8>> {
     let count = entries.len();
-    let dir_end = 8 + count * 16;
-    let mut cursor = align_up(dir_end, DEFAULT_ARCHIVE_ALIGN);
+    let mut header = [0u8; 8];
+    header[..4].copy_from_slice(MAGIC_SFCD);
+    header[4..8].copy_from_slice(&(count as u32).to_le_bytes());
 
-    let mut offsets = Vec::with_capacity(count);
-    for (i, &(_, payload)) in entries.iter().enumerate() {
-        offsets.push(cursor);
-        let end = cursor.checked_add(payload.len()).ok_or(Error::ResourceLimit {
+    let names: Vec<Vec<u8>> = entries
+        .iter()
+        .enumerate()
+        .map(|(i, &(name, _))| {
+            let clean: Vec<u8> = name
+                .bytes()
+                .filter(|&b| (0x20..=0x7E).contains(&b))
+                .take(8)
+                .collect();
+            if clean.is_empty() {
+                format!("E{i:07}").into_bytes()
+            } else {
+                clean
+            }
+        })
+        .collect();
+    let inputs: Vec<FixedRecordInput<'_>> = entries
+        .iter()
+        .enumerate()
+        .map(|(i, &(_, payload))| FixedRecordInput {
+            name: Some(names[i].as_slice()),
+            key: None,
+            payload,
+            record_template: None,
+        })
+        .collect();
+    let policy = PackPolicy {
+        data_alignment: DEFAULT_ARCHIVE_ALIGN,
+        pad_final_entry: false,
+        ..PackPolicy::TIGHT
+    };
+    pack_fixed_record_table(&SFCD_FIXED_SPEC, &policy, &header, &inputs)
+        .map_err(map_pack_layout_error)
+}
+
+fn map_pack_layout_error(err: LayoutError) -> Error {
+    match err {
+        LayoutError::ValueOutOfRange { value, max } => Error::ResourceLimit {
+            resource: "archive_size",
+            requested: value,
+            limit: max,
+        },
+        LayoutError::Overflow { .. } => Error::ResourceLimit {
             resource: "archive_size",
             requested: u64::MAX,
             limit: u32::MAX as u64,
-        })?;
-        cursor = if i + 1 < count {
-            align_up(end, DEFAULT_ARCHIVE_ALIGN)
-        } else {
-            end
-        };
+        },
+        other => Error::Malformed(other.to_string()),
     }
-    let total_size = cursor;
-    if total_size > u32::MAX as usize {
-        return Err(Error::ResourceLimit {
-            resource: "archive_size",
-            requested: total_size as u64,
-            limit: u32::MAX as u64,
-        });
-    }
-
-    let mut out = vec![0u8; total_size];
-    out[0..4].copy_from_slice(MAGIC_SFCD);
-    out[4..8].copy_from_slice(&(count as u32).to_le_bytes());
-
-    for (i, &(name, payload)) in entries.iter().enumerate() {
-        let rec_off = 8 + i * 16;
-        let mut name_buf = [0u8; 8];
-        let clean: Vec<u8> = name
-            .bytes()
-            .filter(|&b| (0x20..=0x7E).contains(&b))
-            .take(8)
-            .collect();
-        if clean.is_empty() {
-            let fallback = format!("E{i:07}");
-            name_buf.copy_from_slice(&fallback.as_bytes()[..8]);
-        } else {
-            name_buf[..clean.len()].copy_from_slice(&clean);
-        }
-        out[rec_off..rec_off + 8].copy_from_slice(&name_buf);
-        out[rec_off + 8..rec_off + 12].copy_from_slice(&(offsets[i] as u32).to_le_bytes());
-        out[rec_off + 12..rec_off + 16].copy_from_slice(&(payload.len() as u32).to_le_bytes());
-
-        let start = offsets[i];
-        out[start..start + payload.len()].copy_from_slice(payload);
-    }
-
-    Ok(out)
 }
 
 // -----------------------------------------------------------------------------
