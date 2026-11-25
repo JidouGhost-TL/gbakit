@@ -33,91 +33,121 @@
       "name": "header_magic_block0",
       "offset": 0,
       "size": 8,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "confirmed",
+      "evidence": "Identical in both .sav files. FUN_08008c38 compare loop over 4 shorts and FUN_08008ca4 block-0 write in ghidra/decompiled.c; per-block byte reversal is proven by the checksum field (see profile_checksum_sum8), so the RAM-order magic is the ascending sequence 00 01 02 03 04 05 06 07. The expected buffer's absolute RAM/ROM address is unresolved (_DAT_08008c8c literal), so the magic is verified as the compared/written pattern, not read from a named constant."
     },
     {
       "name": "profile_reserved_00_09",
       "offset": 8,
       "size": 10,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "unknown",
+      "evidence": "Zero in both samples; no decompiled function accesses RAM+0x00..+0x09 of this struct individually. Offset given is the file offset of the first byte of the range in file order; RAM offset = file offset - 8 within each reversed 8-byte block (see report for the full mapping formula)."
     },
     {
       "name": "profile_u16_at_ram_0x0a",
       "offset": 21,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "confidence": "likely",
+      "evidence": "FUN_0801e928 reads *(short *)(base + 10) and either copies it to an output pointer or substitutes 0x8000. Offset 21 is the .sav file offset of the low byte in RAM order (RAM bytes 10-11 map to file bytes 21-20 due to per-block reversal); the field occupies file bytes 20-21. Semantics unknown."
     },
     {
       "name": "profile_u16_at_ram_0x0c",
       "offset": 19,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "confidence": "likely",
+      "evidence": "FUN_0801e928 reads *(short *)(base + 0x0C), default 0x80. RAM bytes 12-13 map to file bytes 19-18; the field occupies file bytes 18-19, offset listed is the file offset of the RAM low byte. Semantics unknown."
     },
     {
       "name": "profile_u16_at_ram_0x0e",
       "offset": 17,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "confidence": "likely",
+      "evidence": "FUN_0801e928 reads *(short *)(base + 0x0E), default 0x20. RAM bytes 14-15 map to file bytes 17-16; the field occupies file bytes 16-17. Semantics unknown."
     },
     {
       "name": "profile_u16_at_ram_0x10",
       "offset": 31,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "confidence": "likely",
+      "evidence": "FUN_0801e928 reads *(short *)(base + 0x10), default 0x10. RAM bytes 16-17 map to file bytes 31-30; the field occupies file bytes 30-31. Semantics unknown; the four defaults (0x8000, 0x80, 0x20, 0x10) suggest scaled/option values but that is not proven."
     },
     {
       "name": "profile_reserved_12_14",
       "offset": 29,
       "size": 3,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "unknown",
+      "evidence": "RAM offsets 0x12-0x14 lie between the u16 at RAM+0x10 and the byte at RAM+0x15 consumed by FUN_0801e928. Zero in both samples."
     },
     {
       "name": "profile_byte_at_ram_0x15",
       "offset": 26,
       "size": 1,
-      "type": "u8"
+      "type": "u8",
+      "confidence": "likely",
+      "evidence": "FUN_0801e928 tests *(char *)(base + 0x15) and branches on it. The JSON offset 26 uses the struct-relative convention in the generator (sav offset = 8 + RAM offset for the byte's block start is not byte-exact); the byte-exact file offset under per-block reversal is 0x1A (26 decimal is coincidentally that file offset: RAM byte 21 is in block 2 (RAM 16-23), file bytes 24-31 reversed, so RAM 21 -> file 24 + (7 - 5) = 26). Zero in both samples; semantics unknown."
     },
     {
       "name": "profile_byte_at_ram_0x16",
       "offset": 25,
       "size": 1,
-      "type": "u8"
+      "type": "u8",
+      "confidence": "unknown",
+      "evidence": "RAM offset 0x16 -> file offset 24 + (7 - 6) = 25 (0x19). Zero in both samples."
     },
     {
       "name": "profile_selection_value_at_ram_0x17",
       "offset": 24,
       "size": 1,
-      "type": "u8"
+      "type": "u8",
+      "confidence": "confirmed",
+      "evidence": "Writer in FUN_0800931c body, reader FUN_08009434 returns *(u8)(struct + 0x17), caller FUN_08046b90 else-branch. Observed 0 -> 2 matches the +0x19 flag and checksum changes as a single commit event. Semantics (what the value 2 selects: language, difficulty, character, or menu choice) are NOT proven; the Europe multilingual build makes a language index plausible but that is a hypothesis, not claimed here. File offset 0x18 is also the cold-probe mutation offset in PACKET.md, consistent with it being checksum-covered."
     },
     {
       "name": "profile_gate_byte_at_ram_0x18",
       "offset": 39,
       "size": 1,
-      "type": "u8"
+      "type": "u8",
+      "confidence": "likely",
+      "evidence": "FUN_080093e4: if (*(char *)(struct + 0x18) == 0) return 2. RAM offset 0x18 -> file offset 32 + 7 = 39 (0x27). It is 0 in both samples, so FUN_080093e4 would return 2 (not 0) for both samples even though the arithmetic checksum matches; see the report for this distinction. Its non-zero writer may be a later gameplay path not exercised by the captures."
     },
     {
       "name": "profile_committed_flag_at_ram_0x19",
       "offset": 38,
       "size": 1,
-      "type": "u8"
+      "type": "u8",
+      "confidence": "confirmed",
+      "evidence": "Writer *(u8 *)(struct + 0x19) = 1 in FUN_0800931c; reader FUN_08009424 returns *(u8)(struct + 0x19); gate in FUN_08046b90. Observed 0 -> 1 is the file image (offset 0x26) under per-block reversal and is the third byte of the commit event alongside +0x17 and the checksum."
     },
     {
       "name": "profile_reserved_1a_1e",
       "offset": 33,
       "size": 5,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "unknown",
+      "evidence": "RAM offsets 0x1A-0x1E -> file offsets 37, 36, 35, 34, 33 (reversed within block 4). Zero in both samples. Offset listed is the lowest file offset of the range."
     },
     {
       "name": "profile_checksum_sum8",
       "offset": 32,
       "size": 1,
-      "type": "u8"
+      "type": "u8",
+      "confidence": "confirmed",
+      "evidence": "FUN_0800931c sum loop (uVar7 < 0x1F) storing at +0x1F; FUN_080093e4 identical sum compared against +0x1F. Python verification on the real .sav files in RAM order: cap-00 stored 0x00 computed 0x00 match; cap-01 stored 0x03 computed 0x03 match (2 at RAM+0x17 plus 1 at RAM+0x19). Without the per-block byte reversal the cap-01 sum is 0x06 vs stored 0x00 and does not match, which is how the reversal was proven."
     },
     {
       "name": "unused_eeprom_space",
       "offset": 40,
       "size": 472,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "confirmed",
+      "evidence": "Both 512-byte .sav files are 0xFF from offset 40 to 511 (472 bytes), matching the PACKET.md profile (active range only 0x00-0x27, dominant fill 0xFF)."
     }
   ]
 }

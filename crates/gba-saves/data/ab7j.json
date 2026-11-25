@@ -25,13 +25,17 @@
       "name": "template_block",
       "offset": 12317,
       "size": 22,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "guessed",
+      "evidence": "Byte-for-byte match against a verbatim ROM-template memcpy is CONFIRMED_STATIC at the mechanism level, but no byte evidence exists of this block ever containing anything other than the static template, so per-field game semantics (e.g. any individual sub-value being a stat/currency/species id) remain unverified hypotheses."
     },
     {
       "name": "checksum",
       "offset": 12339,
       "size": 1,
-      "type": "u8"
+      "type": "u8",
+      "confidence": "confirmed",
+      "evidence": "Independent Python recomputation against saves/cap-01-future-1.sav reproduces the exact stored byte (0x15); see save-format report section 4 for full script and output."
     },
     {
       "name": "reserved",
@@ -43,7 +47,9 @@
       "name": "payload",
       "offset": 12344,
       "size": 82,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "confirmed",
+      "evidence": "82-byte length, RAM buffer address, and all-zero content all match decompiled.c and the real .sav bytes exactly; however since content is always zero in available evidence, no sub-field structure within the payload can be determined."
     }
   ]
 }

@@ -53,79 +53,105 @@
       "name": "sentinel_valid_marker",
       "offset": 0,
       "size": 1,
-      "type": "u8"
+      "type": "u8",
+      "confidence": "confirmed",
+      "evidence": "FUN_08019504 steps 1/3/6/9 write 1 byte to literal 0x0E000000; FUN_08019c70 returns 0 only for 0xEE (0x10 for 0x02, 0x20 for 0x01, 0x40 otherwise); both .sav files hold 0xEE at 0x00"
     },
     {
       "name": "magic_signature",
       "offset": 1,
       "size": 15,
-      "type": "ascii"
+      "type": "ascii",
+      "confidence": "confirmed",
+      "evidence": "FUN_08019cb4 reads 15 bytes and compares against a ROM string (return 4 on mismatch); bytes 59 44 42 54 45 5F 30 30 30 30 5F 4B 43 45 4A present at 0x01 in both .sav files"
     },
     {
       "name": "per_write_leading_field_32",
       "offset": 16,
       "size": 4,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "guessed",
+      "evidence": "Value changes completely between captures while all other payload bytes are identical, and the checksum delta (+159) exactly tracks its byte-sum delta (-159); consistent with per-write random nonce/save ID (LFSR FUN_0803bc68/FUN_0803bc90 is a candidate source, unproven); inconsistent with counter/timer. Existence and checksum coverage are CONFIRMED_VERIFIED, semantics UNKNOWN"
     },
     {
       "name": "payload_flags_rel04_08",
       "offset": 20,
       "size": 5,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "guessed",
+      "evidence": "Data-relative 0x04-0x08; five adjacent 0x01 bytes in both files; field boundaries/semantics unknown, grouping is by non-zero enumeration only"
     },
     {
       "name": "payload_zero_gap_rel09_0b",
       "offset": 25,
       "size": 3,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "unknown",
+      "evidence": "Zero in both near-blank samples; zero-valued fields vs padding indistinguishable"
     },
     {
       "name": "payload_flag_rel0c",
       "offset": 28,
       "size": 1,
-      "type": "u8"
+      "type": "u8",
+      "confidence": "guessed",
+      "evidence": "Data-relative 0x0C; isolated non-zero byte between zero gaps in both files; semantics unknown"
     },
     {
       "name": "payload_flags_rel0e_10",
       "offset": 30,
       "size": 3,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "guessed",
+      "evidence": "Data-relative 0x0E-0x10; contiguous 0x01 run in both files; boundaries/semantics unknown"
     },
     {
       "name": "payload_flag_rel1c",
       "offset": 44,
       "size": 1,
-      "type": "u8"
+      "type": "u8",
+      "confidence": "guessed",
+      "evidence": "Data-relative 0x1C; isolated non-zero byte in both files; semantics unknown"
     },
     {
       "name": "payload_flag_rel26",
       "offset": 54,
       "size": 1,
-      "type": "u8"
+      "type": "u8",
+      "confidence": "guessed",
+      "evidence": "Data-relative 0x26; last non-zero payload byte in both samples; semantics unknown"
     },
     {
       "name": "payload_tail_unexplored",
       "offset": 55,
       "size": 16335,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "unknown",
+      "evidence": "Data-relative 0x27-0x3FF5 (save 0x37-0x4005); membership in checksummed block CONFIRMED_VERIFIED by checksum adjacency proof; all-zero in both near-blank samples, sub-field layout completely unmapped"
     },
     {
       "name": "checksum_copy_a",
       "offset": 16390,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "confidence": "confirmed",
+      "evidence": "(0xFFFF - sum(bytes 0x10..0x4005)) & 0xFFFF equals stored value in both files (Python-verified); FUN_08019cfc compares FUN_08019c44 result against this stored u16 (2 on mismatch)"
     },
     {
       "name": "copy_b_data_mirror",
       "offset": 16392,
       "size": 16374,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "confirmed",
+      "evidence": "Full 16374-byte ranges 0x10-0x4005 and 0x4008-0x7FFD are byte-identical in both .sav files (Python-verified); sub-field semantics inherit copy A UNKNOWN/HYPOTHESIS ratings at data-relative offsets +0x3FF8"
     },
     {
       "name": "checksum_copy_b",
       "offset": 32766,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "confidence": "confirmed",
+      "evidence": "(0xFFFF - sum(bytes 0x4008..0x7FFD)) & 0xFFFF equals stored value in both files (Python-verified); FUN_08019d54 compares against it (boolean mismatch, status bit 0x01)"
     }
   ]
 }

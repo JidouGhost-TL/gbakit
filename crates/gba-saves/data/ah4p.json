@@ -37,109 +37,145 @@
       "name": "magic_version_tag",
       "offset": 0,
       "size": 12,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "confirmed",
+      "evidence": "FUN_080092ec copy loop (len 12) and FUN_080094e0 compare loop (len 12 of a 13-byte copy) both bound to buf+0x00; bytes match cap-01-future-1.sav exactly and match the packet's auto-detected ascii_magic_strings."
     },
     {
       "name": "header_checksum",
       "offset": 12,
       "size": 4,
-      "type": "u32_le"
+      "type": "u32_le",
+      "confidence": "guessed",
+      "evidence": "Offset/trigger proven in code (FUN_08009548, FUN_080092ec both call FUN_080094cc immediately after FUN_08009374). Value verification against cap-01-future-1.sav FAILED for both LE and BE 32-bit-word interpretations of the summed fields (computed 0x000002ea vs stored 0x30313052/0x52303130) -- see SAVE-FORMAT-REPORT.md Sec 4.2 for full Python output."
     },
     {
       "name": "header_field_a",
       "offset": 16,
       "size": 4,
-      "type": "u32_le"
+      "type": "u32_le",
+      "confidence": "likely",
+      "evidence": "Offset proven via *(u32*)(buf+0x10) in both accessor bodies; semantics unknown."
     },
     {
       "name": "header_field_b",
       "offset": 20,
       "size": 4,
-      "type": "u32_le"
+      "type": "u32_le",
+      "confidence": "likely",
+      "evidence": "Offset proven via *(u32*)(buf+0x14) in both accessor bodies; semantics unknown."
     },
     {
       "name": "header_field_c",
       "offset": 24,
       "size": 4,
-      "type": "u32_le"
+      "type": "u32_le",
+      "confidence": "likely",
+      "evidence": "Offset proven via *(u32*)(buf+0x18) in both accessor bodies; semantics unknown."
     },
     {
       "name": "header_field_d",
       "offset": 28,
       "size": 4,
-      "type": "u32_le"
+      "type": "u32_le",
+      "confidence": "likely",
+      "evidence": "Offset proven via *(u32*)(buf+0x1C) in both accessor bodies; semantics unknown."
     },
     {
       "name": "slot_record_0_field_0",
       "offset": 32,
       "size": 4,
-      "type": "u32_le"
+      "type": "u32_le",
+      "confidence": "likely",
+      "evidence": "Offset proven via *(u32*)(buf+0x20+idx*0x10) in accessor bodies; semantics unknown."
     },
     {
       "name": "slot_record_0_field_1",
       "offset": 36,
       "size": 4,
-      "type": "u32_le"
+      "type": "u32_le",
+      "confidence": "likely",
+      "evidence": "Offset proven via *(u32*)(buf+0x24+idx*0x10); semantics unknown."
     },
     {
       "name": "slot_record_0_field_2",
       "offset": 40,
       "size": 4,
-      "type": "u32_le"
+      "type": "u32_le",
+      "confidence": "likely",
+      "evidence": "Offset proven via *(u32*)(buf+0x28+idx*0x10); semantics unknown."
     },
     {
       "name": "slot_record_0_field_3",
       "offset": 44,
       "size": 4,
-      "type": "u32_le"
+      "type": "u32_le",
+      "confidence": "likely",
+      "evidence": "Offset proven via *(u32*)(buf+0x2c+idx*0x10); semantics unknown."
     },
     {
       "name": "slot_record_1_field_0",
       "offset": 48,
       "size": 4,
-      "type": "u32_le"
+      "type": "u32_le",
+      "confidence": "likely",
+      "evidence": "Record stride of 0x10 confirmed by (param_2 & 0xff) * 0x10 term in accessor."
     },
     {
       "name": "slot_record_1_field_1",
       "offset": 52,
       "size": 4,
-      "type": "u32_le"
+      "type": "u32_le",
+      "confidence": "likely",
+      "evidence": "Record stride of 0x10 confirmed."
     },
     {
       "name": "slot_record_1_field_2",
       "offset": 56,
       "size": 4,
-      "type": "u32_le"
+      "type": "u32_le",
+      "confidence": "likely",
+      "evidence": "Record stride of 0x10 confirmed."
     },
     {
       "name": "slot_record_1_field_3",
       "offset": 60,
       "size": 4,
-      "type": "u32_le"
+      "type": "u32_le",
+      "confidence": "likely",
+      "evidence": "Record stride of 0x10 confirmed."
     },
     {
       "name": "slot_record_2_field_0",
       "offset": 64,
       "size": 4,
-      "type": "u32_le"
+      "type": "u32_le",
+      "confidence": "likely",
+      "evidence": "Record stride of 0x10 confirmed; idx loop bound (bVar1 < 3) proven in FUN_080092ec."
     },
     {
       "name": "slot_record_2_field_1",
       "offset": 68,
       "size": 4,
-      "type": "u32_le"
+      "type": "u32_le",
+      "confidence": "likely",
+      "evidence": "Record stride of 0x10 confirmed."
     },
     {
       "name": "slot_record_2_field_2",
       "offset": 72,
       "size": 4,
-      "type": "u32_le"
+      "type": "u32_le",
+      "confidence": "likely",
+      "evidence": "Record stride of 0x10 confirmed."
     },
     {
       "name": "slot_record_2_field_3",
       "offset": 76,
       "size": 4,
-      "type": "u32_le"
+      "type": "u32_le",
+      "confidence": "likely",
+      "evidence": "Record stride of 0x10 confirmed; total struct size 0x20 + 3*0x10 = 0x50 matches the literal length (0x50) passed to both top-level save write/read wrappers."
     }
   ]
 }

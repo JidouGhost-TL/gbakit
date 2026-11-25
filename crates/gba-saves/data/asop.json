@@ -29,85 +29,113 @@
       "name": "magic_signature",
       "offset": 0,
       "size": 4,
-      "type": "ascii"
+      "type": "ascii",
+      "confidence": "confirmed",
+      "evidence": "sav bytes PIRO + FUN_08012ca8 lines 1595/1611 magic compares + FUN_08012d98 line 1698 magic store; literal values themselves unresolved in Ghidra output"
     },
     {
       "name": "header_reserved_0x004",
       "offset": 4,
       "size": 20,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "likely",
+      "evidence": "FUN_0803cd34 (lines 1864-1873) + observed zeros; semantic meaning unknown"
     },
     {
       "name": "header_byte_0x018",
       "offset": 24,
       "size": 1,
-      "type": "u8"
+      "type": "u8",
+      "confidence": "likely",
+      "evidence": "decompiled line 1866 vs sav byte 0x18=0x00"
     },
     {
       "name": "header_flag_0x019",
       "offset": 25,
       "size": 1,
-      "type": "u8"
+      "type": "u8",
+      "confidence": "likely",
+      "evidence": "decompiled line 1893 vs sav byte 0x19=0x01"
     },
     {
       "name": "header_flag_0x01A",
       "offset": 26,
       "size": 1,
-      "type": "u8"
+      "type": "u8",
+      "confidence": "likely",
+      "evidence": "decompiled line 1894 vs sav byte 0x1A=0x01"
     },
     {
       "name": "header_bytes_0x01B_0x01F",
       "offset": 27,
       "size": 5,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "likely",
+      "evidence": "lines 1895-1896 + observed zeros"
     },
     {
       "name": "u32_array_0x020_216_entries",
       "offset": 32,
       "size": 864,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "guessed",
+      "evidence": "216 identical dwords in sav; no explicit store in decompiled.c (searched); semantics (time/score defaults) unproven"
     },
     {
       "name": "dword_0x380",
       "offset": 896,
       "size": 4,
-      "type": "u32_le"
+      "type": "u32_le",
+      "confidence": "unknown",
+      "evidence": "observed zero only"
     },
     {
       "name": "records_10x16B_0x384",
       "offset": 900,
       "size": 160,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "likely",
+      "evidence": "lines 1875-1888 exactly reproduce sav pattern incl. 0xFF at 0x38C,0x39C,...; record9 +12=0xC350 matches *(struct+0x420)=_DAT_0803cdf4 at line 1865 (unresolved literal, inferred 50000)"
     },
     {
       "name": "record_name_subfield",
       "offset": 900,
       "size": 8,
-      "type": "ascii"
+      "type": "ascii",
+      "confidence": "likely",
+      "evidence": "lines 1881-1887 write 0x20 x8 per record; label 'name' is structural hypothesis from space-fill + stride, not proven semantics"
     },
     {
       "name": "record_marker_0xFF_subfield",
       "offset": 908,
       "size": 1,
-      "type": "u8"
+      "type": "u8",
+      "confidence": "likely",
+      "evidence": "line 1878 + sav; likely empty-entry marker (hypothesis on meaning)"
     },
     {
       "name": "record_value_u32_subfield",
       "offset": 912,
       "size": 4,
-      "type": "u32_le"
+      "type": "u32_le",
+      "confidence": "guessed",
+      "evidence": "observed dwords; no gameplay writer in corpus"
     },
     {
       "name": "trailing_zero_0x424",
       "offset": 1060,
       "size": 8,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "likely",
+      "evidence": "line 1897 + sav zeros + checksum covers [0,0x42C)"
     },
     {
       "name": "checksum_sum32",
       "offset": 1068,
       "size": 4,
-      "type": "u32_le"
+      "type": "u32_le",
+      "confidence": "confirmed",
+      "evidence": "Python: sum32 LE [0,0x42C)=0xD24D4116 == stored; FUN_08012fc4 lines 1729-1734"
     }
   ]
 }

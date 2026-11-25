@@ -3,6 +3,8 @@
 
 #![deny(unsafe_code)]
 
+pub mod ead_sma_pool;
+pub mod engine_sw_pool;
 pub mod gax_pool;
 pub mod konami_pool;
 pub mod krawall_pool;
@@ -14,6 +16,7 @@ pub mod rare_pool;
 pub mod rd1_pool;
 pub mod replace;
 pub mod sf2;
+pub mod sonix_pool;
 pub mod southpaw_pool;
 
 pub use cosmigo_sonix;
@@ -30,6 +33,8 @@ pub use rd1_kaede;
 pub use southpaw_audio;
 pub use ::m4a as m4a_core;
 
+pub use ead_sma_pool::*;
+pub use engine_sw_pool::*;
 pub use gax_pool::*;
 pub use konami_pool::*;
 pub use krawall_pool::*;
@@ -38,6 +43,7 @@ pub use musyx_pool::*;
 pub use paragon5_pool::*;
 pub use rare_pool::*;
 pub use rd1_pool::*;
+pub use sonix_pool::*;
 pub use southpaw_pool::*;
 
 #[cfg(test)]

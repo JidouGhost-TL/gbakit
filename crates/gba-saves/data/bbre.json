@@ -39,85 +39,113 @@
       "name": "header_word0",
       "offset": 0,
       "size": 4,
-      "type": "u32_le"
+      "type": "u32_le",
+      "confidence": "confirmed",
+      "evidence": "Bytes 00 00 00 00 at 0x00 in both .sav (Python-verified); FUN_0801239c calls FUN_08019a3c(param_1+4) after FUN_0802100c(param_1+4). RAM absolute address unknown: save object base is _DAT_0800c330 literal, absent from corpus; image at base+4."
     },
     {
       "name": "header_magic_or_id",
       "offset": 4,
       "size": 4,
-      "type": "u32_le"
+      "type": "u32_le",
+      "confidence": "guessed",
+      "evidence": "Bytes 60 0d d0 62 at 0x04 in both files, duplicated at 0x0c (Python-verified equal). Code-verification incomplete: 0x08019a6c compares one header dword but corpus lacks _DAT_08019a7c/_DAT_08019a80 values, so which word/constant cannot be proven. Non-ASCII binary value."
     },
     {
       "name": "header_sentinel_reserved",
       "offset": 8,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "confidence": "confirmed",
+      "evidence": "Bytes ff ff at 0x08 in both files; no function in decompiled.c tests this offset individually (only bulk read)."
     },
     {
       "name": "header_reserved_zero",
       "offset": 10,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "confidence": "unknown",
+      "evidence": "Bytes 00 00 at 0x0a in both files; no specific reader/writer in corpus beyond bulk read."
     },
     {
       "name": "header_magic_copy",
       "offset": 12,
       "size": 4,
-      "type": "u32_le"
+      "type": "u32_le",
+      "confidence": "guessed",
+      "evidence": "Bytes identical to 0x04 in both files (Python-verified). No comparison of the two copies found in 225 decompiled functions."
     },
     {
       "name": "block2_zero_field",
       "offset": 16,
       "size": 8,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "unknown",
+      "evidence": "8 zero bytes at 0x10-0x17 in both files."
     },
     {
       "name": "payload_prefix_zero",
       "offset": 24,
       "size": 4,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "unknown",
+      "evidence": "Bytes 00 00 00 00 at 0x18-0x1b in both files."
     },
     {
       "name": "counter_or_setting_a",
       "offset": 28,
       "size": 2,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "guessed",
+      "evidence": "Only non-header nonzero payload bytes together with offset 0x1e; Python-verified. No traced function addresses this field individually."
     },
     {
       "name": "counter_or_setting_b",
       "offset": 30,
       "size": 2,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "guessed",
+      "evidence": "Bytes 00 05 at 0x1e-0x1f in both files (Python-verified)."
     },
     {
       "name": "zero_payload",
       "offset": 32,
       "size": 56,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "unknown",
+      "evidence": "56 zero bytes at 0x20-0x57 in both files; no traced per-field access."
     },
     {
       "name": "late_zero_block_58",
       "offset": 88,
       "size": 8,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "confirmed",
+      "evidence": "Byte diff sav-00->sav-01: 0x58-0x5f all ff->00 (11-byte diff total, Python-verified)."
     },
     {
       "name": "block60_head_erased",
       "offset": 96,
       "size": 5,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "unknown",
+      "evidence": "Bytes ff at 0x60-0x64 in both files."
     },
     {
       "name": "late_zero_field_65",
       "offset": 101,
       "size": 3,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "confirmed",
+      "evidence": "Byte diff 0x65-0x67 ff->00 (Python-verified); surrounding 0x60-0x64 remain ff."
     },
     {
       "name": "unused_erased_tail",
       "offset": 104,
       "size": 408,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "confirmed",
+      "evidence": "All bytes 0x68-0x1ff are ff in both 512-byte files (Python scan, last non-FF index 0x57 / 0x67)."
     }
   ]
 }

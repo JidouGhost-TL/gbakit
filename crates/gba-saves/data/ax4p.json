@@ -91,97 +91,129 @@
       "name": "sma4_magic",
       "offset": 0,
       "size": 8,
-      "type": "ascii"
+      "type": "ascii",
+      "confidence": "confirmed",
+      "evidence": "FUN_0803b0dc 8-byte loop called in FUN_0803bc5c; bytes verbatim in both populated saves both copies"
     },
     {
       "name": "sma4_checksum",
       "offset": 8,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "confidence": "confirmed",
+      "evidence": "Python: (sum(block)-byte8-byte9)&0xFFFF == stored for both copies/saves"
     },
     {
       "name": "sma4_header_u32_at_0x0c",
       "offset": 12,
       "size": 4,
-      "type": "u32_le"
+      "type": "u32_le",
+      "confidence": "likely",
+      "evidence": "Constant 0x4E20 in all copies; semantics unknown (matches neither block nor media size)"
     },
     {
       "name": "sma4_header_u32_at_0x10",
       "offset": 16,
       "size": 4,
-      "type": "u32_le"
+      "type": "u32_le",
+      "confidence": "guessed",
+      "evidence": "Constant 3 across captures; version/count semantics unproven"
     },
     {
       "name": "sma4_header_bytes_0x18",
       "offset": 24,
       "size": 4,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "guessed",
+      "evidence": "Two 0xFF sentinels; covered by checksum so probe mutation at 0x1A must fail integrity"
     },
     {
       "name": "sma4_record_array",
       "offset": 120,
       "size": 1512,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "confirmed",
+      "evidence": "Layout: stride-0x15 alignment from 0x78 hits 72/72 at byte+8; semantics (per-level/world progress) UNKNOWN — no progressed capture"
     },
     {
       "name": "sma4_tail_u16_group_0x728",
       "offset": 1832,
       "size": 8,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "guessed",
+      "evidence": "Only non-zero u16 group in block tail (block offsets 0x728-0x72F); no diff capture"
     },
     {
       "name": "sma4_tail_sentinels",
       "offset": 1849,
       "size": 1,
-      "type": "u8"
+      "type": "u8",
+      "confidence": "guessed",
+      "evidence": "Isolated 0xFF bytes; last non-zero byte at block offset 0x7D2, rest to 0xFFF zero"
     },
     {
       "name": "m3p0_magic",
       "offset": 0,
       "size": 4,
-      "type": "ascii"
+      "type": "ascii",
+      "confidence": "confirmed",
+      "evidence": "12 head positions verbatim in populated saves"
     },
     {
       "name": "m3p0_checksum",
       "offset": 4,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "confidence": "confirmed",
+      "evidence": "Python verified all 6 blocks both saves; halves differ only in these 2 bytes"
     },
     {
       "name": "m3p0_slot_index",
       "offset": 8,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "confidence": "confirmed",
+      "evidence": "Populated M3P0 blocks differ only at +0x04,+0x08,+0x808; sector selection uses separate RAM counter in FUN_0803c308/FUN_0803d440"
     },
     {
       "name": "m3p0_payload_half",
       "offset": 12,
       "size": 2036,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "likely",
+      "evidence": "Layout proven by FUN_0803c91c/FUN_0803c6b0 and .sav texture; all field semantics UNKNOWN (no progressed diff)"
     },
     {
       "name": "m3p0_second_half",
       "offset": 2048,
       "size": 2048,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "confirmed",
+      "evidence": "Per-block half diff = exactly 2 bytes in both saves"
     },
     {
       "name": "s4cp_magic",
       "offset": 0,
       "size": 4,
-      "type": "ascii"
+      "type": "ascii",
+      "confidence": "confirmed",
+      "evidence": "FUN_0803b124 4-byte loop; bytes verbatim in saves"
     },
     {
       "name": "s4cp_checksum",
       "offset": 4,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "confidence": "confirmed",
+      "evidence": "Python verified all completed copies; 2 mid-write copies match after erased-tail (0xFF->0x00) correction"
     },
     {
       "name": "s4cp_payload",
       "offset": 8,
       "size": 4088,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "unknown",
+      "evidence": "Emptiness verified in .sav; semantics unknown — may be default state or assembled outside trace"
     }
   ]
 }

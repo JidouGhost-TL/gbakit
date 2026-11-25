@@ -40,97 +40,129 @@
       "name": "status_commit_byte",
       "offset": 0,
       "size": 1,
-      "type": "u8"
+      "type": "u8",
+      "confidence": "confirmed",
+      "evidence": "Writer bodies store immediates 1/2/3/0 to 0x0e000000; FUN_08005a84 gates on <3; observed 0x00"
     },
     {
       "name": "magic_ascii",
       "offset": 1,
       "size": 15,
-      "type": "ascii"
+      "type": "ascii",
+      "confidence": "confirmed",
+      "evidence": "FUN_08005ecc length 0xf; FUN_08005ee4 15-byte compare; string at sav offset 1"
     },
     {
       "name": "payload_index_byte_array",
       "offset": 16,
       "size": 958,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "guessed",
+      "evidence": "Sparse 0/1 byte-per-index shape fits card ownership/count flags; semantics unproven with one populated sample. Copy B mirror at +0x3fe0"
     },
     {
       "name": "list_header_pair",
       "offset": 974,
       "size": 4,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "guessed",
+      "evidence": "Immediately precedes 40xu16 list at 0x3d2; candidate count/length pair"
     },
     {
       "name": "u16_list_40",
       "offset": 978,
       "size": 80,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "guessed",
+      "evidence": "Entry count 40 matches FUN_08013abc 0x28-entry copy; values mostly ascending 0x0150-0x02a9 (card-ID-like), tail unsorted incl. 0x0640,0x0000 - internal boundaries UNKNOWN"
     },
     {
       "name": "byte_after_list_0x48",
       "offset": 1058,
       "size": 1,
-      "type": "u8"
+      "type": "u8",
+      "confidence": "guessed",
+      "evidence": "Value equals FUN_08013800 constant; semantic identity unknown"
     },
     {
       "name": "reserved_zero_0x423",
       "offset": 1059,
       "size": 107,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "unknown",
+      "evidence": "Zero gap, no distinct code reference"
     },
     {
       "name": "flag_0x48e",
       "offset": 1166,
       "size": 1,
-      "type": "u8"
+      "type": "u8",
+      "confidence": "guessed",
+      "evidence": "Isolated 0x01 in zero region; semantics unknown"
     },
     {
       "name": "table_0x385_candidate",
       "offset": 1167,
       "size": 901,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "guessed",
+      "evidence": "Region length exactly 0x385 matching FUN_08004134 copy length; alignment unproven (all zero, RAM addr unresolved)"
     },
     {
       "name": "counter_u16_0x814",
       "offset": 2068,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "confidence": "guessed",
+      "evidence": "Only payload scalar outside list region; round value 500 fits currency/points counter. Copy B at 0x47f4"
     },
     {
       "name": "reserved_zero_0x816",
       "offset": 2070,
       "size": 38,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "unknown",
+      "evidence": "Zero gap"
     },
     {
       "name": "flag_0x83c",
       "offset": 2108,
       "size": 1,
-      "type": "u8"
+      "type": "u8",
+      "confidence": "guessed",
+      "evidence": "Last nonzero payload byte; isolated 0x01"
     },
     {
       "name": "payload_zero_tail",
       "offset": 2109,
       "size": 14305,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "likely",
+      "evidence": "Extent fixed by checksum covered range ending at stored offset 0x401e; contributes 0 to sum on this sample"
     },
     {
       "name": "checksum_a",
       "offset": 16414,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "confidence": "confirmed",
+      "evidence": "Python: computed 0x112e == stored 0x112e. Overlaps copy B payload +0x2e"
     },
     {
       "name": "payload_copy_b",
       "offset": 16368,
       "size": 16398,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "confirmed",
+      "evidence": "Python byte diff of [0x10,0x401e) vs [0x3ff0,0x7ffe): only offsets 0x3e,0x3f (A-relative) differ. Backup role is HYPOTHESIS"
     },
     {
       "name": "checksum_b",
       "offset": 32766,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "confidence": "confirmed",
+      "evidence": "Stored 0x112e; RAM-view computed 0x112e (raw on-disk sum 0x116d due to overlap, delta exactly 0x3f)"
     }
   ]
 }

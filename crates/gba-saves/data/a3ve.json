@@ -27,85 +27,113 @@
       "name": "magic_signature",
       "offset": 0,
       "size": 8,
-      "type": "ascii"
+      "type": "ascii",
+      "confidence": "confirmed",
+      "evidence": "Identical bytes 534f4e49435f5042 present at absolute offset 0x0000 and 0x1000 in both saves/cap-00-future-0.sav and saves/cap-01-future-1.sav."
     },
     {
       "name": "sequence_counter",
       "offset": 8,
       "size": 4,
-      "type": "u32_le"
+      "type": "u32_le",
+      "confidence": "confirmed",
+      "evidence": "Byte-level diff: cap-00 slot0 == cap-01 slot0 exactly; cap-01 slot0 vs slot1 differ only at this 4-byte field (0x01000000 -> 0x02000000 as raw LE32)."
     },
     {
       "name": "reserved_block_0x0c",
       "offset": 12,
       "size": 8,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "guessed",
+      "evidence": "Constant zero in all observed samples; no mutation evidence available to confirm purpose."
     },
     {
       "name": "unknown_counter_0x14",
       "offset": 20,
       "size": 4,
-      "type": "u32_le"
+      "type": "u32_le",
+      "confidence": "guessed",
+      "evidence": "Constant value 0x64 (100 decimal) across both samples; value of 100 is suggestive of a percentage/max-count default but unconfirmed."
     },
     {
       "name": "unknown_pair_0x18",
       "offset": 24,
       "size": 4,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "guessed",
+      "evidence": "Constant across both samples."
     },
     {
       "name": "unknown_pair_0x1c",
       "offset": 28,
       "size": 4,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "guessed",
+      "evidence": "Constant across both samples."
     },
     {
       "name": "unknown_pair_0x20",
       "offset": 32,
       "size": 4,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "guessed",
+      "evidence": "Constant across both samples."
     },
     {
       "name": "option_flags_0x2c",
       "offset": 44,
       "size": 4,
-      "type": "bitflags"
+      "type": "bitflags",
+      "confidence": "guessed",
+      "evidence": "Constant across both samples; plausibly option/menu toggles given this is a multi-language (En,Ja,Fr,De,Es,It) release, but not confirmed by any code reference."
     },
     {
       "name": "option_flags_0xcc",
       "offset": 204,
       "size": 3,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "guessed",
+      "evidence": "Constant across both samples; mirrors the 0x2c cluster pattern."
     },
     {
       "name": "highscore_table_board1",
       "offset": 560,
       "size": 320,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "confirmed",
+      "evidence": "Parsed directly from saves/cap-00-future-0.sav bytes 0x230-0x36f with struct.unpack_from; confirmed exact arithmetic progression (constant -50,000,000 step) across all transitions."
     },
     {
       "name": "highscore_table_board2",
       "offset": 880,
       "size": 320,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "confirmed",
+      "evidence": "data[0x370:0x4B0] == data[0x230:0x370] verified by direct Python equality check."
     },
     {
       "name": "highscore_table_board3",
       "offset": 1200,
       "size": 320,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "confirmed",
+      "evidence": "data[0x4B0:0x5F0] == data[0x230:0x370] verified by direct Python equality check."
     },
     {
       "name": "highscore_table_board4_or_counter",
       "offset": 1520,
       "size": 320,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "guessed",
+      "evidence": "Byte-range diff against the canonical 320-byte block isolates exactly one differing 4-byte field; semantic interpretation (4th leaderboard vs. a plays/credits counter reusing the struct slot) is unresolved."
     },
     {
       "name": "sector_trailer",
       "offset": 4094,
       "size": 2,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "unknown",
+      "evidence": "Constant 0x0139 (BE)/0x3901(LE) across both generations despite body mutation at offset 0x08, which rules out a whole-sector-body checksum under every tested formula."
     }
   ]
 }

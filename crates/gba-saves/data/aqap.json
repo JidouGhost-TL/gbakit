@@ -45,85 +45,113 @@
       "name": "header_zero_0x00",
       "offset": 0,
       "size": 10,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "likely",
+      "evidence": "decompiled.c:1263,1202-1210; sav bytes 0x00-0x09=0x00"
     },
     {
       "name": "header_flag_0x0a",
       "offset": 10,
       "size": 1,
-      "type": "u8"
+      "type": "u8",
+      "confidence": "confirmed",
+      "evidence": "decompiled.c:1264 AND sav[0x0a]=0x01 in cap-01, 0xff in blank cap-00"
     },
     {
       "name": "header_zero_0x0b",
       "offset": 11,
       "size": 9,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "likely",
+      "evidence": "decompiled.c:1202-1210,1263; sav 0x0b-0x13=0x00"
     },
     {
       "name": "header_empty_name_0x14",
       "offset": 20,
       "size": 8,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "confirmed",
+      "evidence": "decompiled.c:1265-1273 AND sav 0x14-0x1b=0x6d*8"
     },
     {
       "name": "header_sentinel_0x1c",
       "offset": 28,
       "size": 1,
-      "type": "u8"
+      "type": "u8",
+      "confidence": "likely",
+      "evidence": "decompiled.c:1274; sav[0x1c]=0xff"
     },
     {
       "name": "reserved_zero_0x1d_0x66b",
       "offset": 29,
       "size": 1615,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "guessed",
+      "evidence": "sav 0x1d-0x66b all 0x00; no _DAT-resolved accessor in decompiled.c"
     },
     {
       "name": "tableA_records_50x24",
       "offset": 1708,
       "size": 1200,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "confirmed",
+      "evidence": "Record layout/stride/count and sav pattern at 0x66c+ i*0x18 match exactly for all 50 records; +6/+7 vary as encoded text/digits, rec48 differs"
     },
     {
       "name": "gap_0xb1c_0xbfb",
       "offset": 2844,
       "size": 224,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "likely",
+      "evidence": "sav all zero; table ends computed from code counts/strides"
     },
     {
       "name": "tableB_records_50x32",
       "offset": 3068,
       "size": 1600,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "confirmed",
+      "evidence": "decompiled.c:1315-1319,1124-1145 (FUN_08029140) AND sav repeating 1d0a140a1b0aff strings + varying u32s (1800,9600,2400,12600...) at 0xbfc+i*0x20"
     },
     {
       "name": "gap_0x123c_0x1367",
       "offset": 4668,
       "size": 300,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "likely",
+      "evidence": "sav all zero"
     },
     {
       "name": "tableC_records_32x120",
       "offset": 4968,
       "size": 3840,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "confirmed",
+      "evidence": "decompiled.c:1328-1348 AND sav pattern repeats identically for all 32 records at 0x1368+i*0x78, ending 0x2268"
     },
     {
       "name": "tail_zero_0x2268_0x2c07",
       "offset": 8808,
       "size": 2464,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "likely",
+      "evidence": "sav 0x2268-0x2c07 all 0x00, 0x2c08 onward all 0xff => flush length reaches exactly 0x2c08"
     },
     {
       "name": "erased_region_0x2c08_0x7fff",
       "offset": 11272,
       "size": 21496,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "confirmed",
+      "evidence": "sav bytes; only SRAM write in corpus is FUN_0802b904 flush at decompiled.c:1352 plus 4-byte clamp writes in FUN_0802b7ec"
     },
     {
       "name": "saved_index_u16_0_to_5",
       "offset": 0,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "confidence": "unknown",
+      "evidence": "decompiled.c:1366-1382,893-932; size/offset in JSON are placeholders 2/0 - see open_questions"
     }
   ]
 }

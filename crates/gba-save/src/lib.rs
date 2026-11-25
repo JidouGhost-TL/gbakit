@@ -8,7 +8,7 @@
 #![deny(unsafe_code)]
 
 use std::borrow::Cow;
-use std::collections::HashSet;
+use std::collections::{BTreeMap, HashMap, HashSet};
 use std::fmt;
 
 use formatkit_core::checksum::{Crc16, Crc16Params, FoldChecksum, FoldOp, FoldUnit};
@@ -645,6 +645,72 @@ pub struct FieldCondition {
     pub value: serde_json::Value,
 }
 
+/// Provenance confidence level for a save field.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum FieldConfidence {
+    #[serde(
+        alias = "CONFIRMED",
+        alias = "CONFIRMED_VERIFIED",
+        alias = "confirmed_verified"
+    )]
+    Confirmed,
+    #[serde(
+        alias = "LIKELY",
+        alias = "CONFIRMED_STATIC",
+        alias = "confirmed_static"
+    )]
+    Likely,
+    #[serde(alias = "GUESSED", alias = "HYPOTHESIS", alias = "hypothesis")]
+    Guessed,
+    #[serde(alias = "UNKNOWN")]
+    Unknown,
+}
+
+/// Declarative domain constraint enforced on field edits and validation.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(tag = "kind", rename_all = "kebab-case")]
+pub enum FieldConstraint {
+    /// Inclusive unsigned integer range `[minimum, maximum]`.
+    UnsignedRange { minimum: u64, maximum: u64 },
+    /// Inclusive signed integer range `[minimum, maximum]`.
+    SignedRange { minimum: i64, maximum: i64 },
+    /// Discrete set of valid integer values with optional human-readable labels.
+    Enum {
+        values: Vec<u64>,
+        #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+        labels: BTreeMap<String, String>,
+    },
+    /// Valid bitmask for `bitflags` fields plus optional bit-index labels.
+    Bitmask {
+        valid_mask: u64,
+        #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+        flag_labels: BTreeMap<String, String>,
+    },
+    /// Packed Binary-Coded Decimal (2 decimal digits per byte).
+    PackedBcd {
+        digits: u8,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        minimum: Option<u64>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        maximum: Option<u64>,
+    },
+    /// Allowed character set and/or maximum length for `ascii` fields.
+    AsciiCharset {
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        allowed: Option<String>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        max_len: Option<usize>,
+    },
+}
+
+/// Group of non-overlapping mirror/backup copies of the same logical field.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct CopyGroup {
+    pub name: String,
+    pub fields: Vec<String>,
+}
+
 /// Declarative specification of one named field inside a save image.
 #[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
 pub struct FieldSpec {
@@ -659,6 +725,12 @@ pub struct FieldSpec {
     pub bitfield_array: Option<BitfieldArraySpec>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub condition: Option<FieldCondition>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub constraint: Option<FieldConstraint>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub confidence: Option<FieldConfidence>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub evidence: Option<String>,
 }
 
 fn is_false(b: &bool) -> bool {
@@ -698,6 +770,8 @@ pub struct SaveDefinition {
     pub checksums: Vec<ChecksumSpec>,
     #[serde(default)]
     pub fields: Vec<FieldSpec>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub copy_groups: Vec<CopyGroup>,
 }
 
 impl SaveDefinition {
@@ -854,10 +928,401 @@ impl SaveDefinition {
                     )));
                 }
             }
+            if let Some(constraint) = &field.constraint {
+                validate_field_constraint_spec(field, constraint)?;
+            }
+        }
+
+        // Validate copy_groups: unique non-empty names, >=2 unique existing fields,
+        // no field in multiple groups, identical field_type & size, non-overlapping spans.
+        let field_map: HashMap<&str, &FieldSpec> =
+            self.fields.iter().map(|f| (f.name.as_str(), f)).collect();
+        let mut seen_groups = HashSet::new();
+        let mut assigned_fields = HashSet::new();
+        for group in &self.copy_groups {
+            if group.name.is_empty() {
+                return Err(Error::Malformed("copy_group name must not be empty".into()));
+            }
+            if !seen_groups.insert(group.name.as_str()) {
+                return Err(Error::Malformed(format!(
+                    "duplicate copy_group name {:?}",
+                    group.name
+                )));
+            }
+            if group.fields.len() < 2 {
+                return Err(Error::Malformed(format!(
+                    "copy_group {:?} must reference at least 2 fields",
+                    group.name
+                )));
+            }
+            let mut group_specs: Vec<&FieldSpec> = Vec::with_capacity(group.fields.len());
+            let mut group_members = HashSet::new();
+            for fname in &group.fields {
+                if !group_members.insert(fname.as_str()) {
+                    return Err(Error::Malformed(format!(
+                        "copy_group {:?} lists duplicate field {:?}",
+                        group.name, fname
+                    )));
+                }
+                if !assigned_fields.insert(fname.as_str()) {
+                    return Err(Error::Malformed(format!(
+                        "field {:?} appears in multiple copy_groups",
+                        fname
+                    )));
+                }
+                let spec = field_map.get(fname.as_str()).copied().ok_or_else(|| {
+                    Error::Malformed(format!(
+                        "copy_group {:?} references unknown field {:?}",
+                        group.name, fname
+                    ))
+                })?;
+                group_specs.push(spec);
+            }
+            let first = group_specs[0];
+            for spec in &group_specs[1..] {
+                if spec.field_type != first.field_type || spec.size != first.size {
+                    return Err(Error::Malformed(format!(
+                        "copy_group {:?} field {:?} ({:?}, {} bytes) does not match {:?} ({:?}, {} bytes)",
+                        group.name,
+                        spec.name,
+                        spec.field_type,
+                        spec.size,
+                        first.name,
+                        first.field_type,
+                        first.size
+                    )));
+                }
+            }
+            for i in 0..group_specs.len() {
+                for j in (i + 1)..group_specs.len() {
+                    let a = group_specs[i];
+                    let b = group_specs[j];
+                    let a_end = a.offset + a.size;
+                    let b_end = b.offset + b.size;
+                    if a.offset < b_end && b.offset < a_end {
+                        return Err(Error::Malformed(format!(
+                            "copy_group {:?} fields {:?} and {:?} overlap",
+                            group.name, a.name, b.name
+                        )));
+                    }
+                }
+            }
         }
 
         Ok(())
     }
+}
+
+fn unsigned_type_max(ft: FieldType) -> Option<u64> {
+    match ft {
+        FieldType::U8 => Some(u64::from(u8::MAX)),
+        FieldType::U16Le => Some(u64::from(u16::MAX)),
+        FieldType::U32Le => Some(u64::from(u32::MAX)),
+        _ => None,
+    }
+}
+
+fn validate_field_constraint_spec(field: &FieldSpec, constraint: &FieldConstraint) -> Result<()> {
+    match constraint {
+        FieldConstraint::UnsignedRange { minimum, maximum } => {
+            let max_allowed = unsigned_type_max(field.field_type).ok_or_else(|| {
+                Error::Malformed(format!(
+                    "unsigned-range constraint on field {:?} requires u8/u16_le/u32_le, got {:?}",
+                    field.name, field.field_type
+                ))
+            })?;
+            if minimum > maximum || *maximum > max_allowed {
+                return Err(Error::Malformed(format!(
+                    "invalid unsigned-range [{minimum}, {maximum}] for field {:?} (max {max_allowed})",
+                    field.name
+                )));
+            }
+        }
+        FieldConstraint::SignedRange { minimum, maximum } => {
+            if field.field_type != FieldType::I16Le {
+                return Err(Error::Malformed(format!(
+                    "signed-range constraint on field {:?} requires i16_le, got {:?}",
+                    field.name, field.field_type
+                )));
+            }
+            if minimum > maximum
+                || *minimum < i64::from(i16::MIN)
+                || *maximum > i64::from(i16::MAX)
+            {
+                return Err(Error::Malformed(format!(
+                    "invalid signed-range [{minimum}, {maximum}] for field {:?}",
+                    field.name
+                )));
+            }
+        }
+        FieldConstraint::Enum { values, .. } => {
+            let max_allowed = unsigned_type_max(field.field_type).ok_or_else(|| {
+                Error::Malformed(format!(
+                    "enum constraint on field {:?} requires u8/u16_le/u32_le, got {:?}",
+                    field.name, field.field_type
+                ))
+            })?;
+            if values.is_empty() {
+                return Err(Error::Malformed(format!(
+                    "enum constraint on field {:?} must have at least one value",
+                    field.name
+                )));
+            }
+            if let Some(&bad) = values.iter().find(|&&v| v > max_allowed) {
+                return Err(Error::Malformed(format!(
+                    "enum value {bad} exceeds type max {max_allowed} for field {:?}",
+                    field.name
+                )));
+            }
+        }
+        FieldConstraint::Bitmask { valid_mask, .. } => {
+            if field.field_type != FieldType::Bitflags {
+                return Err(Error::Malformed(format!(
+                    "bitmask constraint on field {:?} requires bitflags, got {:?}",
+                    field.name, field.field_type
+                )));
+            }
+            let max_mask = if field.size >= 8 {
+                u64::MAX
+            } else {
+                (1u64 << (field.size * 8)) - 1
+            };
+            if *valid_mask > max_mask {
+                return Err(Error::Malformed(format!(
+                    "bitmask 0x{valid_mask:X} exceeds width of field {:?} ({} bytes)",
+                    field.name, field.size
+                )));
+            }
+        }
+        FieldConstraint::PackedBcd {
+            digits,
+            minimum,
+            maximum,
+        } => {
+            if !matches!(
+                field.field_type,
+                FieldType::Bytes | FieldType::U8 | FieldType::U16Le | FieldType::U32Le
+            ) {
+                return Err(Error::Malformed(format!(
+                    "packed-bcd constraint on field {:?} requires bytes or unsigned integer, got {:?}",
+                    field.name, field.field_type
+                )));
+            }
+            if *digits == 0 || *digits > 16 || usize::from(*digits) > field.size * 2 {
+                return Err(Error::Malformed(format!(
+                    "packed-bcd digits {} invalid for field {:?} ({} bytes)",
+                    digits, field.name, field.size
+                )));
+            }
+            if let (Some(min), Some(max)) = (minimum, maximum) {
+                if min > max {
+                    return Err(Error::Malformed(format!(
+                        "packed-bcd minimum {min} > maximum {max} for field {:?}",
+                        field.name
+                    )));
+                }
+            }
+        }
+        FieldConstraint::AsciiCharset { max_len, .. } => {
+            if field.field_type != FieldType::Ascii {
+                return Err(Error::Malformed(format!(
+                    "ascii-charset constraint on field {:?} requires ascii, got {:?}",
+                    field.name, field.field_type
+                )));
+            }
+            if let Some(m) = max_len {
+                if *m > field.size {
+                    return Err(Error::Malformed(format!(
+                        "ascii-charset max_len {m} exceeds field {:?} size {}",
+                        field.name, field.size
+                    )));
+                }
+            }
+        }
+    }
+    Ok(())
+}
+
+/// Decode a packed BCD byte sequence (big-endian byte order, high nibble then low nibble)
+/// into its decimal `u64` value, rejecting any nibble > 9 or non-zero leading unused nibbles.
+fn decode_packed_bcd_bytes(bytes: &[u8], digits: u8) -> std::result::Result<u64, String> {
+    let total_nibbles = bytes.len() * 2;
+    let d = usize::from(digits);
+    if d == 0 || d > 16 || d > total_nibbles {
+        return Err(format!("invalid packed-bcd digit count {digits} for {} bytes", bytes.len()));
+    }
+    let unused_leading = total_nibbles - d;
+    let mut acc = 0u64;
+    for (idx, &byte) in bytes.iter().enumerate() {
+        let hi = byte >> 4;
+        let lo = byte & 0x0F;
+        for (sub, nib) in [(0usize, hi), (1usize, lo)] {
+            let nibble_pos = idx * 2 + sub;
+            if nibble_pos < unused_leading {
+                if nib != 0 {
+                    return Err(format!(
+                        "non-zero unused leading BCD nibble 0x{nib:X} at nibble {nibble_pos}"
+                    ));
+                }
+            } else {
+                if nib > 9 {
+                    return Err(format!(
+                        "invalid BCD nibble 0x{nib:X} at nibble {nibble_pos} (expected 0..=9)"
+                    ));
+                }
+                acc = acc * 10 + u64::from(nib);
+            }
+        }
+    }
+    Ok(acc)
+}
+
+/// Validate `value` against `spec.constraint` (if any).
+///
+/// Returns `Ok(())` when `spec.constraint` is `None` or when `value` satisfies the constraint.
+pub fn validate_field_value(spec: &FieldSpec, value: &FieldValue) -> Result<()> {
+    let Some(constraint) = &spec.constraint else {
+        return Ok(());
+    };
+    match constraint {
+        FieldConstraint::UnsignedRange { minimum, maximum } => {
+            let v = match value {
+                FieldValue::U8(x) => u64::from(*x),
+                FieldValue::U16(x) => u64::from(*x),
+                FieldValue::U32(x) => u64::from(*x),
+                other => {
+                    return Err(Error::Malformed(format!(
+                        "unsigned-range constraint on {:?} expected unsigned int, got {other:?}",
+                        spec.name
+                    )));
+                }
+            };
+            if v < *minimum || v > *maximum {
+                return Err(Error::Malformed(format!(
+                    "field {:?} value {v} out of unsigned-range [{minimum}, {maximum}]",
+                    spec.name
+                )));
+            }
+        }
+        FieldConstraint::SignedRange { minimum, maximum } => {
+            let v = match value {
+                FieldValue::I16(x) => i64::from(*x),
+                other => {
+                    return Err(Error::Malformed(format!(
+                        "signed-range constraint on {:?} expected i16, got {other:?}",
+                        spec.name
+                    )));
+                }
+            };
+            if v < *minimum || v > *maximum {
+                return Err(Error::Malformed(format!(
+                    "field {:?} value {v} out of signed-range [{minimum}, {maximum}]",
+                    spec.name
+                )));
+            }
+        }
+        FieldConstraint::Enum { values, .. } => {
+            let v = match value {
+                FieldValue::U8(x) => u64::from(*x),
+                FieldValue::U16(x) => u64::from(*x),
+                FieldValue::U32(x) => u64::from(*x),
+                other => {
+                    return Err(Error::Malformed(format!(
+                        "enum constraint on {:?} expected unsigned int, got {other:?}",
+                        spec.name
+                    )));
+                }
+            };
+            if !values.contains(&v) {
+                return Err(Error::Malformed(format!(
+                    "field {:?} value {v} not in allowed enum values {values:?}",
+                    spec.name
+                )));
+            }
+        }
+        FieldConstraint::Bitmask { valid_mask, .. } => {
+            let v = match value {
+                FieldValue::Bitflags(x) => *x,
+                other => {
+                    return Err(Error::Malformed(format!(
+                        "bitmask constraint on {:?} expected bitflags, got {other:?}",
+                        spec.name
+                    )));
+                }
+            };
+            if (v & !*valid_mask) != 0 {
+                return Err(Error::Malformed(format!(
+                    "field {:?} value 0x{v:X} sets bits outside valid_mask 0x{valid_mask:X}",
+                    spec.name
+                )));
+            }
+        }
+        FieldConstraint::PackedBcd {
+            digits,
+            minimum,
+            maximum,
+        } => {
+            let raw_bytes: Vec<u8> = match value {
+                FieldValue::Bytes(b) => b.clone(),
+                FieldValue::U8(x) => vec![*x],
+                FieldValue::U16(x) => x.to_be_bytes().to_vec(),
+                FieldValue::U32(x) => x.to_be_bytes().to_vec(),
+                other => {
+                    return Err(Error::Malformed(format!(
+                        "packed-bcd constraint on {:?} expected bytes or unsigned int, got {other:?}",
+                        spec.name
+                    )));
+                }
+            };
+            let decoded = decode_packed_bcd_bytes(&raw_bytes, *digits).map_err(|msg| {
+                Error::Malformed(format!("field {:?} invalid packed-bcd: {msg}", spec.name))
+            })?;
+            if let Some(min) = minimum {
+                if decoded < *min {
+                    return Err(Error::Malformed(format!(
+                        "field {:?} packed-bcd value {decoded} below minimum {min}",
+                        spec.name
+                    )));
+                }
+            }
+            if let Some(max) = maximum {
+                if decoded > *max {
+                    return Err(Error::Malformed(format!(
+                        "field {:?} packed-bcd value {decoded} above maximum {max}",
+                        spec.name
+                    )));
+                }
+            }
+        }
+        FieldConstraint::AsciiCharset { allowed, max_len } => {
+            let s = match value {
+                FieldValue::Ascii(s) => s,
+                other => {
+                    return Err(Error::Malformed(format!(
+                        "ascii-charset constraint on {:?} expected ascii, got {other:?}",
+                        spec.name
+                    )));
+                }
+            };
+            let limit = max_len.unwrap_or(spec.size).min(spec.size);
+            if s.len() > limit {
+                return Err(Error::Malformed(format!(
+                    "field {:?} ascii length {} exceeds max_len {limit}",
+                    spec.name,
+                    s.len()
+                )));
+            }
+            if let Some(allowed_chars) = allowed {
+                if let Some(bad) = s.chars().find(|&c| !allowed_chars.contains(c)) {
+                    return Err(Error::Malformed(format!(
+                        "field {:?} contains disallowed character {bad:?}",
+                        spec.name
+                    )));
+                }
+            }
+        }
+    }
+    Ok(())
 }
 
 /// Typed value of a decoded or mutated save field.
@@ -1222,12 +1687,17 @@ fn set_field_logical(
     field_name: &str,
     value: FieldValue,
     repair: bool,
+    check_constraint: bool,
 ) -> Result<()> {
     let spec = def
         .fields
         .iter()
         .find(|f| f.name == field_name)
         .ok_or_else(|| Error::Malformed(format!("unknown field {field_name:?}")))?;
+
+    if check_constraint {
+        validate_field_value(spec, &value)?;
+    }
 
     let end = spec.offset + spec.size;
     if end > data.len() {
@@ -1311,7 +1781,8 @@ fn set_field_logical(
     Ok(())
 }
 
-/// Set a named field in `data`, optionally repairing all checksums afterward.
+/// Set a named field in `data`, validating any declared [`FieldConstraint`]
+/// and optionally repairing all checksums afterward.
 pub fn set_field(
     def: &SaveDefinition,
     data: &mut [u8],
@@ -1322,12 +1793,12 @@ pub fn set_field(
     def.validate()?;
     if def.eeprom_rev8 {
         let mut logical = to_rev8(data);
-        set_field_logical(def, &mut logical, field_name, value, repair)?;
+        set_field_logical(def, &mut logical, field_name, value, repair, true)?;
         reverse_eeprom_blocks_8(&mut logical);
         data.copy_from_slice(&logical);
         Ok(())
     } else {
-        set_field_logical(def, data, field_name, value, repair)
+        set_field_logical(def, data, field_name, value, repair, true)
     }
 }
 
@@ -2070,8 +2541,9 @@ impl SaveBuffer {
         }
     }
 
-    /// Set a named field by typed [`FieldValue`], recalculating all covering checksums
-    /// across slots automatically, and validating that all checksums match after modification.
+    /// Set a named field by typed [`FieldValue`], validating its [`FieldConstraint`]
+    /// if present, recalculating all covering checksums across slots automatically,
+    /// and validating that all checksums match after modification.
     pub fn set_field(
         &mut self,
         def: &SaveDefinition,
@@ -2088,6 +2560,93 @@ impl SaveBuffer {
                 "checksum verification failed after modification: covering checksums do not match".into(),
             ));
         }
+        Ok(results)
+    }
+
+    /// Set a named field by typed [`FieldValue`], validating its [`FieldConstraint`]
+    /// (and those of any [`CopyGroup`] peers), atomically updating all mirror peers
+    /// in any matching `copy_groups`, and recalculating + verifying all checksums.
+    pub fn set_field_sync(
+        &mut self,
+        def: &SaveDefinition,
+        field_name: &str,
+        value: FieldValue,
+    ) -> Result<Vec<ChecksumResult>> {
+        def.validate()?;
+        let targets: Vec<&str> = match def
+            .copy_groups
+            .iter()
+            .find(|g| g.fields.iter().any(|f| f == field_name))
+        {
+            Some(group) => group.fields.iter().map(|s| s.as_str()).collect(),
+            None => vec![field_name],
+        };
+        // Pre-validate every target field before touching `self.data` (atomic on error).
+        for &target in &targets {
+            let spec = def
+                .fields
+                .iter()
+                .find(|f| f.name == target)
+                .ok_or_else(|| Error::Malformed(format!("unknown field {target:?}")))?;
+            validate_field_value(spec, &value)?;
+        }
+
+        let canonical = self.canonical_slice(def)?;
+        let mut staged = if def.eeprom_rev8 {
+            to_rev8(canonical)
+        } else {
+            canonical.to_vec()
+        };
+
+        for &target in &targets {
+            set_field_logical(def, &mut staged, target, value.clone(), false, true)?;
+        }
+        let results = fix_checksums_logical(def, &mut staged)?;
+        let report = verify_save_logical(def, &staged)?;
+        if !report.checksums.iter().all(|c| c.valid) {
+            return Err(Error::Malformed(
+                "checksum verification failed after synced modification: covering checksums do not match".into(),
+            ));
+        }
+        if def.eeprom_rev8 {
+            reverse_eeprom_blocks_8(&mut staged);
+        }
+        let slice = self.canonical_slice_mut(def)?;
+        slice.copy_from_slice(&staged);
+        Ok(results)
+    }
+
+    /// Set a named field by typed [`FieldValue`] WITHOUT validating its [`FieldConstraint`].
+    ///
+    /// Intended for counterfactual boundary fuzzing (e.g. writing `max + 1`, invalid
+    /// enum codes, unmasked bits, or malformed BCD nibbles) while still recalculating
+    /// and verifying covering checksums.
+    pub fn set_field_unchecked(
+        &mut self,
+        def: &SaveDefinition,
+        field_name: &str,
+        value: FieldValue,
+    ) -> Result<Vec<ChecksumResult>> {
+        def.validate()?;
+        let canonical = self.canonical_slice(def)?;
+        let mut staged = if def.eeprom_rev8 {
+            to_rev8(canonical)
+        } else {
+            canonical.to_vec()
+        };
+        set_field_logical(def, &mut staged, field_name, value, false, false)?;
+        let results = fix_checksums_logical(def, &mut staged)?;
+        let report = verify_save_logical(def, &staged)?;
+        if !report.checksums.iter().all(|c| c.valid) {
+            return Err(Error::Malformed(
+                "checksum verification failed after unchecked modification: covering checksums do not match".into(),
+            ));
+        }
+        if def.eeprom_rev8 {
+            reverse_eeprom_blocks_8(&mut staged);
+        }
+        let slice = self.canonical_slice_mut(def)?;
+        slice.copy_from_slice(&staged);
         Ok(results)
     }
 
@@ -2164,6 +2723,15 @@ impl SaveBuffer {
                         d["condition"] = serde_json::to_value(c).unwrap_or_default();
                         d["condition_met"] =
                             serde_json::Value::Bool(evaluate_condition(c, def, &canonical_bytes));
+                    }
+                    if let Some(constraint) = &s.constraint {
+                        d["constraint"] = serde_json::to_value(constraint).unwrap_or_default();
+                    }
+                    if let Some(confidence) = &s.confidence {
+                        d["confidence"] = serde_json::to_value(confidence).unwrap_or_default();
+                    }
+                    if let Some(evidence) = &s.evidence {
+                        d["evidence"] = serde_json::Value::String(evidence.clone());
                     }
                 }
                 d
@@ -2565,6 +3133,7 @@ mod tests {
                 xor_out: None,
             }],
             fields: vec![],
+            copy_groups: vec![],
         };
         let mut buf = vec![0x11u8; 512];
         fix_checksums(&def, &mut buf).unwrap();
@@ -2649,6 +3218,7 @@ mod tests {
                 xor_out: None,
             }],
             fields: vec![],
+            copy_groups: vec![],
         };
         let mut buf = vec![0u8; 512];
         buf[0..14].copy_from_slice(b"TESTHEADER1234");
@@ -3118,6 +3688,9 @@ mod tests {
                     description: None,
                     bitfield_array: None,
                     condition: None,
+                    constraint: None,
+                    confidence: None,
+                    evidence: None,
                 },
                 FieldSpec {
                     name: "badges".to_string(),
@@ -3131,6 +3704,9 @@ mod tests {
                         labels: vec![],
                     }),
                     condition: None,
+                    constraint: None,
+                    confidence: None,
+                    evidence: None,
                 },
                 FieldSpec {
                     name: "secret_bonus".to_string(),
@@ -3144,8 +3720,12 @@ mod tests {
                         op: ConditionOp::Eq,
                         value: serde_json::json!(1),
                     }),
+                    constraint: None,
+                    confidence: None,
+                    evidence: None,
                 },
             ],
+            copy_groups: vec![],
         };
 
         let mut raw = vec![0u8; 64];
@@ -3219,6 +3799,9 @@ mod tests {
                 labels: vec![],
             }),
             condition: None,
+            constraint: None,
+            confidence: None,
+            evidence: None,
         });
         assert!(bad_bw.validate().is_err());
     }
@@ -3243,6 +3826,9 @@ mod tests {
                     description: None,
                     bitfield_array: None,
                     condition: None,
+                    constraint: None,
+                    confidence: None,
+                    evidence: None,
                 },
                 FieldSpec {
                     name: "short_u32".to_string(),
@@ -3252,6 +3838,9 @@ mod tests {
                     description: None,
                     bitfield_array: None,
                     condition: None,
+                    constraint: None,
+                    confidence: None,
+                    evidence: None,
                 },
                 FieldSpec {
                     name: "wide_bitflags".to_string(),
@@ -3261,6 +3850,9 @@ mod tests {
                     description: None,
                     bitfield_array: None,
                     condition: None,
+                    constraint: None,
+                    confidence: None,
+                    evidence: None,
                 },
                 FieldSpec {
                     name: "bad_bw".to_string(),
@@ -3274,8 +3866,12 @@ mod tests {
                         labels: vec![],
                     }),
                     condition: None,
+                    constraint: None,
+                    confidence: None,
+                    evidence: None,
                 },
             ],
+            copy_groups: vec![],
         };
         let data = vec![0u8; 16];
         for name in ["overflow_off", "short_u32", "wide_bitflags", "bad_bw"] {
@@ -3320,6 +3916,9 @@ mod tests {
                     description: None,
                     bitfield_array: None,
                     condition: None,
+                    constraint: None,
+                    confidence: None,
+                    evidence: None,
                 },
                 FieldSpec {
                     name: "score".to_string(),
@@ -3329,8 +3928,12 @@ mod tests {
                     description: None,
                     bitfield_array: None,
                     condition: None,
+                    constraint: None,
+                    confidence: None,
+                    evidence: None,
                 },
             ],
+            copy_groups: vec![],
         };
 
         let json = serde_json::json!({
@@ -3366,5 +3969,238 @@ mod tests {
         assert!(json_val_to_field_value(i16_spec, &serde_json::json!(-40_000)).is_err());
         let bytes_spec = def.fields.iter().find(|f| f.name == "badge_bytes").unwrap();
         assert!(json_val_to_field_value(bytes_spec, &serde_json::json!([1, 256, 3, 4])).is_err());
+    }
+
+    fn schema_v2_definition() -> SaveDefinition {
+        SaveDefinition::from_json(
+            r#"{
+                "id": "schema_v2_test",
+                "game_code": "V201",
+                "title": "Schema v2 Constraints & CopyGroups Test",
+                "media": "sram",
+                "size_bytes": 128,
+                "magic_signatures": [
+                    { "offset": 0, "bytes": [86, 50, 83, 86] }
+                ],
+                "checksums": [
+                    {
+                        "name": "slot_sum16",
+                        "algorithm": "sum16_le",
+                        "covered_start": 0,
+                        "covered_end": 126,
+                        "stored_offset": 126
+                    }
+                ],
+                "fields": [
+                    {
+                        "name": "level",
+                        "offset": 4,
+                        "size": 1,
+                        "type": "u8",
+                        "confidence": "confirmed",
+                        "evidence": "Verified clamp at 0x08001234",
+                        "constraint": {
+                            "kind": "unsigned-range",
+                            "minimum": 1,
+                            "maximum": 99
+                        }
+                    },
+                    {
+                        "name": "level_mirror",
+                        "offset": 68,
+                        "size": 1,
+                        "type": "u8",
+                        "confidence": "confirmed",
+                        "constraint": {
+                            "kind": "unsigned-range",
+                            "minimum": 1,
+                            "maximum": 99
+                        }
+                    },
+                    {
+                        "name": "temp_offset",
+                        "offset": 6,
+                        "size": 2,
+                        "type": "i16_le",
+                        "confidence": "likely",
+                        "constraint": {
+                            "kind": "signed-range",
+                            "minimum": -100,
+                            "maximum": 100
+                        }
+                    },
+                    {
+                        "name": "difficulty",
+                        "offset": 8,
+                        "size": 1,
+                        "type": "u8",
+                        "confidence": "CONFIRMED_VERIFIED",
+                        "constraint": {
+                            "kind": "enum",
+                            "values": [0, 1, 2],
+                            "labels": { "0": "Easy", "1": "Normal", "2": "Hard" }
+                        }
+                    },
+                    {
+                        "name": "unlock_flags",
+                        "offset": 10,
+                        "size": 2,
+                        "type": "bitflags",
+                        "confidence": "HYPOTHESIS",
+                        "constraint": {
+                            "kind": "bitmask",
+                            "valid_mask": 15,
+                            "flag_labels": { "0": "SoundTest", "1": "BossRush" }
+                        }
+                    },
+                    {
+                        "name": "bcd_score",
+                        "offset": 12,
+                        "size": 3,
+                        "type": "bytes",
+                        "confidence": "guessed",
+                        "constraint": {
+                            "kind": "packed-bcd",
+                            "digits": 5,
+                            "minimum": 0,
+                            "maximum": 99999
+                        }
+                    },
+                    {
+                        "name": "hero_name",
+                        "offset": 16,
+                        "size": 8,
+                        "type": "ascii",
+                        "confidence": "unknown",
+                        "constraint": {
+                            "kind": "ascii-charset",
+                            "allowed": "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 ",
+                            "max_len": 6
+                        }
+                    }
+                ],
+                "copy_groups": [
+                    {
+                        "name": "level_copies",
+                        "fields": ["level", "level_mirror"]
+                    }
+                ]
+            }"#,
+        )
+        .expect("schema v2 definition must parse and validate")
+    }
+
+    #[test]
+    fn schema_v2_field_constraints_validate_all_variants() {
+        let def = schema_v2_definition();
+
+        // Check legacy confidence aliases mapped properly
+        let diff_spec = def.fields.iter().find(|f| f.name == "difficulty").unwrap();
+        assert_eq!(diff_spec.confidence, Some(FieldConfidence::Confirmed));
+        let flags_spec = def.fields.iter().find(|f| f.name == "unlock_flags").unwrap();
+        assert_eq!(flags_spec.confidence, Some(FieldConfidence::Guessed));
+
+        // 1. UnsignedRange [1, 99]
+        let lvl = def.fields.iter().find(|f| f.name == "level").unwrap();
+        assert!(validate_field_value(lvl, &FieldValue::U8(1)).is_ok());
+        assert!(validate_field_value(lvl, &FieldValue::U8(99)).is_ok());
+        assert!(validate_field_value(lvl, &FieldValue::U8(0)).is_err());
+        assert!(validate_field_value(lvl, &FieldValue::U8(100)).is_err());
+
+        // 2. SignedRange [-100, 100]
+        let temp = def.fields.iter().find(|f| f.name == "temp_offset").unwrap();
+        assert!(validate_field_value(temp, &FieldValue::I16(-100)).is_ok());
+        assert!(validate_field_value(temp, &FieldValue::I16(100)).is_ok());
+        assert!(validate_field_value(temp, &FieldValue::I16(-101)).is_err());
+        assert!(validate_field_value(temp, &FieldValue::I16(101)).is_err());
+
+        // 3. Enum [0, 1, 2]
+        assert!(validate_field_value(diff_spec, &FieldValue::U8(0)).is_ok());
+        assert!(validate_field_value(diff_spec, &FieldValue::U8(2)).is_ok());
+        assert!(validate_field_value(diff_spec, &FieldValue::U8(3)).is_err());
+
+        // 4. Bitmask 0x0F
+        assert!(validate_field_value(flags_spec, &FieldValue::Bitflags(0x00)).is_ok());
+        assert!(validate_field_value(flags_spec, &FieldValue::Bitflags(0x0F)).is_ok());
+        assert!(validate_field_value(flags_spec, &FieldValue::Bitflags(0x10)).is_err());
+
+        // 5. PackedBcd (5 digits in 3 bytes, 0..=99999)
+        let bcd = def.fields.iter().find(|f| f.name == "bcd_score").unwrap();
+        assert!(validate_field_value(bcd, &FieldValue::Bytes(vec![0x00, 0x00, 0x00])).is_ok());
+        assert!(validate_field_value(bcd, &FieldValue::Bytes(vec![0x09, 0x99, 0x99])).is_ok());
+        // Non-zero leading unused nibble (6th digit set) -> err
+        assert!(validate_field_value(bcd, &FieldValue::Bytes(vec![0x10, 0x00, 0x00])).is_err());
+        // Invalid hex nibble 0xA -> err
+        assert!(validate_field_value(bcd, &FieldValue::Bytes(vec![0x00, 0x1A, 0x00])).is_err());
+
+        // 6. AsciiCharset (uppercase alnum + space, max_len 6)
+        let name = def.fields.iter().find(|f| f.name == "hero_name").unwrap();
+        assert!(validate_field_value(name, &FieldValue::Ascii("HERO 1".into())).is_ok());
+        assert!(validate_field_value(name, &FieldValue::Ascii("hero".into())).is_err());
+        assert!(validate_field_value(name, &FieldValue::Ascii("TOOLONG".into())).is_err());
+    }
+
+    #[test]
+    fn schema_v2_copy_group_validation_rejects_invalid_definitions() {
+        // Unknown field in copy_group
+        let mut bad_unknown = schema_v2_definition();
+        bad_unknown.copy_groups[0].fields.push("nonexistent".into());
+        assert!(bad_unknown.validate().is_err());
+
+        // Mismatched type/size in copy_group
+        let mut bad_type = schema_v2_definition();
+        bad_type.copy_groups[0].fields = vec!["level".into(), "temp_offset".into()];
+        assert!(bad_type.validate().is_err());
+
+        // Fewer than 2 fields in copy_group
+        let mut bad_single = schema_v2_definition();
+        bad_single.copy_groups[0].fields = vec!["level".into()];
+        assert!(bad_single.validate().is_err());
+
+        // Duplicate copy_group name
+        let mut bad_dup = schema_v2_definition();
+        bad_dup.copy_groups.push(CopyGroup {
+            name: "level_copies".into(),
+            fields: vec!["difficulty".into(), "level".into()],
+        });
+        assert!(bad_dup.validate().is_err());
+
+        // Overlapping fields in copy_group
+        let mut bad_overlap = schema_v2_definition();
+        bad_overlap.fields[1].offset = bad_overlap.fields[0].offset;
+        assert!(bad_overlap.validate().is_err());
+    }
+
+    #[test]
+    fn schema_v2_set_field_sync_and_set_field_unchecked() {
+        let def = schema_v2_definition();
+        let mut raw = vec![0u8; def.size_bytes];
+        raw[0..4].copy_from_slice(b"V2SV");
+        raw[4] = 1;
+        raw[68] = 1;
+        fix_checksums(&def, &mut raw).unwrap();
+
+        let mut buf = SaveBuffer::new(raw);
+        assert!(buf.validate_checksums(&def).unwrap().valid);
+
+        // set_field_sync updates both `level` and `level_mirror` atomically and repairs checksums
+        buf.set_field_sync(&def, "level", FieldValue::U8(42)).unwrap();
+        assert_eq!(buf.get_field(&def, "level").unwrap(), FieldValue::U8(42));
+        assert_eq!(buf.get_field(&def, "level_mirror").unwrap(), FieldValue::U8(42));
+        assert!(buf.validate_checksums(&def).unwrap().valid);
+
+        // set_field_sync rejects out-of-range values without mutating the buffer
+        let before = buf.data().to_vec();
+        assert!(buf.set_field_sync(&def, "level", FieldValue::U8(200)).is_err());
+        assert_eq!(buf.data(), before.as_slice());
+
+        // set_field also enforces constraints
+        assert!(buf.set_field(&def, "difficulty", FieldValue::U8(9)).is_err());
+
+        // set_field_unchecked bypasses constraints for fuzzing while keeping checksums valid
+        buf.set_field_unchecked(&def, "level", FieldValue::U8(200)).unwrap();
+        assert_eq!(buf.get_field(&def, "level").unwrap(), FieldValue::U8(200));
+        assert_eq!(buf.get_field(&def, "level_mirror").unwrap(), FieldValue::U8(42));
+        assert!(buf.validate_checksums(&def).unwrap().valid);
     }
 }

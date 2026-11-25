@@ -121,103 +121,137 @@
       "name": "header_checksum",
       "offset": 0,
       "size": 4,
-      "type": "u32_le"
+      "type": "u32_le",
+      "confidence": "confirmed",
+      "evidence": "Decompiled C in 0x08073438/0x08073620 plus Python verification against all 4 header copies (see SAVE-FORMAT-REPORT.md section 4.3)"
     },
     {
       "name": "header_checksum_complement",
       "offset": 4,
       "size": 4,
-      "type": "u32_le"
+      "type": "u32_le",
+      "confidence": "confirmed",
+      "evidence": "ghidra/decompiled.c:17401 (puVar7[1] = ~uVar3) plus Python verification: stored == ~checksum in both files"
     },
     {
       "name": "format_tag",
       "offset": 8,
       "size": 2,
-      "type": "ascii"
+      "type": "ascii",
+      "confidence": "confirmed",
+      "evidence": "ghidra/decompiled.c:17367-17368"
     },
     {
       "name": "save_generation_counter",
       "offset": 10,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "confidence": "likely",
+      "evidence": "ghidra/decompiled.c:17369 (*(short*)(puVar7+10) += 1); both samples read 0, consistent with an early/pre-increment capture"
     },
     {
       "name": "header_copied_u16_0x0c",
       "offset": 12,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "confidence": "likely",
+      "evidence": "ghidra/decompiled.c:17370-17371"
     },
     {
       "name": "header_const_flag_0x0f",
       "offset": 15,
       "size": 1,
-      "type": "u8"
+      "type": "u8",
+      "confidence": "confirmed",
+      "evidence": "ghidra/decompiled.c:17373"
     },
     {
       "name": "header_const_0x10",
       "offset": 16,
       "size": 1,
-      "type": "u8"
+      "type": "u8",
+      "confidence": "confirmed",
+      "evidence": "ghidra/decompiled.c:17374"
     },
     {
       "name": "header_copied_u32_0x18",
       "offset": 24,
       "size": 4,
-      "type": "u32_le"
+      "type": "u32_le",
+      "confidence": "likely",
+      "evidence": "ghidra/decompiled.c:17379"
     },
     {
       "name": "version_string",
       "offset": 28,
       "size": 20,
-      "type": "ascii"
+      "type": "ascii",
+      "confidence": "confirmed",
+      "evidence": "ghidra/decompiled.c:17380-17385 (writer), 17530-17536 (reader); matches both .sav files exactly"
     },
     {
       "name": "header_trailing_fill",
       "offset": 48,
       "size": 16,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "confirmed",
+      "evidence": "Included in checksum verification range (0x00-0x3F); value never observed to differ from SRAM fill"
     },
     {
       "name": "zeroed_reserved_block",
       "offset": 28096,
       "size": 128,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "guessed",
+      "evidence": "All-zero in both samples, distinct from the dominant 0xFF SRAM fill; no writer located in available decompilation"
     },
     {
       "name": "slot_select_label_leading_u16",
       "offset": 27968,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "confidence": "unknown",
+      "evidence": "Changed only between the two captures alongside the slot_select_label_text and zerosave_footer fields; no writer or checksum algorithm identified"
     },
     {
       "name": "slot_select_label_leading_u32",
       "offset": 27970,
       "size": 4,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "unknown",
+      "evidence": "Brute-force checksum search against all plausible ranges found no algorithmic match"
     },
     {
       "name": "slot_select_label_text",
       "offset": 27974,
       "size": 34,
-      "type": "ascii"
+      "type": "ascii",
+      "confidence": "likely",
+      "evidence": "String content read directly from .sav bytes; no writer function located among the 339 decompiled functions"
     },
     {
       "name": "zerosave_tag",
       "offset": 32624,
       "size": 8,
-      "type": "ascii"
+      "type": "ascii",
+      "confidence": "likely",
+      "evidence": "String content read directly from .sav bytes; no writer function located among the 339 decompiled functions"
     },
     {
       "name": "zerosave_footer_field_a",
       "offset": 32632,
       "size": 4,
-      "type": "u32_le"
+      "type": "u32_le",
+      "confidence": "unknown",
+      "evidence": "Brute-force checksum search against all plausible ranges found no algorithmic match"
     },
     {
       "name": "zerosave_footer_field_b",
       "offset": 32636,
       "size": 4,
-      "type": "u32_le"
+      "type": "u32_le",
+      "confidence": "unknown",
+      "evidence": "Brute-force checksum search against all plausible ranges found no algorithmic match"
     }
   ]
 }

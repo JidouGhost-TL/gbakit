@@ -87,97 +87,129 @@
       "name": "header_text_block",
       "offset": 0,
       "size": 38,
-      "type": "ascii"
+      "type": "ascii",
+      "confidence": "guessed",
+      "evidence": "saves/hexdump_and_diffs.txt; byte-identical in both EEPROM halves; substrings KNIL/EHT/SDROW reverse to LINK/THE/WORDS but no consistent whole-string decode rule found"
     },
     {
       "name": "header_tail_value",
       "offset": 38,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "confidence": "unknown",
+      "evidence": "Trailing non-0xFF bytes after header_text_block; scanned against FUN_08068af0's u16+u16==0x10000 formula with no matching neighbor found"
     },
     {
       "name": "slot_0_init_magic",
       "offset": 64,
       "size": 4,
-      "type": "u32_le"
+      "type": "u32_le",
+      "confidence": "confirmed",
+      "evidence": "Byte value 0x494e4954 ('INIT' big-endian-read) confirmed in both halves; writer/reader function identity inferred from table-row-stride position, not individually isolated per-slot in code"
     },
     {
       "name": "slot_1_init_magic",
       "offset": 80,
       "size": 4,
-      "type": "u32_le"
+      "type": "u32_le",
+      "confidence": "confirmed",
+      "evidence": "Byte-identical to slot 0 pattern, offset matches expected stride"
     },
     {
       "name": "slot_2_init_magic",
       "offset": 96,
       "size": 4,
-      "type": "u32_le"
+      "type": "u32_le",
+      "confidence": "confirmed",
+      "evidence": "Byte-identical to slot 0 pattern, offset matches expected stride"
     },
     {
       "name": "slot_3_global_config_init_magic",
       "offset": 112,
       "size": 4,
-      "type": "u32_le"
+      "type": "u32_le",
+      "confidence": "confirmed",
+      "evidence": "Explicit func_0x08068bdc(3) call in FUN_080686a8 ties this offset's slot index directly to code, unlike slots 0-2 which are inferred by stride only"
     },
     {
       "name": "slot_unidentified_4_init_magic",
       "offset": 144,
       "size": 4,
-      "type": "u32_le"
+      "type": "u32_le",
+      "confidence": "confirmed",
+      "evidence": "Byte pattern confirmed; no individual function call isolated for this table index"
     },
     {
       "name": "slot_unidentified_5_init_magic",
       "offset": 176,
       "size": 4,
-      "type": "u32_le"
+      "type": "u32_le",
+      "confidence": "confirmed",
+      "evidence": "Byte pattern confirmed; no individual function call isolated for this table index"
     },
     {
       "name": "slot3_format_flag_byte_0",
       "offset": 224,
       "size": 1,
-      "type": "u8"
+      "type": "u8",
+      "confidence": "likely",
+      "evidence": "Offset and value (1) match FUN_0801164c's literal store exactly; base-address resolution to this exact file offset is inferred from relative position, not a directly observed pointer"
     },
     {
       "name": "slot3_format_flag_byte_1",
       "offset": 225,
       "size": 1,
-      "type": "u8"
+      "type": "u8",
+      "confidence": "likely",
+      "evidence": "Same reasoning as slot3_format_flag_byte_0"
     },
     {
       "name": "table_block_u16_e2",
       "offset": 226,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "confidence": "unknown",
+      "evidence": "No code reference isolated for this exact offset"
     },
     {
       "name": "mode_tag_tf4s",
       "offset": 228,
       "size": 4,
-      "type": "ascii"
+      "type": "ascii",
+      "confidence": "guessed",
+      "evidence": "Forward-readable 4-char tag, not reversed like KNIL; plausibly a game-mode/variant identifier abbreviation, unconfirmed against code"
     },
     {
       "name": "table_block_u16_e8",
       "offset": 232,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "confidence": "unknown",
+      "evidence": "No code reference isolated for this exact offset"
     },
     {
       "name": "reversed_link_tag",
       "offset": 234,
       "size": 4,
-      "type": "ascii"
+      "type": "ascii",
+      "confidence": "guessed",
+      "evidence": "Byte-reversed ASCII for 'LINK', same reversal pattern observed in the header_text_block field"
     },
     {
       "name": "table_block_u16_ee",
       "offset": 238,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "confidence": "unknown",
+      "evidence": "No code reference isolated for this exact offset"
     },
     {
       "name": "backup_half_mirror",
       "offset": 4096,
       "size": 4096,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "confirmed",
+      "evidence": "Python comparison: data[0:0x1000] == data[0x1000:0x2000] -> True"
     }
   ]
 }

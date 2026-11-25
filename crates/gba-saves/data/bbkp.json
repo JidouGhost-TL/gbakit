@@ -41,67 +41,89 @@
       "name": "slot_header_reserved",
       "offset": 0,
       "size": 192,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "guessed",
+      "evidence": "All-zero in both .sav samples at slot offsets 0x0000/0x0D00/0x1A00/0x2700 +0x00..0xBF"
     },
     {
       "name": "slot_marker_a",
       "offset": 192,
       "size": 2,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "guessed",
+      "evidence": "Bytes 60 60 at 0x00C0,0x0DC0,0x1AC0,0x27C0 and again at +0xC00 block in both samples"
     },
     {
       "name": "slot_flag_byte",
       "offset": 249,
       "size": 1,
-      "type": "u8"
+      "type": "u8",
+      "confidence": "guessed",
+      "evidence": "Byte 0x02 at 0x00F9 (+replicas) and 0x0CF9 (+replicas); surrounding bytes zero"
     },
     {
       "name": "slot_flags_array",
       "offset": 256,
       "size": 512,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "guessed",
+      "evidence": "64 identical 8-byte records at slot+0x100..0x2FF in both samples; no code in decompiled set indexes it"
     },
     {
       "name": "slot_records_array",
       "offset": 768,
       "size": 2304,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "guessed",
+      "evidence": "Record stride 0x18 verified by repeating u32=4 header at slot+0x300+0x18*n; no decompiled function references the RAM mirror, so gameplay meaning is inferred from value shape only"
     },
     {
       "name": "slot_tail_reserved",
       "offset": 3072,
       "size": 192,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "guessed",
+      "evidence": "slot+0xC00..0xCBF zero, +0xCC0=60 60, +0xCF9=02 in both samples"
     },
     {
       "name": "trailer_magic",
       "offset": 13312,
       "size": 16,
-      "type": "ascii"
+      "type": "ascii",
+      "confidence": "confirmed",
+      "evidence": "ASCII at 0x3400 in both .sav; FUN_086d26f4 compares 4 int words after SRAM read (decompiled.c:1888-1895)"
     },
     {
       "name": "trailer_padding",
       "offset": 13328,
       "size": 11,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "guessed",
+      "evidence": "Zero in both samples"
     },
     {
       "name": "trailer_variable_byte",
       "offset": 13339,
       "size": 1,
-      "type": "u8"
+      "type": "u8",
+      "confidence": "unknown",
+      "evidence": "3-byte diff between samples is exactly this byte plus the 2 resulting checksum bytes"
     },
     {
       "name": "trailer_checksum",
       "offset": 13340,
       "size": 4,
-      "type": "u32_le"
+      "type": "u32_le",
+      "confidence": "confirmed",
+      "evidence": "sum8 over [0,0x341C) equals stored u32 LE on both samples (see report Sec.4)"
     },
     {
       "name": "unused_sram_tail",
       "offset": 13344,
       "size": 19424,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "confirmed",
+      "evidence": "Both 32768-byte samples are 0xFF from 0x3420 onward; writer length is total-4 covered +4 checksum = 0x3420"
     }
   ]
 }

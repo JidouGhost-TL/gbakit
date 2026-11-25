@@ -56,115 +56,153 @@
       "name": "magic_hE01_sram_base",
       "offset": 0,
       "size": 4,
-      "type": "ascii"
+      "type": "ascii",
+      "confidence": "likely",
+      "evidence": "ghidra/decompiled.c FUN_08041208: func_0x08041620(auStack_24,0xe000000,4) + FUN_0800a8c0 compare; saves/hexdump_and_diffs.txt offset 0x0000."
     },
     {
       "name": "magic_hP03",
       "offset": 24724,
       "size": 4,
-      "type": "ascii"
+      "type": "ascii",
+      "confidence": "likely",
+      "evidence": "Count-match: six non-lg02 magics in saves vs six non-lg02 regions checked in FUN_08041208; negative checksum control at this offset in report section 4 (stored 0x0000 vs computed 0x01E4 as a 12-byte block)."
     },
     {
       "name": "magic_hS02_first",
       "offset": 26504,
       "size": 4,
-      "type": "ascii"
+      "type": "ascii",
+      "confidence": "likely",
+      "evidence": "As magic_hP03; negative control computed 0x01E2 vs stored 0x0000."
     },
     {
       "name": "magic_hM02",
       "offset": 26720,
       "size": 4,
-      "type": "ascii"
+      "type": "ascii",
+      "confidence": "likely",
+      "evidence": "As magic_hP03; negative control computed 0x01E8 vs stored 0x0000."
     },
     {
       "name": "magic_eM02",
       "offset": 30984,
       "size": 4,
-      "type": "ascii"
+      "type": "ascii",
+      "confidence": "likely",
+      "evidence": "As magic_hP03; negative control computed 0x01EB vs stored 0x0000."
     },
     {
       "name": "hC02_magic",
       "offset": 32188,
       "size": 4,
-      "type": "ascii"
+      "type": "ascii",
+      "confidence": "confirmed",
+      "evidence": "Unique all-offset checksum scan (covered 10) hits only 32188 in both saves; layout exactly matches FUN_08002eec/FUN_08002e84 (0xC total, checksum at +10)."
     },
     {
       "name": "hC02_payload_bytes_1_to_4",
       "offset": 32192,
       "size": 4,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "confirmed",
+      "evidence": "Part of the checksum-verified 12-byte block; FUN_08002eec stack layout uStack_10..uStack_c at +4..+8."
     },
     {
       "name": "hC02_payload_byte_5",
       "offset": 32196,
       "size": 1,
-      "type": "u8"
+      "type": "u8",
+      "confidence": "confirmed",
+      "evidence": "Only payload diff between the two saves (hexdump_and_diffs.txt: 0x7DC4 01->81, 0x7DC6 F1->71); both files satisfy (sum&0xFFFF)^0xFF with their own byte."
     },
     {
       "name": "hC02_covered_zero_byte",
       "offset": 32197,
       "size": 1,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "confirmed",
+      "evidence": "Covered-range endpoint analysis of FUN_08002eec (FUN_0800a890(stack,10) with stack bytes +4..+8 = 5 payload bytes)."
     },
     {
       "name": "hC02_checksum",
       "offset": 32198,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "confidence": "confirmed",
+      "evidence": "Python verification executed in workspace: stored == computed in both files (report section 4)."
     },
     {
       "name": "magic_hS02_second",
       "offset": 32200,
       "size": 4,
-      "type": "ascii"
+      "type": "ascii",
+      "confidence": "likely",
+      "evidence": "Negative control computed 0x01E2 vs stored 0x0000 (12-byte form); covered-0xDA scan hit list in report section 4 contains only 32416 (plus overlaps ending at 32198)."
     },
     {
       "name": "lg02_magic",
       "offset": 32416,
       "size": 4,
-      "type": "ascii"
+      "type": "ascii",
+      "confidence": "confirmed",
+      "evidence": "Unique all-offset covered-0xDA checksum hit at 32416 in both saves; size/checksum offsets match FUN_08041444/FUN_08041208 step 7 exactly."
     },
     {
       "name": "lg02_gathered_flag_bytes",
       "offset": 32420,
       "size": 213,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "confirmed",
+      "evidence": "Payload of the checksum-verified lg02 block; gather loop in FUN_08041444 (uVar3<0xD5, iVar5+=0x14, *(iVar5+0xE))."
     },
     {
       "name": "lg02_zero_pad",
       "offset": 32633,
       "size": 1,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "confirmed",
+      "evidence": "Offset arithmetic in FUN_08041444: payload ends at +0xD9, checksum stored at +0xDA, total 0xDC."
     },
     {
       "name": "lg02_checksum",
       "offset": 32634,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "confidence": "confirmed",
+      "evidence": "Python verification executed in workspace: stored == computed (0x01CA) in both files (report section 4)."
     },
     {
       "name": "tail_ff_region",
       "offset": 32636,
       "size": 132,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "unknown",
+      "evidence": "Byte scan of both saves; FUN_080415b0 writes a zero buffer, so 0xFF cannot come from the traced erase path."
     },
     {
       "name": "large_region_checksum_field_unlocated",
       "offset": 0,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "confidence": "guessed",
+      "evidence": "FUN_08041208 first block; full-offset scan for covered 0x6F0 returned no hits in either save (report section 4)."
     },
     {
       "name": "record30_record_unlocated",
       "offset": 0,
       "size": 48,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "likely",
+      "evidence": "FUN_0804390c/FUN_08043964 bodies (0x30 read, +0x2E checksum, 0x2E covered, 2-byte magic); all-offset covered-0x2E scan found no standalone valid record."
     },
     {
       "name": "dynamic_sram_flag_bit_unlocated",
       "offset": 0,
       "size": 2,
-      "type": "bitflags"
+      "type": "bitflags",
+      "confidence": "likely",
+      "evidence": "FUN_08040d74 body; caller chain FUN_08043470->FUN_08040bb8->FUN_08040d1c->FUN_08040d74."
     }
   ]
 }

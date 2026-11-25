@@ -33,79 +33,105 @@
       "name": "header_magic",
       "offset": 0,
       "size": 8,
-      "type": "ascii"
+      "type": "ascii",
+      "confidence": "confirmed",
+      "evidence": "FUN_0802f56c byte-compares 8 bytes after FUN_0802fa34(0,4,buf); FUN_0802f9f4 copies the 32-byte template. Bytes present at .sav offset 0 in both samples; RAM decode yields readable magic 'ROBT0012'."
     },
     {
       "name": "header_language_and_flags",
       "offset": 15,
       "size": 1,
-      "type": "bitflags"
+      "type": "bitflags",
+      "confidence": "confirmed",
+      "evidence": "Only differing header byte between samples (0x00->0x80, checksum -0x80). FUN_0802f5c8 uses *(byte*)(struct+8)&0x7F; FUN_0802f618 rewrites struct+8 preserving/forcing bit7. Struct base absolute address not in C dump, hence ram_addr null."
     },
     {
       "name": "header_template_bytes_09_0f",
       "offset": 8,
       "size": 7,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "likely",
+      "evidence": "Constant across both samples; only writer is the template copy FUN_08024610(dst,template,0x20) in FUN_0802f9f4. No individual reader found in decompiled.c (checksum-only coverage)."
     },
     {
       "name": "header_reserved_zero",
       "offset": 16,
       "size": 8,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "likely",
+      "evidence": "Zero in both samples and in the template path; remaining header bytes RAM 0x18-0x1D (.sav 0x18 pair excluded as checksum) are also zero and included in the 32-byte checksum/struct compare."
     },
     {
       "name": "header_checksum",
       "offset": 24,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "confidence": "confirmed",
+      "evidence": "Python verification: decoded RAM header sums to 0x0000 and stored==computed on both samples (0xF8EE/0xF86E). Code: FUN_0802f968 stores -FUN_0802f9d0 at +0x1E; FUN_0802f9f4 stores word[0xF]=-sum; FUN_0802f56c requires total sum 0."
     },
     {
       "name": "slot0_blank_prefix",
       "offset": 32,
       "size": 24,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "likely",
+      "evidence": "FUN_0802f5c8 blank-write loop (start blocks 4,24,44 count 3) matches the 24 zero bytes at each slot start in both .sav files; remainder of slot is 0xFF."
     },
     {
       "name": "slot0_erased_tail",
       "offset": 56,
       "size": 134,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "likely",
+      "evidence": "Both samples show 0xFF from slot+24 to slot end; slot u16 sum 0xFFBC (invalid/empty per FUN_0802f8ec rule)."
     },
     {
       "name": "slot0_checksum_inferred",
       "offset": 184,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "confidence": "guessed",
+      "evidence": "FUN_0802f8ec proves the sum==0 check over 0xA0 via FUN_0802f9d0; stored-word position inferred from header symmetry (last word). Not verified: no valid slot sample exists."
     },
     {
       "name": "slot1_blank_prefix",
       "offset": 192,
       "size": 24,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "likely",
+      "evidence": "Matches blank-write geometry (blocks 24-26); FUN_0802f91c(1) loads blocks 24..43 (param 1*0x14+4, count 0x14)."
     },
     {
       "name": "slot1_erased_tail_and_checksum",
       "offset": 216,
       "size": 136,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "unknown",
+      "evidence": "All 0xFF in both samples; per-slot validation rule proven (FUN_0802f8ec) but payload layout and checksum stored offset unverified without a populated slot."
     },
     {
       "name": "slot2_blank_prefix",
       "offset": 352,
       "size": 24,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "likely",
+      "evidence": "Matches blank-write geometry (blocks 44-46); FUN_0802f91c(2) loads blocks 44..63 (param 2*0x14+4, count 0x14)."
     },
     {
       "name": "slot2_erased_tail_and_checksum",
       "offset": 376,
       "size": 136,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "unknown",
+      "evidence": "All 0xFF in both samples; per-slot validation rule proven (FUN_0802f8ec) but payload layout and checksum stored offset unverified without a populated slot."
     },
     {
       "name": "slot_gameplay_payload_all_slots",
       "offset": 32,
       "size": 480,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "unknown",
+      "evidence": "Exhaustive text search of decompiled.c: FUN_0802fa90 is never called with count 0x14; no store of a negated FUN_0802f9d0 result to staging+0x9E exists. Both samples contain zero valid slots."
     }
   ]
 }

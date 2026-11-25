@@ -12,61 +12,81 @@
       "name": "slot0_status",
       "offset": 0,
       "size": 1,
-      "type": "u8"
+      "type": "u8",
+      "confidence": "confirmed",
+      "evidence": "ghidra/decompiled.c:10864-10880 (reset), :10924 (commit set to 1); both samples show the pre-commit 0x00 value."
     },
     {
       "name": "slot0_fieldA",
       "offset": 4,
       "size": 4,
-      "type": "u32_le"
+      "type": "u32_le",
+      "confidence": "confirmed",
+      "evidence": "ghidra/decompiled.c:10943; sentinel 0x00FFFFFF consistent with record never having been committed."
     },
     {
       "name": "slot0_fieldB",
       "offset": 8,
       "size": 4,
-      "type": "u32_le"
+      "type": "u32_le",
+      "confidence": "confirmed",
+      "evidence": "ghidra/decompiled.c:10940-10942."
     },
     {
       "name": "slot1_fieldA",
       "offset": 16,
       "size": 4,
-      "type": "u32_le"
+      "type": "u32_le",
+      "confidence": "confirmed",
+      "evidence": "ghidra/decompiled.c:10919-10943 (generic over *pbVar9 slot index)."
     },
     {
       "name": "slot1_fieldB",
       "offset": 20,
       "size": 4,
-      "type": "u32_le"
+      "type": "u32_le",
+      "confidence": "confirmed",
+      "evidence": "ghidra/decompiled.c:10919-10943."
     },
     {
       "name": "slot2_fieldA",
       "offset": 28,
       "size": 4,
-      "type": "u32_le"
+      "type": "u32_le",
+      "confidence": "confirmed",
+      "evidence": "ghidra/decompiled.c:10919-10943."
     },
     {
       "name": "slot2_fieldB",
       "offset": 32,
       "size": 4,
-      "type": "u32_le"
+      "type": "u32_le",
+      "confidence": "likely",
+      "evidence": "ghidra/decompiled.c:10940-10942; diff confirmed via saves/hexdump_and_diffs.txt (4-byte delta at file offset 0x20-0x23)."
     },
     {
       "name": "table_checksum_generation",
       "offset": 36,
       "size": 4,
-      "type": "u32_le"
+      "type": "u32_le",
+      "confidence": "likely",
+      "evidence": "ghidra/decompiled.c:10853-10873, :10951-10954. Numeric verification blocked: both samples are pre-finalize (value never written to a real nonzero number); modulus/seed constants not present in this workspace."
     },
     {
       "name": "table_flags",
       "offset": 40,
       "size": 1,
-      "type": "bitflags"
+      "type": "bitflags",
+      "confidence": "confirmed",
+      "evidence": "ghidra/decompiled.c:10874 (reset to 7), :10965-10996 (FUN_08038300 bit-unpack)."
     },
     {
       "name": "calibration_fill_region",
       "offset": 41,
       "size": 176,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "confirmed",
+      "evidence": "ghidra/decompiled.c:10876-10880; Python permutation formula matched 176/184 bytes exactly against both saves/*.sav files, with the 8 mismatches fully explained as sector-boundary effects."
     }
   ]
 }

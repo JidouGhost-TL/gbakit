@@ -33,73 +33,97 @@
       "name": "magic_blen0911",
       "offset": 0,
       "size": 8,
-      "type": "ascii"
+      "type": "ascii",
+      "confidence": "confirmed",
+      "evidence": "FUN_080059c8 loop over 8 bytes in decompiled.c; sample bytes 42 4c 45 4e 30 39 31 31 at 0x00 with verifying checksum. Writer attribution is hypothesised (body unrecovered) but the field itself is verified in both code and bytes."
     },
     {
       "name": "checksum_sum16",
       "offset": 8,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "confidence": "confirmed",
+      "evidence": "FUN_08005990 (sum from buf+0x10, count size-0x10) + FUN_080059c0 (*(u16*)(buf+8)) in decompiled.c; Python recomputation on sav-00-f1162.sav slot0: stored 0x70a1 == computed 0x70a1; alternative ranges [0,0x100)=0x739f, [8,0x100)=0x71b3, [0,8)=0x01ec all falsified."
     },
     {
       "name": "valid_flag_u16_at_0x0a",
       "offset": 10,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "confidence": "likely",
+      "evidence": "Explicit test in FUN_08005b64 decompiled body; sample holds 01 00. Semantics (valid flag vs version) unproven - only the non-zero-low-byte requirement is code-proven, hence not CONFIRMED_VERIFIED."
     },
     {
       "name": "header_reserved_0x0c",
       "offset": 12,
       "size": 4,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "unknown",
+      "evidence": "No reader in decompiled.c references buf+0x0C; observed zero in the single sample. Padding/reserved on current evidence."
     },
     {
       "name": "payload_first_dword_populated_marker",
       "offset": 16,
       "size": 4,
-      "type": "u32_le"
+      "type": "u32_le",
+      "confidence": "likely",
+      "evidence": "Explicit test in FUN_08005b64 decompiled body; sample dword = 1. Whether the exact value carries meaning beyond non-zero is unproven with one sample, hence not CONFIRMED_VERIFIED."
     },
     {
       "name": "payload_body_0x14",
       "offset": 20,
       "size": 12,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "unknown",
+      "evidence": "Single near-empty sample; no reader code. Refusing to subdivide further without more samples or fuzzing results."
     },
     {
       "name": "payload_erased_gap_0x20",
       "offset": 32,
       "size": 112,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "unknown",
+      "evidence": "Bytes 0x20-0x8F are 0xFF while 0x00-0x1F and 0x90-0xFF are written; checksum covers the gap and verifies. Mechanism inference recorded in the report; field semantics unknown."
     },
     {
       "name": "payload_tail_zero_0x90",
       "offset": 144,
       "size": 35,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "unknown",
+      "evidence": "Non-blank written span 0x90-0xFF per hexdump_and_diffs.txt; no reader code interprets it."
     },
     {
       "name": "payload_values_0xb3",
       "offset": 179,
       "size": 6,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "guessed",
+      "evidence": "Observed bytes only; no reader code. Flagged as fuzzing target T6 in the report to discover semantics by mutation."
     },
     {
       "name": "payload_tail_0xb9",
       "offset": 185,
       "size": 71,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "unknown",
+      "evidence": "Observed zeros; no reader code."
     },
     {
       "name": "slot1_erased_record",
       "offset": 1024,
       "size": 256,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "likely",
+      "evidence": "Geometry functions + dispatcher probe FUN_08005bc8(3,1) in FUN_0803d6bc; uniform 0xFF in the sample. Internal payload layout if written is UNKNOWN and deliberately not modelled as separate fields."
     },
     {
       "name": "slot2_erased_record",
       "offset": 2048,
       "size": 768,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "likely",
+      "evidence": "FUN_08005970->0x800, FUN_08005958->0x300, probe FUN_08005bc8(3,2); uniform 0xFF in the sample. Purpose of the larger size is an open question."
     }
   ]
 }

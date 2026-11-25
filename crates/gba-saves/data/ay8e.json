@@ -40,43 +40,57 @@
       "name": "header_marker",
       "offset": 0,
       "size": 1,
-      "type": "u8"
+      "type": "u8",
+      "confidence": "likely",
+      "evidence": "Four single-byte FUN_080588c4(...,0xe000000,1) writers with constants 0/1/2/3; cap-01 byte0=0x00 final state"
     },
     {
       "name": "magic",
       "offset": 1,
       "size": 15,
-      "type": "ascii"
+      "type": "ascii",
+      "confidence": "confirmed",
+      "evidence": "Code length 0xf in both writer and reader; bytes present verbatim in cap-01 at offset 1"
     },
     {
       "name": "save_payload_block0",
       "offset": 16,
       "size": 8176,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "unknown",
+      "evidence": "No non-zero payload sample in workspace; semantics unmapped"
     },
     {
       "name": "duelist_state_mode",
       "offset": 50,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "confidence": "guessed",
+      "evidence": "Recurring +0x32 dereference in >=6 decompiled RAM functions; never non-zero in a .sav sample"
     },
     {
       "name": "duelist_progress",
       "offset": 362,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "confidence": "guessed",
+      "evidence": "Recurring +0x16A dereference with strlen-threshold compares (FUN_0805d1fc)"
     },
     {
       "name": "candidate_integrity_0x401E",
       "offset": 16414,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "confidence": "guessed",
+      "evidence": "Equals one's-complement sum16 of zeroed covered bytes (trivially) and erased 0xFFFF sentinel; no checksum loop in corpus"
     },
     {
       "name": "candidate_integrity_0x7FFE",
       "offset": 32766,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "confidence": "guessed",
+      "evidence": "Same trivial complement consistency as 0x401E; unverified"
     }
   ]
 }

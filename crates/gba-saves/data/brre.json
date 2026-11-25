@@ -19,43 +19,57 @@
       "name": "byte0_sentinel_field",
       "offset": 0,
       "size": 1,
-      "type": "u8"
+      "type": "u8",
+      "confidence": "guessed",
+      "evidence": "decompiled.c:2369 (*puVar4=*param_1), 2378-2379 ('Z' compare/substitution), 2382 (shadow store). Semantics of the field and of 'Z' unknown; not a proven magic byte."
     },
     {
       "name": "header_gap_0x001_0x003",
       "offset": 1,
       "size": 3,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "unknown",
+      "evidence": "FUN_080247e4 copies only param_1[0], param_1[4..0x11F], param_1[0x120], param_1[0x121]; no other traced access."
     },
     {
       "name": "save_payload_284b",
       "offset": 4,
       "size": 284,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "guessed",
+      "evidence": "decompiled.c:2370 memcpy length 0x11C from param_1+4; checksum loop decompiled.c:2373-2377 over same range. Extent is CONFIRMED_STATIC; contents UNKNOWN (blank sample)."
     },
     {
       "name": "byte0_extension_0x120",
       "offset": 288,
       "size": 1,
-      "type": "u8"
+      "type": "u8",
+      "confidence": "guessed",
+      "evidence": "decompiled.c:2378-2379. Read mechanics CONFIRMED_STATIC; semantics unknown."
     },
     {
       "name": "payload_checksum_sum8",
       "offset": 289,
       "size": 1,
-      "type": "u8"
+      "type": "u8",
+      "confidence": "likely",
+      "evidence": "decompiled.c:2374-2381 loop and comparison. Sample match 0x00==0x00 is vacuous; see report section 4.3."
     },
     {
       "name": "unknown_region_0x122_0x19f",
       "offset": 290,
       "size": 126,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "unknown",
+      "evidence": "Absence of any access >=0x122 in FUN_080247e4 and callers; region lies between checksum byte and 0xFF tail."
     },
     {
       "name": "erased_tail_0x1a0_0x1ff",
       "offset": 416,
       "size": 96,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "guessed",
+      "evidence": "Python scan: 0xFF range [0x1A0,0x200); hexdump_and_diffs.txt lists it as sole active range vs 0x00 background."
     }
   ]
 }

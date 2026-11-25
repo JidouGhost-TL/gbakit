@@ -53,61 +53,81 @@
       "name": "field_0x00_u16_dirty_or_pending",
       "offset": 0,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "confidence": "guessed",
+      "evidence": "Direct byte read of saves/cap-00-future-0.sav and saves/cap-01-future-1.sav offsets 0x00-0x01; see saves/hexdump_and_diffs.txt diff lines for 0x00000-0x00003"
     },
     {
       "name": "field_0x02_u16_generation_or_counter_pair",
       "offset": 2,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "confidence": "guessed",
+      "evidence": "Python verification: struct.unpack_from('<H', s0, 2) - struct.unpack_from('<H', s1, 2) == 257, run against saves/cap-00-future-0.sav and saves/cap-01-future-1.sav"
     },
     {
       "name": "field_0x04_magic_tail",
       "offset": 4,
       "size": 4,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "confirmed",
+      "evidence": "Python equality check of s0[off+4:off+8] and s1[off+4:off+8] == bytes.fromhex('00224455') for off in [0x00, 0x10, 0xA8, 0x140], against both actual .sav files; role as a deliberate magic/validity check (vs. incidental constant data) is NOT proven, only the byte-level invariance"
     },
     {
       "name": "field_0x09_u8_counter",
       "offset": 9,
       "size": 1,
-      "type": "u8"
+      "type": "u8",
+      "confidence": "guessed",
+      "evidence": "Direct byte read at offset 0x09 of both .sav files; see saves/hexdump_and_diffs.txt diff line for 0x00009"
     },
     {
       "name": "field_0x0a_flags_or_u16",
       "offset": 10,
       "size": 2,
-      "type": "bitflags"
+      "type": "bitflags",
+      "confidence": "guessed",
+      "evidence": "Direct byte read at offsets 0x0a-0x0b of both .sav files; see saves/hexdump_and_diffs.txt diff lines for 0x0000a-0x0000b"
     },
     {
       "name": "field_0x0c_reserved_or_padding",
       "offset": 12,
       "size": 4,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "unknown",
+      "evidence": "Direct byte read at offsets 0x0c-0x0f of both .sav files; unchanged in both"
     },
     {
       "name": "slot_mirror_block2_full",
       "offset": 16,
       "size": 8,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "guessed",
+      "evidence": "Direct byte read at offset 0x10-0x17 of both .sav files, byte-identical to offset 0x00-0x07 of cap-00-future-0.sav"
     },
     {
       "name": "slot_mirror_block21_full",
       "offset": 168,
       "size": 8,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "guessed",
+      "evidence": "Direct byte read at offset 0xa8-0xaf of both .sav files"
     },
     {
       "name": "slot_mirror_block40_full",
       "offset": 320,
       "size": 8,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "guessed",
+      "evidence": "Direct byte read at offset 0x140-0x147 of both .sav files"
     },
     {
       "name": "unwritten_tail_blocks59_63",
       "offset": 472,
       "size": 40,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "confirmed",
+      "evidence": "Direct byte read at offset 0x1d8-0x1ff of both .sav files, all bytes equal 0xFF"
     }
   ]
 }

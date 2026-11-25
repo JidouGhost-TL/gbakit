@@ -33,67 +33,89 @@
       "name": "magic_primary",
       "offset": 0,
       "size": 1,
-      "type": "u8"
+      "type": "u8",
+      "confidence": "confirmed",
+      "evidence": "FUN_080237a0: '*(S+0x83) = *buf; if (*(S+0x83) == 'W') *(S+0x83) = buf[0x171]'; FUN_080235b4 booleanizes it. Logical offset 0 maps to file offset 0x007 under FUN_08049504's per-block byte reversal; both .sav files hold 0x57 there."
     },
     {
       "name": "payload_first_byte_suspected_version",
       "offset": 1,
       "size": 1,
-      "type": "u8"
+      "type": "u8",
+      "confidence": "guessed",
+      "evidence": "Observed 0x32 in both saves; FUN_080234b0 '*puVar1 = 0x32' (u16) in ghidra/decompiled.c. No code in the corpus reads or compares this byte, so a checked version tag is unproven; a stat value of 50 is equally consistent."
     },
     {
       "name": "payload_body_opaque",
       "offset": 2,
       "size": 366,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "likely",
+      "evidence": "FUN_080237a0 'func_0x08049a9c(_DAT_08023804, param_1 + 1, 0x170)' in ghidra/decompiled.c; byte census computed from both .sav files after block-reversal transform. RAM destination literal unresolved, hence ram_addr null."
     },
     {
       "name": "payload_flag_a",
       "offset": 5,
       "size": 1,
-      "type": "u8"
+      "type": "u8",
+      "confidence": "guessed",
+      "evidence": "One of only seven non-0x00/0xFF payload bytes in either save (Python byte census); boolean-like value 0x01."
     },
     {
       "name": "payload_flag_pair_b",
       "offset": 13,
       "size": 2,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "guessed",
+      "evidence": "Adjacent 0x01 pair; payload-relative offset 0x00C, and the three pairs at payload offsets 0x00C/0x060/0x0B4 are exactly 0x54 apart, matching FUN_080234b0's 3-entry x 0x54-byte stride."
     },
     {
       "name": "payload_flag_pair_c",
       "offset": 97,
       "size": 2,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "guessed",
+      "evidence": "Adjacent 0x01 pair exactly 0x54 after payload_flag_pair_b; see FUN_080234b0 stride analysis."
     },
     {
       "name": "payload_flag_pair_d",
       "offset": 181,
       "size": 2,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "guessed",
+      "evidence": "Adjacent 0x01 pair exactly 0x54 after payload_flag_pair_c; see FUN_080234b0 stride analysis."
     },
     {
       "name": "payload_erased_looking_region",
       "offset": 336,
       "size": 32,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "unknown",
+      "evidence": "Both .sav files hold 0xFF across logical 0x150..0x16F even though sav-01 is fully written and checksum-valid; therefore payload data (reserved space or 0xFF/-1 sentinel fields), not unwritten media."
     },
     {
       "name": "magic_secondary",
       "offset": 369,
       "size": 1,
-      "type": "u8"
+      "type": "u8",
+      "confidence": "confirmed",
+      "evidence": "FUN_080237a0 'if (*(char *)(_DAT_08023800 + 0x83) == 'W') *(char *)(_DAT_08023800 + 0x83) = param_1[0x171]'; sav-01 holds 0x57 at the transformed file offset, sav-00 still holds erased 0xFF."
     },
     {
       "name": "checksum_sum8",
       "offset": 370,
       "size": 1,
-      "type": "u8"
+      "type": "u8",
+      "confidence": "confirmed",
+      "evidence": "FUN_080237a0 sum loop + 'if (param_1[0x172] == cVar3)'; Python verification executed on both .sav files (see SAVE-FORMAT-REPORT.md section 4.3): sav-01 computed 0x60 == stored 0x60; naive file-order sum gives 0x61, independently confirming the block-reversal transform."
     },
     {
       "name": "image_tail_zero_filled",
       "offset": 371,
       "size": 141,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "confirmed",
+      "evidence": "Byte census of both .sav files; FUN_080237a0 reads at most logical 0x172 and FUN_080235b4 validates nothing beyond it. The sav-00->sav-01 0xFF->0x00 transition over this range is the clearest block-ascending write-progress marker."
     }
   ]
 }

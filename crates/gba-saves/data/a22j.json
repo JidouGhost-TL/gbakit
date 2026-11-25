@@ -41,43 +41,57 @@
       "name": "magic_POKEMON_TAKASHI2",
       "offset": 0,
       "size": 16,
-      "type": "ascii"
+      "type": "ascii",
+      "confidence": "confirmed",
+      "evidence": "Bytes present verbatim in saves/cap-01-future-1.sav offset 0 and absent (0xFF) in blank saves/cap-00-future-0.sav (Python scan); sole SRAM transfer covers offset 0. Code-side gate is HYPOTHESIS: string literal does not appear in decompiled text; only the strcmp/strcpy machinery in FUN_08015154 supports the role."
     },
     {
       "name": "header_padding_zero",
       "offset": 16,
       "size": 16,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "likely",
+      "evidence": "All zero in the only populated sample (Python nonzero-byte scan: no non-zero bytes between 0x10 and 0x1F)."
     },
     {
       "name": "header_word_0x20",
       "offset": 32,
       "size": 4,
-      "type": "u32_le"
+      "type": "u32_le",
+      "confidence": "guessed",
+      "evidence": "struct.unpack('<I') at 0x20 in cap-01 gives 1. Semantics UNKNOWN: candidates are format version (=1) or a save-present/initialised flag; a generation counter is not supported (single sample, single copy, no selection logic in code)."
     },
     {
       "name": "header_word_0x24",
       "offset": 36,
       "size": 4,
-      "type": "u32_le"
+      "type": "u32_le",
+      "confidence": "guessed",
+      "evidence": "struct.unpack('<I') at 0x24 in cap-01 gives 1. Semantics UNKNOWN: second version/flag word, slot state, or boolean stored as u32."
     },
     {
       "name": "header_word_0x28_rom_pointer_like",
       "offset": 40,
       "size": 4,
-      "type": "u32_le"
+      "type": "u32_le",
+      "confidence": "guessed",
+      "evidence": "Value 0x084A1097 lies in the GBA ROM window (0x08000000.., ROM offset 0x4A1097). Rejected as a checksum: sum8=0xAA, sum16=0x05AA, sum32=0x05AA, xor8=0xB8, crc32=0x47F0D428, crc32-excluding-word=0x411A96A0, sum-u16le=0x5954, sum-u32le=0x207838DD over the cap-01 block - none equals 0x084A1097 (Python, both files, multiple ranges)."
     },
     {
       "name": "payload_body_zero_in_sample",
       "offset": 44,
       "size": 8148,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "unknown",
+      "evidence": "Python scan: only 22 non-zero bytes exist in the populated 0x2000 block (magic + offsets 0x20, 0x24, 0x28..0x2B). Claiming finer fields here would be fabrication."
     },
     {
       "name": "unused_sram_tail",
       "offset": 8192,
       "size": 24576,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "confirmed",
+      "evidence": "Python: bytes 0x2000..0x7FFF are all 0xFF in both files; grep of ghidra/decompiled.c finds exactly one SRAM address literal (0xe000000 at FUN_0801a6a8's call)."
     }
   ]
 }

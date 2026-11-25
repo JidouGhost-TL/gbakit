@@ -24,73 +24,97 @@
       "name": "slot_valid_flag",
       "offset": 0,
       "size": 1,
-      "type": "u8"
+      "type": "u8",
+      "confidence": "likely",
+      "evidence": "Raw byte read from both .sav files; no writer/reader function identified in the provided decompilation window"
     },
     {
       "name": "reserved_1",
       "offset": 1,
       "size": 2,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "confirmed",
+      "evidence": "Raw byte read, identical in both files"
     },
     {
       "name": "magic_DTOPT",
       "offset": 3,
       "size": 5,
-      "type": "ascii"
+      "type": "ascii",
+      "confidence": "guessed",
+      "evidence": "ASCII decoded directly from raw .sav bytes; constant across both snapshots"
     },
     {
       "name": "reserved_2",
       "offset": 8,
       "size": 3,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "confirmed",
+      "evidence": "Raw byte read, identical in both files"
     },
     {
       "name": "counter_candidate_A",
       "offset": 11,
       "size": 1,
-      "type": "u8"
+      "type": "u8",
+      "confidence": "guessed",
+      "evidence": "Byte-diff between saves/cap-00-future-0.sav and saves/cap-01-future-1.sav; matches packet's own mutation_probe offset 0xB"
     },
     {
       "name": "header_const_C",
       "offset": 12,
       "size": 1,
-      "type": "u8"
+      "type": "u8",
+      "confidence": "confirmed",
+      "evidence": "Raw byte read, identical in both files"
     },
     {
       "name": "counter_candidate_B",
       "offset": 13,
       "size": 1,
-      "type": "u8"
+      "type": "u8",
+      "confidence": "guessed",
+      "evidence": "Byte-diff between the two .sav snapshots"
     },
     {
       "name": "header_const_E",
       "offset": 14,
       "size": 1,
-      "type": "u8"
+      "type": "u8",
+      "confidence": "confirmed",
+      "evidence": "Raw byte read, identical in both files"
     },
     {
       "name": "counter_candidate_C",
       "offset": 15,
       "size": 1,
-      "type": "u8"
+      "type": "u8",
+      "confidence": "guessed",
+      "evidence": "Byte-diff between the two .sav snapshots"
     },
     {
       "name": "record_table_entry_0_anomalous",
       "offset": 16,
       "size": 8,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "guessed",
+      "evidence": "Raw byte read; pattern-breaks from all other 50 records which have a 1-pad-byte + up to 3 ASCII char trailing field"
     },
     {
       "name": "record_table",
       "offset": 24,
       "size": 400,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "confirmed",
+      "evidence": "Python fixed-stride parse of saves/cap-00-future-0.sav and saves/cap-01-future-1.sav bytes 0x18-0x1A7; byte-identical in both snapshots (region untouched by the probe mutation)"
     },
     {
       "name": "unused_tail",
       "offset": 424,
       "size": 88,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "confirmed",
+      "evidence": "Raw byte read, identical in both files"
     }
   ]
 }

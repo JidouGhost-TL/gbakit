@@ -41,55 +41,73 @@
       "name": "record_header",
       "offset": 0,
       "size": 12,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "likely",
+      "evidence": "Decompiled memcpy(dest, src, 0xc) in FUN_08001474; internal field boundaries beyond this are not resolvable from the two near-default samples available."
     },
     {
       "name": "slot_parity_byte",
       "offset": 7,
       "size": 1,
-      "type": "u8"
+      "type": "u8",
+      "confidence": "confirmed",
+      "evidence": "Only header byte that differs between the two capture generations; FUN_0800154c's slot-selection logic uses *mirror & 1, matching the observed 0->1 transition timed with the switch from slot_a-only to slot_a+slot_b."
     },
     {
       "name": "format_version_tag",
       "offset": 12,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "confidence": "likely",
+      "evidence": "Decompiled *(short*)(dest+0xc) = _DAT_080014b0; constant across all observed records."
     },
     {
       "name": "gameplay_payload",
       "offset": 14,
       "size": 52,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "likely",
+      "evidence": "Byte ranges and copy sizes directly read from FUN_08000d4c/FUN_08000df4's memcpy and scalar-store operations; per-field gameplay semantics unresolved due to insufficient non-default sample data."
     },
     {
       "name": "payload_flag_byte",
       "offset": 53,
       "size": 1,
-      "type": "u8"
+      "type": "u8",
+      "confidence": "guessed",
+      "evidence": "Second and only other byte that differs between capture generations; falls inside the mapped payload region but no second confirming data point exists to assign it a concrete meaning."
     },
     {
       "name": "magic_signature_mickeyma",
       "offset": 112,
       "size": 8,
-      "type": "ascii"
+      "type": "ascii",
+      "confidence": "confirmed",
+      "evidence": "Byte-identical across all 3 observed record instances; reversal confirmed via Python: 'AMYEKCIM'[::-1] == 'MICKEYMA'."
     },
     {
       "name": "unidentified_static_block",
       "offset": 120,
       "size": 4,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "guessed",
+      "evidence": "Non-ASCII, constant across all samples; not matched by any sum-to-zero checksum window in the brute-force search performed in the report, so not confirmed as a secondary checksum."
     },
     {
       "name": "format_tag_checked_by_validator",
       "offset": 124,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "confidence": "likely",
+      "evidence": "Directly gated on in decompiled FUN_08001430; constant across all samples."
     },
     {
       "name": "record_checksum_word",
       "offset": 126,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "confidence": "likely",
+      "evidence": "Algorithm fully traced in both FUN_08001474 and FUN_08001430; numeric verification against all 3 sample instances produced sum=0x03fd (expected 0x0000) — a confirmed MISMATCH, not a confirmed-correct checksum. See fuzzing_targets and open_questions."
     }
   ]
 }

@@ -27,283 +27,377 @@
       "name": "magic_star",
       "offset": 0,
       "size": 1,
-      "type": "u8"
+      "type": "u8",
+      "confidence": "confirmed",
+      "evidence": "FUN_080090f0 *(u8*)buf=0x2a; FUN_0800917c compares '*'; verified in sav"
     },
     {
       "name": "slot_index",
       "offset": 1,
       "size": 1,
-      "type": "u8"
+      "type": "u8",
+      "confidence": "confirmed",
+      "evidence": "FUN_080090f0 byte1=param_1; FUN_0800917c byte1<3; sav byte1 equals slot number in all copies"
     },
     {
       "name": "reserved_header_zero",
       "offset": 2,
       "size": 16,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "guessed",
+      "evidence": "Zero in sav; no named writer traced to individual bytes; DAT literal bases unresolved"
     },
     {
       "name": "flag_byte_at_0x12",
       "offset": 18,
       "size": 1,
-      "type": "bitflags"
+      "type": "bitflags",
+      "confidence": "likely",
+      "evidence": "Decompiled OR-8 at +0x12/+0x1c and sav byte=0x08; semantic meaning unknown"
     },
     {
       "name": "reserved_0x13_0x1b",
       "offset": 19,
       "size": 9,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "guessed",
+      "evidence": "Zero region between two OR-8 flag bytes"
     },
     {
       "name": "flag_byte_at_0x1c",
       "offset": 28,
       "size": 1,
-      "type": "bitflags"
+      "type": "bitflags",
+      "confidence": "likely",
+      "evidence": "As 0x12"
     },
     {
       "name": "reserved_0x1d_0x25",
       "offset": 29,
       "size": 9,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "guessed",
+      "evidence": "Zero region; stride-0x0a pattern 0x12,0x1c,0x26,0x30 suggests 4-entry array of 10-byte records (entry field at +0x0a?) - unproven"
     },
     {
       "name": "flag_byte_at_0x26",
       "offset": 38,
       "size": 1,
-      "type": "bitflags"
+      "type": "bitflags",
+      "confidence": "guessed",
+      "evidence": "Sav byte=0x08 at stride 0x0a; writer not isolated due to unresolved DAT bases"
     },
     {
       "name": "reserved_0x27_0x2f",
       "offset": 39,
       "size": 9,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "guessed",
+      "evidence": "Zero"
     },
     {
       "name": "flag_byte_at_0x30",
       "offset": 48,
       "size": 1,
-      "type": "bitflags"
+      "type": "bitflags",
+      "confidence": "guessed",
+      "evidence": "Sav byte=0x08 at stride 0x0a"
     },
     {
       "name": "reserved_0x31_0x71",
       "offset": 49,
       "size": 65,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "guessed",
+      "evidence": "FUN_08008b08 puVar2[0x10..0x16]=0 and record indexing static-only; offsets in RAM mirror not proven to equal sav offsets for every sub-write"
     },
     {
       "name": "counter_or_value_1000_at_0x72",
       "offset": 114,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "confidence": "likely",
+      "evidence": "Sav u16=1000 at 0x72 and 0x544; two 1000 constants in FUN_08008fe8"
     },
     {
       "name": "byte_0x74_zero",
       "offset": 116,
       "size": 1,
-      "type": "u8"
+      "type": "u8",
+      "confidence": "unknown",
+      "evidence": "Zero in sav"
     },
     {
       "name": "sentinel_ff_at_0x75",
       "offset": 117,
       "size": 1,
-      "type": "u8"
+      "type": "u8",
+      "confidence": "likely",
+      "evidence": "Sav 0xff at 0x75 and 0x58b amid zero block; 0xff constants in init"
     },
     {
       "name": "reserved_0x76_0x4eb",
       "offset": 118,
       "size": 1142,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "unknown",
+      "evidence": "All zero in only non-blank sample; FUN_08008b08 5-byte records at RAM+0x7e and bitfield writes at +0x20.. fall in this span statically"
     },
     {
       "name": "substruct_u16_0_at_0x4ec",
       "offset": 1260,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "confidence": "likely",
+      "evidence": "Sequence 120,120,120,80,80 at 0x4ec..0x4f5 exactly matches puVar1[0..4]=0x78,0x78,0x78,0x50,0x50 in FUN_08008fe8"
     },
     {
       "name": "substruct_u16_1_at_0x4ee",
       "offset": 1262,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "confidence": "likely",
+      "evidence": "As above"
     },
     {
       "name": "substruct_u16_2_at_0x4f0",
       "offset": 1264,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "confidence": "likely",
+      "evidence": "As above"
     },
     {
       "name": "substruct_u16_3_at_0x4f2",
       "offset": 1266,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "confidence": "likely",
+      "evidence": "As above"
     },
     {
       "name": "substruct_u16_4_at_0x4f4",
       "offset": 1268,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "confidence": "likely",
+      "evidence": "As above"
     },
     {
       "name": "substruct_u16_at_0x4f6",
       "offset": 1270,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "confidence": "guessed",
+      "evidence": "Nonzero in sav only"
     },
     {
       "name": "reserved_0x4f8_0x4f9",
       "offset": 1272,
       "size": 2,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "guessed",
+      "evidence": "Zero"
     },
     {
       "name": "substruct_byte_at_0x4fb",
       "offset": 1275,
       "size": 1,
-      "type": "u8"
+      "type": "u8",
+      "confidence": "guessed",
+      "evidence": "Nonzero byte in sav only"
     },
     {
       "name": "reserved_0x4fc_0x50b",
       "offset": 1276,
       "size": 16,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "guessed",
+      "evidence": "Zero"
     },
     {
       "name": "substruct_u16_at_0x50c",
       "offset": 1292,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "confidence": "guessed",
+      "evidence": "Nonzero in sav only"
     },
     {
       "name": "reserved_0x50e_0x53f",
       "offset": 1294,
       "size": 50,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "guessed",
+      "evidence": "Zero"
     },
     {
       "name": "value_2_at_0x540",
       "offset": 1344,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "confidence": "likely",
+      "evidence": "Static mask-write at +0x540 and sav u16=2; caller FUN_08008fe8->FUN_08008e98(0)"
     },
     {
       "name": "reserved_0x542_0x543",
       "offset": 1346,
       "size": 2,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "guessed",
+      "evidence": "Zero"
     },
     {
       "name": "substruct_1000_at_0x544",
       "offset": 1348,
       "size": 4,
-      "type": "u32_le"
+      "type": "u32_le",
+      "confidence": "likely",
+      "evidence": "Sav u32=1000 at 0x544 = 0x4ec+0x58; FUN_08008fe8 *(undefined4*)(puVar1+0x2c)=1000"
     },
     {
       "name": "reserved_0x548_0x549",
       "offset": 1352,
       "size": 2,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "guessed",
+      "evidence": "Zero"
     },
     {
       "name": "substruct_u16_at_0x54a",
       "offset": 1354,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "confidence": "likely",
+      "evidence": "Sav=2; FUN_08008fe8 puVar1[0x2f]=2"
     },
     {
       "name": "substruct_u16_at_0x54c",
       "offset": 1356,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "confidence": "likely",
+      "evidence": "Sav=2"
     },
     {
       "name": "substruct_u16_at_0x54e",
       "offset": 1358,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "confidence": "likely",
+      "evidence": "Sav=1"
     },
     {
       "name": "substruct_u16_at_0x550",
       "offset": 1360,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "confidence": "likely",
+      "evidence": "Sav=1"
     },
     {
       "name": "reserved_0x552_0x55d",
       "offset": 1362,
       "size": 12,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "guessed",
+      "evidence": "Zero"
     },
     {
       "name": "substruct_u16_at_0x55e",
       "offset": 1374,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "confidence": "likely",
+      "evidence": "Sav=1 exactly matches puVar1[0x39]=1"
     },
     {
       "name": "reserved_0x560_0x569",
       "offset": 1376,
       "size": 10,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "guessed",
+      "evidence": "Zero"
     },
     {
       "name": "substruct_byte_at_0x56b",
       "offset": 1387,
       "size": 1,
-      "type": "u8"
+      "type": "u8",
+      "confidence": "guessed",
+      "evidence": "Nonzero byte in sav only"
     },
     {
       "name": "reserved_0x56c_0x589",
       "offset": 1388,
       "size": 30,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "guessed",
+      "evidence": "Static OR-2 writes exist but sav mapping unresolved"
     },
     {
       "name": "sentinel_ff_at_0x58b",
       "offset": 1419,
       "size": 1,
-      "type": "u8"
+      "type": "u8",
+      "confidence": "likely",
+      "evidence": "Sav 0xff at 0x58b = 0x4ec+0x9f; byte 0x58a (puVar1+0x4f u16-indexed write of 0xff) is 0x00 in sav - noted discrepancy, that write may target a different base or be overwritten"
     },
     {
       "name": "reserved_0x58c_0x58d",
       "offset": 1420,
       "size": 2,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "guessed",
+      "evidence": "Zero"
     },
     {
       "name": "value_at_0x58e",
       "offset": 1422,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "confidence": "guessed",
+      "evidence": "Nonzero in sav only"
     },
     {
       "name": "reserved_0x590_0x597",
       "offset": 1424,
       "size": 8,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "guessed",
+      "evidence": "Zero"
     },
     {
       "name": "value_at_0x598",
       "offset": 1432,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "confidence": "guessed",
+      "evidence": "Nonzero in sav only"
     },
     {
       "name": "reserved_0x59a_0x59b",
       "offset": 1434,
       "size": 2,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "guessed",
+      "evidence": "Zero"
     },
     {
       "name": "checksum_not_sum16",
       "offset": 1436,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "confidence": "confirmed",
+      "evidence": "Python: 12/12 copies match (see report section 4)"
     },
     {
       "name": "trailing_pad_zero",
       "offset": 1438,
       "size": 2,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "likely",
+      "evidence": "Writer/reader loop bound is the DAT checksum offset (0x59c verified by sav); block flushed is full 0x5a0"
     }
   ]
 }

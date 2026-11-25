@@ -33,121 +33,161 @@
       "name": "magic_BIOGBAE1_header",
       "offset": 0,
       "size": 8,
-      "type": "ascii"
+      "type": "ascii",
+      "confidence": "confirmed",
+      "evidence": "Both .sav start 31 45 41 42 47 4F 49 42; per-block reversal (proven by slot stamp, see slot fields) yields BIOGBAE1; FUN_08038348 8-byte template compare at decompiled.c:6630-6640."
     },
     {
       "name": "header_settings_byte_RAM8",
       "offset": 15,
       "size": 1,
-      "type": "u8"
+      "type": "u8",
+      "confidence": "likely",
+      "evidence": "decompiled.c:4231-4239 and FUN_08020d58 body."
     },
     {
       "name": "header_settings_byte_RAM9",
       "offset": 14,
       "size": 1,
-      "type": "u8"
+      "type": "u8",
+      "confidence": "likely",
+      "evidence": "decompiled.c:4230, FUN_08020d58."
     },
     {
       "name": "header_settings_byte_RAM10",
       "offset": 13,
       "size": 1,
-      "type": "u8"
+      "type": "u8",
+      "confidence": "likely",
+      "evidence": "decompiled.c:4236, FUN_08020d58."
     },
     {
       "name": "header_flag_RAM11_settings_applied",
       "offset": 12,
       "size": 1,
-      "type": "u8"
+      "type": "u8",
+      "confidence": "likely",
+      "evidence": "decompiled.c:4235 (*(iVar1+0xb)=1); inter-sample diff at sav 0x0C; header sum stays 0 in both."
     },
     {
       "name": "header_byte_RAM12_reserved",
       "offset": 11,
       "size": 1,
-      "type": "u8"
+      "type": "u8",
+      "confidence": "guessed",
+      "evidence": "Zero in both samples; gap in FUN_08020a58 packing offsets 8,9,10,11,13,14."
     },
     {
       "name": "header_settings_bit_RAM13_bit7",
       "offset": 10,
       "size": 1,
-      "type": "bitflags"
+      "type": "bitflags",
+      "confidence": "likely",
+      "evidence": "decompiled.c:4233 and FUN_08020d58 puVar1[2] line."
     },
     {
       "name": "header_settings_byte_RAM14",
       "offset": 9,
       "size": 1,
-      "type": "u8"
+      "type": "u8",
+      "confidence": "likely",
+      "evidence": "decompiled.c:4237, FUN_08020d58."
     },
     {
       "name": "header_erased_RAM15_17",
       "offset": 8,
       "size": 3,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "guessed",
+      "evidence": "Both samples FF; covered by FUN_0803880c sum (any change breaks header validity unless checksum repaired)."
     },
     {
       "name": "header_field_RAM18_0x0F",
       "offset": 21,
       "size": 1,
-      "type": "bitflags"
+      "type": "bitflags",
+      "confidence": "guessed",
+      "evidence": "Identical 0x0F in both samples; only template copy (FUN_0802b358 in FUN_08038830) can be cited statically."
     },
     {
       "name": "header_zero_RAM19_21",
       "offset": 18,
       "size": 3,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "guessed",
+      "evidence": "Zero in both; no semantic writer traced."
     },
     {
       "name": "header_checksum_word11",
       "offset": 16,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "confidence": "confirmed",
+      "evidence": "Python: RAM sum words0..10 = 0x0930/0x0A30, negated = 0xF6D0/0xF5D0 = stored, total sum 0 in both files. Code: decompiled.c:6584-6586, 6850-6858."
     },
     {
       "name": "slot0_first_block_stamp",
       "offset": 24,
       "size": 8,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "confirmed",
+      "evidence": "decompiled.c:6674-6680 loop (iVar5=0x18, +=0xA0); observed file bytes exactly reversed stamp."
     },
     {
       "name": "slot1_first_block_stamp",
       "offset": 184,
       "size": 8,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "confirmed",
+      "evidence": "Same FUN_080383a4 loop; RAM reconstruction matches exactly."
     },
     {
       "name": "slot2_first_block_stamp",
       "offset": 344,
       "size": 8,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "confirmed",
+      "evidence": "Same loop; RAM reconstruction matches exactly."
     },
     {
       "name": "slot0_payload_erased",
       "offset": 32,
       "size": 152,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "unknown",
+      "evidence": "Both samples erased here; exhaustive grep for FUN_08008bcc callers yields only header (0x18) and stamp (8) writes."
     },
     {
       "name": "slot1_payload_erased",
       "offset": 192,
       "size": 152,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "unknown",
+      "evidence": "Erased in both samples; no 0xA0 writer recovered."
     },
     {
       "name": "slot2_payload_erased",
       "offset": 352,
       "size": 152,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "unknown",
+      "evidence": "Erased in both samples; no 0xA0 writer recovered."
     },
     {
       "name": "slot_checksum_last_word_each_slot",
       "offset": 182,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "confidence": "guessed",
+      "evidence": "Slot RAM sums 0x00B3/0xFFB3/0x00B2 !=0 in both samples (Python), consistent with FUN_08038798 rejecting all slots and FUN_08038730 zeroing their 8-byte descriptors."
     },
     {
       "name": "unused_tail_block63",
       "offset": 504,
       "size": 8,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "likely",
+      "evidence": "Address arithmetic in FUN_080387c4/FUN_080383a4; all FF in both samples."
     }
   ]
 }

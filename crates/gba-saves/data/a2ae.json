@@ -42,103 +42,137 @@
       "name": "magic_disney_soccer",
       "offset": 0,
       "size": 16,
-      "type": "ascii"
+      "type": "ascii",
+      "confidence": "confirmed",
+      "evidence": "rev8(raw[0:16]) == b'DISNEY SOCCER   ' in both files; FUN_080fc3b8 (0x080fc3b8) reconstructs each 8-byte EEPROM block into RAM in exactly this reversed-u16 order (writes u16s to param2+6,+4,+2,+0). Note SOCCER (not Basketball) is literal in both samples - shared comm-009 engine heritage, not a transcription error. Raw offset 0x00, raw bytes 53 20 59 45 4e 53 49 44 20 20 20 52 45 43 43 4f"
     },
     {
       "name": "header_unknown_u16_at_0x10",
       "offset": 16,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "confidence": "unknown",
+      "evidence": "Logical bytes 8f c7 (LE 0xc78f, BE 0x8fc7) identical in both files. Exhaustive sum8/sum16/sum32/xor/CRC16(Modbus/CCITT/XMODEM/Kermit)/CRC32/Adler32 search over 8-byte-aligned ranges in raw and rev8 domains found no non-spurious match at this offset."
     },
     {
       "name": "header_bytes_0x12_0x14_all_0x3f",
       "offset": 18,
       "size": 3,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "guessed",
+      "evidence": "Logical bytes 3f 3f 3f in both files at 0x12-0x14; following 3 bytes zero."
     },
     {
       "name": "header_reserved_zero",
       "offset": 21,
       "size": 3,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "guessed",
+      "evidence": "Logical 00 00 00 in both files."
     },
     {
       "name": "record32_0",
       "offset": 24,
       "size": 32,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "guessed",
+      "evidence": "32-byte record 0 at logical 0x18, byte-identical to records 0-3 in both files (template/default pattern). Internal semantics unknown."
     },
     {
       "name": "record32_1",
       "offset": 56,
       "size": 32,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "guessed",
+      "evidence": "32-byte record 1 at logical 0x38, byte-identical to records 0-3 in both files (template/default pattern). Internal semantics unknown."
     },
     {
       "name": "record32_2",
       "offset": 88,
       "size": 32,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "guessed",
+      "evidence": "32-byte record 2 at logical 0x58, byte-identical to records 0-3 in both files (template/default pattern). Internal semantics unknown."
     },
     {
       "name": "record32_3",
       "offset": 120,
       "size": 32,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "guessed",
+      "evidence": "32-byte record 3 at logical 0x78, byte-identical to records 0-3 in both files (template/default pattern). Internal semantics unknown."
     },
     {
       "name": "record32_4",
       "offset": 152,
       "size": 32,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "guessed",
+      "evidence": "32-byte record 4 at logical 0x98. Records 0-3 byte-identical in both files; record 4 differs at +0 (0x32->0x46), +6 (0xa0->0xf0), +12 (0xe1->0x21), +13 (0xa1->0xa3), +19 (0x85->0x8a), +25 (0x0a->0x1e) in logical order - the only mutated record, consistent with one active/defaulted entity vs four template copies. Internal field semantics unknown; bytes look bit-packed, not plain LE ints (e.g. u16s 2610,839,16576... have no obvious stats meaning)."
     },
     {
       "name": "record108_0",
       "offset": 184,
       "size": 108,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "guessed",
+      "evidence": "108-byte record at logical 0xb8. Sparse single-bit bytes recur at identical internal offsets in all three records: +0x2a=0x10, +0x3c=0x01, +0x5c=0x01 (logical). record108_1 == record108_2 byte-for-byte in sav-01 (verified); record108_0 differs only at +0..+5 (00*6 vs fd 7e bf df ef 03) and +9 (0x01 vs 0x00)."
     },
     {
       "name": "record108_1",
       "offset": 292,
       "size": 108,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "guessed",
+      "evidence": "108-byte record at logical 0x124. Sparse single-bit bytes recur at identical internal offsets in all three records: +0x2a=0x10, +0x3c=0x01, +0x5c=0x01 (logical). record108_1 == record108_2 byte-for-byte in sav-01 (verified); record108_0 differs only at +0..+5 (00*6 vs fd 7e bf df ef 03) and +9 (0x01 vs 0x00)."
     },
     {
       "name": "record108_2",
       "offset": 400,
       "size": 108,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "guessed",
+      "evidence": "108-byte record at logical 0x190. Sparse single-bit bytes recur at identical internal offsets in all three records: +0x2a=0x10, +0x3c=0x01, +0x5c=0x01 (logical). record108_1 == record108_2 byte-for-byte in sav-01 (verified); record108_0 differs only at +0..+5 (00*6 vs fd 7e bf df ef 03) and +9 (0x01 vs 0x00)."
     },
     {
       "name": "record108_1_dense_header",
       "offset": 292,
       "size": 6,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "guessed",
+      "evidence": "Logical fd 7e bf df ef 03 in both files at 0x124 and (sav-01) 0x190; 00*6 at 0xb8."
     },
     {
       "name": "record108_2_dense_header",
       "offset": 400,
       "size": 6,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "guessed",
+      "evidence": "sav-01 logical fd 7e bf df ef 03; sav-00 raw/logical ff*6 (unwritten)."
     },
     {
       "name": "flag_byte_0xbe",
       "offset": 190,
       "size": 1,
-      "type": "u8"
+      "type": "u8",
+      "confidence": "guessed",
+      "evidence": "Logical 0x82 in both files at 0xbe, 0x12a, 0x196 (record108 internal +6). Raw .sav offset for 0xbe is 0xb9 (byte-reversed within block)."
     },
     {
       "name": "flag_bytes_sparse_0x2a_0x3c_0x5c_per_108record",
       "offset": 226,
       "size": 1,
-      "type": "bitflags"
+      "type": "bitflags",
+      "confidence": "guessed",
+      "evidence": "Logical: 0xe2=0x10,0xf4=0x01,0x114=0x01; 0x14e=0x10,0x160=0x01,0x180=0x01; 0x1ba=0x10,0x1cc=0x01,0x1ec=0x01 (sav-01). Positions verified in both files where written."
     },
     {
       "name": "trailer_last_4_bytes",
       "offset": 508,
       "size": 4,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "guessed",
+      "evidence": "sav-01 rev8[0x1fc:0x200]=00 00 00 80; sav-00 = ff ff ff ff. Raw sav-01 offset 0x1f8 bytes 80 00 00 00 in file order at block start (reversed within final block)."
     }
   ]
 }

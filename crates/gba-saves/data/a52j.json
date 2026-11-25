@@ -29,25 +29,33 @@
       "name": "magic_dword0",
       "offset": 0,
       "size": 4,
-      "type": "u32_le"
+      "type": "u32_le",
+      "confidence": "likely",
+      "evidence": "ghidra/decompiled.c:36 (*puVar1 = _DAT_0800057c) and :72 (if *piVar1 != _DAT_08000664); sav dword0 is the ONLY non-zero dword in cap-01. Equality of the two unresolved constants with each other / with 0x6E512BE4 is inferred, not directly read, hence not CONFIRMED_VERIFIED."
     },
     {
       "name": "payload_zero_region",
       "offset": 4,
       "size": 18296,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "unknown",
+      "evidence": "Python diff cap-00->cap-01: single contiguous range 0x0000-0x477F; Counter(cap-01) = 0x00:18312, 0xFF:14452, plus the 4 magic bytes. No non-zero payload byte exists to anchor any sub-field."
     },
     {
       "name": "sram_untouched_tail",
       "offset": 18304,
       "size": 14464,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "confirmed",
+      "evidence": "Python run analysis of cap-01: runs 0x4780-0x488F 0xFF, 0x4890-0x489B 0x00, 0x489C-0x7FFF 0xFF; identical ranges in saves/hexdump_and_diffs.txt."
     },
     {
       "name": "ram_only_default_flags_4780",
       "offset": 18304,
       "size": 136,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "guessed",
+      "evidence": "ghidra/decompiled.c:78-90 (piVar1+0x11e0 int* = +0x4780 bytes, iVar6=0x43 loop). File offset is given as the RAM offset; persistence is unproven."
     }
   ]
 }

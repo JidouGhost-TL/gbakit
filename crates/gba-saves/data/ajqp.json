@@ -43,97 +43,129 @@
       "name": "magic_mobile21",
       "offset": 0,
       "size": 8,
-      "type": "ascii"
+      "type": "ascii",
+      "confidence": "confirmed",
+      "evidence": "FUN_08007268 8-byte compare called by FUN_080072a4; RAM-decoded cap-01 bytes 0x00-0x07 are exactly 'mobile21' (raw file shows block-reversed '12elibom'). Absolute RAM base unresolved: Ghidra _DAT literal values were not exported, so ram_addr is null rather than guessed."
     },
     {
       "name": "format_version",
       "offset": 8,
       "size": 4,
-      "type": "ascii"
+      "type": "ascii",
+      "confidence": "confirmed",
+      "evidence": "FUN_080072a4 compares 4 bytes at base+8 against a ROM string; RAM-decoded cap-01 bytes 0x08-0x0B are '0.05' (raw file bytes 0x0C-0x0F read '50.0' due to block reversal)."
     },
     {
       "name": "header_sentinel_0x0c",
       "offset": 12,
       "size": 4,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "guessed",
+      "evidence": "RAM-decoded cap-01 bytes 0x0C-0x0F; absence of any reference in decompiled.c validation or transfer code."
     },
     {
       "name": "zero_region_0x10",
       "offset": 16,
       "size": 48,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "unknown",
+      "evidence": "RAM-decoded cap-01 bytes 0x10-0x3F are all zero; no traced function interprets them."
     },
     {
       "name": "table_header_0x40",
       "offset": 64,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "confidence": "unknown",
+      "evidence": "RAM-decoded cap-01 u16 at 0x40 is 0x0000 while the next nine u16 all hold 30000."
     },
     {
       "name": "default_table_0x42",
       "offset": 66,
       "size": 18,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "guessed",
+      "evidence": "RAM-decoded cap-01 u16[9] at 0x42..0x53 all equal 0x7530; type is an array of nine u16_le (schema type enum has no array form, so recorded as u16_le with the count in the name/evidence)."
     },
     {
       "name": "table_tail_0x54",
       "offset": 84,
       "size": 4,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "unknown",
+      "evidence": "RAM-decoded cap-01 u16 at 0x54 and 0x56 are both 0x0000."
     },
     {
       "name": "zero_region_0x58",
       "offset": 88,
       "size": 40,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "unknown",
+      "evidence": "RAM-decoded cap-01 bytes 0x58-0x7F are all zero."
     },
     {
       "name": "region_0x80_header",
       "offset": 128,
       "size": 4,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "unknown",
+      "evidence": "RAM-decoded cap-01 bytes 0x80-0x83 are zero."
     },
     {
       "name": "payload_0x84",
       "offset": 132,
       "size": 4,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "guessed",
+      "evidence": "RAM-decoded cap-01 bytes 0x84-0x87; the only non-trivial payload bytes outside the header and the 0x42 table."
     },
     {
       "name": "sentinel_0x88",
       "offset": 136,
       "size": 4,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "guessed",
+      "evidence": "RAM-decoded cap-01 bytes 0x88-0x8B are 0xFF; no reference in traced code."
     },
     {
       "name": "zero_region_0x8c",
       "offset": 140,
       "size": 19,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "unknown",
+      "evidence": "RAM-decoded cap-01 bytes 0x8C-0x9E are all zero."
     },
     {
       "name": "flag_0x9f",
       "offset": 159,
       "size": 1,
-      "type": "u8"
+      "type": "u8",
+      "confidence": "guessed",
+      "evidence": "RAM-decoded cap-01 byte 0x9F is 0x01 with all of 0x8C-0x9E zero."
     },
     {
       "name": "zero_region_0xa0",
       "offset": 160,
       "size": 344,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "unknown",
+      "evidence": "RAM-decoded cap-01 bytes 0xA0-0x1F7 are all zero (344 bytes)."
     },
     {
       "name": "checksum_sum32_le",
       "offset": 504,
       "size": 4,
-      "type": "u32_le"
+      "type": "u32_le",
+      "confidence": "confirmed",
+      "evidence": "Python verification on RAM-decoded cap-01: computed 0x1bb6dfd0 == stored 0x1bb6dfd0. Blank cap-00 correctly mismatches (0xffffff82 vs 0xffffffff). Absolute RAM address is base+0x1F8; the base literal was not exported, so ram_addr is null."
     },
     {
       "name": "checksum_condneg",
       "offset": 508,
       "size": 4,
-      "type": "u32_le"
+      "type": "u32_le",
+      "confidence": "confirmed",
+      "evidence": "Python verification on RAM-decoded cap-01: computed 0x762fd3c6 == stored 0x762fd3c6. Blank cap-00 correctly mismatches (0x00000000 vs 0xffffffff)."
     }
   ]
 }

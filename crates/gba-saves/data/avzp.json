@@ -38,49 +38,64 @@
       "name": "magic_word_a",
       "offset": 0,
       "size": 4,
-      "type": "u32_le"
+      "type": "u32_le",
+      "confidence": "likely",
+      "evidence": "FUN_080003f0: *puVar3 = uRam080005c0;  FUN_08000214: *piVar7 == iRam080003d0 gate."
     },
     {
       "name": "magic_word_b_spbs",
       "offset": 4,
       "size": 4,
-      "type": "ascii"
+      "type": "ascii",
+      "evidence": "FUN_080003f0: *(undefined4*)(iVar2+4) = (*pcRam080005d0)();  FUN_08000214: piVar7[1] == (*pcRam080003d4)() gate. ASCII decode is direct byte inspection of cap-01-future-1.sav."
     },
     {
       "name": "header_flag_byte",
       "offset": 8,
       "size": 1,
-      "type": "u8"
+      "type": "u8",
+      "confidence": "likely",
+      "evidence": "FUN_08000214: *puRam080003d8 = *(undefined1*)(iVar4+8); FUN_080003f0: *(undefined1*)(puVar3+2) = *puRam080005bc;"
     },
     {
       "name": "header_block_5b",
       "offset": 9,
       "size": 5,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "likely",
+      "evidence": "FUN_08000214: FUN_080001cc(iVar4+9, uVar3, 5); FUN_080003f0: FUN_080001cc(uRam080005c4, iVar2+9, 5);"
     },
     {
       "name": "header_block_8b",
       "offset": 14,
       "size": 8,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "likely",
+      "evidence": "FUN_08000214: FUN_080001cc(*piVar1+0xe, uRam080003e0, 8); FUN_080003f0: FUN_080001cc(uRam080005c8, iVar2+0xe, 8); byte-diff of saves/cap-00-future-0.sav vs cap-01-future-1.sav shows offsets 0x10-0x11 unchanged."
     },
     {
       "name": "unused_gap_0x10",
       "offset": 16,
       "size": 2,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "confirmed",
+      "evidence": "Byte-by-byte diff in saves/hexdump_and_diffs.txt / direct Python diff of the two .sav files: only bytes 0x10 and 0x11 inside the active 384-byte region are unchanged between the blank and populated snapshot."
     },
     {
       "name": "record_table",
       "offset": 24,
       "size": 360,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "guessed",
+      "evidence": "Span size/copy calls: CONFIRMED_STATIC from FUN_08000214/FUN_080003f0. Internal field typing: pure byte-pattern inference over saves/cap-01-future-1.sav (period-120 recurrence of byte 0x28 at absolute offsets 0x25/0x9d/0x115; BE32 round-number decode of leading 4-byte words; ASCII decode of trailing tag bytes)."
     },
     {
       "name": "unused_eeprom_tail",
       "offset": 384,
       "size": 128,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "confirmed",
+      "evidence": "Loop bounds in FUN_08000214/FUN_080003f0 (uVar6 < 0x30); both .sav files have bytes 0x180-0x1FF entirely 0xFF."
     }
   ]
 }

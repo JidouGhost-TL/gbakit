@@ -29,37 +29,48 @@
       "name": "unknown_header_prefix",
       "offset": 0,
       "size": 4,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "unknown",
+      "evidence": "Byte comparison of the two real .sav files only; no corresponding code reference found"
     },
     {
       "name": "magic_signature",
       "offset": 4,
       "size": 4,
-      "type": "ascii"
+      "type": "ascii",
+      "confidence": "confirmed",
+      "evidence": "Code read/write call sites in ghidra/decompiled.c (FUN_0801cd14, FUN_0801ccb8) plus exact byte match in saves/cap-01-future-1.sav; blank in saves/cap-00-future-0.sav"
     },
     {
       "name": "mirrored_stat_low",
       "offset": 8,
       "size": 4,
-      "type": "u32_le"
+      "type": "u32_le",
+      "confidence": "guessed",
+      "evidence": "saves/cap-01-future-1.sav: bytes 0x08-0x0B == bytes 0x0C-0x0F, both 0xAAB40000"
     },
     {
       "name": "global_checksum_or_stat",
       "offset": 12,
       "size": 4,
-      "type": "u32_le"
+      "type": "u32_le",
+      "confidence": "guessed",
+      "evidence": "Code call graph in ghidra/decompiled.c; Python XOR-fold recomputation against saves/cap-01-future-1.sav did not reproduce the stored value"
     },
     {
       "name": "per_slot_checksum[n] (n=0..11)",
       "offset": 20,
       "size": 4,
-      "type": "u32_le"
+      "type": "u32_le",
+      "evidence": "Offset formula from FUN_0801ccb8/FUN_0801c224 text, matched byte-for-byte (all 12 positions, exact stride 0x28) against saves/cap-01-future-1.sav"
     },
     {
       "name": "per_slot_body[n] (n=0..11)",
       "offset": 24,
       "size": 36,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "guessed",
+      "evidence": "Bit-range arithmetic in FUN_0801c224's is_slot branch; content semantics (e.g. leaderboard entry) not proven, only plausible given genre"
     }
   ]
 }

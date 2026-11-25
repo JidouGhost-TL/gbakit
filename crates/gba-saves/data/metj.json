@@ -60,85 +60,113 @@
       "name": "header_checksum_sum32",
       "offset": 0,
       "size": 4,
-      "type": "u32_le"
+      "type": "u32_le",
+      "confidence": "confirmed",
+      "evidence": "FUN_0807caf4 decompiled body; Python re-derivation matches both .sav files exactly (see SAVE-FORMAT-REPORT.md section 4.2)."
     },
     {
       "name": "header_checksum_complement",
       "offset": 4,
       "size": 4,
-      "type": "u32_le"
+      "type": "u32_le",
+      "confidence": "confirmed",
+      "evidence": "FUN_0807caf4 decompiled body; Python verification: (stored_sum + stored_complement) & 0xFFFFFFFF == 0xFFFFFFFF on both files."
     },
     {
       "name": "tag_char_0",
       "offset": 8,
       "size": 1,
-      "type": "ascii"
+      "type": "ascii",
+      "confidence": "confirmed",
+      "evidence": "FUN_0807caf4 decompiled body, line *(undefined1*)(_DAT_0807cb54+2)=0x30; byte matches both .sav files."
     },
     {
       "name": "tag_char_1",
       "offset": 9,
       "size": 1,
-      "type": "ascii"
+      "type": "ascii",
+      "confidence": "confirmed",
+      "evidence": "FUN_0807caf4 decompiled body; byte matches both .sav files."
     },
     {
       "name": "unresolved_global_byte",
       "offset": 10,
       "size": 1,
-      "type": "u8"
+      "type": "u8",
+      "confidence": "likely",
+      "evidence": "FUN_0807caf4 decompiled body; source global not further resolvable in available decompilation."
     },
     {
       "name": "constant_flag_byte",
       "offset": 11,
       "size": 1,
-      "type": "u8"
+      "type": "u8",
+      "confidence": "confirmed",
+      "evidence": "FUN_0807caf4 decompiled body; byte matches both .sav files."
     },
     {
       "name": "build_tag_string",
       "offset": 12,
       "size": 20,
-      "type": "ascii"
+      "type": "ascii",
+      "confidence": "confirmed",
+      "evidence": "FUN_0807caf4 copy loop and FUN_0807cc34 compare loop both decompiled; string matches both .sav files exactly."
     },
     {
       "name": "header_reserved_padding",
       "offset": 32,
       "size": 96,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "likely",
+      "evidence": "Byte range verified as 0xFF fill in both .sav files; no writer found in ghidra/decompiled.c."
     },
     {
       "name": "candidate_slot_b_bytes",
       "offset": 128,
       "size": 128,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "guessed",
+      "evidence": "FUN_0807cc34 validates a second 128-byte candidate at base+0x80 words; SRAM offset 0x80-0xFF is 0xFF fill (unpopulated) in both .sav files."
     },
     {
       "name": "unresolved_zero_block",
       "offset": 256,
       "size": 256,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "unknown",
+      "evidence": "Zero fill (distinct from surrounding 0xFF default) confirmed in both .sav files; no matching writer/reader found in ghidra/decompiled.c."
     },
     {
       "name": "volatile_counter_bytes",
       "offset": 28736,
       "size": 5,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "unknown",
+      "evidence": "Byte-diff between cap-00 and cap-01 at 0x7040-0x7044; not ASCII, not matching the sum/complement checksum shape used elsewhere."
     },
     {
       "name": "unexplained_language_key_text",
       "offset": 28741,
       "size": 34,
-      "type": "ascii"
+      "type": "ascii",
+      "confidence": "guessed",
+      "evidence": "saves/hexdump_and_diffs.txt diff between the two capture files; string searched for and not found anywhere in ghidra/decompiled.c."
     },
     {
       "name": "footer_tag_string",
       "offset": 32752,
       "size": 10,
-      "type": "ascii"
+      "type": "ascii",
+      "confidence": "likely",
+      "evidence": "Bytes proven identical in both .sav files via direct Python read; no matching function found in ghidra/decompiled.c."
     },
     {
       "name": "footer_fill",
       "offset": 32762,
       "size": 6,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "likely",
+      "evidence": "Byte range verified as 0xFF fill in both .sav files."
     }
   ]
 }

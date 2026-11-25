@@ -39,121 +39,161 @@
       "name": "global_header_magic",
       "offset": 0,
       "size": 4,
-      "type": "u32_le"
+      "type": "u32_le",
+      "confidence": "confirmed",
+      "evidence": "Logical offset 0; both files hold 0xC0DE611D; FUN_08022c50 writes it (decompiled.c:4265), FUN_08022c3c checks it (decompiled.c:4254). File offset is block-reversed (bytes at file 0x04-0x07 reversed order)."
     },
     {
       "name": "global_counter_byte",
       "offset": 4,
       "size": 1,
-      "type": "u8"
+      "type": "u8",
+      "confidence": "likely",
+      "evidence": "FUN_08022c34/08022c38 access global+4 (decompiled.c:4233/4243); caller FUN_080314c4 (decompiled.c:5349-5354). Value semantics unproven from two samples."
     },
     {
       "name": "global_record_padding",
       "offset": 5,
       "size": 3,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "guessed",
+      "evidence": "Always 0xFF; never written by traced code; likely unused padding in 8-byte global record."
     },
     {
       "name": "slot_header_magic",
       "offset": 8,
       "size": 4,
-      "type": "u32_le"
+      "type": "u32_le",
+      "confidence": "confirmed",
+      "evidence": "FUN_08022bb4 header+CRC check (decompiled.c:4177); empty init FUN_08022c04 (decompiled.c:4221). Slots 1/2 repeat at logical 168/328. Whether occupied value varies by slot is unknown (only slot0 occupied)."
     },
     {
       "name": "profile_u32_04",
       "offset": 12,
       "size": 4,
-      "type": "u32_le"
+      "type": "u32_le",
+      "confidence": "likely",
+      "evidence": "FUN_080226dc decompiled.c:3845-3850; FUN_080228a8 decompiled.c:3922. Slot0 offset shown; +0xA0 per slot."
     },
     {
       "name": "profile_u32_08",
       "offset": 16,
       "size": 4,
-      "type": "u32_le"
+      "type": "u32_le",
+      "confidence": "likely",
+      "evidence": "FUN_080226dc decompiled.c:3849; FUN_080228a8 decompiled.c:3923."
     },
     {
       "name": "profile_u32_0c",
       "offset": 20,
       "size": 4,
-      "type": "u32_le"
+      "type": "u32_le",
+      "confidence": "likely",
+      "evidence": "FUN_080226dc (FUN_08014bd8 decompiled.c:1829); FUN_080228a8 decompiled.c:3924."
     },
     {
       "name": "profile_u32_10",
       "offset": 24,
       "size": 4,
-      "type": "u32_le"
+      "type": "u32_le",
+      "confidence": "likely",
+      "evidence": "FUN_080226dc (FUN_08014e08 decompiled.c:1965); FUN_080228a8 decompiled.c:3925."
     },
     {
       "name": "profile_region_14",
       "offset": 28,
       "size": 20,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "likely",
+      "evidence": "FUN_08022b10 decompiled.c:4124-4162; FUN_08022a6c decompiled.c:4052-4090. Internal entry semantics unknown."
     },
     {
       "name": "profile_bytes_28",
       "offset": 40,
       "size": 8,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "likely",
+      "evidence": "FUN_080226dc profile+0x28..0x2F; FUN_080228a8 decompiled.c:3929-3943."
     },
     {
       "name": "profile_bytes_30",
       "offset": 48,
       "size": 10,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "likely",
+      "evidence": "FUN_080226dc profile+0x30..0x39; FUN_080228a8 decompiled.c:3944-3969."
     },
     {
       "name": "profile_bytes_3a",
       "offset": 58,
       "size": 2,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "likely",
+      "evidence": "FUN_080226dc profile+0x3A..0x3B; FUN_080228a8 decompiled.c:3970-3975."
     },
     {
       "name": "profile_bytes_3c",
       "offset": 60,
       "size": 2,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "likely",
+      "evidence": "FUN_08022a38 decompiled.c:4011-4017; FUN_08022a14 decompiled.c:3992-3994. Appears at file 0x42-0x43 in cap-01 (block-reversed)."
     },
     {
       "name": "profile_region_3e_43",
       "offset": 62,
       "size": 6,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "unknown",
+      "evidence": "Zero in all samples; inside CRC range but no writer found in corpus."
     },
     {
       "name": "profile_block_44",
       "offset": 68,
       "size": 24,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "likely",
+      "evidence": "FUN_080226dc (FUN_08001e48); FUN_080228a8 decompiled.c:3926. Unit size not stated in corpus."
     },
     {
       "name": "profile_block_60",
       "offset": 96,
       "size": 56,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "likely",
+      "evidence": "FUN_080226dc FUN_08007214(...,profile+0x18,0xE) = byte +0x60; FUN_080228a8 decompiled.c:3978. Cap-01 sets sub-offsets +0x60,+0x62,+0x63,+0x6B,+0x7C,+0x7E,+0x7F,+0x87."
     },
     {
       "name": "profile_tail_98_9b",
       "offset": 152,
       "size": 4,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "unknown",
+      "evidence": "Zero in all samples; last 4 CRC-covered bytes."
     },
     {
       "name": "profile_crc16",
       "offset": 156,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "confidence": "confirmed",
+      "evidence": "Verified 6/6 in Python (see report section 4). Slot0 stored at file 0xA2-0xA3 block-reversed; slot1 file 0x142, slot2 file 0x1E2."
     },
     {
       "name": "profile_post_crc_9e",
       "offset": 158,
       "size": 2,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "guessed",
+      "evidence": "Always zero; likely padding to 0xA0 stride."
     },
     {
       "name": "unwritten_tail",
       "offset": 488,
       "size": 24,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "confirmed",
+      "evidence": "File bytes 0x1E8-0x1FF are 0xFF in both samples; layout ends at 488."
     }
   ]
 }

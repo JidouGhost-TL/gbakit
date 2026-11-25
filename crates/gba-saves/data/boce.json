@@ -33,151 +33,201 @@
       "name": "magic_urbz0011",
       "offset": 0,
       "size": 8,
-      "type": "ascii"
+      "type": "ascii",
+      "confidence": "confirmed",
+      "evidence": "FUN_0804d694 8-byte compare loop; FUN_0804da48 template memcpy (FUN_08033018, 0x18 bytes); bytes present in both .sav files."
     },
     {
       "name": "header_const_ff80",
       "offset": 8,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "confidence": "likely",
+      "evidence": "Identical in both samples; inside FUN_0804d694/FUN_0804da48 24-byte header; semantics unknown."
     },
     {
       "name": "language_id",
       "offset": 10,
       "size": 1,
-      "type": "u8"
+      "type": "u8",
+      "confidence": "likely",
+      "evidence": "Struct-relative offsets +0x0A in FUN_0804d74c/FUN_0804d6f0; 6 locales match title languages (En,Fr,De,Es,It,Nl); exact index-to-language order beyond 0 is untested."
     },
     {
       "name": "header_flag_0x0b",
       "offset": 11,
       "size": 1,
-      "type": "u8"
+      "type": "u8",
+      "confidence": "likely",
+      "evidence": "Writer body sets =1; diff between samples is 0->1 with checksum compensating by -0x100; PACKET probe mutation at this offset is rejected via header checksum, not via a counter check."
     },
     {
       "name": "header_reserved_0x0c",
       "offset": 12,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "confidence": "likely",
+      "evidence": "Inside 24-byte header in FUN_0804da48/FUN_0804d694."
     },
     {
       "name": "header_checksum",
       "offset": 14,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "confidence": "confirmed",
+      "evidence": "Python recomputation matches stored values on both samples exactly; decompiled writer/validator bodies read in full."
     },
     {
       "name": "header_reserved_0x10",
       "offset": 16,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "confidence": "likely",
+      "evidence": "Inside 24-byte header."
     },
     {
       "name": "header_sentinel_0x12",
       "offset": 18,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "confidence": "likely",
+      "evidence": "Identical 0xFFFF in both samples inside the templated header."
     },
     {
       "name": "header_reserved_0x14",
       "offset": 20,
       "size": 4,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "likely",
+      "evidence": "Header length 0x18 used by FUN_0804d694/FUN_0804da48/FUN_0804d624."
     },
     {
       "name": "sector0_buffer_pointer_persisted",
       "offset": 24,
       "size": 4,
-      "type": "u32_le"
+      "type": "u32_le",
+      "confidence": "likely",
+      "evidence": "Pointer value is an EWRAM address identical in both files; struct+0x18 dereferenced as buffer by FUN_0804d9e4/FUN_0804d938."
     },
     {
       "name": "sector0_reserved_0x1c_0xcb",
       "offset": 28,
       "size": 176,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "unknown",
+      "evidence": "Zero in both samples; no decompiled function references struct offsets in this range."
     },
     {
       "name": "sector_valid_flags",
       "offset": 204,
       "size": 4,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "likely",
+      "evidence": "Exact struct offset +0xCC in two functions; file values change 00->01 per byte between captures in step with sector loading."
     },
     {
       "name": "stream_cursor_persisted",
       "offset": 212,
       "size": 4,
-      "type": "u32_le"
+      "type": "u32_le",
+      "confidence": "likely",
+      "evidence": "Struct offsets +0xD4/+0xD8 in FUN_0804d938 and game FUN_0804d800; cap-01 value is an EWRAM pointer near the +0x18 buffer allocation."
     },
     {
       "name": "stream_state",
       "offset": 216,
       "size": 4,
-      "type": "u32_le"
+      "type": "u32_le",
+      "confidence": "likely",
+      "evidence": "FUN_0804d800 game stream body; FUN_0804d938 stores 0 at struct+0xD8."
     },
     {
       "name": "sector0_payload_0x300_pointers",
       "offset": 768,
       "size": 24,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "guessed",
+      "evidence": "Six EWRAM-pointer-shaped u32 values appear only in cap-01; likely references to live RAM objects, targets not identifiable from the save alone."
     },
     {
       "name": "sector0_flags_0x34a",
       "offset": 842,
       "size": 5,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "guessed",
+      "evidence": "Five boolean-like bytes change 0->1 as a group; semantics unknown."
     },
     {
       "name": "sector0_payload_0x610_pointers",
       "offset": 1552,
       "size": 16,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "guessed",
+      "evidence": "Four EWRAM-pointer-shaped values in cap-01 only."
     },
     {
       "name": "sector0_payload_0x70c_pointers",
       "offset": 1804,
       "size": 28,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "guessed",
+      "evidence": "Small header word followed by six descending EWRAM pointers in cap-01 only."
     },
     {
       "name": "sector0_unclassified_0x730",
       "offset": 1840,
       "size": 200,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "unknown",
+      "evidence": "Byte patterns resemble ARM opcodes; no traced reader consumes file offsets 0x730-0x7f7. Not interpreted as gameplay fields."
     },
     {
       "name": "sector0_descriptor_table_0x87c",
       "offset": 2172,
       "size": 32,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "guessed",
+      "evidence": "Identical except first word in both files; pointer classes (IWRAM trampoline + ROM flash-driver area) match FUN_0806b8a4 descriptor copying, but the exact writer was not traced."
     },
     {
       "name": "sector1_block",
       "offset": 4096,
       "size": 4096,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "likely",
+      "evidence": "Reader/checksum chain fully traced; sample content is empty so field-level layout inside a non-empty block is unknown."
     },
     {
       "name": "sector2_block",
       "offset": 8192,
       "size": 4096,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "likely",
+      "evidence": "FUN_0804d938 loop index 1."
     },
     {
       "name": "sector3_block",
       "offset": 12288,
       "size": 4096,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "likely",
+      "evidence": "FUN_0804d938 loop index 2."
     },
     {
       "name": "sector4_block",
       "offset": 16384,
       "size": 4096,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "likely",
+      "evidence": "FUN_0804d938 loop index 3."
     },
     {
       "name": "unused_tail",
       "offset": 20480,
       "size": 45056,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "confirmed",
+      "evidence": "Uniform 0xFF in both 65536-byte files past 0x5000; no traced access to sectors >= 5."
     }
   ]
 }

@@ -50,61 +50,81 @@
       "name": "payload_region_1_zero",
       "offset": 0,
       "size": 268,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "unknown",
+      "evidence": "Logical 0x000..0x10B all zero in block-reversed RAM image; no function in decompiled.c writes these offsets"
     },
     {
       "name": "ff_padding_field",
       "offset": 268,
       "size": 32,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "guessed",
+      "evidence": "Logical 0x10C..0x12B = 32x 0xFF; PACKET candidate spans 0x10C/0x128 are this field's edges, not checksums"
     },
     {
       "name": "payload_region_2_zero",
       "offset": 300,
       "size": 84,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "unknown",
+      "evidence": "Logical 0x12C..0x17F all zero"
     },
     {
       "name": "counter_at_0x180",
       "offset": 384,
       "size": 4,
-      "type": "u32_le"
+      "type": "u32_le",
+      "confidence": "guessed",
+      "evidence": "Logical bytes 01 00 00 00 at 0x180 in RAM image"
     },
     {
       "name": "counter_at_0x184",
       "offset": 388,
       "size": 4,
-      "type": "u32_le"
+      "type": "u32_le",
+      "confidence": "guessed",
+      "evidence": "Logical bytes 01 00 00 00 at 0x184"
     },
     {
       "name": "reserved_zero_0x188",
       "offset": 392,
       "size": 44,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "unknown",
+      "evidence": "Logical 0x188..0x1B3 all zero"
     },
     {
       "name": "record_array_4x28",
       "offset": 436,
       "size": 112,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "likely",
+      "evidence": "Writer pattern decompiled.c:1889-1925 (base+0x1B4+i*0x1C) matches logical 0x1B4..0x223 values exactly; base-pointer identity with save mirror is HYPOTHESIS (literal values absent)"
     },
     {
       "name": "zero_padding_pre_trailer",
       "offset": 548,
       "size": 4,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "likely",
+      "evidence": "Logical 0x224..0x227 zero; 0x224 is also FUN_0803c974 payload-size constant"
     },
     {
       "name": "magic_DIABLK_logical",
       "offset": 552,
       "size": 6,
-      "type": "ascii"
+      "type": "ascii",
+      "confidence": "confirmed",
+      "evidence": "FUN_0803c9b8 writes 0x44 0x49 0x41 0x42 0x4C 0x4B; FUN_0803ca54 compares D,I,A,B,L,K; block-reversed raw sav shows KLBAID at predicted offsets in both copies"
     },
     {
       "name": "checksum_sum8_u16",
       "offset": 558,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "confidence": "confirmed",
+      "evidence": "Python: sum(ram[:0x228])&0xFFFF == 0x2C0A == stored u16_le in both copies of cap-01"
     }
   ]
 }

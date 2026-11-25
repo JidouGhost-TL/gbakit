@@ -40,79 +40,105 @@
       "name": "magic",
       "offset": 0,
       "size": 8,
-      "type": "ascii"
+      "type": "ascii",
+      "confidence": "confirmed",
+      "evidence": "FUN_080357ac compares 8 RAM bytes after sum check; both .sav files contain 30ABGROL at file 0x00; transform proven by checksum in Section 4 of SAVE-FORMAT-REPORT.md."
     },
     {
       "name": "header_template_const_0c",
       "offset": 8,
       "size": 4,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "guessed",
+      "evidence": "Identical non-zero bytes in both samples at file 0x08-0x0B; no field-specific reader found, checksum-only."
     },
     {
       "name": "header_reserved_08",
       "offset": 12,
       "size": 4,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "unknown",
+      "evidence": "Zero in both samples; no writer/reader beyond checksum."
     },
     {
       "name": "header_settings_byte",
       "offset": 23,
       "size": 1,
-      "type": "u8"
+      "type": "u8",
+      "confidence": "likely",
+      "evidence": "FUN_08035658/FUN_0803557c/FUN_0803e9f8 bodies in ghidra/decompiled.c. Locale/language meaning is hypothesis only; value 0 in both samples."
     },
     {
       "name": "header_flag_11",
       "offset": 22,
       "size": 1,
-      "type": "u8"
+      "type": "u8",
+      "confidence": "confirmed",
+      "evidence": "Only differing payload byte between the two samples; checksum changes by exact compensating -0x0100 in RAM word terms. FUN_08035658 sets it to 1."
     },
     {
       "name": "header_reserved_12",
       "offset": 16,
       "size": 6,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "unknown",
+      "evidence": "Zero in both samples; no field writer in ghidra/decompiled.c."
     },
     {
       "name": "header_checksum",
       "offset": 24,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "confidence": "confirmed",
+      "evidence": "Python computed f515/f415 matches stored in both files; see checksums[0]."
     },
     {
       "name": "header_reserved_18",
       "offset": 26,
       "size": 6,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "unknown",
+      "evidence": "Zero in both samples; no field writer traced."
     },
     {
       "name": "slot0_record",
       "offset": 32,
       "size": 120,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "unknown",
+      "evidence": "Geometry CONFIRMED_STATIC from FUN_080355c0 stride 0x78 and FUN_080356b8 block count 0xF; contents never observed populated."
     },
     {
       "name": "slot1_record",
       "offset": 152,
       "size": 120,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "unknown",
+      "evidence": "Same loader/validator chain as slot 0; contents never observed populated."
     },
     {
       "name": "slot2_record",
       "offset": 272,
       "size": 120,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "unknown",
+      "evidence": "Same loader/validator chain as slot 0; contents never observed populated."
     },
     {
       "name": "slot3_record",
       "offset": 392,
       "size": 120,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "unknown",
+      "evidence": "Same loader/validator chain as slot 0; contents never observed populated."
     },
     {
       "name": "slot_validator_word",
       "offset": 128,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "confidence": "likely",
+      "evidence": "FUN_08035628 body: (u16)(word-0x1F)<0x66 gate and low-byte return. Meaning (stage/level id) is hypothesis."
     }
   ]
 }

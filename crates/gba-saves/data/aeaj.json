@@ -29,103 +29,137 @@
       "name": "records_200x60",
       "offset": 0,
       "size": 12000,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "guessed",
+      "evidence": "Code count/stride 200/0x3C; 200*0x3C=0x2EE0 exactly ends populated span. Base pointer literal unresolved; semantics unknown."
     },
     {
       "name": "five_pairs_after_records",
       "offset": 12000,
       "size": 10,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "guessed",
+      "evidence": "Immediately after 200x60 array; only 5-iteration stride-0x12 defaults writer."
     },
     {
       "name": "zero_gap_2eea_2fa8",
       "offset": 12010,
       "size": 190,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "unknown",
+      "evidence": "No nonzero bytes, no resolvable code offset."
     },
     {
       "name": "u16_index_flag_array",
       "offset": 12200,
       "size": 300,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "guessed",
+      "evidence": "Sequence shape matches defaults loop; entry count 150 vs code 30 unresolved."
     },
     {
       "name": "name_records_6x18",
       "offset": 12500,
       "size": 108,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "guessed",
+      "evidence": "6*18=108 ends exactly at 0x3140; FFFF pairs at record tails. Type bytes because schema has no sjis type."
     },
     {
       "name": "dword_at_3140",
       "offset": 12608,
       "size": 4,
-      "type": "u32_le"
+      "type": "u32_le",
+      "confidence": "guessed",
+      "evidence": "Only large literal offset in defaults code coincides with value 1 at same file offset."
     },
     {
       "name": "zero_gap_3144_39c4",
       "offset": 12612,
       "size": 2176,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "unknown",
+      "evidence": "Zero region only."
     },
     {
       "name": "byte_at_39c4",
       "offset": 14788,
       "size": 1,
-      "type": "u8"
+      "type": "u8",
+      "confidence": "unknown",
+      "evidence": "Isolated nonzero byte."
     },
     {
       "name": "sparse_at_3a44",
       "offset": 14916,
       "size": 12,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "unknown",
+      "evidence": "Sparse cluster, boundaries unresolvable from one sample."
     },
     {
       "name": "u16_at_3a78",
       "offset": 14968,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "confidence": "guessed",
+      "evidence": "Aligned isolated round value 0x05DC."
     },
     {
       "name": "sparse_at_3bb2",
       "offset": 15282,
       "size": 28,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "unknown",
+      "evidence": "Sparse cluster."
     },
     {
       "name": "u16_ff_array_200",
       "offset": 15380,
       "size": 400,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "guessed",
+      "evidence": "200*2=400 ends at 0x3DA4, end of populated main region. Type unknown in schema terms (array of u16_le)."
     },
     {
       "name": "zero_gap_3da4_7d50",
       "offset": 15780,
       "size": 16300,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "unknown",
+      "evidence": "Zero run causing checksum covered-end ambiguity [0x3DA4,0x7D50)."
     },
     {
       "name": "candidate_magic_dword",
       "offset": 32080,
       "size": 4,
-      "type": "u32_le"
+      "type": "u32_le",
+      "confidence": "guessed",
+      "evidence": "Code proves a dword check/write pair; offset/value are unresolved literals. Could be version/date."
     },
     {
       "name": "zero_dword_7d54",
       "offset": 32084,
       "size": 4,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "guessed",
+      "evidence": "Adjacency to candidate magic/checksum only."
     },
     {
       "name": "candidate_checksum_byte",
       "offset": 32088,
       "size": 1,
-      "type": "u8"
+      "type": "u8",
+      "confidence": "guessed",
+      "evidence": "sum8[0:0x3DA4]=0x69 matches, 0x69 unique in file; single sample, zero-gap ambiguity. See checksums."
     },
     {
       "name": "tail_zero_7d59",
       "offset": 32089,
       "size": 679,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "unknown",
+      "evidence": "Zero tail of 32KiB image."
     }
   ]
 }

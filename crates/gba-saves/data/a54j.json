@@ -29,37 +29,49 @@
       "name": "magic",
       "offset": 0,
       "size": 4,
-      "type": "u32_le"
+      "type": "u32_le",
+      "confidence": "confirmed",
+      "evidence": "decompiled.c:25,56 + cap-01 bytes c666f089 at offset 0; Python-verified."
     },
     {
       "name": "payload_unknown",
       "offset": 4,
       "size": 1740,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "unknown",
+      "evidence": "Only sample is a freshly initialised record (all zero); exhaustive search shows no payload sub-offset access in decompiled.c."
     },
     {
       "name": "tail_u32_at_0x6d0",
       "offset": 1744,
       "size": 4,
-      "type": "u32_le"
+      "type": "u32_le",
+      "confidence": "likely",
+      "evidence": "decompiled.c:16,62 index arithmetic; observed 0 in sav."
     },
     {
       "name": "tail_byte_at_0x6d4",
       "offset": 1748,
       "size": 1,
-      "type": "u8"
+      "type": "u8",
+      "confidence": "likely",
+      "evidence": "decompiled.c:17,63; observed 0 in sav."
     },
     {
       "name": "tail_reserved_0x6d5_0x6d7",
       "offset": 1749,
       "size": 3,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "guessed",
+      "evidence": "No access in decompiled.c; zero in sav."
     },
     {
       "name": "unused_sram_beyond_record",
       "offset": 1752,
       "size": 31016,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "confirmed",
+      "evidence": "Python check cap-01[0x6D8:]==0xFF*31016; driver length literal 0x6D8."
     }
   ]
 }

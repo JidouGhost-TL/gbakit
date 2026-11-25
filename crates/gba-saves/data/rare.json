@@ -30,67 +30,89 @@
       "name": "unknown_header_dword",
       "offset": 0,
       "size": 4,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "likely",
+      "evidence": "Decompiled assignment identified; always zero in both samples so semantics are unproven"
     },
     {
       "name": "magic_ERAR",
       "offset": 4,
       "size": 4,
-      "type": "ascii"
+      "type": "ascii",
+      "confidence": "confirmed",
+      "evidence": "Byte-identical in both real .sav files; matching write site located in decompiled.c"
     },
     {
       "name": "nibble_pack_block",
       "offset": 8,
       "size": 12,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "likely",
+      "evidence": "Loop and packing formula read directly from decompiled code; byte offset 0x13 (slot 11, high nibble) is the only byte in this span that differs between the two samples (0xF0->0x00)"
     },
     {
       "name": "nibble_combo_byte",
       "offset": 20,
       "size": 1,
-      "type": "u8"
+      "type": "u8",
+      "confidence": "likely",
+      "evidence": "Both source nibbles are 0 in both samples"
     },
     {
       "name": "copy_field_u16_a",
       "offset": 22,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "confidence": "likely",
+      "evidence": "Direct 2-byte copy in decompiled code; constant zero in both samples"
     },
     {
       "name": "copy_field_bytes_b",
       "offset": 24,
       "size": 2,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "confirmed",
+      "evidence": "Both real .sav files show the exact predicted constant bytes FF 00"
     },
     {
       "name": "validity_marker_0x16",
       "offset": 28,
       "size": 1,
-      "type": "u8"
+      "type": "u8",
+      "confidence": "confirmed",
+      "evidence": "Constant 0x16 in both samples; decompiled source line has a known +/-1 byte offset ambiguity (file offset 0x1b is always 0x00, file offset 0x1c is the real constant) attributed to Ghidra's own flagged overlapping-globals warning for this binary"
     },
     {
       "name": "trailer_field_c",
       "offset": 29,
       "size": 1,
-      "type": "u8"
+      "type": "u8",
+      "confidence": "likely",
+      "evidence": "Direct copy in decompiled code; always zero observed"
     },
     {
       "name": "trailer_field_d",
       "offset": 30,
       "size": 1,
-      "type": "u8"
+      "type": "u8",
+      "confidence": "likely",
+      "evidence": "Direct byte copy; always zero observed"
     },
     {
       "name": "bulk_gameplay_span",
       "offset": 32,
       "size": 216,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "unknown",
+      "evidence": "No mutation observed between the 2 available samples anywhere in this span"
     },
     {
       "name": "mutating_word_0xF8",
       "offset": 248,
       "size": 2,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "guessed",
+      "evidence": "Identified purely from byte-diffing the 2 real .sav samples (saves/hexdump_and_diffs.txt); circumstantial numeric correlation with offset 0x13, not yet confirmed causally"
     }
   ]
 }

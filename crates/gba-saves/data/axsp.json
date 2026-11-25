@@ -33,91 +33,121 @@
       "name": "header_lead_bytes",
       "offset": 0,
       "size": 2,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "likely",
+      "evidence": "FUN_08018ae0 memsets whole struct to 0; FUN_08018c2c line ~3123 `*puVar1 = *_DAT_08018d0c` overwrites offset 0-3 as a unit."
     },
     {
       "name": "identity_string",
       "offset": 2,
       "size": 6,
-      "type": "ascii"
+      "type": "ascii",
+      "confidence": "guessed",
+      "evidence": "Bytes directly observed (69 6d 61 6e 6f 4b); whether FUN_08018b98 actually enforces this as a magic value depends on an unresolved strcmp base-pointer ambiguity (see magic_strcmp checksum entry)."
     },
     {
       "name": "content_version_stamp",
       "offset": 8,
       "size": 4,
-      "type": "u32_le"
+      "type": "u32_le",
+      "confidence": "likely",
+      "evidence": "ghidra/decompiled.c FUN_08018bb4 (lines 2999-3021), FUN_08018bd4 line 3045, FUN_08018c2c lines 3126-3127."
     },
     {
       "name": "flag_byte_0xC",
       "offset": 12,
       "size": 1,
-      "type": "u8"
+      "type": "u8",
+      "confidence": "likely",
+      "evidence": "FUN_08018ae0 line 2943."
     },
     {
       "name": "flag_byte_0xD",
       "offset": 13,
       "size": 1,
-      "type": "u8"
+      "type": "u8",
+      "confidence": "likely",
+      "evidence": "FUN_08018ae0 line 2942."
     },
     {
       "name": "flag_byte_0xE",
       "offset": 14,
       "size": 1,
-      "type": "u8"
+      "type": "u8",
+      "confidence": "likely",
+      "evidence": "FUN_08018ae0 line 2944."
     },
     {
       "name": "flag_byte_0xF",
       "offset": 15,
       "size": 1,
-      "type": "u8"
+      "type": "u8",
+      "confidence": "likely",
+      "evidence": "FUN_08018ae0 line 2941."
     },
     {
       "name": "record_table",
       "offset": 16,
       "size": 440,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "likely",
+      "evidence": "FUN_08018ae0 (reset, literal constants), FUN_08018908/FUN_08018884 (pack), FUN_08018950 (unpack/read), FUN_08018c2c (rebuild-on-save loop)."
     },
     {
       "name": "score_slot_0",
       "offset": 456,
       "size": 4,
-      "type": "u32_le"
+      "type": "u32_le",
+      "confidence": "guessed",
+      "evidence": "FUN_080189b0 (lines 2906-2920); observed remainder digit (1) does not match the pure reset-seed prediction for idx=0 (expected remainder 0), indicating this sample's slot table was not populated purely by FUN_08018ae0."
     },
     {
       "name": "score_slot_1",
       "offset": 460,
       "size": 4,
-      "type": "u32_le"
+      "type": "u32_le",
+      "confidence": "guessed",
+      "evidence": "Same as score_slot_0."
     },
     {
       "name": "score_slot_2",
       "offset": 464,
       "size": 4,
-      "type": "u32_le"
+      "type": "u32_le",
+      "confidence": "guessed",
+      "evidence": "Same as score_slot_0."
     },
     {
       "name": "score_slot_3",
       "offset": 468,
       "size": 4,
-      "type": "u32_le"
+      "type": "u32_le",
+      "confidence": "guessed",
+      "evidence": "Same as score_slot_0."
     },
     {
       "name": "score_slot_4",
       "offset": 472,
       "size": 4,
-      "type": "u32_le"
+      "type": "u32_le",
+      "confidence": "guessed",
+      "evidence": "Same as score_slot_0."
     },
     {
       "name": "unchecked_trailer_span",
       "offset": 476,
       "size": 4,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "unknown",
+      "evidence": "Literal 0x1DC length constant in both FUN_08018bd4 (line 3038) and FUN_08018c2c (line 3129) excludes offset 0x1DC-0x1DF; matches the packet's own mutation-probe result of no detected integrity failure and no rewrite at that offset."
     },
     {
       "name": "unused_tail",
       "offset": 480,
       "size": 32,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "unknown",
+      "evidence": "Outside the traced read/write range; all-0xFF matches EEPROM erased-state fill, consistent with never being written."
     }
   ]
 }

@@ -27,193 +27,257 @@
       "name": "magic_0x0d",
       "offset": 0,
       "size": 1,
-      "type": "u8"
+      "type": "u8",
+      "confidence": "confirmed",
+      "evidence": "FUN_0800c5cc writes 0x0D at RAM base+0 before checksum; FUN_0800c654 requires (char)*base=='\\r' (0x0D); byte is 0x0D in all 12 copies of cap-01, 0xFF in blank cap-00"
     },
     {
       "name": "slot_index",
       "offset": 1,
       "size": 1,
-      "type": "u8"
+      "type": "u8",
+      "confidence": "confirmed",
+      "evidence": "FUN_0800c5cc: *(base+1)=(char)param_1 (slot 0..2 from FUN_080563ac loop); FUN_0800c654 requires byte1<3 (does NOT compare ==requested slot); sav byte1=0,1,2 per slot, identical across its 4 copies"
     },
     {
       "name": "mode_or_cursor_byte2",
       "offset": 2,
       "size": 1,
-      "type": "u8"
+      "type": "u8",
+      "confidence": "likely",
+      "evidence": "FUN_0800c4a8 preserves *(block+2) clamped to <=4 (else 0) across default-init; FUN_080563ac clamps its param to 0..4 and writes *(RAM+2)=param before each FUN_0800c5cc; FUN_08057078 passes a clamped byte ( >0x80->2, >2->0 ). Observed 0 in all slots/copies of cap-01 (param was 0 at capture)"
     },
     {
       "name": "reserved_or_gameplay_0x003_0x087",
       "offset": 3,
       "size": 133,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "unknown",
+      "evidence": "Zero in the only non-blank sample (a freshly default-initialised save, see §3); no writer in the traced save chain assigns a resolved offset here. DAT_* literal-pool values are unresolved in decompiled.c, so individual fields cannot be separated honestly"
     },
     {
       "name": "default_field_0x088_u16_9",
       "offset": 136,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "confidence": "guessed",
+      "evidence": "Value 9 in all 3 slots of cap-01. FUN_0800c4a8 contains `*(byte*)(base+DAT_0800c58c) |= 9` via an unresolved DAT offset; exact offset attribution is not provable from the text, so the 9 is observed-only"
     },
     {
       "name": "default_field_0x090_u16_2",
       "offset": 144,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "confidence": "guessed",
+      "evidence": "Value 2 in all slots. FUN_0800c4a8 has multiple `|=2` / `=2` writes via unresolved DAT offsets (DAT_0800c584, DAT_0800c59c, puVar1[0x8a]=2 at sub-struct+0x114 if sub-struct base is block+0x204, which would land at 0x318 not 0x090); attribution unresolved"
     },
     {
       "name": "default_field_0x0a0_u16_0x004c",
       "offset": 160,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "confidence": "guessed",
+      "evidence": "Value 0x004C=76. FUN_0800c4a8 calls FUN_08036978(0x4C) (bit-setter for id 76) and FUN_08036a18 writes 0x4C to a global; FUN_0800c4a8 also writes u16 0x4C via DAT_0800c590. One of these plausibly lands here; DAT unresolved"
     },
     {
       "name": "default_field_0x0a2_byte_ff",
       "offset": 162,
       "size": 2,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "guessed",
+      "evidence": "Bytes 00 FF (u16 0xFF00): byte 0x0A3=0xFF. FUN_0800c4a8 writes 0xFF via DAT_0800c594 and DAT_0800c598 and at sub-struct+0x102 (=>block 0x306, verified pattern below); one 0xFF byte lands at 0x0A3, attribution via unresolved DAT"
     },
     {
       "name": "default_field_0x0a4_byte_68",
       "offset": 164,
       "size": 2,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "guessed",
+      "evidence": "Bytes 00 68 (u16 0x6800): byte 0x0A5=0x68. FUN_0800c4a8 writes 0x68 via DAT_0800c588; FUN_08036a18 also writes 0x68 to a global. Attribution unresolved between them"
     },
     {
       "name": "reserved_or_gameplay_0x0a6_0x203",
       "offset": 166,
       "size": 350,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "unknown",
+      "evidence": "Zero in cap-01 default save; contains the (inferred) gap before the 0x204 sub-struct. No resolved writer offset in traced chain"
     },
     {
       "name": "substruct_u16_0x204_120",
       "offset": 516,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "confidence": "likely",
+      "evidence": "FUN_0800c4a8 puVar1-indexed write matches sav value exactly under puVar1 == save-block+0x204 (inferred base; 7 coincident matches: [0..2]=0x78, [3..4]=0x50, [0x1c]=0x4000, *(u32)(puVar1+0x36)=1000, [0x72]=0xF, byte(puVar1+0x73)=4, byte(puVar1+0x81)=0xFF, byte(puVar1+0x8a)=2 low byte). Base itself is an unresolved _DAT_0800c57c pointer, hence STATIC not VERIFIED for the RAM address | This field: puVar1[0]=0x78"
     },
     {
       "name": "substruct_u16_0x206_120",
       "offset": 518,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "confidence": "likely",
+      "evidence": "FUN_0800c4a8 puVar1-indexed write matches sav value exactly under puVar1 == save-block+0x204 (inferred base; 7 coincident matches: [0..2]=0x78, [3..4]=0x50, [0x1c]=0x4000, *(u32)(puVar1+0x36)=1000, [0x72]=0xF, byte(puVar1+0x73)=4, byte(puVar1+0x81)=0xFF, byte(puVar1+0x8a)=2 low byte). Base itself is an unresolved _DAT_0800c57c pointer, hence STATIC not VERIFIED for the RAM address | This field: puVar1[1]=0x78"
     },
     {
       "name": "substruct_u16_0x208_120",
       "offset": 520,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "confidence": "likely",
+      "evidence": "FUN_0800c4a8 puVar1-indexed write matches sav value exactly under puVar1 == save-block+0x204 (inferred base; 7 coincident matches: [0..2]=0x78, [3..4]=0x50, [0x1c]=0x4000, *(u32)(puVar1+0x36)=1000, [0x72]=0xF, byte(puVar1+0x73)=4, byte(puVar1+0x81)=0xFF, byte(puVar1+0x8a)=2 low byte). Base itself is an unresolved _DAT_0800c57c pointer, hence STATIC not VERIFIED for the RAM address | This field: puVar1[2]=0x78"
     },
     {
       "name": "substruct_u16_0x20a_80",
       "offset": 522,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "confidence": "likely",
+      "evidence": "FUN_0800c4a8 puVar1-indexed write matches sav value exactly under puVar1 == save-block+0x204 (inferred base; 7 coincident matches: [0..2]=0x78, [3..4]=0x50, [0x1c]=0x4000, *(u32)(puVar1+0x36)=1000, [0x72]=0xF, byte(puVar1+0x73)=4, byte(puVar1+0x81)=0xFF, byte(puVar1+0x8a)=2 low byte). Base itself is an unresolved _DAT_0800c57c pointer, hence STATIC not VERIFIED for the RAM address | This field: puVar1[3]=0x50"
     },
     {
       "name": "substruct_u16_0x20c_80",
       "offset": 524,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "confidence": "likely",
+      "evidence": "FUN_0800c4a8 puVar1-indexed write matches sav value exactly under puVar1 == save-block+0x204 (inferred base; 7 coincident matches: [0..2]=0x78, [3..4]=0x50, [0x1c]=0x4000, *(u32)(puVar1+0x36)=1000, [0x72]=0xF, byte(puVar1+0x73)=4, byte(puVar1+0x81)=0xFF, byte(puVar1+0x8a)=2 low byte). Base itself is an unresolved _DAT_0800c57c pointer, hence STATIC not VERIFIED for the RAM address | This field: puVar1[4]=0x50"
     },
     {
       "name": "substruct_u16_0x20e_10",
       "offset": 526,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "confidence": "likely",
+      "evidence": "FUN_0800c4a8 puVar1-indexed write matches sav value exactly under puVar1 == save-block+0x204 (inferred base; 7 coincident matches: [0..2]=0x78, [3..4]=0x50, [0x1c]=0x4000, *(u32)(puVar1+0x36)=1000, [0x72]=0xF, byte(puVar1+0x73)=4, byte(puVar1+0x81)=0xFF, byte(puVar1+0x8a)=2 low byte). Base itself is an unresolved _DAT_0800c57c pointer, hence STATIC not VERIFIED for the RAM address | This field: No direct puVar1 write at index 5 in FUN_0800c4a8; value 10 plausibly set by FUN_0800c428/FUN_0800c34c/FUN_0800c39c/FUN_0800bbb8 helper chain called at end of default-init"
     },
     {
       "name": "substruct_byte_0x213_01",
       "offset": 530,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "confidence": "guessed",
+      "evidence": "FUN_0800c4a8 puVar1-indexed write matches sav value exactly under puVar1 == save-block+0x204 (inferred base; 7 coincident matches: [0..2]=0x78, [3..4]=0x50, [0x1c]=0x4000, *(u32)(puVar1+0x36)=1000, [0x72]=0xF, byte(puVar1+0x73)=4, byte(puVar1+0x81)=0xFF, byte(puVar1+0x8a)=2 low byte). Base itself is an unresolved _DAT_0800c57c pointer, hence STATIC not VERIFIED for the RAM address | This field: u16 0x0100 (byte 0x213=1); no resolved writer; helper chain candidate"
     },
     {
       "name": "substruct_u16_0x224_2",
       "offset": 548,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "confidence": "guessed",
+      "evidence": "FUN_0800c4a8 puVar1-indexed write matches sav value exactly under puVar1 == save-block+0x204 (inferred base; 7 coincident matches: [0..2]=0x78, [3..4]=0x50, [0x1c]=0x4000, *(u32)(puVar1+0x36)=1000, [0x72]=0xF, byte(puVar1+0x73)=4, byte(puVar1+0x81)=0xFF, byte(puVar1+0x8a)=2 low byte). Base itself is an unresolved _DAT_0800c57c pointer, hence STATIC not VERIFIED for the RAM address | This field: No resolved writer; helper chain candidate"
     },
     {
       "name": "substruct_u16_0x23c_0x4000",
       "offset": 572,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "confidence": "likely",
+      "evidence": "FUN_0800c4a8 puVar1-indexed write matches sav value exactly under puVar1 == save-block+0x204 (inferred base; 7 coincident matches: [0..2]=0x78, [3..4]=0x50, [0x1c]=0x4000, *(u32)(puVar1+0x36)=1000, [0x72]=0xF, byte(puVar1+0x73)=4, byte(puVar1+0x81)=0xFF, byte(puVar1+0x8a)=2 low byte). Base itself is an unresolved _DAT_0800c57c pointer, hence STATIC not VERIFIED for the RAM address | This field: puVar1[0x1c]=0x4000"
     },
     {
       "name": "substruct_byte_0x26c_08",
       "offset": 620,
       "size": 1,
-      "type": "u8"
+      "type": "u8",
+      "confidence": "likely",
+      "evidence": "FUN_0800c4a8 puVar1-indexed write matches sav value exactly under puVar1 == save-block+0x204 (inferred base; 7 coincident matches: [0..2]=0x78, [3..4]=0x50, [0x1c]=0x4000, *(u32)(puVar1+0x36)=1000, [0x72]=0xF, byte(puVar1+0x73)=4, byte(puVar1+0x81)=0xFF, byte(puVar1+0x8a)=2 low byte). Base itself is an unresolved _DAT_0800c57c pointer, hence STATIC not VERIFIED for the RAM address | This field: FUN_0800c34c: *(base+0x26c) = (*(base+0x26c) & 0xCF) | 8 if its base is the save block; FUN_0800c39c does the same at +0x68 of its struct. Observed byte 0x08 (low nibble pattern x8, bits 4-5 cleared) is consistent with &0xCF|8"
     },
     {
       "name": "substruct_u32_0x270_1000",
       "offset": 624,
       "size": 4,
-      "type": "u32_le"
+      "type": "u32_le",
+      "confidence": "likely",
+      "evidence": "FUN_0800c4a8 puVar1-indexed write matches sav value exactly under puVar1 == save-block+0x204 (inferred base; 7 coincident matches: [0..2]=0x78, [3..4]=0x50, [0x1c]=0x4000, *(u32)(puVar1+0x36)=1000, [0x72]=0xF, byte(puVar1+0x73)=4, byte(puVar1+0x81)=0xFF, byte(puVar1+0x8a)=2 low byte). Base itself is an unresolved _DAT_0800c57c pointer, hence STATIC not VERIFIED for the RAM address | This field: *(undefined4*)(puVar1+0x36)=1000 (u16-index arithmetic: +0x6C bytes from 0x204)"
     },
     {
       "name": "substruct_u16_0x276_2",
       "offset": 630,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "confidence": "guessed",
+      "evidence": "FUN_0800c4a8 puVar1-indexed write matches sav value exactly under puVar1 == save-block+0x204 (inferred base; 7 coincident matches: [0..2]=0x78, [3..4]=0x50, [0x1c]=0x4000, *(u32)(puVar1+0x36)=1000, [0x72]=0xF, byte(puVar1+0x73)=4, byte(puVar1+0x81)=0xFF, byte(puVar1+0x8a)=2 low byte). Base itself is an unresolved _DAT_0800c57c pointer, hence STATIC not VERIFIED for the RAM address | This field: No resolved writer; helper chain candidate"
     },
     {
       "name": "substruct_u16_0x27e_0x1000",
       "offset": 638,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "confidence": "guessed",
+      "evidence": "FUN_0800c4a8 puVar1-indexed write matches sav value exactly under puVar1 == save-block+0x204 (inferred base; 7 coincident matches: [0..2]=0x78, [3..4]=0x50, [0x1c]=0x4000, *(u32)(puVar1+0x36)=1000, [0x72]=0xF, byte(puVar1+0x73)=4, byte(puVar1+0x81)=0xFF, byte(puVar1+0x8a)=2 low byte). Base itself is an unresolved _DAT_0800c57c pointer, hence STATIC not VERIFIED for the RAM address | This field: u16 0x1000 (byte 0x27F=0x10); no resolved writer"
     },
     {
       "name": "substruct_u16_0x2b6_0x0100",
       "offset": 694,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "confidence": "guessed",
+      "evidence": "FUN_0800c4a8 puVar1-indexed write matches sav value exactly under puVar1 == save-block+0x204 (inferred base; 7 coincident matches: [0..2]=0x78, [3..4]=0x50, [0x1c]=0x4000, *(u32)(puVar1+0x36)=1000, [0x72]=0xF, byte(puVar1+0x73)=4, byte(puVar1+0x81)=0xFF, byte(puVar1+0x8a)=2 low byte). Base itself is an unresolved _DAT_0800c57c pointer, hence STATIC not VERIFIED for the RAM address | This field: Byte 0x2B7=1; no resolved writer"
     },
     {
       "name": "substruct_u16_0x2e8_15",
       "offset": 744,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "confidence": "likely",
+      "evidence": "FUN_0800c4a8 puVar1-indexed write matches sav value exactly under puVar1 == save-block+0x204 (inferred base; 7 coincident matches: [0..2]=0x78, [3..4]=0x50, [0x1c]=0x4000, *(u32)(puVar1+0x36)=1000, [0x72]=0xF, byte(puVar1+0x73)=4, byte(puVar1+0x81)=0xFF, byte(puVar1+0x8a)=2 low byte). Base itself is an unresolved _DAT_0800c57c pointer, hence STATIC not VERIFIED for the RAM address | This field: puVar1[0x72]=0xF"
     },
     {
       "name": "substruct_byte_0x2ea_4",
       "offset": 746,
       "size": 1,
-      "type": "u8"
+      "type": "u8",
+      "confidence": "likely",
+      "evidence": "FUN_0800c4a8 puVar1-indexed write matches sav value exactly under puVar1 == save-block+0x204 (inferred base; 7 coincident matches: [0..2]=0x78, [3..4]=0x50, [0x1c]=0x4000, *(u32)(puVar1+0x36)=1000, [0x72]=0xF, byte(puVar1+0x73)=4, byte(puVar1+0x81)=0xFF, byte(puVar1+0x8a)=2 low byte). Base itself is an unresolved _DAT_0800c57c pointer, hence STATIC not VERIFIED for the RAM address | This field: *(undefined1*)(puVar1+0x73)=4 (+0xE6 bytes from 0x204)"
     },
     {
       "name": "substruct_byte_0x306_ff",
       "offset": 774,
       "size": 1,
-      "type": "u8"
+      "type": "u8",
+      "confidence": "likely",
+      "evidence": "FUN_0800c4a8 puVar1-indexed write matches sav value exactly under puVar1 == save-block+0x204 (inferred base; 7 coincident matches: [0..2]=0x78, [3..4]=0x50, [0x1c]=0x4000, *(u32)(puVar1+0x36)=1000, [0x72]=0xF, byte(puVar1+0x73)=4, byte(puVar1+0x81)=0xFF, byte(puVar1+0x8a)=2 low byte). Base itself is an unresolved _DAT_0800c57c pointer, hence STATIC not VERIFIED for the RAM address | This field: *(undefined1*)(puVar1+0x81)=0xFF (+0x102 bytes from 0x204)"
     },
     {
       "name": "substruct_u16_0x30a_0x0200",
       "offset": 778,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "confidence": "likely",
+      "evidence": "FUN_0800c4a8 puVar1-indexed write matches sav value exactly under puVar1 == save-block+0x204 (inferred base; 7 coincident matches: [0..2]=0x78, [3..4]=0x50, [0x1c]=0x4000, *(u32)(puVar1+0x36)=1000, [0x72]=0xF, byte(puVar1+0x73)=4, byte(puVar1+0x81)=0xFF, byte(puVar1+0x8a)=2 low byte). Base itself is an unresolved _DAT_0800c57c pointer, hence STATIC not VERIFIED for the RAM address | This field: Byte 0x30B=2 (u16 0x0200); candidate puVar1[0x8a]=2 is at byte +0x114 => block 0x318, not here; attribution unresolved"
     },
     {
       "name": "substruct_u16_0x318_2",
       "offset": 792,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "confidence": "likely",
+      "evidence": "FUN_0800c4a8 puVar1-indexed write matches sav value exactly under puVar1 == save-block+0x204 (inferred base; 7 coincident matches: [0..2]=0x78, [3..4]=0x50, [0x1c]=0x4000, *(u32)(puVar1+0x36)=1000, [0x72]=0xF, byte(puVar1+0x73)=4, byte(puVar1+0x81)=0xFF, byte(puVar1+0x8a)=2 low byte). Base itself is an unresolved _DAT_0800c57c pointer, hence STATIC not VERIFIED for the RAM address | This field: *(undefined1*)(puVar1+0x8a)=2 writes low byte at block 0x318 (u16-index 0x8A*2=0x114 from 0x204); observed u16=2"
     },
     {
       "name": "reserved_or_gameplay_0x31a_0x387",
       "offset": 794,
       "size": 110,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "unknown",
+      "evidence": "Zero in cap-01; tail of the 452-word checksummed region beyond the inferred 0x204+0x118 sub-struct (ends 0x31C). No resolved writer"
     },
     {
       "name": "checksum_u16_complemented_sum",
       "offset": 904,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "confidence": "confirmed",
+      "evidence": "FUN_0800c5cc sums 0x1C4 u16 LE words at RAM base..base+0x387 (wrapping u16), stores ~sum at word index 0x1C4 (byte 0x388); FUN_0800c654 recomputes and compares == (u16)~sum. Python: all 12 copies of cap-01 match (slot sums 0xC27E/0xC37E/0xC47E -> stored 0x3D81/0x3C81/0x3B81); blank cap-00 correctly mismatches"
     },
     {
       "name": "tail_padding_0x38a",
       "offset": 906,
       "size": 2,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "likely",
+      "evidence": "Bytes 0x38A-0x38B are inside the 0x38C block copied by both writer (FUN_08098920 len 0x38C) and reader (FUN_080988bc len 0x38C) but outside the 452-word checksum (ends 0x387) and the stored word at 0x388. Observed 00 00 in all copies; not validated by reader"
     }
   ]
 }

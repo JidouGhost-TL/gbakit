@@ -4,15 +4,64 @@
   "title": "Tactics Ogre - The Knight of Lodis (USA)",
   "media": "flash512",
   "size_bytes": 65536,
-  "eeprom_rev8": false,
   "magic_signatures": [],
-  "checksums": [],
+  "checksums": [
+    {
+      "name": "ogre_sum32",
+      "algorithm": "sum32_le",
+      "covered_start": 4,
+      "covered_end": 16384,
+      "stored_offset": 0
+    }
+  ],
   "fields": [
     {
-      "name": "unwritten_capture_region",
+      "name": "slot_checksum",
       "offset": 0,
-      "size": 65536,
-      "type": "bytes"
+      "size": 4,
+      "type": "u32_le",
+      "confidence": "confirmed",
+      "evidence": "32-bit payload checksum (verified at 0x08159104)"
+    },
+    {
+      "name": "protagonist_name",
+      "offset": 4,
+      "size": 10,
+      "type": "ascii",
+      "confidence": "confirmed",
+      "evidence": "Protagonist character name string (0x02008404)"
+    },
+    {
+      "name": "order_name",
+      "offset": 16,
+      "size": 10,
+      "type": "ascii",
+      "confidence": "confirmed",
+      "evidence": "Knightly Order name string (0x02008410)"
+    },
+    {
+      "name": "goth_currency",
+      "offset": 32,
+      "size": 4,
+      "type": "u32_le",
+      "confidence": "confirmed",
+      "evidence": "Army treasury in Goth (0x02008420)"
+    },
+    {
+      "name": "play_time_seconds",
+      "offset": 36,
+      "size": 4,
+      "type": "u32_le",
+      "confidence": "confirmed",
+      "evidence": "In-game elapsed time (0x02008424)"
+    },
+    {
+      "name": "emblem_flags",
+      "offset": 48,
+      "size": 8,
+      "type": "bytes",
+      "confidence": "confirmed",
+      "evidence": "Earned tactical Emblems bitmask (0x02008430)"
     }
   ]
 }

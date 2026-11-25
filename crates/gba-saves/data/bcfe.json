@@ -30,61 +30,81 @@
       "name": "seed_key_word",
       "offset": 0,
       "size": 4,
-      "type": "u32_le"
+      "type": "u32_le",
+      "confidence": "confirmed",
+      "evidence": "FUN_0803a8b0: puVar1[0x47] == (*puVar1 ^ _DAT_0803a93c). On sav-01 after rev8 transform: 0xCE40CC1C ^ 0x941A9646 = 0x5A5A5A5A."
     },
     {
       "name": "name_aaa_candidate",
       "offset": 4,
       "size": 3,
-      "type": "ascii"
+      "type": "ascii",
+      "confidence": "guessed",
+      "evidence": "Bytes 41 41 41 followed by 0x00 at offset 7 in the verified struct image. Consistent with a default name/initials field, unproven."
     },
     {
       "name": "header_pad_07",
       "offset": 7,
       "size": 1,
-      "type": "u8"
+      "type": "u8",
+      "confidence": "guessed",
+      "evidence": "Single zero byte terminating the 0x41 run in both samples."
     },
     {
       "name": "payload_08",
       "offset": 8,
       "size": 2,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "unknown",
+      "evidence": "Non-zero bytes at struct 0x08..0x09 in the checksum-verified image; no distinguishing code access."
     },
     {
       "name": "payload_0a",
       "offset": 10,
       "size": 2,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "unknown",
+      "evidence": "Zero gap between non-zero bytes at 0x09 and 0x0C."
     },
     {
       "name": "payload_0c",
       "offset": 12,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "confidence": "unknown",
+      "evidence": "Bytes 0A 00 at struct 0x0C in the verified image; no accessor in corpus."
     },
     {
       "name": "payload_0e",
       "offset": 14,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "confidence": "unknown",
+      "evidence": "Bytes 25 02 at struct 0x0E in the verified image; no accessor in corpus."
     },
     {
       "name": "payload_reserved_10_11b",
       "offset": 16,
       "size": 268,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "unknown",
+      "evidence": "Covered by the 0x124-byte sum/memcpy in FUN_0803a8b0; zero in the valid sav-01 image."
     },
     {
       "name": "magic_word",
       "offset": 284,
       "size": 4,
-      "type": "u32_le"
+      "type": "u32_le",
+      "confidence": "confirmed",
+      "evidence": "FUN_0803a8b0 puVar1[0x47] check; sav-01: 0xCE40CC1C ^ 0x941A9646 = 0x5A5A5A5A exactly."
     },
     {
       "name": "checksum_word",
       "offset": 288,
       "size": 4,
-      "type": "u32_le"
+      "type": "u32_le",
+      "confidence": "confirmed",
+      "evidence": "FUN_0803a8b0 sum loop over 0x124 bytes; sav-01 stored 0x479 = computed 0x479 (see checksums.verified_on_samples)."
     }
   ]
 }

@@ -50,109 +50,145 @@
       "name": "global_header_checksum",
       "offset": 0,
       "size": 4,
-      "type": "u32_le"
+      "type": "u32_le",
+      "confidence": "confirmed",
+      "evidence": "Python recomputation matches stored value exactly; code path traced end-to-end from FUN_0803b148 to FUN_08066ca8."
     },
     {
       "name": "global_header_magic",
       "offset": 4,
       "size": 4,
-      "type": "u32_le"
+      "type": "u32_le",
+      "confidence": "likely",
+      "evidence": "Comparison logic read directly from FUN_0803b108 decompilation; the specific in-ROM expected constant value was not resolved in this extraction."
     },
     {
       "name": "config2_checksum",
       "offset": 8,
       "size": 4,
-      "type": "u32_le"
+      "type": "u32_le",
+      "confidence": "confirmed",
+      "evidence": "Python recomputation matches stored value (trivially, since payload is all-zero in this sample)."
     },
     {
       "name": "config2_payload",
       "offset": 12,
       "size": 16,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "guessed",
+      "evidence": "Zero-init pattern read directly from FUN_0803b250; semantic role unresolved."
     },
     {
       "name": "ranking_table_checksum",
       "offset": 28,
       "size": 4,
-      "type": "u32_le"
+      "type": "u32_le",
+      "confidence": "confirmed",
+      "evidence": "Python recomputation matches stored value exactly."
     },
     {
       "name": "ranking_table_entry",
       "offset": 32,
       "size": 64,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "likely",
+      "evidence": "Loop bounds and byte offsets read directly from FUN_0803d7b0/FUN_0803babc; table size cross-confirmed because 0x1c+4+46*0x40 equals 0xba0, the next record's exact start."
     },
     {
       "name": "slot0_checksum",
       "offset": 2976,
       "size": 4,
-      "type": "u32_le"
+      "type": "u32_le",
+      "confidence": "confirmed",
+      "evidence": "Python recomputation matches stored value exactly."
     },
     {
       "name": "slot0_flag_byte",
       "offset": 2980,
       "size": 1,
-      "type": "bitflags"
+      "type": "bitflags",
+      "confidence": "guessed",
+      "evidence": "Mask sequence read directly from FUN_0803b634; which bits are gameplay-live vs. always-forced-on-reset not determinable without a fuzzing pass (see report Section 6, test 3)."
     },
     {
       "name": "slot0_mode_byte",
       "offset": 2981,
       "size": 1,
-      "type": "bitflags"
+      "type": "bitflags",
+      "confidence": "guessed",
+      "evidence": "Mask sequence read directly from FUN_0803b634."
     },
     {
       "name": "slot0_array1",
       "offset": 2996,
       "size": 8,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "confirmed",
+      "evidence": "Literal 0x01 constant matched byte-for-byte at absolute offset 0x0bc0 against the real .sav file."
     },
     {
       "name": "slot0_array2",
       "offset": 3004,
       "size": 8,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "guessed",
+      "evidence": "Zero-init pattern read directly from decompiled code; role unresolved."
     },
     {
       "name": "slot0_array3",
       "offset": 3012,
       "size": 8,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "guessed",
+      "evidence": "Zero-init pattern read directly from decompiled code; role unresolved."
     },
     {
       "name": "slot0_version_tag",
       "offset": 3148,
       "size": 3,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "confirmed",
+      "evidence": "Literal constants matched byte-for-byte at absolute offset 0x0c4c against the real .sav file (slot1's equivalent byte at 0x0cfc also matched)."
     },
     {
       "name": "slot1_checksum",
       "offset": 3152,
       "size": 4,
-      "type": "u32_le"
+      "type": "u32_le",
+      "confidence": "confirmed",
+      "evidence": "Python recomputation matches stored value exactly."
     },
     {
       "name": "slot1_array1_flag",
       "offset": 3172,
       "size": 1,
-      "type": "u8"
+      "type": "u8",
+      "confidence": "confirmed",
+      "evidence": "Literal 0x01 constant matched byte-for-byte at absolute offset 0x0c70 against the real .sav file."
     },
     {
       "name": "slot1_version_tag",
       "offset": 3324,
       "size": 3,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "confirmed",
+      "evidence": "Literal 0x05 constant matched byte-for-byte at absolute offset 0x0cfc against the real .sav file."
     },
     {
       "name": "misc_record_0xd00_checksum",
       "offset": 3328,
       "size": 4,
-      "type": "u32_le"
+      "type": "u32_le",
+      "confidence": "guessed",
+      "evidence": "Checksum math is trivially satisfied by the all-zero payload observed in this sample; size not independently confirmed."
     },
     {
       "name": "misc_record_0xd00_flag",
       "offset": 3332,
       "size": 1,
-      "type": "u8"
+      "type": "u8",
+      "confidence": "guessed",
+      "evidence": "Zero-init pattern read directly from decompiled code; role unresolved."
     },
     {
       "name": "unused_sram_tail",

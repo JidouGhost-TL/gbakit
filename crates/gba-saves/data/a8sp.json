@@ -48,127 +48,169 @@
       "name": "header_magic_8",
       "offset": 0,
       "size": 8,
-      "type": "ascii"
+      "type": "ascii",
+      "confidence": "confirmed",
+      "evidence": "FUN_0802A084 8-byte compare loop and 16-byte copy in decompiled.c; bytes present in both .sav files (Python-verified)."
     },
     {
       "name": "header_full_16",
       "offset": 0,
       "size": 16,
-      "type": "ascii"
+      "type": "ascii",
+      "confidence": "confirmed",
+      "evidence": "FUN_0802A084 copy loop (0x10 iterations) in decompiled.c; bytes present in both .sav files."
     },
     {
       "name": "header_tail_ek",
       "offset": 16,
       "size": 2,
-      "type": "ascii"
+      "type": "ascii",
+      "confidence": "guessed",
+      "evidence": "Observed bytes in both .sav files; no individual code accessor found."
     },
     {
       "name": "field_0x12",
       "offset": 18,
       "size": 2,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "guessed",
+      "evidence": "FUN_0802A084 zero loop; FUN_0802A2E4 mask at +0x12 (RAM layout); observed zero bytes in both samples."
     },
     {
       "name": "record_table",
       "offset": 20,
       "size": 80,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "likely",
+      "evidence": "FUN_0802A084 copy/replicate loops and FUN_0802A2E4 10x8 loop in decompiled.c; table bytes identical in both samples."
     },
     {
       "name": "record_flag_byte",
       "offset": 20,
       "size": 1,
-      "type": "u8"
+      "type": "u8",
+      "confidence": "guessed",
+      "evidence": "Observed bytes; FUN_0802A2E4 flag mask at record+0 (RAM layout)."
     },
     {
       "name": "record_score",
       "offset": 21,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "confidence": "confirmed",
+      "evidence": "Descending values 250/200/150 at record+1 in both .sav files (Python-parsed); FUN_0802A2E4 score clamp with default 200 in decompiled.c."
     },
     {
       "name": "record_name",
       "offset": 23,
       "size": 3,
-      "type": "ascii"
+      "type": "ascii",
+      "confidence": "guessed",
+      "evidence": "ASCII names at record+3 in both .sav files (Python-parsed); FUN_0802A2E4 name validation in decompiled.c (RAM layout shifted by one byte relative to the file)."
     },
     {
       "name": "record_field6",
       "offset": 26,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "confidence": "unknown",
+      "evidence": "Observed values in both samples; FUN_0802A084 replication (u16 at +6 from template) and FUN_0802A2E4 id clamp at RAM+1."
     },
     {
       "name": "reserved_0x64_0xbf",
       "offset": 100,
       "size": 92,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "likely",
+      "evidence": "FUN_0802A084 zero loop (200 bytes); observed zeros in both samples; FUN_0802A2E4 mask at +100."
     },
     {
       "name": "field_0xc0_u16",
       "offset": 192,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "confidence": "likely",
+      "evidence": "FUN_0802A084 preservation/store at +0xC0 and FUN_080158F8 clamp (0 or >5 -> 1) in decompiled.c; value 0 in both samples. Semantics (5-valued, e.g. language) are HYPOTHESIS-level and are not encoded in this field's confidence."
     },
     {
       "name": "field_0xc2_u16",
       "offset": 194,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "confidence": "likely",
+      "evidence": "FUN_0802A084 store at +0xC2 in decompiled.c; value 0 in both samples."
     },
     {
       "name": "field_0xc4_u8",
       "offset": 196,
       "size": 1,
-      "type": "u8"
+      "type": "u8",
+      "confidence": "unknown",
+      "evidence": "Observed byte in both samples only."
     },
     {
       "name": "counter_0xc5",
       "offset": 197,
       "size": 1,
-      "type": "u8"
+      "type": "u8",
+      "confidence": "guessed",
+      "evidence": "Sole payload diff between samples (Python-verified) with checksum following +1; PACKET mutation probe at 0xC5 (reverted to blank, save rewritten)."
     },
     {
       "name": "field_0xc6_u8",
       "offset": 198,
       "size": 1,
-      "type": "u8"
+      "type": "u8",
+      "confidence": "unknown",
+      "evidence": "Observed byte in both samples only."
     },
     {
       "name": "field_0xc7_u8",
       "offset": 199,
       "size": 1,
-      "type": "u8"
+      "type": "u8",
+      "confidence": "guessed",
+      "evidence": "Observed byte in both samples only."
     },
     {
       "name": "trailer_dword_0xc8",
       "offset": 200,
       "size": 4,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "likely",
+      "evidence": "FUN_0802A4A8 store at +200 and FUN_0802A084 trailer check in decompiled.c; observed 0xFFFFFFFF in both samples. Meaning is UNKNOWN (see open questions)."
     },
     {
       "name": "trailer_0xcc_u16",
       "offset": 204,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "confidence": "unknown",
+      "evidence": "Observed bytes in both samples; block geometry (26 blocks) from FUN_0802A4A8/FUN_0802A4F4."
     },
     {
       "name": "trailer_0xce_u8",
       "offset": 206,
       "size": 1,
-      "type": "u8"
+      "type": "u8",
+      "confidence": "unknown",
+      "evidence": "Observed byte 0x0F in both samples; checksum range verified without it in Python."
     },
     {
       "name": "checksum_0xcf",
       "offset": 207,
       "size": 1,
-      "type": "u8"
+      "type": "u8",
+      "confidence": "confirmed",
+      "evidence": "Python verification on both samples (computed 0x23/0x24 == stored); +1 delta tracking the 0xC5 mutation; PACKET integrity probe; load-rebuild structure in FUN_0802A084. Writer attribution to the flush path is structural (block 25 is written by 0x0802A4A8); the exact computing instruction is unrecovered."
     },
     {
       "name": "unused_0xd0_0x1ff",
       "offset": 208,
       "size": 304,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "confirmed",
+      "evidence": "Python-verified all-0xFF in both samples; 26-iteration loops in FUN_0802A4A8/FUN_0802A4F4."
     }
   ]
 }

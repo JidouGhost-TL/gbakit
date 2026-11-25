@@ -66,55 +66,73 @@
       "name": "slot0_header_name",
       "offset": 0,
       "size": 8,
-      "type": "ascii"
+      "type": "ascii",
+      "confidence": "confirmed",
+      "evidence": "Reversing file bytes 00 00 64 65 73 75 6e 55 yields ASCII 'Unused\\0\\0'; matches code path that copies a template buffer at this sector"
     },
     {
       "name": "slot1_header_name",
       "offset": 8,
       "size": 8,
-      "type": "ascii"
+      "type": "ascii",
+      "confidence": "confirmed",
+      "evidence": "Identical byte pattern at file offset 0x08"
     },
     {
       "name": "slot2_header_name",
       "offset": 16,
       "size": 8,
-      "type": "ascii"
+      "type": "ascii",
+      "confidence": "confirmed",
+      "evidence": "Identical byte pattern at file offset 0x10"
     },
     {
       "name": "slot0_body_padding",
       "offset": 24,
       "size": 7,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "likely",
+      "evidence": "Buffer-zero loop in FUN_08022680 covers these words; no reader found"
     },
     {
       "name": "slot0_status_marker",
       "offset": 31,
       "size": 1,
-      "type": "u8"
+      "type": "u8",
+      "confidence": "confirmed",
+      "evidence": "Code sets this exact byte to 0xD8 at this exact sector; file byte matches exactly once the containing 8-byte sector is un-reversed"
     },
     {
       "name": "slot1_status_marker",
       "offset": 191,
       "size": 1,
-      "type": "u8"
+      "type": "u8",
+      "confidence": "confirmed",
+      "evidence": "File offset 0xBF matches expected position (slot1 body start sector + 7, reversed)"
     },
     {
       "name": "slot2_status_marker",
       "offset": 351,
       "size": 1,
-      "type": "u8"
+      "type": "u8",
+      "confidence": "confirmed",
+      "evidence": "File offset 0x15F matches expected position"
     },
     {
       "name": "slot_sequence_tag_byte",
       "offset": 77,
       "size": 1,
-      "type": "u8"
+      "type": "u8",
+      "confidence": "guessed",
+      "evidence": "Byte 2 of the u32 at relative body offset +0x08 is 0x00/0x04/0x08 for slots 0/1/2 respectively; no reader was traced for this field"
     },
     {
       "name": "slot_body_stack_garbage_region",
       "offset": 64,
       "size": 96,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "guessed",
+      "evidence": "Buffer declared as undefined4 auStack_48[10] (40 bytes) but passed to WriteEepromBlock with length 0xA0 (160); cross-slot byte-for-byte identity in the raw .sav corroborates stale/incidental content rather than deliberate per-slot data"
     }
   ]
 }

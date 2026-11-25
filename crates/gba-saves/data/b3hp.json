@@ -29,79 +29,105 @@
       "name": "slot0_header_word0",
       "offset": 0,
       "size": 2,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "guessed",
+      "evidence": "Byte offset 0x000-0x001 of cap-01-future-1.sav; no corroborating second sample to confirm meaning."
     },
     {
       "name": "slot0_counter_candidate",
       "offset": 2,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "confidence": "guessed",
+      "evidence": "Byte offset 0x002-0x003; plausible generation/write counter, not confirmed to increment (only one sample)."
     },
     {
       "name": "magic_c0de600d",
       "offset": 4,
       "size": 4,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "guessed",
+      "evidence": "Byte offset 0x004-0x007 of slot 0; recognizable hex-speak constant pattern (C0DE/600D) but not code-verified."
     },
     {
       "name": "slot0_reserved",
       "offset": 8,
       "size": 4,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "guessed",
+      "evidence": "All-zero in the only sample; could be reserved or legitimately zero at this game state."
     },
     {
       "name": "slot0_trailer_candidate",
       "offset": 12,
       "size": 4,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "unknown",
+      "evidence": "Byte offset 0x00C-0x00F; identical value recurs at 0x0AC and 0x14C despite differing preceding content."
     },
     {
       "name": "slot1_field_0",
       "offset": 160,
       "size": 2,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "guessed",
+      "evidence": "Byte offset 0x0A0-0x0A1; differs in value from the equivalent slot-0 position (ffff vs 0000), suggesting header vs payload slot-type distinction."
     },
     {
       "name": "slot1_field_1",
       "offset": 162,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "confidence": "guessed",
+      "evidence": "Byte offset 0x0A2-0x0A3; constant between slot 1 and slot 2; no second distinct sample to determine if this varies with game state."
     },
     {
       "name": "slot1_reserved",
       "offset": 164,
       "size": 8,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "guessed",
+      "evidence": "Byte offset 0x0A4-0x0AB; all-zero in the only sample."
     },
     {
       "name": "slot1_trailer_candidate",
       "offset": 172,
       "size": 4,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "unknown",
+      "evidence": "Byte offset 0x0AC-0x0AF; identical to slot0_trailer_candidate and slot2_trailer_candidate."
     },
     {
       "name": "slot2_block",
       "offset": 320,
       "size": 16,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "guessed",
+      "evidence": "Byte-for-byte identical to slot 1 (offset 160-175); consistent with but not proof of a primary/backup mirror design."
     },
     {
       "name": "slot3_block0",
       "offset": 480,
       "size": 8,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "likely",
+      "evidence": "Matches the slot1/slot2 payload pattern; block-write mechanism itself is proven by decompiled code, but the field's game meaning is not."
     },
     {
       "name": "slot3_block1_unwritten",
       "offset": 488,
       "size": 24,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "confirmed",
+      "evidence": "Direct byte observation; central proof that slot writes are split into independent 8-byte EEPROM block commits (see FUN_0802f4d0/FUN_0802f4e4 in io_driver_functions)."
     },
     {
       "name": "reserved_gap_bytes",
       "offset": 16,
       "size": 400,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "confirmed",
+      "evidence": "Raw byte-level fact confirmed in cap-01-future-1.sav; semantic purpose (reserved growth space vs. fixed padding) is UNKNOWN."
     }
   ]
 }

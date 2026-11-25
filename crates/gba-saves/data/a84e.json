@@ -110,127 +110,169 @@
       "name": "reserved_zero_prefix",
       "offset": 0,
       "size": 7168,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "likely",
+      "evidence": "Byte scan: first non-zero byte of each 0x4000 copy is at 0x1C00. Region is inside the 0x4000 image read/written as one unit by 0x0809dea0/0x0809e00c."
     },
     {
       "name": "active_header_zero_a",
       "offset": 7168,
       "size": 32,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "likely",
+      "evidence": "Hexdump at copy 0x1C00..0x1C1F is all zero; boundary is structural (scan-delimited)."
     },
     {
       "name": "header_word_1c20",
       "offset": 7200,
       "size": 4,
-      "type": "u32_le"
+      "type": "u32_le",
+      "confidence": "guessed",
+      "evidence": "Only non-zero word in the 0x1C00 header area (bytes 01 00 00 00). Small value suggests flag/version/count; loader-return identification unproven."
     },
     {
       "name": "active_header_zero_b",
       "offset": 7204,
       "size": 64,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "likely",
+      "evidence": "Zero gap between header_word_1c20 and the sentinel array at 0x1C64 (scan-delimited)."
     },
     {
       "name": "sentinel_records_999",
       "offset": 7268,
       "size": 4020,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "guessed",
+      "evidence": "Exact-match Python scan for (e703)*30 found 34 hits at a constant 120-byte stride; bytes themselves are verified. Record semantics (34x120-byte records vs interleaved arrays) and the meaning of sentinel 999 are undetermined from a single default-heavy sample."
     },
     {
       "name": "post_array_word_a",
       "offset": 11288,
       "size": 4,
-      "type": "u32_le"
+      "type": "u32_le",
+      "confidence": "guessed",
+      "evidence": "First word after the sentinel array at copy 0x2C18. Pair 1,2 with post_array_word_b suggests small enum/count fields; semantics unknown."
     },
     {
       "name": "post_array_word_b",
       "offset": 11292,
       "size": 4,
-      "type": "u32_le"
+      "type": "u32_le",
+      "confidence": "guessed",
+      "evidence": "Second word after the sentinel array at copy 0x2C1C, immediately following post_array_word_a."
     },
     {
       "name": "zero_gap_2c20",
       "offset": 11296,
       "size": 59,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "likely",
+      "evidence": "Zero gap scan-delimited by the 0xFF run starting at 0x2C5B."
     },
     {
       "name": "ff_sentinel_run",
       "offset": 11355,
       "size": 451,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "guessed",
+      "evidence": "Maximal 0xFF run measured exactly (start 0x2C5B, length 451). Odd length favours byte-sized empty-slot sentinels within the written template rather than erased SRAM, since the image is produced by the template flush."
     },
     {
       "name": "zero_gap_2e1e",
       "offset": 11806,
       "size": 454,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "likely",
+      "evidence": "Zero gap between the 0xFF run and the 0xFFFF pair array (scan-delimited)."
     },
     {
       "name": "ffff_pair_array",
       "offset": 12260,
       "size": 192,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "guessed",
+      "evidence": "Pattern is exact over the whole span (48 repetitions). 0xFFFF reads as an unset ID paired with a zero value; semantics unknown."
     },
     {
       "name": "ff_stride4_array",
       "offset": 12452,
       "size": 224,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "guessed",
+      "evidence": "4-byte stride is exact over the whole span. Could be 56 byte-flags in 4-byte records; the u32 type assignment is structural only."
     },
     {
       "name": "nibble_field_a",
       "offset": 12676,
       "size": 4,
-      "type": "u32_le"
+      "type": "u32_le",
+      "confidence": "guessed",
+      "evidence": "Nibble-repeated pattern suggests eight packed 4-bit fields rather than a scalar; no field-level code access traced."
     },
     {
       "name": "nibble_field_b",
       "offset": 12680,
       "size": 4,
-      "type": "u32_le"
+      "type": "u32_le",
+      "confidence": "guessed",
+      "evidence": "Immediately follows nibble_field_a; may be a 4-bit count/mask or the tail of a joint 8-byte bitfield block. Unproven."
     },
     {
       "name": "zero_gap_318c",
       "offset": 12684,
       "size": 351,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "likely",
+      "evidence": "Zero gap before the 0x07 byte at 0x32EB (scan-delimited)."
     },
     {
       "name": "byte_32eb",
       "offset": 13035,
       "size": 1,
-      "type": "u8"
+      "type": "u8",
+      "confidence": "unknown",
+      "evidence": "Single non-zero byte immediately before the 12-byte record array. Ambiguous alignment: standalone count byte (=7) or top byte of a u32_le at 0x32E8 (0x07000000). No code resolves it."
     },
     {
       "name": "records12_array",
       "offset": 13036,
       "size": 1476,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "guessed",
+      "evidence": "Stride-12 parse is exact: 123 records, first u32 always 2, remaining 8 bytes zero. The leading 2 reads as a default type/state enum per entry; what the entries represent is unknown."
     },
     {
       "name": "zero_gap_38b0",
       "offset": 14512,
       "size": 340,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "likely",
+      "evidence": "Zero gap between the record array and the signature (scan-delimited)."
     },
     {
       "name": "signature_title_sjis",
       "offset": 14852,
       "size": 40,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "likely",
+      "evidence": "Bytes verified in both copies; exactly 40 bytes, matching the only length-0x28 SRAM verify call in the corpus, and the only text-like region in the file. Code-side offset is not provable because the verify operands are unresolved literal-pool placeholders, hence STATIC not VERIFIED for the code link."
     },
     {
       "name": "zero_tail_3a2c",
       "offset": 14892,
       "size": 1488,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "likely",
+      "evidence": "Trailing zero space between signature and checksum word; inside checksum coverage."
     },
     {
       "name": "checksum_stored",
       "offset": 16380,
       "size": 4,
-      "type": "u32_le"
+      "type": "u32_le",
+      "confidence": "confirmed",
+      "evidence": "Python verification on the real file: computed 0x2FB796B5 == stored 0x2FB796B5 in both copies (see checksums entry). Code-side loop in FUN_0809dea0 accumulates the same sum over 16x0x400 chunks from 0x0E000000."
     }
   ]
 }

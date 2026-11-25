@@ -52,241 +52,321 @@
       "name": "magic_3110a",
       "offset": 0,
       "size": 6,
-      "type": "ascii"
+      "type": "ascii",
+      "confidence": "confirmed",
+      "evidence": "FUN_08001a44 6-byte compare + FUN_080019ec template copy; identical bytes in both .sav"
     },
     {
       "name": "checksum_table_0_reserved",
       "offset": 6,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "confidence": "likely",
+      "evidence": "FUN_08001b5c stores at header+6+2*slot; entry0 over zero buffer in init; file block0 recompute mismatches by construction (report 4.4)"
     },
     {
       "name": "checksum_table_1_block1",
       "offset": 8,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "confidence": "confirmed",
+      "evidence": "Writer store + reader compare; Python recompute matches both files (report 4.4)"
     },
     {
       "name": "checksum_table_2_block2",
       "offset": 10,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "confidence": "confirmed",
+      "evidence": "As table[1] for block2; DMA live size 0x4A0 but checksum covers 0x800"
     },
     {
       "name": "checksum_table_3_4_reserved",
       "offset": 12,
       "size": 4,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "likely",
+      "evidence": "Init-loop only; no wrappers for physical blocks 3-4"
     },
     {
       "name": "checksum_table_5_backup1",
       "offset": 16,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "confidence": "confirmed",
+      "evidence": "Second store in same FUN_08001b5c call; fallback compare in FUN_08001a9c; matches recompute over block5"
     },
     {
       "name": "checksum_table_6_backup2",
       "offset": 18,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "confidence": "confirmed",
+      "evidence": "As table[5] for block6"
     },
     {
       "name": "checksum_table_7_15_reserved",
       "offset": 20,
       "size": 18,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "likely",
+      "evidence": "Zero in populated sample; no reader; no generation counter present anywhere in header"
     },
     {
       "name": "header_padding",
       "offset": 38,
       "size": 2,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "guessed",
+      "evidence": "Header size 0x28, table ends 0x25; tail bytes unassigned"
     },
     {
       "name": "header_page_zero_tail",
       "offset": 40,
       "size": 2008,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "likely",
+      "evidence": "Nothing reads beyond 0x28 in block0"
     },
     {
       "name": "block1_zero_head",
       "offset": 2048,
       "size": 36,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "unknown",
+      "evidence": "Zero in populated sample"
     },
     {
       "name": "block1_scalar_intra_024",
       "offset": 2084,
       "size": 1,
-      "type": "u8"
+      "type": "u8",
+      "confidence": "guessed",
+      "evidence": "Isolated nonzero scalar in zero span"
     },
     {
       "name": "block1_scalar_intra_03e",
       "offset": 2110,
       "size": 1,
-      "type": "u8"
+      "type": "u8",
+      "confidence": "guessed",
+      "evidence": "Isolated scalar"
     },
     {
       "name": "block1_bytes_intra_0a5",
       "offset": 2213,
       "size": 2,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "guessed",
+      "evidence": "Unaligned 2-byte nonzero; u16_le reading 0x0360 unproven"
     },
     {
       "name": "block1_scalar_intra_0cf",
       "offset": 2255,
       "size": 1,
-      "type": "u8"
+      "type": "u8",
+      "confidence": "guessed",
+      "evidence": "Isolated scalar"
     },
     {
       "name": "block1_scalar_intra_0f5",
       "offset": 2293,
       "size": 1,
-      "type": "u8"
+      "type": "u8",
+      "confidence": "guessed",
+      "evidence": "Isolated scalar"
     },
     {
       "name": "block1_scalar_intra_0f9",
       "offset": 2297,
       "size": 1,
-      "type": "u8"
+      "type": "u8",
+      "confidence": "guessed",
+      "evidence": "Isolated scalar"
     },
     {
       "name": "block1_scalar_intra_0ff",
       "offset": 2303,
       "size": 1,
-      "type": "u8"
+      "type": "u8",
+      "confidence": "guessed",
+      "evidence": "Isolated scalar"
     },
     {
       "name": "block1_array32_intra_120",
       "offset": 2336,
       "size": 32,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "guessed",
+      "evidence": "Uniform u8[32] all 99"
     },
     {
       "name": "block1_array32_zero_intra_140",
       "offset": 2368,
       "size": 32,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "guessed",
+      "evidence": "Zero gap between paired arrays, included for gap-free map"
     },
     {
       "name": "block1_array32_intra_160",
       "offset": 2400,
       "size": 32,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "guessed",
+      "evidence": "Uniform u8[32] all 100, exactly +1 vs intra 0x120"
     },
     {
       "name": "block1_identity32_intra_180",
       "offset": 2432,
       "size": 32,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "guessed",
+      "evidence": "Byte at 0x180 is 0 then 0x01..0x1F"
     },
     {
       "name": "block1_scalar_intra_1d1",
       "offset": 2513,
       "size": 1,
-      "type": "u8"
+      "type": "u8",
+      "confidence": "guessed",
+      "evidence": "Isolated scalar after arrays"
     },
     {
       "name": "block1_scalar_intra_200",
       "offset": 2560,
       "size": 1,
-      "type": "u8"
+      "type": "u8",
+      "confidence": "guessed",
+      "evidence": "Aligned sub-struct head scalar"
     },
     {
       "name": "block1_flag_intra_206",
       "offset": 2566,
       "size": 1,
-      "type": "u8"
+      "type": "u8",
+      "confidence": "guessed",
+      "evidence": "All-ones byte"
     },
     {
       "name": "block1_packed_intra_210",
       "offset": 2576,
       "size": 10,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "guessed",
+      "evidence": "FF04 FF05 FF06 FF07 C001; u16_le parse unproven"
     },
     {
       "name": "block1_scalar_intra_22a",
       "offset": 2602,
       "size": 1,
-      "type": "u8"
+      "type": "u8",
+      "confidence": "guessed",
+      "evidence": "Isolated scalar"
     },
     {
       "name": "block1_u16_intra_22c",
       "offset": 2604,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "confidence": "guessed",
+      "evidence": "Aligned u16 candidate"
     },
     {
       "name": "block1_ascii_intra_2fd",
       "offset": 2813,
       "size": 3,
-      "type": "ascii"
+      "type": "ascii",
+      "confidence": "guessed",
+      "evidence": "Only ASCII in block1; decoding verified, meaning unknown"
     },
     {
       "name": "block1_sparse_table_intra_400",
       "offset": 3072,
       "size": 256,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "guessed",
+      "evidence": "256-entry sparse u8 table, values 1-4 at 19 indices (listed in report 5.2)"
     },
     {
       "name": "block1_u16_region_intra_680",
       "offset": 3712,
       "size": 160,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "guessed",
+      "evidence": "Sparse u16_le region intra 0x680-0x71F, values to ~614, last nonzero intra 0x718"
     },
     {
       "name": "block1_zero_tail_intra_720",
       "offset": 3872,
       "size": 224,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "unknown",
+      "evidence": "Zero tail beyond last observed data"
     },
     {
       "name": "block2_record_head_x8",
       "offset": 4096,
       "size": 5,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "guessed",
+      "evidence": "5 zero bytes at start of each 0x94 record (records at 0x1000+k*0x94)"
     },
     {
       "name": "block2_record_name_x8",
       "offset": 4101,
       "size": 24,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "confirmed",
+      "evidence": "Name bytes repeat at record base+5 for all 8 records (stride 0x94 verified); CP932 decode via Python codecs; semantics HYPOTHESIS in report"
     },
     {
       "name": "block2_rec0_u16_list",
       "offset": 4130,
       "size": 64,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "guessed",
+      "evidence": "Record0-only u16_le[32] list (values listed report 5.3); type kept bytes in JSON enum (u16_le array described here) - see note"
     },
     {
       "name": "block2_rec0_tail_1062",
       "offset": 4194,
       "size": 19,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "unknown",
+      "evidence": "Bytes between u16 list and final span incl 3A x5 and 18 1E 0B 0B 24 24"
     },
     {
       "name": "block2_rec0_tail_1082",
       "offset": 4226,
       "size": 16,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "unknown",
+      "evidence": "Ends exactly at 0x94 record boundary"
     },
     {
       "name": "block2_records1_7_empty_bodies",
       "offset": 4249,
       "size": 1031,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "guessed",
+      "evidence": "Records1-7 (0x94 each from 0x1094) contain only their 10-byte names; this entry covers from record1 name start to live-struct end 0x14A0 as the empty-body span - see report for per-record bases"
     },
     {
       "name": "block2_buffer_zero_tail",
       "offset": 5280,
       "size": 864,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "likely",
+      "evidence": "No nonzero byte at/after intra 0x4A0; DMA never touches it but checksum/flush cover it"
     },
     {
       "name": "reserved_physical_blocks",
       "offset": 6144,
       "size": 4096,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "likely",
+      "evidence": "Blocks 3-4 (this entry) and 7-15 (file 0x3800, 18432 bytes, same status) are zero with no wrappers; see report 5.4"
     }
   ]
 }

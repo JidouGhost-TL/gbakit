@@ -33,85 +33,113 @@
       "name": "header_magic",
       "offset": 0,
       "size": 8,
-      "type": "ascii"
+      "type": "ascii",
+      "confidence": "confirmed",
+      "evidence": "Bytes 37 35 30 30 45 55 53 41 at offset 0 in both .sav files; 8-byte compare loop in FUN_08039b4c body."
     },
     {
       "name": "header_byte_08",
       "offset": 8,
       "size": 1,
-      "type": "u8"
+      "type": "u8",
+      "confidence": "guessed",
+      "evidence": "Only differing byte besides 0x0C between the two captures (saves/hexdump_and_diffs.txt); PACKET probe confirms single-byte mutation at 0x08 triggers blank-save rewrite (integrity coverage)."
     },
     {
       "name": "header_byte_09",
       "offset": 9,
       "size": 1,
-      "type": "u8"
+      "type": "u8",
+      "confidence": "guessed",
+      "evidence": "Constant byte in both .sav files; no dedicated accessor in ghidra/decompiled.c."
     },
     {
       "name": "header_word_0a",
       "offset": 10,
       "size": 2,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "unknown",
+      "evidence": "Zero bytes at 0x0A-0x0B in both .sav files; no accessor found in the 273-function corpus."
     },
     {
       "name": "header_counter_candidate",
       "offset": 12,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "confidence": "guessed",
+      "evidence": "Byte diff at 0x0C (00 -> 01) in saves/hexdump_and_diffs.txt; checksum remained valid only via the compensating +0xFF00 big-endian delta at 0x08 (net +0x10000 mod 0x10000), consistent with a FUN_08039a48 reflush."
     },
     {
       "name": "header_checksum",
       "offset": 14,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "confidence": "confirmed",
+      "evidence": "Python verification: stored 0xff80 == computed negated sum 0xff80 and total big-endian word sum 0x0000 in both .sav files; formula read from FUN_08039ac0/FUN_08039a48/FUN_08039afc bodies."
     },
     {
       "name": "slot0_prefix",
       "offset": 16,
       "size": 8,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "confirmed",
+      "evidence": "8x0x00 at 0x10-0x17 in both files matches the count=1 prefix write at block 2 in FUN_0803935c; remainder of slot is erased 0xFF."
     },
     {
       "name": "slot0_payload",
       "offset": 24,
       "size": 152,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "unknown",
+      "evidence": "All 0xFF in both blank captures; slot geometry from FUN_080399d0 address/count formula only."
     },
     {
       "name": "slot1_prefix",
       "offset": 176,
       "size": 8,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "confirmed",
+      "evidence": "8x0x00 at 0xB0-0xB7 in both files matches prefix write at block 22 (1*0x14+2) in FUN_0803935c."
     },
     {
       "name": "slot1_payload",
       "offset": 184,
       "size": 152,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "unknown",
+      "evidence": "All 0xFF in both blank captures; geometry from FUN_080399d0 formula only."
     },
     {
       "name": "slot2_prefix",
       "offset": 336,
       "size": 8,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "confirmed",
+      "evidence": "8x0x00 at 0x150-0x157 in both files matches prefix write at block 42 (2*0x14+2) in FUN_0803935c."
     },
     {
       "name": "slot2_payload",
       "offset": 344,
       "size": 152,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "unknown",
+      "evidence": "All 0xFF in both blank captures; geometry from FUN_080399d0 formula only."
     },
     {
       "name": "slot_checksum_candidate_slot0",
       "offset": 174,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "confidence": "guessed",
+      "evidence": "FUN_08039988 body proves the sum-over-0xA0==0 rule; position inferred from header layout only. No valid slot sample exists."
     },
     {
       "name": "unused_tail",
       "offset": 496,
       "size": 16,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "likely",
+      "evidence": "All 0xFF in both files; max EEPROM block touched by traced code is 61 (slot 2 end)."
     }
   ]
 }

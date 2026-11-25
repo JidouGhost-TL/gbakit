@@ -33,121 +33,160 @@
       "name": "whole_written_image",
       "offset": 0,
       "size": 24968,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "confirmed",
+      "evidence": "FUN_080e69bc passes literal 0xe000000 to func_0x080f1e1c; python: FF tail starts 0x6188 len 7800 in cap-01"
     },
     {
       "name": "first_u32_scalar",
       "offset": 0,
       "size": 4,
-      "type": "u32_le"
+      "type": "u32_le",
+      "confidence": "unknown",
+      "evidence": "struct.unpack_from('<I', sav, 0) == 0x188"
     },
     {
       "name": "sparse_stride12_record_region",
       "offset": 4,
       "size": 14376,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "guessed",
+      "evidence": "Python offset arithmetic over cap-01; FUN_080e533c record stride 0xC in decompiled.c"
     },
     {
       "name": "pre_string_u16",
       "offset": 14476,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "confidence": "unknown",
+      "evidence": "bytes 0x384C..0x384D = 1a 00"
     },
     {
       "name": "ascii_YUGIOHGX",
       "offset": 14478,
       "size": 8,
-      "type": "ascii"
+      "type": "ascii",
+      "confidence": "guessed",
+      "evidence": "Python re.finditer -> [0x384e]; 8-byte copy/compare lengths match in decompiled.c but addresses/expected bytes are unresolved literals"
     },
     {
       "name": "post_string_candidate_checksum",
       "offset": 14486,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "confidence": "unknown"
     },
     {
       "name": "deck_like_count",
       "offset": 14488,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "confidence": "guessed",
+      "evidence": "u16@0x3858 == 40 followed by exactly 40 u16 slots"
     },
     {
       "name": "deck_like_u16_array_40",
       "offset": 14490,
       "size": 80,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "guessed",
+      "evidence": "39 small non-zero u16 + trailing 0 at 0x385A..0x38A9; card-ID-like range, no semantic mapping (clean-room)"
     },
     {
       "name": "second_sparse_u16_array",
       "offset": 14506,
       "size": 1384,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "unknown",
+      "evidence": "byte-pattern scan of cap-01; boundaries approximate (offset overlaps deck array end deliberately avoided: region starts after 0x38AA)"
     },
     {
       "name": "zero_reserved_region",
       "offset": 15890,
       "size": 1702,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "guessed",
+      "evidence": "largest 00 run measured in python"
     },
     {
       "name": "stride12_ff_pair_record_region",
       "offset": 19672,
       "size": 792,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "guessed",
+      "evidence": "12-byte periodicity scan over 0x4CF0..0x4F00"
     },
     {
       "name": "sorted_8byte_record_table",
       "offset": 20480,
       "size": 2532,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "guessed",
+      "evidence": "Code stride/cap in decompiled.c matches observed 8-byte record cadence and slot count; exact table base offset unresolved"
     },
     {
       "name": "trailing_scalar_6148",
       "offset": 24904,
       "size": 4,
-      "type": "u32_le"
+      "type": "u32_le",
+      "confidence": "unknown",
+      "evidence": "u32@0x6148 == 0x7B"
     },
     {
       "name": "trailing_scalars_6164_6178",
       "offset": 24932,
       "size": 24,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "unknown",
+      "evidence": "dword dump of 0x6160..0x617F"
     },
     {
       "name": "trailing_scalar_617c",
       "offset": 24956,
       "size": 4,
-      "type": "u32_le"
+      "type": "u32_le",
+      "confidence": "unknown",
+      "evidence": "u32@0x617C"
     },
     {
       "name": "packed_counter_at_6180",
       "offset": 24960,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "confidence": "likely",
+      "evidence": "Literal +0x6180 offset and &7|<<3 packing at decompiled.c:1080,1091-1092; in-file u16@0x6180=0x0010"
     },
     {
       "name": "last_dword_6184",
       "offset": 24964,
       "size": 4,
-      "type": "u32_le"
+      "type": "u32_le",
+      "confidence": "unknown",
+      "evidence": "u32@0x6184; last non-0xFF dword in image"
     },
     {
       "name": "erased_tail",
       "offset": 24968,
       "size": 7800,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "confirmed",
+      "evidence": "FF tail starts 0x6188 len 7800 (python)"
     },
     {
       "name": "stored_checksum_1",
       "offset": 0,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "confidence": "unknown",
+      "evidence": "Existence CONFIRMED_STATIC from decompiled.c:4311-4323; offset/value UNKNOWN (see open_questions)"
     },
     {
       "name": "stored_checksum_2",
       "offset": 0,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "confidence": "unknown",
+      "evidence": "decompiled.c:4331-4343, 4351-4363"
     }
   ]
 }

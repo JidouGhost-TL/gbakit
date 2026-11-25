@@ -376,9 +376,123 @@ fn parse_offset_toc_archive(
     })
 }
 
-/// Parse an `SFCD` (`.mmstr`) archive:
-/// `b"SFCD"` + `u32 count` + `count * (8-byte name + u32 offset + u32 size)`.
+/// Parse an `SFCD` (`.mmstr`) archive.
+///
+/// Supports both:
+/// 1. Retail Majesco / 4Kids variable-length `SFCD` directories:
+///    `b"SFCD"` + `u16 dir_size` + `u16 unk` + `u32 file_count`, followed by
+///    `file_count` variable-length entries `(u32 size, u32 rel_off, NUL-terminated
+///    ASCII filename padded to 4-byte alignment)` with payloads relative to
+///    `data_base = 8 + dir_size`.
+/// 2. Fixed 16-byte-entry `SFCD` archives:
+///    `b"SFCD"` + `u32 count` + `count * (8-byte ASCII name + u32 offset + u32 size)`.
 fn parse_sfcd(slice: &[u8], rom_offset: usize) -> Result<ParsedArchive> {
+    if slice.len() < 8 || !slice.starts_with(MAGIC_SFCD) {
+        return Err(Error::Malformed("invalid SFCD header".into()));
+    }
+    if let Ok(parsed) = parse_sfcd_variable(slice, rom_offset) {
+        return Ok(parsed);
+    }
+    parse_sfcd_fixed(slice, rom_offset)
+}
+
+/// Parse a retail Majesco / 4Kids variable-length `SFCD` directory matching `mobiclip::SfcdArchive`.
+fn parse_sfcd_variable(slice: &[u8], rom_offset: usize) -> Result<ParsedArchive> {
+    if slice.len() < 12 || !slice.starts_with(MAGIC_SFCD) {
+        return Err(Error::Truncated {
+            offset: rom_offset,
+            needed: 12,
+            available: slice.len(),
+        });
+    }
+    let dir_size = u16::from_le_bytes([slice[4], slice[5]]) as usize;
+    let file_count = read_u32_le(slice, 8) as usize;
+    if dir_size < 16 || file_count == 0 || file_count > MAX_ARCHIVE_ENTRIES {
+        return Err(Error::InvalidField {
+            what: "sfcd_variable_header",
+            value: file_count as u64,
+        });
+    }
+    let data_base = 8usize.checked_add(dir_size).ok_or(Error::InvalidField {
+        what: "sfcd_data_base",
+        value: dir_size as u64,
+    })?;
+    if data_base > slice.len() {
+        return Err(Error::Truncated {
+            offset: rom_offset + 8,
+            needed: dir_size,
+            available: slice.len().saturating_sub(8),
+        });
+    }
+
+    let mut pos = 12usize;
+    let mut entries = Vec::with_capacity(file_count);
+    let mut max_end = data_base;
+
+    for i in 0..file_count {
+        let name_start = pos.checked_add(8).ok_or(Error::InvalidField {
+            what: "sfcd_dir_overflow",
+            value: pos as u64,
+        })?;
+        if name_start > data_base {
+            return Err(Error::Malformed("truncated variable SFCD directory".into()));
+        }
+        let size = read_u32_le(slice, pos) as usize;
+        let rel_off = read_u32_le(slice, pos + 4) as usize;
+
+        let nul_rel = slice[name_start..data_base]
+            .iter()
+            .position(|&b| b == 0)
+            .ok_or_else(|| Error::Malformed("unterminated variable SFCD filename".into()))?;
+        let name_bytes = &slice[name_start..name_start + nul_rel];
+        if name_bytes.is_empty() || !name_bytes.iter().all(|&b| (0x20..=0x7E).contains(&b)) {
+            return Err(Error::Malformed(format!(
+                "invalid variable SFCD filename at entry {i}"
+            )));
+        }
+        let name = std::str::from_utf8(name_bytes)
+            .map_err(|_| Error::Malformed(format!("invalid UTF-8 in SFCD entry {i} name")))?
+            .to_string();
+        pos = align_up(name_start + nul_rel + 1, 4);
+
+        let offset = data_base.checked_add(rel_off).ok_or(Error::InvalidField {
+            what: "sfcd_entry_offset",
+            value: rel_off as u64,
+        })?;
+        let end = offset.checked_add(size).ok_or(Error::InvalidField {
+            what: "sfcd_entry_end",
+            value: offset as u64,
+        })?;
+        if end > slice.len() {
+            return Err(Error::Truncated {
+                offset: rom_offset + offset,
+                needed: size,
+                available: slice.len().saturating_sub(offset),
+            });
+        }
+        if end > max_end {
+            max_end = end;
+        }
+        entries.push(ArchiveEntry {
+            index: i,
+            name,
+            offset,
+            size,
+        });
+    }
+
+    Ok(ParsedArchive {
+        format: ArchiveFormat::Sfcd,
+        rom_offset,
+        total_size: max_end,
+        has_end_sentinel: false,
+        entries,
+    })
+}
+
+/// Parse a fixed 16-byte-entry `SFCD` archive:
+/// `b"SFCD"` + `u32 count` + `count * (8-byte name + u32 offset + u32 size)`.
+fn parse_sfcd_fixed(slice: &[u8], rom_offset: usize) -> Result<ParsedArchive> {
     if slice.len() < 8 || !slice.starts_with(MAGIC_SFCD) {
         return Err(Error::Malformed("invalid SFCD header".into()));
     }
@@ -923,5 +1037,67 @@ mod tests {
         assert_eq!(parsed_reloc.entries.len(), 2);
         assert_eq!(parsed_reloc.entries[0].name, "BIG01");
         assert_eq!(parsed_reloc.entries[1].name, "BIG02");
+    }
+
+    #[test]
+    fn parses_retail_variable_length_sfcd_archive() {
+        let files: [(&str, &[u8]); 3] = [
+            ("main.bin", b"ARM_MAIN_PAYLOAD"),
+            ("movie_1.mmstr", b"MMSTR_STREAM_ONE_DATA"),
+            ("menuresources.mmstr", b"MENU_RES"),
+        ];
+
+        // Build directory body starting at +12: (u32 size, u32 rel_off, NUL-terminated name, 4B aligned)
+        let mut dir_entries = Vec::new();
+        let mut rel_off = 0usize;
+        for &(name, data) in &files {
+            dir_entries.extend_from_slice(&(data.len() as u32).to_le_bytes());
+            dir_entries.extend_from_slice(&(rel_off as u32).to_le_bytes());
+            dir_entries.extend_from_slice(name.as_bytes());
+            dir_entries.push(0);
+            while !dir_entries.len().is_multiple_of(4) {
+                dir_entries.push(0);
+            }
+            rel_off += align_up(data.len(), 4);
+        }
+
+        // dir_size covers [file_count(4) + dir_entries], so data_base = 8 + dir_size
+        let dir_size = (4 + dir_entries.len()) as u16;
+        let mut archive = Vec::new();
+        archive.extend_from_slice(b"SFCD");
+        archive.extend_from_slice(&dir_size.to_le_bytes());
+        archive.extend_from_slice(&0u16.to_le_bytes());
+        archive.extend_from_slice(&(files.len() as u32).to_le_bytes());
+        archive.extend_from_slice(&dir_entries);
+        assert_eq!(archive.len(), 8 + dir_size as usize);
+
+        for &(_, data) in &files {
+            archive.extend_from_slice(data);
+            while !archive.len().is_multiple_of(4) {
+                archive.push(0);
+            }
+        }
+
+        // Embed inside a ROM buffer and verify both parse_archive_at and scan_archives.
+        let mut rom = vec![0xFFu8; 0x1000];
+        let off = 0x0400usize;
+        rom[off..off + archive.len()].copy_from_slice(&archive);
+
+        let parsed = parse_archive_at(&rom, off).expect("variable SFCD should parse");
+        assert_eq!(parsed.format, ArchiveFormat::Sfcd);
+        assert_eq!(parsed.entries.len(), 3);
+        assert_eq!(parsed.entries[0].name, "main.bin");
+        assert_eq!(parsed.entries[1].name, "movie_1.mmstr");
+        assert_eq!(parsed.entries[2].name, "menuresources.mmstr");
+
+        let extracted = extract_archive_entries(&rom, &parsed).expect("extract should succeed");
+        assert_eq!(extracted[0].1, files[0].1);
+        assert_eq!(extracted[1].1, files[1].1);
+        assert_eq!(extracted[2].1, files[2].1);
+
+        let scanned = scan_archives(&rom);
+        assert_eq!(scanned.len(), 1);
+        assert_eq!(scanned[0].rom_offset, off);
+        assert_eq!(scanned[0].entries.len(), 3);
     }
 }

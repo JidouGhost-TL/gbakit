@@ -42,79 +42,105 @@
       "name": "header_magic_disney_snowboard",
       "offset": 0,
       "size": 16,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "confirmed",
+      "evidence": "Per-8-byte-block reversal of raw bytes yields ASCII DISNEY SNOWBOARD in both saves (Python: logical magic ok True/True); transform predicted by FUN_0809b6fc decompilation in ghidra/save_related_functions.c."
     },
     {
       "name": "header_reserved_zero_0x10",
       "offset": 16,
       "size": 16,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "confirmed",
+      "evidence": "Bytes verified zero in both files; purpose UNKNOWN and stated as such."
     },
     {
       "name": "record0_u16le_x30",
       "offset": 32,
       "size": 60,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "confirmed",
+      "evidence": "30xu16_le parse + zero pad verified by Python on both files; checksum rejection in Section 4.3 of SAVE-FORMAT-REPORT.md. Meaning labeled HYPOTHESIS in report."
     },
     {
       "name": "record0_zero_pad",
       "offset": 92,
       "size": 4,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "confirmed",
+      "evidence": "Verified zero in both files; checksum candidates over the record do not land here (Section 4.3)."
     },
     {
       "name": "record1_u16le_x30",
       "offset": 96,
       "size": 60,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "confirmed",
+      "evidence": "Delta vector computed by Python over logical views; structure identical to Record 0 (30xu16_le + 4 zero bytes at offset 156). Meaning HYPOTHESIS."
     },
     {
       "name": "record1_zero_pad",
       "offset": 156,
       "size": 4,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "confirmed",
+      "evidence": "Verified in sav-01; absent (erased) in sav-00 consistent with write order."
     },
     {
       "name": "table_template_array_15byte_entries",
       "offset": 160,
       "size": 150,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "confirmed",
+      "evidence": "Exact 15-byte periodicity proven by Python string compare (copies 0-8 byte-identical, copy 9 diverges). Entry semantics HYPOTHESIS."
     },
     {
       "name": "walking_bit_trailer",
       "offset": 310,
       "size": 18,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "guessed",
+      "evidence": "Byte-pattern analysis only; no code recovered for this region. Includes candidate value field broken out separately at raw offset 326."
     },
     {
       "name": "candidate_trailer_value_u16",
       "offset": 326,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "confidence": "unknown",
+      "evidence": "Negative checksum verification in SAVE-FORMAT-REPORT.md Section 4.3; single observation only."
     },
     {
       "name": "reserved_zero_span_blocks41_60",
       "offset": 328,
       "size": 160,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "confirmed",
+      "evidence": "Python verified sav01 0x148-0x1E8 all zero and sav00 >=0x60 all 0xFF. Purpose UNKNOWN."
     },
     {
       "name": "tail_block61_scalar_candidate",
       "offset": 488,
       "size": 8,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "guessed",
+      "evidence": "Byte observation only; no writer/reader semantics recovered."
     },
     {
       "name": "tail_block62_flagbyte_candidate",
       "offset": 496,
       "size": 8,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "unknown",
+      "evidence": "Single-snapshot byte observation; cannot distinguish flags from packed spanning value."
     },
     {
       "name": "tail_block63_bytes_candidate",
       "offset": 504,
       "size": 8,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "unknown",
+      "evidence": "Single-snapshot byte observation only."
     }
   ]
 }

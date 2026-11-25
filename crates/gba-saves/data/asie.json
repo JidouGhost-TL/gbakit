@@ -33,79 +33,105 @@
       "name": "header_magic",
       "offset": 0,
       "size": 8,
-      "type": "ascii"
+      "type": "ascii",
+      "confidence": "confirmed",
+      "evidence": "Bytes 30 30 30 30 45 49 53 41 at offset 0 of both .sav files; 8-byte compare loop in FUN_08038074 and first-u32 compare in FUN_08037fb4."
     },
     {
       "name": "header_byte_08",
       "offset": 8,
       "size": 1,
-      "type": "u8"
+      "type": "u8",
+      "confidence": "guessed",
+      "evidence": "Byte diff 0x08: 07->06 and 0x0C: 00->01 in saves/hexdump_and_diffs.txt; BE checksum unchanged (0xFF80) in both files."
     },
     {
       "name": "header_byte_09_const",
       "offset": 9,
       "size": 1,
-      "type": "u8"
+      "type": "u8",
+      "confidence": "likely",
+      "evidence": "0x96 in both samples; covered by the verified header checksum (FUN_08038010/FUN_08038074)."
     },
     {
       "name": "header_bytes_0A_0B",
       "offset": 10,
       "size": 2,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "guessed",
+      "evidence": "FUN_08037d3c body writes at +10/+11; both saves show 00 00 at 0x0A-0x0B."
     },
     {
       "name": "header_byte_0C",
       "offset": 12,
       "size": 1,
-      "type": "u8"
+      "type": "u8",
+      "confidence": "guessed",
+      "evidence": "Byte diff 0x0C: 00->01; stored header checksum identical (FF 80) in both files."
     },
     {
       "name": "header_byte_0D",
       "offset": 13,
       "size": 1,
-      "type": "u8"
+      "type": "u8",
+      "confidence": "likely",
+      "evidence": "0x00 in both samples; covered by the verified header checksum."
     },
     {
       "name": "header_checksum",
       "offset": 14,
       "size": 2,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "confirmed",
+      "evidence": "Python: BE sum of all 8 words == 0x0000 and stored == -sum(first 7) == 0xFF80 on both files; LE sum == 0x01FE fails. Code: FUN_08038034 '_DAT_0803806c[7] = -sVar1', FUN_08037fb4 '*(short*)(mirror+0xE) = -sVar2'."
     },
     {
       "name": "slot0_payload",
       "offset": 16,
       "size": 2040,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "unknown",
+      "evidence": "Geometry from FUN_08037f7c (slot*0xFF+2, 0xFF blocks); slot BE checksum 0xFC18 != 0 in both samples (empty). Internal field layout cannot be mapped without a populated sample."
     },
     {
       "name": "slot1_payload",
       "offset": 2056,
       "size": 2040,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "unknown",
+      "evidence": "Same as slot0_payload; slot checksum 0xFC18 (empty) in both samples."
     },
     {
       "name": "slot2_payload",
       "offset": 4096,
       "size": 2040,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "unknown",
+      "evidence": "Same as slot0_payload; slot checksum 0xFC18 (empty) in both samples."
     },
     {
       "name": "slot3_payload",
       "offset": 6136,
       "size": 2040,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "unknown",
+      "evidence": "Same as slot0_payload; slot checksum 0xFC18 (empty) in both samples."
     },
     {
       "name": "slot_checksum_word",
       "offset": 2054,
       "size": 2,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "guessed",
+      "evidence": "FUN_08037f4c/FUN_08038010 cover the full 0x7F8 bytes with no excluded word; no valid slot sample exists to confirm placement."
     },
     {
       "name": "unused_tail",
       "offset": 8176,
       "size": 16,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "likely",
+      "evidence": "Geometry arithmetic 2 + 4*255 = 1022 blocks used; both samples all 0xFF at 0x1FF0-0x1FFF."
     }
   ]
 }

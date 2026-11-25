@@ -50,61 +50,81 @@
       "name": "header_magic_prefix",
       "offset": 0,
       "size": 4,
-      "type": "ascii"
+      "type": "ascii",
+      "confidence": "confirmed",
+      "evidence": "Identical in both valid .sav files; FUN_080172e8 4xu32 compare loop over struct base; checksum covers offset 0 and verifies."
     },
     {
       "name": "header_variable_word",
       "offset": 4,
       "size": 4,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "confirmed",
+      "evidence": "Only differing payload word between samples (hexdump_and_diffs.txt offsets 0x04-0x07); cannot be fixed magic because both saves were retained/loaded; code role beyond template comparison unknown."
     },
     {
       "name": "header_magic_suffix",
       "offset": 8,
       "size": 8,
-      "type": "ascii"
+      "type": "ascii",
+      "confidence": "confirmed",
+      "evidence": "Identical in both valid .sav files and inside the compared 16-byte range; interpreted as constant data/framework identifier, not gameplay state."
     },
     {
       "name": "records_x3",
       "offset": 16,
       "size": 24,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "guessed",
+      "evidence": "Record stride/count and sort key from FUN_0801744c/FUN_0801760c bodies (static, different literal base); byte layout and ASCII fragments observed identically in both .sav files; no sample variation to verify semantics."
     },
     {
       "name": "zero_region_a",
       "offset": 40,
       "size": 64,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "unknown",
+      "evidence": "All zero in both samples; only static sanitizer overlap (hypothesized base) suggests reserved counters/flags. Distinguished from 0xFF fill: these zeros are inside the checksummed, written payload (EEPROM-written zeros, not erased state)."
     },
     {
       "name": "tail_fields_and_settings_hypothesis",
       "offset": 104,
       "size": 24,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "guessed",
+      "evidence": "Offsets from FUN_0801744c/FUN_08016dbc bodies (static, unrecovered literal bases); values in both .sav files are in-range zeros except 0x7E/0x7F. No variation between samples."
     },
     {
       "name": "zero_region_b",
       "offset": 128,
       "size": 8,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "unknown",
+      "evidence": "Inside checksummed payload and written by FUN_080125b4; all zero in both samples; only static clamp hypothesis touches +0x80."
     },
     {
       "name": "checksum_complement_be",
       "offset": 136,
       "size": 4,
-      "type": "u32_le"
+      "type": "u32_le",
+      "confidence": "confirmed",
+      "evidence": "Python recomputation matches stored BE value on both files; sav[0x88:0x90] == reverse(pack('<I',sum)+pack('<I',~sum)) verified true on both."
     },
     {
       "name": "checksum_sum_be",
       "offset": 140,
       "size": 4,
-      "type": "u32_le"
+      "type": "u32_le",
+      "confidence": "confirmed",
+      "evidence": "Python: computed 0x00000741/0x0000086b equals stored BE on both files; inter-sample delta +298 equals 'PMID' insertion byte sum."
     },
     {
       "name": "unused_eeprom_fill",
       "offset": 144,
       "size": 368,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "confirmed",
+      "evidence": "Byte scan: zero non-0xFF bytes at >=0x90 in both files; no call site references block indices >=18."
     }
   ]
 }

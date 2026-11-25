@@ -40,85 +40,113 @@
       "name": "header_magic",
       "offset": 0,
       "size": 8,
-      "type": "ascii"
+      "type": "ascii",
+      "confidence": "confirmed",
+      "evidence": "FUN_0803c244 8-byte compare loop (iVar3<8) in decompiled.c; both .sav files start 313030414f505048 (Python read in verification run)"
     },
     {
       "name": "header_payload_word_0x08",
       "offset": 8,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "confidence": "guessed",
+      "evidence": "Covered by header checksum (sum includes word 4); inter-sample diff 0x09 ED->6D exactly compensated at 0x0F; no code reads this word individually"
     },
     {
       "name": "header_payload_0x0A",
       "offset": 10,
       "size": 2,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "unknown",
+      "evidence": "Zero in both blank samples; no individual reader in decompiled corpus"
     },
     {
       "name": "header_byte_0x0C",
       "offset": 12,
       "size": 1,
-      "type": "u8"
+      "type": "u8",
+      "confidence": "unknown",
+      "evidence": "Constant 0x01 in both blank samples; candidate version field not claimed; no reader recovered"
     },
     {
       "name": "header_byte_0x0D",
       "offset": 13,
       "size": 1,
-      "type": "u8"
+      "type": "u8",
+      "confidence": "unknown",
+      "evidence": "Constant 0x0A in both samples; distinct from checksum word at 0x0E; no reader recovered"
     },
     {
       "name": "header_checksum",
       "offset": 14,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "confidence": "confirmed",
+      "evidence": "Decompiled FUN_0803c114/FUN_0803c204/FUN_0803c244; Python verification over both .sav files stored==computed 2/2 (see SAVE-FORMAT-REPORT.md section 4.4)"
     },
     {
       "name": "global_record_payload",
       "offset": 16,
       "size": 38,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "likely",
+      "evidence": "FUN_0803c29c/FUN_0803c2e0 block counts 5x8=40 and sum over 20 words; .sav bytes 0x10-0x35 all zero"
     },
     {
       "name": "global_record_checksum",
       "offset": 54,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "confidence": "confirmed",
+      "evidence": "Explicit *(short*)(struct+0x36) = -sum in FUN_0803c29c; Python sum over file 0x10-0x37 = 0x0000 both files (trivial, all-zero record; formula rests on code)"
     },
     {
       "name": "slot0_head",
       "offset": 56,
       "size": 16,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "confirmed",
+      "evidence": "Non-FF island 0x38-0x47 in both .sav files matches 2-block zero write; FUN_0803bc9c format loop in decompiled.c"
     },
     {
       "name": "slot0_body",
       "offset": 72,
       "size": 2696,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "unknown",
+      "evidence": "Bytes all 0xFF; only slot writes in corpus are the 16-byte heads in FUN_0803bc9c format path"
     },
     {
       "name": "slot1_head",
       "offset": 2768,
       "size": 16,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "confirmed",
+      "evidence": "Island at 0xAD0 = block 346 x 8 in both files; confirms 339-block stride"
     },
     {
       "name": "slot1_body",
       "offset": 2784,
       "size": 2696,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "unknown",
+      "evidence": "All 0xFF in both samples"
     },
     {
       "name": "slot2_head",
       "offset": 5480,
       "size": 16,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "confirmed",
+      "evidence": "Island at 0x1568 = block 685 x 8 in both files"
     },
     {
       "name": "slot2_body",
       "offset": 5496,
       "size": 2696,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "unknown",
+      "evidence": "All 0xFF in both samples; 5480+2712=8192 exact partition"
     }
   ]
 }

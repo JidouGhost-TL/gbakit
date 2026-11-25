@@ -50,97 +50,129 @@
       "name": "slot0_checksum",
       "offset": 0,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "confidence": "confirmed",
+      "evidence": "FUN_080193b4/FUN_080193e0 in decompiled.c; Python sum of slot block = 0x0020 matches stored BE16 on both files."
     },
     {
       "name": "slot1_checksum",
       "offset": 2,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "confidence": "confirmed",
+      "evidence": "Same code path; Python verification on both files."
     },
     {
       "name": "slot2_checksum",
       "offset": 4,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "confidence": "confirmed",
+      "evidence": "Same code path; Python verification on both files."
     },
     {
       "name": "header_checksum",
       "offset": 6,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "confidence": "confirmed",
+      "evidence": "FUN_080193b4/FUN_08019404/FUN_08019364 in decompiled.c; Python computed 0x034f/0x03fa matches stored on both files; pack mutation probe at offset 0x7 (low byte of this field) caused blank reset."
     },
     {
       "name": "header_reserved_0x08_0x67",
       "offset": 8,
       "size": 96,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "unknown",
+      "evidence": "Zero in both near-blank samples; no distinguishing code references. Reported as one span to avoid fabricating sub-fields."
     },
     {
       "name": "header_mutated_byte_0x68",
       "offset": 104,
       "size": 1,
-      "type": "u8"
+      "type": "u8",
+      "confidence": "guessed",
+      "evidence": "Only differing payload byte across the two .sav files (hexdump_and_diffs.txt and independent census agree); checksum lockstep proves checksummed payload status. Semantics (progress/score/counter) unproven; no progressed save in corpus."
     },
     {
       "name": "magic_1M2A",
       "offset": 108,
       "size": 4,
-      "type": "ascii"
+      "type": "ascii",
+      "confidence": "confirmed",
+      "evidence": "Bytes 31 4D 32 41 at file 0x6C in both samples; 4-byte compare in FUN_08019364 and 4-byte copy in FUN_08019420 in decompiled.c."
     },
     {
       "name": "header_reserved_0x70_0x75",
       "offset": 112,
       "size": 6,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "unknown",
+      "evidence": "Zero in both samples; no traced semantics."
     },
     {
       "name": "header_flag_byte_0",
       "offset": 118,
       "size": 1,
-      "type": "u8"
+      "type": "u8",
+      "confidence": "likely",
+      "evidence": "FUN_08019420 stores 0xFF flag bytes and FUN_0801909c copies them out in decompiled.c; file bytes 0x76..0x77 are the only 0xFF pair inside the header in both samples. Setting semantics unknown."
     },
     {
       "name": "header_flag_byte_1",
       "offset": 119,
       "size": 1,
-      "type": "u8"
+      "type": "u8",
+      "confidence": "likely",
+      "evidence": "Same as header_flag_byte_0."
     },
     {
       "name": "slot_payload_head",
       "offset": 120,
       "size": 30,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "unknown",
+      "evidence": "Zero in all 6 slot images; structured transient writes in FUN_080190d4 prove live-play structure exists but no progressed sample reveals it. Offset is slot 0; add 0x40 per slot."
     },
     {
       "name": "slot_index_byte",
       "offset": 144,
       "size": 1,
-      "type": "u8"
+      "type": "u8",
+      "confidence": "likely",
+      "evidence": "Explicit index store in FUN_080190d4 in decompiled.c; absence of 0x01/0x02 bytes in all sample slots confirms the reset-path erasure. Live-save retention unknown."
     },
     {
       "name": "slot_marker_0x20",
       "offset": 150,
       "size": 1,
-      "type": "u8"
+      "type": "u8",
+      "confidence": "confirmed",
+      "evidence": "0x20 store in FUN_08019078; byte 0x20 at slot+0x1E in all 6 slot images; slot sums verify to 0x0020 on both files."
     },
     {
       "name": "slot_payload_tail",
       "offset": 151,
       "size": 29,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "unknown",
+      "evidence": "Zero in all samples; no traced field semantics."
     },
     {
       "name": "slot_unvalidated_tail",
       "offset": 180,
       "size": 4,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "guessed",
+      "evidence": "Length discrepancy read directly from FUN_080193e0 (0x40) vs FUN_080192c8 (0x3C) in decompiled.c; samples have zeros here so file bytes cannot discriminate. Fuzz target F5 in the report discriminates it."
     },
     {
       "name": "unused_tail_0x138",
       "offset": 312,
       "size": 200,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "confirmed",
+      "evidence": "All 0xFF in both files; length constants 0x138/0x78 in FUN_080192c8/FUN_08019420/FUN_080192a0; no traced block index >= 39."
     }
   ]
 }

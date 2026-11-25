@@ -33,187 +33,249 @@
       "name": "magic",
       "offset": 0,
       "size": 8,
-      "type": "ascii"
+      "type": "ascii",
+      "confidence": "confirmed",
+      "evidence": "FUN_080494cc copies 8 bytes to struct+0; FUN_08048dd0 compares first 8 bytes per sector; present verbatim in all 3 valid .sav copies"
     },
     {
       "name": "sequence_counter_64",
       "offset": 8,
       "size": 8,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "confirmed",
+      "evidence": "FUN_080494cc sets +8=1,+0xC=0; FUN_08049644 64-bit increment; FUN_08048dd0 picks valid sector with largest pair; .sav sectors differ only at byte 0x08 (1 vs 2)"
     },
     {
       "name": "reserved_0x010",
       "offset": 16,
       "size": 1,
-      "type": "u8"
+      "type": "u8",
+      "confidence": "likely",
+      "evidence": "FUN_080494cc *(u8*)(struct+0x10)=0"
     },
     {
       "name": "pending_update_flag_0x011",
       "offset": 17,
       "size": 1,
-      "type": "u8"
+      "type": "u8",
+      "confidence": "likely",
+      "evidence": "FUN_080494cc/FUN_08049d50 decompiled bodies; observed 0 (no pending update at capture)"
     },
     {
       "name": "reserved_0x012",
       "offset": 18,
       "size": 2,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "guessed",
+      "evidence": "Zero in all copies; no named writer/reader traced"
     },
     {
       "name": "field_0x014",
       "offset": 20,
       "size": 4,
-      "type": "u32_le"
+      "type": "u32_le",
+      "confidence": "likely",
+      "evidence": "FUN_080494cc *(u32*)(+0x14)=100; FUN_08049d50 *(u32*)(+0x14)=uVar3; observed 100 in all copies. Semantics of the value (score/time/counter) UNKNOWN"
     },
     {
       "name": "config_u16_0x018",
       "offset": 24,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "confidence": "likely",
+      "evidence": "FUN_080494cc +0x18=8; FUN_0803a09c index0. Meaning UNKNOWN"
     },
     {
       "name": "config_u16_0x01a",
       "offset": 26,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "confidence": "likely",
+      "evidence": "FUN_080494cc +0x1A=1; FUN_0803a09c index1"
     },
     {
       "name": "config_u16_0x01c",
       "offset": 28,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "confidence": "likely",
+      "evidence": "FUN_080494cc +0x1C=0x20; FUN_0803a09c index2"
     },
     {
       "name": "config_u16_0x01e",
       "offset": 30,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "confidence": "likely",
+      "evidence": "FUN_080494cc +0x1E=1; FUN_0803a09c index3"
     },
     {
       "name": "config_u16_0x020",
       "offset": 32,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "confidence": "likely",
+      "evidence": "FUN_080494cc +0x20=0x200; FUN_0803a09c index4"
     },
     {
       "name": "config_u16_0x022",
       "offset": 34,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "confidence": "likely",
+      "evidence": "FUN_080494cc +0x22=0x100; FUN_0803a09c index5"
     },
     {
       "name": "config_u16_0x024",
       "offset": 36,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "confidence": "likely",
+      "evidence": "FUN_080494cc +0x24=2; FUN_0803a09c index6"
     },
     {
       "name": "reserved_0x026",
       "offset": 38,
       "size": 10,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "guessed",
+      "evidence": "Zero in all copies; no traced reader/writer"
     },
     {
       "name": "byte_array_0x030",
       "offset": 48,
       "size": 6,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "likely",
+      "evidence": "FUN_080494cc assignments; FUN_08048dd0 6-byte copy loop. Per-byte semantics UNKNOWN"
     },
     {
       "name": "byte_array_0x036",
       "offset": 54,
       "size": 4,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "likely",
+      "evidence": "FUN_08048dd0 4-byte copy loop from +0x36"
     },
     {
       "name": "byte_array_0x03a",
       "offset": 58,
       "size": 16,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "likely",
+      "evidence": "FUN_08048dd0 16-byte copy loop from +0x3A"
     },
     {
       "name": "reserved_0x04a",
       "offset": 74,
       "size": 130,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "unknown",
+      "evidence": "No traced reader/writer; zero in all copies"
     },
     {
       "name": "field_u16_0x0cc",
       "offset": 204,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "confidence": "likely",
+      "evidence": "FUN_080494cc +0xCC=1; FUN_08048dd0 *(u16*)(ram+0x80)=*(u16*)(sav+0xCC)"
     },
     {
       "name": "field_u16_0x0ce",
       "offset": 206,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "confidence": "likely",
+      "evidence": "FUN_080494cc +0xCE=1; FUN_08048dd0 *(u16*)(ram+0x82)=*(u16*)(sav+0xCE)"
     },
     {
       "name": "field_u16_0x0d0",
       "offset": 208,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "confidence": "likely",
+      "evidence": "FUN_080494cc +0xD0=1"
     },
     {
       "name": "field_u16_0x0d2_hypothesised",
       "offset": 210,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "confidence": "guessed",
+      "evidence": "FUN_080494cc *(u16*)(struct+_DAT_08049634)=0 with unresolved DAT constant; FUN_08048dd0 *(u16*)(ram+0x6E0)=*(u16*)(sav+_DAT_08049078); FUN_080498f4 mirror copy. Exact offset not provable from DAT stubs"
     },
     {
       "name": "reserved_0x0d4",
       "offset": 212,
       "size": 344,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "unknown",
+      "evidence": "Zero in all copies; no traced reader/writer in save struct"
     },
     {
       "name": "score_table_0",
       "offset": 556,
       "size": 320,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "confirmed",
+      "evidence": "FUN_08030e8c/FUN_080494cc/FUN_08048dd0 bodies; all 4 tables byte-identical factory defaults in every valid .sav copy"
     },
     {
       "name": "score_table_1",
       "offset": 876,
       "size": 320,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "confirmed",
+      "evidence": "FUN_08030e8c/FUN_080494cc/FUN_08048dd0 bodies; all 4 tables byte-identical factory defaults in every valid .sav copy"
     },
     {
       "name": "score_table_2",
       "offset": 1196,
       "size": 320,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "confirmed",
+      "evidence": "FUN_08030e8c/FUN_080494cc/FUN_08048dd0 bodies; all 4 tables byte-identical factory defaults in every valid .sav copy"
     },
     {
       "name": "score_table_3",
       "offset": 1516,
       "size": 320,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "confirmed",
+      "evidence": "FUN_08030e8c/FUN_080494cc/FUN_08048dd0 bodies; all 4 tables byte-identical factory defaults in every valid .sav copy"
     },
     {
       "name": "score_entry_template",
       "offset": 556,
       "size": 16,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "confirmed",
+      "evidence": "Parsed all 80 entries in cap-01: scores 1e9 down to 5e7 step 5e7, names SON/TAI/KNU/AMY/CLA/ELL/NIG/AMI/BIN/BON/CHU/REA/WIS/CHA/PIA/EGG/RIO/SHA/ROU/SEG in every table"
     },
     {
       "name": "reserved_0x72c",
       "offset": 1836,
       "size": 210,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "unknown",
+      "evidence": "Zero in all copies. Note RAM-side mirror offset +0x72C exists (FUN_080498f4) but that is the RAM working struct, not this file offset"
     },
     {
       "name": "reserved_tail_0x7fe",
       "offset": 2046,
       "size": 2048,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "unknown",
+      "evidence": "Zero in all copies; no traced reader/writer"
     },
     {
       "name": "checksum_be",
       "offset": 4094,
       "size": 2,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "confirmed",
+      "evidence": "FUN_0804971c 4-iteration byte-sum loop; FUN_080494cc/FUN_08049644 hi/lo byte stores; Python: stored 0x0139 == sum(b[0:4]) on all 3 valid copies, full-block sum 0xD2C7/0xD2C8 does NOT match"
     }
   ]
 }

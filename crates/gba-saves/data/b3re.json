@@ -42,49 +42,65 @@
       "name": "stored_checksum",
       "offset": 0,
       "size": 4,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "confirmed",
+      "evidence": "FUN_08778000: sums 0x1F8 bytes from struct+8, compares with u32 at struct+4. Python: sav-01 full-range computed 0x2f0 == stored; sav-00 prefix [8:0x90) computed 0x2f0 == stored, full range 0x17180 due to erased 0xFF tail. File offset 0 is the block-reversed image of RAM struct+4."
     },
     {
       "name": "magic_driv",
       "offset": 4,
       "size": 4,
-      "type": "ascii"
+      "type": "ascii",
+      "confidence": "confirmed",
+      "evidence": "FUN_08778000 magic gate and rewrite; ASCII 'driv' appears in both files only under the verified 8-byte block reversal (file 'vird' at offset 4). RAM mirror struct+0x00 (absolute base _DAT_087780c0 unresolved)."
     },
     {
       "name": "reserved_zero_008_07f",
       "offset": 8,
       "size": 120,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "likely",
+      "evidence": "Inside both the summed range [8:512) and the zeroed range [4:512) in FUN_08778000; all-zero in both .sav files. RAM struct+0x08..+0x80. Semantics unknown; reserved."
     },
     {
       "name": "profile_name",
       "offset": 128,
       "size": 8,
-      "type": "ascii"
+      "type": "ascii",
+      "confidence": "confirmed",
+      "evidence": "Byte-exact match between FUN_0800289c's non-zero write sequence and RAM-reversed file bytes at 0x80 in both files. RAM struct+0x80..+0x88. No reader in corpus (menu code not traced)."
     },
     {
       "name": "profile_byte_088",
       "offset": 143,
       "size": 1,
-      "type": "u8"
+      "type": "u8",
+      "confidence": "confirmed",
+      "evidence": "Initializer write *(param_1+2)=0x20 at byte +8 reproduced in both .sav files under block reversal. RAM struct+0x88. Meaning unknown."
     },
     {
       "name": "profile_flag_089",
       "offset": 142,
       "size": 1,
-      "type": "bitflags"
+      "type": "bitflags",
+      "confidence": "likely",
+      "evidence": "Initializer byte +9 = 0x80 matches observed byte in both files; no reader in the corpus proves flag semantics, so bitflags typing is structural only. RAM struct+0x89."
     },
     {
       "name": "profile_record_tail_zero",
       "offset": 136,
       "size": 6,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "likely",
+      "evidence": "File bytes 0x88..0x8D are zero in both files (the two non-zero bytes of this 8-byte block sit at file 0x8E/0x8F, i.e. RAM struct+0x89/+0x88 after block reversal). Zeroed by FUN_0800289c record+0x0A onward and FUN_08778000 blank-init; inside checksum range."
     },
     {
       "name": "unused_tail_090_1ff",
       "offset": 144,
       "size": 368,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "likely",
+      "evidence": "Sole inter-snapshot delta per saves/hexdump_and_diffs.txt (368 bytes at 0x90..0x200). Inside checksum range [8:512); explains sav-00 full-range sum mismatch (0x17180 vs stored 0x2f0). RAM struct+0x90..+0x200."
     }
   ]
 }

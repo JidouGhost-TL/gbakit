@@ -43,85 +43,113 @@
       "name": "checksum_xor32_keyed",
       "offset": 84,
       "size": 4,
-      "type": "u32_le"
+      "type": "u32_le",
+      "confidence": "confirmed",
+      "evidence": "FUN_0801cd98/FUN_0801ce40 loops in ghidra/decompiled.c; Python verification both files match (see SAVE-FORMAT-REPORT.md sec.4.3)"
     },
     {
       "name": "header_bytes_plus4_to_plus7",
       "offset": 80,
       "size": 4,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "confirmed",
+      "evidence": "FUN_0801d08c decompiled; only payload byte differing between captures; block-reversal mapping file 0x50 = RAM +7"
     },
     {
       "name": "record_packed_24bit_fields_x4_per_record",
       "offset": 88,
       "size": 36,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "likely",
+      "evidence": "FUN_0801c7f0 pack and FUN_0801ca80 unpack bodies; zero in both captures"
     },
     {
       "name": "record_byte_from_src_plus0x118_per_record",
       "offset": 99,
       "size": 3,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "likely",
+      "evidence": "FUN_0801c7f0/FUN_0801ca80"
     },
     {
       "name": "record_bitpacked_array1_12bytes_per_record",
       "offset": 98,
       "size": 36,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "likely",
+      "evidence": "FUN_0801c7f0/FUN_0801ca80 loops over 0xc groups"
     },
     {
       "name": "record_bitpacked_array2_12bytes_per_record",
       "offset": 118,
       "size": 36,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "likely",
+      "evidence": "FUN_0801c7f0/FUN_0801ca80 second 0xc-group loops"
     },
     {
       "name": "record_div60_value_3bytes_per_record",
       "offset": 122,
       "size": 9,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "likely",
+      "evidence": "FUN_0801c7f0 (func_0x080637e8(*src,0x3c)) and FUN_0801ca80 (*0x3C)"
     },
     {
       "name": "record_bitfield31_a_per_record",
       "offset": 135,
       "size": 12,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "likely",
+      "evidence": "FUN_0801c7f0/FUN_0801ca80 0x1f-iteration bit loops"
     },
     {
       "name": "record_bitfield31_b_per_record",
       "offset": 131,
       "size": 12,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "likely",
+      "evidence": "FUN_0801c7f0/FUN_0801ca80; FUN_0801ce40/FUN_0801cd98 byte +0x35 stores"
     },
     {
       "name": "sentinel_0228_copy1_validated",
       "offset": 146,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "confidence": "confirmed",
+      "evidence": "FUN_0801cd44/FUN_0801c7f0 writers, FUN_0801ce40 compare (blob_word[0x11] byte *0x100 + blob[0x45]); both savs"
     },
     {
       "name": "sentinel_0228_copy2",
       "offset": 210,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "confidence": "confirmed",
+      "evidence": "FUN_0801cd44 writes +0x84/+0x85; both savs"
     },
     {
       "name": "sentinel_0228_copy3",
       "offset": 274,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "confidence": "confirmed",
+      "evidence": "FUN_0801cd44 writes +0xC4/+0xC5; FUN_0801c7f0 per-record +0x44; both savs"
     },
     {
       "name": "unused_reserved_gaps_in_blob",
       "offset": 80,
       "size": 208,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "likely",
+      "evidence": "FUN_0801c7f0 writes only +0x08..0x37 and +0x44 per record; FUN_0801cd44/FUN_0801d08c memset"
     },
     {
       "name": "erased_eeprom_outside_blob",
       "offset": 0,
       "size": 512,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "confirmed",
+      "evidence": "Both .sav files; FUN_0801cd98/FUN_0801ce40 loops start block 10 count 0x1a"
     }
   ]
 }

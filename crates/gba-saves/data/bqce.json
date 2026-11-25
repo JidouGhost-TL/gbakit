@@ -33,61 +33,81 @@
       "name": "magic_ascii",
       "offset": 0,
       "size": 8,
-      "type": "ascii"
+      "type": "ascii",
+      "confidence": "confirmed",
+      "evidence": "Both .sav files start 34 34 30 30 41 42 47 43 = '4400ABGC'. Code: FUN_080323d0 lines 6997-7000 byte-compare loop over 8 bytes; PACKET cold-reload probe confirms integrity failure handling."
     },
     {
       "name": "header_settings_group_a",
       "offset": 8,
       "size": 4,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "likely",
+      "evidence": "FUN_08020688 lines 4535-4540 and FUN_08021390 lines 4586-4590 are inverse byte-store patterns on the same struct offsets; FUN_0803242c line 7043 passes *(SaveManager+10) to FUN_080384b0."
     },
     {
       "name": "header_counter_field_w6",
       "offset": 12,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "confidence": "guessed",
+      "evidence": "Byte diff of the two real .sav files (only 2 bytes differ); PACKET probe_offset_hex 0xC with integrity_check_confirmed and reverted_to_blank_on_mutation."
     },
     {
       "name": "header_field_w7",
       "offset": 14,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "confidence": "likely",
+      "evidence": "FUN_08020688 line 4537 and FUN_08021390 line 4588 operate on struct+0x0D bit7; observed bytes unchanged across captures."
     },
     {
       "name": "header_compensating_field_w8",
       "offset": 16,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "confidence": "guessed",
+      "evidence": "Two-sample diff; net word-sum delta 0 in both endiannesses; FUN_08020688 line 4540 / FUN_08021390 line 4590 for the +0x11 byte."
     },
     {
       "name": "header_erased_padding_w9_w10",
       "offset": 18,
       "size": 4,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "likely",
+      "evidence": "Both samples; EEPROM block granularity proven by FUN_08043564/FUN_08043628 (8-byte blocks) and FUN_0800a4bc/FUN_0800a524 (>>3 block conversion)."
     },
     {
       "name": "header_checksum",
       "offset": 22,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "confidence": "confirmed",
+      "evidence": "Python verification on both real files: BE words sum to 0x0000, computed -sum(others) = 0x0100 = stored. Code proof: FUN_08032364 lines 6946-6948, FUN_0803284c lines 7197-7202, FUN_080323d0 lines 6990-6995."
     },
     {
       "name": "slot_first_block_cleared",
       "offset": 24,
       "size": 8,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "confirmed",
+      "evidence": "Both samples show exactly 8 zero bytes at each of the three slot bases predicted by (slot*0x14+3)*8 and the 0x18+i*0xA0 loop in FUN_0803242c lines 7036-7041; all other slot bytes are 0xFF."
     },
     {
       "name": "slot_payload",
       "offset": 32,
       "size": 152,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "unknown",
+      "evidence": "Exhaustive textual search for FUN_0800a524/func_0x0800a524 and 0xa0 uses in decompiled.c; both samples contain no non-FF slot payload byte beyond the cleared first block."
     },
     {
       "name": "tail_unused",
       "offset": 504,
       "size": 8,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "likely",
+      "evidence": "Slot offset formula (slot*0x14+3)*8 with slot max 2 and length 0xa0 in FUN_080327e0/FUN_0803242c; both samples are 0xFF at 0x1F8-0x1FF."
     }
   ]
 }

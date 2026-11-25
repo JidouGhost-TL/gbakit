@@ -33,73 +33,97 @@
       "name": "magic",
       "offset": 0,
       "size": 8,
-      "type": "ascii"
+      "type": "ascii",
+      "confidence": "confirmed",
+      "evidence": "Both .sav files start 33 30 30 41 42 47 32 49. FUN_0802ef8c performs an 8-byte compare after the zero-sum test (expected-pattern pointer is an unresolved literal, so code proves the compare, samples prove the bytes)."
     },
     {
       "name": "header_checksum",
       "offset": 8,
       "size": 2,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "confirmed",
+      "evidence": "Python verification on both samples: computed -sum(others) == stored (0x20F6 / 0x1FF6) and whole-record RAM sum == 0. File offset 0x08 is the PACKET.md mutation-probe offset that reverted the save to blank."
     },
     {
       "name": "header_counter_like_byte",
       "offset": 12,
       "size": 1,
-      "type": "u8"
+      "type": "u8",
+      "confidence": "guessed",
+      "evidence": "Only differing payload byte between the samples (diff: file 0x0C 0x00->0x01, file 0x08 0x20->0x1F checksum compensation). Semantics unknown; no traced reader consumes it except via the record checksum."
     },
     {
       "name": "header_word_ram8",
       "offset": 14,
       "size": 2,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "guessed",
+      "evidence": "Identical in both samples and part of the zero-sum template. Version/stamp or packed-pair semantics unprovable from this corpus; no direct reader."
     },
     {
       "name": "header_reserved",
       "offset": 16,
       "size": 24,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "unknown",
+      "evidence": "All zero in both samples; no field-level reader or writer identified."
     },
     {
       "name": "slot0_payload",
       "offset": 40,
       "size": 144,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "likely",
+      "evidence": "Geometry from FUN_0802f410 (40 + slot*152) and FUN_0802efe8 write size 0x90; blank pattern verified in both files under the block-reversal transform. Payload semantics UNKNOWN (blank in all samples); validity via slot_sum16_zero (RAM sum 251, invalid)."
     },
     {
       "name": "slot0_trailer_erased",
       "offset": 184,
       "size": 8,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "confirmed",
+      "evidence": "Both files show FF x8 at 0xB8-0xBF; FUN_0802efe8 write length 0x90 vs FUN_0802f410 read length 0x98."
     },
     {
       "name": "slot1_payload",
       "offset": 192,
       "size": 144,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "likely",
+      "evidence": "Blank pattern verified in both files; RAM checksum -5 (invalid). Payload semantics UNKNOWN."
     },
     {
       "name": "slot1_trailer_erased",
       "offset": 336,
       "size": 8,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "confirmed",
+      "evidence": "FF x8 at 0x150-0x157 in both files."
     },
     {
       "name": "slot2_payload",
       "offset": 344,
       "size": 144,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "likely",
+      "evidence": "Blank pattern verified in both files; RAM checksum 250 (invalid). Payload semantics UNKNOWN."
     },
     {
       "name": "slot2_trailer_erased",
       "offset": 488,
       "size": 8,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "confirmed",
+      "evidence": "FF x8 at 0x1E8-0x1EF in both files."
     },
     {
       "name": "tail_unused",
       "offset": 496,
       "size": 16,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "confirmed",
+      "evidence": "All 0xFF in both 512-byte files; exhaustive size grep finds only 0x28/0x90/0x98-byte EEPROM transfers."
     }
   ]
 }

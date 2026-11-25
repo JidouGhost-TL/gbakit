@@ -40,157 +40,209 @@
       "name": "header_magic_agb_fe7",
       "offset": 0,
       "size": 8,
-      "type": "ascii"
+      "type": "ascii",
+      "confidence": "confirmed",
+      "evidence": "Bytes at file 0x0 in both samples (only AGB-FE7 occurrence in each 32768-byte image, Python search); FUN_080a1370/FUN_080a142c structure in ghidra/decompiled.c."
     },
     {
       "name": "header_id_u32_at_8",
       "offset": 8,
       "size": 4,
-      "type": "u32_le"
+      "type": "u32_le",
+      "confidence": "confirmed",
+      "evidence": "u32_le at file 0x8 in both samples; compare and assignment in FUN_080a1370/FUN_080a142c decompiled C. ROM constant values themselves are unresolved _DAT_ contents, so the numeric value comes from the .sav bytes."
     },
     {
       "name": "header_id_u16_at_c",
       "offset": 12,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "confidence": "confirmed",
+      "evidence": "u16_le at file 0xC in both samples; compare/assignment in decompiled C (value from .sav, ROM constant unresolved)."
     },
     {
       "name": "header_zero_bytes_at_e",
       "offset": 14,
       "size": 2,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "likely",
+      "evidence": "Assignments in FUN_080a142c; zero bytes in both samples."
     },
     {
       "name": "header_flags_u32_at_10",
       "offset": 16,
       "size": 4,
-      "type": "u32_le"
+      "type": "u32_le",
+      "confidence": "likely",
+      "evidence": "Masking code in FUN_080a142c and observed 0xe0000000 in both samples."
     },
     {
       "name": "header_counted_array_at_14",
       "offset": 20,
       "size": 12,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "likely",
+      "evidence": "FUN_080a2f34 loop (param_1+0x14, i<0xc) and FUN_080a142c zero loop; all-zero in both samples."
     },
     {
       "name": "header_bytes_at_20",
       "offset": 32,
       "size": 32,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "likely",
+      "evidence": "FUN_080a142c stack layout (auStack_4c at +0x20, 32-byte zero loop); zero in both samples."
     },
     {
       "name": "header_bytes_at_40_checksummed_part",
       "offset": 64,
       "size": 16,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "likely",
+      "evidence": "FUN_080a142c auStack_2c at +0x40; FUN_080a1344 length 0x50 in FUN_080a1370/FUN_080a13f0."
     },
     {
       "name": "header_bytes_at_50_unchecksummed",
       "offset": 80,
       "size": 16,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "likely",
+      "evidence": "Covered length 0x50 vs block size 100 in FUN_080a13f0; zero in both samples."
     },
     {
       "name": "header_checksum_at_60",
       "offset": 96,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "confidence": "confirmed",
+      "evidence": "Python: computed (sum16+xor16)&0xFFFF over file [0,0x50) = 0xa990 (sum=0xbb22 xor=0xee6e) = stored in both samples; negative control flipping byte 0x10 gives 0xa992."
     },
     {
       "name": "header_tail_at_62",
       "offset": 98,
       "size": 2,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "likely",
+      "evidence": "FUN_080a142c tail assignments; zero in both samples."
     },
     {
       "name": "erased_gap_0064_7037_and_candidate_subrecords",
       "offset": 100,
       "size": 28628,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "unknown",
+      "evidence": "All-0xFF in both samples; FUN_080a1558 address formula in decompiled C."
     },
     {
       "name": "data100_block_B_payload",
       "offset": 28728,
       "size": 96,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "guessed",
+      "evidence": "Block shape CONFIRMED_STATIC from FUN_080a1f28/FUN_080a1f84/FUN_080a1fb4; file offset 0x7038 inferred only from the 136-byte all-zero span size fit (100+36) - B/C order could be swapped and zero payload gives no discrimination."
     },
     {
       "name": "data100_block_B_checksum",
       "offset": 28824,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "confidence": "likely",
+      "evidence": "Writer/validator pair in decompiled C; at the proposed offset the computed and stored values are both 0x0000 (trivial all-zero match)."
     },
     {
       "name": "data100_block_B_tail",
       "offset": 28826,
       "size": 2,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "guessed",
+      "evidence": "Block size 100 vs covered 0x60 in FUN_080a1f84; offset follows the HYPOTHESIS B placement."
     },
     {
       "name": "data36_block_C_payload",
       "offset": 28828,
       "size": 34,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "guessed",
+      "evidence": "Block shape CONFIRMED_STATIC from FUN_080a1e50/FUN_080a1ea8/FUN_080a1508; file offset 0x709C inferred from size fit after proposed B (order could be swapped)."
     },
     {
       "name": "data36_block_C_checksum",
       "offset": 28862,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "confidence": "guessed",
+      "evidence": "Writer/validator constants in decompiled C; all-zero sample matches lengths 0x20/0x22/0x24 trivially, so no sample discrimination."
     },
     {
       "name": "erased_gap_70c0_70f7",
       "offset": 28864,
       "size": 56,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "unknown",
+      "evidence": "All-0xFF in both samples; no writer/validator size places a block here."
     },
     {
       "name": "bits20_block_at_70f8_payload",
       "offset": 28920,
       "size": 16,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "confirmed",
+      "evidence": "Inter-sample diff is exactly this block: byte 0x7103 0x00->0x04 = bit 90 (word 2 bit 26, 1<<2 in byte +0x0B) and checksum byte 0x7109; FUN_080a24b8 bit-set formula in decompiled C."
     },
     {
       "name": "bits20_block_at_70f8_checksum",
       "offset": 28936,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "confidence": "confirmed",
+      "evidence": "Python: cap-01 covered words contain single word 0x0400, (0x0400 sum + 0x0400 xor)&0xFFFF = 0x0800 = stored; cap-00 0x0000=0x0000. Writer addr may be 0x080a2578 if D/E assignment is swapped (HYPOTHESIS for identity only)."
     },
     {
       "name": "bits20_block_at_70f8_tail",
       "offset": 28938,
       "size": 2,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "likely",
+      "evidence": "Block size 0x14 vs covered 0x10 in FUN_080a2454/FUN_080a2578."
     },
     {
       "name": "bits20_block_at_710c_payload",
       "offset": 28940,
       "size": 16,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "guessed",
+      "evidence": "Second 20-byte validator/writer pair in decompiled C; all-zero 20 bytes at file 0x710C in both samples complete the 40-byte span (20+20)."
     },
     {
       "name": "bits20_block_at_710c_checksum",
       "offset": 28956,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "confidence": "likely",
+      "evidence": "Writer/validator pair in decompiled C; computed=stored=0x0000 at the proposed offset (trivial)."
     },
     {
       "name": "bits20_block_at_710c_tail",
       "offset": 28958,
       "size": 2,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "likely",
+      "evidence": "Block size 0x14 vs covered 0x10."
     },
     {
       "name": "erased_tail_7120_7fff",
       "offset": 28960,
       "size": 3808,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "unknown",
+      "evidence": "All-0xFF in both samples. Note: report text rounds the remaining erased regions; exact tail from 0x7120 is 3808 bytes including the 32 bytes 0x7120..0x713F - see open_questions for the arithmetic note."
     },
     {
       "name": "subrecord_16b_via_FUN_080a1558 (unplaced)",
       "offset": 100,
       "size": 16,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "unknown",
+      "evidence": "Address formula and ID check in FUN_080a1558 decompiled C; base _DAT_ value unresolved and candidate bytes are 0xFF."
     }
   ]
 }

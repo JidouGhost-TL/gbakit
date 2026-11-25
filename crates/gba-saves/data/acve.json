@@ -36,31 +36,41 @@
       "name": "magic_signature",
       "offset": 0,
       "size": 11,
-      "type": "ascii"
+      "type": "ascii",
+      "confidence": "confirmed",
+      "evidence": "ghidra/decompiled.c FUN_08010158 byte stores reproduce the exact ASCII sequence found at saves/cap-00-future-0.sav offset 0x0000."
     },
     {
       "name": "header_padding",
       "offset": 11,
       "size": 5,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "unknown",
+      "evidence": "saves/hexdump_and_diffs.txt shows zero bytes at offset 0x000b-0x000f; no corresponding write instruction found in ghidra/decompiled.c."
     },
     {
       "name": "slot_checksum_byte",
       "offset": 25,
       "size": 1,
-      "type": "u8"
+      "type": "u8",
+      "confidence": "likely",
+      "evidence": "Formula in ghidra/decompiled.c FUN_08010490; position/resting-value verified numerically against all 8 slots in saves/cap-00-future-0.sav, but the all-zero sample cannot disambiguate the exact coverage length N."
     },
     {
       "name": "slot_body_unmapped",
       "offset": 16,
       "size": 7808,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "unknown",
+      "evidence": "Only a blank/never-played save sample is available; a post-gameplay non-blank .sav is required to map any field inside the slot body."
     },
     {
       "name": "unused_sram_tail",
       "offset": 7824,
       "size": 24944,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "confirmed",
+      "evidence": "Directly observed byte range in saves/cap-00-future-0.sav; corroborated by absence of any matching address arithmetic in ghidra/decompiled.c."
     }
   ]
 }

@@ -41,31 +41,41 @@
       "name": "validity_tag_null_byte",
       "offset": 0,
       "size": 1,
-      "type": "u8"
+      "type": "u8",
+      "confidence": "confirmed",
+      "evidence": "Identical 0x00 byte present in both .sav files at offset 0; matches FUN_0800fedc's '*apuStack_6c[0]=0' statement."
     },
     {
       "name": "validity_tag_text",
       "offset": 1,
       "size": 7,
-      "type": "ascii"
+      "type": "ascii",
+      "confidence": "confirmed",
+      "evidence": "Byte-identical across both .sav samples; reverses cleanly to ASCII 'EEPROM ' using Python verification in SAVE-FORMAT-REPORT.md section 4."
     },
     {
       "name": "mode_identity_tag_null_byte",
       "offset": 8,
       "size": 1,
-      "type": "u8"
+      "type": "u8",
+      "confidence": "confirmed",
+      "evidence": "Direct byte diff between the two .sav snapshots isolates exactly this transition."
     },
     {
       "name": "mode_identity_tag_text",
       "offset": 9,
       "size": 7,
-      "type": "ascii"
+      "type": "ascii",
+      "confidence": "confirmed",
+      "evidence": "Byte diff between cap-00/cap-01 plus full static caller-chain trace in SAVE-FORMAT-REPORT.md section 3.4. Which of the 4 writer-side constants maps to the observed 'LCDUNIT' text, and which numeric mode_index FUN_080001e4 would classify it back to, is UNKNOWN since the literal ROM constant bytes are not present in the supplied decompilation."
     },
     {
       "name": "unused_blocks_2_63",
       "offset": 16,
       "size": 496,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "unknown",
+      "evidence": "No writer or reader targeting block addresses 2-63 was found anywhere in the supplied ghidra/decompiled.c or ghidra/callgraph.json."
     }
   ]
 }

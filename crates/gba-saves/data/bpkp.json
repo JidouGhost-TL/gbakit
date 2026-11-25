@@ -34,85 +34,113 @@
       "name": "magic_payback",
       "offset": 0,
       "size": 8,
-      "type": "ascii"
+      "type": "ascii",
+      "confidence": "confirmed",
+      "evidence": "FUN_08027c68 byte compares + write; present in cap01, absent in cap00"
     },
     {
       "name": "journal_header",
       "offset": 8,
       "size": 8,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "confirmed",
+      "evidence": "FUN_080277a4 uStack_4c..45 build + FUN_0807c6f0(1,..); FUN_08027c68 range/repetition checks; both samples idle"
     },
     {
       "name": "journal_staging",
       "offset": 16,
       "size": 32,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "confirmed",
+      "evidence": "FUN_080277a4 staging loop; cap01 word2==word6 fingerprint of the logical-0 commit"
     },
     {
       "name": "selector_language",
       "offset": 0,
       "size": 1,
-      "type": "u8"
+      "type": "u8",
+      "confidence": "confirmed",
+      "evidence": "FUN_08028134 FUN_08027b6c(0,..,1) + >4 check + 20-byte-stride table index (5 languages En/Fr/De/Es/It); FUN_080294c4 commit; PACKET probe offset 0x37 is this byte, not a checksum. Language semantic HYPOTHESIS, range/role verified"
     },
     {
       "name": "nibble_field_u32",
       "offset": 1,
       "size": 4,
-      "type": "u32_le"
+      "type": "u32_le",
+      "confidence": "confirmed",
+      "evidence": "FUN_08028134 nibble split/validate/repair; nibbles LSB-first 0,1,5,4,8,9,6,7 valid in both samples; gameplay meaning UNKNOWN"
     },
     {
       "name": "entry_table",
       "offset": 5,
       "size": 264,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "confirmed",
+      "evidence": "FUN_08027f90 six writes/entry; FUN_08028134 reads every field at (i*6+j)*4+5; observed identical defaults"
     },
     {
       "name": "entry_field_ref_value",
       "offset": 5,
       "size": 4,
-      "type": "bitflags"
+      "type": "bitflags",
+      "confidence": "likely",
+      "evidence": "Shift/mask and both repair branches in FUN_08028134; mask literal unresolved so 28-bit width inferred from >>0x1C; value meaning UNKNOWN"
     },
     {
       "name": "record0_flag",
       "offset": 269,
       "size": 1,
-      "type": "u8"
+      "type": "u8",
+      "confidence": "confirmed",
+      "evidence": "FUN_08028134 i*0x27+0x10D reads; file 0x13A=0x00 in both samples; FUN_08027f90 literal for this record inferred"
     },
     {
       "name": "record1_flag",
       "offset": 308,
       "size": 1,
-      "type": "u8"
+      "type": "u8",
+      "confidence": "confirmed",
+      "evidence": "FUN_08027f90 FUN_08027a2c(0x134,..,1)=0; isolated 0x00 at file 0x163 in hexdump_and_diffs.txt"
     },
     {
       "name": "record2_flag",
       "offset": 347,
       "size": 1,
-      "type": "u8"
+      "type": "u8",
+      "confidence": "confirmed",
+      "evidence": "FUN_08028134 stride; isolated 0x00 at file 0x18C; FUN_08027f90 literal inferred"
     },
     {
       "name": "record3_flag",
       "offset": 386,
       "size": 1,
-      "type": "u8"
+      "type": "u8",
+      "confidence": "confirmed",
+      "evidence": "FUN_08027f90 FUN_08027a2c(0x182,..,1)=0; isolated 0x00 at file 0x1B5"
     },
     {
       "name": "record4_flag",
       "offset": 425,
       "size": 1,
-      "type": "u8"
+      "type": "u8",
+      "confidence": "confirmed",
+      "evidence": "FUN_08028134 stride; isolated 0x00 at file 0x1DE; FUN_08027f90 literal inferred"
     },
     {
       "name": "record_names",
       "offset": 270,
       "size": 20,
-      "type": "ascii"
+      "type": "ascii",
+      "confidence": "likely",
+      "evidence": "FUN_08028134 name read/terminator scan; encoding unproven (no non-FF sample). Writer UNKNOWN"
     },
     {
       "name": "record_tails",
       "offset": 290,
       "size": 18,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "unknown",
+      "evidence": "Arithmetic only: record stride 0x27 in FUN_08028134 minus flag/name sizes; content meaning unknown"
     }
   ]
 }

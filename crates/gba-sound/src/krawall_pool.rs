@@ -19,7 +19,7 @@ pub use krawall::{
 };
 use krawall::{
     GBA_ROM_BUS_BASE as ROM_BUS_START, KRAWALL_DEFAULT_C2_FREQ, KRAWALL_SAMPLE_HEADER_SIZE,
-    KRAWALL_SILENCE_BYTE,
+    KRAWALL_SILENCE_BYTE, KRAWALL_TAIL_SIZE,
 };
 use serde::{Deserialize, Serialize};
 
@@ -118,6 +118,9 @@ pub fn scan_krawall_soundpool(rom: &[u8]) -> Vec<KrawallSampleEntry> {
     scan_krawall_native_tables(rom, &mut samples, &mut seen_pcm_offsets);
     scan_protracker_mod_modules(rom, &mut samples, &mut seen_pcm_offsets);
     scan_s3m_modules(rom, &mut samples, &mut seen_pcm_offsets);
+    if samples.is_empty() {
+        scan_krawall_relocatable_samples(rom, &mut samples, &mut seen_pcm_offsets);
+    }
 
     samples
 }
@@ -196,7 +199,7 @@ fn parse_krawall_sample_view<'a>(rom: &'a [u8], off: usize) -> Option<KrawallSam
 
     if !(1_000..=65_535).contains(&view.c2_freq)
         || !(16..=MAX_SAMPLE_BYTES).contains(&view.len())
-        || view.flags != 0
+        || view.flags > 1
     {
         return None;
     }
@@ -511,6 +514,123 @@ fn scan_s3m_modules(
     }
 }
 
+/// Fallback scanner for relocatable Krawall sample banks where the 18-byte
+/// `KrawallSampleHeader::end_ptr` stores a relative PCM byte length (`< 0x0800_0000`)
+/// instead of an absolute GBA ROM bus pointer, followed immediately by inline
+/// unsigned 8-bit PCM and Krawall's 64-byte unrolled loop or `0x80` silence tail.
+fn scan_krawall_relocatable_samples(
+    rom: &[u8],
+    out: &mut Vec<KrawallSampleEntry>,
+    seen_pcm_offsets: &mut HashSet<usize>,
+) {
+    if rom.len() < KRAWALL_SAMPLE_HEADER_SIZE + 16 + KRAWALL_TAIL_SIZE {
+        return;
+    }
+
+    let mut found: Vec<(usize, KrawallSampleHeader, usize)> = Vec::new();
+    let mut off = 0usize;
+
+    while off + KRAWALL_SAMPLE_HEADER_SIZE + 16 + KRAWALL_TAIL_SIZE <= rom.len() {
+        let Ok(hdr) = KrawallSampleHeader::parse(&rom[off..off + KRAWALL_SAMPLE_HEADER_SIZE])
+        else {
+            off += 4;
+            continue;
+        };
+
+        let length = hdr.end_ptr as usize;
+        let loop_mode_matches = (hdr.loop_mode == KrawallLoopMode::None) == (hdr.loop_length == 0);
+        if hdr.end_ptr >= ROM_BUS_START
+            || !(16..=MAX_SAMPLE_BYTES).contains(&length)
+            || !(1_000..=65_535).contains(&hdr.c2_freq)
+            || !(-64..=64).contains(&hdr.pan_default)
+            || hdr.flags > 1
+            || !loop_mode_matches
+            || (hdr.loop_length as usize) > length
+        {
+            off += 4;
+            continue;
+        }
+
+        let pcm_start = off + KRAWALL_SAMPLE_HEADER_SIZE;
+        let Some(pcm_end) = pcm_start.checked_add(length) else {
+            off += 4;
+            continue;
+        };
+        let Some(tail_end) = pcm_end.checked_add(KRAWALL_TAIL_SIZE) else {
+            off += 4;
+            continue;
+        };
+        if tail_end > rom.len() {
+            off += 4;
+            continue;
+        }
+
+        let pcm_u8 = &rom[pcm_start..pcm_end];
+        let tail_u8 = &rom[pcm_end..tail_end];
+        let is_silence_tail = tail_u8.iter().all(|&b| b == KRAWALL_SILENCE_BYTE);
+        let valid_tail = if hdr.loop_length == 0 {
+            is_silence_tail
+        } else if is_silence_tail {
+            true
+        } else {
+            let loop_len = hdr.loop_length as usize;
+            let loop_start = length - loop_len;
+            tail_u8
+                .iter()
+                .enumerate()
+                .all(|(k, &b)| b == pcm_u8[loop_start + (k % loop_len)])
+        };
+
+        if valid_tail {
+            found.push((off, hdr, length));
+            // Advance past this sample + tail, keeping 4-byte alignment.
+            let next = tail_end & !3;
+            off = next.max(off + 4);
+        } else {
+            off += 4;
+        }
+    }
+
+    // Require at least 4 valid relocatable Krawall samples to reject coincidental hits.
+    if found.len() < 4 {
+        return;
+    }
+
+    for (hdr_off, hdr, length) in found {
+        let pcm_offset = hdr_off + KRAWALL_SAMPLE_HEADER_SIZE;
+        if !seen_pcm_offsets.insert(pcm_offset) {
+            continue;
+        }
+        let pcm_data: Vec<i8> = rom[pcm_offset..pcm_offset + length]
+            .iter()
+            .map(|&b| (b ^ KRAWALL_SILENCE_BYTE) as i8)
+            .collect();
+        let (loop_start, loop_end) = if hdr.loop_length > 0 {
+            (
+                Some((length - hdr.loop_length as usize) as u32),
+                Some(length as u32),
+            )
+        } else {
+            (None, None)
+        };
+
+        let idx = out.len();
+        out.push(KrawallSampleEntry {
+            index: idx,
+            rom_offset: pcm_offset,
+            bus_address: ROM_BUS_START.saturating_add(hdr_off as u32),
+            size: length,
+            sample_rate: hdr.c2_freq,
+            loop_start,
+            loop_end,
+            default_volume: hdr.vol_default,
+            format: KrawallSampleFormat::KrawallPcm8,
+            name: String::new(),
+            pcm_data,
+        });
+    }
+}
+
 /// Convert a ProTracker 4-bit signed finetune value (`0..=15`) to a C2 sample rate in Hz.
 fn mod_finetune_rate(finetune: u8) -> u32 {
     let signed_ft: i32 = if finetune >= 8 {
@@ -798,5 +918,63 @@ mod tests {
         assert!(scan_krawall_soundpool(&rom).is_empty());
         assert!(export_krawall_samples_wav16(&rom).is_err());
         assert!(compile_krawall_soundfont(&rom, None).is_err());
+    }
+
+    #[test]
+    fn scans_relocatable_krawall_samples_and_hq_flags() {
+        let mut rom = vec![0u8; 0x4000];
+        rom[0xA0..0xAC].copy_from_slice(b"KRAWALLRELO\0");
+
+        let mut cursor = 0x0400usize;
+        for idx in 0..4usize {
+            let pcm_len = 64 + idx * 32;
+            let looped = idx % 2 == 1;
+            let loop_len = if looped { 32usize } else { 0usize };
+            let c2_freq: u32 = 11_023;
+            let flags: u8 = u8::from(idx == 3); // exercise HQ interpolation flag == 1
+
+            let hdr_off = cursor;
+            let pcm_start = hdr_off + KRAWALL_SAMPLE_HEADER_SIZE;
+            let pcm_end = pcm_start + pcm_len;
+
+            rom[hdr_off..hdr_off + 4].copy_from_slice(&(loop_len as u32).to_le_bytes());
+            // Relative PCM length instead of 0x08xxxxxx absolute bus pointer
+            rom[hdr_off + 4..hdr_off + 8].copy_from_slice(&(pcm_len as u32).to_le_bytes());
+            rom[hdr_off + 8..hdr_off + 12].copy_from_slice(&c2_freq.to_le_bytes());
+            rom[hdr_off + 12..hdr_off + 14].copy_from_slice(&0u16.to_le_bytes());
+            rom[hdr_off + 14] = 64;
+            rom[hdr_off + 15] = 0;
+            rom[hdr_off + 16] = u8::from(looped);
+            rom[hdr_off + 17] = flags;
+
+            for k in 0..pcm_len {
+                let val = 128i32 + ((k as i32 % 16) - 8) * 5;
+                rom[pcm_start + k] = val as u8;
+            }
+            if looped {
+                let loop_src = pcm_end - loop_len;
+                for k in 0..KRAWALL_TAIL_SIZE {
+                    rom[pcm_end + k] = rom[loop_src + (k % loop_len)];
+                }
+            } else {
+                rom[pcm_end..pcm_end + KRAWALL_TAIL_SIZE].fill(KRAWALL_SILENCE_BYTE);
+            }
+
+            cursor = (pcm_end + KRAWALL_TAIL_SIZE + 15) & !15;
+        }
+
+        let samples = scan_krawall_soundpool(&rom);
+        assert_eq!(samples.len(), 4);
+        assert_eq!(samples[0].size, 64);
+        assert_eq!(samples[0].loop_start, None);
+        assert_eq!(samples[1].size, 96);
+        assert_eq!(samples[1].loop_start, Some(64));
+        assert_eq!(samples[1].loop_end, Some(96));
+        assert_eq!(samples[3].size, 160);
+
+        let sf2 = compile_krawall_soundfont(&rom, Some("Relocatable Krawall"))
+            .expect("relocatable krawall sf2 should compile");
+        let validation = validate_soundfont(&sf2.sf2_bytes).expect("sf2 should validate");
+        assert_eq!(validation.sample_count, 4);
     }
 }

@@ -30,25 +30,33 @@
       "name": "header_word0_version_or_reserved",
       "offset": 0,
       "size": 4,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "guessed",
+      "evidence": "Bytes 0x02-0x03 = 01 25 (big-endian reading = 0x0125 = 293) coincide with the 0x125-byte struct length seen at FUN_08029eb0 line (`uVar5 < 0x125`) and the earlier default-init zero-fill loop (`uVar4 < 0x125`)."
     },
     {
       "name": "format_magic_stamp",
       "offset": 4,
       "size": 4,
-      "type": "ascii"
+      "type": "ascii",
+      "confidence": "confirmed",
+      "evidence": "Python verification: stamp_forward=4e47444b ('NGDK'); stamp_forward[::-1]=4b44474e ('KDGN'); cap-01-future-1.sav bytes[4:8]=4b44474e. Exact match. Also ruled out as being FUN_080037c8's checksum output, since the maximum value that checksum can produce for any length 0..504 is 0x1f800, far below the stored 0x4e47444b."
     },
     {
       "name": "progress_struct_blank_region",
       "offset": 8,
       "size": 288,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "likely",
+      "evidence": "hexdump shows 0x0008-0x0127 as uniform 0x00, consistent with a freshly-formatted, not-yet-played struct."
     },
     {
       "name": "unknown_block_0x25_marker",
       "offset": 296,
       "size": 8,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "unknown",
+      "evidence": "saves/hexdump_and_diffs.txt active-range dump: '000120: 00 00 00 00 00 00 00 00 ff ff ff 00 00 00 00 00' -- the three 0xff bytes sit at absolute file offsets 0x128-0x12a, inside this struct but outside any field this trace could attribute to a specific instruction."
     }
   ]
 }

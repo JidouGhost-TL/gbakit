@@ -33,79 +33,105 @@
       "name": "magic",
       "offset": 0,
       "size": 8,
-      "type": "ascii"
+      "type": "ascii",
+      "confidence": "confirmed",
+      "evidence": "Both .sav files start 34 31 30 30 41 42 47 45; FUN_0803ade8 loops iVar3 0..7 comparing read bytes to _DAT_0803ae30 and returns 2 on mismatch."
     },
     {
       "name": "global_settings_byte_a",
       "offset": 8,
       "size": 1,
-      "type": "u8"
+      "type": "u8",
+      "confidence": "guessed",
+      "evidence": "FUN_0802cd7c: *(global+8) = *(settings+0x2A); FUN_0802cd48 inverse. Observed file byte 0x08 changed 0x0C->0x0B between samples; traced writer cannot be proven to have produced this change (byte 0x0B contradiction)."
     },
     {
       "name": "global_settings_byte_b",
       "offset": 9,
       "size": 1,
-      "type": "u8"
+      "type": "u8",
+      "confidence": "guessed",
+      "evidence": "FUN_0802cd7c: *(global+9) = *(settings+0x2B); FUN_080371b8 branches adjust byte at settings+0x2B via func_0x0802d094/func_0x0802d0c4 with +/-1."
     },
     {
       "name": "global_settings_byte_c",
       "offset": 10,
       "size": 1,
-      "type": "u8"
+      "type": "u8",
+      "confidence": "likely",
+      "evidence": "FUN_0802cd7c: *(global+10) = *(settings+0x2D); FUN_0803a978: *(mgr+10) = FUN_08040f68(); FUN_080371b8 writes settings+0x2D = item-0x42 before calling FUN_0802cd7c."
     },
     {
       "name": "global_initialized_marker",
       "offset": 11,
       "size": 1,
-      "type": "u8"
+      "type": "u8",
+      "confidence": "guessed",
+      "evidence": "FUN_0802cd7c: *(global+0xB) = 1; FUN_0803a978: *(mgr+0xB) = 1. File bytes 0x0A and 0x0B are both 0x00 in both samples under either byte-order hypothesis."
     },
     {
       "name": "global_settings_bitfield_u16",
       "offset": 12,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "confidence": "likely",
+      "evidence": "FUN_0802cd7c masked-merge lines and *(byte*)(global+0xD) = &0x7F | settings[0x2C]<<7; FUN_0802cd48: *(u16*)(settings+0x2E) = *(u16*)(global+0xC) & 0x7FFF. Role static-confirmed; observed-change attribution is hypothesis."
     },
     {
       "name": "global_checksum",
       "offset": 14,
       "size": 2,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "confirmed",
+      "evidence": "Python verification on both samples: sum of eight BE u16 words = 0x0000, stored BE word 0x070A == -sum(first seven BE words) 0x070A. LE on file bytes fails (sum 0x00FF). Code: FUN_0803ada4 mgr[7]=-sum; FUN_0803a8b0 zeroes +0xE, stamps -FUN_0803ad80(mgr,0x10)."
     },
     {
       "name": "slot0_header",
       "offset": 16,
       "size": 16,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "likely",
+      "evidence": "FUN_0803a91c loop FUN_08008fe8(0x10+slot*0xAA0, 0x10, zeroed buffer); FUN_0803ac9c calls FUN_0802cfdc(mgr+0x14+slot*0x10) after loading each slot."
     },
     {
       "name": "slot1_header",
       "offset": 2736,
       "size": 16,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "likely",
+      "evidence": "Same FUN_0803a91c/FUN_0803ac9c code paths with slot index 1; file range 0xAB0..0xABF is 16 zero bytes in both samples."
     },
     {
       "name": "slot2_header",
       "offset": 5456,
       "size": 16,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "likely",
+      "evidence": "Same code paths with slot index 2; file range 0x1550..0x155F is 16 zero bytes in both samples."
     },
     {
       "name": "slot_payload",
       "offset": 32,
       "size": 2704,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "unknown",
+      "evidence": "No function calls FUN_08008fe8 with length 0xAA0 and no field reader beyond the header copy exists in decompiled.c; samples contain only 0xFF here, so no field subdivision is derivable."
     },
     {
       "name": "slot_checksum_candidate",
       "offset": 2734,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "confidence": "guessed",
+      "evidence": "FUN_0803acf8: *(bool*)(mgr+0x44+slot) = (FUN_0803ad80(slot_buffer, 0xAA0) == 0). Both samples sum to 0xFAB8 per slot (invalid/empty), consistent with never-written 0xFF payload."
     },
     {
       "name": "tail_unused",
       "offset": 8176,
       "size": 16,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "likely",
+      "evidence": "Geometry derived from FUN_0803ad28 offset formula (0x10 + slot*0xAA0, size 0xAA0) exhausts the file except these 16 bytes; full-corpus constant search found no accessor."
     }
   ]
 }

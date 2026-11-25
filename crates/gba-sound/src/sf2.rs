@@ -600,13 +600,14 @@ pub fn compile_rom_soundfont(rom: &[u8], title_override: Option<&str>) -> Result
         DetectedSoundEngine::Paragon5(_) => crate::paragon5_pool::compile_paragon5_soundfont(rom, title_override),
         DetectedSoundEngine::Rd1(_) => crate::rd1_pool::compile_rd1_soundfont(rom, title_override),
         DetectedSoundEngine::Southpaw(_) => crate::southpaw_pool::compile_southpaw_soundfont(rom, title_override),
-        DetectedSoundEngine::EadSma(_)
-        | DetectedSoundEngine::EngineSw(_)
-        | DetectedSoundEngine::CosmigoSonix(_) => {
-            Err(Error::InvalidField {
-                what: "soundfont_not_yet_supported_for_engine",
-                value: 0,
-            })
+        DetectedSoundEngine::EadSma(_) => {
+            crate::ead_sma_pool::compile_ead_sma_soundfont(rom, title_override)
+        }
+        DetectedSoundEngine::EngineSw(_) => {
+            crate::engine_sw_pool::compile_engine_sw_soundfont(rom, title_override)
+        }
+        DetectedSoundEngine::CosmigoSonix(_) => {
+            crate::sonix_pool::compile_cosmigo_sonix_soundfont(rom, title_override)
         }
         DetectedSoundEngine::Custom => {
             // Check if GAX or MusyX sample tables exist in ROM as fallback

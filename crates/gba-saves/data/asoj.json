@@ -25,85 +25,113 @@
       "name": "magic",
       "offset": 0,
       "size": 4,
-      "type": "ascii"
+      "type": "ascii",
+      "confidence": "guessed",
+      "evidence": "saves/cap-01-future-1.sav bytes 0x0000-0x0003 = 50 49 52 4F; absent (0xFF) in saves/cap-00-future-0.sav"
     },
     {
       "name": "reserved_post_magic",
       "offset": 4,
       "size": 28,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "guessed",
+      "evidence": "saves/cap-01-future-1.sav bytes 0x0004-0x001F, all zero"
     },
     {
       "name": "default_filler_table",
       "offset": 32,
       "size": 864,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "guessed",
+      "evidence": "saves/cap-01-future-1.sav bytes 0x0020-0x037F, Python 4-byte-stride scan"
     },
     {
       "name": "record_table",
       "offset": 896,
       "size": 160,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "guessed",
+      "evidence": "saves/cap-01-future-1.sav bytes 0x0380-0x041F, Python 16-byte-stride scan; each record = 00000000 20202020 20202020 ff000000"
     },
     {
       "name": "record_id_or_score",
       "offset": 896,
       "size": 4,
-      "type": "u32_le"
+      "type": "u32_le",
+      "confidence": "guessed",
+      "evidence": "First 4 bytes of each 16-byte record in 0x0380-0x041F, all zero"
     },
     {
       "name": "record_name_field",
       "offset": 900,
       "size": 8,
-      "type": "ascii"
+      "type": "ascii",
+      "confidence": "guessed",
+      "evidence": "Bytes +0x4..+0xB of each 16-byte record, all 0x20 (ASCII space)"
     },
     {
       "name": "record_flag_byte",
       "offset": 908,
       "size": 1,
-      "type": "u8"
+      "type": "u8",
+      "confidence": "guessed",
+      "evidence": "Byte +0xC of each 16-byte record"
     },
     {
       "name": "record_padding",
       "offset": 909,
       "size": 3,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "guessed",
+      "evidence": "Bytes +0xD..+0xF of each 16-byte record"
     },
     {
       "name": "trailer_value_50000",
       "offset": 1056,
       "size": 4,
-      "type": "u32_le"
+      "type": "u32_le",
+      "confidence": "guessed",
+      "evidence": "saves/cap-01-future-1.sav bytes 0x0420-0x0423 = 50 c3 00 00"
     },
     {
       "name": "trailer_reserved",
       "offset": 1060,
       "size": 8,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "guessed",
+      "evidence": "saves/cap-01-future-1.sav bytes 0x0424-0x042B"
     },
     {
       "name": "trailer_u16_a",
       "offset": 1068,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "confidence": "unknown",
+      "evidence": "saves/cap-01-future-1.sav bytes 0x042C-0x042D = 16 40"
     },
     {
       "name": "trailer_u16_b",
       "offset": 1070,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "confidence": "unknown",
+      "evidence": "saves/cap-01-future-1.sav bytes 0x042E-0x042F = 4c d2"
     },
     {
       "name": "zero_tail",
       "offset": 1072,
       "size": 3024,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "confirmed",
+      "evidence": "saves/cap-01-future-1.sav bytes 0x0430-0x0FFF, full byte scan"
     },
     {
       "name": "unwritten_chip_remainder",
       "offset": 4096,
       "size": 61440,
-      "type": "bytes"
+      "type": "bytes",
+      "confidence": "confirmed",
+      "evidence": "saves/cap-00-future-0.sav and saves/cap-01-future-1.sav bytes 0x1000-0xFFFF, full byte scan"
     }
   ]
 }
