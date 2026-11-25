@@ -116,6 +116,8 @@ fn usage() {
            gbakit text replace       <rom.gba> --offset <hex|dec> --text <str> -o <out.gba> [--table <builtin|file.tbl>] [--lz77] [--capacity <n>] [--allow-relocate] [--pad-byte <n>] [--json]\n  \
            gbakit text huffman-extract <rom.gba> --tree <hex|dec> --root <hex|dec> --offset <hex|dec> [--max-len <n>] [--json]\n  \
            gbakit text huffman-replace <rom.gba> --tree <hex|dec> --root <hex|dec> --offset <hex|dec> --text <str> -o <out.gba> [--capacity <n>] [--allow-relocate] [--pad-byte <n>] [--json]\n  \
+           gbakit text camelot-extract <rom.gba> --trees <hex|dec> [--offsets <hex|dec>] --offset <hex|dec> [--max-len <n>] [--json]\n  \
+           gbakit text camelot-replace <rom.gba> --trees <hex|dec> [--offsets <hex|dec>] --offset <hex|dec> --text <str> -o <out.gba> [--capacity <n>] [--allow-relocate] [--pad-byte <n>] [--json]\n  \
            gbakit text font-dump     <rom.gba> --offset <hex|dec> --count <n> --width <px> --height <px> --bpp 1|2 -o <out.png|ppm> [--lsb] [--cols <n>]\n  \
            gbakit text font-replace  <rom.gba> --offset <hex|dec> --image <in.png|ppm> --count <n> --width <px> --height <px> --bpp 1|2 -o <out.gba> [--lsb] [--cols <n>] [--json]\n  \
            gbakit text font-widths   <rom.gba> --offset <hex|dec> --count <n> [--from-image <sheet.png|ppm> --width <px> --height <px> [--cols <n>] [--pad <px>] -o <out.gba>] [--json]"

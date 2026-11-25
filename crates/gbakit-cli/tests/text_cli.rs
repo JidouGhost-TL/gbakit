@@ -687,3 +687,196 @@ fn cli_text_font_widths_read_and_update_from_image() {
     ]);
     assert_eq!(verify_json["widths"], serde_json::json!([0, 3, 6, 9]));
 }
+
+fn write_camelot_test_tree(rom: &mut [u8], tree_addr: usize, syms: &[u16], bits: &[u8]) {
+    for (k, &sym) in syms.iter().enumerate() {
+        let pair = k / 2;
+        let base = tree_addr - pair * 3;
+        if k % 2 == 0 {
+            rom[base - 1] = ((sym >> 4) & 0xFF) as u8;
+            rom[base - 2] = (rom[base - 2] & 0x0F) | (((sym & 0x0F) as u8) << 4);
+        } else {
+            rom[base - 2] = (rom[base - 2] & 0xF0) | (((sym >> 8) & 0x0F) as u8);
+            rom[base - 3] = (sym & 0xFF) as u8;
+        }
+    }
+    let mut byte_idx = 0usize;
+    let mut bit_pos = 0u8;
+    for &b in bits {
+        if bit_pos == 0 {
+            rom[tree_addr + byte_idx] = 0;
+        }
+        if b != 0 {
+            rom[tree_addr + byte_idx] |= 1 << bit_pos;
+        }
+        bit_pos += 1;
+        if bit_pos == 8 {
+            bit_pos = 0;
+            byte_idx += 1;
+        }
+    }
+}
+
+#[test]
+fn cli_text_camelot_extract_and_replace() {
+    let dir = TempDir::new("camelot_cli");
+    let mut rom = vec![0u8; ROM_SIZE];
+    rom[FREE_START..].fill(0xFF);
+
+    let tree_data_off = 0x200usize;
+    let offset_table_off = 0x300usize;
+    let header_off = 0x400usize;
+
+    for i in 0..128 {
+        let off = offset_table_off + i * 2;
+        rom[off..off + 2].copy_from_slice(&0x8000u16.to_le_bytes());
+    }
+
+    let bits3 = &[0u8, 1, 0, 1, 1];
+    let bits2 = &[0u8, 1, 1];
+    let bits1 = &[1u8];
+    let specs: &[(u8, usize, &[u16], &[u8])] = &[
+        (0x00, 0x10, &[b'A' as u16, b'B' as u16, 0x00], bits3),
+        (b'A', 0x20, &[b'B' as u16, b'C' as u16, 0x00], bits3),
+        (b'B', 0x30, &[b'A' as u16, b' ' as u16, 0x00], bits3),
+        (b'C', 0x40, &[0x00], bits1),
+        (b' ', 0x50, &[b'A' as u16, b'B' as u16], bits2),
+    ];
+    for &(ch, rel, syms, bits) in specs {
+        write_camelot_test_tree(&mut rom, tree_data_off + rel, syms, bits);
+        let slot = offset_table_off + usize::from(ch) * 2;
+        rom[slot..slot + 2].copy_from_slice(&(rel as u16).to_le_bytes());
+    }
+
+    rom[header_off..header_off + 4]
+        .copy_from_slice(&(0x0800_0000u32 + tree_data_off as u32).to_le_bytes());
+    rom[header_off + 4..header_off + 8]
+        .copy_from_slice(&(0x0800_0000u32 + offset_table_off as u32).to_le_bytes());
+
+    let bank = gbakit::text::CamelotHuffmanBank::from_header(&rom, header_off).unwrap();
+    let encoded = bank.encode(b"AB AC").unwrap();
+
+    let entry_off = 0x1000usize;
+    rom[entry_off..entry_off + encoded.len()].copy_from_slice(&encoded);
+    let ptr_off = 0x500usize;
+    rom[ptr_off..ptr_off + 4].copy_from_slice(&(0x0800_0000u32 + entry_off as u32).to_le_bytes());
+
+    let rom_path = dir.path.join("camelot.gba");
+    fs::write(&rom_path, &rom).unwrap();
+
+    // 1. Extract via 8-byte header (--trees 0x400)
+    let ext_hdr = run_ok_json(&[
+        "text",
+        "camelot-extract",
+        p(&rom_path),
+        "--trees",
+        "0x400",
+        "--offset",
+        "0x1000",
+        "--json",
+    ]);
+    assert_eq!(ext_hdr["text"], "AB AC");
+    assert_eq!(ext_hdr["tree_count"], 5);
+    assert_eq!(ext_hdr["terminated"], true);
+
+    // 2. Extract via explicit --trees + --offsets
+    let ext_raw = run_ok_json(&[
+        "text",
+        "camelot-extract",
+        p(&rom_path),
+        "--trees",
+        "0x200",
+        "--offsets",
+        "0x300",
+        "--offset",
+        "0x1000",
+        "--json",
+    ]);
+    assert_eq!(ext_raw["text"], "AB AC");
+
+    // 3. Refuse overwriting input ROM in place
+    let refuse = run(&[
+        "text",
+        "camelot-replace",
+        p(&rom_path),
+        "--trees",
+        "0x400",
+        "--offset",
+        "0x1000",
+        "--text",
+        "AC",
+        "-o",
+        p(&rom_path),
+    ]);
+    assert!(!refuse.status.success());
+
+    // 4. In-place replace ("AC" fits within 1-byte original capacity)
+    let inplace_path = dir.path.join("camelot_inplace.gba");
+    let rep_in = run_ok_json(&[
+        "text",
+        "camelot-replace",
+        p(&rom_path),
+        "--trees",
+        "0x400",
+        "--offset",
+        "0x1000",
+        "--text",
+        "AC",
+        "-o",
+        p(&inplace_path),
+        "--json",
+    ]);
+    assert_eq!(rep_in["mode"], "in_place");
+    assert_eq!(fs::read(&rom_path).unwrap(), rom, "input ROM unchanged");
+
+    let verify_in = run_ok_json(&[
+        "text",
+        "camelot-extract",
+        p(&inplace_path),
+        "--trees",
+        "0x400",
+        "--offset",
+        "0x1000",
+        "--json",
+    ]);
+    assert_eq!(verify_in["text"], "AC");
+
+    // 5. Oversized replacement with --allow-relocate relocates to 0xFF free space & patches pointer
+    let reloc_path = dir.path.join("camelot_reloc.gba");
+    let long_str = "AB AB AB AB AB AB AC";
+    let rep_reloc = run_ok_json(&[
+        "text",
+        "camelot-replace",
+        p(&rom_path),
+        "--trees",
+        "0x400",
+        "--offset",
+        "0x1000",
+        "--text",
+        long_str,
+        "-o",
+        p(&reloc_path),
+        "--allow-relocate",
+        "--json",
+    ]);
+    assert_eq!(rep_reloc["mode"], "relocated");
+    assert_eq!(rep_reloc["patched_pointers"], 1);
+    let new_off = parse_hex(&rep_reloc["written_offset"]);
+    assert!(new_off >= FREE_START);
+
+    let reloc_rom = fs::read(&reloc_path).unwrap();
+    assert_eq!(read_u32(&reloc_rom, ptr_off), 0x0800_0000 + new_off as u32);
+
+    let new_off_str = format!("0x{new_off:X}");
+    let verify_reloc = run_ok_json(&[
+        "text",
+        "camelot-extract",
+        p(&reloc_path),
+        "--trees",
+        "0x400",
+        "--offset",
+        &new_off_str,
+        "--json",
+    ]);
+    assert_eq!(verify_reloc["text"], long_str);
+}

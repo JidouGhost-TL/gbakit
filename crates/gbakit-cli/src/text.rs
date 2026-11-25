@@ -5,13 +5,16 @@
 //! - `gbakit text replace` (raw and `--lz77`)
 //! - `gbakit text huffman-extract`
 //! - `gbakit text huffman-replace`
+//! - `gbakit text camelot-extract`
+//! - `gbakit text camelot-replace`
 //! - `gbakit text font-dump`
 //! - `gbakit text font-replace`
 //! - `gbakit text font-widths`
 //!
-//! Write commands (`replace`, `huffman-replace`, `font-replace`, `font-widths --from-image`)
-//! are strictly non-destructive: the input ROM is read into memory, modified there, and
-//! written to a separate `-o <out.gba>` path. Overwriting the input ROM in place is refused.
+//! Write commands (`replace`, `huffman-replace`, `camelot-replace`, `font-replace`,
+//! `font-widths --from-image`) are strictly non-destructive: the input ROM is read into memory,
+//! modified there, and written to a separate `-o <out.gba>` path. Overwriting the input ROM in
+//! place is refused.
 
 #![deny(unsafe_code)]
 
@@ -20,10 +23,11 @@ use std::path::Path;
 
 use gbakit::text::{
     compute_vwf_widths_from_sheet, dump_font_sheet, extract_lz77_string, extract_string,
-    parse_huffman_text, read_vwf_widths, replace_font_sheet_in_rom, replace_huffman_text_in_rom,
-    replace_lz77_string_in_rom, replace_string_in_rom, replace_vwf_widths_in_rom,
-    scan_string_tables, Charmap, FontBpp, FontImageFormat, FontSheetConfig, HuffmanTree,
-    TextReplaceMode, TextReplaceOptions, BUILTIN_CHARMAPS, DEFAULT_MAX_STRING_LEN,
+    parse_huffman_text, read_vwf_widths, replace_camelot_text_in_rom, replace_font_sheet_in_rom,
+    replace_huffman_text_in_rom, replace_lz77_string_in_rom, replace_string_in_rom,
+    replace_vwf_widths_in_rom, scan_string_tables, CamelotHuffmanBank, Charmap, FontBpp,
+    FontImageFormat, FontSheetConfig, HuffmanTree, TextReplaceMode, TextReplaceOptions,
+    BUILTIN_CHARMAPS, DEFAULT_MAX_STRING_LEN,
 };
 
 use super::{
@@ -49,6 +53,21 @@ const HUFFMAN_EXTRACT_VALUE_FLAGS: &[&[&str]] = &[
 const HUFFMAN_REPLACE_VALUE_FLAGS: &[&[&str]] = &[
     &["--tree"],
     &["--root"],
+    &["--offset"],
+    &["--text"],
+    &["-o", "--output"],
+    &["--capacity"],
+    &["--pad-byte"],
+];
+const CAMELOT_EXTRACT_VALUE_FLAGS: &[&[&str]] = &[
+    &["--trees"],
+    &["--offsets"],
+    &["--offset"],
+    &["--max-len"],
+];
+const CAMELOT_REPLACE_VALUE_FLAGS: &[&[&str]] = &[
+    &["--trees"],
+    &["--offsets"],
     &["--offset"],
     &["--text"],
     &["-o", "--output"],
@@ -92,6 +111,8 @@ pub const TEXT_USAGE: &str = "usage:\n  \
   gbakit text replace <rom.gba> --offset <hex|dec> --text <str> -o <out.gba> [--table <builtin|file.tbl>] [--lz77] [--capacity <n>] [--allow-relocate] [--pad-byte <n>] [--json]\n  \
   gbakit text huffman-extract <rom.gba> --tree <hex|dec> --root <hex|dec> --offset <hex|dec> [--max-len <n>] [--json]\n  \
   gbakit text huffman-replace <rom.gba> --tree <hex|dec> --root <hex|dec> --offset <hex|dec> --text <str> -o <out.gba> [--capacity <n>] [--allow-relocate] [--pad-byte <n>] [--json]\n  \
+  gbakit text camelot-extract <rom.gba> --trees <hex|dec> [--offsets <hex|dec>] --offset <hex|dec> [--max-len <n>] [--json]\n  \
+  gbakit text camelot-replace <rom.gba> --trees <hex|dec> [--offsets <hex|dec>] --offset <hex|dec> --text <str> -o <out.gba> [--capacity <n>] [--allow-relocate] [--pad-byte <n>] [--json]\n  \
   gbakit text font-dump <rom.gba> --offset <hex|dec> --count <n> --width <px> --height <px> --bpp 1|2 -o <out.png|ppm> [--lsb] [--cols <n>] [--json]\n  \
   gbakit text font-replace <rom.gba> --offset <hex|dec> --image <in.png|ppm> --count <n> --width <px> --height <px> --bpp 1|2 -o <out.gba> [--lsb] [--cols <n>] [--json]\n  \
   gbakit text font-widths <rom.gba> --offset <hex|dec> --count <n> [--from-image <sheet.png|ppm> --width <px> --height <px> [--cols <n>] [--pad <px>] -o <out.gba>] [--json]";
@@ -138,6 +159,8 @@ pub fn dispatch_text(args: &[String]) -> Result<(), String> {
         "replace" => cmd_text_replace(&args[1..]),
         "huffman-extract" => cmd_text_huffman_extract(&args[1..]),
         "huffman-replace" => cmd_text_huffman_replace(&args[1..]),
+        "camelot-extract" => cmd_text_camelot_extract(&args[1..]),
+        "camelot-replace" => cmd_text_camelot_replace(&args[1..]),
         "font-dump" => cmd_text_font_dump(&args[1..]),
         "font-replace" => cmd_text_font_replace(&args[1..]),
         "font-widths" => cmd_text_font_widths(&args[1..]),
@@ -605,6 +628,181 @@ pub fn cmd_text_huffman_replace(args: &[String]) -> Result<(), String> {
     } else {
         println!(
             "Huffman Text Replace: {} -> {}",
+            rom_path.display(),
+            out_path.display()
+        );
+        println!("  Original Offset:  0x{:X}", report.original_offset);
+        println!(
+            "  Written Offset:   0x{:X} (bus 0x{:08X})",
+            report.written_offset, report.written_bus_address
+        );
+        println!(
+            "  Size:             {} bytes written / {} capacity (original {} bytes)",
+            report.new_bytes_len, report.original_capacity, report.original_bytes_len
+        );
+        println!("  Mode:             {mode_id}");
+        if report.mode == TextReplaceMode::Relocated {
+            println!("  Patched Pointers: {}", report.patched_pointer_count);
+        }
+    }
+    Ok(())
+}
+
+fn load_camelot_bank(
+    rom: &[u8],
+    trees_offset: usize,
+    offsets_opt: Option<usize>,
+) -> Result<CamelotHuffmanBank, String> {
+    match offsets_opt {
+        Some(offsets_off) => CamelotHuffmanBank::from_rom(rom, trees_offset, offsets_off).map_err(
+            |e| format!("parse Camelot Huffman bank (trees=0x{trees_offset:X}, offsets=0x{offsets_off:X}): {e}"),
+        ),
+        None => CamelotHuffmanBank::from_header(rom, trees_offset)
+            .map_err(|e| format!("parse Camelot Huffman header at 0x{trees_offset:X}: {e}")),
+    }
+}
+
+/// `gbakit text camelot-extract <rom.gba> --trees <off> [--offsets <off>] --offset <off> [--max-len <n>] [--json]`
+pub fn cmd_text_camelot_extract(args: &[String]) -> Result<(), String> {
+    let rom_path = parse_positional_arg(args, CAMELOT_EXTRACT_VALUE_FLAGS)
+        .ok_or_else(|| format!("missing required <rom.gba>\n{TEXT_USAGE}"))?;
+    let rom_path = Path::new(rom_path);
+    let trees_offset = parse_offset(required(args, &["--trees"], "--trees <hex|dec>")?)
+        .map_err(|e| format!("invalid --trees: {e}"))?;
+    let offsets_opt = match parse_flag_value(args, &["--offsets"]) {
+        Some(s) => Some(parse_offset(s).map_err(|e| format!("invalid --offsets: {e}"))?),
+        None => None,
+    };
+    let offset = parse_offset(required(args, &["--offset"], "--offset <hex|dec>")?)
+        .map_err(|e| format!("invalid --offset: {e}"))?;
+    let max_len = match parse_flag_value(args, &["--max-len"]) {
+        Some(s) => parse_offset(s).map_err(|e| format!("invalid --max-len: {e}"))?,
+        None => 4096,
+    };
+    let as_json = has_flag(args, "--json");
+
+    let rom = fs::read(rom_path).map_err(|e| format!("read {}: {e}", rom_path.display()))?;
+    let bank = load_camelot_bank(&rom, trees_offset, offsets_opt)?;
+    let decoded = bank
+        .decode_at(&rom, offset, max_len)
+        .map_err(|e| format!("decode Camelot Huffman text at 0x{offset:X}: {e}"))?;
+
+    if as_json {
+        let payload = serde_json::json!({
+            "tree_data_offset": format!("0x{:X}", bank.tree_data_offset()),
+            "offset_table_offset": format!("0x{:X}", bank.offset_table_offset()),
+            "tree_count": bank.tree_count(),
+            "offset": format!("0x{:X}", decoded.offset),
+            "bus_address": decoded.bus_address.map(|a| format!("0x{a:08X}")),
+            "text": decoded.text,
+            "decoded_bytes_len": decoded.bytes.len(),
+            "compressed_bytes_len": decoded.compressed_bytes_len,
+            "bit_len": decoded.bit_len,
+            "terminated": decoded.terminated,
+        });
+        println!(
+            "{}",
+            serde_json::to_string_pretty(&payload).map_err(|e| e.to_string())?
+        );
+    } else {
+        println!(
+            "Extracted Camelot Huffman Text @ 0x{:X} ({} trees, {} compressed bytes / {} bits -> {} bytes, {}):",
+            decoded.offset,
+            bank.tree_count(),
+            decoded.compressed_bytes_len,
+            decoded.bit_len,
+            decoded.bytes.len(),
+            if decoded.terminated {
+                "terminated"
+            } else {
+                "unterminated"
+            }
+        );
+        println!("{}", decoded.text);
+    }
+    Ok(())
+}
+
+/// `gbakit text camelot-replace <rom.gba> --trees <off> [--offsets <off>] --offset <off> --text <str> -o <out.gba> [--capacity <n>] [--allow-relocate] [--pad-byte <n>] [--json]`
+pub fn cmd_text_camelot_replace(args: &[String]) -> Result<(), String> {
+    let rom_path = parse_positional_arg(args, CAMELOT_REPLACE_VALUE_FLAGS)
+        .ok_or_else(|| format!("missing required <rom.gba>\n{TEXT_USAGE}"))?;
+    let rom_path = Path::new(rom_path);
+    let trees_offset = parse_offset(required(args, &["--trees"], "--trees <hex|dec>")?)
+        .map_err(|e| format!("invalid --trees: {e}"))?;
+    let offsets_opt = match parse_flag_value(args, &["--offsets"]) {
+        Some(s) => Some(parse_offset(s).map_err(|e| format!("invalid --offsets: {e}"))?),
+        None => None,
+    };
+    let offset = parse_offset(required(args, &["--offset"], "--offset <hex|dec>")?)
+        .map_err(|e| format!("invalid --offset: {e}"))?;
+    let new_text = required(args, &["--text"], "--text <str>")?;
+    let out_path = Path::new(required(args, &["-o", "--output"], "-o <out.gba>")?);
+    let allow_relocate = has_flag(args, "--allow-relocate");
+    let as_json = has_flag(args, "--json");
+
+    let capacity = match parse_flag_value(args, &["--capacity"]) {
+        Some(s) => Some(parse_offset(s).map_err(|e| format!("invalid --capacity: {e}"))?),
+        None => None,
+    };
+    let pad_byte = match parse_flag_value(args, &["--pad-byte"]) {
+        Some(s) => {
+            let v = parse_offset(s).map_err(|e| format!("invalid --pad-byte: {e}"))?;
+            Some(u8::try_from(v).map_err(|_| format!("--pad-byte {v} exceeds 0xFF"))?)
+        }
+        None => None,
+    };
+
+    ensure_distinct_paths(rom_path, out_path)?;
+
+    let mut rom = fs::read(rom_path).map_err(|e| format!("read {}: {e}", rom_path.display()))?;
+    let bank = load_camelot_bank(&rom, trees_offset, offsets_opt)?;
+    let options = TextReplaceOptions {
+        capacity,
+        pad_byte,
+        allow_relocate,
+        ..TextReplaceOptions::default()
+    };
+
+    let report = replace_camelot_text_in_rom(&mut rom, &bank, offset, new_text, &options)
+        .map_err(|e| format!("replace Camelot Huffman text at 0x{offset:X}: {e}"))?;
+
+    fs::write(out_path, &rom).map_err(|e| format!("write {}: {e}", out_path.display()))?;
+
+    let mode_id = match report.mode {
+        TextReplaceMode::InPlace => "in_place",
+        TextReplaceMode::Relocated => "relocated",
+    };
+
+    if as_json {
+        let payload = serde_json::json!({
+            "input": rom_path.display().to_string(),
+            "output": out_path.display().to_string(),
+            "tree_data_offset": format!("0x{:X}", bank.tree_data_offset()),
+            "offset_table_offset": format!("0x{:X}", bank.offset_table_offset()),
+            "tree_count": bank.tree_count(),
+            "mode": mode_id,
+            "original_offset": format!("0x{:X}", report.original_offset),
+            "written_offset": format!("0x{:X}", report.written_offset),
+            "written_bus_address": format!("0x{:08X}", report.written_bus_address),
+            "original_bytes_len": report.original_bytes_len,
+            "original_capacity": report.original_capacity,
+            "new_bytes_len": report.new_bytes_len,
+            "slack_bytes": report.slack_bytes,
+            "patched_pointers": report.patched_pointer_count,
+            "patched_pointer_offsets": report
+                .patched_pointer_offsets
+                .iter()
+                .map(|o| format!("0x{o:X}"))
+                .collect::<Vec<_>>(),
+        });
+        println!(
+            "{}",
+            serde_json::to_string_pretty(&payload).map_err(|e| e.to_string())?
+        );
+    } else {
+        println!(
+            "Camelot Huffman Text Replace: {} -> {}",
             rom_path.display(),
             out_path.display()
         );

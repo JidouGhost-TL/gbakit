@@ -6,15 +6,20 @@
 //!   capacity-checked in-place or free-space-relocated string write-back with automatic ROM
 //!   pointer patching.
 //! - Custom 16-bit Huffman tree text decode/encode/replace (*Fire Emblem* GBA lineage).
+//! - Camelot 255-tree context-sensitive bigram Huffman text decode/encode/replace (*Golden Sun*).
 //! - 1bpp and 2bpp bitmap/VWF font sheet PNG/PPM dump/replace and VWF width table tools.
 
 #![deny(unsafe_code)]
 
+pub mod camelot;
 pub mod charmap;
 pub mod font;
 pub mod huffman;
 pub mod string;
 
+pub use camelot::{
+    replace_camelot_text_in_rom, CamelotHuffmanBank, CamelotHuffmanDecoded,
+};
 pub use charmap::{BuiltinCharmapInfo, Charmap, BUILTIN_CHARMAPS};
 pub use font::{
     compute_vwf_widths_from_sheet, dump_font_sheet, dump_font_sheet_rgba, encode_glyph_1bpp,
