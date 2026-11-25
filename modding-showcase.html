@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Modding Showcase — gbakit GBA Reference</title>
+  <link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+  <header>
+    <div class="brand"><a href="index.html" style="color:inherit">gbakit GBA Reference <span class="badge badge-emerald">v2.0</span></a></div>
+    <nav>
+      <a href="index.html">Games</a>
+      <a href="saves/index.html">Save Formats</a>
+      <a href="patches/index.html">Debug Patches</a>
+      <a href="debug-menus.html">Debug Gallery</a>
+      <a href="non-retail-cartridges.html">Non-Retail</a>
+      <a href="cartridge-hardware.html">Cartridge Hardware</a>
+      <a href="link-multiplayer.html">Link &amp; Multiplayer</a>
+      <a href="multiboot-museum.html">MultiBoot Museum</a>
+      <a href="assets/index.html">Assets &amp; Audio</a>
+      <a href="text-and-fonts.html">Text &amp; Fonts</a>
+      <a href="modding-showcase.html">Modding Showcase</a>
+      <a href="engines/index.html">Engines &amp; Hardware</a>
+      <a href="families/index.html">Families</a>
+      <a href="gbakit/index.html">Using gbakit</a>
+    </nav>
+  </header>
+  <main>
+<h1><code>gbakit</code> Modding Showcase (Live <code>libmgba.so.0.10</code> Write-Back Proof)</h1>
+<p class="meta">End-to-end non-destructive ROM write-back for graphics (<code>gbakit gfx replace</code>), DirectSound audio (<code>gbakit audio replace</code>), and VWF dialogue text (<code>gbakit text replace</code>), verified live in headless <code>libmgba.so.0.10</code> &middot; Companion guide for <a href="gbakit/index.html"><code>gbakit</code></a>.</p>
+
+<div class="grid">
+  <div class="card"><div class="val">4</div><div class="lbl">Live GFX Replace Proofs</div></div>
+  <div class="card"><div class="val">2</div><div class="lbl">Live DirectSound Proofs (600f)</div></div>
+  <div class="card"><div class="val">2</div><div class="lbl">Live Text Proofs (Charmap + Huffman)</div></div>
+  <div class="card"><div class="val">1</div><div class="lbl">Live 2bpp Font Sheet Proof</div></div>
+  <div class="card"><div class="val">28</div><div class="lbl">Auto-Patched 32-bit ROM Pointers</div></div>
+</div>
+
+<div class="callout">
+  <strong>Non-Destructive In-Place &amp; Relocated Write-Back:</strong> When replacement data fits inside the original asset's capacity, <code>gbakit</code> writes in-place with zero pointer mutations. When it grows larger, passing <code>--allow-relocate</code> allocates aligned <code>0xFF</code> free space and automatically patches every 32-bit AGB ROM bus (<code>0x08000000</code>) pointer referencing the original offset.
+</div>
+
+<h2>1. Visual Before / After Gallery (<code>gfx replace</code> &amp; <code>text replace</code>)</h2>
+<div class="card" style="margin-bottom:1rem">
+  <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.5rem">
+    <div><span class="badge badge-blue">gbakit gfx replace</span> <a href='titles/BPRE-r0-3d0c79f1627022e1.html'><strong>Pokemon FireRed Version</strong></a> (<code>BPRE</code>) &middot; <span class='badge badge-emerald'>In-Place (+1,267 B slack)</span></div>
+    <div class="meta">Frame 540 &middot; <strong>19.75%</strong> pixel diff (7,585 px) &middot; <code>0xEAB8C4</code></div>
+  </div>
+  <p class="meta" style="margin:0.4rem 0 0.6rem">Title screen Pokemon + FireRed logo (BG0 8bpp LZ77 tileset) &middot; <code>lz77-vram</code> &middot; 8bpp &middot; 256 tiles (5,590 B written / 6,857 B cap)</p>
+  <div class="gallery">
+    <figure><img src="images/modding/bpre_before.png" alt="BPRE Before"><figcaption>Before (Retail ROM)</figcaption></figure>
+    <figure><img src="images/modding/bpre_after.png" alt="BPRE After"><figcaption>After (<code>gbakit gfx replace</code>)</figcaption></figure>
+  </div>
+</div><div class="card" style="margin-bottom:1rem">
+  <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.5rem">
+    <div><span class="badge badge-blue">gbakit gfx replace</span> <a href='titles/BPEE-r0-a9dec84dfe7f62ab.html'><strong>Pokemon Emerald Version</strong></a> (<code>BPEE</code>) &middot; <span class='badge badge-emerald'>In-Place (+837 B slack)</span></div>
+    <div class="meta">Frame 720 &middot; <strong>14.45%</strong> pixel diff (5,547 px) &middot; <code>0xDDE690</code></div>
+  </div>
+  <p class="meta" style="margin:0.4rem 0 0.6rem">Title screen Pokemon logo (BG2 8bpp LZ77 tileset) &middot; <code>lz77-vram</code> &middot; 8bpp &middot; 256 tiles (5,052 B written / 5,889 B cap)</p>
+  <div class="gallery">
+    <figure><img src="images/modding/bpee_before.png" alt="BPEE Before"><figcaption>Before (Retail ROM)</figcaption></figure>
+    <figure><img src="images/modding/bpee_after.png" alt="BPEE After"><figcaption>After (<code>gbakit gfx replace</code>)</figcaption></figure>
+  </div>
+</div><div class="card" style="margin-bottom:1rem">
+  <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.5rem">
+    <div><span class="badge badge-blue">gbakit gfx replace</span> <a href='titles/AWRE-r0-72f5ad9283aa709e.html'><strong>Advance Wars</strong></a> (<code>AWRE</code>) &middot; <span class='badge badge-purple'>Relocated (1 ptr)</span></div>
+    <div class="meta">Frame 420 &middot; <strong>34.57%</strong> pixel diff (13,274 px) &middot; <code>0x1374A8</code> &rarr; <code>0x3F7B80</code></div>
+  </div>
+  <p class="meta" style="margin:0.4rem 0 0.6rem">Title screen Advance Wars logo &amp; Press Start sprites (OBJ 4bpp LZ77 tileset) &middot; <code>lz77-vram</code> &middot; 4bpp &middot; 506 tiles (8,025 B written / 5,879 B cap)</p>
+  <div class="gallery">
+    <figure><img src="images/modding/awre_before.png" alt="AWRE Before"><figcaption>Before (Retail ROM)</figcaption></figure>
+    <figure><img src="images/modding/awre_after.png" alt="AWRE After"><figcaption>After (<code>gbakit gfx replace</code>)</figcaption></figure>
+  </div>
+</div><div class="card" style="margin-bottom:1rem">
+  <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.5rem">
+    <div><span class="badge badge-blue">gbakit gfx replace</span> <a href='titles/BMXE-r0-fc94f65380b65b87.html'><strong>Metroid: Zero Mission</strong></a> (<code>BMXE</code>) &middot; <span class='badge badge-purple'>Relocated (2 ptrs)</span></div>
+    <div class="meta">Frame 480 &middot; <strong>1.54%</strong> pixel diff (593 px) &middot; <code>0x45C0F4</code> &rarr; <code>0x760D38</code></div>
+  </div>
+  <p class="meta" style="margin:0.4rem 0 0.6rem">Samus Data helmet &amp; A/B/C slot icons (OBJ 4bpp LZ77 tileset, 2 ROM pointers) &middot; <code>lz77-vram</code> &middot; 4bpp &middot; 640 tiles (10,957 B written / 6,885 B cap)</p>
+  <div class="gallery">
+    <figure><img src="images/modding/bmxe_before.png" alt="BMXE Before"><figcaption>Before (Retail ROM)</figcaption></figure>
+    <figure><img src="images/modding/bmxe_after.png" alt="BMXE After"><figcaption>After (<code>gbakit gfx replace</code>)</figcaption></figure>
+  </div>
+</div><div class="card" style="margin-bottom:1rem">
+  <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.5rem">
+    <div><span class="badge badge-amber">gbakit text replace</span> <a href='titles/BPRE-r0-3d0c79f1627022e1.html'><strong>Pokemon FireRed Version</strong></a> (<code>BPRE</code>) &middot; <span class='badge badge-purple'>Relocated (1 ptr)</span></div>
+    <div class="meta">Frame 840 &middot; <strong>5.21%</strong> pixel diff (2,002 px) &middot; <code>0x1C582D</code> &rarr; <code>0x456734</code></div>
+  </div>
+  <p class="meta" style="margin:0.4rem 0 0.6rem">Controls intro VWF dialogue string &middot; Charmap <code>pokemon-gen3-en</code> &middot; 72 B &rarr; 99 B</p>
+  <div class="gallery">
+    <figure><img src="images/modding/bpre_text_before.png" alt="BPRE Text Before"><figcaption>Before (Retail VWF Dialogue)</figcaption></figure>
+    <figure><img src="images/modding/bpre_text_after.png" alt="BPRE Text After"><figcaption>After (<code>gbakit text replace</code>)</figcaption></figure>
+  </div>
+</div><div class="card" style="margin-bottom:1rem">
+  <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.5rem">
+    <div><span class="badge badge-amber">gbakit text replace (Huffman)</span> <a href='titles/BE8E-r0-a106b01154fd72e9.html'><strong>Fire Emblem: The Sacred Stones</strong></a> (<code>BE8E</code>) &middot; <span class='badge badge-purple'>Relocated (1 ptr: <code>0x15D9B0</code>)</span></div>
+    <div class="meta">Frame 840 &middot; <strong>5.95%</strong> pixel diff (2,286 px) &middot; <code>0xE8C54</code> &rarr; <code>0x31E890</code></div>
+  </div>
+  <p class="meta" style="margin:0.4rem 0 0.6rem">Select Mode Easy difficulty description (16-bit canonical Huffman, table 0x15D488 entry 0x014A) &middot; <code>fe-huffman-16bit</code> (tree <code>0x15A72C</code>, entry <code>0x014A</code>) &middot; 42 B &rarr; 60 B</p>
+  <div class="gallery">
+    <figure><img src="images/modding/be8e_huffman_before.png" alt="BE8E Huffman Before"><figcaption>Before (Retail Canonical Huffman)</figcaption></figure>
+    <figure><img src="images/modding/be8e_huffman_after.png" alt="BE8E Huffman After"><figcaption>After (<code>gbakit text replace</code> Huffman)</figcaption></figure>
+  </div>
+</div><div class="card" style="margin-bottom:1rem">
+  <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.5rem">
+    <div><span class="badge badge-blue">gbakit font replace</span> <a href='titles/BPRE-r0-3d0c79f1627022e1.html'><strong>Pokemon FireRed Version</strong></a> (<code>BPRE</code>) &middot; <span class='badge badge-emerald'>In-Place (831 B changed)</span></div>
+    <div class="meta">Frame 840 &middot; <strong>4.62%</strong> pixel diff (1,773 px) &middot; <code>0x1FF370</code></div>
+  </div>
+  <p class="meta" style="margin:0.4rem 0 0.6rem">Controls intro 2bpp VWF Latin font sheet (gFontNormalLatinGlyphs, 256 16x16 glyphs = 1,024 8x8 tiles) &middot; 2bpp &middot; 1,024 tiles (16,384 B written)</p>
+  <div class="gallery">
+    <figure><img src="images/modding/bpre_font_before.png" alt="BPRE Font Before"><figcaption>Before (Retail 2bpp VWF Font)</figcaption></figure>
+    <figure><img src="images/modding/bpre_font_after.png" alt="BPRE Font After"><figcaption>After (<code>gbakit font replace</code>)</figcaption></figure>
+  </div>
+</div>
+
+<h2>2. Visual Write-Back Telemetry Summary</h2>
+<table>
+  <thead><tr><th>Pipeline</th><th>Title</th><th>Mode</th><th>ROM Offsets</th><th>Format / Size</th><th class="num">Framebuffer Diff</th></tr></thead>
+  <tbody><tr><td><code>gfx replace</code></td><td><a href='titles/BPRE-r0-3d0c79f1627022e1.html'><strong>Pokemon FireRed Version</strong></a> (<code>BPRE</code>)</td><td><span class='badge badge-emerald'>In-Place (+1,267 B slack)</span></td><td><code>0xEAB8C4</code></td><td><code>lz77-vram</code> 8bpp (5,590 B)</td><td class='num'><strong>19.75%</strong> (7,585 px @ f540)</td></tr><tr><td><code>gfx replace</code></td><td><a href='titles/BPEE-r0-a9dec84dfe7f62ab.html'><strong>Pokemon Emerald Version</strong></a> (<code>BPEE</code>)</td><td><span class='badge badge-emerald'>In-Place (+837 B slack)</span></td><td><code>0xDDE690</code></td><td><code>lz77-vram</code> 8bpp (5,052 B)</td><td class='num'><strong>14.45%</strong> (5,547 px @ f720)</td></tr><tr><td><code>gfx replace</code></td><td><a href='titles/AWRE-r0-72f5ad9283aa709e.html'><strong>Advance Wars</strong></a> (<code>AWRE</code>)</td><td><span class='badge badge-purple'>Relocated (1 ptr)</span></td><td><code>0x1374A8</code> &rarr; <code>0x3F7B80</code></td><td><code>lz77-vram</code> 4bpp (8,025 B)</td><td class='num'><strong>34.57%</strong> (13,274 px @ f420)</td></tr><tr><td><code>gfx replace</code></td><td><a href='titles/BMXE-r0-fc94f65380b65b87.html'><strong>Metroid: Zero Mission</strong></a> (<code>BMXE</code>)</td><td><span class='badge badge-purple'>Relocated (2 ptrs)</span></td><td><code>0x45C0F4</code> &rarr; <code>0x760D38</code></td><td><code>lz77-vram</code> 4bpp (10,957 B)</td><td class='num'><strong>1.54%</strong> (593 px @ f480)</td></tr><tr><td><code>text replace</code></td><td><a href='titles/BPRE-r0-3d0c79f1627022e1.html'><strong>Pokemon FireRed Version</strong></a> (<code>BPRE</code>)</td><td><span class='badge badge-purple'>Relocated (1 ptr)</span></td><td><code>0x1C582D</code> &rarr; <code>0x456734</code></td><td><code>pokemon-gen3-en</code> (72 B &rarr; 99 B)</td><td class='num'><strong>5.21%</strong> (2,002 px @ f840)</td></tr><tr><td><code>text replace (huffman)</code></td><td><a href='titles/BE8E-r0-a106b01154fd72e9.html'><strong>Fire Emblem: The Sacred Stones</strong></a> (<code>BE8E</code>)</td><td><span class='badge badge-purple'>Relocated (1 ptr: <code>0x15D9B0</code>)</span></td><td><code>0xE8C54</code> &rarr; <code>0x31E890</code></td><td><code>fe-huffman-16bit</code> (42 B &rarr; 60 B)</td><td class='num'><strong>5.95%</strong> (2,286 px @ f840)</td></tr><tr><td><code>font replace</code></td><td><a href='titles/BPRE-r0-3d0c79f1627022e1.html'><strong>Pokemon FireRed Version</strong></a> (<code>BPRE</code>)</td><td><span class='badge badge-emerald'>In-Place (831 B changed)</span></td><td><code>0x1FF370</code></td><td>2bpp VWF (1,024 tiles, 16,384 B)</td><td class='num'><strong>4.62%</strong> (1,773 px @ f840)</td></tr></tbody>
+</table>
+
+<h2>3. Live DirectSound Audio Write-Back Proof (<code>gbakit audio replace</code>)</h2>
+<p class="meta">Verified in headless <code>libmgba.so.0.10</code> over 600 frames on <em>Pok&eacute;mon FireRed</em> (<code>BPRE</code>, M4A <code>WaveData</code> at <code>0x4A741C</code>), replacing an instrument sample with an 880 Hz tone both in-place and relocated with 23 voicegroup pointers patched.</p>
+<table>
+  <thead><tr><th>Title</th><th>Mode</th><th>ROM Offsets</th><th>Codec &amp; Size</th><th class="num">Re-Extracted vs Target Freq</th><th class="num">600f Stereo PCM Diff</th></tr></thead>
+  <tbody><tr><td><a href='titles/BPRE-r0-3d0c79f1627022e1.html'><strong>Pokemon FireRed Version</strong></a> (<code>BPRE</code>)</td><td><span class='badge badge-emerald'>In-Place</span></td><td><code>0x4A741C</code></td><td><code>pcm8</code> / <code>m4a_wavedata</code> (3,361 B, 3,344 smp @ 13,379 Hz)</td><td class='num'><code>876.2 Hz</code> / <code>880.0 Hz</code></td><td class='num'><strong>56.28%</strong> (369,996 / 657,416 smp)</td></tr><tr><td><a href='titles/BPRE-r0-3d0c79f1627022e1.html'><strong>Pokemon FireRed Version</strong></a> (<code>BPRE</code>)</td><td><span class='badge badge-purple'>Relocated (23 ptrs)</span></td><td><code>0x4A741C</code> &rarr; <code>0x71A29C</code></td><td><code>pcm8</code> / <code>m4a_wavedata</code> (6,706 B, 6,689 smp @ 13,379 Hz)</td><td class='num'><code>878.1 Hz</code> / <code>880.0 Hz</code></td><td class='num'><strong>48.39%</strong> (318,132 / 657,416 smp)</td></tr></tbody>
+</table>
+
+<h2>4. Copy-Pasteable CLI Workflows</h2>
+<pre><code># 1. In-place 8bpp LZ77 tileset replacement (Pokemon FireRed BG0 title logo @ 0xEAB8C4):
+gbakit gfx replace firered.gba --offset 0xEAB8C4 --image custom_logo.png \
+  --bpp 8 --palette-offset 0xEAD4F4 -o firered_mod.gba --json
+
+# 2. Relocated 4bpp LZ77 tileset replacement with automatic 32-bit ROM pointer patching:
+gbakit gfx replace advance_wars.gba --offset 0x1374A8 --image custom_aw_logo.png \
+  --bpp 4 --allow-relocate -o advance_wars_mod.gba --json
+
+# 3. DirectSound M4A WaveData PCM8 replacement (in-place or --allow-relocate):
+gbakit audio replace firered.gba --offset 0x4A741C --wav tone_880hz.wav \
+  --codec pcm8 --allow-relocate -o firered_audio_mod.gba --json
+
+# 4. VWF / charmap string replacement with 0xFF free-space relocation + pointer patching:
+gbakit text replace firered.gba --offset 0x1C582D --table pokemon-gen3-en \
+  --text "Modded with gbakit!\nPress A to continue." --allow-relocate -o firered_text_mod.gba --json</code></pre>
+</main>
+  <footer>gbakit GBA Format Reference &middot; <a href="https://github.com/JidouGhost-TL/gbakit">GitHub: JidouGhost-TL/gbakit</a> &middot; Clean-room GBA binary format specs &amp; Rust toolkit.</footer>
+</body>
+</html>

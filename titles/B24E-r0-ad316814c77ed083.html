@@ -20,6 +20,7 @@
       <a href="../multiboot-museum.html">MultiBoot Museum</a>
       <a href="../assets/index.html">Assets &amp; Audio</a>
       <a href="../text-and-fonts.html">Text &amp; Fonts</a>
+      <a href="../modding-showcase.html">Modding Showcase</a>
       <a href="../engines/index.html">Engines &amp; Hardware</a>
       <a href="../families/index.html">Families</a>
       <a href="../gbakit/index.html">Using gbakit</a>
@@ -81,6 +82,16 @@ gbakit save fix    B24E damaged.sav -o repaired.sav</code></pre>
 
 <h2>Text, Fonts &amp; Scene Data</h2>
 <dl class="kv"><dt>Primary Text Encoding</dt><dd><strong>Custom 16-bit Huffman</strong> (<code>11,938</code> ASCII strings &middot; <code>4</code> Shift-JIS runs)</dd><dt>Font &amp; VWF Indicators</dt><dd><span class='badge badge-emerald'>VWF Width Table</span> <span class='badge badge-blue'>1bpp Font</span> &middot; BIOS SWIs: BitUnPack <code>0x10</code>: <code>2</code> &middot; LZ77 <code>0x11/12</code>: <code>0</code> &middot; Huffman <code>0x13</code>: <code>0</code> &middot; RLE <code>0x14/15</code>: <code>2</code></dd><dt>Scene &amp; Packaging</dt><dd><code>1,177</code> ROM pointer tables (&ge;32 entries, <code>430</code> &ge;200) &middot; <code>19</code> relative <code>u32</code> TOCs &middot; <code>254</code> OAM metasprite hits</dd></dl>
+
+
+
+<h2>Password System</h2>
+<dl class="kv"><dt>Save Media</dt><dd><span class='badge badge-emerald'>Battery-Backed (FLASH_1M)</span></dd><dt>Password Class</dt><dd><strong>Password UI Strings Detected</strong> (<code>password_ui_strings_only</code>)</dd><dt>Password UI Strings</dt><dd><code>password</code>, <code>wonder mail</code></dd></dl>
+
+<div class="callout">
+  <strong>Verified Password System Deep Dive</strong> (Chunsoft / Nintendo)
+</div>
+<dl class="kv"><dt>Verified Category</dt><dd><code>algorithmic_bitpacked_permuted_checksum</code> (Chunsoft / Nintendo)</dd><dt>Verified Format</dt><dd>24-char / 54-char · 5 bits/char · 120-bit payload</dd><dt>Checksum / Integrity</dt><dd>8-bit positional additive sum: buf[0] = sum(buf[i] + i for i in 1..14) &amp; 0xFF (Thumb @ 0x03D3BE-0x03D3DA)</dd><dt>Verified ROM Offsets</dt><dd>Alphabet @ <code>0x0f42d0</code> (<code>?67NPR89F0+...STXY45MCHJ-K12!♂3Q♀W</code>) &middot; Reverse LUT @ <code>0x0f42f0</code> &middot; 24-char Perm @ <code>0x0f4426</code> &middot; 54-char Perm @ <code>0x0f43f0</code> &middot; Checksum Thumb @ <code>0x03d3be</code></dd></dl>
 
 
 <h2>Hardware MMIO Subsystems</h2><dl class='kv'><dt><code>ppu_display</code></dt><dd><code>0x800cde4</code></dd><dt><code>save_bus_sram_flash</code></dt><dd><code>0x80b0434</code>, <code>0x80b06ac</code>, <code>0x80b0810</code>, <code>0x80b0adc</code></dd></dl>
