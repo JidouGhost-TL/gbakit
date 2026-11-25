@@ -81,6 +81,7 @@ pub fn cmd_link_bridge(
             summary.players_connected, summary.players_expected
         );
         println!(" Transfers:       {} relayed ({} both non-0xFFFF)", summary.transfers_relayed, summary.both_non_ff_transfers);
+        println!(" Normal SPI:      {} relayed", summary.normal_transfers_relayed);
         println!(" Frame Syncs:     {}", summary.frame_syncs_relayed);
         println!(" Elapsed:         {} ms", summary.elapsed_ms);
         println!(" Stop Reason:     {}", summary.stop_reason);

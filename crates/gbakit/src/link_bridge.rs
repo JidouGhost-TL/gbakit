@@ -51,6 +51,23 @@
 //!    - `msg_type`: `u8` (`6`)
 //!    - `status`: `u8` (`0` = OK)
 //!    - `frame`: `u32` (LE)
+//!
+//! 9. **Client -> Server Normal Mode SPI Request** (14 bytes):
+//!    - `msg_type`: `u8` (`7`)
+//!    - `slot`: `u8` (`0..=1`)
+//!    - `width_bits`: `u8` (`8` or `32`)
+//!    - `reserved`: `u8` (`0`)
+//!    - `siocnt`: `u16` (LE)
+//!    - `tx_word`: `u32` (LE, value of `SIODATA8` or `SIODATA32`)
+//!    - `frame`: `u32` (LE, emulator frame counter or sequence)
+//!
+//! 10. **Server -> Client Normal Mode SPI Response** (12 bytes):
+//!     - `msg_type`: `u8` (`8`)
+//!     - `status`: `u8` (`0` = OK)
+//!     - `width_bits`: `u8` (`8` or `32`)
+//!     - `reserved`: `u8` (`0`)
+//!     - `rx_word`: `u32` (LE, peer's swapped `tx_word`, masked to `0xFF` for 8-bit)
+//!     - `seq`: `u32` (LE, Normal Mode transfer sequence counter)
 
 #![deny(unsafe_code)]
 
@@ -90,6 +107,10 @@ pub const MSG_POLL: u8 = 4;
 pub const MSG_FRAME_SYNC: u8 = 5;
 /// Message type: Server -> Client frame-boundary barrier release (6 bytes).
 pub const MSG_FRAME_ACK: u8 = 6;
+/// Message type: Client -> Server Normal Mode (8-bit / 32-bit SPI) transfer request (14 bytes).
+pub const MSG_NORMAL_REQ: u8 = 7;
+/// Message type: Server -> Client Normal Mode (8-bit / 32-bit SPI) transfer response (12 bytes).
+pub const MSG_NORMAL_RESP: u8 = 8;
 
 /// Client -> Server Hello packet (8 bytes).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -254,6 +275,95 @@ impl TransferResponse {
     }
 }
 
+/// Client -> Server Normal Mode (8-bit / 32-bit SPI) transfer submission (14 bytes).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct NormalTransferRequest {
+    pub slot: u8,
+    pub width_bits: u8,
+    pub siocnt: u16,
+    pub tx_word: u32,
+    pub frame: u32,
+}
+
+impl NormalTransferRequest {
+    pub fn to_bytes(self) -> [u8; 14] {
+        let sc = self.siocnt.to_le_bytes();
+        let tx = self.tx_word.to_le_bytes();
+        let fr = self.frame.to_le_bytes();
+        [
+            MSG_NORMAL_REQ,
+            self.slot,
+            self.width_bits,
+            0,
+            sc[0],
+            sc[1],
+            tx[0],
+            tx[1],
+            tx[2],
+            tx[3],
+            fr[0],
+            fr[1],
+            fr[2],
+            fr[3],
+        ]
+    }
+
+    pub fn from_payload(payload: [u8; 13]) -> Self {
+        Self {
+            slot: payload[0],
+            width_bits: payload[1],
+            siocnt: u16::from_le_bytes([payload[3], payload[4]]),
+            tx_word: u32::from_le_bytes([payload[5], payload[6], payload[7], payload[8]]),
+            frame: u32::from_le_bytes([payload[9], payload[10], payload[11], payload[12]]),
+        }
+    }
+}
+
+/// Server -> Client Normal Mode (8-bit / 32-bit SPI) transfer response (12 bytes).
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct NormalTransferResponse {
+    pub status: u8,
+    pub width_bits: u8,
+    pub rx_word: u32,
+    pub seq: u32,
+}
+
+impl NormalTransferResponse {
+    pub fn to_bytes(self) -> [u8; 12] {
+        let rx = self.rx_word.to_le_bytes();
+        let sq = self.seq.to_le_bytes();
+        [
+            MSG_NORMAL_RESP,
+            self.status,
+            self.width_bits,
+            0,
+            rx[0],
+            rx[1],
+            rx[2],
+            rx[3],
+            sq[0],
+            sq[1],
+            sq[2],
+            sq[3],
+        ]
+    }
+
+    pub fn from_bytes(buf: [u8; 12]) -> Result<Self, String> {
+        if buf[0] != MSG_NORMAL_RESP {
+            return Err(format!(
+                "expected NormalTransferResp (msg_type={MSG_NORMAL_RESP}), got {}",
+                buf[0]
+            ));
+        }
+        Ok(Self {
+            status: buf[1],
+            width_bits: buf[2],
+            rx_word: u32::from_le_bytes([buf[4], buf[5], buf[6], buf[7]]),
+            seq: u32::from_le_bytes([buf[8], buf[9], buf[10], buf[11]]),
+        })
+    }
+}
+
 /// Configuration for [`LinkBridgeServer`].
 #[derive(Debug, Clone)]
 pub struct LinkBridgeConfig {
@@ -295,6 +405,7 @@ pub struct LinkBridgeSummary {
     pub players_connected: u8,
     pub transfers_relayed: u64,
     pub both_non_ff_transfers: u64,
+    pub normal_transfers_relayed: u64,
     pub frame_syncs_relayed: u64,
     pub elapsed_ms: u64,
     pub stop_reason: String,
@@ -311,6 +422,7 @@ pub struct LinkBridgeServer {
 
 enum ClientEvent {
     Transfer { slot: usize, req: TransferRequest },
+    NormalTransfer { slot: usize, req: NormalTransferRequest },
     FrameSync { slot: usize, frame: u32 },
     Bye { slot: usize },
     Disconnected { slot: usize },
@@ -496,6 +608,17 @@ impl LinkBridgeServer {
                             break;
                         }
                     }
+                    MSG_NORMAL_REQ => {
+                        let mut payload = [0u8; 13];
+                        if reader.read_exact(&mut payload).is_err() {
+                            let _ = tx_c.send(ClientEvent::Disconnected { slot });
+                            break;
+                        }
+                        let req = NormalTransferRequest::from_payload(payload);
+                        if tx_c.send(ClientEvent::NormalTransfer { slot, req }).is_err() {
+                            break;
+                        }
+                    }
                     MSG_FRAME_SYNC => {
                         let mut payload = [0u8; 5];
                         if reader.read_exact(&mut payload).is_err() {
@@ -524,9 +647,11 @@ impl LinkBridgeServer {
         drop(tx);
 
         let mut pending_transfers: [Option<TransferRequest>; 4] = [None; 4];
+        let mut pending_normal: [Option<NormalTransferRequest>; 2] = [None; 2];
         let mut pending_frames: [Option<u32>; 4] = [None; 4];
         let mut transfers_relayed: u64 = 0;
         let mut both_non_ff_transfers: u64 = 0;
+        let mut normal_transfers_relayed: u64 = 0;
         let mut frame_syncs_relayed: u64 = 0;
         let idle_timeout = self.config.idle_timeout_ms.map(Duration::from_millis);
         let stop_reason: String;
@@ -631,9 +756,98 @@ impl LinkBridgeServer {
                             break;
                         }
                         if let Some(cap) = self.config.max_transfers {
-                            if transfers_relayed >= cap {
+                            if transfers_relayed + normal_transfers_relayed >= cap {
                                 stop_reason = "max_transfers_reached".to_string();
                                 break;
+                            }
+                        }
+                    }
+                }
+                ClientEvent::NormalTransfer { slot, req } => {
+                    if slot < 2 {
+                        pending_normal[slot] = Some(req);
+
+                        // If P0 (Master) initiated Normal SPI and P1 (Slave) has FLAG_SLAVE_POLL
+                        // and hasn't submitted yet, send MSG_POLL with master's SIOCNT.
+                        if slot == 0
+                            && pending_normal[1].is_none()
+                            && (client_flags[1] & FLAG_SLAVE_POLL) != 0
+                        {
+                            let sc = req.siocnt.to_le_bytes();
+                            let poll_pkt = [MSG_POLL, 0u8, sc[0], sc[1]];
+                            if let Some(w) = writers[1].as_mut() {
+                                let _ = w.write_all(&poll_pkt);
+                            }
+                        }
+
+                        if let (Some(p0_req), Some(p1_req)) = (pending_normal[0], pending_normal[1])
+                        {
+                            let width = if p0_req.width_bits == 8 { 8u8 } else { 32u8 };
+                            let mask: u32 = if width == 8 { 0xFF } else { 0xFFFF_FFFF };
+                            let p0_word = p0_req.tx_word & mask;
+                            let p1_word = p1_req.tx_word & mask;
+                            normal_transfers_relayed += 1;
+                            let seq = (normal_transfers_relayed & 0xFFFF_FFFF) as u32;
+
+                            // Full-duplex SPI swap: P0 receives P1's tx_word, P1 receives P0's tx_word.
+                            let resp0 = NormalTransferResponse {
+                                status: 0,
+                                width_bits: width,
+                                rx_word: p1_word,
+                                seq,
+                            }
+                            .to_bytes();
+                            let resp1 = NormalTransferResponse {
+                                status: 0,
+                                width_bits: width,
+                                rx_word: p0_word,
+                                seq,
+                            }
+                            .to_bytes();
+
+                            let mut write_failed = false;
+                            if let Some(w0) = writers[0].as_mut() {
+                                if w0.write_all(&resp0).is_err() {
+                                    write_failed = true;
+                                }
+                            }
+                            if let Some(w1) = writers[1].as_mut() {
+                                if w1.write_all(&resp1).is_err() {
+                                    write_failed = true;
+                                }
+                            }
+
+                            if let Some(bw) = log_writer.as_mut() {
+                                let mode_str = if width == 8 { "normal_8" } else { "normal_32" };
+                                let record = serde_json::json!({
+                                    "step": transfers_relayed + normal_transfers_relayed,
+                                    "frame": p0_req.frame,
+                                    "mode": mode_str,
+                                    "width_bits": width,
+                                    "p0_tx": format!("0x{:08X}", p0_word),
+                                    "p1_tx": format!("0x{:08X}", p1_word),
+                                    "p0_rx": format!("0x{:08X}", p1_word),
+                                    "p1_rx": format!("0x{:08X}", p0_word),
+                                    "siocnt": format!("0x{:04X}", p0_req.siocnt),
+                                });
+                                if let Err(e) = writeln!(bw, "{record}") {
+                                    return Err(format!(
+                                        "failed to write JSONL normal transfer record: {e}"
+                                    ));
+                                }
+                            }
+
+                            pending_normal = [None; 2];
+
+                            if write_failed {
+                                stop_reason = "client_write_error".to_string();
+                                break;
+                            }
+                            if let Some(cap) = self.config.max_transfers {
+                                if transfers_relayed + normal_transfers_relayed >= cap {
+                                    stop_reason = "max_transfers_reached".to_string();
+                                    break;
+                                }
                             }
                         }
                     }
@@ -694,6 +908,7 @@ impl LinkBridgeServer {
             players_connected: connected as u8,
             transfers_relayed,
             both_non_ff_transfers,
+            normal_transfers_relayed,
             frame_syncs_relayed,
             elapsed_ms: start.elapsed().as_millis() as u64,
             stop_reason,
@@ -931,5 +1146,122 @@ mod tests {
         let summary = server_handle.join().unwrap().unwrap();
         assert_eq!(summary.transfers_relayed, 2);
         assert_eq!(summary.frame_syncs_relayed, 1);
+    }
+
+    #[test]
+    fn test_live_tcp_bridge_normal_mode_8bit_and_32bit_swaps() {
+        let log_path = std::env::temp_dir().join(format!(
+            "gbakit_link_bridge_normal_test_{}.jsonl",
+            std::process::id()
+        ));
+        let _ = std::fs::remove_file(&log_path);
+
+        let cfg = LinkBridgeConfig {
+            listen_addr: "127.0.0.1:0".to_string(),
+            players: 2,
+            log_path: Some(log_path.clone()),
+            max_transfers: Some(4),
+            idle_timeout_ms: Some(5_000),
+            game_code: Some("NORM".to_string()),
+            game_title: Some("Normal Mode SPI Test".to_string()),
+        };
+
+        let server = LinkBridgeServer::bind(cfg).expect("bind bridge");
+        let addr = server.local_addr();
+        let server_handle = thread::spawn(move || server.run());
+
+        let mut c0 = TcpStream::connect(addr).expect("connect p0");
+        let mut c1 = TcpStream::connect(addr).expect("connect p1");
+        let _ = c0.set_nodelay(true);
+        let _ = c1.set_nodelay(true);
+
+        c0.write_all(
+            &HelloPacket {
+                version: PROTOCOL_VERSION,
+                requested_slot: 0,
+                flags: 0,
+            }
+            .to_bytes(),
+        )
+        .unwrap();
+        c1.write_all(
+            &HelloPacket {
+                version: PROTOCOL_VERSION,
+                requested_slot: 1,
+                flags: 0,
+            }
+            .to_bytes(),
+        )
+        .unwrap();
+
+        let mut wbuf = [0u8; 8];
+        c0.read_exact(&mut wbuf).unwrap();
+        c1.read_exact(&mut wbuf).unwrap();
+
+        // 2x 8-bit Normal Mode swaps (including upper bits that must be masked to 0xFF)
+        // + 2x 32-bit Normal Mode full-duplex swaps
+        let cases: [(u8, u16, u32, u32, u32, u32); 4] = [
+            (8, 0x4081, 0xDEAD_BE5A, 0x1234_56A5, 0x0000_00A5, 0x0000_005A),
+            (8, 0x4081, 0x0000_00F0, 0x0000_000F, 0x0000_000F, 0x0000_00F0),
+            (32, 0x5081, 0xCAFE_BABE, 0xDEAD_BEEF, 0xDEAD_BEEF, 0xCAFE_BABE),
+            (32, 0x5081, 0x1122_3344, 0x8877_6655, 0x8877_6655, 0x1122_3344),
+        ];
+
+        for (idx, &(width, siocnt, p0_tx, p1_tx, exp_p0_rx, exp_p1_rx)) in cases.iter().enumerate() {
+            c0.write_all(
+                &NormalTransferRequest {
+                    slot: 0,
+                    width_bits: width,
+                    siocnt,
+                    tx_word: p0_tx,
+                    frame: 10 + idx as u32,
+                }
+                .to_bytes(),
+            )
+            .unwrap();
+            c1.write_all(
+                &NormalTransferRequest {
+                    slot: 1,
+                    width_bits: width,
+                    siocnt: siocnt & !0x0001,
+                    tx_word: p1_tx,
+                    frame: 10 + idx as u32,
+                }
+                .to_bytes(),
+            )
+            .unwrap();
+
+            let mut r0_buf = [0u8; 12];
+            let mut r1_buf = [0u8; 12];
+            c0.read_exact(&mut r0_buf).unwrap();
+            c1.read_exact(&mut r1_buf).unwrap();
+
+            let r0 = NormalTransferResponse::from_bytes(r0_buf).unwrap();
+            let r1 = NormalTransferResponse::from_bytes(r1_buf).unwrap();
+            assert_eq!(r0.status, 0);
+            assert_eq!(r1.status, 0);
+            assert_eq!(r0.width_bits, width);
+            assert_eq!(r1.width_bits, width);
+            assert_eq!(r0.rx_word, exp_p0_rx);
+            assert_eq!(r1.rx_word, exp_p1_rx);
+            assert_eq!(r0.seq, (idx + 1) as u32);
+            assert_eq!(r1.seq, (idx + 1) as u32);
+        }
+
+        let summary = server_handle.join().unwrap().unwrap();
+        assert_eq!(summary.players_connected, 2);
+        assert_eq!(summary.transfers_relayed, 0);
+        assert_eq!(summary.normal_transfers_relayed, 4);
+        assert_eq!(summary.stop_reason, "max_transfers_reached");
+
+        let jsonl = std::fs::read_to_string(&log_path).expect("read normal jsonl");
+        let lines: Vec<&str> = jsonl.lines().collect();
+        assert_eq!(lines.len(), 5); // 1 header + 4 normal transfer records
+        assert!(lines[1].contains("\"mode\":\"normal_8\""));
+        assert!(lines[2].contains("\"mode\":\"normal_8\""));
+        assert!(lines[3].contains("\"mode\":\"normal_32\""));
+        assert!(lines[4].contains("\"mode\":\"normal_32\""));
+
+        let _ = std::fs::remove_file(&log_path);
     }
 }
