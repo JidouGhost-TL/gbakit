@@ -10,7 +10,11 @@ env:
 
 jobs:
   check:
-    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
@@ -21,3 +25,19 @@ jobs:
         run: cargo test --workspace
       - name: Run clippy
         run: cargo clippy --workspace --all-targets -- -D warnings
+      - name: CLI contract smoke tests
+        shell: bash
+        run: |
+          cargo run -p gbakit-cli -- --version --json > version.json
+          cargo run -p gbakit-cli -- capabilities --json > caps.json
+          PYTHON="$(command -v python3 || command -v python)"
+          "$PYTHON" -c '
+          import json
+          v = json.load(open("version.json"))
+          assert v["schema"] == "formatkit.build-identity.v1", v
+          assert v["tool"] == "gbakit", v
+          c = json.load(open("caps.json"))
+          assert c["schema"] == "formatkit.capabilities.v1", c
+          assert c["tool"] == "gbakit", c
+          assert len(c["formats"]) > 0, c
+          '

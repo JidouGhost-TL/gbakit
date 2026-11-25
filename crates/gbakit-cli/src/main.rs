@@ -5,6 +5,10 @@ use std::fs;
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
 
+use clap::error::ErrorKind;
+use clap::{CommandFactory, Parser, Subcommand};
+use serde::Serialize;
+
 use formatkit_patch::ips::{self, Patch};
 use gbakit::compress::{
     decode_diff_filter, decode_hudson_lz, decode_huffman, decode_konami_dict, decode_lz11,
@@ -40,6 +44,8 @@ use gbakit::sound::{
 use gbakit::sound::sf2::{compile_rom_soundfont, validate_soundfont};
 
 mod archive;
+mod capabilities;
+mod detect;
 mod ereader;
 mod link;
 mod modding;
@@ -48,79 +54,6 @@ mod video;
 
 const DEFAULT_MAX_WAV_SAMPLES: usize = 16 * 1024 * 1024;
 const DEFAULT_MIN_POINTER_TABLE_ENTRIES: usize = 8;
-
-fn usage() {
-    eprintln!(
-        "gbakit 0.1.0 — Clean-room GBA format toolkit\n\n\
-         USAGE:\n  \
-           gbakit info <rom.gba> [--json]\n  \
-           gbakit inspect <rom.gba> [--json]\n  \
-           gbakit analyze trace <rom.gba> [--json]\n  \
-           gbakit analyze callgraph <rom.gba> [--dot | --json]\n  \
-           gbakit rom tables    <rom.gba> [--min-entries 8]\n  \
-           gbakit rom multiboot <rom.gba> [-o <out.mb.gba>] [--index <n>] [--json]\n  \
-           gbakit multiboot serve <payload.mb.gba> [--socket <path>] [--baud <n>] [--palette <hex>] [--mock] [--json]\n  \
-           gbakit compress decode-lz77   <file> <hex-offset> <out-file>\n  \
-           gbakit compress decode-lz11   <file> <hex-offset> <out-file>\n  \
-           gbakit compress decode-hudson <file> <hex-offset> <out-file>\n  \
-           gbakit compress decode-konami <file> <hex-offset> <out-file>\n  \
-           gbakit compress decode-shinen <file> <hex-offset> <out-file>\n  \
-           gbakit compress decode-rle    <file> <hex-offset> <out-file>\n  \
-           gbakit compress decode-huffman <file> <hex-offset> <out-file>\n  \
-           gbakit compress decode-diff   <file> <hex-offset> <out-file>\n  \
-           gbakit patch apply  <patch> <input> <new-output>\n  \
-           gbakit patch create <orig> <modified> -o <out.bps|ups|ips> [--format <format>]\n  \
-           gbakit patch debug-menu <rom.gba> [-o <out.gba>]\n  \
-           gbakit patch list-debug-menus [--json]\n  \
-           gbakit patch test   <rom.gba> [--json]\n  \
-           gbakit cheat list [--json]\n  \
-           gbakit cheat verify <game_code> [--json]\n  \
-           gbakit save inspect <save.sav> [--format <code_or_id>] [--json]\n  \
-           gbakit save export  <save.sav> [-o <out.json>] [--format <code_or_id>] [--json]\n  \
-           gbakit save import  <input.json> [-o <out.sav>] [--format <code_or_id>] [--json]\n  \
-           gbakit save set     <save.sav> <field_name> <value> [-o <out.sav>] [--format <code_or_id>] [--json]\n  \
-           gbakit save probe   <file.sav> [--json]\n  \
-           gbakit save trim    <file.sav> [-o <out.sav>] [--force] [--size <bytes>] [--game <code>]\n  \
-           gbakit save info    <file.sav> [--json]\n  \
-           gbakit save verify  <def-or-code> <sav>\n  \
-           gbakit save decode  <def-or-code> <sav>\n  \
-           gbakit save fix     <def-or-code> <sav> -o <out>\n  \
-           gbakit sound wav    <rom> --offset <hex> -o <out.wav>\n  \
-           gbakit sound m4a   <rom> --song-header <hex>\n  \
-           gbakit audio scan   <rom.gba> [--json]\n  \
-           gbakit audio export <rom.gba> [-o <out_dir>] [--song <id>]\n  \
-           gbakit audio soundfont <rom.gba> [-o <out.sf2>] [--json]\n  \
-           gbakit audio replace <rom.gba> --offset <hex|dec> --wav <in.wav> -o <out.gba> [--codec pcm8|dpcm|pcm8-unsigned|ima-adpcm|ima-adpcm-arm] [--rate <hz>] [--loop-start <n>] [--raw-capacity <bytes>] [--allow-relocate] [--json]\n  \
-           gbakit link dissect <capture.json|capture.jsonl> [--json] [--rfu] [--joybus]\n  \
-           gbakit link bridge [--listen 127.0.0.1:5000] [--players 2] [--log <capture.jsonl>] [--max-transfers <n>] [--idle-timeout-ms <ms>] [--game-code <code>] [--game-title <title>] [--json]\n  \
-           gbakit gfx rip     <rom.gba> [-o <out_dir>] [--palettes] [--tilesets] [--tilemaps] [--sprites] [--json]\n  \
-           gbakit gfx tile4   <file> --offset <hex> --palette <hex> -o <out.ppm>\n  \
-           gbakit gfx replace <rom.gba> --offset <hex|dec> --image <in.png|ppm> -o <out.gba> [--bpp 4|8] [--palette-offset <n>] [--write-palette] [--compression auto|raw|lz77-vram|lz77-wram|rle|huff4|huff8] [--capacity <bytes>] [--allow-relocate] [--pad-byte <n>] [--json]\n  \
-           gbakit gfx replace-map <rom.gba> --offset <hex|dec> --map <in.tmx|scr> -o <out.gba> [--palette-bank <0..15>] [--compression auto|raw|lz77-vram|lz77-wram|rle|huff4|huff8] [--capacity <bytes>] [--allow-relocate] [--pad-byte <n>] [--json]\n  \
-           gbakit archive scan    <rom.gba> [--json]\n  \
-           gbakit archive extract <rom_or_archive> [--offset <hex|dec>] -o <out_dir/> [--json]\n  \
-           gbakit archive repack  <in_dir/> -o <out.bin> [--format pack|wayforward|sfcd] [--json]\n  \
-           gbakit archive replace <rom.gba> --offset <hex|dec> --input <dir_or_bin> -o <out.gba> [--format pack|wayforward|sfcd] [--capacity <bytes>] [--allow-relocate] [--pad-byte <n>] [--json]\n  \
-           gbakit ereader decode     <strip.raw> -o <out.bin> [--decompress]\n  \
-           gbakit ereader encode     <in.bin> -o <out.raw> [--short|--long]\n  \
-           gbakit ereader render     <strip.raw> -o <out.bmp|pbm|pgm> [--dpi 300|600|1200]\n  \
-           gbakit ereader vpk-decode <in.vpk> -o <out.bin>\n  \
-           gbakit ereader vpk-encode <in.bin> -o <out.vpk> [--method 0|1]\n  \
-           gbakit video scan         <rom.gba> [--json]\n  \
-           gbakit video export       <rom.gba> -o <out_dir> [--max-frames <n>]\n  \
-           gbakit text tables        [--json]\n  \
-           gbakit text extract       <rom.gba> --offset <hex|dec> [--table <builtin|file.tbl>] [--lz77] [--max-len <n>] [--json]\n  \
-           gbakit text scan          <rom.gba> [--table <builtin|file.tbl>] [--min-entries <n>] [--limit <n>] [--json]\n  \
-           gbakit text replace       <rom.gba> --offset <hex|dec> --text <str> -o <out.gba> [--table <builtin|file.tbl>] [--lz77] [--capacity <n>] [--allow-relocate] [--pad-byte <n>] [--json]\n  \
-           gbakit text huffman-extract <rom.gba> --tree <hex|dec> --root <hex|dec> --offset <hex|dec> [--max-len <n>] [--json]\n  \
-           gbakit text huffman-replace <rom.gba> --tree <hex|dec> --root <hex|dec> --offset <hex|dec> --text <str> -o <out.gba> [--capacity <n>] [--allow-relocate] [--pad-byte <n>] [--json]\n  \
-           gbakit text camelot-extract <rom.gba> --trees <hex|dec> [--offsets <hex|dec>] --offset <hex|dec> [--max-len <n>] [--json]\n  \
-           gbakit text camelot-replace <rom.gba> --trees <hex|dec> [--offsets <hex|dec>] --offset <hex|dec> --text <str> -o <out.gba> [--capacity <n>] [--allow-relocate] [--pad-byte <n>] [--json]\n  \
-           gbakit text font-dump     <rom.gba> --offset <hex|dec> --count <n> --width <px> --height <px> --bpp 1|2 -o <out.png|ppm> [--lsb] [--cols <n>]\n  \
-           gbakit text font-replace  <rom.gba> --offset <hex|dec> --image <in.png|ppm> --count <n> --width <px> --height <px> --bpp 1|2 -o <out.gba> [--lsb] [--cols <n>] [--json]\n  \
-           gbakit text font-widths   <rom.gba> --offset <hex|dec> --count <n> [--from-image <sheet.png|ppm> --width <px> --height <px> [--cols <n>] [--pad <px>] -o <out.gba>] [--json]"
-    );
-}
 
 fn parse_offset(s: &str) -> Result<usize, String> {
     if let Some(hex) = s.strip_prefix("0x").or_else(|| s.strip_prefix("0X")) {
@@ -3028,22 +2961,205 @@ fn parse_positional_arg<'a>(
     parse_all_positional_args(args, skip_flags_with_val).first().copied()
 }
 
-fn main() -> ExitCode {
-    let args: Vec<String> = env::args().skip(1).collect();
-    if args.is_empty() || args[0] == "--help" || args[0] == "-h" {
-        usage();
-        return ExitCode::SUCCESS;
-    }
-    if args[0] == "--version" {
-        println!("gbakit 0.1.0");
-        return ExitCode::SUCCESS;
-    }
+#[derive(Parser, Debug)]
+#[command(
+    name = "gbakit",
+    about = "Clean-room Game Boy Advance format toolkit",
+    disable_version_flag = true
+)]
+struct Cli {
+    /// Print version (combine with --json for formatkit.build-identity.v1)
+    #[arg(short = 'V', long = "version")]
+    version: bool,
 
-    let res = match args[0].as_str() {
-        "info" | "inspect" if args.len() >= 2 => {
-            let as_json = args.iter().skip(2).any(|a| a == "--json");
-            cmd_info(&PathBuf::from(&args[1]), as_json)
+    /// Emit deterministic JSON on stdout (and structured JSON error envelope on stderr)
+    #[arg(long, global = true)]
+    json: bool,
+
+    /// Suppress non-essential informational output on stderr
+    #[arg(short = 'q', long = "quiet", global = true)]
+    quiet: bool,
+
+    #[command(subcommand)]
+    command: Option<Commands>,
+}
+
+#[derive(Subcommand, Debug)]
+enum Commands {
+    /// Emit code-generated capability manifest (formatkit.capabilities.v1)
+    Capabilities,
+    /// Identify file format by magic bytes and structural invariants
+    Detect {
+        /// Path to the file to inspect
+        path: PathBuf,
+    },
+    /// Inspect GBA ROM header, SDK save tags, padding, and peripherals
+    Info {
+        #[arg(trailing_var_arg = true, allow_hyphen_values = true)]
+        args: Vec<String>,
+    },
+    /// Alias for `info`
+    Inspect {
+        #[arg(trailing_var_arg = true, allow_hyphen_values = true)]
+        args: Vec<String>,
+    },
+    /// Run ARM/Thumb boot reachability trace or callgraph analysis
+    Analyze {
+        #[arg(trailing_var_arg = true, allow_hyphen_values = true)]
+        args: Vec<String>,
+    },
+    /// ROM pointer tables and embedded MultiBoot payload operations
+    Rom {
+        #[arg(trailing_var_arg = true, allow_hyphen_values = true)]
+        args: Vec<String>,
+    },
+    /// Serve a GBA MultiBoot payload over serial link
+    Multiboot {
+        #[arg(trailing_var_arg = true, allow_hyphen_values = true)]
+        args: Vec<String>,
+    },
+    /// Decode GBA BIOS and studio compression streams
+    Compress {
+        #[arg(trailing_var_arg = true, allow_hyphen_values = true)]
+        args: Vec<String>,
+    },
+    /// Create, apply, and test IPS/BPS/UPS and debug-menu patches
+    Patch {
+        #[arg(trailing_var_arg = true, allow_hyphen_values = true)]
+        args: Vec<String>,
+    },
+    /// List and verify button-combo cheats
+    Cheat {
+        #[arg(trailing_var_arg = true, allow_hyphen_values = true)]
+        args: Vec<String>,
+    },
+    /// Inspect, verify, edit, export, import, probe, and trim GBA save files
+    Save {
+        #[arg(trailing_var_arg = true, allow_hyphen_values = true)]
+        args: Vec<String>,
+    },
+    /// Low-level PCM WAV and M4A song header utilities
+    Sound {
+        #[arg(trailing_var_arg = true, allow_hyphen_values = true)]
+        args: Vec<String>,
+    },
+    /// Scan, export, compile SF2 soundfonts, and replace GBA audio assets
+    Audio {
+        #[arg(trailing_var_arg = true, allow_hyphen_values = true)]
+        args: Vec<String>,
+    },
+    /// Dissect link-cable/RFU/JOYBus captures and run virtual link bridge
+    Link {
+        #[arg(trailing_var_arg = true, allow_hyphen_values = true)]
+        args: Vec<String>,
+    },
+    /// Rip, render, and replace GBA palettes, tiles, tilemaps, and sprites
+    Gfx {
+        #[arg(trailing_var_arg = true, allow_hyphen_values = true)]
+        args: Vec<String>,
+    },
+    /// Scan, extract, repack, and replace PACK/WAYFORWARD/SFCD archives
+    Archive {
+        #[arg(trailing_var_arg = true, allow_hyphen_values = true)]
+        args: Vec<String>,
+    },
+    /// Decode, encode, render e-Reader DotCode strips and VPK0 streams
+    Ereader {
+        #[arg(trailing_var_arg = true, allow_hyphen_values = true)]
+        args: Vec<String>,
+    },
+    /// Scan and export Mobiclip MOC5/VXGB video streams
+    Video {
+        #[arg(trailing_var_arg = true, allow_hyphen_values = true)]
+        args: Vec<String>,
+    },
+    /// Scan, extract, replace GBA text scripts, Huffman text, and VWF fonts
+    Text {
+        #[arg(trailing_var_arg = true, allow_hyphen_values = true)]
+        args: Vec<String>,
+    },
+}
+
+#[derive(Serialize)]
+struct JsonErrorEnvelope<'a> {
+    ok: bool,
+    error: JsonErrorBody<'a>,
+}
+
+#[derive(Serialize)]
+struct JsonErrorBody<'a> {
+    code: &'a str,
+    message: &'a str,
+    exit_code: u8,
+}
+
+fn emit_error(as_json: bool, code: &str, message: &str, exit_code: u8) -> ExitCode {
+    if as_json {
+        let envelope = JsonErrorEnvelope {
+            ok: false,
+            error: JsonErrorBody {
+                code,
+                message,
+                exit_code,
+            },
+        };
+        match serde_json::to_string(&envelope) {
+            Ok(s) => eprintln!("{s}"),
+            Err(_) => eprintln!(
+                "{{\"ok\":false,\"error\":{{\"code\":\"{code}\",\"message\":\"{}\",\"exit_code\":{exit_code}}}}}",
+                json_escape(message)
+            ),
         }
+    } else {
+        eprintln!("error: {message}");
+    }
+    ExitCode::from(exit_code)
+}
+
+fn classify_error(msg: &str) -> (&'static str, u8) {
+    if msg.starts_with("usage:")
+        || msg.starts_with("missing required ")
+        || msg.starts_with("invalid --")
+        || msg.starts_with("unknown archive subcommand")
+        || msg.starts_with("unknown text subcommand")
+        || msg.starts_with("unknown --format")
+        || msg.starts_with("cannot specify both ")
+        || msg.starts_with("invalid arguments")
+        || msg.starts_with("invalid target size:")
+        || msg.starts_with("invalid vpk0 method")
+    {
+        ("cli_usage", 2)
+    } else if msg.contains("checksum") || msg.contains("CRC-32 mismatch") {
+        ("checksum_mismatch", 1)
+    } else if msg.starts_with("read ") || msg.starts_with("write ") || msg.starts_with("create dir ") {
+        ("io_error", 1)
+    } else {
+        ("runtime_error", 1)
+    }
+}
+
+fn build_legacy_args(noun: &str, mut tail: Vec<String>, global_json: bool) -> (Vec<String>, bool) {
+    let effective_json = global_json || tail.iter().any(|a| a == "--json");
+    if global_json && !tail.iter().any(|a| a == "--json") {
+        tail.push("--json".to_string());
+    }
+    let mut args = Vec::with_capacity(tail.len() + 1);
+    args.push(noun.to_string());
+    args.extend(tail);
+    (args, effective_json)
+}
+
+fn dispatch_legacy(args: &[String]) -> Result<(), String> {
+    match args[0].as_str() {
+        "info" | "inspect" if args.len() >= 2 => {
+            let as_json = args.iter().skip(1).any(|a| a == "--json");
+            let file_arg = parse_positional_arg(&args[1..], &[]);
+            match file_arg {
+                Some(path) => cmd_info(&PathBuf::from(path), as_json),
+                None => Err("missing required <rom.gba> for `info`".into()),
+            }
+        }
+        "info" | "inspect" => Err("missing required <rom.gba> for `info`".into()),
         "analyze" if args.len() >= 3 && args[1] == "trace" => {
             let as_json = args[2..].iter().any(|a| a == "--json");
             let file_arg = parse_positional_arg(&args[2..], &[]);
@@ -3061,6 +3177,7 @@ fn main() -> ExitCode {
                 None => Err("missing required <rom.gba> for `analyze callgraph`".into()),
             }
         }
+        "analyze" => Err("usage: `gbakit analyze trace <rom.gba> [--json]` or `gbakit analyze callgraph <rom.gba> [--dot | --json]`".into()),
         "rom" if args.len() >= 3 && args[1] == "tables" => {
             let min_entries = match parse_flag_value(&args[3..], &["--min-entries"]) {
                 Some(v) => v
@@ -3094,6 +3211,7 @@ fn main() -> ExitCode {
                 (None, _) => Err("missing required <rom.gba> for `rom multiboot`".into()),
             }
         }
+        "rom" => Err("usage: `gbakit rom tables <rom.gba> [--min-entries 8]` or `gbakit rom multiboot <rom.gba> [-o <out.mb.gba>] [--index <n>] [--json]`".into()),
         "multiboot" if args.len() >= 3 && args[1] == "serve" => {
             let as_json = args[2..].iter().any(|a| a == "--json");
             let mock = args[2..].iter().any(|a| a == "--mock");
@@ -3140,6 +3258,7 @@ fn main() -> ExitCode {
                 (None, _, _) => Err("missing required <payload.mb.gba> for `multiboot serve`".into()),
             }
         }
+        "multiboot" => Err("usage: `gbakit multiboot serve <payload.mb.gba> [--socket <path>] [--baud <n>] [--palette <hex>] [--mock] [--json]`".into()),
         "patch" if args.len() >= 3 && args[1] == "debug-menu" => {
             let out_opt = parse_flag_value(&args[3..], &["-o", "--output"]);
             cmd_patch_debug_menu(Path::new(&args[2]), out_opt.map(Path::new))
@@ -3194,6 +3313,7 @@ fn main() -> ExitCode {
             &args[3],
             &PathBuf::from(&args[4]),
         ),
+        "compress" => Err("usage: `gbakit compress decode-<lz77|lz11|hudson|konami|shinen|rle|huffman|diff> <file> <hex-offset> <out-file>`".into()),
         "save" if args.len() >= 2 && args[1] == "inspect" => {
             let as_json = args[2..].iter().any(|a| a == "--json");
             let format_opt = parse_flag_value(&args[2..], &["--format", "--def"]);
@@ -3320,6 +3440,7 @@ fn main() -> ExitCode {
                 None => Err("missing required -o <out> option for `save fix`".into()),
             }
         }
+        "save" => Err("usage: `gbakit save inspect|export|import|set|probe|trim|info|verify|decode|fix ...`".into()),
         "sound" if args.len() >= 7 && args[1] == "wav" => {
             let offset = parse_flag_value(&args[3..], &["--offset"]);
             let out = parse_flag_value(&args[3..], &["-o", "--output"]);
@@ -3336,6 +3457,7 @@ fn main() -> ExitCode {
                 None => Err("missing required --song-header <hex> for `sound m4a`".into()),
             }
         }
+        "sound" => Err("usage: `gbakit sound wav <rom> --offset <hex> -o <out.wav>` or `gbakit sound m4a <rom> --song-header <hex>`".into()),
         "audio" if args.len() >= 3 && args[1] == "scan" => {
             let as_json = args[2..].iter().any(|a| a == "--json");
             let file_arg = parse_positional_arg(&args[2..], &[]);
@@ -3472,6 +3594,7 @@ fn main() -> ExitCode {
                 ),
             }
         }
+        "gfx" => Err("usage: `gbakit gfx rip|tile4|replace|replace-map ...`".into()),
         "ereader" if args.len() >= 3 && args[1] == "decode" => {
             let decompress = args[2..].iter().any(|a| a == "--decompress");
             let out_opt = parse_flag_value(&args[2..], &["-o", "--output"]);
@@ -3489,10 +3612,9 @@ fn main() -> ExitCode {
             let long = args[2..].iter().any(|a| a == "--long");
             let size = match (short, long) {
                 (true, true) => {
-                    return {
-                        eprintln!("error: cannot specify both --short and --long for `ereader encode`");
-                        ExitCode::FAILURE
-                    };
+                    return Err(
+                        "cannot specify both --short and --long for `ereader encode`".into(),
+                    );
                 }
                 (true, false) => ereader::StripSize::Short,
                 (false, true) => ereader::StripSize::Long,
@@ -3589,17 +3711,134 @@ fn main() -> ExitCode {
         ),
         "text" => text::dispatch_text(&args[1..]),
         "archive" => archive::dispatch_archive(&args[1..]),
-        _ => {
-            usage();
-            Err("invalid arguments".to_string())
+        _ => Err("invalid arguments".to_string()),
+    }
+}
+
+fn main() -> ExitCode {
+    let cli = match Cli::try_parse() {
+        Ok(cli) => cli,
+        Err(err) => {
+            if matches!(
+                err.kind(),
+                ErrorKind::DisplayHelp | ErrorKind::DisplayVersion
+            ) {
+                let _ = err.print();
+                return ExitCode::SUCCESS;
+            }
+            let wants_json = env::args().any(|a| a == "--json");
+            if wants_json {
+                return emit_error(true, "cli_usage", err.to_string().trim(), 2);
+            }
+            let _ = err.print();
+            return ExitCode::from(2);
+        }
+    };
+
+    let _ = cli.quiet;
+
+    if cli.version {
+        if cli.json {
+            let identity = capabilities::BuildIdentity::current();
+            match serde_json::to_string_pretty(&identity) {
+                Ok(text) => {
+                    println!("{text}");
+                    return ExitCode::SUCCESS;
+                }
+                Err(e) => {
+                    return emit_error(true, "runtime_error", &format!("serialize version: {e}"), 1);
+                }
+            }
+        } else {
+            println!("{} {}", capabilities::TOOL_NAME, capabilities::TOOL_VERSION);
+            return ExitCode::SUCCESS;
+        }
+    }
+
+    let Some(command) = cli.command else {
+        let _ = Cli::command().print_help();
+        println!();
+        return ExitCode::SUCCESS;
+    };
+
+    let (res, effective_json) = match command {
+        Commands::Capabilities => (capabilities::cmd_capabilities(cli.json), cli.json),
+        Commands::Detect { path } => (detect::cmd_detect(&path, cli.json), cli.json),
+        Commands::Info { args } => {
+            let (full, json) = build_legacy_args("info", args, cli.json);
+            (dispatch_legacy(&full), json)
+        }
+        Commands::Inspect { args } => {
+            let (full, json) = build_legacy_args("inspect", args, cli.json);
+            (dispatch_legacy(&full), json)
+        }
+        Commands::Analyze { args } => {
+            let (full, json) = build_legacy_args("analyze", args, cli.json);
+            (dispatch_legacy(&full), json)
+        }
+        Commands::Rom { args } => {
+            let (full, json) = build_legacy_args("rom", args, cli.json);
+            (dispatch_legacy(&full), json)
+        }
+        Commands::Multiboot { args } => {
+            let (full, json) = build_legacy_args("multiboot", args, cli.json);
+            (dispatch_legacy(&full), json)
+        }
+        Commands::Compress { args } => {
+            let (full, json) = build_legacy_args("compress", args, cli.json);
+            (dispatch_legacy(&full), json)
+        }
+        Commands::Patch { args } => {
+            let (full, json) = build_legacy_args("patch", args, cli.json);
+            (dispatch_legacy(&full), json)
+        }
+        Commands::Cheat { args } => {
+            let (full, json) = build_legacy_args("cheat", args, cli.json);
+            (dispatch_legacy(&full), json)
+        }
+        Commands::Save { args } => {
+            let (full, json) = build_legacy_args("save", args, cli.json);
+            (dispatch_legacy(&full), json)
+        }
+        Commands::Sound { args } => {
+            let (full, json) = build_legacy_args("sound", args, cli.json);
+            (dispatch_legacy(&full), json)
+        }
+        Commands::Audio { args } => {
+            let (full, json) = build_legacy_args("audio", args, cli.json);
+            (dispatch_legacy(&full), json)
+        }
+        Commands::Link { args } => {
+            let (full, json) = build_legacy_args("link", args, cli.json);
+            (dispatch_legacy(&full), json)
+        }
+        Commands::Gfx { args } => {
+            let (full, json) = build_legacy_args("gfx", args, cli.json);
+            (dispatch_legacy(&full), json)
+        }
+        Commands::Archive { args } => {
+            let (full, json) = build_legacy_args("archive", args, cli.json);
+            (dispatch_legacy(&full), json)
+        }
+        Commands::Ereader { args } => {
+            let (full, json) = build_legacy_args("ereader", args, cli.json);
+            (dispatch_legacy(&full), json)
+        }
+        Commands::Video { args } => {
+            let (full, json) = build_legacy_args("video", args, cli.json);
+            (dispatch_legacy(&full), json)
+        }
+        Commands::Text { args } => {
+            let (full, json) = build_legacy_args("text", args, cli.json);
+            (dispatch_legacy(&full), json)
         }
     };
 
     match res {
         Ok(()) => ExitCode::SUCCESS,
         Err(msg) => {
-            eprintln!("error: {msg}");
-            ExitCode::FAILURE
+            let (code, exit_code) = classify_error(&msg);
+            emit_error(effective_json, code, &msg, exit_code)
         }
     }
 }
