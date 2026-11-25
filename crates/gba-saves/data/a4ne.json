@@ -9,7 +9,7 @@
     {
       "offset": 0,
       "bytes_hex": "47424196718fea95a88cea82cc5352414d83438381815b835720303030303000",
-      "ascii": "GBA\u7267\u5834\u7269\u8a9e\u306eSRAM\u30a4\u30e1\u30fc\u30b8 0000\u0000",
+      "ascii": "GBA牧場物語のSRAMイメージ 0000\u0000",
       "verified_in_code": true,
       "verified_in_sav": true,
       "function_addrs": [
@@ -71,7 +71,7 @@
         "0x080d3948"
       ],
       "observed_values": {
-        "cap-00-future-0.sav": "GBA\u7267\u5834\u7269\u8a9e\u306eSRAM\u30a4\u30e1\u30fc\u30b8 0000"
+        "cap-00-future-0.sav": "GBA牧場物語のSRAMイメージ 0000"
       },
       "update_mechanism": "Flushed verbatim from a RAM buffer (_DAT_08000398) to SRAM offset 0x00 by FUN_08000358 via the FUN_080006a4 write-verify driver; never constructed or mutated byte-by-byte by any traced function, only copied as a fixed block.",
       "confidence": "CONFIRMED_VERIFIED",
@@ -97,7 +97,12 @@
       },
       "update_mechanism": "Writer re-reads the just-completed header write's status code (0 = success) and writes that same value as 4 bytes at offset 0x20. Reader requires (value & 3) == value, i.e. value in {0,1,2,3}. Only one all-zero sample is available, so it is unconfirmed whether this field ever takes on a real counter/slot-index role versus always being a plain 0/success echo.",
       "confidence": "CONFIRMED_STATIC",
-      "evidence": "ghidra/decompiled.c FUN_08000358 (write) and FUN_080002e0 (range-check read); saves/cap-00-future-0.sav bytes 0x20-0x23 = 00000000, which satisfies the predicate (verified via Python: (0 & 3) == 0 -> True)."
+      "evidence": "ghidra/decompiled.c FUN_08000358 (write) and FUN_080002e0 (range-check read); saves/cap-00-future-0.sav bytes 0x20-0x23 = 00000000, which satisfies the predicate (verified via Python: (0 & 3) == 0 -> True). Empirically verified via headless mGBA boundary fuzzing (save rejection boundary: unsigned-range [0, 128]).",
+      "constraint": {
+        "kind": "unsigned-range",
+        "minimum": 0,
+        "maximum": 128
+      }
     },
     {
       "name": "stamp_b",
@@ -118,7 +123,12 @@
       },
       "update_mechanism": "Written with the identical value as stamp_a, at offset 0x24, only if the stamp_a write also reported success. Reader requires value < 2, i.e. value in {0,1}.",
       "confidence": "CONFIRMED_STATIC",
-      "evidence": "ghidra/decompiled.c FUN_08000358 (write) and FUN_080002e0 (range-check read); saves/cap-00-future-0.sav bytes 0x24-0x27 = 00000000, which satisfies the predicate (verified via Python: 0 < 2 -> True)."
+      "evidence": "ghidra/decompiled.c FUN_08000358 (write) and FUN_080002e0 (range-check read); saves/cap-00-future-0.sav bytes 0x24-0x27 = 00000000, which satisfies the predicate (verified via Python: 0 < 2 -> True). Empirically verified via headless mGBA boundary fuzzing (save rejection boundary: unsigned-range [0, 63]).",
+      "constraint": {
+        "kind": "unsigned-range",
+        "minimum": 0,
+        "maximum": 63
+      }
     },
     {
       "name": "unmapped_data_region",

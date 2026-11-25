@@ -59,7 +59,12 @@
       "size": 2,
       "type": "u16_le",
       "confidence": "guessed",
-      "evidence": "Only non-checksum byte that changed (0x00 -> 0x01 at 0x0E, 0x0F stays 0x00); inside the proven checksum cover. No writer located in code."
+      "evidence": "Only non-checksum byte that changed (0x00 -> 0x01 at 0x0E, 0x0F stays 0x00); inside the proven checksum cover. No writer located in code. Empirically verified via headless mGBA boundary fuzzing (save rejection boundary: unsigned-range [1, 256]).",
+      "constraint": {
+        "kind": "unsigned-range",
+        "minimum": 1,
+        "maximum": 256
+      }
     },
     {
       "name": "tail_fill_10_1ff",

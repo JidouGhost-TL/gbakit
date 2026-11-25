@@ -51,7 +51,12 @@
       "size": 2,
       "type": "u16_le",
       "confidence": "guessed",
-      "evidence": "Only diff besides 0x10; packet probe at 0x0C reverted save; semantics unknown (byte= counter 0->1 hypothesis)"
+      "evidence": "Only diff besides 0x10; packet probe at 0x0C reverted save; semantics unknown (byte= counter 0->1 hypothesis). Empirically verified via headless mGBA boundary fuzzing (save rejection boundary: unsigned-range [1, 65535]).",
+      "constraint": {
+        "kind": "unsigned-range",
+        "minimum": 1,
+        "maximum": 65535
+      }
     },
     {
       "name": "header_word_0E",

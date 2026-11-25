@@ -51,7 +51,12 @@
       "size": 1,
       "type": "u8",
       "confidence": "guessed",
-      "evidence": "Only differing payload byte between the samples (diff: file 0x0C 0x00->0x01, file 0x08 0x20->0x1F checksum compensation). Semantics unknown; no traced reader consumes it except via the record checksum."
+      "evidence": "Only differing payload byte between the samples (diff: file 0x0C 0x00->0x01, file 0x08 0x20->0x1F checksum compensation). Semantics unknown; no traced reader consumes it except via the record checksum. Empirically verified via headless mGBA boundary fuzzing (save rejection boundary: unsigned-range [1, 255]).",
+      "constraint": {
+        "kind": "unsigned-range",
+        "minimum": 1,
+        "maximum": 255
+      }
     },
     {
       "name": "header_word_ram8",

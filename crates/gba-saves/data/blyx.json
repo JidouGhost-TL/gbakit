@@ -67,7 +67,12 @@
       "size": 2,
       "type": "u16_le",
       "confidence": "guessed",
-      "evidence": "Byte diff at 0x0C (00 -> 01) in saves/hexdump_and_diffs.txt; checksum remained valid only via the compensating +0xFF00 big-endian delta at 0x08 (net +0x10000 mod 0x10000), consistent with a FUN_08039a48 reflush."
+      "evidence": "Byte diff at 0x0C (00 -> 01) in saves/hexdump_and_diffs.txt; checksum remained valid only via the compensating +0xFF00 big-endian delta at 0x08 (net +0x10000 mod 0x10000), consistent with a FUN_08039a48 reflush. Empirically verified via headless mGBA boundary fuzzing (save rejection boundary: unsigned-range [1, 518]).",
+      "constraint": {
+        "kind": "unsigned-range",
+        "minimum": 1,
+        "maximum": 518
+      }
     },
     {
       "name": "header_checksum",

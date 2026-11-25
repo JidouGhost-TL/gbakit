@@ -75,7 +75,12 @@
       "size": 1,
       "type": "u8",
       "confidence": "guessed",
-      "evidence": "Incremented by 1 between captures while byte 0x08 decremented by 1, leaving the header checksum (0xFF80) unchanged in both files. Counter-like; semantics unknown. RAM mirror offset +0x0C."
+      "evidence": "Incremented by 1 between captures while byte 0x08 decremented by 1, leaving the header checksum (0xFF80) unchanged in both files. Counter-like; semantics unknown. RAM mirror offset +0x0C. Empirically verified via headless mGBA boundary fuzzing (save rejection boundary: unsigned-range [1, 255]).",
+      "constraint": {
+        "kind": "unsigned-range",
+        "minimum": 1,
+        "maximum": 255
+      }
     },
     {
       "name": "header_byte_0d_reserved",

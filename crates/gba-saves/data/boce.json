@@ -51,7 +51,12 @@
       "size": 1,
       "type": "u8",
       "confidence": "likely",
-      "evidence": "Struct-relative offsets +0x0A in FUN_0804d74c/FUN_0804d6f0; 6 locales match title languages (En,Fr,De,Es,It,Nl); exact index-to-language order beyond 0 is untested."
+      "evidence": "Struct-relative offsets +0x0A in FUN_0804d74c/FUN_0804d6f0; 6 locales match title languages (En,Fr,De,Es,It,Nl); exact index-to-language order beyond 0 is untested. Empirically verified via headless mGBA boundary fuzzing (crash/hang boundary: unsigned-range [0, 91]).",
+      "constraint": {
+        "kind": "unsigned-range",
+        "minimum": 0,
+        "maximum": 91
+      }
     },
     {
       "name": "header_flag_0x0b",
@@ -59,7 +64,12 @@
       "size": 1,
       "type": "u8",
       "confidence": "likely",
-      "evidence": "Writer body sets =1; diff between samples is 0->1 with checksum compensating by -0x100; PACKET probe mutation at this offset is rejected via header checksum, not via a counter check."
+      "evidence": "Writer body sets =1; diff between samples is 0->1 with checksum compensating by -0x100; PACKET probe mutation at this offset is rejected via header checksum, not via a counter check. Empirically verified via headless mGBA boundary fuzzing (save rejection boundary: unsigned-range [1, 255]).",
+      "constraint": {
+        "kind": "unsigned-range",
+        "minimum": 1,
+        "maximum": 255
+      }
     },
     {
       "name": "header_reserved_0x0c",

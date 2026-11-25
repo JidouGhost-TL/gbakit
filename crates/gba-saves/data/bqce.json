@@ -51,7 +51,12 @@
       "size": 2,
       "type": "u16_le",
       "confidence": "guessed",
-      "evidence": "Byte diff of the two real .sav files (only 2 bytes differ); PACKET probe_offset_hex 0xC with integrity_check_confirmed and reverted_to_blank_on_mutation."
+      "evidence": "Byte diff of the two real .sav files (only 2 bytes differ); PACKET probe_offset_hex 0xC with integrity_check_confirmed and reverted_to_blank_on_mutation. Empirically verified via headless mGBA boundary fuzzing (save rejection boundary: unsigned-range [1, 65535]).",
+      "constraint": {
+        "kind": "unsigned-range",
+        "minimum": 1,
+        "maximum": 65535
+      }
     },
     {
       "name": "header_field_w7",
