@@ -13,8 +13,8 @@ use gbakit::compress::{
 use gbakit::gfx::{decode_palette, render_tile_4bpp_rgba};
 use gbakit::patches::{apply_patch_unified, BpsPatch, PatchFormat, UpsPatch};
 use gbakit::rom::{
-    analyze_callgraph, analyze_trace, detect_rom_padding, scan_embedded_multiboot, scan_pointer_tables,
-    scan_sdk_save_tags, AgbHeader,
+    analyze_callgraph, analyze_trace, detect_peripherals, detect_rom_padding,
+    scan_embedded_multiboot, scan_pointer_tables, scan_sdk_save_tags, AgbHeader,
 };
 use gbakit::save::{
     decode_save, fix_checksums, probe_loose_save, reverse_eeprom_blocks_8,
@@ -43,7 +43,6 @@ mod archive;
 mod ereader;
 mod link;
 mod modding;
-mod sensor;
 mod text;
 mod video;
 
@@ -93,8 +92,6 @@ fn usage() {
            gbakit audio soundfont <rom.gba> [-o <out.sf2>] [--json]\n  \
            gbakit audio replace <rom.gba> --offset <hex|dec> --wav <in.wav> -o <out.gba> [--codec pcm8|dpcm|pcm8-unsigned|ima-adpcm|ima-adpcm-arm] [--rate <hz>] [--loop-start <n>] [--raw-capacity <bytes>] [--allow-relocate] [--json]\n  \
            gbakit link dissect <capture.json> [--json] [--rfu] [--joybus]\n  \
-           gbakit sensor list [--json]\n  \
-           gbakit sensor test <rom.gba> [--solar <0-10>] [--tilt <-90..90>] [--gyro <rpm>] [--json]\n  \
            gbakit gfx rip     <rom.gba> [-o <out_dir>] [--palettes] [--tilesets] [--tilemaps] [--sprites] [--json]\n  \
            gbakit gfx tile4   <file> --offset <hex> --palette <hex> -o <out.ppm>\n  \
            gbakit gfx replace <rom.gba> --offset <hex|dec> --image <in.png|ppm> -o <out.gba> [--bpp 4|8] [--palette-offset <n>] [--write-palette] [--compression auto|raw|lz77-vram|lz77-wram|rle|huff4|huff8] [--capacity <bytes>] [--allow-relocate] [--pad-byte <n>] [--json]\n  \
@@ -164,12 +161,12 @@ fn load_save_definition(def_or_code: &str) -> Result<SaveDefinition, String> {
     }
 }
 
-fn cmd_info(path: &PathBuf, as_json: bool) -> Result<(), String> {
-    let bytes = fs::read(path).map_err(|e| format!("read {}: {e}", path.display()))?;
-    let hdr = AgbHeader::parse(&bytes).map_err(|e| format!("parse header: {e}"))?;
-    let tags = scan_sdk_save_tags(&bytes);
-    let pad_opt = detect_rom_padding(&bytes, 64);
-    let mb_payloads = scan_embedded_multiboot(&bytes);
+fn format_info_output(bytes: &[u8], as_json: bool) -> Result<String, String> {
+    let hdr = AgbHeader::parse(bytes).map_err(|e| format!("parse header: {e}"))?;
+    let tags = scan_sdk_save_tags(bytes);
+    let pad_opt = detect_rom_padding(bytes, 64);
+    let mb_payloads = scan_embedded_multiboot(bytes);
+    let peripherals = detect_peripherals(bytes);
 
     if as_json {
         let tag_items: Vec<String> = tags
@@ -198,8 +195,10 @@ fn cmd_info(path: &PathBuf, as_json: bool) -> Result<(), String> {
                 .collect();
             format!(",\"multiboot_payloads\":[{}]", mb_items.join(","))
         };
-        println!(
-            "{{\"bytes\":{},\"title\":\"{}\",\"game_code\":\"{}\",\"header_family\":\"{}\",\"maker_code\":\"{}\",\"software_version\":{},\"valid_header\":{},\"header_checksum\":\"0x{:02X}\",\"computed_checksum\":\"0x{:02X}\",\"sdk_save_tags\":[{}]{}{}}}",
+        let peripherals_json = serde_json::to_string(&peripherals)
+            .map_err(|e| format!("serialize peripherals: {e}"))?;
+        Ok(format!(
+            "{{\"bytes\":{},\"title\":\"{}\",\"game_code\":\"{}\",\"header_family\":\"{}\",\"maker_code\":\"{}\",\"software_version\":{},\"valid_header\":{},\"header_checksum\":\"0x{:02X}\",\"computed_checksum\":\"0x{:02X}\",\"sdk_save_tags\":[{}],\"peripherals\":{}{}{}}}",
             bytes.len(),
             json_escape(&hdr.title),
             json_escape(&hdr.game_code),
@@ -210,31 +209,55 @@ fn cmd_info(path: &PathBuf, as_json: bool) -> Result<(), String> {
             hdr.header_checksum,
             hdr.computed_checksum,
             tag_items.join(","),
+            peripherals_json,
             pad_fields,
             mb_fields
-        );
+        ))
     } else {
-        println!("Title:          {}", hdr.title);
-        println!("Game Code:      {} (family {})", hdr.game_code, hdr.header_family());
-        println!("Maker / Rev:    {} / v{}", hdr.maker_code, hdr.software_version);
-        println!("ROM Size:       {} bytes", bytes.len());
+        let mut lines = Vec::new();
+        lines.push(format!("Title:          {}", hdr.title));
+        lines.push(format!(
+            "Game Code:      {} (family {})",
+            hdr.game_code,
+            hdr.header_family()
+        ));
+        lines.push(format!(
+            "Maker / Rev:    {} / v{}",
+            hdr.maker_code, hdr.software_version
+        ));
+        lines.push(format!("ROM Size:       {} bytes", bytes.len()));
         if let Some(p) = pad_opt {
-            println!("Payload Size:   {} bytes (trailing padding: {} bytes)", p.payload_size, p.padding_bytes);
+            lines.push(format!(
+                "Payload Size:   {} bytes (trailing padding: {} bytes)",
+                p.payload_size, p.padding_bytes
+            ));
         }
-        println!(
+        lines.push(format!(
             "Header Check:   {} (stored 0x{:02X}, computed 0x{:02X})",
             if hdr.is_valid() { "VALID" } else { "INVALID" },
             hdr.header_checksum,
             hdr.computed_checksum
-        );
+        ));
         if tags.is_empty() {
-            println!("SDK Save Tags:  none");
+            lines.push("SDK Save Tags:  none".to_string());
         } else {
             let formatted: Vec<String> = tags
                 .iter()
                 .map(|(t, off)| format!("{} @ 0x{:X}", t.as_str(), off))
                 .collect();
-            println!("SDK Save Tags:  {}", formatted.join(", "));
+            lines.push(format!("SDK Save Tags:  {}", formatted.join(", ")));
+        }
+        if peripherals.is_empty() {
+            lines.push("Peripherals:    none".to_string());
+        } else {
+            let formatted: Vec<String> = peripherals
+                .iter()
+                .map(|p| match &p.detail {
+                    Some(d) => format!("{} ({})", p.label, d),
+                    None => p.label.clone(),
+                })
+                .collect();
+            lines.push(format!("Peripherals:    {}", formatted.join(", ")));
         }
         if !mb_payloads.is_empty() {
             let names: Vec<String> = mb_payloads
@@ -248,9 +271,16 @@ fn cmd_info(path: &PathBuf, as_json: bool) -> Result<(), String> {
                     }
                 })
                 .collect();
-            println!("MultiBoot Imgs: {}", names.join("; "));
+            lines.push(format!("MultiBoot Imgs: {}", names.join("; ")));
         }
+        Ok(lines.join("\n"))
     }
+}
+
+fn cmd_info(path: &PathBuf, as_json: bool) -> Result<(), String> {
+    let bytes = fs::read(path).map_err(|e| format!("read {}: {e}", path.display()))?;
+    let out = format_info_output(&bytes, as_json)?;
+    println!("{out}");
     Ok(())
 }
 
@@ -3351,49 +3381,6 @@ fn main() -> ExitCode {
                 None => Err("missing required <capture.json> for `link dissect`".into()),
             }
         }
-        "sensor" if args.len() >= 2 && args[1] == "list" => {
-            let as_json = args[2..].iter().any(|a| a == "--json");
-            sensor::cmd_sensor_list(as_json)
-        }
-        "sensor" if args.len() >= 3 && args[1] == "test" => (|| -> Result<(), String> {
-            let as_json = args[2..].iter().any(|a| a == "--json");
-            let solar_opt = match parse_flag_value(&args[2..], &["--solar"]) {
-                Some(s) => Some(
-                    s.parse::<u8>()
-                        .map_err(|e| format!("invalid --solar value {s:?}: {e}"))?,
-                ),
-                None => None,
-            };
-            let tilt_opt = match parse_flag_value(&args[2..], &["--tilt"]) {
-                Some(s) => Some(
-                    s.parse::<i16>()
-                        .map_err(|e| format!("invalid --tilt value {s:?}: {e}"))?,
-                ),
-                None => None,
-            };
-            let gyro_opt = match parse_flag_value(&args[2..], &["--gyro"]) {
-                Some(s) => Some(
-                    s.parse::<i16>()
-                        .map_err(|e| format!("invalid --gyro value {s:?}: {e}"))?,
-                ),
-                None => None,
-            };
-            let file_arg = parse_positional_arg(
-                &args[2..],
-                &[
-                    &["--solar"],
-                    &["--tilt"],
-                    &["--gyro"],
-                ],
-            );
-            match file_arg {
-                Some(path) => sensor::cmd_sensor_test(Path::new(path), solar_opt, tilt_opt, gyro_opt, as_json),
-                None => Err("missing required <rom.gba> for `sensor test`".into()),
-            }
-        })(),
-        "sensor" => {
-            Err("usage: `gbakit sensor list [--json]` or `gbakit sensor test <rom.gba> [--solar <0-10>] [--tilt <-90..90>] [--gyro <rpm>] [--json]`".into())
-        }
         "gfx" if args.len() >= 3 && args[1] == "replace" => modding::cmd_gfx_replace(&args[2..]),
         "gfx" if args.len() >= 3 && args[1] == "replace-map" => {
             modding::cmd_gfx_replace_map(&args[2..])
@@ -4403,30 +4390,37 @@ mod tests {
     }
 
     #[test]
-    fn test_cli_sensor_list() {
-        sensor::cmd_sensor_list(false).expect("sensor list text");
-        sensor::cmd_sensor_list(true).expect("sensor list json");
-    }
+    fn test_cli_inspect_peripherals() {
+        // Synthetic ROM with Wireless Adapter RFU + GBP Boot Logo
+        let mut rom = make_test_rom(b"BPRE", "RFU TEST");
+        rom.resize(1024, 0);
+        rom[0x200..0x209].copy_from_slice(b"RFU_V1024");
+        rom[0x240..0x260].copy_from_slice(&gbakit::rom::peripherals::GBP_LOGO_PALETTE_32);
 
-    #[test]
-    fn test_cli_sensor_test_targets() {
-        // Solar target: Boktai (U3IE)
-        let rom_solar = make_test_rom(b"U3IE", "BOKTAI");
-        let tf_solar = TempFile::new("boktai_sensor.gba", &rom_solar);
-        sensor::cmd_sensor_test(tf_solar.path(), Some(8), None, None, false).expect("solar test text");
-        sensor::cmd_sensor_test(tf_solar.path(), Some(8), None, None, true).expect("solar test json");
+        let tf = TempFile::new("inspect_peripherals.gba", &rom);
+        let path_buf = tf.path().to_path_buf();
+        cmd_info(&path_buf, false).expect("inspect text");
+        cmd_info(&path_buf, true).expect("inspect json");
 
-        // Tilt target: Yoshi Topsy-Turvy (KYGE)
-        let rom_tilt = make_test_rom(b"KYGE", "YOSHI TOPSY");
-        let tf_tilt = TempFile::new("yoshi_tilt.gba", &rom_tilt);
-        sensor::cmd_sensor_test(tf_tilt.path(), None, Some(-45), None, false).expect("tilt test text");
-        sensor::cmd_sensor_test(tf_tilt.path(), None, Some(45), None, true).expect("tilt test json");
+        let hits = detect_peripherals(&rom);
+        assert_eq!(hits.len(), 2);
+        assert_eq!(hits[0].kind, gbakit::rom::PeripheralKind::GameBoyPlayerLogo);
+        assert_eq!(hits[1].kind, gbakit::rom::PeripheralKind::WirelessAdapterRfu);
+        assert_eq!(hits[1].detail.as_deref(), Some("RFU_V1024"));
 
-        // Gyro target: WarioWare Twisted (RZWE)
-        let rom_gyro = make_test_rom(b"RZWE", "WARIOTWISTED");
-        let tf_gyro = TempFile::new("wario_gyro.gba", &rom_gyro);
-        sensor::cmd_sensor_test(tf_gyro.path(), None, None, Some(30), false).expect("gyro test text");
-        sensor::cmd_sensor_test(tf_gyro.path(), None, None, Some(-30), true).expect("gyro test json");
+        let text_out = format_info_output(&rom, false).expect("format inspect text");
+        assert!(text_out.contains("Peripherals:"));
+        assert!(text_out.contains("Game Boy Player Boot Logo"));
+        assert!(text_out.contains("Wireless Adapter (RFU) (RFU_V1024)"));
+
+        let json_out = format_info_output(&rom, true).expect("format inspect json");
+        let val: serde_json::Value =
+            serde_json::from_str(&json_out).expect("valid inspect json");
+        let arr = val["peripherals"].as_array().expect("peripherals array");
+        assert_eq!(arr.len(), 2);
+        assert_eq!(arr[0]["kind"], "game_boy_player_logo");
+        assert_eq!(arr[1]["kind"], "wireless_adapter_rfu");
+        assert_eq!(arr[1]["detail"], "RFU_V1024");
     }
 
     #[test]

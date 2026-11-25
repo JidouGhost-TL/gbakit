@@ -8,7 +8,7 @@ A clean-room Game Boy Advance (GBA) format toolkit in Rust built on **[Formatkit
 
 | Crate | Responsibility |
 | --- | --- |
-| `gba-rom` | Checked 192-byte AGB headers, complement checksum, `0x08000000` bus mapping, SDK backup tags, ROM pointer-table scanner, Multiboot (`0x02000000`) helpers |
+| `gba-rom` | Checked 192-byte AGB headers, complement checksum, `0x08000000` bus mapping, SDK backup tags, byte-level peripheral detection (`gbakit inspect`), ROM pointer-table scanner, Multiboot (`0x02000000`) helpers |
 | `gba-compress` | Complete GBA BIOS codecs: LZ77 (`0x10` WRAM/VRAM), LZ11, RLE (`0x30`), Huffman 4/8-bit decode & encode (`0x24`/`0x28`), `BitUnPack` (`SWI 0x10`), `Diff8`/`Diff16` (`0x81`/`0x82`), plus studio codecs (Hudson LZ, Konami Dict, Shin'en Mode 7) |
 | `gba-gfx` | `BGR555` palettes, allocation-free 4bpp/8bpp tiles, **4bpp/8bpp graphics ripper & write-back** (PNG/PPM → 4bpp/8bpp tiles + BGR555 palette + BIOS recompression + in-place/relocated ROM patching), OAM sprites & affine matrices (`ObjAttr`/`ObjAffine`), text BG compositor, Mode 3/4 framebuffers, 1bpp/2bpp font glyphs |
 | `gba-sound` | Multi-engine GBA audio scanner, exporter (MIDI / MOD / S3M / WAV16), SoundFont 2 (`.sf2`) compiler across **13 GBA sound engines**, and **WAV16 → GBA ROM sample write-back** (PCM8, Pokémon Gen 3 DPCM, IMA ADPCM4 + in-place/relocated ROM patching), delegating byte-exact ARM7TDMI DSP/mixing to standalone zero-dep `#![no_std]` crates |
@@ -16,7 +16,7 @@ A clean-room Game Boy Advance (GBA) format toolkit in Rust built on **[Formatkit
 | `gba-save` | Declarative GBA battery-save schema engine, `SaveGeometry` detection & padding trimming, loose save probing, 25+ checksum algorithms (`sum8`/`16`/`32`, word-sums, `xor8`/`16`/`32`, `sum_xor16`, `rol32_add`, `Crc16` incl. XMODEM), EEPROM `rev8` block reversal, verification, repair, and field decode/edit |
 | `gba-saves` | Embedded registry covering **814 / 814** saving families (**1,543** saving ROMs = 100% corpus coverage) |
 | `gba-patches` | Embedded registry of **82** clean-room verified `.ips` debug-menu micro-patches, **193** 4-way counterfactually verified retail button-combo cheats, and unified IPS / UPS / BPS patcher |
-| `gbakit` / `gbakit-cli` | Facade crate and CLI (`info`/`inspect`, `analyze`, `rom`, `multiboot`, `compress`, `patch`, `cheat`, `save`, `sound`, `audio`, `gfx`, `text`, `ereader`, `video`, `link`, `sensor`) |
+| `gbakit` / `gbakit-cli` | Facade crate and CLI (`info`/`inspect`, `analyze`, `rom`, `multiboot`, `compress`, `patch`, `cheat`, `save`, `sound`, `audio`, `gfx`, `text`, `ereader`, `video`, `link`) |
 
 ## Standalone Published Format & Synth Crates (15 Crates)
 

@@ -182,6 +182,8 @@ pub use callgraph::{
     analyze_callgraph, CallgraphEdge, CallgraphEdgeKind, CallgraphJumpTable, CallgraphNode,
     CallgraphNodeKind, CallgraphNodeStatus, CallgraphReport, CallgraphSummary,
 };
+pub mod peripherals;
+pub use peripherals::{detect_peripherals, DetectedPeripheral, PeripheralKind};
 pub use formatkit_layout::tables::{FixedStrideOffsetTable, TableSizeMode};
 
 /// Summary of trailing hardware padding at the end of a GBA cartridge ROM.

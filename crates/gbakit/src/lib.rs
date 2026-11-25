@@ -17,4 +17,3 @@ pub use mobiclip;
 pub mod joybus;
 pub mod link;
 pub mod multiboot;
-pub mod sensor;
