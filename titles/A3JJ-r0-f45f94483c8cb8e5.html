@@ -30,7 +30,7 @@
   <main>
 <p class="meta"><a href="../index.html">&larr; Games</a> &middot; Family <code>A3J</code></p>
 <h1>Gyakuten Saiban 3 (Japan)</h1>
-<p><span class='badge badge-slate'>SRAM 256K</span> <span class='badge badge-emerald'>gbakit Built-In</span> <a href='../link-multiplayer.html#multiboot'><span class='badge badge-amber'>💾 MultiBoot</span></a></p>
+<p><span class='badge badge-slate'>SRAM 256K</span> <span class='badge badge-emerald'>gbakit Built-In</span> <span class='badge badge-amber'>Debug Menu Patch</span> <a href='../link-multiplayer.html#multiboot'><span class='badge badge-amber'>💾 MultiBoot</span></a></p>
 
 <h2>Cartridge Identity</h2>
 <dl class="kv">
@@ -43,6 +43,15 @@
   <dt>Engine / SDK Group</dt><dd><a href='../engines/index.html#comm-049'><code>comm-049</code></a> (3 families)</dd>
 </dl>
 
+
+<h2>Debug Menu Re-Enablement Patch (<code>.ips</code>)</h2>
+<p><a class="btn" href="../assets/patches/A3JJ-r0-f45f94483c8cb8e5/A3JJ-debug.ips" download>Download A3JJ-debug.ips (17 B IPS / 4 B delta)</a></p>
+<dl class="kv">
+  <dt>Hook Mechanism</dt><dd><code>state_jump_table_ptr</code> &middot; Redirect main state table entry 0x0C at 0x081610b8 (0x0800cc09 -&gt; 0x08001a29) to launch 7-entry DEBUG MENU (VRAM VIEW, SOUND TEST, OBJ TEST, MOVIE TEST, FLAG EDIT, SCENARIO, EXIT)</dd>
+  <dt>IPS SHA-256</dt><dd><code>a440b82640b283be559df07886fd074189ba8581f73b5a3d76bdec6b3147c2b6</code></dd>
+</dl>
+<pre><code>gbakit patch apply A3JJ-debug.ips original.gba patched-debug.gba</code></pre>
+<div class='gallery'><figure><img src='../assets/patches/A3JJ-r0-f45f94483c8cb8e5/boot-patched.png' alt='Re-enabled debug menu' loading='lazy'><figcaption>Re-Enabled Debug Menu</figcaption></figure><figure><img src='../assets/patches/A3JJ-r0-f45f94483c8cb8e5/after-input.png' alt='Interactive debug menu navigation' loading='lazy'><figcaption>After D-Pad / A Input</figcaption></figure></div>
 
 
 

@@ -33,14 +33,14 @@
 
 <div class="callout">
   <strong>Unlock directly using <a href="../gbakit/index.html"><code>gbakit</code></a>:</strong>
-  <pre><code># Built-in automatic debug menu unlocker (82 games embedded):
+  <pre><code># Built-in automatic debug menu unlocker (85 games embedded):
 gbakit patch debug-menu mygame.gba
 
 # Or apply external IPS micro-patch:
 gbakit patch apply AF5E-debug.ips original.gba patched-debug.gba</code></pre>
 </div>
 
-<h2>Verified Debug Menu Re-Enablement Patches (82 Titles)</h2>
+<h2>Verified Debug Menu Re-Enablement Patches (85 Titles)</h2>
 <p class="meta">Minimal clean-room <code>.ips</code> micro-patches (15–30 bytes) that bypass debug flags or scene dispatchers to activate dormant developer test suites.</p>
 
 <div class="card" style="margin-bottom:1.25rem">
@@ -234,6 +234,16 @@ gbakit patch apply AF5E-debug.ips original.gba patched-debug.gba</code></pre>
 </div>
 
 <div class="card" style="margin-bottom:1.25rem">
+  <h2 style="margin-top:0;border:none;padding:0"><a href="../titles/ALFE-r0-6e6c370c339ec917.html">Dragon Ball Z - The Legacy of Goku II (USA)</a> <span class="badge badge-emerald">Interactive Verified</span> <span class='badge badge-slate'>🛠️ Developer Suite</span></h2>
+  <p class="meta">Code: <code>ALFE</code> &middot; Delta: <strong>4 B</strong> (17 B <code>.ips</code>) &middot; Target: <code>0x080056B0</code> &middot; Hook: <code>thumb_bl_redirect</code></p>
+  <p>Redirect post-copyright screen constructor call at 0x080001e6 (bl 0x0801d378 -&gt; bl 0x080056b0) to boot directly into interactive DEBUG menu (MUSIC TEST, SAMPLE TEST, MAP TEST, ZONE, AREA, VARIATION)</p>
+  <p class="meta"><strong>Activation Inputs:</strong> <span class='kbd'>RIGHT</span> <span class='kbd'>DOWN</span></p>
+  <p><a class="btn" href="../assets/patches/ALFE-r0-6e6c370c339ec917/ALFE-debug.ips" download>Download ALFE-debug.ips</a> <a class="btn btn-secondary" href="../titles/ALFE-r0-6e6c370c339ec917.html">View Game Page</a></p>
+  <pre><code>gbakit patch debug-menu ALFE.gba   # or: gbakit patch apply ALFE-debug.ips original.gba debug.gba</code></pre>
+  <div class="gallery"><figure><img src='../assets/patches/ALFE-r0-6e6c370c339ec917/boot-patched.png' alt='Dragon Ball Z - The Legacy of Goku II (USA) debug menu' loading='lazy'><figcaption>Re-Enabled Debug Menu</figcaption></figure><figure><img src='../assets/patches/ALFE-r0-6e6c370c339ec917/after-input.png' alt='Dragon Ball Z - The Legacy of Goku II (USA) after input' loading='lazy'><figcaption>After D-Pad / A Input</figcaption></figure></div>
+</div>
+
+<div class="card" style="margin-bottom:1.25rem">
   <h2 style="margin-top:0;border:none;padding:0"><a href="../titles/BD2J-r0-915fada793849b6b.html">Duel Masters 2 - Invincible Advance (Japan)</a> <span class="badge badge-emerald">Interactive Verified</span> <span class='badge badge-blue'>🗺️ Stage Select</span></h2>
   <p class="meta">Code: <code>BD2J</code> &middot; Delta: <strong>2 B</strong> (15 B <code>.ips</code>) &middot; Target: <code>0x08007008</code> &middot; Hook: <code>thumb_imm_scene_override</code></p>
   <p>Patch Hudson scene dispatcher at 0x0800039e (ldr r0,[r4] -&gt; movs r0,#90) to select scene 0x5a (TEST SELECT 2.0 debug menu at 0x08007009)</p>
@@ -411,6 +421,16 @@ gbakit patch apply AF5E-debug.ips original.gba patched-debug.gba</code></pre>
   <p><a class="btn" href="../assets/patches/AGSE-r0-c14f1151897e8d73/AGSE-debug.ips" download>Download AGSE-debug.ips</a> <a class="btn btn-secondary" href="../titles/AGSE-r0-c14f1151897e8d73.html">View Game Page</a></p>
   <pre><code>gbakit patch debug-menu AGSE.gba   # or: gbakit patch apply AGSE-debug.ips original.gba debug.gba</code></pre>
   <div class="gallery"><figure><img src='../assets/patches/AGSE-r0-c14f1151897e8d73/boot-patched.png' alt='Golden Sun (USA, Europe) debug menu' loading='lazy'><figcaption>Re-Enabled Debug Menu</figcaption></figure><figure><img src='../assets/patches/AGSE-r0-c14f1151897e8d73/after-input.png' alt='Golden Sun (USA, Europe) after input' loading='lazy'><figcaption>After D-Pad / A Input</figcaption></figure></div>
+</div>
+
+<div class="card" style="margin-bottom:1.25rem">
+  <h2 style="margin-top:0;border:none;padding:0"><a href="../titles/A3JJ-r0-f45f94483c8cb8e5.html">Gyakuten Saiban 3 (Japan)</a> <span class="badge badge-emerald">Interactive Verified</span> <span class='badge badge-purple'>🎵 Sound Test</span> <span class='badge badge-amber'>💾 Flag / Memory</span> <span class='badge badge-cyan'>🎨 VRAM / Sprite</span></h2>
+  <p class="meta">Code: <code>A3JJ</code> &middot; Delta: <strong>4 B</strong> (17 B <code>.ips</code>) &middot; Target: <code>0x08001A28</code> &middot; Hook: <code>state_jump_table_ptr</code></p>
+  <p>Redirect main state table entry 0x0C at 0x081610b8 (0x0800cc09 -&gt; 0x08001a29) to launch 7-entry DEBUG MENU (VRAM VIEW, SOUND TEST, OBJ TEST, MOVIE TEST, FLAG EDIT, SCENARIO, EXIT)</p>
+  <p class="meta"><strong>Activation Inputs:</strong> <span class='kbd'>A</span> <span class='kbd'>DOWN</span> <span class='kbd'>DOWN</span> <span class='kbd'>DOWN</span> <span class='kbd'>A</span> <span class='kbd'>RIGHT</span> <span class='kbd'>A</span></p>
+  <p><a class="btn" href="../assets/patches/A3JJ-r0-f45f94483c8cb8e5/A3JJ-debug.ips" download>Download A3JJ-debug.ips</a> <a class="btn btn-secondary" href="../titles/A3JJ-r0-f45f94483c8cb8e5.html">View Game Page</a></p>
+  <pre><code>gbakit patch debug-menu A3JJ.gba   # or: gbakit patch apply A3JJ-debug.ips original.gba debug.gba</code></pre>
+  <div class="gallery"><figure><img src='../assets/patches/A3JJ-r0-f45f94483c8cb8e5/boot-patched.png' alt='Gyakuten Saiban 3 (Japan) debug menu' loading='lazy'><figcaption>Re-Enabled Debug Menu</figcaption></figure><figure><img src='../assets/patches/A3JJ-r0-f45f94483c8cb8e5/after-input.png' alt='Gyakuten Saiban 3 (Japan) after input' loading='lazy'><figcaption>After D-Pad / A Input</figcaption></figure></div>
 </div>
 
 <div class="card" style="margin-bottom:1.25rem">
@@ -751,6 +771,16 @@ gbakit patch apply AF5E-debug.ips original.gba patched-debug.gba</code></pre>
   <p><a class="btn" href="../assets/patches/ASYE-r0-d331abe19e3f02e2/ASYE-debug.ips" download>Download ASYE-debug.ips</a> <a class="btn btn-secondary" href="../titles/ASYE-r0-d331abe19e3f02e2.html">View Game Page</a></p>
   <pre><code>gbakit patch debug-menu ASYE.gba   # or: gbakit patch apply ASYE-debug.ips original.gba debug.gba</code></pre>
   <div class="gallery"><figure><img src='../assets/patches/ASYE-r0-d331abe19e3f02e2/boot-patched.png' alt='Spyro - Season of Ice (USA) debug menu' loading='lazy'><figcaption>Re-Enabled Debug Menu</figcaption></figure><figure><img src='../assets/patches/ASYE-r0-d331abe19e3f02e2/after-input.png' alt='Spyro - Season of Ice (USA) after input' loading='lazy'><figcaption>After D-Pad / A Input</figcaption></figure></div>
+</div>
+
+<div class="card" style="margin-bottom:1.25rem">
+  <h2 style="margin-top:0;border:none;padding:0"><a href="../titles/BKTP-r0-1613cf4a76a01dba.html">Steel Empire (Europe)</a> <span class="badge badge-emerald">Interactive Verified</span> <span class='badge badge-amber'>💾 Flag / Memory</span> <span class='badge badge-cyan'>🎨 VRAM / Sprite</span></h2>
+  <p class="meta">Code: <code>BKTP</code> &middot; Delta: <strong>1 B</strong> (14 B <code>.ips</code>) &middot; Target: <code>0x08000A64</code> &middot; Hook: <code>thumb_imm_mode_override</code></p>
+  <p>Patch boot debug-flag initializer at 0x08000410 (movs r0,#0 -&gt; movs r0,#0xa5) to arm debug mode flag *(u8*)0x03003be4 at boot; press L+SELECT+START to open 6-mode VRAM VIEW debugger</p>
+  <p class="meta"><strong>Activation Inputs:</strong> <span class='kbd'>L+SELECT+START</span> <span class='kbd'>R</span></p>
+  <p><a class="btn" href="../assets/patches/BKTP-r0-1613cf4a76a01dba/BKTP-debug.ips" download>Download BKTP-debug.ips</a> <a class="btn btn-secondary" href="../titles/BKTP-r0-1613cf4a76a01dba.html">View Game Page</a></p>
+  <pre><code>gbakit patch debug-menu BKTP.gba   # or: gbakit patch apply BKTP-debug.ips original.gba debug.gba</code></pre>
+  <div class="gallery"><figure><img src='../assets/patches/BKTP-r0-1613cf4a76a01dba/boot-patched.png' alt='Steel Empire (Europe) debug menu' loading='lazy'><figcaption>Re-Enabled Debug Menu</figcaption></figure><figure><img src='../assets/patches/BKTP-r0-1613cf4a76a01dba/after-input.png' alt='Steel Empire (Europe) after input' loading='lazy'><figcaption>After D-Pad / A Input</figcaption></figure></div>
 </div>
 
 <div class="card" style="margin-bottom:1.25rem">

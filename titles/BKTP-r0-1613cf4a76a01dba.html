@@ -30,7 +30,7 @@
   <main>
 <p class="meta"><a href="../index.html">&larr; Games</a> &middot; Family <code>BKT</code></p>
 <h1>Steel Empire (Europe)</h1>
-<p><span class='badge badge-slate'>Battery Save</span> <span class='badge badge-emerald'>Save Format Mapped (Family Spec)</span> <a href='../link-multiplayer.html#multiboot'><span class='badge badge-amber'>💾 MultiBoot</span></a></p>
+<p><span class='badge badge-slate'>Battery Save</span> <span class='badge badge-emerald'>Save Format Mapped (Family Spec)</span> <span class='badge badge-amber'>Debug Menu Patch</span> <a href='../link-multiplayer.html#multiboot'><span class='badge badge-amber'>💾 MultiBoot</span></a></p>
 
 <h2>Cartridge Identity</h2>
 <dl class="kv">
@@ -43,6 +43,15 @@
   <dt>Engine / SDK Group</dt><dd><a href='../engines/index.html#comm-001'><code>comm-001</code></a> (196 families)</dd>
 </dl>
 <h2>Screenshots</h2><div class='gallery'><figure><img src='../assets/thumbs/BKTP-r0-1613cf4a76a01dba-boot.png' alt='Boot Screen' loading='lazy'><figcaption>Boot Screen</figcaption></figure><figure><img src='../assets/thumbs/BKTP-r0-1613cf4a76a01dba-after.png' alt='In-Game' loading='lazy'><figcaption>In-Game</figcaption></figure></div>
+
+<h2>Debug Menu Re-Enablement Patch (<code>.ips</code>)</h2>
+<p><a class="btn" href="../assets/patches/BKTP-r0-1613cf4a76a01dba/BKTP-debug.ips" download>Download BKTP-debug.ips (14 B IPS / 1 B delta)</a></p>
+<dl class="kv">
+  <dt>Hook Mechanism</dt><dd><code>thumb_imm_mode_override</code> &middot; Patch boot debug-flag initializer at 0x08000410 (movs r0,#0 -&gt; movs r0,#0xa5) to arm debug mode flag *(u8*)0x03003be4 at boot; press L+SELECT+START to open 6-mode VRAM VIEW debugger</dd>
+  <dt>IPS SHA-256</dt><dd><code>ad9953a4c37302dfaed37d40cb2c271b01e37f7b80128671f83e7048971bed63</code></dd>
+</dl>
+<pre><code>gbakit patch apply BKTP-debug.ips original.gba patched-debug.gba</code></pre>
+<div class='gallery'><figure><img src='../assets/patches/BKTP-r0-1613cf4a76a01dba/boot-patched.png' alt='Re-enabled debug menu' loading='lazy'><figcaption>Re-Enabled Debug Menu</figcaption></figure><figure><img src='../assets/patches/BKTP-r0-1613cf4a76a01dba/after-input.png' alt='Interactive debug menu navigation' loading='lazy'><figcaption>After D-Pad / A Input</figcaption></figure></div>
 
 
 

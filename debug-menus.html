@@ -30,39 +30,39 @@
   <main>
 <h1>Verified GBA Debug Menu Interactive Gallery</h1>
 <p class="meta">
-  Visual side-by-side interactive gallery of 82 dormant developer debug menus and test modes verified live in headless mGBA
+  Visual side-by-side interactive gallery of 85 dormant developer debug menus and test modes verified live in headless mGBA
   across 12 waves of clean-room reverse engineering &middot; Companion gallery for <a href="gbakit/index.html"><code>gbakit</code></a>.
 </p>
 
 <div class="grid">
-  <div class="card"><div class="val">82</div><div class="lbl">Verified Debug Menus</div></div>
-  <div class="card"><div class="val">100%</div><div class="lbl">Clean-Room Micro-Patches (15–45 B IPS)</div></div>
+  <div class="card"><div class="val">85</div><div class="lbl">Verified Debug Menus</div></div>
+  <div class="card"><div class="val">100%</div><div class="lbl">Clean-Room Micro-Patches (14–45 B IPS)</div></div>
   <div class="card"><div class="val">12</div><div class="lbl">Discovery Waves</div></div>
   <div class="card"><div class="val">200+</div><div class="lbl">mGBA Visual Captures</div></div>
 </div>
 
 <div class="callout">
   <strong>GBA In-Engine Patch Verification via <a href="gbakit/index.html"><code>gbakit</code></a>:</strong>
-  All 82 patches can be validated, applied, and verified directly from the CLI:
+  All 85 patches can be validated, applied, and verified directly from the CLI:
   <pre><code># Test and verify patch application against original ROM:
 gbakit patch test &lt;rom.gba&gt; [--json]
 
 # Automatically patch ROM into re-enabled debug menu:
 gbakit patch debug-menu &lt;rom.gba&gt; [-o &lt;debug.gba&gt;]
 
-# List all 82 embedded micro-patches:
+# List all 85 embedded micro-patches:
 gbakit patch list-debug-menus [--json]</code></pre>
 </div>
 
-<h2>Interactive Debug Menu Gallery (82 Titles)</h2>
+<h2>Interactive Debug Menu Gallery (85 Titles)</h2>
 <p class="meta">Instant client-side search, genre/engine filtering, Ghidra disassembly traces, and 3-state boot comparisons.</p>
 
 <div class="controls" style="margin-bottom:0.5rem">
-  <input id="gallery-search" type="search" placeholder="Search 82 debug menus by game title, code (AZLE), hook type, handler address, or offset...">
+  <input id="gallery-search" type="search" placeholder="Search 85 debug menus by game title, code (AZLE), hook type, handler address, or offset...">
 </div>
 
 <div class="controls" id="filter-buttons" style="margin-top:0; margin-bottom:1rem; gap:0.4rem">
-  <button class="tab-btn active" data-filter="all">All (82)</button>
+  <button class="tab-btn active" data-filter="all">All (85)</button>
   <button class="tab-btn" data-filter="nintendo">Nintendo</button>
   <button class="tab-btn" data-filter="capcom">Capcom</button>
   <button class="tab-btn" data-filter="konami">Konami</button>
@@ -73,7 +73,7 @@ gbakit patch list-debug-menus [--json]</code></pre>
   <button class="tab-btn" data-filter="branch-bypass">Branch Bypasses</button>
 </div>
 
-<div id="gallery-counter" class="meta" style="margin-bottom:1.25rem">Showing 82 of 82 debug menus</div>
+<div id="gallery-counter" class="meta" style="margin-bottom:1.25rem">Showing 85 of 85 debug menus</div>
 
 <div id="gallery-container">
 
@@ -856,6 +856,47 @@ gbakit patch test A8DJ.gba
 gbakit patch debug-menu A8DJ.gba -o A8DJ-debug.gba</code></pre>
 </div>
 
+<div class="card gallery-card" data-tags="all" data-search="dragon ball z - the legacy of goku ii (usa) alfe alfe-r0-6e6c370c339ec917 thumb_bl_redirect 0x080056b0 0x000001e6 redirect post-copyright screen constructor call at 0x080001e6 (bl 0x0801d378 -&gt; bl 0x080056b0) to boot directly into interactive debug menu (music test, sample test, map test, zone, area, variation)" style="margin-bottom:1.5rem">
+  <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:0.5rem">
+    <div>
+      <h2 style="margin:0; border:none; padding:0"><a href="titles/ALFE-r0-6e6c370c339ec917.html">Dragon Ball Z - The Legacy of Goku II (USA)</a> <span class="badge badge-emerald">Interactive Verified</span> <span class='badge badge-slate'>🛠️ Developer Suite</span></h2>
+      <p class="meta" style="margin-top:0.25rem">
+        Code: <code>ALFE</code> &middot;
+        Release: <code>ALFE-r0-6e6c370c339ec917</code> &middot;
+        Delta: <strong>4 B</strong> (17 B <code>.ips</code>) &middot;
+        Hook: <code>thumb_bl_redirect</code> &middot;
+        Target Handler: <code>0x080056B0</code>
+      </p>
+    </div>
+    <div style="white-space:nowrap">
+      <a class="btn" href="assets/patches/ALFE-r0-6e6c370c339ec917/ALFE-debug.ips" download>Download ALFE-debug.ips</a>
+      <a class="btn btn-secondary" href="titles/ALFE-r0-6e6c370c339ec917.html">Title Specs</a>
+    </div>
+  </div>
+
+  <p style="margin:0.5rem 0">Redirect post-copyright screen constructor call at 0x080001e6 (bl 0x0801d378 -&gt; bl 0x080056b0) to boot directly into interactive DEBUG menu (MUSIC TEST, SAMPLE TEST, MAP TEST, ZONE, AREA, VARIATION)</p>
+
+  <div style="background:var(--surface2); border:1px solid var(--border); border-radius:6px; padding:0.6rem 0.8rem; margin:0.6rem 0; font-size:0.85rem">
+    <strong style="color:var(--accent)">Ghidra Clean-Room Static Trace:</strong>
+    ROM Offset: <code>0X000001E6</code> &middot;
+    Instruction: <code>1df0c7f8</code> &rarr; <code>05f063fa</code> &middot;
+    Vector: <code>0x080056B0</code><br>
+    <span class="meta">Redirect post-copyright screen constructor call at 0x080001e6 (bl 0x0801d378 -&gt; bl 0x080056b0) to boot directly into interactive DEBUG menu (MUSIC TEST, SAMPLE TEST, MAP TEST, ZONE, AREA, VARIATION)</span>
+  </div>
+
+  <p class="meta"><strong>Activation Controller Sequence:</strong> <span class='badge badge-slate'>RIGHT</span> <span class='badge badge-slate'>DOWN</span></p>
+
+  <div class="gallery" style="margin-top:0.75rem">
+    <figure><img src='assets/patches/ALFE-r0-6e6c370c339ec917/boot-orig.png' alt='Dragon Ball Z - The Legacy of Goku II (USA) retail boot' loading='lazy'><figcaption>1. Unpatched Retail Boot</figcaption></figure><figure><img src='assets/patches/ALFE-r0-6e6c370c339ec917/boot-patched.png' alt='Dragon Ball Z - The Legacy of Goku II (USA) debug menu boot' loading='lazy'><figcaption>2. Clean-Room Debug Boot</figcaption></figure><figure><img src='assets/patches/ALFE-r0-6e6c370c339ec917/after-input.png' alt='Dragon Ball Z - The Legacy of Goku II (USA) interactive navigation' loading='lazy'><figcaption>3. Interactive Menu Navigation</figcaption></figure>
+  </div>
+
+  <pre style="margin-top:0.75rem; margin-bottom:0"><code># Test &amp; verify patch in-engine:
+gbakit patch test ALFE.gba
+
+# Apply patch directly:
+gbakit patch debug-menu ALFE.gba -o ALFE-debug.gba</code></pre>
+</div>
+
 <div class="card gallery-card" data-tags="all scene-override" data-search="duel masters 2 - invincible advance (japan) bd2j bd2j-r0-915fada793849b6b thumb_imm_scene_override 0x08007008 0x0000039e patch hudson scene dispatcher at 0x0800039e (ldr r0,[r4] -&gt; movs r0,#90) to select scene 0x5a (test select 2.0 debug menu at 0x08007009)" style="margin-bottom:1.5rem">
   <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:0.5rem">
     <div>
@@ -1592,6 +1633,47 @@ gbakit patch test AGSE.gba
 
 # Apply patch directly:
 gbakit patch debug-menu AGSE.gba -o AGSE-debug.gba</code></pre>
+</div>
+
+<div class="card gallery-card" data-tags="all" data-search="gyakuten saiban 3 (japan) a3jj a3jj-r0-f45f94483c8cb8e5 state_jump_table_ptr 0x08001a28 0x001610b8 redirect main state table entry 0x0c at 0x081610b8 (0x0800cc09 -&gt; 0x08001a29) to launch 7-entry debug menu (vram view, sound test, obj test, movie test, flag edit, scenario, exit)" style="margin-bottom:1.5rem">
+  <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:0.5rem">
+    <div>
+      <h2 style="margin:0; border:none; padding:0"><a href="titles/A3JJ-r0-f45f94483c8cb8e5.html">Gyakuten Saiban 3 (Japan)</a> <span class="badge badge-emerald">Interactive Verified</span> <span class='badge badge-purple'>🎵 Sound Test</span> <span class='badge badge-amber'>💾 Flag / Memory</span> <span class='badge badge-cyan'>🎨 VRAM / Sprite</span></h2>
+      <p class="meta" style="margin-top:0.25rem">
+        Code: <code>A3JJ</code> &middot;
+        Release: <code>A3JJ-r0-f45f94483c8cb8e5</code> &middot;
+        Delta: <strong>4 B</strong> (17 B <code>.ips</code>) &middot;
+        Hook: <code>state_jump_table_ptr</code> &middot;
+        Target Handler: <code>0x08001A28</code>
+      </p>
+    </div>
+    <div style="white-space:nowrap">
+      <a class="btn" href="assets/patches/A3JJ-r0-f45f94483c8cb8e5/A3JJ-debug.ips" download>Download A3JJ-debug.ips</a>
+      <a class="btn btn-secondary" href="titles/A3JJ-r0-f45f94483c8cb8e5.html">Title Specs</a>
+    </div>
+  </div>
+
+  <p style="margin:0.5rem 0">Redirect main state table entry 0x0C at 0x081610b8 (0x0800cc09 -&gt; 0x08001a29) to launch 7-entry DEBUG MENU (VRAM VIEW, SOUND TEST, OBJ TEST, MOVIE TEST, FLAG EDIT, SCENARIO, EXIT)</p>
+
+  <div style="background:var(--surface2); border:1px solid var(--border); border-radius:6px; padding:0.6rem 0.8rem; margin:0.6rem 0; font-size:0.85rem">
+    <strong style="color:var(--accent)">Ghidra Clean-Room Static Trace:</strong>
+    ROM Offset: <code>0X001610B8</code> &middot;
+    Instruction: <code>09cc0008</code> &rarr; <code>291a0008</code> &middot;
+    Vector: <code>0x08001A28</code><br>
+    <span class="meta">Redirect main state table entry 0x0C at 0x081610b8 (0x0800cc09 -&gt; 0x08001a29) to launch 7-entry DEBUG MENU (VRAM VIEW, SOUND TEST, OBJ TEST, MOVIE TEST, FLAG EDIT, SCENARIO, EXIT)</span>
+  </div>
+
+  <p class="meta"><strong>Activation Controller Sequence:</strong> <span class='badge badge-slate'>A</span> <span class='badge badge-slate'>DOWN</span> <span class='badge badge-slate'>DOWN</span> <span class='badge badge-slate'>DOWN</span> <span class='badge badge-slate'>A</span> <span class='badge badge-slate'>RIGHT</span> <span class='badge badge-slate'>A</span></p>
+
+  <div class="gallery" style="margin-top:0.75rem">
+    <figure><img src='assets/patches/A3JJ-r0-f45f94483c8cb8e5/boot-orig.png' alt='Gyakuten Saiban 3 (Japan) retail boot' loading='lazy'><figcaption>1. Unpatched Retail Boot</figcaption></figure><figure><img src='assets/patches/A3JJ-r0-f45f94483c8cb8e5/boot-patched.png' alt='Gyakuten Saiban 3 (Japan) debug menu boot' loading='lazy'><figcaption>2. Clean-Room Debug Boot</figcaption></figure><figure><img src='assets/patches/A3JJ-r0-f45f94483c8cb8e5/after-input.png' alt='Gyakuten Saiban 3 (Japan) interactive navigation' loading='lazy'><figcaption>3. Interactive Menu Navigation</figcaption></figure>
+  </div>
+
+  <pre style="margin-top:0.75rem; margin-bottom:0"><code># Test &amp; verify patch in-engine:
+gbakit patch test A3JJ.gba
+
+# Apply patch directly:
+gbakit patch debug-menu A3JJ.gba -o A3JJ-debug.gba</code></pre>
 </div>
 
 <div class="card gallery-card" data-tags="all scene-override" data-search="hagane no renkinjutsushi - meisou no rondo (japan) bhrj bhrj-r0-49df5e9e12830273 scene_descriptor_table_override 0x08014100 0x0017d8a8 patch scene table at 0x0817d8a8 (slot 1) with slot 0 debug menu descriptor [debug menu] (16 bytes)" style="margin-bottom:1.5rem">
@@ -2986,6 +3068,47 @@ gbakit patch test ASYE.gba
 
 # Apply patch directly:
 gbakit patch debug-menu ASYE.gba -o ASYE-debug.gba</code></pre>
+</div>
+
+<div class="card gallery-card" data-tags="all scene-override" data-search="steel empire (europe) bktp bktp-r0-1613cf4a76a01dba thumb_imm_mode_override 0x08000a64 0x00000410 patch boot debug-flag initializer at 0x08000410 (movs r0,#0 -&gt; movs r0,#0xa5) to arm debug mode flag *(u8*)0x03003be4 at boot; press l+select+start to open 6-mode vram view debugger" style="margin-bottom:1.5rem">
+  <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:0.5rem">
+    <div>
+      <h2 style="margin:0; border:none; padding:0"><a href="titles/BKTP-r0-1613cf4a76a01dba.html">Steel Empire (Europe)</a> <span class="badge badge-emerald">Interactive Verified</span> <span class='badge badge-amber'>💾 Flag / Memory</span> <span class='badge badge-cyan'>🎨 VRAM / Sprite</span></h2>
+      <p class="meta" style="margin-top:0.25rem">
+        Code: <code>BKTP</code> &middot;
+        Release: <code>BKTP-r0-1613cf4a76a01dba</code> &middot;
+        Delta: <strong>1 B</strong> (14 B <code>.ips</code>) &middot;
+        Hook: <code>thumb_imm_mode_override</code> &middot;
+        Target Handler: <code>0x08000A64</code>
+      </p>
+    </div>
+    <div style="white-space:nowrap">
+      <a class="btn" href="assets/patches/BKTP-r0-1613cf4a76a01dba/BKTP-debug.ips" download>Download BKTP-debug.ips</a>
+      <a class="btn btn-secondary" href="titles/BKTP-r0-1613cf4a76a01dba.html">Title Specs</a>
+    </div>
+  </div>
+
+  <p style="margin:0.5rem 0">Patch boot debug-flag initializer at 0x08000410 (movs r0,#0 -&gt; movs r0,#0xa5) to arm debug mode flag *(u8*)0x03003be4 at boot; press L+SELECT+START to open 6-mode VRAM VIEW debugger</p>
+
+  <div style="background:var(--surface2); border:1px solid var(--border); border-radius:6px; padding:0.6rem 0.8rem; margin:0.6rem 0; font-size:0.85rem">
+    <strong style="color:var(--accent)">Ghidra Clean-Room Static Trace:</strong>
+    ROM Offset: <code>0X00000410</code> &middot;
+    Instruction: <code>00</code> &rarr; <code>a5</code> &middot;
+    Vector: <code>0x08000A64</code><br>
+    <span class="meta">Patch boot debug-flag initializer at 0x08000410 (movs r0,#0 -&gt; movs r0,#0xa5) to arm debug mode flag *(u8*)0x03003be4 at boot; press L+SELECT+START to open 6-mode VRAM VIEW debugger</span>
+  </div>
+
+  <p class="meta"><strong>Activation Controller Sequence:</strong> <span class='badge badge-slate'>L+SELECT+START</span> <span class='badge badge-slate'>R</span></p>
+
+  <div class="gallery" style="margin-top:0.75rem">
+    <figure><img src='assets/patches/BKTP-r0-1613cf4a76a01dba/boot-orig.png' alt='Steel Empire (Europe) retail boot' loading='lazy'><figcaption>1. Unpatched Retail Boot</figcaption></figure><figure><img src='assets/patches/BKTP-r0-1613cf4a76a01dba/boot-patched.png' alt='Steel Empire (Europe) debug menu boot' loading='lazy'><figcaption>2. Clean-Room Debug Boot</figcaption></figure><figure><img src='assets/patches/BKTP-r0-1613cf4a76a01dba/after-input.png' alt='Steel Empire (Europe) interactive navigation' loading='lazy'><figcaption>3. Interactive Menu Navigation</figcaption></figure>
+  </div>
+
+  <pre style="margin-top:0.75rem; margin-bottom:0"><code># Test &amp; verify patch in-engine:
+gbakit patch test BKTP.gba
+
+# Apply patch directly:
+gbakit patch debug-menu BKTP.gba -o BKTP-debug.gba</code></pre>
 </div>
 
 <div class="card gallery-card" data-tags="all nintendo scene-override" data-search="super mario advance (usa, europe) amae amae-r0-d29dec02caacbf44 thumb_imm_scene_override 0x0801ab45 0x00001c78 nintendo scene selector override at 0x00001c78: replace ldrb r1, [r2] with movs r1, #1 to boot into mode 1 game select menu" style="margin-bottom:1.5rem">

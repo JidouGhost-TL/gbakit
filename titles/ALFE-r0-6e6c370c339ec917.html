@@ -30,7 +30,7 @@
   <main>
 <p class="meta"><a href="../index.html">&larr; Games</a> &middot; Family <code>ALF</code></p>
 <h1>Dragon Ball Z - The Legacy of Goku II (USA)</h1>
-<p><span class='badge badge-slate'>EEPROM 64K</span> <span class='badge badge-emerald'>Save Format Mapped (Family Spec)</span> <span class='badge badge-blue'>VRAM Tile Sheet</span> <a href='../link-multiplayer.html#joybus'><span class='badge badge-purple'>📺 Joybus</span></a> <a href='../link-multiplayer.html#multiboot'><span class='badge badge-amber'>💾 MultiBoot</span></a></p>
+<p><span class='badge badge-slate'>EEPROM 64K</span> <span class='badge badge-emerald'>Save Format Mapped (Family Spec)</span> <span class='badge badge-amber'>Debug Menu Patch</span> <span class='badge badge-blue'>VRAM Tile Sheet</span> <a href='../link-multiplayer.html#joybus'><span class='badge badge-purple'>📺 Joybus</span></a> <a href='../link-multiplayer.html#multiboot'><span class='badge badge-amber'>💾 MultiBoot</span></a></p>
 
 <h2>Cartridge Identity</h2>
 <dl class="kv">
@@ -43,6 +43,15 @@
   <dt>Engine / SDK Group</dt><dd><a href='../engines/index.html#comm-024'><code>comm-024</code></a> (9 families)</dd>
 </dl>
 
+
+<h2>Debug Menu Re-Enablement Patch (<code>.ips</code>)</h2>
+<p><a class="btn" href="../assets/patches/ALFE-r0-6e6c370c339ec917/ALFE-debug.ips" download>Download ALFE-debug.ips (17 B IPS / 4 B delta)</a></p>
+<dl class="kv">
+  <dt>Hook Mechanism</dt><dd><code>thumb_bl_redirect</code> &middot; Redirect post-copyright screen constructor call at 0x080001e6 (bl 0x0801d378 -&gt; bl 0x080056b0) to boot directly into interactive DEBUG menu (MUSIC TEST, SAMPLE TEST, MAP TEST, ZONE, AREA, VARIATION)</dd>
+  <dt>IPS SHA-256</dt><dd><code>9306be3a39dd64ac0f033d3b1166c97ff7e7cd55f95f8d4f864696d648e5087f</code></dd>
+</dl>
+<pre><code>gbakit patch apply ALFE-debug.ips original.gba patched-debug.gba</code></pre>
+<div class='gallery'><figure><img src='../assets/patches/ALFE-r0-6e6c370c339ec917/boot-patched.png' alt='Re-enabled debug menu' loading='lazy'><figcaption>Re-Enabled Debug Menu</figcaption></figure><figure><img src='../assets/patches/ALFE-r0-6e6c370c339ec917/after-input.png' alt='Interactive debug menu navigation' loading='lazy'><figcaption>After D-Pad / A Input</figcaption></figure></div>
 
 
 
