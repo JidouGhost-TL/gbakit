@@ -3,6 +3,7 @@
 A clean-room Game Boy Advance (GBA) format toolkit in Rust built on **[Formatkit](https://github.com/JidouGhost-TL/formatkit)** (`=0.1.10`).
 
 - **Documentation & GBA Research Wiki:** **https://jidoughost-tl.github.io/gbakit/** & **[GitHub Wiki](https://github.com/JidouGhost-TL/gbakit/wiki)** — **3,409 / 3,409** unique GBA ROMs accounted for (3,052 retail + 357 non-retail incl. 32 GBA Video carts), **814 / 814** saving families (1,543 saving ROMs = 100%), **88** verified interactive debug-menu `.ips` micro-patches, **193** verified button-combo cheats (with per-game before/after screenshots), **13** byte-exact standalone GBA synth crates, **2** standalone non-synth format crates (`gba-ereader`, `mobiclip`), 91 Engine/SDK communities, live VRAM/PRAM probes, and DirectSound PCM scans.
+- **Community Discord:** **https://discord.gg/khwxFSVNrS** — Come discuss the wonders of GBA RE, modding, etc. — also the best way to report issues or bugs, or ask for help on your own project.
 
 ## Workspace Crates
 
@@ -191,6 +192,10 @@ Every write-back pipeline (`gbakit gfx replace`, `gbakit audio replace`, `gbakit
 | **`gbakit text replace`** — *Pokémon FireRed* (`BPRE`) | **Relocated** `pokemon-gen3-en` VWF string (`0x1C582D → 0x456734`, 1 ptr patched) | ![FireRed Text Before](https://jidoughost-tl.github.io/gbakit/images/modding/bpre_text_before.png) | ![FireRed Text After](https://jidoughost-tl.github.io/gbakit/images/modding/bpre_text_after.png) |
 
 `gbakit audio replace` is likewise live-verified in `libmgba.so.0.10` on *Pokémon FireRed* (`BPRE`, M4A `WaveData` `0x4A741C`, both `in_place` and `relocated` with **23** voicegroup pointers patched, producing `56.28%` / `48.39%` live DirectSound stereo PCM diff over 600 frames).
+
+## Community & Support
+
+Come discuss the wonders of GBA RE, modding, etc. — also the best way to report issues or bugs, or ask for help on your own project: https://discord.gg/khwxFSVNrS
 
 ## Verification
 
