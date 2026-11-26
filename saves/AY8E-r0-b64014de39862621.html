@@ -25,6 +25,7 @@
       <a href="../engines/index.html">Engines &amp; Hardware</a>
       <a href="../families/index.html">Families</a>
       <a href="../gbakit/index.html">Using gbakit</a>
+      <a href="https://discord.gg/khwxFSVNrS" target="_blank" rel="noopener">Discord</a>
     </nav>
   </header>
   <main>
@@ -76,6 +77,6 @@ gbakit save fix    AY8E damaged.sav -o repaired.sav</code></pre>
 <table><thead><tr><th>#</th><th>Mutation</th><th>Checksum repair</th><th>Predicted observable</th></tr></thead><tbody><tr><td>1</td><td>Flip one magic byte at 0x05 (<code>0x30</code>→<code>0x31</code>)</td><td>None</td><td><code>FUN_0800b194</code> compare fails → <code>FUN_0800ac64</code> returns 0 → <code>FUN_08035444</code> takes new-save path (<code>FUN_080354c0</code>/<code>FUN_0800af68</code>); save treated as absent, SRAM re-initialized</td></tr><tr><td>2</td><td>Set header marker 0x0000 = 0x01, 0x02, 0x03 in turn</td><td>None</td><td>Tests whether <code>FUN_0800ac64</code> interprets byte 0 as save type; type change should alter load branch (<code>FUN_0800ad24</code> 2/3 dispatch) or trigger re-init</td></tr><tr><td>3</td><td>Set u16 at 0x401E = 0x0000 (data still zero)</td><td>Deliberately broken if checksum</td><td>If boot rejects/reinitializes → checksum confirmed and covered range includes block 2; if boot accepts → sentinel hypothesis wins, drop checksum model</td></tr><tr><td>4</td><td>Write 0x01 at 0x0100, then set 0x401E = 0xFFFE (one&#x27;s-complement repair for sum+1)</td><td>Yes (hypothesized formula)</td><td>If accepted and byte survives reload → complement-sum16 over block 2 supported; if rejected → formula/range wrong</td></tr><tr><td>5</td><td>Set struct field +0x32 (file 0x0032) = 0x0005</td><td>Repair 0x401E/0x7FFE if test 3 proved checksums</td><td>RAM struct state forced to mode 5; expect <code>FUN_08006958</code> 5-branch behaviour / different duel UI state on load</td></tr><tr><td>6</td><td>Corrupt only block 1 (0x2000) payload, leave block 0 intact</td><td>None</td><td>If load succeeds → block 0 is primary (or blocks are slots); if load fails → mirrored-verify across blocks</td></tr><tr><td>7</td><td>Zero the magic (0x0001–0x000F = 0x00) in block 0 only</td><td>None</td><td>Distinguishes global-header vs per-slot magic: re-init implies header is global and mandatory</td></tr></tbody></table>
 </div>
 </main>
-  <footer>gbakit GBA Format Reference &middot; <a href="https://github.com/JidouGhost-TL/gbakit">GitHub: JidouGhost-TL/gbakit</a> &middot; Clean-room GBA binary format specs &amp; Rust toolkit.</footer>
+  <footer>gbakit GBA Format Reference &middot; <a href="https://github.com/JidouGhost-TL/gbakit">GitHub: JidouGhost-TL/gbakit</a> &middot; <a href="https://discord.gg/khwxFSVNrS" target="_blank" rel="noopener">Community Discord</a> &middot; Clean-room GBA binary format specs &amp; Rust toolkit.</footer>
 </body>
 </html>

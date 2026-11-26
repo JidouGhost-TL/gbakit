@@ -25,6 +25,7 @@
       <a href="../engines/index.html">Engines &amp; Hardware</a>
       <a href="../families/index.html">Families</a>
       <a href="../gbakit/index.html">Using gbakit</a>
+      <a href="https://discord.gg/khwxFSVNrS" target="_blank" rel="noopener">Discord</a>
     </nav>
   </header>
   <main>
@@ -65,6 +66,6 @@ gbakit save fix    A88E damaged.sav -o repaired.sav</code></pre>
 <table><thead><tr><th>Offset</th><th>Size</th><th>Mutation Vector</th><th>Requires Checksum Repair</th><th>Predicted Gameplay &amp; Hardware Effect</th></tr></thead><tbody><tr><td><code>0x0000</code></td><td>2B</td><td>flip 0x0000-0x0001 from 00 00 to FF FF</td><td><code>False</code></td><td>If unused padding: no observable change. If a save-valid flag consumed by an out-of-trace routine: title screen Continue/New-Game state may change, or the game may re-initialize the EEPROM header on next write.</td></tr><tr><td><code>0x0002</code></td><td>1B</td><td>corrupt first byte of &#x27;GPRLAM&#x27; (0x47 -&gt; 0x00)</td><td><code>False</code></td><td>If validated on boot by an out-of-trace routine: forced re-initialization of the 16-byte header or a corrupted-save code path. If not validated (consistent with current code evidence): no observable change, which would itself support the &#x27;inert literal&#x27; hypothesis.</td></tr><tr><td><code>0x0008</code></td><td>8B</td><td>write recognizable non-zero test pattern 0102030405060708</td><td><code>False</code></td><td>Whether/when this pattern is overwritten by the next real in-game save localizes if this is a per-save field vs. a boot-time-only constant.</td></tr><tr><td><code>0x0010</code></td><td>8176B</td><td>fill entire unused region with an offset-derived marker pattern (byte[i] = i &amp; 0xFF)</td><td><code>False</code></td><td>Diffing against the resulting .sav after a real gameplay save directly reveals the true save-record byte ranges and record boundaries - the single highest-value experiment for bootstrapping the real field map.</td></tr></tbody></table>
 </div>
 </main>
-  <footer>gbakit GBA Format Reference &middot; <a href="https://github.com/JidouGhost-TL/gbakit">GitHub: JidouGhost-TL/gbakit</a> &middot; Clean-room GBA binary format specs &amp; Rust toolkit.</footer>
+  <footer>gbakit GBA Format Reference &middot; <a href="https://github.com/JidouGhost-TL/gbakit">GitHub: JidouGhost-TL/gbakit</a> &middot; <a href="https://discord.gg/khwxFSVNrS" target="_blank" rel="noopener">Community Discord</a> &middot; Clean-room GBA binary format specs &amp; Rust toolkit.</footer>
 </body>
 </html>
