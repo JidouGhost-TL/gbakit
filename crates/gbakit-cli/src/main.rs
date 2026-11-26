@@ -30,15 +30,18 @@ use gbakit::sound::m4a::{
     rom_ptr_to_offset,
 };
 use gbakit::sound::{
+    compile_cosmigo_sonix_soundfont, compile_ead_sma_soundfont, compile_engine_sw_soundfont,
     compile_gax_soundfont, compile_konami_soundfont, compile_krawall_soundfont,
     compile_logik_soundfont, compile_musyx_soundfont, compile_paragon5_soundfont,
     compile_rare_soundfont, compile_rd1_soundfont, compile_southpaw_soundfont,
-    detect_sound_engine, export_gax_samples_wav16, export_konami_samples_wav16,
-    export_krawall_samples_wav16, export_logik_samples_wav16, export_musyx_samples_wav16,
-    export_paragon5_samples_wav16, export_rare_samples_wav16, export_rd1_samples_wav16,
-    export_southpaw_samples_wav16, extract_pcm_i8, scan_gax_soundpool, scan_konami_soundpool,
-    scan_krawall_soundpool, scan_logik_soundpool, scan_musyx_soundpool, scan_paragon5_soundpool,
-    scan_rare_soundpool, scan_rd1_midis, scan_rd1_soundpool, scan_southpaw_soundpool,
+    detect_sound_engine, export_ead_sma_samples_wav16, export_engine_sw_samples_wav16,
+    export_gax_samples_wav16, export_konami_samples_wav16, export_krawall_samples_wav16,
+    export_logik_samples_wav16, export_musyx_samples_wav16, export_paragon5_samples_wav16,
+    export_rare_samples_wav16, export_rd1_samples_wav16, export_sonix_samples_wav16,
+    export_southpaw_samples_wav16, extract_pcm_i8, scan_ead_sma_soundpool,
+    scan_engine_sw_soundpool, scan_gax_soundpool, scan_konami_soundpool, scan_krawall_soundpool,
+    scan_logik_soundpool, scan_musyx_soundpool, scan_paragon5_soundpool, scan_rare_soundpool,
+    scan_rd1_midis, scan_rd1_soundpool, scan_sonix_soundpool, scan_southpaw_soundpool,
     DetectedSoundEngine, KonamiEngineVariant, LogikEngineVariant,
 };
 use gbakit::sound::sf2::{compile_rom_soundfont, validate_soundfont};
@@ -1116,6 +1119,7 @@ fn cmd_audio_scan(rom_path: &Path, as_json: bool) -> Result<(), String> {
                     "Sma4Mla",
                 ),
             };
+            let samples = scan_ead_sma_soundpool(&bytes);
             if as_json {
                 let payload = serde_json::json!({
                     "detected": true,
@@ -1123,6 +1127,7 @@ fn cmd_audio_scan(rom_path: &Path, as_json: bool) -> Result<(), String> {
                     "family": "nintendo_ead_sma",
                     "version": ver_str,
                     "ead_sma_version": ead_ver_id,
+                    "sample_count": samples.len(),
                     "rom_path": rom_path.file_name().map(|n| n.to_string_lossy().to_string()).unwrap_or_default(),
                 });
                 println!("{}", serde_json::to_string_pretty(&payload).map_err(|e| e.to_string())?);
@@ -1131,20 +1136,23 @@ fn cmd_audio_scan(rom_path: &Path, as_json: bool) -> Result<(), String> {
                 println!("  Status:                  Detected (Nintendo EAD/SRD DirectSound Engine)");
                 println!("  Family:                  nintendo_ead_sma");
                 println!("  Version:                 {}", ver_str);
+                println!("  Sample Count:            {}", samples.len());
             }
             Ok(())
         }
         DetectedSoundEngine::EngineSw(ver) => {
             let (ver_str, esw_ver_id) = match ver {
-                gbakit::sound::engine_sw_audio::EngineSwVersion::V20Standard => (
+                Some(gbakit::sound::engine_sw_audio::EngineSwVersion::V20Standard) => (
                     "Engine Software EIRE v2.0 (V20Standard)",
                     "V20Standard",
                 ),
-                gbakit::sound::engine_sw_audio::EngineSwVersion::V20AltRegisters => (
+                Some(gbakit::sound::engine_sw_audio::EngineSwVersion::V20AltRegisters) => (
                     "Engine Software EIRE v2.0 (V20AltRegisters)",
                     "V20AltRegisters",
                 ),
+                None => ("Engine Software EIRE v1.x (ARM Mixer)", "V1xArmMixer"),
             };
+            let samples = scan_engine_sw_soundpool(&bytes);
             if as_json {
                 let payload = serde_json::json!({
                     "detected": true,
@@ -1152,6 +1160,7 @@ fn cmd_audio_scan(rom_path: &Path, as_json: bool) -> Result<(), String> {
                     "family": "engine_sw_eire",
                     "version": ver_str,
                     "engine_sw_version": esw_ver_id,
+                    "sample_count": samples.len(),
                     "rom_path": rom_path.file_name().map(|n| n.to_string_lossy().to_string()).unwrap_or_default(),
                 });
                 println!("{}", serde_json::to_string_pretty(&payload).map_err(|e| e.to_string())?);
@@ -1160,11 +1169,14 @@ fn cmd_audio_scan(rom_path: &Path, as_json: bool) -> Result<(), String> {
                 println!("  Status:                  Detected (Engine Software / Bob Koon EIRE v2.0)");
                 println!("  Family:                  engine_sw_eire");
                 println!("  Version:                 {}", ver_str);
+                println!("  Sample Count:            {}", samples.len());
             }
             Ok(())
         }
         DetectedSoundEngine::CosmigoSonix(ver) => {
             let (ver_str, sonix_ver_id) = sonix_version_labels(ver);
+            let samples = scan_sonix_soundpool(&bytes);
+            let midis = scan_rd1_midis(&bytes);
             if as_json {
                 let payload = serde_json::json!({
                     "detected": true,
@@ -1174,6 +1186,8 @@ fn cmd_audio_scan(rom_path: &Path, as_json: bool) -> Result<(), String> {
                     "sonix_version": sonix_ver_id,
                     "has_gsm": ver.has_gsm(),
                     "sample_format": "Unsigned 8-bit PCM (DirectSound DMA)",
+                    "sample_count": samples.len(),
+                    "midi_count": midis.len(),
                     "rom_path": rom_path.file_name().map(|n| n.to_string_lossy().to_string()).unwrap_or_default(),
                 });
                 println!("{}", serde_json::to_string_pretty(&payload).map_err(|e| e.to_string())?);
@@ -1184,6 +1198,8 @@ fn cmd_audio_scan(rom_path: &Path, as_json: bool) -> Result<(), String> {
                 println!("  Version:                 {}", ver_str);
                 println!("  GSM Voice Codec:         {}", if ver.has_gsm() { "yes" } else { "no" });
                 println!("  Sample Format:           Unsigned 8-bit PCM (DirectSound DMA)");
+                println!("  Sample Count:            {}", samples.len());
+                println!("  MIDI Count:              {}", midis.len());
             }
             Ok(())
         }
@@ -1554,19 +1570,139 @@ fn cmd_audio_export(
             println!("  SoundFont Generated:  soundfont.sf2");
             Ok(())
         }
-        DetectedSoundEngine::EadSma(ver) => Err(format!(
-            "audio export is not yet supported for Nintendo EAD/SRD ({ver:?}) in {}",
-            rom_path.display()
-        )),
-        DetectedSoundEngine::EngineSw(ver) => Err(format!(
-            "audio export is not yet supported for Engine Software EIRE ({ver:?}) in {}",
-            rom_path.display()
-        )),
-        DetectedSoundEngine::CosmigoSonix(ver) => Err(format!(
-            "audio export is not yet supported for {} in {}",
-            sonix_version_labels(ver).0,
-            rom_path.display()
-        )),
+        DetectedSoundEngine::EadSma(ver) => {
+            let ver_str = match ver {
+                gbakit::sound::ead_sma::EadSmaVersion::Sma23Shift8 => {
+                    "Nintendo EAD/SRD Mixer (Sma23Shift8)"
+                }
+                gbakit::sound::ead_sma::EadSmaVersion::Sma4Mla => {
+                    "Nintendo EAD/SRD Mixer (Sma4Mla)"
+                }
+            };
+            let wavs = export_ead_sma_samples_wav16(&bytes)
+                .map_err(|e| format!("export Nintendo EAD/SRD samples: {e}"))?;
+
+            for (_idx, filename, wav_bytes) in &wavs {
+                let p_sub = samples_dir.join(filename);
+                let p_root = target_dir.join(filename);
+                fs::write(&p_sub, wav_bytes)
+                    .map_err(|e| format!("write {}: {e}", p_sub.display()))?;
+                let _ = fs::write(&p_root, wav_bytes);
+            }
+
+            let mut sf2_generated = false;
+            if let Ok(sf2) = compile_ead_sma_soundfont(&bytes, None) {
+                let sf2_path = target_dir.join("soundfont.sf2");
+                if fs::write(&sf2_path, &sf2.sf2_bytes).is_ok() {
+                    sf2_generated = true;
+                }
+            }
+
+            println!("Audio Export Summary (Nintendo EAD/SRD):");
+            println!("  Output Directory:     {}", target_dir.display());
+            println!("  Engine Version:       {}", ver_str);
+            println!("  WAV Samples Exported: {}", wavs.len());
+            if sf2_generated {
+                println!("  SoundFont Generated:  soundfont.sf2");
+            }
+            Ok(())
+        }
+        DetectedSoundEngine::EngineSw(ver) => {
+            let ver_str = match ver {
+                Some(gbakit::sound::engine_sw_audio::EngineSwVersion::V20Standard) => {
+                    "Engine Software EIRE v2.0 (V20Standard)"
+                }
+                Some(gbakit::sound::engine_sw_audio::EngineSwVersion::V20AltRegisters) => {
+                    "Engine Software EIRE v2.0 (V20AltRegisters)"
+                }
+                None => "Engine Software EIRE v1.x (ARM Mixer)",
+            };
+            let wavs = export_engine_sw_samples_wav16(&bytes)
+                .map_err(|e| format!("export Engine Software EIRE samples: {e}"))?;
+
+            for (_idx, filename, wav_bytes) in &wavs {
+                let p_sub = samples_dir.join(filename);
+                let p_root = target_dir.join(filename);
+                fs::write(&p_sub, wav_bytes)
+                    .map_err(|e| format!("write {}: {e}", p_sub.display()))?;
+                let _ = fs::write(&p_root, wav_bytes);
+            }
+
+            let mut sf2_generated = false;
+            if let Ok(sf2) = compile_engine_sw_soundfont(&bytes, None) {
+                let sf2_path = target_dir.join("soundfont.sf2");
+                if fs::write(&sf2_path, &sf2.sf2_bytes).is_ok() {
+                    sf2_generated = true;
+                }
+            }
+
+            println!("Audio Export Summary (Engine Software EIRE):");
+            println!("  Output Directory:     {}", target_dir.display());
+            println!("  Engine Version:       {}", ver_str);
+            println!("  WAV Samples Exported: {}", wavs.len());
+            if sf2_generated {
+                println!("  SoundFont Generated:  soundfont.sf2");
+            }
+            Ok(())
+        }
+        DetectedSoundEngine::CosmigoSonix(ver) => {
+            let (ver_str, _) = sonix_version_labels(ver);
+            let wavs = export_sonix_samples_wav16(&bytes)
+                .map_err(|e| format!("export Cosmigo Sonix samples: {e}"))?;
+
+            for (_idx, filename, wav_bytes) in &wavs {
+                let p_sub = samples_dir.join(filename);
+                let p_root = target_dir.join(filename);
+                fs::write(&p_sub, wav_bytes)
+                    .map_err(|e| format!("write {}: {e}", p_sub.display()))?;
+                let _ = fs::write(&p_root, wav_bytes);
+            }
+
+            let midis = scan_rd1_midis(&bytes);
+            let target_midis: Vec<&(usize, String, Vec<u8>)> = match song_id {
+                Some(id) => {
+                    let item = midis.get(id).ok_or_else(|| {
+                        format!("song index {id} exceeds Cosmigo Sonix MIDI count {}", midis.len())
+                    })?;
+                    vec![item]
+                }
+                None => midis.iter().collect(),
+            };
+
+            let mut exported_midis = 0usize;
+            if !target_midis.is_empty() {
+                let midi_dir = target_dir.join("midi");
+                fs::create_dir_all(&midi_dir)
+                    .map_err(|e| format!("create {}: {e}", midi_dir.display()))?;
+                for (_idx, filename, midi_bytes) in &target_midis {
+                    let sonix_name = filename.replacen("rd1_midi_", "sonix_midi_", 1);
+                    let p_sub = midi_dir.join(&sonix_name);
+                    let p_root = target_dir.join(&sonix_name);
+                    fs::write(&p_sub, midi_bytes)
+                        .map_err(|e| format!("write {}: {e}", p_sub.display()))?;
+                    let _ = fs::write(&p_root, midi_bytes);
+                    exported_midis += 1;
+                }
+            }
+
+            let mut sf2_generated = false;
+            if let Ok(sf2) = compile_cosmigo_sonix_soundfont(&bytes, None) {
+                let sf2_path = target_dir.join("soundfont.sf2");
+                if fs::write(&sf2_path, &sf2.sf2_bytes).is_ok() {
+                    sf2_generated = true;
+                }
+            }
+
+            println!("Audio Export Summary (Cosmigo Sonix):");
+            println!("  Output Directory:     {}", target_dir.display());
+            println!("  Engine Version:       {}", ver_str);
+            println!("  MIDI Files Exported:  {}", exported_midis);
+            println!("  WAV Samples Exported: {}", wavs.len());
+            if sf2_generated {
+                println!("  SoundFont Generated:  soundfont.sf2");
+            }
+            Ok(())
+        }
         DetectedSoundEngine::Custom => {
             if let Ok(wavs) = export_gax_samples_wav16(&bytes) {
                 for (_idx, filename, wav_bytes) in &wavs {
@@ -4673,6 +4809,140 @@ mod tests {
         let tf_musyx = TempFile::new("synthetic_musyx.gba", &musyx_rom);
         cmd_audio_scan(tf_musyx.path(), false).expect("audio scan musyx text");
         cmd_audio_scan(tf_musyx.path(), true).expect("audio scan musyx json");
+
+        // Test audio scan + export on EAD-SMA ROM (Sma23Shift8 + 3 chained 16B EadSampleDesc)
+        let mut ead_rom = make_test_rom(b"AA2E", "EAD SMA TEST");
+        ead_rom.resize(4096, 0);
+        // Sma23Shift8 ARM kernel block: CONV_PREFIX + A_CONV_TAIL @ 0x200, A_MIX @ +0xC0, A_COMB @ +0x1E0
+        ead_rom[0x200..0x218].copy_from_slice(&[
+            0x30, 0x00, 0x2D, 0xE9, 0x7F, 0x40, 0xA0, 0xE3, 0xFF, 0x5C, 0xA0, 0xE3, 0x80, 0x50,
+            0x85, 0xE3, 0xF2, 0x30, 0xD0, 0xE0, 0x05, 0xC0, 0x13, 0xE0,
+        ]);
+        ead_rom[0x2C0..0x2D8].copy_from_slice(&[
+            0x0D, 0xC0, 0xA0, 0xE1, 0xF0, 0x03, 0x2D, 0xE9, 0xF0, 0x00, 0x9C, 0xE8, 0x01, 0xC0,
+            0x43, 0xE0, 0x07, 0xC0, 0x0C, 0xE2, 0x00, 0x00, 0x5C, 0xE3,
+        ]);
+        ead_rom[0x3E0..0x3F8].copy_from_slice(&[
+            0x30, 0x00, 0x2D, 0xE9, 0x01, 0x40, 0xA0, 0xE3, 0x01, 0xC0, 0x43, 0xE2, 0x14, 0x4C,
+            0xA0, 0xE1, 0xF0, 0x50, 0xD0, 0xE1, 0xF0, 0xC0, 0xD1, 0xE1,
+        ]);
+        let mut ead_off = 0x500usize;
+        for i in 0..3u32 {
+            let pcm_len = 64u32;
+            ead_rom[ead_off..ead_off + 4].copy_from_slice(&pcm_len.to_le_bytes());
+            ead_rom[ead_off + 4..ead_off + 8].copy_from_slice(&16_000u32.to_le_bytes());
+            ead_rom[ead_off + 8..ead_off + 12].copy_from_slice(&0u32.to_le_bytes());
+            ead_rom[ead_off + 12..ead_off + 16].copy_from_slice(&0u32.to_le_bytes());
+            for k in 0..pcm_len as usize {
+                ead_rom[ead_off + 16 + k] = ((k as u8).wrapping_mul(7).wrapping_add(i as u8 + 10)) ^ 0x40;
+            }
+            ead_off += 16 + pcm_len as usize;
+        }
+        let tf_ead = TempFile::new("synthetic_ead_sma.gba", &ead_rom);
+        cmd_audio_scan(tf_ead.path(), false).expect("audio scan ead_sma text");
+        cmd_audio_scan(tf_ead.path(), true).expect("audio scan ead_sma json");
+        let ead_export_dir = TempDir::new("ead_sma_export");
+        cmd_audio_export(tf_ead.path(), Some(ead_export_dir.path()), None)
+            .expect("audio export ead_sma");
+        assert!(ead_export_dir.path().join("soundfont.sf2").exists());
+        assert_eq!(
+            fs::read_dir(ead_export_dir.path().join("samples"))
+                .expect("read ead samples dir")
+                .count(),
+            3
+        );
+
+        // Test audio scan + export on Engine Software EIRE ROM (V20Standard + 3 chained 124B headers)
+        let mut esw_rom = make_test_rom(b"AC9E", "EIRE TEST");
+        esw_rom.resize(4096, 0);
+        esw_rom[0x200..0x210].copy_from_slice(&[
+            0xf6, 0x4f, 0x2d, 0xe9, 0x3c, 0x10, 0x9f, 0xe5, 0x3c, 0x00, 0x91, 0xe8, 0x00, 0x60,
+            0x93, 0xe0,
+        ]);
+        let mut esw_off = 0x400usize;
+        for i in 0..3u32 {
+            let pcm_len = 64u32;
+            esw_rom[esw_off..esw_off + 4].copy_from_slice(&pcm_len.to_le_bytes());
+            esw_rom[esw_off + 4..esw_off + 8].copy_from_slice(&0u32.to_le_bytes());
+            esw_rom[esw_off + 8..esw_off + 12].copy_from_slice(&0u32.to_le_bytes());
+            esw_rom[esw_off + 12] = 64;
+            esw_rom[esw_off + 22] = 0xFF;
+            esw_rom[esw_off + 23] = 0xFF;
+            for k in 0..pcm_len as usize {
+                esw_rom[esw_off + 124 + k] = (k as u8).wrapping_mul(5).wrapping_add(i as u8 + 1);
+            }
+            esw_off += 124 + pcm_len as usize;
+        }
+        let tf_esw = TempFile::new("synthetic_engine_sw.gba", &esw_rom);
+        cmd_audio_scan(tf_esw.path(), false).expect("audio scan engine_sw text");
+        cmd_audio_scan(tf_esw.path(), true).expect("audio scan engine_sw json");
+        let esw_export_dir = TempDir::new("engine_sw_export");
+        cmd_audio_export(tf_esw.path(), Some(esw_export_dir.path()), None)
+            .expect("audio export engine_sw");
+        assert!(esw_export_dir.path().join("soundfont.sf2").exists());
+        assert_eq!(
+            fs::read_dir(esw_export_dir.path().join("samples"))
+                .expect("read esw samples dir")
+                .count(),
+            3
+        );
+
+        // Test audio scan + export on Cosmigo Sonix ROM (ARM mixer sig + banner + SNX3 bank + embedded MThd MIDI)
+        let mut sonix_rom = make_test_rom(b"ABUE", "SONIX TEST");
+        sonix_rom.resize(4096, 0);
+        let sonix_sig: [u8; 64] = [
+            0x12, 0x40, 0x2D, 0xE9, 0x00, 0x00, 0xA0, 0xE3, 0xBA, 0x00, 0xCC, 0xE1, 0x04, 0x00,
+            0xDC, 0xE5, 0x02, 0x00, 0xC0, 0xE3, 0x04, 0x00, 0xCC, 0xE5, 0x00, 0x10, 0xDC, 0xE5,
+            0x0E, 0xE0, 0xDC, 0xE5, 0x81, 0xB2, 0x8C, 0xE0, 0x0C, 0xA0, 0x9B, 0xE5, 0x00, 0x80,
+            0x9D, 0xE5, 0x80, 0x00, 0x58, 0xE3, 0x80, 0x80, 0xA0, 0x23, 0x00, 0x48, 0x2D, 0xE9,
+            0x05, 0x00, 0xDB, 0xE5, 0x03, 0x20, 0xDB, 0xE5,
+        ];
+        sonix_rom[0x200..0x240].copy_from_slice(&sonix_sig);
+        let banner = b"Sonix Sound System for GBA v1.09c";
+        sonix_rom[0x280..0x280 + banner.len()].copy_from_slice(banner);
+        // SNX3 bank at 0x400 with 2 samples (header 0x1C, table 0x1C..0x3C, PCM at 0x3C and 0x7C)
+        let bank = 0x400usize;
+        sonix_rom[bank..bank + 4].copy_from_slice(b"SNX3");
+        sonix_rom[bank + 0x0C..bank + 0x10].copy_from_slice(&(0xBCu32).to_le_bytes());
+        sonix_rom[bank + 0x14..bank + 0x18].copy_from_slice(&(0x3Cu32).to_le_bytes());
+        sonix_rom[bank + 0x18..bank + 0x1C].copy_from_slice(&(0x1Cu32).to_le_bytes());
+        for i in 0..2usize {
+            let rec = bank + 0x1C + i * 16;
+            let data_rel = 0x3C + i * 64;
+            sonix_rom[rec..rec + 4].copy_from_slice(&(64u32).to_le_bytes());
+            sonix_rom[rec + 4..rec + 8].copy_from_slice(&(0u32).to_le_bytes());
+            sonix_rom[rec + 8..rec + 10].copy_from_slice(&(0u16).to_le_bytes());
+            sonix_rom[rec + 10..rec + 12].copy_from_slice(&(11_025u16).to_le_bytes());
+            sonix_rom[rec + 12..rec + 16].copy_from_slice(&(data_rel as u32).to_le_bytes());
+            for k in 0..64usize {
+                sonix_rom[bank + data_rel + k] = 0x80u8.wrapping_add((k as u8).wrapping_mul(3));
+            }
+        }
+        // Minimal valid Standard MIDI (MThd + 1 MTrk) at 0x600
+        let midi_stub: &[u8] = &[
+            b'M', b'T', b'h', b'd', 0, 0, 0, 6, 0, 0, 0, 1, 0, 0x60, b'M', b'T', b'r', b'k', 0,
+            0, 0, 4, 0x00, 0xFF, 0x2F, 0x00,
+        ];
+        sonix_rom[0x600..0x600 + midi_stub.len()].copy_from_slice(midi_stub);
+        let tf_sonix = TempFile::new("synthetic_sonix.gba", &sonix_rom);
+        cmd_audio_scan(tf_sonix.path(), false).expect("audio scan sonix text");
+        cmd_audio_scan(tf_sonix.path(), true).expect("audio scan sonix json");
+        let sonix_export_dir = TempDir::new("sonix_export");
+        cmd_audio_export(tf_sonix.path(), Some(sonix_export_dir.path()), None)
+            .expect("audio export sonix");
+        assert!(sonix_export_dir.path().join("soundfont.sf2").exists());
+        assert_eq!(
+            fs::read_dir(sonix_export_dir.path().join("samples"))
+                .expect("read sonix samples dir")
+                .count(),
+            2
+        );
+        assert_eq!(
+            fs::read_dir(sonix_export_dir.path().join("midi"))
+                .expect("read sonix midi dir")
+                .count(),
+            1
+        );
     }
 
     fn make_test_rom(game_code: &[u8; 4], title: &str) -> Vec<u8> {

@@ -82,8 +82,8 @@ pub enum DetectedSoundEngine {
     Southpaw(Option<southpaw_audio::SouthpawVersion>),
     /// Nintendo EAD/SRD Super Mario Advance 2–4 & Zelda ALttP DirectSound Engine
     EadSma(ead_sma::EadSmaVersion),
-    /// Engine Software / Bob Koon EIRE v2.0 DirectSound Engine
-    EngineSw(engine_sw_audio::EngineSwVersion),
+    /// Engine Software / Bob Koon EIRE DirectSound Engine (v2.0 or v1.x ARM mixer)
+    EngineSw(Option<engine_sw_audio::EngineSwVersion>),
     /// Cosmigo Sonix Sound System (v1.09c / v1.096 + GSM / v1.16 + GSM)
     CosmigoSonix(cosmigo_sonix::SonixVersion),
     /// Unrecognized or custom direct sound driver
@@ -101,7 +101,7 @@ pub fn detect_sound_engine(bytes: &[u8]) -> DetectedSoundEngine {
     } else if let Some(ead_ver) = ead_sma::EadSmaVersion::detect_from_bytes(bytes) {
         DetectedSoundEngine::EadSma(ead_ver)
     } else if let Some(esw_ver) = engine_sw_audio::EngineSwVersion::detect_from_bytes(bytes) {
-        DetectedSoundEngine::EngineSw(esw_ver)
+        DetectedSoundEngine::EngineSw(Some(esw_ver))
     } else if let Some(sonix_ver) = cosmigo_sonix::SonixVersion::detect_from_bytes(bytes) {
         DetectedSoundEngine::CosmigoSonix(sonix_ver)
     } else if let Some(krawall_ver) = krawall::KrawallVersion::detect_from_bytes(bytes) {
@@ -129,6 +129,8 @@ pub fn detect_sound_engine(bytes: &[u8]) -> DetectedSoundEngine {
         DetectedSoundEngine::Southpaw(Some(sp_ver))
     } else if southpaw_pool::has_southpaw_sample_table(bytes) {
         DetectedSoundEngine::Southpaw(None)
+    } else if engine_sw_pool::has_engine_sw_v1_mixer(bytes) {
+        DetectedSoundEngine::EngineSw(None)
     } else {
         DetectedSoundEngine::Custom
     }

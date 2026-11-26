@@ -481,8 +481,12 @@ fn cli_audio_scan_detects_cosmigo_sonix_revisions() {
     let json = run_ok_json(&["audio", "scan", p(&v1096_path), "--json"]);
     assert_eq!(json["sonix_version"], "V1096Gsm");
 
-    // `audio export` reports the exact revision in its (not-yet-supported) error.
+    // `audio export` on a mixer-only ROM without an SNX3 bank reports a clean Cosmigo Sonix error.
     let export = run(&["audio", "export", p(&v1096_path), "-o", p(&dir.path.join("exp"))]);
     assert!(!export.status.success());
-    assert!(String::from_utf8_lossy(&export.stderr).contains("V1096Gsm"));
+    assert!(
+        String::from_utf8_lossy(&export.stderr).contains("Cosmigo Sonix"),
+        "unexpected stderr: {}",
+        String::from_utf8_lossy(&export.stderr)
+    );
 }

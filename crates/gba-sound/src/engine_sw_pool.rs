@@ -60,9 +60,55 @@ pub struct EngineSwSampleEntry {
     pub pcm_data: Vec<i8>,
 }
 
-/// Detect whether a GBA ROM uses the Engine Software / Bob Koon EIRE v2.0 engine.
+/// Exact 16-byte middle anchor of the Engine Software EIRE v1.x ARM mixer
+/// prologue (`ldmia r1, {r2, r5}; add r3, r0, r5; str r3, [r1, #4]; ldr r6, [r1, #0x10]`).
+const EIRE_V1_MIXER_MID_SIG: [u8; 16] = [
+    0x24, 0x00, 0x91, 0xe8, 0x05, 0x30, 0x80, 0xe0, 0x04, 0x30, 0x81, 0xe5, 0x10, 0x60, 0x91, 0xe5,
+];
+
+/// Detect the Engine Software EIRE v1.x ARM7TDMI software mixer prologue
+/// (`stmfd sp!, {r0-r2, r4-r11}; ldr r1, [pc, #imm]; ldmia r1, {r2, r5}; ...`).
+///
+/// Captures early EIRE v1.x builds (e.g., *Mission Impossible: Operation Surma*,
+/// *James Pond: Codename Robocod*, *Animaniacs*, *Spirits & Spells*, *xXx*,
+/// *Max Payne*, *Bionicle*) that share the same 124-byte `EngineSwSampleHeader`
+/// format as EIRE v2.0.
+pub fn has_engine_sw_v1_mixer(rom: &[u8]) -> bool {
+    if rom.len() < 32 {
+        return false;
+    }
+    let mut start = 8usize;
+    while start + 24 <= rom.len() {
+        let Some(rel) = rom[start..]
+            .windows(EIRE_V1_MIXER_MID_SIG.len())
+            .position(|w| w == EIRE_V1_MIXER_MID_SIG)
+        else {
+            break;
+        };
+        let mid = start + rel;
+        if mid >= 8 && mid + 24 <= rom.len() {
+            let w0 = u32::from_le_bytes([rom[mid - 8], rom[mid - 7], rom[mid - 6], rom[mid - 5]]);
+            let w1 = u32::from_le_bytes([rom[mid - 4], rom[mid - 3], rom[mid - 2], rom[mid - 1]]);
+            let w6 =
+                u32::from_le_bytes([rom[mid + 16], rom[mid + 17], rom[mid + 18], rom[mid + 19]]);
+            let w7 =
+                u32::from_le_bytes([rom[mid + 20], rom[mid + 21], rom[mid + 22], rom[mid + 23]]);
+            if w0 == 0xe92d_0ff7
+                && (w1 & 0xFFFF_F000) == 0xe59f_1000
+                && (w6 & 0xFFFF_F000) == 0xe59f_c000
+                && w7 == 0xe1a0_400c
+            {
+                return true;
+            }
+        }
+        start = mid + 4;
+    }
+    false
+}
+
+/// Detect whether a GBA ROM uses the Engine Software / Bob Koon EIRE engine (v1.x or v2.0).
 pub fn detect_engine_sw_engine(rom: &[u8]) -> bool {
-    EngineSwVersion::detect_from_bytes(rom).is_some()
+    EngineSwVersion::detect_from_bytes(rom).is_some() || has_engine_sw_v1_mixer(rom)
 }
 
 /// Validate a candidate 124-byte (`0x7C`) EIRE instrument header at `off` within `rom`.
@@ -343,5 +389,34 @@ mod tests {
         assert!(scan_engine_sw_soundpool(&rom).is_empty());
         assert!(export_engine_sw_samples_wav16(&rom).is_err());
         assert!(compile_engine_sw_soundfont(&rom, None).is_err());
+    }
+
+    #[test]
+    fn detects_eire_v1_arm_mixer_signature() {
+        let mut rom = vec![0u8; 0x200];
+        let words: [u32; 8] = [
+            0xe92d_0ff7,
+            0xe59f_1044,
+            0xe891_0024,
+            0xe080_3005,
+            0xe581_3004,
+            0xe591_6010,
+            0xe59f_c02c,
+            0xe1a0_400c,
+        ];
+        for (i, word) in words.iter().enumerate() {
+            rom[0x80 + i * 4..0x84 + i * 4].copy_from_slice(&word.to_le_bytes());
+        }
+        assert!(has_engine_sw_v1_mixer(&rom));
+        assert!(detect_engine_sw_engine(&rom));
+        assert_eq!(
+            crate::detect_sound_engine(&rom),
+            crate::DetectedSoundEngine::EngineSw(None)
+        );
+
+        // Corrupting w0 must reject
+        rom[0x80] ^= 0x01;
+        assert!(!has_engine_sw_v1_mixer(&rom));
+        assert!(!detect_engine_sw_engine(&rom));
     }
 }
