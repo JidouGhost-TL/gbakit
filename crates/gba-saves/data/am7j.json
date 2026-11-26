@@ -1,29 +1,47 @@
 {
-  "id": "am7j",
-  "game_code": "AM7J",
-  "title": "Hamepane - Tokyo Mew Mew (Japan)",
-  "media": "sram",
-  "size_bytes": 32768,
-  "magic_signatures": [],
   "checksums": [],
   "fields": [
     {
-      "name": "slot_counter",
+      "confidence": "likely",
+      "description": "64-byte header/config payload: first 0x40 bytes of the 0x44-byte SRAM header block. Treated by FUN_0801b85c as sixteen-bit words [0,0x20) feeding the header summation check; zeroed when verification fails. Internal byte semantics are not exposed by the stripped decomp.",
+      "evidence": "FUN_0801b85c writes 0x44 bytes from the EWRAM config struct at _DAT_0801b8a8 to SRAM 0x0E000000 (file offset 0) via FUN_080236d4; the first 0x40 bytes are the word-summed payload and a mismatch zeroes bytes [0,0x40). FUN_0801b43c reads the same span back with FUN_08023688(stack_dst,0x0E000000,0x44).",
+      "name": "cfg_block_data",
       "offset": 0,
+      "size": 64,
+      "type": "bytes"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "16-bit header verification word at struct/file offset 0x40. FUN_0801b85c compares it against the accumulated 16-bit word sum over the header; baseline holds 0x0000, consistent with an all-zero payload.",
+      "evidence": "FUN_0801b85c accumulates sVar2 over the 0x44-byte header as 16-bit words and requires _DAT_0801b8a8[0x20] (struct byte offset 0x40 = file offset 64) to equal that sum, else it zeroes bytes [0,0x40) and reports failure via its indirect callback.",
+      "name": "header_checksum_word",
+      "offset": 64,
       "size": 2,
       "type": "u16_le"
     },
     {
-      "name": "game_progress_flags",
-      "offset": 2,
+      "confidence": "likely",
+      "description": "Trailing 16-bit word of the 0x44-byte header. Falls inside the FUN_0801b85c 0x22-word summation span (word index [0x21]) but is never directly compared; exact role unproven (baseline 0x0000). Live mutation is gbakit-verify-safe but may trip the in-game check.",
+      "evidence": "FUN_0801b85c summation loop covers 0x22 sixteen-bit words (bytes [0,0x44)) from _DAT_0801b8a8 at SRAM 0x0E000000, so file offset 66 participates in header verification; only word [0x20] (offset 64) is used as the comparison target.",
+      "name": "verify_span_tail_word",
+      "offset": 66,
       "size": 2,
       "type": "u16_le"
     },
     {
-      "name": "player_status_payload",
-      "offset": 4,
-      "size": 16,
+      "confidence": "likely",
+      "description": "480-byte extended save block backing the second SRAM transfer. File forensics plus the two transfer sizes prove its placement; internal structure is not exposed by the stripped decomp (all gameplay callers are indirect).",
+      "evidence": "FUN_0801b43c performs the second SRAM transfer FUN_08023688(dst_buf,_DAT_0801b490,0x1E0). Only file bytes [0,0x224) differ from the 0xFF erased fill and 0x44+0x1E0 == 0x224, proving _DAT_0801b490 is SRAM 0x0E000044, i.e. file offset 68.",
+      "name": "ext_block_data",
+      "offset": 68,
+      "size": 480,
       "type": "bytes"
     }
-  ]
+  ],
+  "game_code": "AM7J",
+  "id": "am7j",
+  "magic_signatures": [],
+  "media": "sram",
+  "size_bytes": 32768,
+  "title": "Hamepane - Tokyo Mew Mew (Japan)"
 }

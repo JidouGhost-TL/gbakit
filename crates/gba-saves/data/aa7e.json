@@ -1,45 +1,420 @@
 {
-  "id": "aa7e",
-  "game_code": "AA7E",
-  "title": "All-Star Baseball 2004 Featuring Derek Jeter (USA)",
-  "media": "sram",
-  "size_bytes": 32768,
-  "magic_signatures": [
+  "checksums": [
     {
-      "offset": 0,
-      "bytes": [
-        83,
-        84,
-        65,
-        84
-      ]
+      "algorithm": "sum16_le",
+      "covered_end": 16,
+      "covered_start": 12,
+      "name": "stat_checksum",
+      "seed": 0,
+      "stored_offset": 10,
+      "xor_out": 0
+    },
+    {
+      "algorithm": "sum16_le",
+      "covered_end": 12428,
+      "covered_start": 28,
+      "name": "batt_checksum",
+      "seed": 0,
+      "stored_offset": 26,
+      "xor_out": 0
+    },
+    {
+      "algorithm": "sum16_le",
+      "covered_end": 18840,
+      "covered_start": 12440,
+      "name": "pitc_checksum",
+      "seed": 0,
+      "stored_offset": 12438,
+      "xor_out": 0
+    },
+    {
+      "algorithm": "sum16_le",
+      "covered_end": 19652,
+      "covered_start": 18852,
+      "name": "wbat_checksum",
+      "seed": 0,
+      "stored_offset": 18850,
+      "xor_out": 0
+    },
+    {
+      "algorithm": "sum16_le",
+      "covered_end": 20464,
+      "covered_start": 19664,
+      "name": "wpit_checksum",
+      "seed": 0,
+      "stored_offset": 19662,
+      "xor_out": 0
+    },
+    {
+      "algorithm": "sum16_le",
+      "covered_end": 20976,
+      "covered_start": 20476,
+      "name": "wslu_checksum",
+      "seed": 0,
+      "stored_offset": 20474,
+      "xor_out": 0
+    },
+    {
+      "algorithm": "sum16_le",
+      "covered_end": 29244,
+      "covered_start": 20988,
+      "name": "line_checksum",
+      "seed": 0,
+      "stored_offset": 20986,
+      "xor_out": 0
+    },
+    {
+      "algorithm": "sum16_le",
+      "covered_end": 31996,
+      "covered_start": 29256,
+      "name": "seas_checksum",
+      "seed": 0,
+      "stored_offset": 29254,
+      "xor_out": 0
+    },
+    {
+      "algorithm": "sum16_le",
+      "covered_end": 32168,
+      "covered_start": 32008,
+      "name": "seri_checksum",
+      "seed": 0,
+      "stored_offset": 32006,
+      "xor_out": 0
+    },
+    {
+      "algorithm": "sum16_le",
+      "covered_end": 32434,
+      "covered_start": 32180,
+      "name": "card_checksum",
+      "seed": 0,
+      "stored_offset": 32178,
+      "xor_out": 0
+    },
+    {
+      "algorithm": "sum16_le",
+      "covered_end": 32462,
+      "covered_start": 32446,
+      "name": "opts_checksum",
+      "seed": 0,
+      "stored_offset": 32444,
+      "xor_out": 0
     }
   ],
-  "checksums": [],
+  "copy_groups": [],
+  "eeprom_rev8": false,
   "fields": [
     {
-      "name": "magic_header",
+      "confidence": "confirmed",
+      "constraint": {
+        "allowed": "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+        "kind": "ascii-charset",
+        "max_len": 4
+      },
+      "description": "Record tag for the season/status table; opens the SRAM image.",
+      "evidence": "ASCII 'STAT' (bytes 53 54 41 54) at SRAM file offset 0x00000000 in baseline.sav; boot chain FUN_08000ab0 drives table setup through the CpuSet SWI 0xB bulk primitive FUN_08057d3c and the memset-like fill helper FUN_0804bf30.",
+      "name": "stat_magic",
       "offset": 0,
       "size": 4,
       "type": "ascii"
     },
     {
-      "name": "slot_counter",
+      "confidence": "likely",
+      "constraint": {
+        "kind": "enum",
+        "labels": {
+          "0": "fixed-table",
+          "1": "checksummed-record"
+        },
+        "values": [
+          0,
+          1
+        ]
+      },
+      "description": "Format version of the STAT record; 1 marks the checksummed 12-byte-header layout.",
+      "evidence": "u16 value 1 at SRAM file offset 0x00000004 in baseline.sav; the same version word reads 1 in the WSLU/LINE/SEAS/SERI/CARD/OPTS headers and 0 in the fixed BATT/PITC/WBAT/WPIT headers. Record-header parsing belongs to the save-table layer initialized under FUN_08000ab0 via FUN_08057d3c.",
+      "name": "stat_format_version",
       "offset": 4,
       "size": 2,
       "type": "u16_le"
     },
     {
-      "name": "game_progress_flags",
-      "offset": 6,
+      "confidence": "likely",
+      "description": "Entry count of the STAT record; payload follows at file offset 0x0C.",
+      "evidence": "u16 value 1 at SRAM file offset 0x00000008 in baseline.sav, consistent with the 4-byte STAT payload at 0x0000000C. Table-dimension words of this kind are consumed by fixed-stride init loops of the FUN_08000680 form (N entries by 0x14-byte stride with FUN_08058950-derived fields).",
+      "name": "stat_entry_count",
+      "offset": 8,
       "size": 2,
       "type": "u16_le"
     },
     {
-      "name": "player_status_payload",
-      "offset": 8,
-      "size": 16,
-      "type": "bytes"
+      "confidence": "confirmed",
+      "constraint": {
+        "allowed": "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+        "kind": "ascii-charset",
+        "max_len": 4
+      },
+      "description": "Record tag for the batting-stats table (775 entries of 16 bytes).",
+      "evidence": "ASCII 'BATT' at SRAM file offset 0x00000010 in baseline.sav; chained geometry 0x0000001C + 775*16 = 0x0000308C lands exactly on the verified 'PITC' tag. Bulk table transfers use the FUN_08057d3c CpuSet primitive brought up by FUN_08000ab0.",
+      "name": "batt_magic",
+      "offset": 16,
+      "size": 4,
+      "type": "ascii"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 775,
+        "minimum": 0
+      },
+      "description": "Number of 16-byte batting-stat entries; covers file offsets 0x1C..0x308C.",
+      "evidence": "u16 value 775 (0x0307) at SRAM file offset 0x00000018 in baseline.sav; geometry chains exactly into the next record tag and the sum16_le batt_checksum verifies. Fixed-stride table init follows the FUN_08000680 loop pattern with FUN_08058950 software division.",
+      "name": "batt_record_count",
+      "offset": 24,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 400,
+        "minimum": 0
+      },
+      "description": "Number of 16-byte pitching-stat entries; covers file offsets 0x3098..0x4998.",
+      "evidence": "u16 value 400 (0x0190) at SRAM file offset 0x00003094 in baseline.sav; geometry chains exactly into the verified 'WBAT' tag at 0x00004998 and the sum16_le pitc_checksum verifies. Consumed by fixed-stride table loops of the FUN_08000680 form.",
+      "name": "pitc_record_count",
+      "offset": 12436,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 50,
+        "minimum": 0
+      },
+      "description": "Number of 16-byte team-batting entries; covers file offsets 0x49A4..0x4CC4.",
+      "evidence": "u16 value 50 (0x32) at SRAM file offset 0x000049A0 in baseline.sav; geometry chains exactly into the verified 'WPIT' tag at 0x00004CC4 and the sum16_le wbat_checksum verifies. Fixed-stride table init per the FUN_08000680 loop pattern.",
+      "name": "wbat_record_count",
+      "offset": 18848,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 50,
+        "minimum": 0
+      },
+      "description": "Number of 16-byte team-pitching entries; covers file offsets 0x4CD0..0x4FF0.",
+      "evidence": "u16 value 50 (0x32) at SRAM file offset 0x00004CCC in baseline.sav; geometry chains exactly into the verified 'WSLU' tag at 0x00004FF0 and the sum16_le wpit_checksum verifies. Fixed-stride table init per the FUN_08000680 loop pattern.",
+      "name": "wpit_record_count",
+      "offset": 19660,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 500,
+        "minimum": 0
+      },
+      "description": "Byte length of the WSLU payload; covers file offsets 0x4FFC..0x51F0.",
+      "evidence": "u16 value 500 (0x01F4) at SRAM file offset 0x00004FF6 in baseline.sav; payload end 0x00004FFC + 500 = 0x000051F0 lands exactly on the verified 'LINE' tag, and the sum16_le wslu_checksum (0x063C) over this span verifies. Length-driven CpuSet transfers use FUN_08057d3c.",
+      "name": "wslu_payload_len",
+      "offset": 20470,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 8256,
+        "minimum": 0
+      },
+      "description": "Byte length of the LINE (lineup) payload; covers file offsets 0x51FC..0x723C and holds the nonzero 0/1/3-valued slot array.",
+      "evidence": "u16 value 8256 (0x2040) at SRAM file offset 0x000051F6 in baseline.sav; payload end lands exactly on the verified 'SEAS' tag at 0x0000723C, and the sum16_le line_checksum (0x739B) over this span verifies. Bulk-moved by the FUN_08057d3c CpuSet primitive.",
+      "name": "line_payload_len",
+      "offset": 20982,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 2740,
+        "minimum": 0
+      },
+      "description": "Byte length of the SEAS (season) payload; covers file offsets 0x7248..0x7CFC.",
+      "evidence": "u16 value 2740 (0x0AB4) at SRAM file offset 0x00007242 in baseline.sav; payload end lands exactly on the verified 'SERI' tag at 0x00007CFC, and the sum16_le seas_checksum (0x0BEB) over this span verifies. Bulk-moved by the FUN_08057d3c CpuSet primitive.",
+      "name": "seas_payload_len",
+      "offset": 29250,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "allowed": "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+        "kind": "ascii-charset",
+        "max_len": 4
+      },
+      "description": "Record tag for the game-options block (16-byte payload).",
+      "evidence": "ASCII 'OPTS' at SRAM file offset 0x00007EB2 in baseline.sav; the trailing record of the image (payload 0x00007EBE..0x00007ECE, then 0xFF erased fill to end of SRAM). Option bytes are applied during the FUN_08000ab0 boot/bring-up sequence.",
+      "name": "opts_magic",
+      "offset": 32434,
+      "size": 4,
+      "type": "ascii"
+    },
+    {
+      "confidence": "guessed",
+      "description": "Packed general option word (observed 0x0101: both low bytes set to 1, e.g. enabled defaults).",
+      "evidence": "u16 value 0x0101 at SRAM file offset 0x00007EBE inside the OPTS payload in baseline.sav; covered by the verified sum16_le opts_checksum. Option application happens along the FUN_08000ab0 boot path; exact bit meanings are inferred, not decomp-confirmed.",
+      "name": "opts_setup_word",
+      "offset": 32446,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "guessed",
+      "description": "Option toggle pair (observed 0x00FF: first byte 0xFF/selected, second 0x00).",
+      "evidence": "u16 value 0x00FF at SRAM file offset 0x00007EC2 inside the OPTS payload in baseline.sav; covered by the verified sum16_le opts_checksum. Semantics inferred from the 0xFF-selected/0x00 byte pattern; exact meaning not decomp-confirmed (save serializer outside the FUN_08000680..FUN_08058A98 decomp slice).",
+      "name": "opts_toggle_a",
+      "offset": 32450,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "guessed",
+      "description": "Option toggle pair mirroring opts_toggle_a (observed 0x00FF).",
+      "evidence": "u16 value 0x00FF at SRAM file offset 0x00007EC4 inside the OPTS payload in baseline.sav; covered by the verified sum16_le opts_checksum. Semantics inferred from the repeated toggle pattern; exact meaning not confirmed beyond the FUN_08000ab0 boot-option path.",
+      "name": "opts_toggle_b",
+      "offset": 32452,
+      "size": 2,
+      "type": "u16_le"
     }
-  ]
+  ],
+  "game_code": "AA7E",
+  "id": "aa7e",
+  "magic_signatures": [
+    {
+      "bytes": [
+        83,
+        84,
+        65,
+        84
+      ],
+      "description": "STAT season/status table tag",
+      "offset": 0
+    },
+    {
+      "bytes": [
+        66,
+        65,
+        84,
+        84
+      ],
+      "description": "BATT batting-stats table tag",
+      "offset": 16
+    },
+    {
+      "bytes": [
+        80,
+        73,
+        84,
+        67
+      ],
+      "description": "PITC pitching-stats table tag",
+      "offset": 12428
+    },
+    {
+      "bytes": [
+        87,
+        66,
+        65,
+        84
+      ],
+      "description": "WBAT team-batting table tag",
+      "offset": 18840
+    },
+    {
+      "bytes": [
+        87,
+        80,
+        73,
+        84
+      ],
+      "description": "WPIT team-pitching table tag",
+      "offset": 19652
+    },
+    {
+      "bytes": [
+        87,
+        83,
+        76,
+        85
+      ],
+      "description": "WSLU record tag",
+      "offset": 20464
+    },
+    {
+      "bytes": [
+        76,
+        73,
+        78,
+        69
+      ],
+      "description": "LINE lineup record tag",
+      "offset": 20976
+    },
+    {
+      "bytes": [
+        83,
+        69,
+        65,
+        83
+      ],
+      "description": "SEAS season record tag",
+      "offset": 29244
+    },
+    {
+      "bytes": [
+        83,
+        69,
+        82,
+        73
+      ],
+      "description": "SERI series record tag",
+      "offset": 31996
+    },
+    {
+      "bytes": [
+        67,
+        65,
+        82,
+        68
+      ],
+      "description": "CARD record tag",
+      "offset": 32168
+    },
+    {
+      "bytes": [
+        79,
+        80,
+        84,
+        83
+      ],
+      "description": "OPTS game-options record tag",
+      "offset": 32434
+    }
+  ],
+  "media": "sram",
+  "size_bytes": 32768,
+  "title": "All-Star Baseball 2004 Featuring Derek Jeter (USA)"
 }

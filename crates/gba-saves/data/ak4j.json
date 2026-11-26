@@ -1,45 +1,203 @@
 {
-  "id": "ak4j",
+  "checksums": [],
+  "copy_groups": [
+    {
+      "fields": [
+        "option_slot0_config",
+        "option_slot1_config"
+      ],
+      "name": "option_config_mirrors"
+    },
+    {
+      "fields": [
+        "progress_slot0_tail",
+        "progress_slot1_tail"
+      ],
+      "name": "progress_tail_mirrors"
+    },
+    {
+      "fields": [
+        "progress_slot0_data",
+        "progress_slot1_data"
+      ],
+      "name": "progress_data_mirrors"
+    },
+    {
+      "fields": [
+        "option_slot0_checksum",
+        "option_slot1_checksum"
+      ],
+      "name": "option_checksum_mirrors"
+    },
+    {
+      "fields": [
+        "progress_slot0_checksum",
+        "progress_slot1_checksum"
+      ],
+      "name": "progress_checksum_mirrors"
+    }
+  ],
+  "fields": [
+    {
+      "confidence": "confirmed",
+      "description": "Fixed boot sentinel word; SRAM file bytes [0,11) read back as ASCII 'INITIALIZED'.",
+      "evidence": "FUN_08014c20 SRAM-reads 0x10 bytes from 0x0E000000 into RAM via FUN_08015310 and validates all 0x10 bytes with FUN_0805e738; baseline.sav bytes [0,11) are ASCII 'INITIALIZED'.",
+      "name": "init_marker",
+      "offset": 0,
+      "size": 11,
+      "type": "ascii"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Fixed build/revision tag; SRAM file bytes [11,16) read back as ASCII '0516A'.",
+      "evidence": "FUN_08014c20 validates SRAM bytes [0,16) as one 0x10-byte block via FUN_0805e738 and rewrites it with FUN_0801536c on mismatch; baseline.sav bytes [11,16) are ASCII '0516A'.",
+      "name": "init_build_tag",
+      "offset": 11,
+      "size": 5,
+      "type": "ascii"
+    },
+    {
+      "confidence": "likely",
+      "description": "Slot 0 validity tag: first 10 bytes of the 16-byte option record, compared with FUN_0805e738 length 10 on load.",
+      "evidence": "FUN_08014dd8 loads 2 x 0x10-byte records via FUN_08015310 and FUN_0805e738-compares the first 10 bytes against the expected tag; record base inferred by contiguous packing directly after the 0x10-byte header (slot 0 base 16). Baseline region is zero (fresh save).",
+      "name": "option_slot0_magic",
+      "offset": 16,
+      "size": 10,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Slot 0 option/config payload word: the 4-byte value (record bytes [10,14)) copied to live RAM on valid load and DMA-written back on store.",
+      "evidence": "FUN_08014dd8 FUN_080012b4-copies 4 bytes (uRam08014e60 to uRam08014e5c) after the 10-byte magic check passes, and FUN_08014e70 persists the record with FUN_0801536c (slot stride 0x10); save offset 26 = record base 16 + payload inner offset 10.",
+      "name": "option_slot0_config",
+      "offset": 26,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Slot 0 stored additive checksum: byte sum of record bytes [0,14) kept as a 16-bit value at record bytes [14,16).",
+      "evidence": "FUN_08014dd8 accumulates bytes [0,0x0E) into a short and compares with *psRam08014e58; kept as a plain u16_le field because the baseline slot is zero-filled and the checksum never verifies non-trivially. Save offset 30 = record base 16 + 14.",
+      "name": "option_slot0_checksum",
+      "offset": 30,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Slot 1 validity tag: first 10 bytes of the second 16-byte option record.",
+      "evidence": "FUN_08014dd8 iterates 2 slots (uVar6 = 0..1) reading uVar6 * 0x10 + _DAT_08014e08 via FUN_08015310 with the same 10-byte FUN_0805e738 magic check; slot 1 base 32 = 16 + 0x10 stride. Baseline region is zero (fresh save).",
+      "name": "option_slot1_magic",
+      "offset": 32,
+      "size": 10,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Slot 1 option/config payload word, mirrored copy of the slot 0 config word.",
+      "evidence": "FUN_08014dd8 / FUN_08014e70 handle slot param_1 * 0x10 + _DAT_08014ea8 symmetrically for both slots (load copies 4 live-RAM bytes, store writes 0x10 bytes via FUN_0801536c); save offset 42 = record base 32 + payload inner offset 10.",
+      "name": "option_slot1_config",
+      "offset": 42,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Slot 1 stored additive checksum: byte sum of record bytes [0,14) as a 16-bit value at record bytes [14,16).",
+      "evidence": "FUN_08014dd8 checksum loop (sum of 0x0E bytes vs *psRam08014e58) applies to each of the 2 slots; kept as u16_le (see option_slot0_checksum). Save offset 46 = record base 32 + 14.",
+      "name": "option_slot1_checksum",
+      "offset": 46,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Slot 0 validity tag: first 10 bytes of the 0x22C-byte progress record, compared with FUN_0805e738 length 10 on load.",
+      "evidence": "FUN_08014fb8 loads 2 x 0x22C-byte records via FUN_08015310 (uVar6 * 0x22C + _DAT_08014ff8) and FUN_0805e738-compares the first 10 bytes; record base inferred by contiguous packing after header + option slots (slot 0 base 48). Baseline region is zero (fresh save).",
+      "name": "progress_slot0_magic",
+      "offset": 48,
+      "size": 10,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Slot 0 main progress payload: 0x21C-byte block (record bytes [10,10+0x21C)) bulk-copied between SRAM and live RAM.",
+      "evidence": "FUN_08014fb8 FUN_080012b4-copies 0x21C bytes (iRam08015064 to uRam08015068) after magic + additive-checksum validation, and FUN_08015080 persists the full 0x22C record with FUN_0801536c (slot stride 0x22C); save offset 58 = record base 48 + inner offset 10.",
+      "name": "progress_slot0_data",
+      "offset": 58,
+      "size": 540,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Slot 0 progress tail word: second payload at record offset 0x21C, copied as 4 bytes alongside the main block.",
+      "evidence": "FUN_08014fb8 performs a second FUN_080012b4 4-byte copy at iVar1 + 0x21C (uRam0801506c) after the 0x21C-byte copy; save offset 598 = record base 48 + 10 + 0x21C.",
+      "name": "progress_slot0_tail",
+      "offset": 598,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Slot 0 stored additive checksum of the progress record (covers record bytes up to uRam08015060), kept as 16-bit value at the record tail.",
+      "evidence": "FUN_08014fb8 sums record bytes [0,uRam08015060] into a short and compares with *psRam0801505c; kept as plain u16_le because the baseline slot is zero-filled. Save offset 602 = record base 48 + 0x22A.",
+      "name": "progress_slot0_checksum",
+      "offset": 602,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Slot 1 validity tag: first 10 bytes of the second 0x22C-byte progress record.",
+      "evidence": "FUN_08014fb8 iterates 2 slots (uVar6 = 0..1) with stride 0x22C and the same 10-byte FUN_0805e738 magic check; slot 1 base 604 = 48 + 0x22C stride. Baseline region is zero (fresh save).",
+      "name": "progress_slot1_magic",
+      "offset": 604,
+      "size": 10,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Slot 1 main progress payload: 0x21C-byte block, mirrored copy of the slot 0 progress block.",
+      "evidence": "FUN_08014fb8 / FUN_08015080 handle slot param_1 * 0x22C + _DAT_080150bc symmetrically (0x21C-byte FUN_080012b4 copy plus 4-byte tail copy, full-record FUN_0801536c store); save offset 614 = record base 604 + inner offset 10.",
+      "name": "progress_slot1_data",
+      "offset": 614,
+      "size": 540,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Slot 1 progress tail word, mirrored copy of the slot 0 tail word.",
+      "evidence": "FUN_08014fb8 second FUN_080012b4 4-byte copy at record offset 0x21C applies to each of the 2 slots; save offset 1154 = record base 604 + 10 + 0x21C.",
+      "name": "progress_slot1_tail",
+      "offset": 1154,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Slot 1 stored additive checksum of the progress record, kept as a 16-bit value at the record tail.",
+      "evidence": "FUN_08014fb8 checksum loop (byte sum vs *psRam0801505c) applies to each of the 2 slots; kept as u16_le (see progress_slot0_checksum). Save offset 1158 = record base 604 + 0x22A.",
+      "name": "progress_slot1_checksum",
+      "offset": 1158,
+      "size": 2,
+      "type": "u16_le"
+    }
+  ],
   "game_code": "AK4J",
-  "title": "Kinniku Banzuke - Kongou-kun no Daibouken! (Japan)",
-  "media": "sram",
-  "size_bytes": 32768,
+  "id": "ak4j",
   "magic_signatures": [
     {
-      "offset": 0,
       "bytes": [
         73,
         78,
         73,
         84
-      ]
+      ],
+      "description": "ASCII 'INIT' boot sentinel, start of the 16-byte INITIALIZED header verified by FUN_08014c20",
+      "offset": 0
     }
   ],
-  "checksums": [],
-  "fields": [
-    {
-      "name": "magic_header",
-      "offset": 0,
-      "size": 4,
-      "type": "ascii"
-    },
-    {
-      "name": "slot_counter",
-      "offset": 4,
-      "size": 2,
-      "type": "u16_le"
-    },
-    {
-      "name": "game_progress_flags",
-      "offset": 6,
-      "size": 2,
-      "type": "u16_le"
-    },
-    {
-      "name": "player_status_payload",
-      "offset": 8,
-      "size": 16,
-      "type": "bytes"
-    }
-  ]
+  "media": "sram",
+  "size_bytes": 32768,
+  "title": "Kinniku Banzuke - Kongou-kun no Daibouken! (Japan)"
 }

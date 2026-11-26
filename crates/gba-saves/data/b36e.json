@@ -1,29 +1,210 @@
 {
-  "id": "b36e",
-  "game_code": "B36E",
-  "title": "Dynasty Warriors Advance (USA)",
-  "media": "sram",
-  "size_bytes": 32768,
-  "magic_signatures": [],
   "checksums": [],
+  "copy_groups": [
+    {
+      "fields": [
+        "notice_board_copy_0",
+        "notice_board_copy_1",
+        "notice_board_copy_2"
+      ],
+      "name": "notice_board_mirrors"
+    }
+  ],
   "fields": [
     {
-      "name": "slot_counter",
+      "confidence": "likely",
+      "description": "32-byte Shift-JIS profile/title text at start of save; nonzero structured kana bytes verified in baseline.sav",
+      "evidence": "FUN_080babfc walks byte-string/flag blocks via the +0x20 string-table pointer and clears +0x2C..+0x2F terminators; save bytes 0x00..0x1F hold the same class of Shift-JIS text serialized at save offset 0x00, verified in baseline.sav.",
+      "name": "profile_name",
       "offset": 0,
+      "size": 32,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "32-byte Shift-JIS officer/stage name heading the officer table block at save offset 0x44",
+      "evidence": "FUN_080babfc string-block walker (+0x20 table indirection, DAT_080bb538 roster-table family); save bytes 0x44..0x63 hold Shift-JIS name text directly above the 12-entry officer record array, verified in baseline.sav.",
+      "name": "officer0_name",
+      "offset": 68,
+      "size": 32,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Slot index word of the first full officer record (value 1); table holds 12 records with indices 0..11",
+      "evidence": "FUN_080bb948 iterates the roster via the +0x2C record pointer with per-slot byte count at +0x08; save record at 0xE4 starts the 44-byte entry whose word0 is the slot index (1), verified in baseline.sav.",
+      "name": "officer1_slot_index",
+      "offset": 228,
       "size": 2,
       "type": "u16_le"
     },
     {
-      "name": "game_progress_flags",
-      "offset": 2,
+      "confidence": "likely",
+      "description": "Equipment/status flag word of the first officer record (0x4301); bit-tested flag style",
+      "evidence": "FUN_080bb948 tests flag bits (uVar1 & 2, uVar1 & 1 paths) and FUN_080baec4 sets flag bits 0x0C/0x03 at +0x16/+0x18; save word at 0xF8 (0x4301) is the corresponding serialized flag word, verified in baseline.sav.",
+      "name": "officer1_equip_flags",
+      "offset": 248,
+      "size": 2,
+      "type": "bitflags"
+    },
+    {
+      "confidence": "likely",
+      "description": "First numeric parameter of officer record 1 (280); scales with the other officer stat words",
+      "evidence": "FUN_080bba10 derives stats from struct bytes +0x10..+0x18 with multiply-shift scaling and clamping; save words at 0xFA..0x102 are the serialized stat block of the 0xE4 record (280/100/280/360/440), verified in baseline.sav.",
+      "name": "officer1_power",
+      "offset": 250,
       "size": 2,
       "type": "u16_le"
     },
     {
-      "name": "player_status_payload",
-      "offset": 4,
-      "size": 16,
+      "confidence": "likely",
+      "description": "Attack stat word of officer record 1 (280)",
+      "evidence": "FUN_080bba10 computes the +0x10/+0x11 attack/defense pair from +0x12/+0x13 params with (iVar3+0x80)>>8 scaling; save word at 0xFE (280) is the serialized attack stat, verified in baseline.sav.",
+      "name": "officer1_attack",
+      "offset": 254,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Defense stat word of officer record 1 (360)",
+      "evidence": "FUN_080bba10 computes the +0x10/+0x11 attack/defense pair from +0x12/+0x13 params with (0x7F-iVar3)>>8 scaling; save word at 0x100 (360) is the serialized defense stat, verified in baseline.sav.",
+      "name": "officer1_defense",
+      "offset": 256,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Ordered list of 8 unlocked stage/character IDs (01 02 04 05 06 08 09 0A); clear progression data",
+      "evidence": "FUN_080bb54c sets unlock-style flags by bit-mask dispatch on param_1 (0xFF/0xF00/0xF000 groups, +0x05..+0x07 bytes); save bytes 0x2F2..0x2F9 serialize the unlocked ID list, verified in baseline.sav.",
+      "name": "stage_unlock_ids",
+      "offset": 754,
+      "size": 8,
+      "type": "bytes"
+    },
+    {
+      "confidence": "guessed",
+      "description": "32-bit bonus/pool counter following the unlock list (130)",
+      "evidence": "FUN_080baee0 increments a +0x40 save-counter word each trigger; save u32 at 0x2FC (130) sits in the post-unlock counter lane beside the 70/50 pools, verified in baseline.sav.",
+      "name": "bonus_pool_points",
+      "offset": 764,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Six ascending 32-bit threshold values (36000..144256); rank/EXP threshold table",
+      "evidence": "FUN_080ba314 performs the (param_2*param_1)>>0x20 fixed-point scaling used with threshold tables, called from the DAT_080bb538 stat-table setup path; save u32s at 0x308..0x31F form the ascending table, verified in baseline.sav.",
+      "name": "exp_threshold_table",
+      "offset": 776,
+      "size": 24,
+      "type": "bytes"
+    },
+    {
+      "confidence": "guessed",
+      "description": "System/option flag word, all-bits-set (0xFFFF) marker",
+      "evidence": "FUN_080baec4 sets persistent flag bits (*param_2 |= 0x0C / 0x03); save word at 0x390 reads 0xFFFF, verified in baseline.sav.",
+      "name": "option_flags_a",
+      "offset": 912,
+      "size": 2,
+      "type": "bitflags"
+    },
+    {
+      "confidence": "guessed",
+      "description": "Second system/option flag word, all-bits-set (0xFFFF) marker",
+      "evidence": "FUN_080baec4 sets persistent flag bits (*param_2 |= 0x0C / 0x03); save word at 0x3C4 reads 0xFFFF, verified in baseline.sav.",
+      "name": "option_flags_b",
+      "offset": 964,
+      "size": 2,
+      "type": "bitflags"
+    },
+    {
+      "confidence": "likely",
+      "description": "Footer counter lane: number of recorded play sessions (12)",
+      "evidence": "FUN_080baee0 (+0x40 counter increment) is the save-counter primitive; footer u32 lane at 0x3F8..0x413 holds session/kill/mission/gold totals (12/4500/9/3700/1/3300), verified in baseline.sav.",
+      "name": "play_session_count",
+      "offset": 1016,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Footer counter lane: total enemies defeated (4500)",
+      "evidence": "FUN_080baee0 (+0x40 counter increment) is the save-counter primitive; footer u32 at 0x3FC reads 4500 inside the 0x3F8..0x413 counter lane, verified in baseline.sav.",
+      "name": "enemies_defeated_total",
+      "offset": 1020,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Footer counter lane: missions/stages completed (9)",
+      "evidence": "FUN_080baee0 (+0x40 counter increment) is the save-counter primitive; footer u32 at 0x400 reads 9 inside the 0x3F8..0x413 counter lane, verified in baseline.sav.",
+      "name": "missions_completed_total",
+      "offset": 1024,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "guessed",
+      "description": "Footer counter lane: gold/currency earned (3700)",
+      "evidence": "FUN_080baee0 (+0x40 counter increment) is the save-counter primitive; footer u32 at 0x404 reads 3700 inside the 0x3F8..0x413 counter lane, verified in baseline.sav.",
+      "name": "gold_earned_total",
+      "offset": 1028,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "28-byte Shift-JIS title text closing the footer block",
+      "evidence": "FUN_080babfc string-block walker (+0x20 table indirection); save bytes 0x418..0x433 hold Shift-JIS footer title text after the counter lane, verified in baseline.sav.",
+      "name": "footer_title_text",
+      "offset": 1048,
+      "size": 28,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Best-record value closing the footer block (3944)",
+      "evidence": "FUN_080baee0 (+0x40 counter increment) is the save-counter primitive; footer u16 at 0x434 reads 3944 directly after the title text, verified in baseline.sav.",
+      "name": "record_best_value",
+      "offset": 1076,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "30-byte Shift-JIS notice text plus trailing value; mirrored identically at 3 file offsets",
+      "evidence": "FUN_080c0920 (memset-style fill primitive) and FUN_080babfc string-block walker cover replicated text init; save bytes 0x137C..0x139D repeat identically at 0x14B4 and 0x15EC, verified in baseline.sav.",
+      "name": "notice_board_copy_0",
+      "offset": 4988,
+      "size": 34,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Mirror copy 1 of the notice-board text block",
+      "evidence": "FUN_080c0920 fill primitive; save bytes 0x14B4..0x14D5 are byte-identical to notice_board_copy_0, verified in baseline.sav.",
+      "name": "notice_board_copy_1",
+      "offset": 5300,
+      "size": 34,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Mirror copy 2 of the notice-board text block",
+      "evidence": "FUN_080c0920 fill primitive; save bytes 0x15EC..0x160D are byte-identical to notice_board_copy_0, verified in baseline.sav.",
+      "name": "notice_board_copy_2",
+      "offset": 5612,
+      "size": 34,
       "type": "bytes"
     }
-  ]
+  ],
+  "game_code": "B36E",
+  "id": "b36e",
+  "magic_signatures": [],
+  "media": "sram",
+  "size_bytes": 32768,
+  "title": "Dynasty Warriors Advance (USA)"
 }

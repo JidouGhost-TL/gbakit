@@ -1,29 +1,139 @@
 {
-  "id": "a8lj",
-  "game_code": "A8LJ",
-  "title": "BB Ball (Japan)",
-  "media": "sram",
-  "size_bytes": 32768,
-  "magic_signatures": [],
   "checksums": [],
   "fields": [
     {
-      "name": "slot_counter",
+      "confidence": "confirmed",
+      "description": "Byte-sum checksum of save block (sum of bytes at save offsets 4..2619 mod 65536, stored little-endian). Written by FUN_0800ae14 and verified by FUN_0800ae94 via FUN_0800af20.",
+      "evidence": "FUN_0800af20 sums bytes [param_1, param_1+param_2); FUN_0800ae14 stores it at heap-buffer offset 0 before SRAM write; FUN_0800ae94 recomputes over SRAM bytes [4, block_end) and compares with stored u16 at offset 0.",
+      "name": "slot_checksum",
       "offset": 0,
       "size": 2,
       "type": "u16_le"
     },
     {
-      "name": "game_progress_flags",
+      "confidence": "confirmed",
+      "constraint": {
+        "kind": "enum",
+        "labels": {
+          "0": "empty",
+          "1": "initialized"
+        },
+        "values": [
+          0,
+          1
+        ]
+      },
+      "description": "Slot validity marker: 1 means the slot holds initialized save data, 0 means empty. Copied between the per-slot RAM staging struct (+2) and save offset 2; the checksum-failure path in FUN_0800ae94 forces marker to 1 with checksum 0 (as seen in baseline).",
+      "evidence": "FUN_0800ae14 copies staging u16 at (DAT_0800ae7c + slot*0x20 + 2) to save offset 2; FUN_0800ae94 failure path writes marker 1 to both the SRAM buffer and staging (DAT_0800af1c / DAT_0800aef4 + slot*0x20).",
+      "name": "slot_status",
       "offset": 2,
       "size": 2,
       "type": "u16_le"
     },
     {
-      "name": "player_status_payload",
+      "confidence": "likely",
+      "description": "Event/state flag byte serialized from game-state offset 0x31C; cleared to 0 by event dispatch in FUN_08034ca8 (event cases 0x04/0x06).",
+      "evidence": "FUN_08005048 writes game-state byte at +0x31C to save offset 4; FUN_080052a0 restores it on load; FUN_08034ca8 writes 0 to game-state +0x31C on handled events.",
+      "name": "event_flag",
       "offset": 4,
-      "size": 16,
-      "type": "bytes"
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Total score counter (game-state +0x32C, initialized to 1000). Rendered as decimal digits and compared against thresholds in FUN_08015528; decremented/redistributed by round results in FUN_08015b98.",
+      "evidence": "FUN_08000838 initializes game-state u32 at +0x32C to 1000; FUN_08015528 renders it digit-by-digit (div/mod by 1000/100/10); FUN_08015b98 subtracts round deltas from it; FUN_08005048 serializes it to save offset 0x0C and FUN_080052a0 restores it.",
+      "name": "total_score",
+      "offset": 12,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Per-stage score accumulator for stage 1 (game-state +0x330). Increased by round earnings in FUN_08015b98.",
+      "evidence": "FUN_08015b98 adds round delta to per-stage word at game-state +0x330 + index*4; FUN_08005048 serializes the first per-stage word to save offset 0x10 and FUN_080052a0 restores it.",
+      "name": "stage_score_1",
+      "offset": 16,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Per-stage score accumulator for stage 2 (game-state +0x334).",
+      "evidence": "FUN_08015b98 adds round delta to per-stage word at game-state +0x330 + index*4; FUN_08005048 serializes it to save offset 0x14 and FUN_080052a0 restores it.",
+      "name": "stage_score_2",
+      "offset": 20,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Per-stage score accumulator for stage 3 (game-state +0x338).",
+      "evidence": "FUN_08015b98 adds round delta to per-stage word at game-state +0x330 + index*4; FUN_08005048 serializes it to save offset 0x18 and FUN_080052a0 restores it.",
+      "name": "stage_score_3",
+      "offset": 24,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Per-stage score accumulator for stage 4 (game-state +0x33C).",
+      "evidence": "FUN_08015b98 adds round delta to per-stage word at game-state +0x330 + index*4; FUN_08005048 serializes it to save offset 0x1C and FUN_080052a0 restores it.",
+      "name": "stage_score_4",
+      "offset": 28,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Stage 1 progression level (game-state +0x344). Initialized to 1 and incremented up to 5 when the stage score beats its target.",
+      "evidence": "FUN_08000838 initializes game-state bytes at +0x344[0..4] to 1; FUN_08015b98 and FUN_080157b0 increment the per-stage byte while it is < 5; FUN_08005048 serializes byte 0 to save offset 0x64 and FUN_080052a0 restores it.",
+      "name": "stage_level_1",
+      "offset": 100,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Stage 2 progression level (game-state +0x345). Initialized to 1, capped at 5.",
+      "evidence": "FUN_08000838 initializes game-state bytes at +0x344[0..4] to 1; FUN_08015b98 and FUN_080157b0 increment the per-stage byte while it is < 5; FUN_08005048 serializes byte 1 to save offset 0x65 and FUN_080052a0 restores it.",
+      "name": "stage_level_2",
+      "offset": 101,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Stage 3 progression level (game-state +0x346). Initialized to 1, capped at 5.",
+      "evidence": "FUN_08000838 initializes game-state bytes at +0x344[0..4] to 1; FUN_08015b98 and FUN_080157b0 increment the per-stage byte while it is < 5; FUN_08005048 serializes byte 2 to save offset 0x66 and FUN_080052a0 restores it.",
+      "name": "stage_level_3",
+      "offset": 102,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Stage 4 progression level (game-state +0x347). Initialized to 1, capped at 5.",
+      "evidence": "FUN_08000838 initializes game-state bytes at +0x344[0..4] to 1; FUN_08015b98 and FUN_080157b0 increment the per-stage byte while it is < 5; FUN_08005048 serializes byte 3 to save offset 0x67 and FUN_080052a0 restores it.",
+      "name": "stage_level_4",
+      "offset": 103,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Stage 5 progression level (game-state +0x348). Initialized to 1, capped at 5.",
+      "evidence": "FUN_08000838 initializes game-state bytes at +0x344[0..4] to 1; FUN_08015b98 and FUN_080157b0 increment the per-stage byte while it is < 5; FUN_08005048 serializes byte 4 to save offset 0x68 and FUN_080052a0 restores it.",
+      "name": "stage_level_5",
+      "offset": 104,
+      "size": 1,
+      "type": "u8"
     }
-  ]
+  ],
+  "game_code": "A8LJ",
+  "id": "a8lj",
+  "magic_signatures": [],
+  "media": "sram",
+  "size_bytes": 32768,
+  "title": "BB Ball (Japan)"
 }

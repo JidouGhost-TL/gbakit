@@ -1,45 +1,149 @@
 {
-  "id": "bp3j",
-  "game_code": "BP3J",
-  "title": "Pia Carrot e Youkoso!! 3.3 (Japan)",
-  "media": "eeprom8k",
-  "size_bytes": 8192,
-  "magic_signatures": [
+  "checksums": [],
+  "copy_groups": [
     {
-      "offset": 0,
-      "bytes": [
-        84,
-        65,
-        68,
-        51
-      ]
+      "fields": [
+        "slot00_state",
+        "slot01_state"
+      ],
+      "name": "slot_state_mirrors"
+    },
+    {
+      "fields": [
+        "slot00_route_flags",
+        "slot01_route_flags"
+      ],
+      "name": "slot_route_flags_mirrors"
+    },
+    {
+      "fields": [
+        "slot00_progress_count",
+        "slot01_progress_count"
+      ],
+      "name": "slot_progress_count_mirrors"
     }
   ],
-  "checksums": [],
+  "eeprom_rev8": true,
   "fields": [
     {
-      "name": "magic_header",
+      "confidence": "confirmed",
+      "description": "16-byte ASCII save header 'PIA33DATA040212' plus NUL terminator; coherent only in the rev8-logical domain.",
+      "evidence": "Baseline logical bytes 0x00..0x0F read back via the FUN_08106388 EEPROM-read path (8-byte blocks through FUN_08106308 DMA to 0x0D000000); raw file bytes are bit-reversed per 8-byte block so eeprom_rev8 is true.",
+      "name": "header_magic",
       "offset": 0,
-      "size": 4,
+      "size": 16,
       "type": "ascii"
     },
     {
-      "name": "slot_counter",
-      "offset": 4,
-      "size": 2,
-      "type": "u16_le"
+      "confidence": "likely",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 255,
+        "minimum": 0
+      },
+      "description": "Slot 0 record tag byte; first byte of the 0x90-stride record array starting at logical 0x158 (value 0x03 in baseline).",
+      "evidence": "FUN_08106388 reads one 8-byte EEPROM block per call (4x u16 rebuilt at param_2+6) and FUN_081065ac verifies 4 shorts per call; record base 0x158 is block-aligned start of slot 0 in the 16-record array.",
+      "name": "slot00_state",
+      "offset": 344,
+      "size": 1,
+      "type": "u8"
     },
     {
-      "name": "game_progress_flags",
-      "offset": 6,
-      "size": 2,
-      "type": "u16_le"
+      "confidence": "likely",
+      "constraint": {
+        "flag_labels": {
+          "0": "route_a",
+          "16": "route_c",
+          "24": "route_d",
+          "8": "route_b"
+        },
+        "kind": "bitmask",
+        "valid_mask": 16843009
+      },
+      "description": "Slot 0 four route/unlock flag bytes (baseline 01 01 01 01, LE32 0x01010101).",
+      "evidence": "Logical bytes 0x15B..0x15E inside the slot-0 record written by the FUN_0810644c EEPROM-write path (bit-serialised words via FUN_08106308 to 0x0D000000) and verified word-wise by FUN_081065ac.",
+      "name": "slot00_route_flags",
+      "offset": 347,
+      "size": 4,
+      "type": "bitflags"
     },
     {
-      "name": "player_status_payload",
-      "offset": 8,
-      "size": 16,
-      "type": "bytes"
+      "confidence": "likely",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 255,
+        "minimum": 0
+      },
+      "description": "Slot 0 progress counter byte at record offset +0x37 (value 0x06 in baseline).",
+      "evidence": "Logical offset 0x18F = slot-0 base 0x158 + 0x37; persisted through the FUN_0810644c write / FUN_08106388 read pair, single nonzero byte amid zero padding.",
+      "name": "slot00_progress_count",
+      "offset": 399,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 255,
+        "minimum": 0
+      },
+      "description": "Slot 1 record tag byte; second entry of the 0x90-stride record array at logical 0x1E8 (value 0x03, identical default to slot 0).",
+      "evidence": "Same FUN_08106388 8-byte-block read / FUN_0810644c write path as slot00_state; stride 0x1E8 - 0x158 = 0x90 matches the 16-record array spacing.",
+      "name": "slot01_state",
+      "offset": 488,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "constraint": {
+        "flag_labels": {
+          "0": "route_a",
+          "16": "route_c",
+          "24": "route_d",
+          "8": "route_b"
+        },
+        "kind": "bitmask",
+        "valid_mask": 16843009
+      },
+      "description": "Slot 1 four route/unlock flag bytes (baseline 01 01 01 01, mirrors slot 0 defaults).",
+      "evidence": "Logical bytes 0x1EB..0x1EE inside the slot-1 record; same FUN_0810644c bit-serialised write and FUN_081065ac 4-short verify path as slot00_route_flags.",
+      "name": "slot01_route_flags",
+      "offset": 491,
+      "size": 4,
+      "type": "bitflags"
+    },
+    {
+      "confidence": "likely",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 255,
+        "minimum": 0
+      },
+      "description": "Slot 1 progress counter byte at record offset +0x37 (value 0x06 in baseline).",
+      "evidence": "Logical offset 0x21F = slot-1 base 0x1E8 + 0x37; persisted through the FUN_0810644c write / FUN_08106388 read pair.",
+      "name": "slot01_progress_count",
+      "offset": 543,
+      "size": 1,
+      "type": "u8"
     }
-  ]
+  ],
+  "game_code": "BP3J",
+  "id": "bp3j",
+  "magic_signatures": [
+    {
+      "bytes": [
+        80,
+        73,
+        65,
+        51
+      ],
+      "description": "ASCII 'PIA3' header in the rev8-logical domain",
+      "offset": 0
+    }
+  ],
+  "media": "eeprom8k",
+  "size_bytes": 8192,
+  "title": "Pia Carrot e Youkoso!! 3.3 (Japan)"
 }

@@ -1,29 +1,168 @@
 {
-  "id": "a2ij",
-  "game_code": "A2IJ",
-  "title": "Magi Nation (Japan)",
-  "media": "eeprom8k",
-  "size_bytes": 8192,
-  "magic_signatures": [],
   "checksums": [],
+  "copy_groups": [
+    {
+      "fields": [
+        "slot0_magic",
+        "slot1_magic"
+      ],
+      "name": "slot_magic_mirrors"
+    },
+    {
+      "fields": [
+        "slot0_reserved_zero",
+        "slot1_reserved_zero"
+      ],
+      "name": "slot_zero_mirrors"
+    },
+    {
+      "fields": [
+        "slot0_param",
+        "slot1_param"
+      ],
+      "name": "slot_param_mirrors"
+    }
+  ],
+  "eeprom_rev8": true,
   "fields": [
     {
-      "name": "slot_counter",
+      "confidence": "confirmed",
+      "constraint": null,
+      "description": "Global save-file identifier magic; must equal the expected word or the boot load path flags the save invalid.",
+      "evidence": "FUN_0803560c reads 8 bytes at EEPROM offset 0 via FUN_080354a4 and accepts the header only if iStack_14 == *DAT_0803567c (expected magic supplied by FUN_0801e998 from DAT_0801e9e8); FUN_080356b4 writes it from DAT_08035744. Baseline logical u32@0 = 0xDEADBEEF.",
+      "name": "file_magic",
       "offset": 0,
-      "size": 2,
-      "type": "u16_le"
+      "size": 4,
+      "type": "u32_le"
     },
     {
-      "name": "game_progress_flags",
-      "offset": 2,
-      "size": 2,
-      "type": "u16_le"
-    },
-    {
-      "name": "player_status_payload",
+      "confidence": "confirmed",
+      "constraint": null,
+      "description": "Reserved zero tag of the global header; the load path requires this word to be exactly zero.",
+      "evidence": "FUN_0803560c requires sStack_10 == 0 (logical bytes 4..5) before accepting the header; FUN_080356b4 always writes uStack_28 = 0. Baseline logical u16@4 = 0.",
+      "name": "file_reserved_zero",
       "offset": 4,
-      "size": 16,
-      "type": "bytes"
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 2,
+        "minimum": 0
+      },
+      "description": "Number of mirrored 8-byte slot records that follow the global header; drives the FUN_080356b4 write loop and the record stride (total/count).",
+      "evidence": "FUN_080356b4 stores param_1 into header bytes 6..7 (uStack_26) and writes that many records; FUN_0803528c (slot-header check shared with this layout) rejects values above 2 (uStack_a = 3 failure path). FUN_0801e998 calls FUN_080356b4(2). Baseline logical u16@6 = 2.",
+      "name": "file_record_count",
+      "offset": 6,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": null,
+      "description": "Per-slot header magic for slot 0; validated against the expected word on every boot and rewritten by the save routine.",
+      "evidence": "FUN_080356b4 writes DAT_0803574c to each record (first at EEPROM offset 8); FUN_080351b0 builds the slot-0 descriptor (read offset 8) and FUN_0803528c via FUN_0801ea50/FUN_0801e998 requires iStack_10 == *DAT_080352c4. Baseline logical u32@8 = 0xCAFEF00D.",
+      "name": "slot0_magic",
+      "offset": 8,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": null,
+      "description": "Reserved zero word of the slot-0 header; must read back as zero under the shared header check.",
+      "evidence": "FUN_0803528c requires sStack_c == 0 (slot-header bytes 4..5) for the FUN_080351b0 slot-0 descriptor; FUN_080356b4 always writes uStack_20 = 0 for records. Baseline logical u16@12 = 0.",
+      "name": "slot0_reserved_zero",
+      "offset": 12,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 2,
+        "minimum": 0
+      },
+      "description": "Slot-0 header parameter word; shares the <=2 validity rule of the 8-byte header layout.",
+      "evidence": "FUN_0803528c rejects slot-header third words above 2 (2 < uStack_a failure path) for descriptors built by FUN_080351b0 and checked from FUN_0801ea50. Baseline logical u16@14 = 0.",
+      "name": "slot0_param",
+      "offset": 14,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": null,
+      "description": "Per-slot header magic for slot 1; redundant mirror of slot0_magic written by the same loop.",
+      "evidence": "FUN_080356b4 record loop writes identical DAT_0803574c content to the record at stride offset 0x1000 (second iteration, sVar2 = 8 + sVar1*8); FUN_080351b0 slot-1 descriptor covers it. Baseline logical u32@0x1000 = 0xCAFEF00D, byte-identical to slot 0.",
+      "name": "slot1_magic",
+      "offset": 4096,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": null,
+      "description": "Reserved zero word of the slot-1 header; mirror of slot0_reserved_zero.",
+      "evidence": "Same FUN_080356b4 record body (uStack_20 = 0) as slot 0; same shared check shape in FUN_0803528c. Baseline logical u16@0x1002 = 0.",
+      "name": "slot1_reserved_zero",
+      "offset": 4100,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 2,
+        "minimum": 0
+      },
+      "description": "Slot-1 header parameter word; mirror of slot0_param under the same <=2 rule.",
+      "evidence": "FUN_080351b0 slot-1 descriptor + FUN_0803528c shared <=2 check via FUN_0801ea50; written 0 by the FUN_080356b4 loop. Baseline logical u16@0x1004 = 0.",
+      "name": "slot1_param",
+      "offset": 4102,
+      "size": 2,
+      "type": "u16_le"
     }
-  ]
+  ],
+  "game_code": "A2IJ",
+  "id": "a2ij",
+  "magic_signatures": [
+    {
+      "bytes": [
+        239,
+        190,
+        173,
+        222
+      ],
+      "description": "Global header identifier 0xDEADBEEF (logical domain)",
+      "offset": 0
+    },
+    {
+      "bytes": [
+        13,
+        240,
+        254,
+        202
+      ],
+      "description": "Slot-0 header marker 0xCAFEF00D (logical domain)",
+      "offset": 8
+    },
+    {
+      "bytes": [
+        13,
+        240,
+        254,
+        202
+      ],
+      "description": "Slot-1 header marker 0xCAFEF00D mirror (logical domain)",
+      "offset": 4096
+    }
+  ],
+  "media": "eeprom8k",
+  "size_bytes": 8192,
+  "title": "Magi Nation (Japan)"
 }

@@ -1,29 +1,65 @@
 {
-  "id": "a6gj",
-  "game_code": "A6GJ",
-  "title": "Monster Gate - Ooinaru Dungeon - Fuuin no Orb (Japan)",
-  "media": "sram",
-  "size_bytes": 32768,
-  "magic_signatures": [],
   "checksums": [],
   "fields": [
     {
-      "name": "slot_counter",
+      "confidence": "confirmed",
+      "description": "Stored CRC-32 of the 0x3380-byte main SRAM block at save offset 0x0. Verified by FUN_080734a4 (computes FUN_08001bf0 over 0xE000000 length 0x3380, compares with 4-byte value read via FUN_08001c50) and FUN_08014eec. Baseline holds erased 0xFFFFFFFF, which mismatches the computed CRC-32 of the all-0xFF block (0x7ba98df4), so the main slot is blank/invalid.",
+      "evidence": "FUN_080734a4 calls FUN_08001bf0(0xe000000,0x3380) and compares against the u32 read by FUN_08001c50; FUN_08014eec repeats the FUN_08001bf0(0x3380) versus FUN_08001c50 4-byte compare. Save offsets 0x3380..0x3384.",
+      "name": "main_data_crc32",
+      "offset": 13184,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "First 16-bit unit of the 8-byte CRC-protected system record at save offset 0x3384. The record is verified as a unit by FUN_08014f4c (FUN_08001bf0 over 8 bytes), default-zeroed by FUN_08014d7c, and transferred as 8 bytes by FUN_08014fb4. Baseline value 0x0000.",
+      "evidence": "FUN_08014f4c runs FUN_08001bf0 over 8 bytes at the record SRAM address and compares with the stored u32; FUN_08014d7c zero-initializes the 8-byte RAM mirror (default state); FUN_08014fb4 transfers the 8-byte record via FUN_08001c50. Save offset 0x3384.",
+      "name": "sys_rec_a",
       "offset": 13188,
       "size": 2,
       "type": "u16_le"
     },
     {
-      "name": "game_progress_flags",
+      "confidence": "likely",
+      "description": "Second 16-bit unit of the 8-byte CRC-protected system record at save offset 0x3384. Same verify/default/transfer call chain as sys_rec_a. Baseline value 0x0000.",
+      "evidence": "FUN_08014f4c runs FUN_08001bf0 over 8 bytes at the record SRAM address and compares with the stored u32; FUN_08014d7c zero-initializes the 8-byte RAM mirror (default state); FUN_08014fb4 transfers the 8-byte record via FUN_08001c50. Save offset 0x3386.",
+      "name": "sys_rec_b",
       "offset": 13190,
       "size": 2,
       "type": "u16_le"
     },
     {
-      "name": "player_status_payload",
+      "confidence": "likely",
+      "description": "Third 16-bit unit of the 8-byte CRC-protected system record at save offset 0x3384. Same verify/default/transfer call chain as sys_rec_a. Baseline value 0x0000.",
+      "evidence": "FUN_08014f4c runs FUN_08001bf0 over 8 bytes at the record SRAM address and compares with the stored u32; FUN_08014d7c zero-initializes the 8-byte RAM mirror (default state); FUN_08014fb4 transfers the 8-byte record via FUN_08001c50. Save offset 0x3388.",
+      "name": "sys_rec_c",
       "offset": 13192,
-      "size": 16,
-      "type": "bytes"
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Fourth 16-bit unit of the 8-byte CRC-protected system record at save offset 0x3384. Same verify/default/transfer call chain as sys_rec_a. Baseline value 0x0000.",
+      "evidence": "FUN_08014f4c runs FUN_08001bf0 over 8 bytes at the record SRAM address and compares with the stored u32; FUN_08014d7c zero-initializes the 8-byte RAM mirror (default state); FUN_08014fb4 transfers the 8-byte record via FUN_08001c50. Save offset 0x338A.",
+      "name": "sys_rec_d",
+      "offset": 13194,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Stored CRC-32 of the 8-byte system record at save offset 0x3384. Verified 100% against baseline: CRC-32 of eight 0x00 bytes is 0x6522df69, matching the little-endian u32 at save offset 0x338C. Represented as a field (not a checksums entry) because Schema v2 has no crc32 algorithm.",
+      "evidence": "FUN_08014f4c computes FUN_08001bf0 over 8 bytes and compares with this stored u32; FUN_080734a4 uses the same FUN_08001bf0/FUN_08001c50 verify pattern for the main block. Save offsets 0x338C..0x3390, value 0x6522df69.",
+      "name": "sys_rec_crc32",
+      "offset": 13196,
+      "size": 4,
+      "type": "u32_le"
     }
-  ]
+  ],
+  "game_code": "A6GJ",
+  "id": "a6gj",
+  "magic_signatures": [],
+  "media": "sram",
+  "size_bytes": 32768,
+  "title": "Monster Gate - Ooinaru Dungeon - Fuuin no Orb (Japan)"
 }

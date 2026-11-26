@@ -1,45 +1,154 @@
 {
-  "id": "afwj",
+  "checksums": [
+    {
+      "algorithm": "sum32_le",
+      "covered_end": 61008,
+      "covered_start": 0,
+      "name": "save_checksum_sum",
+      "seed": 0,
+      "stored_offset": 61008,
+      "xor_out": 0
+    }
+  ],
+  "copy_groups": [],
+  "eeprom_rev8": false,
+  "fields": [
+    {
+      "confidence": "confirmed",
+      "description": "Save-image magic header, ASCII 'FINALFP' identifying a valid Final Fire Pro Wrestling management-mode save.",
+      "evidence": "FUN_0804aabc compares 7 bytes with func_0x0806fb0c against the save-image header at file offset 0x0; samples/baseline.sav holds 46 49 4E 41 4C 46 50 ('FINALFP') there.",
+      "name": "save_magic",
+      "offset": 0,
+      "size": 7,
+      "type": "ascii"
+    },
+    {
+      "confidence": "likely",
+      "constraint": {
+        "flag_labels": {
+          "0": "roster_flag_0",
+          "1": "roster_flag_1",
+          "7": "roster_flag_7"
+        },
+        "kind": "bitmask",
+        "valid_mask": 131
+      },
+      "description": "Wrestler record 0 status/flag byte (per-wrestler state flags; observed bits 0x01, 0x02, 0x80 across the 244-record roster).",
+      "evidence": "FUN_0804a240 writes record byte 0 (copied from roster-table byte at +0x1) for each of 244 records at save-buffer offset 0x6080+i*0x48; FUN_0804a32c iterates the same 244-entry roster table (source stride 0x1F8) reading per-wrestler flag bytes.",
+      "name": "wrestler_00_status",
+      "offset": 24704,
+      "size": 1,
+      "type": "bitflags"
+    },
+    {
+      "confidence": "likely",
+      "description": "Wrestler record 0 attribute/parameter block (5 high-entropy parameter bytes followed by per-record data copied from the roster table).",
+      "evidence": "FUN_0804a240 copies 0x12 bytes from roster-table offset +0x2 to save-buffer offset 0x6081+i*0x48 for 244 records at stride 0x48.",
+      "name": "wrestler_00_attributes",
+      "offset": 24705,
+      "size": 18,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Wrestler record 0 ring name in Shift-JIS (katakana), e.g. record 0 reads as a katakana ring name in baseline.sav.",
+      "evidence": "FUN_0804a240 copies 0x14 bytes from roster-table offset +0x14 to save-buffer offset 0x6093+i*0x48; baseline.sav record 0 holds Shift-JIS katakana at 0x6093..0x60A6.",
+      "name": "wrestler_00_ring_name",
+      "offset": 24723,
+      "size": 20,
+      "type": "ascii"
+    },
+    {
+      "confidence": "likely",
+      "description": "Wrestler record 0 real name in Shift-JIS (kanji/kana).",
+      "evidence": "FUN_0804a240 copies 0x1E bytes from roster-table offset +0x28 to save-buffer offset 0x60A7+i*0x48; baseline.sav record 0 holds Shift-JIS kanji/kana at 0x60A7..0x60C4.",
+      "name": "wrestler_00_real_name",
+      "offset": 24743,
+      "size": 30,
+      "type": "ascii"
+    },
+    {
+      "confidence": "likely",
+      "description": "Wrestler records 1..243, each 0x48 bytes with the same layout as record 0 (status byte, attribute block, ring name, real name).",
+      "evidence": "FUN_0804a240 serializes 244 records (loop counter 0xF3 down to 0, source stride 0x1F8, dest stride 0x48) at save-buffer offsets 0x6080..0xA51F; this field covers records 1..243 at 0x60C8..0xA51F.",
+      "name": "wrestler_records_01_243",
+      "offset": 24776,
+      "size": 17496,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Stable/promotion name table: 18 entries of 0x2C bytes, each a pair of Shift-JIS strings (full name + short name).",
+      "evidence": "FUN_0804a240 first loop copies 0x18 + 0x10 bytes per entry for 0x12 (18) iterations at save-buffer stride 0x2C starting at offset 0xE9D4; baseline.sav holds 18 Shift-JIS name pairs at 0xE9D4..0xECEB.",
+      "name": "stable_names",
+      "offset": 59860,
+      "size": 792,
+      "type": "ascii"
+    },
+    {
+      "confidence": "likely",
+      "description": "Per-wrestler affiliation/config byte for wrestler 0 (values 0x00..0x11 observed; entry 0 is 0x04).",
+      "evidence": "FUN_0804a32c copies one byte per wrestler for 244 iterations (source stride 0x1F8, the same roster-table stride used by FUN_0804a240) into a consecutive 244-byte buffer; baseline.sav holds 244 small per-wrestler values at 0xED2A..0xEE1B.",
+      "name": "wrestler_00_affiliation",
+      "offset": 60714,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Per-wrestler affiliation/config bytes for wrestlers 1..243.",
+      "evidence": "Same 244-byte buffer written by FUN_0804a32c as wrestler_00_affiliation; entries 1..243 at 0xED2B..0xEE1B.",
+      "name": "wrestler_affiliation_rest",
+      "offset": 60715,
+      "size": 243,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Save generation counter used to select the newest sector image on load.",
+      "evidence": "FUN_0804ab88 reads a u32 counter at save-buffer offset +iRam0804abec from each candidate sector image and keeps the image with the highest value; baseline.sav holds 1 at 0xEE4C directly before the stored checksums, inside the verified checksum coverage.",
+      "name": "save_counter",
+      "offset": 61004,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Stored 32-bit byte-sum checksum over save bytes [0x0, 0xEE50).",
+      "evidence": "FUN_0804aaf0 stores the 32-bit byte-sum over save-buffer [0x0, 0xEE50) at offset 0xEE50 and FUN_0804ab34 verifies it; independently recomputed sum over samples/baseline.sav bytes [0, 61008) equals the stored LE u32 0x000DAF89.",
+      "name": "checksum_sum32",
+      "offset": 61008,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Stored 32-bit rotating-xor checksum over save bytes [0x0, 0xEE50): per byte x = ((x ^ byte) << 1), mod 2^32.",
+      "evidence": "FUN_0804aaf0 stores the rotating-xor chain over save-buffer [0x0, 0xEE50) at offset 0xEE54 and FUN_0804ab34 verifies it; independently recomputed value over samples/baseline.sav equals the stored LE u32 0x00000010.",
+      "name": "checksum_xor32",
+      "offset": 61012,
+      "size": 4,
+      "type": "u32_le"
+    }
+  ],
   "game_code": "AFWJ",
-  "title": "Final Fire Pro Wrestling - Yume no Dantai Unei! (Japan)",
-  "media": "flash512",
-  "size_bytes": 65536,
+  "id": "afwj",
   "magic_signatures": [
     {
-      "offset": 0,
       "bytes": [
         70,
         73,
         78,
-        65
-      ]
+        65,
+        76,
+        70,
+        80
+      ],
+      "description": "ASCII 'FINALFP' save-image magic",
+      "offset": 0
     }
   ],
-  "checksums": [],
-  "fields": [
-    {
-      "name": "magic_header",
-      "offset": 0,
-      "size": 4,
-      "type": "ascii"
-    },
-    {
-      "name": "slot_counter",
-      "offset": 4,
-      "size": 2,
-      "type": "u16_le"
-    },
-    {
-      "name": "game_progress_flags",
-      "offset": 6,
-      "size": 2,
-      "type": "u16_le"
-    },
-    {
-      "name": "player_status_payload",
-      "offset": 8,
-      "size": 16,
-      "type": "bytes"
-    }
-  ]
+  "media": "flash512",
+  "size_bytes": 65536,
+  "title": "Final Fire Pro Wrestling - Yume no Dantai Unei! (Japan)"
 }

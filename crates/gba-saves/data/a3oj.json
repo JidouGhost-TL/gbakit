@@ -1,29 +1,266 @@
 {
-  "id": "a3oj",
-  "game_code": "A3OJ",
-  "title": "Di Gi Charat - DigiCommunication (Japan)",
-  "media": "sram",
-  "size_bytes": 32768,
-  "magic_signatures": [],
   "checksums": [],
+  "copy_groups": [
+    {
+      "fields": [
+        "inv_table_len",
+        "inv_table_len_mirror"
+      ],
+      "name": "inv_len_mirrors"
+    },
+    {
+      "fields": [
+        "inv_count_0",
+        "inv_count_0_mirror"
+      ],
+      "name": "inv_count_0_mirrors"
+    },
+    {
+      "fields": [
+        "inv_count_1",
+        "inv_count_1_mirror"
+      ],
+      "name": "inv_count_1_mirrors"
+    },
+    {
+      "fields": [
+        "inv_count_2",
+        "inv_count_2_mirror"
+      ],
+      "name": "inv_count_2_mirrors"
+    },
+    {
+      "fields": [
+        "inv_count_3",
+        "inv_count_3_mirror"
+      ],
+      "name": "inv_count_3_mirrors"
+    },
+    {
+      "fields": [
+        "inv_count_4",
+        "inv_count_4_mirror"
+      ],
+      "name": "inv_count_4_mirrors"
+    }
+  ],
   "fields": [
     {
-      "name": "slot_counter",
+      "confidence": "likely",
+      "description": "Save write counter (increments each time the SRAM image is stored).",
+      "evidence": "Header u32 slot written through the SRAM store path FUN_080b32fc (save_off -> 0x0E000000+off); loaded back via FUN_080b3238/FUN_080b2d70. Value 170 in baseline.",
+      "name": "save_write_counter",
       "offset": 0,
-      "size": 2,
-      "type": "u16_le"
+      "size": 4,
+      "type": "u32_le"
     },
     {
-      "name": "game_progress_flags",
-      "offset": 2,
-      "size": 2,
-      "type": "u16_le"
-    },
-    {
-      "name": "player_status_payload",
+      "confidence": "likely",
+      "description": "Save format version tag.",
+      "evidence": "Header u32 slot persisted via FUN_080b32fc SRAM write path and reloaded via FUN_080b3238. Constant value 8 in baseline.",
+      "name": "save_format_version",
       "offset": 4,
-      "size": 16,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Byte length of the inventory table payload at 0x102C (1616 == 0x167C-0x102C).",
+      "evidence": "Value 0x650 verified against baseline: payload 0x102C..0x167C is exactly 1616 bytes. Persisted via FUN_080b32fc; duplicated slot at save offset 0x14 shows the mirrored-integrity layout.",
+      "name": "inv_table_len",
+      "offset": 16,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Redundant mirror copy of inv_table_len.",
+      "evidence": "Identical value 0x650 at save offset 0x14; mirrored-pair layout written via FUN_080b32fc, read back via FUN_080b3238.",
+      "name": "inv_table_len_mirror",
+      "offset": 20,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Player/shop name in Shift-JIS: 'akihabara shop' (12 bytes + zero padding).",
+      "evidence": "23-byte SJIS field at save offset 0x49 decoded as game text; glyph rendering handled by the text engine FUN_080b7fa4 (per-index 0x24-stride glyph table, half/full-width split at byte value 0x81). Stored via FUN_080b32fc.",
+      "name": "player_name",
+      "offset": 73,
+      "size": 23,
       "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Player funds/points counter (5635 in baseline).",
+      "evidence": "u32 LE word immediately after player_name at save offset 0x60, inside the header record written by FUN_080b32fc and reloaded by FUN_080b3238. Magnitude is consistent with the shop price scale (100000..2000000) in the catalog at 0x50C.",
+      "name": "player_funds",
+      "offset": 96,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Option/config flag byte (0xFF in baseline).",
+      "evidence": "Isolated nonzero flag byte at save offset 0x9C outside all table regions; option bytes are kept in the SRAM image written by FUN_080b32fc and reloaded via FUN_080b3238.",
+      "name": "option_flag",
+      "offset": 156,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Story/progress flag byte (0x01 in baseline).",
+      "evidence": "Isolated nonzero flag byte at save offset 0x4B0; progress state is part of the SRAM image persisted through FUN_080b32fc and reloaded via FUN_080b3238.",
+      "name": "progress_flag",
+      "offset": 1200,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Catalog price of item 0 (broccoli): 2000000. Fixed shop reference data.",
+      "evidence": "u32 LE at save offset 0x51C inside 20-byte catalog records (12-byte SJIS name + 4-byte pad + u32 price); prices descend by exactly 100000 per record (2000000..100000 verified across all 20 records). Written via FUN_080b32fc.",
+      "name": "shop_price_0",
+      "offset": 1308,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Catalog price of item 1 (cauliflower): 1900000.",
+      "evidence": "u32 LE at save offset 0x530, second 20-byte catalog record; 100000-step price ladder verified across the 0x50C table. Written via FUN_080b32fc.",
+      "name": "shop_price_1",
+      "offset": 1328,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Held count of item 0 (broccoli): 5.",
+      "evidence": "u32 LE count at save offset 0x1048 closing a 20-byte inventory record (16-byte SJIS name + u32 count). Counts 5,4,3,2,1 verified for the 5-record table; table repeats identically 16x. Persisted via FUN_080b32fc, reloaded via FUN_080b3238.",
+      "name": "inv_count_0",
+      "offset": 4168,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Held count of item 1 (cauliflower): 4.",
+      "evidence": "u32 LE count at save offset 0x105C (record stride 20 from 0x1038). Verified in baseline; mirrored copies throughout the 0x1028 block. Persisted via FUN_080b32fc.",
+      "name": "inv_count_1",
+      "offset": 4188,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Held count of item 2 (tomato): 3.",
+      "evidence": "u32 LE count at save offset 0x1070 (record stride 20). Verified in baseline; mirrored copies throughout the 0x1028 block. Persisted via FUN_080b32fc.",
+      "name": "inv_count_2",
+      "offset": 4208,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Held count of item 3 (carrot): 2.",
+      "evidence": "u32 LE count at save offset 0x1084 (record stride 20 from 0x1038). Verified in baseline; mirrored copies throughout the 0x1028 block. Persisted via FUN_080b32fc.",
+      "name": "inv_count_3",
+      "offset": 4228,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Held count of item 4 (celery): 1.",
+      "evidence": "u32 LE count at save offset 0x1098 (record stride 20). Verified in baseline; mirrored copies throughout the 0x1028 block. Persisted via FUN_080b32fc.",
+      "name": "inv_count_4",
+      "offset": 4248,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Mirror copy of inv_count_0 in the second 100-byte replica (offset +0x64).",
+      "evidence": "Identical value 5 at save offset 0x10AC; all sixteen 100-byte replicas of the inventory table are byte-identical in baseline. Written via FUN_080b32fc.",
+      "name": "inv_count_0_mirror",
+      "offset": 4268,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Mirror copy of inv_count_1 in the second 100-byte replica.",
+      "evidence": "Identical value 4 at save offset 0x10C0; replica verified byte-identical. Written via FUN_080b32fc.",
+      "name": "inv_count_1_mirror",
+      "offset": 4288,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Mirror copy of inv_count_2 in the second 100-byte replica.",
+      "evidence": "Identical value 3 at save offset 0x10D4; replica verified byte-identical. Written via FUN_080b32fc.",
+      "name": "inv_count_2_mirror",
+      "offset": 4308,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Mirror copy of inv_count_3 in the second 100-byte replica.",
+      "evidence": "Identical value 2 at save offset 0x10E8; replica verified byte-identical. Written via FUN_080b32fc.",
+      "name": "inv_count_3_mirror",
+      "offset": 4328,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Mirror copy of inv_count_4 in the second 100-byte replica.",
+      "evidence": "Identical value 1 at save offset 0x10FC; replica verified byte-identical. Written via FUN_080b32fc.",
+      "name": "inv_count_4_mirror",
+      "offset": 4348,
+      "size": 4,
+      "type": "u32_le"
     }
-  ]
+  ],
+  "game_code": "A3OJ",
+  "id": "a3oj",
+  "magic_signatures": [
+    {
+      "bytes": [
+        5,
+        0,
+        205,
+        171
+      ],
+      "description": "Block magic u32 0xABCD0005 LE guarding the file header",
+      "offset": 40
+    },
+    {
+      "bytes": [
+        5,
+        0,
+        205,
+        171
+      ],
+      "description": "Block magic u32 0xABCD0005 LE guarding the inventory table",
+      "offset": 4136
+    },
+    {
+      "bytes": [
+        5,
+        0,
+        205,
+        171
+      ],
+      "description": "Block magic u32 0xABCD0005 LE guarding the event record table",
+      "offset": 28704
+    }
+  ],
+  "media": "sram",
+  "size_bytes": 32768,
+  "title": "Di Gi Charat - DigiCommunication (Japan)"
 }

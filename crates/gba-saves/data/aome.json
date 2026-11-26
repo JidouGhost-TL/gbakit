@@ -6,40 +6,172 @@
   "size_bytes": 512,
   "magic_signatures": [
     {
-      "offset": 1,
+      "offset": 0,
       "bytes": [
+        0,
         98,
         120,
         116,
-        77
-      ]
+        77,
+        115,
+        110,
+        68
+      ],
+      "description": "8-byte save identification tag at image offset 0, checked by FUN_080241e0 via FUN_08024d60 memcmp length 8 against ROM tag"
     }
   ],
   "checksums": [],
   "fields": [
     {
-      "name": "magic_header",
-      "offset": 1,
-      "size": 4,
-      "type": "ascii"
+      "name": "save_magic",
+      "offset": 0,
+      "size": 8,
+      "type": "bytes",
+      "description": "8-byte save identification tag; must match the ROM tag or FUN_080241e0 rejects the save and re-initializes defaults",
+      "confidence": "confirmed",
+      "evidence": "FUN_080241e0 validates the save with FUN_08024d60 memcmp of 8 bytes at save offset 0 against the ROM tag pointer _DAT_0802426c; FUN_08024324 and FUN_080247d8 copy these 8 bytes raw (stream bits 0..63)."
     },
     {
-      "name": "slot_counter",
-      "offset": 5,
-      "size": 2,
-      "type": "u16_le"
+      "name": "unlock_flags_0",
+      "offset": 8,
+      "size": 1,
+      "type": "bitflags",
+      "description": "Progress/unlock flags 0..7 (LSB-first): 1-bit game-state values at state+8..+22, packed at save bits 64..71",
+      "confidence": "likely",
+      "evidence": "FUN_08024324 packs 47 consecutive 1-bit state u16 values (state+8, 0x2f entries) starting at save bit 64; FUN_080247d8 unpacks them; FUN_08023ad0 defaults the array to [1,0,0,...].",
+      "constraint": {
+        "kind": "bitmask",
+        "valid_mask": 255
+      }
     },
     {
-      "name": "game_progress_flags",
-      "offset": 7,
-      "size": 2,
-      "type": "u16_le"
-    },
-    {
-      "name": "player_status_payload",
+      "name": "unlock_flags_1",
       "offset": 9,
-      "size": 16,
-      "type": "bytes"
+      "size": 1,
+      "type": "bitflags",
+      "description": "Progress/unlock flags 8..15 (LSB-first): 1-bit game-state values at state+24..+38, packed at save bits 72..79",
+      "confidence": "likely",
+      "evidence": "FUN_08024324 packs 47 consecutive 1-bit state u16 values (state+8, 0x2f entries) starting at save bit 64; FUN_080247d8 unpacks them; FUN_08023ad0 defaults the array to [1,0,0,...].",
+      "constraint": {
+        "kind": "bitmask",
+        "valid_mask": 255
+      }
+    },
+    {
+      "name": "unlock_flags_2",
+      "offset": 10,
+      "size": 1,
+      "type": "bitflags",
+      "description": "Progress/unlock flags 16..23 (LSB-first): 1-bit game-state values at state+40..+54, packed at save bits 80..87",
+      "confidence": "likely",
+      "evidence": "FUN_08024324 packs 47 consecutive 1-bit state u16 values (state+8, 0x2f entries) starting at save bit 64; FUN_080247d8 unpacks them; FUN_08023ad0 defaults the array to [1,0,0,...].",
+      "constraint": {
+        "kind": "bitmask",
+        "valid_mask": 255
+      }
+    },
+    {
+      "name": "unlock_flags_3",
+      "offset": 11,
+      "size": 1,
+      "type": "bitflags",
+      "description": "Progress/unlock flags 24..31 (LSB-first): 1-bit game-state values at state+56..+70, packed at save bits 88..95",
+      "confidence": "likely",
+      "evidence": "FUN_08024324 packs 47 consecutive 1-bit state u16 values (state+8, 0x2f entries) starting at save bit 64; FUN_080247d8 unpacks them; FUN_08023ad0 defaults the array to [1,0,0,...].",
+      "constraint": {
+        "kind": "bitmask",
+        "valid_mask": 255
+      }
+    },
+    {
+      "name": "unlock_flags_4",
+      "offset": 12,
+      "size": 1,
+      "type": "bitflags",
+      "description": "Progress/unlock flags 32..39 (LSB-first): 1-bit game-state values at state+72..+86, packed at save bits 96..103",
+      "confidence": "likely",
+      "evidence": "FUN_08024324 packs 47 consecutive 1-bit state u16 values (state+8, 0x2f entries) starting at save bit 64; FUN_080247d8 unpacks them; FUN_08023ad0 defaults the array to [1,0,0,...].",
+      "constraint": {
+        "kind": "bitmask",
+        "valid_mask": 255
+      }
+    },
+    {
+      "name": "unlock_flags_5",
+      "offset": 13,
+      "size": 1,
+      "type": "bitflags",
+      "description": "Progress/unlock flags 40..46 plus the state+0x68 flag (LSB-first), packed at save bits 104..111",
+      "confidence": "likely",
+      "evidence": "FUN_08024324 packs flag 40..46 of the 47-entry array plus the state+0x68 1-bit value at save bit 111; FUN_080247d8 unpacks them; FUN_08024080 defaults state+0x68 to 0.",
+      "constraint": {
+        "kind": "bitmask",
+        "valid_mask": 255
+      }
+    },
+    {
+      "name": "packed_class_records",
+      "offset": 14,
+      "size": 77,
+      "type": "bytes",
+      "description": "Bit-packed class records, save bits 112..727: state+0x6a 1-bit flag at bit 112, then 3 groups x 5 records (state+0x6c stride 0x3c/0xc) each holding a 3-bit selector, three 7-bit values, and a u32 score/prize value stored quantized as value/100 in 17 bits. LSB-first packing; see SPEC.md bit map.",
+      "confidence": "likely",
+      "evidence": "FUN_08024324 packs 3x5 records (3-bit, 3x7-bit, 16+1-bit of value/100 via FUN_0802cef0) at save bits 113..727; FUN_080247d8 unpacks with (low16|hi<<16)*100; record address helper FUN_08024efc; ROM defaults copied by FUN_08023b90."
+    },
+    {
+      "name": "packed_track_records",
+      "offset": 91,
+      "size": 180,
+      "type": "bytes",
+      "description": "Bit-packed track records, save bits 728..2162: 7 groups x 5 records (state+0x120 stride 0x3c/0xc) with the same 3-bit + 3x7-bit + 17-bit (value/100) layout as packed_class_records. Last 3 bits spill into byte 270; see SPEC.md bit map.",
+      "confidence": "likely",
+      "evidence": "FUN_08024324 packs 7x5 records (3-bit, 3x7-bit, 16+1-bit of value/100 via FUN_0802cef0) at save bits 728..2162; FUN_080247d8 unpacks with (low16|hi<<16)*100; record address helper FUN_08024f20; ROM defaults copied by FUN_08023b90."
+    },
+    {
+      "name": "packed_score_records",
+      "offset": 271,
+      "size": 188,
+      "type": "bytes",
+      "description": "Bit-packed score records, save bits 2163..3667: 7 groups x 5 records (state+0x2c4 stride 0x3c/0xc) each holding a 3-bit selector, three 7-bit values, and a 19-bit u32 score (16+3 bits, unscaled). First 5 bits live in byte 270; see SPEC.md bit map.",
+      "confidence": "likely",
+      "evidence": "FUN_08024324 packs 7x5 records (3-bit, 3x7-bit, 16+3-bit u32) at save bits 2163..3667; FUN_080247d8 unpacks as low16|hi<<16; record address helper FUN_08024f44; ROM defaults copied by FUN_08023b90."
+    },
+    {
+      "name": "packed_totals_options",
+      "offset": 459,
+      "size": 10,
+      "type": "bytes",
+      "description": "Save bits 3672..3751: upper/middle bits of three 24-bit career-total counters (state+0x468, state+_DAT_080247c8 region, state+0x470; each packed 16+8 bits at save bits 3668..3739, low bits in the preceding byte) followed by twelve 1-bit option flags (save bits 3740..3751). Counters and flags are zeroed on init.",
+      "confidence": "likely",
+      "evidence": "FUN_08024324 packs three (16+8-bit) totals then twelve 1-bit values at save bits 3668..3751; FUN_080247d8 unpacks them; FUN_08024080 zeroes state+0x468/+0x46c/+0x470, the 12-entry flag array, and the 7x2 array."
+    },
+    {
+      "name": "packed_season_scores",
+      "offset": 469,
+      "size": 33,
+      "type": "bytes",
+      "description": "Save bits 3752..4015: fourteen 19-bit season/score counters (7 groups x 2 entries at state+_DAT_080247d0 region, each 16+3 bits, unscaled u32). Final 2 bits of the stream (bits 4016..4017) sit in byte 502 inside reserved_tail.",
+      "confidence": "likely",
+      "evidence": "FUN_08024324 packs 7x2 (16+3-bit) counters at save bits 3752..4017 with final bit position stored to _DAT_08024d5c; FUN_080247d8 unpacks them; FUN_08024080 zeroes the 7x2 array on init."
+    },
+    {
+      "name": "reserved_tail",
+      "offset": 502,
+      "size": 8,
+      "type": "bytes",
+      "description": "Unused buffer tail (save bits 4018..4079, includes last 2 stream bits in byte 502): never interpreted by the load path but covered by the checksum, so it must be preserved byte-for-byte",
+      "confidence": "confirmed",
+      "evidence": "FUN_080247d8 performs a fixed 4018-bit unpack (final position in _DAT_08024d5c) and never reads save bytes 502..509; FUN_08024d98 checksums the full 512 bytes including this range (FUN_080241e0)."
+    },
+    {
+      "name": "save_checksum",
+      "offset": 510,
+      "size": 2,
+      "type": "u16_le",
+      "description": "Stored custom one's-complement checksum word (little-endian). No Schema v2 algorithm expresses it; recompute per SPEC.md after any mutation or the game rejects the save.",
+      "confidence": "confirmed",
+      "evidence": "FUN_0802415c stores FUN_08024d98(buffer, 0x200) at save offset 0x1fe; FUN_080241e0 accepts the save only if FUN_08024d60 magic matches and FUN_08024d98(buffer, 0x200) returns 0."
     }
-  ]
+  ],
+  "copy_groups": []
 }

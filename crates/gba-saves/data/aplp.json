@@ -8,22 +8,134 @@
   "checksums": [],
   "fields": [
     {
-      "name": "slot_counter",
+      "name": "save_checksum",
       "offset": 0,
-      "size": 2,
-      "type": "u16_le"
+      "size": 4,
+      "type": "u32_le",
+      "description": "Whole-buffer integrity word. FUN_08003660 loads SRAM into the RAM save buffer with FUN_0800dcf4 then compares this word against FUN_08003d54 (byte-sum over save bytes from buffer+4 plus a ROM seed); mismatch triggers full default re-init. Stored via FUN_08003d78 before SRAM flush with FUN_0800dd24. No Schema v2 algorithm matches a seeded byte-sum stored as u32, so it is modelled as a plain field (baseline value 0x423460f3).",
+      "confidence": "confirmed",
+      "evidence": "FUN_08003660 calls FUN_0800dcf4 then compares *piVar1 (save offset 0x0) with FUN_08003d54 result; FUN_08003d54 sums bytes from buffer+4; FUN_08003d78 stores the word; FUN_0800dd24 flushes buffer to SRAM 0x0E000000."
     },
     {
-      "name": "game_progress_flags",
-      "offset": 2,
-      "size": 2,
-      "type": "u16_le"
+      "name": "table0_rank1_name",
+      "offset": 132,
+      "size": 4,
+      "type": "ascii",
+      "description": "Table 0, rank 1 high-score initials (3 chars + NUL). Default 'PSC' from the ROM default-initials table.",
+      "confidence": "confirmed",
+      "evidence": "FUN_08003660 init loop (iVar3 in 0..8, stride 0xb0) writes save offset 0x84/0x85/0x86/0x87 from ROM default-initials table (_DAT_08003788); rank names rendered via FUN_08002a48/FUN_08002998 display path.",
+      "constraint": {
+        "kind": "ascii-charset",
+        "allowed": "ABCDEFGHIJKLMNOPQRSTUVWXYZ ",
+        "max_len": 3
+      }
     },
     {
-      "name": "player_status_payload",
-      "offset": 4,
-      "size": 16,
-      "type": "bytes"
+      "name": "table0_rank1_score",
+      "offset": 140,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Table 0, rank 1 high score. Baseline/default 25000000 (0x017D7840). Rendered by the 8-digit score formatter.",
+      "confidence": "confirmed",
+      "evidence": "FUN_08003660 writes default score word at entry stride offset +0x8c (piVar1[iVar3*0x2c+0x23]); FUN_08002cb0 formats the (entry+0x8c) score into 8 decimal digits with thousands separators; baseline.sav holds 0x017D7840 here.",
+      "constraint": {
+        "kind": "unsigned-range",
+        "minimum": 0,
+        "maximum": 99999999
+      }
+    },
+    {
+      "name": "table0_rank2_name",
+      "offset": 144,
+      "size": 4,
+      "type": "ascii",
+      "description": "Table 0, rank 2 high-score initials (3 chars + NUL). Default 'SJG'.",
+      "confidence": "confirmed",
+      "evidence": "FUN_08003660 init loop writes save offset 0x90/0x91/0x92/0x93 from ROM default-initials table; baseline.sav holds 'SJG'.",
+      "constraint": {
+        "kind": "ascii-charset",
+        "allowed": "ABCDEFGHIJKLMNOPQRSTUVWXYZ ",
+        "max_len": 3
+      }
+    },
+    {
+      "name": "table0_rank2_score",
+      "offset": 152,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Table 0, rank 2 high score. Baseline/default 15000000 (0x00E4E1C0).",
+      "confidence": "confirmed",
+      "evidence": "FUN_08003660 writes default score word at entry stride offset +0x98 (piVar1[iVar3*0x2c+0x26]); FUN_08002cb0 formats it; baseline.sav holds 0x00E4E1C0 here.",
+      "constraint": {
+        "kind": "unsigned-range",
+        "minimum": 0,
+        "maximum": 99999999
+      }
+    },
+    {
+      "name": "table0_rank3_name",
+      "offset": 156,
+      "size": 4,
+      "type": "ascii",
+      "description": "Table 0, rank 3 high-score initials (3 chars + NUL). Default 'MJH'.",
+      "confidence": "confirmed",
+      "evidence": "FUN_08003660 init loop writes save offset 0x9c/0x9d/0x9e/0x9f from ROM default-initials table; baseline.sav holds 'MJH'.",
+      "constraint": {
+        "kind": "ascii-charset",
+        "allowed": "ABCDEFGHIJKLMNOPQRSTUVWXYZ ",
+        "max_len": 3
+      }
+    },
+    {
+      "name": "table0_rank3_score",
+      "offset": 164,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Table 0, rank 3 high score. Baseline/default 5000000 (0x004C4B40).",
+      "confidence": "confirmed",
+      "evidence": "FUN_08003660 writes default score word at entry stride offset +0xa4 (piVar1[iVar3*0x2c+0x29]); FUN_08002cb0 formats it; baseline.sav holds 0x004C4B40 here.",
+      "constraint": {
+        "kind": "unsigned-range",
+        "minimum": 0,
+        "maximum": 99999999
+      }
+    },
+    {
+      "name": "option_value_a",
+      "offset": 2824,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Configuration word A at save offset 0xb08 (buffer word 0x2c2). Default 10; kept in a RAM mirror and restored on checksum failure.",
+      "confidence": "likely",
+      "evidence": "FUN_08003660 sets piVar1[0x2c2] (save offset 0xb08) and RAM mirror _DAT_08003798 to 10, then flushes with FUN_0800dd24; baseline.sav holds 10 here."
+    },
+    {
+      "name": "option_value_b",
+      "offset": 2828,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Configuration word B at save offset 0xb0c (buffer word 0x2c3). Default 10; kept in a RAM mirror and restored on checksum failure.",
+      "confidence": "likely",
+      "evidence": "FUN_08003660 sets piVar1[0x2c3] (save offset 0xb0c) and RAM mirror _DAT_0800379c to 10, then flushes with FUN_0800dd24; baseline.sav holds 10 here."
+    },
+    {
+      "name": "flush_persisted_word",
+      "offset": 2832,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Gameplay word staged into the save buffer at offset 0xb10 ahead of every SRAM flush. Default 3.",
+      "confidence": "likely",
+      "evidence": "FUN_08002af4 stages *(buffer+offset)+*(buffer+offset2)+*(buffer+0xb10) then calls FUN_0800dd24 on both paths (offsets 0xb10 writes); the options/name-entry path also stages buffer+0xb10 before FUN_0800dd24; FUN_08003660 defaults save offset 0xb10 to 3; baseline.sav holds 3 here."
+    },
+    {
+      "name": "name_entry_initials",
+      "offset": 2840,
+      "size": 4,
+      "type": "ascii",
+      "description": "Name-entry buffer persisted at save offset 0xb18 (3 chars + NUL). Default 'PSC'.",
+      "confidence": "likely",
+      "evidence": "FUN_08003660 writes 0x50/0x53/0x43 ('PSC') at save offsets 0xb18/0xb19/0xb1a then flushes with FUN_0800dd24; baseline.sav holds 'PSC' here."
     }
-  ]
+  ],
+  "copy_groups": []
 }

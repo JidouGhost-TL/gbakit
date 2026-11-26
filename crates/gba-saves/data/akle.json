@@ -1,29 +1,149 @@
 {
-  "id": "akle",
-  "game_code": "AKLE",
-  "title": "Klonoa - Empire of Dreams (USA)",
-  "media": "eeprom512",
-  "size_bytes": 512,
-  "magic_signatures": [],
   "checksums": [],
+  "eeprom_rev8": true,
   "fields": [
     {
-      "name": "slot_counter",
-      "offset": 120,
-      "size": 2,
-      "type": "u16_le"
+      "confidence": "confirmed",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 99,
+        "minimum": 0
+      },
+      "description": "File 0 primary progress byte: first data byte of EEPROM block 1 (save offset 0x08). Loaded into save-struct array at +0x14 and clamped to 0..99 (values above 99 are reset to 3).",
+      "evidence": "FUN_08046b6c reads EEPROM block base+1 byte0 via FUN_08051634 into save struct +0x14[iVar12] with >99 failsafe to 3; per-file occupancy bytes +0x26..+0x28 OR-ed in FUN_0804886c.",
+      "name": "slot0_progress_main",
+      "offset": 8,
+      "size": 1,
+      "type": "u8"
     },
     {
-      "name": "game_progress_flags",
-      "offset": 122,
-      "size": 2,
-      "type": "u16_le"
-    },
-    {
-      "name": "player_status_payload",
-      "offset": 124,
-      "size": 16,
+      "confidence": "likely",
+      "description": "File 0 companion progress bytes: bytes 1..4 of EEPROM block 1 (save offsets 0x09..0x0C). Loaded into save-struct arrays at +0x17/+0x1A/+0x1D/+0x20.",
+      "evidence": "FUN_08046b6c reads EEPROM block base+1 bytes1-4 via FUN_08051634 into save struct +0x17/+0x1A/+0x1D/+0x20[iVar12].",
+      "name": "slot0_progress_sub",
+      "offset": 9,
+      "size": 4,
       "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "File 0 extra progress byte: byte0 of EEPROM block 6 (save offset 0x30). Loaded into save-struct array at +0x23.",
+      "evidence": "FUN_08046b6c reads EEPROM block base+6 byte0 via FUN_08051634 into save struct +0x23[iVar12].",
+      "name": "slot0_progress_flag_a",
+      "offset": 48,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "File 0 extra progress byte: byte7 of EEPROM block 12 (save offset 0x67). Loaded into save-struct array at +0x29.",
+      "evidence": "FUN_08046b6c reads EEPROM block base+0xC byte7 via FUN_08051634 into save struct +0x29[iVar12].",
+      "name": "slot0_progress_flag_b",
+      "offset": 103,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 99,
+        "minimum": 0
+      },
+      "description": "File 1 primary progress byte: first data byte of EEPROM block 0x11 (save offset 0x88). Loaded into save-struct array at +0x14 and clamped to 0..99 (values above 99 are reset to 3).",
+      "evidence": "FUN_08046b6c loop iteration iVar12=1 reads EEPROM block base+1 byte0 via FUN_08051634 into save struct +0x14[iVar12] with >99 failsafe to 3.",
+      "name": "slot1_progress_main",
+      "offset": 136,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "File 1 companion progress bytes: bytes 1..4 of EEPROM block 0x11 (save offsets 0x89..0x8C). Loaded into save-struct arrays at +0x17/+0x1A/+0x1D/+0x20.",
+      "evidence": "FUN_08046b6c loop iteration iVar12=1 reads EEPROM block base+1 bytes1-4 via FUN_08051634 into save struct +0x17/+0x1A/+0x1D/+0x20[iVar12].",
+      "name": "slot1_progress_sub",
+      "offset": 137,
+      "size": 4,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "File 1 extra progress byte: byte0 of EEPROM block 0x16 (save offset 0xB0). Loaded into save-struct array at +0x23.",
+      "evidence": "FUN_08046b6c loop iteration iVar12=1 reads EEPROM block base+6 byte0 via FUN_08051634 into save struct +0x23[iVar12].",
+      "name": "slot1_progress_flag_a",
+      "offset": 176,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "File 1 extra progress byte: byte7 of EEPROM block 0x1C (save offset 0xE7). Loaded into save-struct array at +0x29.",
+      "evidence": "FUN_08046b6c loop iteration iVar12=1 reads EEPROM block base+0xC byte7 via FUN_08051634 into save struct +0x29[iVar12].",
+      "name": "slot1_progress_flag_b",
+      "offset": 231,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 99,
+        "minimum": 0
+      },
+      "description": "File 2 primary progress byte: first data byte of EEPROM block 0x21 (save offset 0x108). Loaded into save-struct array at +0x14 and clamped to 0..99 (values above 99 are reset to 3).",
+      "evidence": "FUN_08046b6c loop iteration iVar12=2 reads EEPROM block base+1 byte0 via FUN_08051634 into save struct +0x14[iVar12] with >99 failsafe to 3.",
+      "name": "slot2_progress_main",
+      "offset": 264,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "File 2 companion progress bytes: bytes 1..4 of EEPROM block 0x21 (save offsets 0x109..0x10C). Loaded into save-struct arrays at +0x17/+0x1A/+0x1D/+0x20.",
+      "evidence": "FUN_08046b6c loop iteration iVar12=2 reads EEPROM block base+1 bytes1-4 via FUN_08051634 into save struct +0x17/+0x1A/+0x1D/+0x20[iVar12].",
+      "name": "slot2_progress_sub",
+      "offset": 265,
+      "size": 4,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "File 2 extra progress byte: byte0 of EEPROM block 0x26 (save offset 0x130). Loaded into save-struct array at +0x23.",
+      "evidence": "FUN_08046b6c loop iteration iVar12=2 reads EEPROM block base+6 byte0 via FUN_08051634 into save struct +0x23[iVar12].",
+      "name": "slot2_progress_flag_a",
+      "offset": 304,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "File 2 extra progress byte: byte7 of EEPROM block 0x2C (save offset 0x167). Loaded into save-struct array at +0x29.",
+      "evidence": "FUN_08046b6c loop iteration iVar12=2 reads EEPROM block base+0xC byte7 via FUN_08051634 into save struct +0x29[iVar12].",
+      "name": "slot2_progress_flag_b",
+      "offset": 359,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 2,
+        "minimum": 0
+      },
+      "description": "Global system/config byte from EEPROM block 0x30 (save offset 0x180), loaded into save struct +0x12. Only values 0..2 are accepted; any larger value (or all-empty file slots) forces it back to 1 and rewrites the block.",
+      "evidence": "FUN_08046b6c reads EEPROM block 0x30 byte0 via FUN_08051634 into save struct +0x12; values >2 force default 1 plus rewrite via FUN_08051828.",
+      "name": "system_setting",
+      "offset": 384,
+      "size": 1,
+      "type": "u8"
     }
-  ]
+  ],
+  "game_code": "AKLE",
+  "id": "akle",
+  "magic_signatures": [],
+  "media": "eeprom512",
+  "size_bytes": 512,
+  "title": "Klonoa - Empire of Dreams (USA)"
 }

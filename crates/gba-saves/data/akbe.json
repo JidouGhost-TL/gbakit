@@ -1,36 +1,133 @@
 {
-  "id": "akbe",
-  "game_code": "AKBE",
-  "title": "Sports Illustrated for Kids - Baseball (USA)",
-  "media": "sram",
-  "size_bytes": 32768,
+  "checksums": [
+    {
+      "algorithm": "sum16_le",
+      "covered_end": 94,
+      "covered_start": 0,
+      "name": "header_checksum",
+      "seed": 0,
+      "stored_offset": 94,
+      "xor_out": 0
+    }
+  ],
+  "copy_groups": [],
   "eeprom_rev8": false,
-  "magic_signatures": [],
-  "checksums": [],
   "fields": [
     {
-      "name": "slot_counter",
+      "confidence": "confirmed",
+      "description": "Save-valid marker: first word of the 0x6c-byte header chunk copied from the SRAM slot base by FUN_08020fdc; reads 0xAAAAAAAA in the live baseline.",
+      "evidence": "FUN_08020fdc copies 0x6c bytes from slot base (param_1 * 0x400 + SRAM base) into the header buffer; offset 0x00 is the first word of that chunk and holds 0xAAAAAAAA in samples/baseline.sav.",
+      "name": "save_magic",
       "offset": 0,
-      "size": 2,
-      "type": "u16_le"
+      "size": 4,
+      "type": "u32_le"
     },
     {
-      "name": "game_progress_flags",
-      "offset": 2,
-      "size": 2,
-      "type": "u16_le"
-    },
-    {
-      "name": "player_status_payload",
+      "confidence": "likely",
+      "description": "Gameplay configuration flags (sound/music toggles, match options); zero in the fresh baseline (all defaults off). Low byte of the header payload following the magic word.",
+      "evidence": "FUN_08020fdc loads the 0x6c-byte header chunk at file offset 0x00; offset 0x04 is the first payload byte after save_magic and is read as option flags by the boot path through FUN_08000f30.",
+      "name": "game_options",
       "offset": 4,
-      "size": 16,
+      "size": 1,
+      "type": "bitflags"
+    },
+    {
+      "confidence": "guessed",
+      "description": "Difficulty / skill level selector (e.g. rookie vs veteran); zero (easiest/default) in the fresh baseline.",
+      "evidence": "FUN_08020fdc header chunk byte at file offset 0x05; adjacent to game_options in the slot header loaded at boot by FUN_08000f30 -> FUN_08020fdc.",
+      "name": "difficulty",
+      "offset": 5,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Season win counter; zero in the fresh (unplayed) baseline.",
+      "evidence": "FUN_08020fdc 0x6c-byte header chunk; LE u16 at file offset 0x06 inside the header payload region that is all-zero before any game is played.",
+      "name": "season_wins",
+      "offset": 6,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Season loss counter; zero in the fresh (unplayed) baseline.",
+      "evidence": "FUN_08020fdc 0x6c-byte header chunk; LE u16 at file offset 0x08, paired with season_wins in the header payload region.",
+      "name": "season_losses",
+      "offset": 8,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "guessed",
+      "description": "Favorite / player team selector; zero (first team/default) in the fresh baseline.",
+      "evidence": "FUN_08020fdc header chunk byte at file offset 0x0A, inside the team-selection area of the slot header loaded by FUN_08000f30 -> FUN_08020fdc.",
+      "name": "favorite_team",
+      "offset": 10,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "guessed",
+      "description": "Unlock/progress flag bits (teams, stadiums, modes); zero (nothing unlocked) in the fresh baseline.",
+      "evidence": "FUN_08020fdc header chunk byte at file offset 0x0B; flag-style byte next to favorite_team in the slot header loaded at boot.",
+      "name": "unlocked_flags",
+      "offset": 11,
+      "size": 1,
+      "type": "bitflags"
+    },
+    {
+      "confidence": "likely",
+      "description": "Remaining header payload (per-team/per-game record area); all zero in the fresh baseline, covered by header_checksum.",
+      "evidence": "FUN_08020fdc 0x6c-byte header chunk middle span at file offsets 0x0C..0x5E; zeroed in samples/baseline.sav and included in the sum16_le checksum stored at 0x5E.",
+      "name": "record_area",
+      "offset": 12,
+      "size": 82,
       "type": "bytes"
     },
     {
-      "name": "slot_0_payload",
-      "offset": 32,
-      "size": 8160,
+      "confidence": "confirmed",
+      "description": "Stored byte-sum checksum over header bytes [0x00, 0x5E); value 0x02A8 equals 4 * 0xAA from save_magic with all other covered bytes zero.",
+      "evidence": "FUN_08020fdc header chunk end marker at file offset 0x5E; sum of baseline bytes [0, 0x5E) is 680 (0x02A8), exactly the LE u16 stored here.",
+      "name": "header_checksum_value",
+      "offset": 94,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Unwritten tail of the 0x6c-byte header chunk; reads erased (0xFF) in the baseline, outside the checksummed range.",
+      "evidence": "FUN_08020fdc copies a full 0x6c-byte header chunk, so file offsets 0x60..0x6C are the chunk tail; all 0xFF in samples/baseline.sav.",
+      "name": "header_tail",
+      "offset": 96,
+      "size": 12,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Second per-slot data block (extended season/team stats area); untouched (erased 0xFF) in the baseline because no game was played.",
+      "evidence": "FUN_08020fdc performs a second copy of 0x264 bytes from slot base + 0x6c into the buffer held at _DAT_080210a4 (freed by FUN_0802138c); file span 0x6C..0x2D0.",
+      "name": "team_data_block",
+      "offset": 108,
+      "size": 612,
       "type": "bytes"
     }
-  ]
+  ],
+  "game_code": "AKBE",
+  "id": "akbe",
+  "magic_signatures": [
+    {
+      "bytes": [
+        170,
+        170,
+        170,
+        170
+      ],
+      "description": "Save-valid marker 0xAAAAAAAA at slot base",
+      "offset": 0
+    }
+  ],
+  "media": "sram",
+  "size_bytes": 32768,
+  "title": "Sports Illustrated for Kids - Baseball (USA)"
 }

@@ -1,29 +1,99 @@
 {
-  "id": "aqmp",
-  "game_code": "AQMP",
-  "title": "Magical Quest 2 Starring Mickey & Minnie (Europe) (En,Fr,De)",
-  "media": "eeprom512",
-  "size_bytes": 512,
-  "magic_signatures": [],
-  "checksums": [],
+  "checksums": [
+    {
+      "algorithm": "sum16_le",
+      "covered_end": 270,
+      "covered_start": 256,
+      "name": "record_main_checksum",
+      "seed": 0,
+      "stored_offset": 270,
+      "xor_out": 0
+    }
+  ],
+  "copy_groups": [
+    {
+      "fields": [
+        "stage_reached",
+        "stage_reached_mirror"
+      ],
+      "name": "stage_mirrors"
+    },
+    {
+      "fields": [
+        "record_data_main",
+        "record_data_mirror"
+      ],
+      "name": "record_data_mirrors"
+    },
+    {
+      "fields": [
+        "save_generation",
+        "save_generation_mirror"
+      ],
+      "name": "generation_mirrors"
+    }
+  ],
+  "eeprom_rev8": true,
   "fields": [
     {
-      "name": "slot_counter",
+      "confidence": "likely",
+      "description": "Highest stage reached, 1-based (game stage index + 1). Load path restores game stage as value - 1; store path writes game stage + 1.",
+      "evidence": "FUN_0801d8ac restores game struct +0x62 to save_word0 - 1 (save offset 0x100) and FUN_0801f0bc stores game struct +0x62 + 1 before the FUN_0801f270/FUN_0801d97c EEPROM write chain; +0x62 is the stage selector switched on in FUN_08007e14.",
+      "name": "stage_reached",
       "offset": 256,
       "size": 2,
       "type": "u16_le"
     },
     {
-      "name": "game_progress_flags",
+      "confidence": "likely",
+      "description": "Opaque gameplay record bytes copied whole between RAM and EEPROM; all zero in a fresh save.",
+      "evidence": "FUN_0801d97c copies the full 16-byte RAM record to EEPROM blocks 0x20-0x21 and FUN_0801d8ac copies EEPROM blocks back to RAM opaquely via FUN_0806bc34/FUN_0806bce4; covered by the FUN_0801f29c/FUN_0801f244 checksum.",
+      "name": "record_data_main",
       "offset": 258,
+      "size": 10,
+      "type": "bytes"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Wear-level generation counter: bumped on every advance-load, low bit selects which EEPROM slot pair is written, newest mirror wins when counters differ by less than 0x40.",
+      "evidence": "FUN_0801d8ac increments record halfword at +0x0C and picks the mirror with (new - old) & 0xffff < 0x40; FUN_0801f270 passes byte(+0x0C) & 1 as the slot index to FUN_0801d97c which writes EEPROM blocks 0x20 + slot * 2.",
+      "name": "save_generation",
+      "offset": 268,
       "size": 2,
       "type": "u16_le"
     },
     {
-      "name": "player_status_payload",
-      "offset": 260,
-      "size": 16,
+      "confidence": "likely",
+      "description": "Mirror copy of stage_reached in backup slot B (EEPROM blocks 0x22-0x23); blank (0xFFFF) until the first slot rotation.",
+      "evidence": "FUN_0801d8ac reads slot B via FUN_0806bc34 blocks ((param & 0xff) + 0x20) = 0x22 and validates it with FUN_0801f244 exactly like slot A.",
+      "name": "stage_reached_mirror",
+      "offset": 272,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Mirror copy of the opaque gameplay record bytes in backup slot B.",
+      "evidence": "FUN_0801d8ac loads 16 bytes from EEPROM blocks 0x22-0x23 into the same RAM record layout as slot A and validates with FUN_0801f244.",
+      "name": "record_data_mirror",
+      "offset": 274,
+      "size": 10,
       "type": "bytes"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Mirror copy of the generation counter in backup slot B; compared against the main counter to select the newest save.",
+      "evidence": "FUN_0801d8ac freshness compare (new - old) & 0xffff < 0x40 across the two FUN_0806bc34 mirrors at blocks 0x20 and 0x22.",
+      "name": "save_generation_mirror",
+      "offset": 284,
+      "size": 2,
+      "type": "u16_le"
     }
-  ]
+  ],
+  "game_code": "AQMP",
+  "id": "aqmp",
+  "magic_signatures": [],
+  "media": "eeprom512",
+  "size_bytes": 512,
+  "title": "Magical Quest 2 Starring Mickey & Minnie (Europe) (En,Fr,De)"
 }

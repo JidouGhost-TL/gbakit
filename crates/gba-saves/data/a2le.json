@@ -1,29 +1,167 @@
 {
-  "id": "a2le",
-  "game_code": "A2LE",
-  "title": "Legends of Wrestling II (USA, Europe)",
-  "media": "eeprom512",
-  "size_bytes": 512,
-  "magic_signatures": [],
   "checksums": [],
+  "copy_groups": [],
+  "eeprom_rev8": true,
   "fields": [
     {
-      "name": "slot_counter",
+      "confidence": "likely",
+      "description": "Save header word 0 (low word of EEPROM block 0). Copied from ROM defaults into the RAM save mirror by FUN_08021c74; baseline value 2934 (0x0B76). No runtime writer was found in decomp, so exact gameplay meaning is undetermined.",
+      "evidence": "FUN_08021c74 copies 8 ROM-default bytes into save-mirror block 0; logical offset 0 matches baseline low word 0x00000B76 under eeprom_rev8.",
+      "name": "header_word0",
       "offset": 0,
-      "size": 2,
-      "type": "u16_le"
+      "size": 4,
+      "type": "u32_le"
     },
     {
-      "name": "game_progress_flags",
-      "offset": 2,
-      "size": 2,
-      "type": "u16_le"
-    },
-    {
-      "name": "player_status_payload",
+      "confidence": "likely",
+      "description": "Save header word 1 (high word of EEPROM block 0). Copied from ROM defaults by FUN_08021c74; baseline 0x3DAF00FC. Tested against sum/xor/crc32 over all save regions in both raw and logical domains and it verifies as no supported checksum, so it is mapped as data, not a checksum.",
+      "evidence": "FUN_08021c74 seeds save-mirror block 0 from ROM data; checksum brute-force over blocks 0-63 in FUN_0802c450/FUN_0802c5dc read-verify path shows no additive checksum (read-back compare only).",
+      "name": "header_word1",
       "offset": 4,
-      "size": 16,
-      "type": "bytes"
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "First 40-entry unlock bitfield (EEPROM block 1, 8 bytes). FUN_0802252c packs 40 one-byte flags into bits and FUN_08022488 unpacks them via per-bit queries; FUN_08022d40 seeds the defaults. Baseline low word is zero mask, high word holds set bits 0xF101F1BB.",
+      "evidence": "FUN_0802252c packs flags 0..39 with func_0x08032a08(1,0,uVar1) into save blocks 1-2 via FUN_08021e90(1,buf,2); FUN_08022488 reads them back with FUN_08021f80(1,buf,2) and func_0x08032ab4 per-bit tests over 0x28 entries.",
+      "name": "unlock_bits_a",
+      "offset": 8,
+      "size": 8,
+      "type": "bitflags"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Second 40-entry unlock bitfield (EEPROM block 2, 8 bytes). Same pack/unpack pair as unlock_bits_a, covering flag entries 40..79. Baseline high word 0x1BC3DA37 shows several bits set.",
+      "evidence": "FUN_0802252c second loop packs param_1[0x28..0x4F] into the second 8-byte half written by FUN_08021e90(1,buf,2); FUN_08022488 second loop unpacks via FUN_08021f80(1,buf,2) over 0x28 entries.",
+      "name": "unlock_bits_b",
+      "offset": 16,
+      "size": 8,
+      "type": "bitflags"
+    },
+    {
+      "confidence": "likely",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 2617245696,
+        "minimum": 0
+      },
+      "description": "Career slot 0 draft index (EEPROM block 3 high word): random roster pick 0..39 stored shifted left 26 by FUN_08022d40. Baseline 0x44000000 >> 26 = 17.",
+      "evidence": "FUN_08022d40 writes FUN_0801e360() << 0x1A into block uVar4+3 (3 when selector is 0) via FUN_08021e90; FUN_0801e360 rejects values > 0x27 (39).",
+      "name": "career_slot_0_pick",
+      "offset": 28,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 2617245696,
+        "minimum": 0
+      },
+      "description": "Career slot 1 draft index (EEPROM block 4 high word). Baseline 0x7C000000 >> 26 = 31.",
+      "evidence": "FUN_08022d40 writes FUN_0801e360() << 0x1A into block 4 via FUN_08021e90(4,...); range 0..39 enforced by FUN_0801e360 (0x27 bound).",
+      "name": "career_slot_1_pick",
+      "offset": 36,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 2617245696,
+        "minimum": 0
+      },
+      "description": "Career slot 2 draft index (EEPROM block 5 high word). Baseline 0x84000000 >> 26 = 33.",
+      "evidence": "FUN_08022d40 writes FUN_0801e360() << 0x1A into block 5 via FUN_08021e90(5,...); range 0..39 enforced by FUN_0801e360 (0x27 bound).",
+      "name": "career_slot_2_pick",
+      "offset": 44,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 2617245696,
+        "minimum": 0
+      },
+      "description": "Career slot 3 draft index (EEPROM block 6 high word). Baseline 0x8C000000 >> 26 = 35.",
+      "evidence": "FUN_08022d40 writes FUN_0801e360() << 0x1A into block 6 via FUN_08021e90; range 0..39 enforced by FUN_0801e360 (0x27 bound).",
+      "name": "career_slot_3_pick",
+      "offset": 52,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 2617245696,
+        "minimum": 0
+      },
+      "description": "Career slot 4 draft index (EEPROM block 7 high word). Baseline 0x4C000000 >> 26 = 19.",
+      "evidence": "FUN_08022d40 writes FUN_0801e360() << 0x1A into block 7 via FUN_08021e90; range 0..39 enforced by FUN_0801e360 (0x27 bound).",
+      "name": "career_slot_4_pick",
+      "offset": 60,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 2617245696,
+        "minimum": 0
+      },
+      "description": "Career slot 5 draft index (EEPROM block 8 high word). Baseline 0x1C000000 >> 26 = 7.",
+      "evidence": "FUN_08022d40 writes FUN_0801e360() << 0x1A into block 8 via FUN_08021e90; range 0..39 enforced by FUN_0801e360 (0x27 bound).",
+      "name": "career_slot_5_pick",
+      "offset": 68,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 2617245696,
+        "minimum": 0
+      },
+      "description": "Career slot 6 draft index (EEPROM block 9 high word). Baseline 0x10000000 >> 26 = 4.",
+      "evidence": "FUN_08022d40 writes FUN_0801e360() << 0x1A into block 9 via FUN_08021e90; range 0..39 enforced by FUN_0801e360 (0x27 bound).",
+      "name": "career_slot_6_pick",
+      "offset": 76,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "flag_labels": {
+          "2": "opt_bit2",
+          "3": "opt_bit3",
+          "4": "opt_bit4",
+          "5": "opt_bit5",
+          "6": "opt_bit6"
+        },
+        "kind": "bitmask",
+        "valid_mask": 124
+      },
+      "description": "Packed options flags byte (last byte of EEPROM block 0x36 / 54). Five one-bit options occupy bits 2..6; first 7 bytes of the block are zero-filled. Baseline 0x7C = bits 2..6 all set.",
+      "evidence": "FUN_08022c8c packs param_1[0]<<0x1E and param_1[1..4] bits into 0x1D..0x1A (= block byte 7 bits 2..6) and writes block 0x36 via FUN_08021e90; FUN_08022c18 reads block 0x36 via FUN_08021f80 and unpacks bStack_15 bits 6..2.",
+      "name": "options_flags",
+      "offset": 439,
+      "size": 1,
+      "type": "bitflags"
     }
-  ]
+  ],
+  "game_code": "A2LE",
+  "id": "a2le",
+  "magic_signatures": [],
+  "media": "eeprom512",
+  "size_bytes": 512,
+  "title": "Legends of Wrestling II (USA, Europe)"
 }

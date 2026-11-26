@@ -1,29 +1,146 @@
 {
-  "id": "a9de",
-  "game_code": "A9DE",
-  "title": "Doom II (USA)",
-  "media": "eeprom512",
-  "size_bytes": 512,
-  "magic_signatures": [],
   "checksums": [],
+  "copy_groups": [],
+  "eeprom_rev8": true,
   "fields": [
     {
-      "name": "slot_counter",
+      "confidence": "confirmed",
+      "description": "Never-written EEPROM header gap: all save I/O (FUN_0800a4b4 load, FUN_0800a574 validate, FUN_0800a52c store) roots reads/writes at EEPROM offset 4, so file bytes [0,4) stay erased 0xFF.",
+      "evidence": "FUN_0800a4b4 sets uStack_1c=4 then FUN_08007404 0x170 bytes; FUN_0800a574 same base 4; FUN_0800a52c writes 0x170 bytes at base 4; baseline.sav logical bytes [0,4) are FF FF FF FF.",
+      "name": "header_gap_unused",
       "offset": 0,
-      "size": 2,
-      "type": "u16_le"
+      "size": 4,
+      "type": "bytes"
     },
     {
-      "name": "game_progress_flags",
-      "offset": 2,
-      "size": 2,
-      "type": "u16_le"
-    },
-    {
-      "name": "player_status_payload",
+      "confidence": "confirmed",
+      "description": "EEPROM save magic 0xD0D0DEAD (LE bytes AD DE D0 D0). Written by FUN_0800a52c from ROM word and validated by FUN_0800a4b4/FUN_0800a574 before a save is accepted.",
+      "evidence": "FUN_0800a52c stores _DAT_0800a570 as buffer word 0 written at EEPROM offset 4 via FUN_080072ec; FUN_0800a4b4 requires aiStack_18c[0]==_DAT_0800a518; FUN_0800a574 same check vs _DAT_0800a5c8; baseline.sav logical [4,8) = AD DE D0 D0.",
+      "name": "save_magic",
       "offset": 4,
-      "size": 16,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Skill/difficulty slot: first byte of the 8-byte live record (EEPROM offset 8). FUN_08022514 copies it into game state word *(_DAT_080225b0+0x8c). Default 2 matches the middle Doom skill index.",
+      "evidence": "FUN_0800a4b4 reads 8 bytes at EEPROM offset 8 via FUN_08007404; FUN_08022514 stores byte 0 (bStack_28) to *(_DAT_080225b0+0x8c); FUN_0800a614 default param_1[0]=2; baseline.sav offset 8 = 0x02.",
+      "name": "profile_skill",
+      "offset": 8,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Sound engine parameter A: second live-record byte, applied at boot through FUN_0800bdc4 into the sound object (field +0x30 path). Constant 0x40 default also passed literally in the boot path.",
+      "evidence": "FUN_08022514 passes record byte 1 to FUN_0800bdc4 which calls FUN_080301ba on the sound object; boot code calls FUN_0800bdc4(0x40); FUN_0800a614 default param_1[1]=0x40; baseline.sav offset 9 = 0x40.",
+      "name": "sound_setting_a",
+      "offset": 9,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Sound engine parameter B: third live-record byte, applied at boot through FUN_0800bda4 (also latched at state +0x44). Default 0x10.",
+      "evidence": "FUN_08022514 passes record byte 2 to FUN_0800bda4 which calls FUN_0803016c and stores state+0x44; FUN_0800a614 default param_1[2]=0x10; baseline.sav offset 10 = 0x10.",
+      "name": "sound_setting_b",
+      "offset": 10,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 3,
+        "minimum": 0
+      },
+      "description": "Screen/display mode 0..3: fourth live-record byte selects one of four video/BG register setups in FUN_08006870; any other value is ignored.",
+      "evidence": "FUN_08022514 passes record byte 3 to FUN_08006870; FUN_08006870 switches on (param_1&0xff) with cases 0,1,2,3 programming the display register block at _DAT_08006888 and returns without action otherwise; FUN_0800a614 default param_1[3]=0; baseline.sav offset 11 = 0x00.",
+      "name": "screen_mode",
+      "offset": 11,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Profile config byte: fifth live-record byte, applied at boot into config struct field +8. Default 2.",
+      "evidence": "FUN_08022514 stores record byte 4 (bStack_24) to _DAT_080225ac field +8 after FUN_080028dc memsets 0xc bytes; FUN_0800a614 default param_1[4]=2; baseline.sav offset 12 = 0x02.",
+      "name": "profile_config",
+      "offset": 12,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "flag_labels": {
+          "0": "config_bit2",
+          "1": "alt_boot_path",
+          "2": "status_flag8"
+        },
+        "kind": "bitmask",
+        "valid_mask": 7
+      },
+      "description": "Option flags: bit0 sets config struct bit2, bit1 selects the alt boot path (FUN_08015834 vs 08015840), bit2 sets status flag 8. Default 0x03.",
+      "evidence": "FUN_08022514 tests record byte 5 (bStack_23): bit0 ORs config bit2, bit1 chooses FUN_08015834 over func_0x08015840, bit2 ORs flag 8 into 0x080225e0; FUN_0800a614 default param_1[5]|=3; baseline.sav offset 13 = 0x03.",
+      "name": "option_flags",
+      "offset": 13,
+      "size": 1,
+      "type": "bitflags"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Spare tail of the 8-byte live record: transferred by the EEPROM byte-granular I/O but never consumed by any routine; zero in the captured save.",
+      "evidence": "FUN_0800a4b4 reads 8 bytes at EEPROM offset 8 via FUN_08007404 and FUN_08022514 consumes only bytes 0..5; baseline.sav logical [14,16) = 00 00.",
+      "name": "live_record_spare",
+      "offset": 14,
+      "size": 2,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Reserved zero block: bulk payload of the checksummed save region. Written as memset zeros by the store path and covered by the checksum, but no decomp routine reads or interprets it; zero in the captured save.",
+      "evidence": "FUN_0800a52c memsets 0x170 bytes and only FUN_0800a614 fills 6 bytes before FUN_080072ec writes at EEPROM base 4; FUN_0800a4b4/FUN_0800a574 read it only for magic+checksum validation; baseline.sav logical [0x10,0x170) all zero.",
+      "name": "reserved_zero_block",
+      "offset": 16,
+      "size": 352,
+      "type": "bytes"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Stored 16-bit checksum over logical save bytes [4,0x170), compared against FUN_08006b44 table-driven reflected CRC-16. Custom ROM table, so kept as a plain u16 field (value 0x24D3 in baseline).",
+      "evidence": "FUN_0800a4b4 compares buffer word at save offset 0x170 (sStack_20 at buffer+364) with FUN_08006b44 checksum over 0x170 bytes; FUN_0800a52c stores FUN_08006b44 result at the same slot; baseline.sav logical [0x170,0x172) = D3 24.",
+      "name": "save_checksum16",
+      "offset": 368,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Never-written erased tail: the store path writes exactly 0x170 bytes at EEPROM base 4 (file range [4,0x174)), so bytes [0x174,0x200) stay erased 0xFF.",
+      "evidence": "FUN_0800a52c writes 0x170 bytes at EEPROM offset 4 via FUN_080072ec; baseline.sav logical [0x174,0x200) all 0xFF while [0x172,0x174) are written zeros.",
+      "name": "trailing_erased",
+      "offset": 370,
+      "size": 142,
       "type": "bytes"
     }
-  ]
+  ],
+  "game_code": "A9DE",
+  "id": "a9de",
+  "magic_signatures": [
+    {
+      "bytes": [
+        173,
+        222,
+        208,
+        208
+      ],
+      "description": "EEPROM magic 0xD0D0DEAD LE at logical offset 4 (FUN_0800a52c writes it, FUN_0800a4b4/FUN_0800a574 validate it)",
+      "offset": 4
+    }
+  ],
+  "media": "eeprom512",
+  "size_bytes": 512,
+  "title": "Doom II (USA)"
 }

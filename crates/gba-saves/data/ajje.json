@@ -1,45 +1,153 @@
 {
-  "id": "ajje",
-  "game_code": "AJJE",
-  "title": "Jazz Jackrabbit (USA, Europe)",
-  "media": "eeprom512",
-  "size_bytes": 512,
-  "magic_signatures": [
-    {
-      "offset": 1,
-      "bytes": [
-        115,
-        101,
-        108,
-        116
-      ]
-    }
-  ],
   "checksums": [],
+  "eeprom_rev8": true,
   "fields": [
     {
-      "name": "magic_header",
-      "offset": 1,
-      "size": 4,
+      "confidence": "confirmed",
+      "description": "Save magic: ASCII 'turtles' + NUL, fills all of EEPROM block 0.",
+      "evidence": "FUN_08317324 reads EEPROM address 0 into RAM as 4x u16 (via DMA3 FUN_083172a4 to 0x0D000000); rev8-logical bytes 0..7 are 74 75 72 74 6C 65 73 00 in samples/baseline.sav.",
+      "name": "slot0_magic",
+      "offset": 0,
+      "size": 8,
       "type": "ascii"
     },
     {
-      "name": "slot_counter",
-      "offset": 5,
+      "confidence": "confirmed",
+      "description": "First payload word of EEPROM block 1 (slot 0); baseline value 0x0A00.",
+      "evidence": "FUN_08317324 decodes EEPROM block 1 (save offsets 8..15) as 4x u16 into RAM buffer offsets +0..+7 (ushort store at param_2+6 down to param_2+0); FUN_083173dc writes the same 4x ushort layout back. Baseline word verified.",
+      "name": "slot0_blk1_w0",
+      "offset": 8,
       "size": 2,
       "type": "u16_le"
     },
     {
-      "name": "game_progress_flags",
-      "offset": 7,
+      "confidence": "confirmed",
+      "description": "Second payload word of EEPROM block 1 (slot 0); baseline value 0x000A.",
+      "evidence": "FUN_08317324 decodes EEPROM block 1 (save offsets 8..15) as 4x u16 into RAM buffer; FUN_083173dc encodes 4x ushort per block on write. Baseline word verified.",
+      "name": "slot0_blk1_w1",
+      "offset": 10,
       "size": 2,
       "type": "u16_le"
     },
     {
-      "name": "player_status_payload",
-      "offset": 9,
-      "size": 16,
+      "confidence": "confirmed",
+      "description": "Third payload word of EEPROM block 1 (slot 0); baseline value 0x0001.",
+      "evidence": "FUN_08317324 decodes EEPROM block 1 (save offsets 8..15) as 4x u16 into RAM buffer; FUN_083173dc encodes 4x ushort per block on write. Baseline word verified.",
+      "name": "slot0_blk1_w2",
+      "offset": 12,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Fourth payload word of EEPROM block 1 (slot 0); baseline value 0x0000.",
+      "evidence": "FUN_08317324 decodes EEPROM block 1 (save offsets 8..15) as 4x u16 into RAM buffer; FUN_083173dc encodes 4x ushort per block on write. Baseline word verified.",
+      "name": "slot0_blk1_w3",
+      "offset": 14,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "First word of EEPROM block 2 (slot 0); zero in baseline.",
+      "evidence": "FUN_08317324 decodes EEPROM block 2 (save offsets 16..23) as 4x u16 into RAM buffer; FUN_083173dc encodes 4x ushort per block on write. Baseline word verified.",
+      "name": "slot0_blk2_w0",
+      "offset": 16,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Second word of EEPROM block 2 (slot 0); zero in baseline.",
+      "evidence": "FUN_08317324 decodes EEPROM block 2 (save offsets 16..23) as 4x u16 into RAM buffer; FUN_083173dc encodes 4x ushort per block on write. Baseline word verified.",
+      "name": "slot0_blk2_w1",
+      "offset": 18,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Third word of EEPROM block 2 (slot 0); zero in baseline.",
+      "evidence": "FUN_08317324 decodes EEPROM block 2 (save offsets 16..23) as 4x u16 into RAM buffer; FUN_083173dc encodes 4x ushort per block on write. Baseline word verified.",
+      "name": "slot0_blk2_w2",
+      "offset": 20,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Fourth word of EEPROM block 2 (slot 0); baseline value 0x0300.",
+      "evidence": "FUN_08317324 decodes EEPROM block 2 (save offsets 16..23) as 4x u16 into RAM buffer; FUN_083173dc encodes 4x ushort per block on write. Baseline word verified.",
+      "name": "slot0_blk2_w3",
+      "offset": 22,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Low double-word of EEPROM block 3 (slot 0); zero in baseline (reserved).",
+      "evidence": "FUN_08317324 decodes EEPROM block 3 (save offsets 24..31) as 4x u16 into RAM buffer; FUN_083173dc encodes 4x ushort per block on write. Baseline bytes verified zero.",
+      "name": "slot0_blk3_d0",
+      "offset": 24,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "High double-word of EEPROM block 3 (slot 0); zero in baseline (reserved).",
+      "evidence": "FUN_08317324 decodes EEPROM block 3 (save offsets 24..31) as 4x u16 into RAM buffer; FUN_083173dc encodes 4x ushort per block on write. Baseline bytes verified zero.",
+      "name": "slot0_blk3_d1",
+      "offset": 28,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Slot 1 header block (EEPROM block 4); all zero in baseline = slot never claimed.",
+      "evidence": "Save holds 4x 32-byte records at 0/32/64/96 (one EEPROM-block quad each, see FUN_08317324 single-block addressing); slot 1 header bytes 32..39 are 00 in samples/baseline.sav while slot 0 holds 'turtles'.",
+      "name": "slot1_header",
+      "offset": 32,
+      "size": 8,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Slot 2 header block (EEPROM block 8); all zero in baseline = slot never claimed.",
+      "evidence": "Save holds 4x 32-byte records at 0/32/64/96 (one EEPROM-block quad each, see FUN_08317324 single-block addressing); slot 2 header bytes 64..71 are 00 in samples/baseline.sav while slot 0 holds 'turtles'.",
+      "name": "slot2_header",
+      "offset": 64,
+      "size": 8,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Slot 3 header block (EEPROM block 12); all zero in baseline = slot never claimed.",
+      "evidence": "Save holds 4x 32-byte records at 0/32/64/96 (one EEPROM-block quad each, see FUN_08317324 single-block addressing); slot 3 header bytes 96..103 are 00 in samples/baseline.sav while slot 0 holds 'turtles'.",
+      "name": "slot3_header",
+      "offset": 96,
+      "size": 8,
       "type": "bytes"
     }
-  ]
+  ],
+  "game_code": "AJJE",
+  "id": "ajje",
+  "magic_signatures": [
+    {
+      "bytes": [
+        116,
+        117,
+        114,
+        116,
+        108,
+        101,
+        115,
+        0
+      ],
+      "description": "ASCII 'turtles' + NUL filling EEPROM block 0",
+      "offset": 0
+    }
+  ],
+  "media": "eeprom512",
+  "size_bytes": 512,
+  "title": "Jazz Jackrabbit (USA, Europe)"
 }

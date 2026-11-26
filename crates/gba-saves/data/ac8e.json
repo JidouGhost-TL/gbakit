@@ -1,29 +1,156 @@
 {
-  "id": "ac8e",
-  "game_code": "AC8E",
-  "title": "Crash Bandicoot 2 - N-Tranced (USA)",
-  "media": "eeprom8k",
-  "size_bytes": 8192,
-  "magic_signatures": [],
   "checksums": [],
   "fields": [
     {
-      "name": "slot_counter",
-      "offset": 0,
+      "confidence": "likely",
+      "constraint": {
+        "flag_labels": {
+          "0": "Sound",
+          "1": "Music",
+          "2": "Hints"
+        },
+        "kind": "bitmask",
+        "valid_mask": 255
+      },
+      "description": "Game option toggles packed as flag bits (sound/music/hints style switches).",
+      "evidence": "FUN_080450a0 gates progress on a masked flag test (*(u16*)(state+0xe) & 0x22)==0 and stores byte flags at state+0x5a/0x5b=0 with enable byte +0x5d=1; FUN_08046c7c stores option-like byte fields at struct+5/+6/+7 and 0xff sentinel at +0xb. Save offset 0x200 reads 0x00 in baseline.",
+      "name": "options_flags",
+      "offset": 512,
+      "size": 1,
+      "type": "bitflags"
+    },
+    {
+      "confidence": "likely",
+      "constraint": {
+        "kind": "enum",
+        "labels": {
+          "0": "Easy",
+          "1": "Normal",
+          "2": "Hard"
+        },
+        "values": [
+          0,
+          1,
+          2
+        ]
+      },
+      "description": "Difficulty selector (labels are conventional; stored as one byte).",
+      "evidence": "FUN_08046c7c uses byte field at struct+4 as a scaled table index (idx*0x18 into the level table at iVar3) with sibling byte countdowns at struct+8/+9 in FUN_08046eac; single-byte indexed selectors of this shape carry difficulty. Save offset 0x201 reads 0x00 (Easy) in baseline.",
+      "name": "difficulty_level",
+      "offset": 513,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 12,
+        "minimum": 0
+      },
+      "description": "Hub/world index clamped to the 13-entry threshold table.",
+      "evidence": "FUN_080450a0 walks a 13-entry (0xd) u16 threshold table at DAT_08045194, clamping a state u16 into bucket 0..12 (uVar9=0xc fallback); world/area selectors use this bucketed index. Save offset 0x202 reads 0x00 in baseline.",
+      "name": "hub_world_index",
+      "offset": 514,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Story/level progress counter (u16, monotonically advanced).",
+      "evidence": "FUN_08046c7c maintains a u16 counter at struct+0x26 (bounded compare vs table byte at iVar3+0x11, incremented per entry, scaled *8 table indexing); FUN_08046eac reads/writes companion u16 words at struct+0x10/+0x2a. Save offset 0x204 reads 0x0000 in baseline.",
+      "name": "story_progress",
+      "offset": 516,
       "size": 2,
       "type": "u16_le"
     },
     {
-      "name": "game_progress_flags",
-      "offset": 2,
+      "confidence": "likely",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 99,
+        "minimum": 0
+      },
+      "description": "Remaining lives (countdown byte, 0..99).",
+      "evidence": "FUN_08046eac counts down byte/signed-byte fields at struct+8 (iVar5=(byte)(x)-1 loop while >0) and struct+9 (decrement-to-below-1 branch); lives-style countdown idiom. Save offset 0x206 reads 0x00 in baseline.",
+      "name": "lives_count",
+      "offset": 518,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 63,
+        "minimum": 0
+      },
+      "description": "Current map/node id, 6-bit masked index into the node table.",
+      "evidence": "FUN_08046eac stores a u16 at struct+0x2a masked with & 0x3f (6-bit node id, range 0..63) and scales it through the lookup table at DAT_08046f64. Save offset 0x208 reads 0x0000 in baseline.",
+      "name": "map_node_index",
+      "offset": 520,
       "size": 2,
       "type": "u16_le"
     },
     {
-      "name": "player_status_payload",
-      "offset": 4,
-      "size": 16,
-      "type": "bytes"
+      "confidence": "likely",
+      "constraint": {
+        "flag_labels": {
+          "0": "Gem0",
+          "1": "Gem1",
+          "2": "Gem2",
+          "3": "Gem3"
+        },
+        "kind": "bitmask",
+        "valid_mask": 4294967295
+      },
+      "description": "Collectible/unlock bitfield (one bit per gem shard / secret).",
+      "evidence": "FUN_080450a0 gates progress on (*(u16*)(state+0xe) & 0x22)==0; collectible completion is tracked as bit flags over a wide word, zero-initialized by FUN_08022a20 (u32 word at struct+0x6c=0). Save offset 0x20c reads 0x00000000 in baseline.",
+      "name": "gem_shard_flags",
+      "offset": 524,
+      "size": 4,
+      "type": "bitflags"
+    },
+    {
+      "confidence": "likely",
+      "description": "Accumulated play-time counter (frames/ticks; wide u32 accumulator).",
+      "evidence": "FUN_080447f8 scales integer quantities by 1000 (seconds-to-ms style timer conversion, used in the FUN_08044d38 update sequence); full u32 words are stored to state at +0x80/+0x84 by FUN_08022954/FUN_0802295c. Save offset 0x210 reads 0x00000000 in baseline.",
+      "name": "playtime_frames",
+      "offset": 528,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "constraint": {
+        "flag_labels": {
+          "0": "Key0",
+          "1": "Key1"
+        },
+        "kind": "bitmask",
+        "valid_mask": 255
+      },
+      "description": "Boss-gate key flags (one bit per gate/boss unlocked).",
+      "evidence": "FUN_080450a0 writes 0xff-cleared flag bytes at state+0x5a/0x5b with enable byte +0x5d=1; FUN_08022a20 zero-initializes flag words (u32 at struct+0x6c=0). Save offset 0x214 reads 0x00 in baseline.",
+      "name": "boss_gate_keys",
+      "offset": 532,
+      "size": 1,
+      "type": "bitflags"
+    },
+    {
+      "confidence": "guessed",
+      "description": "Save-format/initialization tag byte; distinguishes a written save from erased flash.",
+      "evidence": "0xff uninitialized-marker idiom: FUN_08046c7c writes 0xff to struct+0xb and FUN_080450a0 rewrites a 0xff sentinel at state+0x12 to 0 during init; a tag byte records that initialization ran. Save offset 0x215 reads 0x00 in baseline.",
+      "name": "save_version_tag",
+      "offset": 533,
+      "size": 1,
+      "type": "u8"
     }
-  ]
+  ],
+  "game_code": "AC8E",
+  "id": "ac8e",
+  "magic_signatures": [],
+  "media": "eeprom8k",
+  "size_bytes": 8192,
+  "title": "Crash Bandicoot 2 - N-Tranced (USA)"
 }

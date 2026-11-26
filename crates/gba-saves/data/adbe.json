@@ -1,29 +1,190 @@
 {
-  "id": "adbe",
-  "game_code": "ADBE",
-  "title": "Denki Blocks! (USA) (En,Es)",
-  "media": "eeprom512",
-  "size_bytes": 512,
-  "magic_signatures": [],
   "checksums": [],
+  "copy_groups": [
+    {
+      "fields": [
+        "slot0_grid_head",
+        "slot0_grid_head_backup"
+      ],
+      "name": "slot0_grid_head_mirror"
+    },
+    {
+      "fields": [
+        "slot0_state_value",
+        "slot0_state_value_backup"
+      ],
+      "name": "slot0_state_mirror"
+    },
+    {
+      "fields": [
+        "slot0_grid_tail",
+        "slot0_grid_tail_backup"
+      ],
+      "name": "slot0_grid_tail_mirror"
+    }
+  ],
+  "eeprom_rev8": false,
   "fields": [
     {
-      "name": "slot_counter",
+      "confidence": "confirmed",
+      "description": "File-level magic word 0xC0DEF3B4 framing EEPROM block 0 (raw bytes B4 F3 DE C0 at offset 4).",
+      "evidence": "FUN_08026aac / FUN_08026b5c transfer EEPROM in 8-byte blocks starting at address 0; raw file offset 4 holds bytes B4 F3 DE C0 (u32_le 0xC0DEF3B4), the only file-unique header word across all 64 blocks.",
+      "name": "save_magic",
       "offset": 4,
-      "size": 2,
-      "type": "u16_le"
+      "size": 4,
+      "type": "u32_le"
     },
     {
-      "name": "game_progress_flags",
-      "offset": 6,
-      "size": 2,
-      "type": "u16_le"
+      "confidence": "likely",
+      "description": "Primary 72-byte head of the 12-block level-progress payload (blocks 2-7). Byte-identical mirror at 0x158.",
+      "evidence": "Payload blocks read by FUN_08026aac (4x u16 per block into RAM struct, param_2+6 descending store) and written by FUN_08026b5c; range 0x10-0x57 is byte-identical to 0x158-0x19F, proving slot framing.",
+      "name": "slot0_grid_head",
+      "offset": 16,
+      "size": 72,
+      "type": "bytes"
     },
     {
-      "name": "player_status_payload",
-      "offset": 8,
-      "size": 16,
+      "confidence": "guessed",
+      "description": "Single-byte mutable state variable inside primary payload (value 1; slot1 counterpart at 0xF0 holds 9).",
+      "evidence": "Difflib content-alignment of slot payloads (FUN_08026aac block images at 0x10 and 0xB0) shows an aligned single-byte replace here: 0x01 vs 0x09, the only clean 1-byte state divergence; serialized via FUN_08026b5c block writes.",
+      "name": "slot0_state_value",
+      "offset": 88,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Primary 23-byte tail of the 12-block payload (blocks 7-13) after the state byte. Mirrored at 0x1A1.",
+      "evidence": "Continuation of the FUN_08026aac-readable payload after slot0_state_value; range 0x59-0x6F byte-identical to 0x1A1-0x1B7; compared by FUN_08026c38 verify loop semantics.",
+      "name": "slot0_grid_tail",
+      "offset": 89,
+      "size": 23,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Primary-slot 32-bit trailer signature word (0x80FFFFFF) at footer block 18.",
+      "evidence": "Footer word read/written as one u32 unit by the FUN_08026aac / FUN_08026b5c 8-byte block primitives (block 18, first word); identical multiset in slot1 footer at 0x13C in swapped position.",
+      "name": "slot0_trailer_sig",
+      "offset": 144,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Primary-slot 32-bit trailer tag word (0x7F545515) at footer block 19.",
+      "evidence": "Second footer word of the FUN_08026b5c-written trailer (block 19, third word); same value appears as slot1 footer first word at 0x138.",
+      "name": "slot0_trailer_tag",
+      "offset": 156,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "guessed",
+      "description": "Primary-slot completion mark byte (0x54 = 84) at end of footer block 20.",
+      "evidence": "Trailing nonzero byte of the slot0 footer written via FUN_08026b5c (block 20 last byte); slot1 footer carries the same 0x54 mark at 0x143; nonzero sentinel position verified in baseline.",
+      "name": "slot0_completion_mark",
+      "offset": 167,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Second 64-byte head of the alternate-state 12-block payload (blocks 22-29). Same value multiset as slot0, rearranged state.",
+      "evidence": "Same-schema payload region serialized through FUN_08026aac / FUN_08026b5c block primitives; identical 14-value histogram to slot0 payload (16x00, 24x24, 23x49, 23x92, plus small ints) proves identical record schema with different arrangement.",
+      "name": "slot1_grid_head",
+      "offset": 176,
+      "size": 64,
+      "type": "bytes"
+    },
+    {
+      "confidence": "guessed",
+      "description": "Single-byte mutable state variable inside alternate payload (value 9; primary counterpart at 0x58 holds 1).",
+      "evidence": "Content-aligned counterpart of slot0_state_value under difflib alignment of the two FUN_08026aac block images (0x10 vs 0xB0 regions): aligned replace 0x09 vs 0x01; writable via FUN_08026b5c block primitives.",
+      "name": "slot1_state_value",
+      "offset": 240,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Alternate-state 31-byte tail of the 12-block payload (blocks 30-33).",
+      "evidence": "Continuation of the slot1 payload after slot1_state_value under the FUN_08026aac block framing; same-schema bytes verified against baseline range 0xF1-0x10F.",
+      "name": "slot1_grid_tail",
+      "offset": 241,
+      "size": 31,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Alternate-slot 32-bit trailer tag word (0x7F545515), first word of footer block 39.",
+      "evidence": "FUN_08026b5c-written trailer word; value-equals slot0_trailer_tag but stored first in this slot's footer, proving per-slot trailer layout.",
+      "name": "slot1_trailer_tag",
+      "offset": 312,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Alternate-slot 32-bit trailer signature word (0x80FFFFFF), second word of footer block 39.",
+      "evidence": "Value-equals slot0_trailer_sig (0x80FFFFFF) via the same FUN_08026aac block-read path; swapped word order vs slot0 footer verified in baseline.",
+      "name": "slot1_trailer_sig",
+      "offset": 316,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "guessed",
+      "description": "Alternate-slot completion mark byte (0x54 = 84) inside footer block 40.",
+      "evidence": "Same 0x54 sentinel value as slot0_completion_mark, carried at footer-relative position +11 (vs +23 in slot0); written through FUN_08026b5c block primitives.",
+      "name": "slot1_completion_mark",
+      "offset": 323,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Backup mirror of the primary 72-byte payload head (blocks 43-51). Byte-identical to 0x10-0x57.",
+      "evidence": "Byte-for-byte identical to slot0_grid_head (verified in Python over baseline); redundant copy compared with FUN_08026c38-style verify semantics and rewritten by FUN_08026b5c.",
+      "name": "slot0_grid_head_backup",
+      "offset": 344,
+      "size": 72,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Backup mirror of the primary state byte (value 1, matches slot0_state_value).",
+      "evidence": "Byte-identical mirror of slot0_state_value at payload-relative +0x48 via the FUN_08026aac block framing; verified 0x01 in baseline at 0x1A0.",
+      "name": "slot0_state_value_backup",
+      "offset": 416,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Backup mirror of the primary 23-byte payload tail. Byte-identical to 0x59-0x6F.",
+      "evidence": "Byte-for-byte identical to slot0_grid_tail (verified in Python over baseline 0x1A1-0x1B7); redundant copy under FUN_08026b5c block writes.",
+      "name": "slot0_grid_tail_backup",
+      "offset": 417,
+      "size": 23,
       "type": "bytes"
     }
-  ]
+  ],
+  "game_code": "ADBE",
+  "id": "adbe",
+  "magic_signatures": [
+    {
+      "bytes": [
+        180,
+        243,
+        222,
+        192
+      ],
+      "description": "File magic B4 F3 DE C0 (u32_le 0xC0DEF3B4) framing EEPROM block 0",
+      "offset": 4
+    }
+  ],
+  "media": "eeprom512",
+  "size_bytes": 512,
+  "title": "Denki Blocks! (USA) (En,Es)"
 }

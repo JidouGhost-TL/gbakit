@@ -12,34 +12,83 @@
         111,
         98,
         105
-      ]
+      ],
+      "description": "ASCII 'mobi' prefix of the 8-byte mobile-system identifier stored at the head of each voted copy"
     }
   ],
   "checksums": [],
   "fields": [
     {
-      "name": "magic_header",
+      "name": "copy0_mobile_id",
       "offset": 0,
-      "size": 4,
-      "type": "ascii"
+      "size": 8,
+      "type": "ascii",
+      "description": "Copy 0 of the 8-byte mobile-system identifier (ASCII 'mobile21'); voted per byte against copies 1-2 and required byte-exact",
+      "confidence": "confirmed",
+      "evidence": "FUN_08054918 reads 0x1E bytes from SRAM 0x0E000000 into staging buffer *_DAT_08054994, votes bytes with FUN_080547cc/FUN_08054748 across copies at +0/+10/+20, then compares all 8 payload bytes against the expected value at iRam0805499c; FUN_0805486c provisions the 8 bytes from ROM defaults at _DAT_08054914."
     },
     {
-      "name": "slot_counter",
-      "offset": 4,
-      "size": 2,
-      "type": "u16_le"
-    },
-    {
-      "name": "game_progress_flags",
-      "offset": 6,
-      "size": 2,
-      "type": "u16_le"
-    },
-    {
-      "name": "player_status_payload",
+      "name": "copy0_xor_word",
       "offset": 8,
-      "size": 16,
-      "type": "bytes"
+      "size": 2,
+      "type": "u16_le",
+      "description": "Copy 0 trailing integrity word: XOR of the four little-endian u16 halves of copy 0 payload (baseline 0x5251); full 10-byte record must XOR to zero",
+      "confidence": "confirmed",
+      "evidence": "FUN_0805486c computes FUN_08054824(*_DAT_0805490c, 8) and stores the u16 at staging-buffer+8, then writes the 10-byte record to SRAM 0x0E000000 via FUN_0809390c; load path FUN_08054918 accepts the record only if FUN_08054844 over 10 bytes reports XOR==0."
+    },
+    {
+      "name": "copy1_mobile_id",
+      "offset": 10,
+      "size": 8,
+      "type": "ascii",
+      "description": "Copy 1 of the 8-byte mobile-system identifier (ASCII 'mobile21'); per-byte median voter input for offsets 0-7",
+      "confidence": "confirmed",
+      "evidence": "FUN_08054918 votes SRAM bytes at 0x0E00000A against copies at 0x0E000000/+20 via FUN_080547cc (per-byte median FUN_08054748); rewrite path FUN_0805486c stores the identical 8-byte ROM default (from _DAT_08054914) at SRAM 0x0E00000A."
+    },
+    {
+      "name": "copy1_xor_word",
+      "offset": 18,
+      "size": 2,
+      "type": "u16_le",
+      "description": "Copy 1 trailing integrity word: XOR of the four little-endian u16 halves of copy 1 payload (baseline 0x5251)",
+      "confidence": "confirmed",
+      "evidence": "FUN_0805486c stores FUN_08054824 checksum output at staging-buffer+8 and writes the 10-byte record to SRAM 0x0E00000A via FUN_0809390c; FUN_08054918 validates copy 1 through the same FUN_08054844 XOR==0 check over its 10 bytes."
+    },
+    {
+      "name": "copy2_mobile_id",
+      "offset": 20,
+      "size": 8,
+      "type": "ascii",
+      "description": "Copy 2 of the 8-byte mobile-system identifier (ASCII 'mobile21'); per-byte median voter input for offsets 0-7",
+      "confidence": "confirmed",
+      "evidence": "FUN_08054918 votes SRAM bytes at 0x0E000014 against copies at 0x0E000000/+10 via FUN_080547cc (per-byte median FUN_08054748); rewrite path FUN_0805486c stores the identical 8-byte ROM default (from _DAT_08054914) at SRAM 0x0E000014."
+    },
+    {
+      "name": "copy2_xor_word",
+      "offset": 28,
+      "size": 2,
+      "type": "u16_le",
+      "description": "Copy 2 trailing integrity word: XOR of the four little-endian u16 halves of copy 2 payload (baseline 0x5251)",
+      "confidence": "confirmed",
+      "evidence": "FUN_0805486c stores FUN_08054824 checksum output at staging-buffer+8 and writes the 10-byte record to SRAM 0x0E000014 via FUN_0809390c; FUN_08054918 validates copy 2 through the same FUN_08054844 XOR==0 check over its 10 bytes."
+    }
+  ],
+  "copy_groups": [
+    {
+      "name": "mobile_id_mirrors",
+      "fields": [
+        "copy0_mobile_id",
+        "copy1_mobile_id",
+        "copy2_mobile_id"
+      ]
+    },
+    {
+      "name": "xor_word_mirrors",
+      "fields": [
+        "copy0_xor_word",
+        "copy1_xor_word",
+        "copy2_xor_word"
+      ]
     }
   ]
 }

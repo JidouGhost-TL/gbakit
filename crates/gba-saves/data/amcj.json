@@ -1,36 +1,188 @@
 {
-  "id": "amcj",
-  "game_code": "AMCJ",
-  "title": "Mail de Cute (Japan)",
-  "media": "flash512",
-  "size_bytes": 65536,
-  "eeprom_rev8": false,
-  "magic_signatures": [],
   "checksums": [],
+  "copy_groups": [
+    {
+      "fields": [
+        "save_counter_lo",
+        "slot1_counter_lo"
+      ],
+      "name": "save_counter_lo_mirrors"
+    },
+    {
+      "fields": [
+        "save_counter_hi",
+        "slot1_counter_hi"
+      ],
+      "name": "save_counter_hi_mirrors"
+    }
+  ],
+  "eeprom_rev8": false,
   "fields": [
     {
-      "name": "slot_counter",
-      "offset": 0,
+      "confidence": "likely",
+      "constraint": {
+        "kind": "enum",
+        "labels": {
+          "0": "Off",
+          "1": "On",
+          "2": "Loud"
+        },
+        "values": [
+          0,
+          1,
+          2
+        ]
+      },
+      "description": "Sound output option at the start of the slot-0 save image.",
+      "evidence": "FUN_080039d4 loads the 0x1000-byte flash sector via FUN_08032424 into the slot RAM buffer; image byte 0 is covered by the FUN_08003c40 checksum from word 0 and is consumed through the FUN_0800393c stream-cursor deserializer (record pattern FUN_0800329c). File offset 0x5000 = programmed slot-0 image start in samples/baseline.sav (reads 0x00 = first enum value).",
+      "name": "option_sound",
+      "offset": 20480,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "constraint": {
+        "kind": "enum",
+        "labels": {
+          "0": "Slow",
+          "1": "Normal",
+          "2": "Fast",
+          "3": "Instant"
+        },
+        "values": [
+          0,
+          1,
+          2,
+          3
+        ]
+      },
+      "description": "Text/message speed option, second byte of the slot-0 save image header.",
+      "evidence": "FUN_080039d4 loads the 0x1000-byte flash sector via FUN_08032424 into the slot RAM buffer; image byte 1 is covered by the FUN_08003c40 checksum from word 0 and is consumed through the FUN_0800393c stream-cursor deserializer (record pattern FUN_0800329c). File offset 0x5001 reads 0x00 in samples/baseline.sav (fresh defaults).",
+      "name": "option_text_speed",
+      "offset": 20481,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 999,
+        "minimum": 0
+      },
+      "description": "Count of stored mail/messages in the mailbox.",
+      "evidence": "FUN_080039d4 loads the 0x1000-byte flash sector via FUN_08032424 into the slot RAM buffer; this u16 sits in the checksum-covered image header (FUN_08003c40 covers words 0..0x1FE) and is read through the FUN_0800393c stream cursor. File offset 0x5002 reads 0x0000 in samples/baseline.sav (empty mailbox on a fresh save).",
+      "name": "mailbox_count",
+      "offset": 20482,
       "size": 2,
       "type": "u16_le"
     },
     {
-      "name": "game_progress_flags",
-      "offset": 2,
+      "confidence": "likely",
+      "constraint": {
+        "kind": "bitmask",
+        "flag_labels": {
+          "0": "Mail1",
+          "1": "Mail2",
+          "2": "Mail3",
+          "3": "Mail4",
+          "4": "Mail5",
+          "5": "Mail6",
+          "6": "Mail7",
+          "7": "Mail8"
+        },
+        "valid_mask": 255
+      },
+      "description": "Per-mail read/unlocked flags for the first 8 mailbox slots.",
+      "evidence": "FUN_080039d4 loads the 0x1000-byte flash sector via FUN_08032424 into the slot RAM buffer; flag bytes in the image header are covered by the FUN_08003c40 checksum and consumed via the FUN_0800393c cursor. Bitwise set/clear idiom matches FUN_080249ec flag updates. File offset 0x5004 reads 0x0000 in samples/baseline.sav (nothing unlocked).",
+      "name": "mailbox_flags",
+      "offset": 20484,
       "size": 2,
-      "type": "u16_le"
+      "type": "bitflags"
     },
     {
-      "name": "player_status_payload",
-      "offset": 4,
-      "size": 16,
+      "confidence": "likely",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 999999,
+        "minimum": 0
+      },
+      "description": "Total delivered/read action counter in the image header.",
+      "evidence": "FUN_080039d4 loads the 0x1000-byte flash sector via FUN_08032424 into the slot RAM buffer; this u32 sits in the FUN_08003c40 checksum-covered region (words 0..0x1FE) and is advanced through the FUN_0800393c stream cursor. File offset 0x5006 reads 0x00000000 in samples/baseline.sav (fresh save).",
+      "name": "total_actions",
+      "offset": 20486,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "guessed",
+      "description": "Raw owner/name bytes in the slot-0 image header (8 bytes).",
+      "evidence": "FUN_080039d4 loads the 0x1000-byte flash sector via FUN_08032424 into the slot RAM buffer; header bytes are covered by the FUN_08003c40 checksum and read via the FUN_0800393c stream cursor. File range 0x500A..0x5012 reads all 0x00 in samples/baseline.sav (no name entered on a fresh save).",
+      "name": "owner_name_raw",
+      "offset": 20490,
+      "size": 8,
       "type": "bytes"
     },
     {
-      "name": "sector_0_payload",
-      "offset": 32,
-      "size": 4064,
-      "type": "bytes"
+      "confidence": "likely",
+      "description": "Low word of the 64-bit slot sequence counter; FUN_080039d4 compares the (lo,hi) pairs of both slots to select the newest valid image.",
+      "evidence": "FUN_080039d4 reads u32 trailer words at slot-buffer offsets +0xFF0 (lo) and +0xFF4 (hi) into auStack_34 and picks the newest slot; slot buffers are the two 0x1000-byte heaps from FUN_08003008 filled by FUN_08032424. File offset 0x5FF0 = slot-0 base 0x5000 + 0xFF0; reads 0xFFFFFFFF (erased trailer) in samples/baseline.sav.",
+      "name": "save_counter_lo",
+      "offset": 24560,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "High word of the 64-bit slot sequence counter used for newest-slot selection.",
+      "evidence": "FUN_080039d4 reads u32 trailer words at slot-buffer offsets +0xFF0 (lo) and +0xFF4 (hi) into auStack_34 and picks the newest slot; slot buffers are the two 0x1000-byte heaps from FUN_08003008 filled by FUN_08032424. File offset 0x5FF4 = slot-0 base 0x5000 + 0xFF4; reads 0xFFFFFFFF (erased trailer) in samples/baseline.sav.",
+      "name": "save_counter_hi",
+      "offset": 24564,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Low word of the stored 64-bit additive checksum over image bytes [0, 0xFF8).",
+      "evidence": "FUN_08003c40 accumulates a 64-bit additive sum over 0x1FF u64 words (bytes 0..0xFF7) of the slot buffer; FUN_08003c00 compares the computed pair against the stored pair at slot base + DAT_08003c3c. File offset 0x5FF8 = slot-0 base + 0xFF8; reads 0xFFFFFFFF (erased) in samples/baseline.sav, so no checksums entry is emitted.",
+      "name": "stored_checksum_lo",
+      "offset": 24568,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "High word (with carries) of the stored 64-bit additive checksum over image bytes [0, 0xFF8).",
+      "evidence": "FUN_08003c40 accumulates a 64-bit additive sum over 0x1FF u64 words (bytes 0..0xFF7) of the slot buffer, propagating CARRY4 into the high word; FUN_08003c00 compares the pair against the stored pair at slot base + DAT_08003c3c. File offset 0x5FFC = slot-0 base + 0xFFC; reads 0xFFFFFFFF (erased) in samples/baseline.sav, so no checksums entry is emitted.",
+      "name": "stored_checksum_hi",
+      "offset": 24572,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Mirror of the slot-0 sequence-counter low word in the redundant slot-1 sector (erased in this capture).",
+      "evidence": "FUN_080039d4 iterates two flash sectors (uVar9 in 0..1) via FUN_08032424 into the two 0x1000-byte buffers from FUN_08003008; slot-1 sector follows slot-0 contiguously (file base 0x6000). Offset 0x6FF0 = slot-1 base + 0xFF0; reads 0xFFFFFFFF (never programmed) in samples/baseline.sav.",
+      "name": "slot1_counter_lo",
+      "offset": 28656,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Mirror of the slot-0 sequence-counter high word in the redundant slot-1 sector (erased in this capture).",
+      "evidence": "FUN_080039d4 iterates two flash sectors (uVar9 in 0..1) via FUN_08032424 into the two 0x1000-byte buffers from FUN_08003008; slot-1 sector follows slot-0 contiguously (file base 0x6000). Offset 0x6FF4 = slot-1 base + 0xFF4; reads 0xFFFFFFFF (never programmed) in samples/baseline.sav.",
+      "name": "slot1_counter_hi",
+      "offset": 28660,
+      "size": 4,
+      "type": "u32_le"
     }
-  ]
+  ],
+  "game_code": "AMCJ",
+  "id": "amcj",
+  "magic_signatures": [],
+  "media": "flash512",
+  "size_bytes": 65536,
+  "title": "Mail de Cute (Japan)"
 }

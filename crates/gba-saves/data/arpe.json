@@ -1,29 +1,74 @@
 {
-  "id": "arpe",
-  "game_code": "ARPE",
-  "title": "Robopon 2 - Ring Version (USA)",
-  "media": "flash512",
-  "size_bytes": 65536,
-  "magic_signatures": [],
   "checksums": [],
   "fields": [
     {
-      "name": "slot_counter",
+      "confidence": "confirmed",
+      "description": "Stored 32-bit checksum word of flash sector 0xC. Computed by FUN_08006a9c over sector-buffer bytes [4..0x1000) as sum = SEED + Σ(byte[i]+i) with SEED = 0, stored as (sum_mod16 << 16) | ((-sum) & 0xFFFF). FUN_08006c94 writes it to buffer[0..4) on store; FUN_08006d90 compares FUN_08006b10's recomputed value against it on load. Baseline value 0xF7FA0806 independently recomputed byte-exact from samples/baseline.sav. Custom algorithm (not in Schema v2 list), so it is a plain u32_le field; see SPEC.md for the recompute recipe.",
+      "evidence": "FUN_08006a9c accumulates (uint)*(byte*)(buf+iVar2)+iVar2 for iVar2 in [4..limit] into sum/diff pair and returns (sum*0x10000)|(diff&mask); FUN_08006c94 stores the result at sector-buffer[0..4); FUN_08006d90 verifies FUN_08006b10's recomputed value against sector-buffer[0..4); file offset 0xC000 holds 0xF7FA0806 which matches the seed-0 full-sector recomputation exactly.",
+      "name": "save_checksum_u32",
       "offset": 49152,
-      "size": 2,
-      "type": "u16_le"
+      "size": 4,
+      "type": "u32_le"
     },
     {
-      "name": "game_progress_flags",
-      "offset": 49154,
-      "size": 2,
-      "type": "u16_le"
-    },
-    {
-      "name": "player_status_payload",
+      "confidence": "guessed",
+      "description": "Payload word 0: u32 at sector-buffer offset +4 (first word of the game save payload). Bulk-copied between game RAM and the sector buffer by FUN_08006c94 (store) / FUN_08006d90 (load) and covered by the FUN_08006a9c checksum over [4..0x1000). Per-word gameplay semantics are not resolved in this decomp slice (fresh-save payload is all zeros); exposed as a mutable scalar for live-mutation probing. Recompute save_checksum_u32 after mutating (see SPEC.md).",
+      "evidence": "FUN_08006c94 copies game RAM into sector-buffer+4 and FUN_08006d90 copies sector-buffer+4 out to game RAM; FUN_08006a9c checksums sector-buffer bytes [4..0x1000); sector 0xC is programmed at file 0xC000 in samples/baseline.sav.",
+      "name": "save_data_word_0",
       "offset": 49156,
-      "size": 16,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "guessed",
+      "description": "Payload word 1: u32 at sector-buffer offset +8. Same bulk-copy and checksum coverage as save_data_word_0; per-word semantics unresolved (reads zero in the fresh baseline save). Mutable scalar for live-mutation probing; recompute save_checksum_u32 after mutating.",
+      "evidence": "FUN_08006c94 / FUN_08006d90 bulk-copy sector-buffer+4 payload words; FUN_08006a9c covers [4..0x1000); file 0xC008 in samples/baseline.sav reads 0x00000000.",
+      "name": "save_data_word_1",
+      "offset": 49160,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "guessed",
+      "description": "Payload word 2: u32 at sector-buffer offset +12. Same bulk-copy and checksum coverage as save_data_word_0; per-word semantics unresolved (reads zero in the fresh baseline save). Mutable scalar for live-mutation probing; recompute save_checksum_u32 after mutating.",
+      "evidence": "FUN_08006c94 / FUN_08006d90 bulk-copy sector-buffer+4 payload words; FUN_08006a9c covers [4..0x1000); file 0xC00C in samples/baseline.sav reads 0x00000000.",
+      "name": "save_data_word_2",
+      "offset": 49164,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "guessed",
+      "description": "Payload word 3: u32 at sector-buffer offset +16. Same bulk-copy and checksum coverage as save_data_word_0; per-word semantics unresolved (reads zero in the fresh baseline save). Mutable scalar for live-mutation probing; recompute save_checksum_u32 after mutating.",
+      "evidence": "FUN_08006c94 / FUN_08006d90 bulk-copy sector-buffer+4 payload words; FUN_08006a9c covers [4..0x1000); file 0xC010 in samples/baseline.sav reads 0x00000000.",
+      "name": "save_data_word_3",
+      "offset": 49168,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "guessed",
+      "description": "Payload word 4: u32 at sector-buffer offset +20. Same bulk-copy and checksum coverage as save_data_word_0; per-word semantics unresolved (reads zero in the fresh baseline save). Mutable scalar for live-mutation probing; recompute save_checksum_u32 after mutating.",
+      "evidence": "FUN_08006c94 / FUN_08006d90 bulk-copy sector-buffer+4 payload words; FUN_08006a9c covers [4..0x1000); file 0xC014 in samples/baseline.sav reads 0x00000000.",
+      "name": "save_data_word_4",
+      "offset": 49172,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Remainder of the game save payload: sector-buffer offsets +24..+4096 (file 0xC018..0xD000), all zeros in the fresh baseline save. Bulk-copied by FUN_08006c94 / FUN_08006d90 and fully covered by the FUN_08006a9c checksum; no per-field structure is resolved for this tail in the decomp slice, so it is kept as one bytes block.",
+      "evidence": "FUN_08006c94 / FUN_08006d90 copy the payload tail in bulk; FUN_08006a9c checksums every byte of [4..0x1000); file 0xC018..0xD000 is uniformly 0x00 in samples/baseline.sav.",
+      "name": "save_data_rest",
+      "offset": 49176,
+      "size": 4072,
       "type": "bytes"
     }
-  ]
+  ],
+  "game_code": "ARPE",
+  "id": "arpe",
+  "magic_signatures": [],
+  "media": "flash512",
+  "size_bytes": 65536,
+  "title": "Robopon 2 - Ring Version (USA)"
 }

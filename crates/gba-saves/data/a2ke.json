@@ -1,45 +1,271 @@
 {
-  "id": "a2ke",
-  "game_code": "A2KE",
-  "title": "Spy Kids Challenger (USA)",
-  "media": "eeprom512",
-  "size_bytes": 512,
-  "magic_signatures": [
-    {
-      "offset": 0,
-      "bytes": [
-        101,
-        107,
-        110,
-        111
-      ]
-    }
-  ],
   "checksums": [],
+  "copy_groups": [],
+  "eeprom_rev8": true,
   "fields": [
     {
-      "name": "magic_header",
+      "confidence": "likely",
+      "description": "Save header version/counter word. First word of the logical image (0x3804 in baseline); transferred as part of the 8-byte EEPROM block read/write pair. Not a standard Schema v2 checksum (sum variants tested, no match).",
+      "evidence": "FUN_081c9ba0 reads 8-byte EEPROM blocks into RAM (dest param_2+6) and FUN_081c9c58 writes them back, both via queued FUN_081c9b20 transfers to 0x0D000000; logical offset 0x00 (rev8 of raw block 0) holds LE u16 0x3804 in samples/baseline.sav.",
+      "name": "save_version",
       "offset": 0,
-      "size": 4,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "allowed": "ABCDEFGHIJKLMNOPQRSTUVWXYZ ",
+        "kind": "ascii-charset",
+        "max_len": 9
+      },
+      "description": "Table A entry 0 name: 'ROBERT R ' + NUL. First of five 14-byte records (10-byte NUL-terminated name + u32 LE score), scores descending 200000..100000.",
+      "evidence": "FUN_081c9ba0/FUN_081c9c58 8-byte EEPROM block primitives via FUN_081c9b20 move this region between 0x0D000000 and RAM; logical offset 0x13d holds bytes 52 4F 42 45 52 54 20 52 20 00 ('ROBERT R ' + NUL) in samples/baseline.sav.",
+      "name": "table_a_entry0_name",
+      "offset": 317,
+      "size": 10,
       "type": "ascii"
     },
     {
-      "name": "slot_counter",
-      "offset": 4,
-      "size": 2,
-      "type": "u16_le"
+      "confidence": "confirmed",
+      "description": "Table A entry 0 score: 200000 (0x00030D40 LE). Top of ladder A.",
+      "evidence": "FUN_081c9ba0/FUN_081c9c58 8-byte EEPROM block primitives via FUN_081c9b20 move this region between 0x0D000000 and RAM; logical offset 0x147 holds LE u32 200000 (40 0D 03 00) in samples/baseline.sav.",
+      "name": "table_a_entry0_score",
+      "offset": 327,
+      "size": 4,
+      "type": "u32_le"
     },
     {
-      "name": "game_progress_flags",
-      "offset": 6,
-      "size": 2,
-      "type": "u16_le"
+      "confidence": "confirmed",
+      "constraint": {
+        "allowed": "ABCDEFGHIJKLMNOPQRSTUVWXYZ ",
+        "kind": "ascii-charset",
+        "max_len": 9
+      },
+      "description": "Table A entry 1 name: 'MICHAEL H' + NUL.",
+      "evidence": "FUN_081c9ba0/FUN_081c9c58 8-byte EEPROM block primitives via FUN_081c9b20 move this region between 0x0D000000 and RAM; logical offset 0x14b holds 'MICHAEL H' + NUL in samples/baseline.sav.",
+      "name": "table_a_entry1_name",
+      "offset": 331,
+      "size": 10,
+      "type": "ascii"
     },
     {
-      "name": "player_status_payload",
-      "offset": 8,
-      "size": 16,
-      "type": "bytes"
+      "confidence": "confirmed",
+      "description": "Table A entry 1 score: 175000 (0x0002AB98 LE).",
+      "evidence": "FUN_081c9ba0/FUN_081c9c58 8-byte EEPROM block primitives via FUN_081c9b20 move this region between 0x0D000000 and RAM; logical offset 0x155 holds LE u32 175000 (98 AB 02 00) in samples/baseline.sav.",
+      "name": "table_a_entry1_score",
+      "offset": 341,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "allowed": "ABCDEFGHIJKLMNOPQRSTUVWXYZ ",
+        "kind": "ascii-charset",
+        "max_len": 9
+      },
+      "description": "Table A entry 2 name: 'DAVE     ' + NUL (space-padded).",
+      "evidence": "FUN_081c9ba0/FUN_081c9c58 8-byte EEPROM block primitives via FUN_081c9b20 move this region between 0x0D000000 and RAM; logical offset 0x159 holds 'DAVE' + 5 spaces + NUL in samples/baseline.sav.",
+      "name": "table_a_entry2_name",
+      "offset": 345,
+      "size": 10,
+      "type": "ascii"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Table A entry 2 score: 150000 (0x000249F0 LE).",
+      "evidence": "FUN_081c9ba0/FUN_081c9c58 8-byte EEPROM block primitives via FUN_081c9b20 move this region between 0x0D000000 and RAM; logical offset 0x163 holds LE u32 150000 (F0 49 02 00) in samples/baseline.sav.",
+      "name": "table_a_entry2_score",
+      "offset": 355,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "allowed": "ABCDEFGHIJKLMNOPQRSTUVWXYZ ",
+        "kind": "ascii-charset",
+        "max_len": 9
+      },
+      "description": "Table A entry 3 name: 'AMERICAN ' + NUL.",
+      "evidence": "FUN_081c9ba0/FUN_081c9c58 8-byte EEPROM block primitives via FUN_081c9b20 move this region between 0x0D000000 and RAM; logical offset 0x167 holds 'AMERICAN ' + NUL in samples/baseline.sav.",
+      "name": "table_a_entry3_name",
+      "offset": 359,
+      "size": 10,
+      "type": "ascii"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Table A entry 3 score: 125000 (0x0001E848 LE).",
+      "evidence": "FUN_081c9ba0/FUN_081c9c58 8-byte EEPROM block primitives via FUN_081c9b20 move this region between 0x0D000000 and RAM; logical offset 0x171 holds LE u32 125000 (48 E8 01 00) in samples/baseline.sav.",
+      "name": "table_a_entry3_score",
+      "offset": 369,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "allowed": "ABCDEFGHIJKLMNOPQRSTUVWXYZ ",
+        "kind": "ascii-charset",
+        "max_len": 9
+      },
+      "description": "Table A entry 4 name: 'SMACKULA ' + NUL. Bottom of ladder A.",
+      "evidence": "FUN_081c9ba0/FUN_081c9c58 8-byte EEPROM block primitives via FUN_081c9b20 move this region between 0x0D000000 and RAM; logical offset 0x175 holds 'SMACKULA ' + NUL in samples/baseline.sav.",
+      "name": "table_a_entry4_name",
+      "offset": 373,
+      "size": 10,
+      "type": "ascii"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Table A entry 4 score: 100000 (0x000186A0 LE).",
+      "evidence": "FUN_081c9ba0/FUN_081c9c58 8-byte EEPROM block primitives via FUN_081c9b20 move this region between 0x0D000000 and RAM; logical offset 0x17f holds LE u32 100000 (A0 86 01 00) in samples/baseline.sav.",
+      "name": "table_a_entry4_score",
+      "offset": 383,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "allowed": "ABCDEFGHIJKLMNOPQRSTUVWXYZ ",
+        "kind": "ascii-charset",
+        "max_len": 9
+      },
+      "description": "Table B entry 0 name: 'JOSH T   ' + NUL. Second 5-entry ladder, same score steps as table A with different names.",
+      "evidence": "FUN_081c9ba0/FUN_081c9c58 8-byte EEPROM block primitives via FUN_081c9b20 move this region between 0x0D000000 and RAM; logical offset 0x183 holds 'JOSH T' + 3 spaces + NUL in samples/baseline.sav.",
+      "name": "table_b_entry0_name",
+      "offset": 387,
+      "size": 10,
+      "type": "ascii"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Table B entry 0 score: 200000 (0x00030D40 LE). Top of ladder B.",
+      "evidence": "FUN_081c9ba0/FUN_081c9c58 8-byte EEPROM block primitives via FUN_081c9b20 move this region between 0x0D000000 and RAM; logical offset 0x18d holds LE u32 200000 (40 0D 03 00) in samples/baseline.sav.",
+      "name": "table_b_entry0_score",
+      "offset": 397,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "allowed": "ABCDEFGHIJKLMNOPQRSTUVWXYZ ",
+        "kind": "ascii-charset",
+        "max_len": 9
+      },
+      "description": "Table B entry 1 name: 'JUSTIN   ' + NUL.",
+      "evidence": "FUN_081c9ba0/FUN_081c9c58 8-byte EEPROM block primitives via FUN_081c9b20 move this region between 0x0D000000 and RAM; logical offset 0x191 holds 'JUSTIN' + 3 spaces + NUL in samples/baseline.sav.",
+      "name": "table_b_entry1_name",
+      "offset": 401,
+      "size": 10,
+      "type": "ascii"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Table B entry 1 score: 175000 (0x0002AB98 LE).",
+      "evidence": "FUN_081c9ba0/FUN_081c9c58 8-byte EEPROM block primitives via FUN_081c9b20 move this region between 0x0D000000 and RAM; logical offset 0x19b holds LE u32 175000 (98 AB 02 00) in samples/baseline.sav.",
+      "name": "table_b_entry1_score",
+      "offset": 411,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "allowed": "ABCDEFGHIJKLMNOPQRSTUVWXYZ ",
+        "kind": "ascii-charset",
+        "max_len": 9
+      },
+      "description": "Table B entry 2 name: 'IAN      ' + NUL.",
+      "evidence": "FUN_081c9ba0/FUN_081c9c58 8-byte EEPROM block primitives via FUN_081c9b20 move this region between 0x0D000000 and RAM; logical offset 0x19f holds 'IAN' + 6 spaces + NUL in samples/baseline.sav.",
+      "name": "table_b_entry2_name",
+      "offset": 415,
+      "size": 10,
+      "type": "ascii"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Table B entry 2 score: 150000 (0x000249F0 LE).",
+      "evidence": "FUN_081c9ba0/FUN_081c9c58 8-byte EEPROM block primitives via FUN_081c9b20 move this region between 0x0D000000 and RAM; logical offset 0x1a9 holds LE u32 150000 (F0 49 02 00) in samples/baseline.sav.",
+      "name": "table_b_entry2_score",
+      "offset": 425,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "allowed": "ABCDEFGHIJKLMNOPQRSTUVWXYZ ",
+        "kind": "ascii-charset",
+        "max_len": 9
+      },
+      "description": "Table B entry 3 name: 'ALFRED   ' + NUL.",
+      "evidence": "FUN_081c9ba0/FUN_081c9c58 8-byte EEPROM block primitives via FUN_081c9b20 move this region between 0x0D000000 and RAM; logical offset 0x1ad holds 'ALFRED' + 3 spaces + NUL in samples/baseline.sav.",
+      "name": "table_b_entry3_name",
+      "offset": 429,
+      "size": 10,
+      "type": "ascii"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Table B entry 3 score: 125000 (0x0001E848 LE).",
+      "evidence": "FUN_081c9ba0/FUN_081c9c58 8-byte EEPROM block primitives via FUN_081c9b20 move this region between 0x0D000000 and RAM; logical offset 0x1b7 holds LE u32 125000 (48 E8 01 00) in samples/baseline.sav.",
+      "name": "table_b_entry3_score",
+      "offset": 439,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "allowed": "ABCDEFGHIJKLMNOPQRSTUVWXYZ ",
+        "kind": "ascii-charset",
+        "max_len": 9
+      },
+      "description": "Table B entry 4 name: 'NAVATAR  ' + NUL. Bottom of ladder B; last used byte of the save is 0x1C8.",
+      "evidence": "FUN_081c9ba0/FUN_081c9c58 8-byte EEPROM block primitives via FUN_081c9b20 move this region between 0x0D000000 and RAM; logical offset 0x1bb holds 'NAVATAR' + 2 spaces + NUL in samples/baseline.sav.",
+      "name": "table_b_entry4_name",
+      "offset": 443,
+      "size": 10,
+      "type": "ascii"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Table B entry 4 score: 100000 (0x000186A0 LE).",
+      "evidence": "FUN_081c9ba0/FUN_081c9c58 8-byte EEPROM block primitives via FUN_081c9b20 move this region between 0x0D000000 and RAM; logical offset 0x1c5 holds LE u32 100000 (A0 86 01 00) in samples/baseline.sav.",
+      "name": "table_b_entry4_score",
+      "offset": 453,
+      "size": 4,
+      "type": "u32_le"
     }
-  ]
+  ],
+  "game_code": "A2KE",
+  "id": "a2ke",
+  "magic_signatures": [
+    {
+      "bytes": [
+        112,
+        109,
+        111,
+        110,
+        107,
+        101,
+        121,
+        115,
+        97,
+        117,
+        99,
+        101
+      ],
+      "description": "ASCII 'pmonkeysauce' header tag at logical offset 2",
+      "offset": 2
+    }
+  ],
+  "media": "eeprom512",
+  "size_bytes": 512,
+  "title": "Spy Kids Challenger (USA)"
 }

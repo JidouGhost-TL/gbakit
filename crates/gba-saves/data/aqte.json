@@ -1,29 +1,67 @@
 {
-  "id": "aqte",
-  "game_code": "AQTE",
-  "title": "Dr. Seuss' The Cat in the Hat (USA)",
-  "media": "eeprom512",
-  "size_bytes": 512,
-  "magic_signatures": [],
   "checksums": [],
+  "copy_groups": [],
+  "eeprom_rev8": true,
   "fields": [
     {
-      "name": "slot_counter",
+      "confidence": "guessed",
+      "description": "First payload byte of EEPROM block 0x3d; flag-bit consumption pattern (bit0 tests) is used by the menu/unlock query path. Bit assignment unobserved (fresh-save baseline 0x00); low confidence.",
+      "evidence": "Guessed position: file 0x1E8 = EEPROM addr 0x3d block byte 0. Payload region is byte-copied with running-sum validation in FUN_0800c078 (0x14 loop into _DAT_0800c18c) and FUN_0800cb40 (0x14 loop from _DAT_0800cc28); per-index bit0 flag queries in FUN_0800ce10 gate menu selection in FUN_0800f354.",
+      "name": "progress_flags",
       "offset": 488,
-      "size": 2,
-      "type": "u16_le"
+      "size": 1,
+      "type": "bitflags"
     },
     {
-      "name": "game_progress_flags",
-      "offset": 490,
-      "size": 2,
-      "type": "u16_le"
-    },
-    {
-      "name": "player_status_payload",
-      "offset": 492,
-      "size": 16,
+      "confidence": "confirmed",
+      "description": "Remaining 7 bytes of the first 8-byte EEPROM block (addr 0x3d); bulk of the validated profile payload.",
+      "evidence": "Confirmed region: file 0x1E9..0x1EF = EEPROM addr 0x3d bytes 1..7. Block read by FUN_0802a42c into heap buffer in FUN_0800c078 (loop sVar10=0x3d, uVar11<3, dest buf+uVar11*8) and written by FUN_0802a4dc via FUN_0802a610 in FUN_0800cb40 (loop iVar7+0x3d); payload bytes bulk-copied in 0x14 loops in FUN_0800c078/FUN_0800cb40.",
+      "name": "profile_data_a",
+      "offset": 489,
+      "size": 7,
       "type": "bytes"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Second 8-byte EEPROM block (addr 0x3e); middle third of the validated profile payload.",
+      "evidence": "Confirmed region: file 0x1F0..0x1F7 = EEPROM addr 0x3e (0x3e*8=496). Read by FUN_0802a42c in FUN_0800c078 and written by FUN_0802a4dc via FUN_0802a610 in FUN_0800cb40; covered by the 0x14-byte copy/checksum loops in both functions.",
+      "name": "profile_data_b",
+      "offset": 496,
+      "size": 8,
+      "type": "bytes"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Final 4 payload bytes (block 0x3f head); typed word so live-mutation testing can probe a concrete scalar. Covered by the seeded checksum.",
+      "evidence": "Confirmed region: file 0x1F8..0x1FB = EEPROM addr 0x3f bytes 0..3 (0x3f*8=504). Written/read as part of the 0x14-byte payload loops in FUN_0800c078 (dest _DAT_0800c18c) and FUN_0800cb40 (src _DAT_0800cc28); included in checksum sum in both.",
+      "name": "profile_tail_word",
+      "offset": 504,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Stored integrity word: expected value equals 0x25 plus the sum of the 20 payload bytes mod 0x10000 (custom algorithm, not in Schema v2 list, so no checksums[] entry). Baseline 0x0025 matches sum of 20 zero bytes + seed.",
+      "evidence": "FUN_0800c078 seeds *_DAT_0800c188=0x25, accumulates 0x14 payload bytes, snapshots sVar10, then compares sVar10==asStack_28[0] (2 bytes at file 0x1FC..0x1FD). FUN_0800cb40 stores asStack_20[0]=sum into the same 2 bytes before block write via FUN_0802a610.",
+      "name": "profile_checksum",
+      "offset": 508,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Unwritten alignment padding: heap save buffer is memset 0 and only 22 of 24 bytes are stored, so these 2 bytes stay 0x0000; never read back by the load path. Safe live-mutation target (outside checksum coverage).",
+      "evidence": "FUN_0800cb40 writes 0x14+2=22 bytes then rounds block count ((n+7)&~7, loop (ccb0+7)>>3 over addrs 0x3d..0x3f) leaving file 0x1FE..0x1FF as memset-0 from func_0x0802a7fc; FUN_0800c078 consumes only 22 of the 24 bytes read by FUN_0802a42c.",
+      "name": "profile_pad",
+      "offset": 510,
+      "size": 2,
+      "type": "u16_le"
     }
-  ]
+  ],
+  "game_code": "AQTE",
+  "id": "aqte",
+  "magic_signatures": [],
+  "media": "eeprom512",
+  "size_bytes": 512,
+  "title": "Dr. Seuss' The Cat in the Hat (USA)"
 }

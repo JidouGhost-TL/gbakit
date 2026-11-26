@@ -4,6 +4,7 @@
   "title": "Dragon Ball Z - Collectible Card Game (USA)",
   "media": "sram",
   "size_bytes": 32768,
+  "eeprom_rev8": false,
   "magic_signatures": [
     {
       "offset": 0,
@@ -11,35 +12,200 @@
         68,
         66,
         90,
-        73
-      ]
+        73,
+        110,
+        105,
+        116,
+        0
+      ],
+      "description": "ASCII 'DBZInit\\0' save header, verified against baseline.sav"
     }
   ],
   "checksums": [],
   "fields": [
     {
-      "name": "magic_header",
+      "name": "header_magic",
       "offset": 0,
-      "size": 4,
-      "type": "ascii"
+      "size": 8,
+      "type": "ascii",
+      "description": "8-byte save header magic 'DBZInit\\0' at SRAM base 0x0E000000",
+      "confidence": "confirmed",
+      "evidence": "FUN_08031f98 reads 8 bytes from SRAM offset -8 (base 0x0E000000) via FUN_0803203c and verifies with strcmp FUN_080386e8 against ROM constant _DAT_08031fc8; FUN_08031fdc re-reads the same 8 bytes via FUN_0803208c. Baseline bytes 0x00..0x07 are 44 42 5a 49 6e 69 74 00.",
+      "constraint": {
+        "kind": "ascii-charset",
+        "allowed": "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 ",
+        "max_len": 8
+      }
     },
     {
-      "name": "slot_counter",
-      "offset": 4,
-      "size": 2,
-      "type": "u16_le"
-    },
-    {
-      "name": "game_progress_flags",
-      "offset": 6,
-      "size": 2,
-      "type": "u16_le"
-    },
-    {
-      "name": "player_status_payload",
+      "name": "save_validation_word",
       "offset": 8,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Fixed header validation sentinel 0xBEEFFEEB stored at SRAM offset 8",
+      "confidence": "likely",
+      "evidence": "FUN_0800281c performs the load path: FUN_0803208c reads _DAT_08002868 bytes from SRAM offset 0 into RAM buffer _DAT_08002864, computes a CRC32-style word with FUN_080332b4, then FUN_0803208c reads 4 trailing bytes from SRAM offset _DAT_08002868 for comparison. Baseline stores 0xBEEFFEEB (LE bytes eb fe ef be) at save offset 0x08; no standard CRC32/sum range over the file reproduces it, so it is kept as a plain u32 field (see SPEC.md).",
+      "constraint": {
+        "kind": "unsigned-range",
+        "minimum": 0,
+        "maximum": 4294967295
+      }
+    },
+    {
+      "name": "player_name",
+      "offset": 12,
       "size": 16,
-      "type": "bytes"
+      "type": "ascii",
+      "description": "Player/profile name, NUL-terminated (baseline: 'Player 1')",
+      "confidence": "confirmed",
+      "evidence": "FUN_0800277c save-init copies the default name with strcpy FUN_08038768 (_DAT_080027d4 <- _DAT_080027d8) into the RAM save struct _DAT_080027c8 (struct+4 maps to save offset 0x0C); FUN_080028fc copies the same default string with FUN_08038768/FUN_0803870c. Baseline save offsets 0x0C..0x13 read 'Player 1\\0' followed by NUL padding to 0x1B.",
+      "constraint": {
+        "kind": "ascii-charset",
+        "allowed": "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 ",
+        "max_len": 16
+      }
+    },
+    {
+      "name": "card_count_0001",
+      "offset": 44,
+      "size": 2,
+      "type": "u16_le",
+      "description": "Owned-copy count for card #1 (baseline: 1)",
+      "confidence": "confirmed",
+      "evidence": "FUN_0800277c initializes RAM save struct _DAT_080027c8 words [9..12] to [1,1,0,0]; struct base maps to save offset 0x08 so word[9] is save offset 0x2C, matching baseline value 1. Per-card counts are clamped 0..0x10 by FUN_08002b44 (writes short to count array slot) and aggregated by FUN_0800370c loop over card ids 1.._DAT_080037e4.",
+      "constraint": {
+        "kind": "unsigned-range",
+        "minimum": 0,
+        "maximum": 16
+      }
+    },
+    {
+      "name": "card_count_0002",
+      "offset": 48,
+      "size": 2,
+      "type": "u16_le",
+      "description": "Owned-copy count for card #2 (baseline: 1)",
+      "confidence": "confirmed",
+      "evidence": "FUN_0800277c init word[10]=1 maps to save offset 0x30 (struct base = save+0x08), matching baseline. Counts clamped 0..0x10 by FUN_08002b44; see FUN_0800370c aggregation loop.",
+      "constraint": {
+        "kind": "unsigned-range",
+        "minimum": 0,
+        "maximum": 16
+      }
+    },
+    {
+      "name": "card_count_0003",
+      "offset": 52,
+      "size": 2,
+      "type": "u16_le",
+      "description": "Owned-copy count for card #3 (baseline: 0, unowned)",
+      "confidence": "likely",
+      "evidence": "FUN_0800277c init word[11]=0 maps to save offset 0x34 (struct base = save+0x08), matching baseline. Same u16 count array governed by FUN_08002b44 clamp 0..0x10 and FUN_0800370c loop.",
+      "constraint": {
+        "kind": "unsigned-range",
+        "minimum": 0,
+        "maximum": 16
+      }
+    },
+    {
+      "name": "card_count_0007",
+      "offset": 144,
+      "size": 2,
+      "type": "u16_le",
+      "description": "Owned-copy count for a mid-collection card (baseline: 3)",
+      "confidence": "likely",
+      "evidence": "Save offsets 0x2C..0xA93 form a contiguous run of 1332 u16_le values all in 0..4 (baseline histogram: 1255 zeros, 32 ones, 9 twos, 34 threes, 2 fours), i.e. the card-ownership array written via FUN_08002b44 (clamp 0..0x10) and scanned by FUN_0800370c. Offset 0x90 holds value 3 in baseline.",
+      "constraint": {
+        "kind": "unsigned-range",
+        "minimum": 0,
+        "maximum": 16
+      }
+    },
+    {
+      "name": "deck1_name",
+      "offset": 2708,
+      "size": 16,
+      "type": "ascii",
+      "description": "Custom deck slot 1 name (baseline: 'Custom 1')",
+      "confidence": "likely",
+      "evidence": "Deck structs are 0xD4 bytes, copied with the 0xD4-byte memcpy FUN_08042240 inside FUN_08002c5c; deck1 block starts at save offset 0xA94 and deck2 at 0xB68 (delta 0xD4). Name sits at deck+0x00; deck names are (str)copied with FUN_08038768/FUN_0803870c (cf. FUN_0803b794 strncpy to deck struct). Baseline 0xA94..0xA9C reads 'Custom 1\\0'.",
+      "constraint": {
+        "kind": "ascii-charset",
+        "allowed": "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 ",
+        "max_len": 16
+      }
+    },
+    {
+      "name": "deck2_name",
+      "offset": 2920,
+      "size": 16,
+      "type": "ascii",
+      "description": "Custom deck slot 2 name (baseline: 'Custom 2')",
+      "confidence": "likely",
+      "evidence": "Mirror of deck1_name at +0xD4 (deck struct stride, cf. FUN_08002c5c 0xD4-byte deck copy via FUN_08042240). Baseline 0xB68..0xB70 reads 'Custom 2\\0'.",
+      "constraint": {
+        "kind": "ascii-charset",
+        "allowed": "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 ",
+        "max_len": 16
+      }
+    },
+    {
+      "name": "deck1_card_slot_0",
+      "offset": 2740,
+      "size": 2,
+      "type": "u16_le",
+      "description": "Deck 1 card list entry 0: card ID (baseline: 281; 0xFFFF = empty)",
+      "confidence": "likely",
+      "evidence": "Deck card-ID array starts at deck+0x20 (save 0xAB4 = 0xA94+0x20); entries are u16 card IDs in triples (281,282,283 then 0xFFFF padding) per baseline, inside the 0xD4-byte deck struct moved by FUN_08002c5c. Baseline 0xAB4..0xAB5 = 0x0119 (281).",
+      "constraint": {
+        "kind": "unsigned-range",
+        "minimum": 0,
+        "maximum": 65535
+      }
+    },
+    {
+      "name": "deck1_card_slot_1",
+      "offset": 2742,
+      "size": 2,
+      "type": "u16_le",
+      "description": "Deck 1 card list entry 1: card ID (baseline: 282; 0xFFFF = empty)",
+      "confidence": "likely",
+      "evidence": "Second u16 entry of the deck+0x20 card-ID array in the 0xD4-byte deck struct (FUN_08002c5c via FUN_08042240). Baseline 0xAB6..0xAB7 = 0x011A (282).",
+      "constraint": {
+        "kind": "unsigned-range",
+        "minimum": 0,
+        "maximum": 65535
+      }
+    },
+    {
+      "name": "deck2_card_slot_0",
+      "offset": 2952,
+      "size": 2,
+      "type": "u16_le",
+      "description": "Deck 2 card list entry 0: card ID (baseline: 281; 0xFFFF = empty)",
+      "confidence": "likely",
+      "evidence": "Mirror of deck1_card_slot_0 at +0xD4 deck stride (deck2 base 0xB68 + 0x20 = 0xB88), same 0xD4-byte deck struct copied by FUN_08002c5c. Baseline 0xB88..0xB89 = 0x0119 (281), identical to deck 1 entry 0.",
+      "constraint": {
+        "kind": "unsigned-range",
+        "minimum": 0,
+        "maximum": 65535
+      }
+    }
+  ],
+  "copy_groups": [
+    {
+      "name": "deck_name_mirrors",
+      "fields": [
+        "deck1_name",
+        "deck2_name"
+      ]
+    },
+    {
+      "name": "deck_lead_card_mirrors",
+      "fields": [
+        "deck1_card_slot_0",
+        "deck2_card_slot_0"
+      ]
     }
   ]
 }

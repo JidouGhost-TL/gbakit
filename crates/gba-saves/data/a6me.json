@@ -1,45 +1,105 @@
 {
-  "id": "a6me",
-  "game_code": "A6ME",
-  "title": "Megaman & Bass (USA)",
-  "media": "eeprom8k",
-  "size_bytes": 8192,
-  "magic_signatures": [
+  "checksums": [
     {
-      "offset": 0,
-      "bytes": [
-        48,
-        76,
-        79,
-        70
-      ]
+      "algorithm": "sum8_inv",
+      "covered_end": 126,
+      "covered_start": 0,
+      "name": "record_checksum_sum8inv",
+      "stored_offset": 126
     }
   ],
-  "checksums": [],
+  "eeprom_rev8": true,
   "fields": [
     {
-      "name": "magic_header",
+      "confidence": "confirmed",
+      "description": "8-byte ASCII save magic 'ROCKFOL0'; copied from ROM constant to record offset 0 on save and byte-compared on load.",
+      "evidence": "FUN_08056548 copies 8-byte magic from _DAT_08056580 to buf+0 (param_2==0 path, line 7964); FUN_080566c0 byte-compares record bytes [0,8) against expected magic (lines 8044-8056); generic 8-byte verifier FUN_080598f4 invoked on the record by FUN_080569d0 (line 8188) and FUN_08055950 (lines 7576,7579).",
+      "name": "header_magic",
       "offset": 0,
-      "size": 4,
+      "size": 8,
       "type": "ascii"
     },
     {
-      "name": "slot_counter",
-      "offset": 4,
-      "size": 2,
-      "type": "u16_le"
-    },
-    {
-      "name": "game_progress_flags",
-      "offset": 6,
-      "size": 2,
-      "type": "u16_le"
-    },
-    {
-      "name": "player_status_payload",
+      "confidence": "likely",
+      "description": "2 reserved bytes between magic and gameplay payload; never written by the serializer, zero on fresh save.",
+      "evidence": "FUN_08056548 param_2==0 path writes [0,8) (magic, line 7964) then [10,0x3A) (payload, line 7944) leaving [8,10) untouched; baseline logical bytes [8,10) are zero.",
+      "name": "header_reserved",
       "offset": 8,
-      "size": 16,
+      "size": 2,
       "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "48-byte gameplay progress snapshot (stage/character progress, counters, unlocks); copied verbatim between record and live game state on save and load. Interior fields unresolved; all zero on fresh save.",
+      "evidence": "FUN_08056548 save path copies 0x30 bytes from live state *(_DAT_0805657c+0x50) to record offset 10 (line 7944); FUN_08055950 load path copies 0x30 bytes from record offset 10 back to live state *(_DAT+0x50) (line 7604); block transfer sized by *(u16*)(ctrl+0x30)=0x80 set in FUN_08056504 (line 7877).",
+      "name": "progress_state",
+      "offset": 10,
+      "size": 48,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Zero padding between gameplay payload and trailing checksum; never written by the serializer.",
+      "evidence": "FUN_08056548 param_2==0 path writes payload only up to offset 0x3A (10+0x30) and checksum at 0x7E (line 7976), leaving [0x3A,0x7E) untouched; baseline logical bytes there are zero.",
+      "name": "record_padding",
+      "offset": 58,
+      "size": 68,
+      "type": "bytes"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Bitwise-NOT checksum (sum8_inv) over record bytes [0,126); verified on load.",
+      "evidence": "FUN_08056548 accumulates byte sum over [0,iVar7) and stores ~sum at iVar7 with iVar7=0x7E (lines 7967-7976); FUN_08056ab4 re-sums [0,param_2-2) and requires *(buf+param_2-2)==~sum with param_2=0x80 (lines 8268-8277); baseline sum=0x40, stored 0xBF.",
+      "name": "record_checksum",
+      "offset": 126,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "kind": "enum",
+        "labels": {
+          "136": "end-of-record marker"
+        },
+        "values": [
+          136
+        ]
+      },
+      "description": "Fixed end-of-record marker stored unconditionally after the checksum byte.",
+      "evidence": "FUN_08056548 stores constant 0x88 at pbVar8[1] (record offset 0x7F) immediately after the checksum byte (line 7977); baseline logical byte is 0x88.",
+      "name": "record_end_marker",
+      "offset": 127,
+      "size": 1,
+      "type": "u8"
     }
-  ]
+  ],
+  "game_code": "A6ME",
+  "id": "a6me",
+  "magic_signatures": [
+    {
+      "bytes": [
+        82,
+        79,
+        67,
+        75,
+        70,
+        79,
+        76,
+        48
+      ],
+      "description": "ASCII 'ROCKFOL0' save magic at record start (rev8-logical domain)",
+      "offset": 0
+    },
+    {
+      "bytes": [
+        136
+      ],
+      "description": "Fixed 0x88 end-of-record marker after checksum",
+      "offset": 127
+    }
+  ],
+  "media": "eeprom8k",
+  "size_bytes": 8192,
+  "title": "Megaman & Bass (USA)"
 }

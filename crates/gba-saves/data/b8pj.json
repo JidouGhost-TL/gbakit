@@ -1,45 +1,145 @@
 {
-  "id": "b8pj",
-  "game_code": "B8PJ",
-  "title": "Power Pro Kun Pocket 1, 2 (Japan)",
-  "media": "sram",
-  "size_bytes": 32768,
-  "magic_signatures": [
+  "checksums": [
     {
-      "offset": 0,
-      "bytes": [
-        75,
-        67,
-        69,
-        79
-      ]
+      "algorithm": "sum8",
+      "covered_end": 111,
+      "covered_start": 96,
+      "name": "slot_data_checksum",
+      "seed": 0,
+      "stored_offset": 111,
+      "xor_out": 0
     }
   ],
-  "checksums": [],
+  "copy_groups": [
+    {
+      "fields": [
+        "save_magic_primary",
+        "save_magic_backup"
+      ],
+      "name": "magic_mirrors"
+    }
+  ],
+  "eeprom_rev8": false,
   "fields": [
     {
-      "name": "magic_header",
+      "confidence": "confirmed",
+      "description": "Primary 16-byte save magic 'KCEO PAWAPOKE1N2', written by FUN_08005e00 and verified by FUN_08005e28 against SRAM 0x0E000000.",
+      "evidence": "FUN_08005e00 calls func_0x08005ed0(RAM magic, 0x0e000000, 0x10); FUN_08005e28 reads 0x0e000000 via func_0x08005ef4 and compares 0x10 bytes to expected ROM magic; baseline bytes 0x00-0x0F match exactly.",
+      "name": "save_magic_primary",
       "offset": 0,
+      "size": 16,
+      "type": "ascii"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Backup 16-byte save magic copy, restored when the primary copy mismatches.",
+      "evidence": "FUN_08005e00 writes the same RAM magic to the backup slot via func_0x08005ed0; FUN_08005e28 falls back to func_0x08005ef4(backup, RAM, 0x10) and re-compares 0x10 bytes; baseline bytes 0x10-0x1F match exactly.",
+      "name": "save_magic_backup",
+      "offset": 16,
+      "size": 16,
+      "type": "ascii"
+    },
+    {
+      "confidence": "likely",
+      "constraint": {
+        "allowed": "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789",
+        "kind": "ascii-charset",
+        "max_len": 4
+      },
+      "description": "4-character alphanumeric code (password/contest entry) at the head of the 15-byte SRAM data slot; reads 'M6O5' in the live capture.",
+      "evidence": "FUN_0800387c writes a 0xf-byte payload from its RAM buffer via func_0x08005ed0 plus a FUN_08005f00 sum byte (dispatched by FUN_0800386c); file bytes 0x60-0x63 are ASCII 'M6O5' and sum(0x60..0x6E)&0xFF equals the stored byte at 0x6F.",
+      "name": "entry_code_chars",
+      "offset": 96,
       "size": 4,
       "type": "ascii"
     },
     {
-      "name": "slot_counter",
-      "offset": 4,
-      "size": 2,
-      "type": "u16_le"
+      "confidence": "likely",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 255,
+        "minimum": 0
+      },
+      "description": "First gameplay parameter byte of the data slot (0x12 = 18 in the live capture).",
+      "evidence": "FUN_0800387c payload byte 4 of the 0xf-byte SRAM slot at file offset 0x60 (RAM buffer via FUN_0800386c); sibling reader FUN_0800325c parses per-byte/bit fields of the same slot family with FUN_08005f00 sum validation.",
+      "name": "gameplay_param_a",
+      "offset": 100,
+      "size": 1,
+      "type": "u8"
     },
     {
-      "name": "game_progress_flags",
-      "offset": 6,
-      "size": 2,
-      "type": "u16_le"
+      "confidence": "likely",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 255,
+        "minimum": 0
+      },
+      "description": "Second gameplay parameter byte of the data slot (0x38 = 56 in the live capture).",
+      "evidence": "FUN_0800387c payload byte 5 of the 0xf-byte SRAM slot at file offset 0x60 (RAM buffer via FUN_0800386c); validated as part of the sum8-covered range checked by FUN_08005f00 against stored byte at 0x6F.",
+      "name": "gameplay_param_b",
+      "offset": 101,
+      "size": 1,
+      "type": "u8"
     },
     {
-      "name": "player_status_payload",
-      "offset": 8,
-      "size": 16,
+      "confidence": "likely",
+      "description": "Zero-filled tail of the 15-byte data slot payload (bytes 6-14), part of the sum8-covered range.",
+      "evidence": "FUN_0800387c writes 0xf payload bytes via func_0x08005ed0 and FUN_08005f00 sums all 0xf bytes into the stored byte at 0x6F; baseline bytes 0x66-0x6E are zero and included in the verified sum.",
+      "name": "slot_data_tail",
+      "offset": 102,
+      "size": 9,
       "type": "bytes"
     }
-  ]
+  ],
+  "game_code": "B8PJ",
+  "id": "b8pj",
+  "magic_signatures": [
+    {
+      "bytes": [
+        75,
+        67,
+        69,
+        79,
+        32,
+        80,
+        65,
+        87,
+        65,
+        80,
+        79,
+        75,
+        69,
+        49,
+        78,
+        50
+      ],
+      "description": "Primary save magic 'KCEO PAWAPOKE1N2' verified by FUN_08005e28 at SRAM 0x0E000000",
+      "offset": 0
+    },
+    {
+      "bytes": [
+        75,
+        67,
+        69,
+        79,
+        32,
+        80,
+        65,
+        87,
+        65,
+        80,
+        79,
+        75,
+        69,
+        49,
+        78,
+        50
+      ],
+      "description": "Backup save magic copy verified by FUN_08005e28 fallback read",
+      "offset": 16
+    }
+  ],
+  "media": "sram",
+  "size_bytes": 32768,
+  "title": "Power Pro Kun Pocket 1, 2 (Japan)"
 }

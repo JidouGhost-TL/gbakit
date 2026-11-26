@@ -4,42 +4,245 @@
   "title": "Madden NFL 2003 (USA)",
   "media": "eeprom8k",
   "size_bytes": 8192,
+  "eeprom_rev8": true,
   "magic_signatures": [
     {
-      "offset": 4,
+      "offset": 0,
       "bytes": [
-        55,
-        57,
+        77,
         68,
-        77
-      ]
+        57,
+        55
+      ],
+      "description": "ASCII 'MD97' record magic at start of EEPROM word 0 (logical domain)"
     }
   ],
   "checksums": [],
   "fields": [
     {
-      "name": "magic_header",
-      "offset": 4,
+      "name": "record_magic",
+      "offset": 0,
       "size": 4,
-      "type": "ascii"
+      "type": "ascii",
+      "description": "Record-book header magic, ASCII 'MD97' (EEPROM word 0)",
+      "confidence": "confirmed",
+      "evidence": "EEPROM word 0 serviced by FUN_0800a26c (word read, 4x u16 via FUN_0800a1ec to 0xd000000) and FUN_0800a31c (word write); bytes 4D 44 39 37 verify in samples/baseline.sav logical domain (rev8).",
+      "constraint": {
+        "kind": "ascii-charset",
+        "allowed": "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789",
+        "max_len": 4
+      }
     },
     {
-      "name": "slot_counter",
-      "offset": 8,
+      "name": "leader_stat_culpepper",
+      "offset": 118,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "description": "Record-book primary stat for CULPEPPER entry (value 483; EEPROM words 14-15)",
+      "confidence": "likely",
+      "evidence": "U16 pair immediately preceding 'CULPEPPER' name at logical 0x7E; words 14/15 transferred by FUN_0800a26c read path and FUN_0800a31c write path via FUN_0800a1ec.",
+      "constraint": {
+        "kind": "unsigned-range",
+        "minimum": 0,
+        "maximum": 9999
+      }
     },
     {
-      "name": "game_progress_flags",
-      "offset": 10,
+      "name": "leader_name_culpepper",
+      "offset": 126,
+      "size": 9,
+      "type": "ascii",
+      "description": "Record-book player name 'CULPEPPER' (EEPROM words 15-16)",
+      "confidence": "confirmed",
+      "evidence": "ASCII bytes 43 55 4C 50 45 50 50 45 52 at logical 0x7E verify in samples/baseline.sav; served through FUN_0800a26c/FUN_0800a31c 8-byte word transfers (words 15-16) via FUN_0800a1ec.",
+      "constraint": {
+        "kind": "ascii-charset",
+        "allowed": "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+        "max_len": 9
+      }
+    },
+    {
+      "name": "leader_name_george",
+      "offset": 141,
+      "size": 6,
+      "type": "ascii",
+      "description": "Record-book player name 'GEORGE' (EEPROM words 17-18)",
+      "confidence": "confirmed",
+      "evidence": "ASCII bytes 47 45 4F 52 47 45 at logical 0x8D verify in samples/baseline.sav; words 17-18 moved by FUN_0800a26c read / FUN_0800a31c write via FUN_0800a1ec.",
+      "constraint": {
+        "kind": "ascii-charset",
+        "allowed": "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+        "max_len": 6
+      }
+    },
+    {
+      "name": "leader_stat_rice_a",
+      "offset": 152,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "description": "Record-book stat A for RICE entry (value 63; EEPROM word 19)",
+      "confidence": "likely",
+      "evidence": "U16 at logical 0x98 directly precedes 'RICE' name at 0x9C; EEPROM word 19 on the FUN_0800a26c read / FUN_0800a31c write path via FUN_0800a1ec.",
+      "constraint": {
+        "kind": "unsigned-range",
+        "minimum": 0,
+        "maximum": 9999
+      }
     },
     {
-      "name": "player_status_payload",
-      "offset": 12,
-      "size": 16,
-      "type": "bytes"
+      "name": "leader_stat_rice_b",
+      "offset": 154,
+      "size": 2,
+      "type": "u16_le",
+      "description": "Record-book stat B for RICE entry (value 6016; EEPROM word 19)",
+      "confidence": "likely",
+      "evidence": "U16 at logical 0x9A directly precedes 'RICE' name at 0x9C; EEPROM word 19 serviced by FUN_0800a26c / FUN_0800a31c via FUN_0800a1ec.",
+      "constraint": {
+        "kind": "unsigned-range",
+        "minimum": 0,
+        "maximum": 9999
+      }
+    },
+    {
+      "name": "leader_name_rice",
+      "offset": 156,
+      "size": 4,
+      "type": "ascii",
+      "description": "Record-book player name 'RICE' (EEPROM word 19)",
+      "confidence": "confirmed",
+      "evidence": "ASCII bytes 52 49 43 45 at logical 0x9C verify in samples/baseline.sav; word 19 transferred by FUN_0800a26c read / FUN_0800a31c write via FUN_0800a1ec.",
+      "constraint": {
+        "kind": "ascii-charset",
+        "allowed": "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+        "max_len": 4
+      }
+    },
+    {
+      "name": "leader_stat_staley_a",
+      "offset": 167,
+      "size": 2,
+      "type": "u16_le",
+      "description": "Record-book stat A for STALEY entry (value 51; EEPROM words 20-21)",
+      "confidence": "likely",
+      "evidence": "U16 at logical 0xA7 directly precedes 'STALEY' name at 0xAB; words 20-21 on the FUN_0800a26c read / FUN_0800a31c write path via FUN_0800a1ec.",
+      "constraint": {
+        "kind": "unsigned-range",
+        "minimum": 0,
+        "maximum": 9999
+      }
+    },
+    {
+      "name": "leader_stat_staley_b",
+      "offset": 169,
+      "size": 2,
+      "type": "u16_le",
+      "description": "Record-book stat B for STALEY entry (value 3362; EEPROM word 21)",
+      "confidence": "likely",
+      "evidence": "U16 at logical 0xA9 directly precedes 'STALEY' name at 0xAB; EEPROM word 21 serviced by FUN_0800a26c / FUN_0800a31c via FUN_0800a1ec.",
+      "constraint": {
+        "kind": "unsigned-range",
+        "minimum": 0,
+        "maximum": 9999
+      }
+    },
+    {
+      "name": "leader_name_staley",
+      "offset": 171,
+      "size": 6,
+      "type": "ascii",
+      "description": "Record-book player name 'STALEY' (EEPROM word 21)",
+      "confidence": "confirmed",
+      "evidence": "ASCII bytes 53 54 41 4C 45 59 at logical 0xAB verify in samples/baseline.sav; word 21 moved by FUN_0800a26c read / FUN_0800a31c write via FUN_0800a1ec.",
+      "constraint": {
+        "kind": "ascii-charset",
+        "allowed": "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+        "max_len": 6
+      }
+    },
+    {
+      "name": "leader_stat_faulk_a",
+      "offset": 182,
+      "size": 2,
+      "type": "u16_le",
+      "description": "Record-book stat A for FAULK entry (value 475; EEPROM word 22-23)",
+      "confidence": "likely",
+      "evidence": "U16 at logical 0xB6 directly precedes 'FAULK' name at 0xBA; words 22-23 on the FUN_0800a26c read / FUN_0800a31c write path via FUN_0800a1ec.",
+      "constraint": {
+        "kind": "unsigned-range",
+        "minimum": 0,
+        "maximum": 9999
+      }
+    },
+    {
+      "name": "leader_name_faulk",
+      "offset": 186,
+      "size": 5,
+      "type": "ascii",
+      "description": "Record-book player name 'FAULK' (EEPROM word 23)",
+      "confidence": "confirmed",
+      "evidence": "ASCII bytes 46 41 55 4C 4B at logical 0xBA verify in samples/baseline.sav; word 23 transferred by FUN_0800a26c read / FUN_0800a31c write via FUN_0800a1ec.",
+      "constraint": {
+        "kind": "ascii-charset",
+        "allowed": "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+        "max_len": 5
+      }
+    },
+    {
+      "name": "leader_stat_green_a",
+      "offset": 197,
+      "size": 2,
+      "type": "u16_le",
+      "description": "Record-book stat A for GREEN entry (value 67; EEPROM word 24-25)",
+      "confidence": "likely",
+      "evidence": "U16 at logical 0xC5 directly precedes 'GREEN' name at 0xC9; words 24-25 serviced by FUN_0800a26c / FUN_0800a31c via FUN_0800a1ec.",
+      "constraint": {
+        "kind": "unsigned-range",
+        "minimum": 0,
+        "maximum": 9999
+      }
+    },
+    {
+      "name": "leader_name_green",
+      "offset": 201,
+      "size": 5,
+      "type": "ascii",
+      "description": "Record-book player name 'GREEN' (EEPROM word 25)",
+      "confidence": "confirmed",
+      "evidence": "ASCII bytes 47 52 45 45 4E at logical 0xC9 verify in samples/baseline.sav; word 25 moved by FUN_0800a26c read / FUN_0800a31c write via FUN_0800a1ec.",
+      "constraint": {
+        "kind": "ascii-charset",
+        "allowed": "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+        "max_len": 5
+      }
+    },
+    {
+      "name": "leader_stat_elam_a",
+      "offset": 212,
+      "size": 2,
+      "type": "u16_le",
+      "description": "Record-book stat A for ELAM entry (value 47; EEPROM word 26)",
+      "confidence": "likely",
+      "evidence": "U16 at logical 0xD4 directly precedes 'ELAM' name at 0xD8; EEPROM word 26 on the FUN_0800a26c read / FUN_0800a31c write path via FUN_0800a1ec.",
+      "constraint": {
+        "kind": "unsigned-range",
+        "minimum": 0,
+        "maximum": 9999
+      }
+    },
+    {
+      "name": "leader_name_elam",
+      "offset": 216,
+      "size": 4,
+      "type": "ascii",
+      "description": "Record-book player name 'ELAM' (EEPROM word 27)",
+      "confidence": "confirmed",
+      "evidence": "ASCII bytes 45 4C 41 4D at logical 0xD8 verify in samples/baseline.sav; word 27 transferred by FUN_0800a26c read / FUN_0800a31c write via FUN_0800a1ec.",
+      "constraint": {
+        "kind": "ascii-charset",
+        "allowed": "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+        "max_len": 4
+      }
     }
-  ]
+  ],
+  "copy_groups": []
 }

@@ -1,45 +1,131 @@
 {
-  "id": "acye",
-  "game_code": "ACYE",
-  "title": "Chessmaster (USA)",
-  "media": "eeprom512",
-  "size_bytes": 512,
-  "magic_signatures": [
+  "checksums": [
     {
-      "offset": 0,
-      "bytes": [
-        50,
-        48,
-        77,
-        83
-      ]
+      "algorithm": "sum16_le",
+      "covered_end": 44,
+      "covered_start": 40,
+      "name": "slot0_header_checksum",
+      "seed": 0,
+      "stored_offset": 44,
+      "xor_out": 0
     }
   ],
-  "checksums": [],
+  "copy_groups": [],
+  "eeprom_rev8": true,
   "fields": [
     {
-      "name": "magic_header",
+      "confidence": "confirmed",
+      "constraint": {
+        "allowed": "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789",
+        "kind": "ascii-charset",
+        "max_len": 8
+      },
+      "description": "8-byte save header magic, ASCII 'CHESSM02'. Verified in rev8-logical domain of baseline.sav. FUN_0800be8c reads 8 bytes at EEPROM offset 0 via FUN_0800bf74 and memcmps (FUN_08041df4) them against the expected magic; mismatch triggers a full reformat.",
+      "evidence": "FUN_0800be8c reads 8 bytes at EEPROM offset 0 (func_0x0800bf74(param_1,0,auStack_1c,8)) and compares via FUN_08041df4; baseline.sav rev8-logical bytes 0x00-0x07 are 43 48 45 53 53 4D 30 32 ('CHESSM02').",
+      "name": "header_magic",
       "offset": 0,
-      "size": 4,
+      "size": 8,
       "type": "ascii"
     },
     {
-      "name": "slot_counter",
-      "offset": 4,
-      "size": 2,
-      "type": "u16_le"
-    },
-    {
-      "name": "game_progress_flags",
-      "offset": 6,
-      "size": 2,
-      "type": "u16_le"
-    },
-    {
-      "name": "player_status_payload",
+      "confidence": "confirmed",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 0,
+        "minimum": 0
+      },
+      "description": "First word of the 32-byte options block at EEPROM offset 8. FUN_0803c334 treats the block as valid only when this word equals its degenerate reference sum (0); baseline reads 0 and takes the defaults path.",
+      "evidence": "FUN_0803c298 reads 0x20 bytes at EEPROM offset 8 into the options buffer; FUN_0803c334 checks *psVar1 (first u16) against FUN_0803c300(psVar1,0)=0 and resets to defaults (FUN_0803b9fc/FUN_0803bc28) on mismatch.",
+      "name": "options_check_word",
       "offset": 8,
-      "size": 16,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Status byte of the options block (low byte of the second u16). FUN_0803c334 resets the block to defaults when (char)psVar1[1]==0; baseline is 0, i.e. unconfigured/default options.",
+      "evidence": "FUN_0803c334 condition (char)psVar1[1]=='\\0' (options buffer byte 2, file offset 0x0A) selects the FUN_0803b9fc/FUN_0803bc28 defaults path; baseline.sav has 0x00 here.",
+      "name": "options_status_byte",
+      "offset": 10,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Remaining 29 bytes of the 32-byte options block (EEPROM offsets 0x0B-0x27): persisted configuration (sound/level/display style settings consumed by FUN_0803bc28). All zero in the baseline (default) capture.",
+      "evidence": "FUN_0803c298 persists 0x20 bytes at EEPROM offset 8; FUN_0803bc28 distributes options-buffer bytes (+3..+0x1c) into game state; baseline.sav rev8-logical bytes 0x0B-0x27 are all 0x00.",
+      "name": "options_payload",
+      "offset": 11,
+      "size": 29,
+      "type": "bytes"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "First 4 data bytes of save slot 0 (EEPROM offset 0x28). Covered by the slot checksum: FUN_0803c324 byte-sums these 4 bytes, FUN_0803c174 stamps the sum, FUN_0803c1ac revalidates on load, FUN_0803c150 zeroes them on init. Mutable gameplay data word.",
+      "evidence": "FUN_0803c174 computes FUN_0803c324(iVar3) over slot base +0..+3 and stores at +4; FUN_0803c1ac invalidates the slot on mismatch; slot base = EEPROM offset (param_1*0x1d80000+0x280000)>>16 = 0x28 for slot 0, length 0x1d8 (FUN_0803c208/FUN_0803c250).",
+      "name": "slot0_header_data",
+      "offset": 40,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "kind": "enum",
+        "labels": {
+          "0": "invalid_empty",
+          "1": "active"
+        },
+        "values": [
+          0,
+          1
+        ]
+      },
+      "description": "Slot 0 active flag (slot base +6). Load path FUN_0803bd48 reformats the slot (FUN_0803c150 + FUN_0803c174) when this byte is 0; FUN_0803c150 sets it to 1. Baseline is 1: freshly initialized but valid.",
+      "evidence": "FUN_0803bd48 checks *(char *)(slot_RAM+6)==0 then calls FUN_0803c150 (sets byte+6=1, byte+7=0) and FUN_0803c174 (re-stamps checksum); baseline.sav rev8-logical offset 0x2E is 0x01.",
+      "name": "slot0_valid_flag",
+      "offset": 46,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Slot 0 header pad byte (slot base +7), always cleared to 0 by the init path.",
+      "evidence": "FUN_0803c150 sets puVar1[7]=0 alongside the valid flag; baseline.sav rev8-logical offset 0x2F is 0x00.",
+      "name": "slot0_pad",
+      "offset": 47,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Remaining 464 bytes of the 472-byte slot 0 record (slot base +8): chess game state (board, clocks, move history) read/written wholesale with the slot. All zero in the baseline capture; trailing 8 bytes (0x1F8-0x1FF) read as erased 0xFF.",
+      "evidence": "FUN_0803c208/FUN_0803c250 transfer 0x1d8 bytes at EEPROM offset 0x28 for slot 0 (single slot: FUN_0803bd48 loop runs iVar3<1); baseline.sav rev8-logical bytes 0x30-0x1F7 are 0x00 with an erased 0xFF tail at 0x1F8-0x1FF.",
+      "name": "slot0_game_data",
+      "offset": 48,
+      "size": 464,
       "type": "bytes"
     }
-  ]
+  ],
+  "game_code": "ACYE",
+  "id": "acye",
+  "magic_signatures": [
+    {
+      "bytes": [
+        67,
+        72,
+        69,
+        83,
+        83,
+        77,
+        48,
+        50
+      ],
+      "description": "ASCII 'CHESSM02' save header magic (rev8-logical domain)",
+      "offset": 0
+    }
+  ],
+  "media": "eeprom512",
+  "size_bytes": 512,
+  "title": "Chessmaster (USA)"
 }

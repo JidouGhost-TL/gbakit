@@ -1,29 +1,209 @@
 {
-  "id": "an3e",
-  "game_code": "AN3E",
-  "title": "Catz (USA, Europe)",
-  "media": "eeprom8k",
-  "size_bytes": 8192,
-  "magic_signatures": [],
   "checksums": [],
   "fields": [
     {
-      "name": "slot_counter",
+      "confidence": "likely",
+      "description": "NUL-terminated ROM magic string copied to buffer start by FUN_08000af0 (store) and verified by FUN_08001120 (load). Exact bytes unknown; zeros in fresh baseline.",
+      "evidence": "FUN_080006dc line 344 calls FUN_08000af0 to stamp magic at buffer offset 0; FUN_08000cf8 line 731 verifies via FUN_08001120 against the same ROM string.",
+      "name": "save_magic_prefix",
       "offset": 0,
+      "size": 14,
+      "type": "bytes"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Stored integrity word: byte-sum of save buffer plus 1 (FUN_08000b1c), written at cursor 0x0e after packing and re-checked on load.",
+      "evidence": "FUN_080006dc lines 419-425 sets cursor 0x10, calls FUN_08000b1c checksum, adds 1, stores 2 bytes at cursor 0x0e; FUN_08000cf8 lines 729-742 recomputes via FUN_08000b1c and compares (sum+1)==stored.",
+      "name": "save_checksum",
+      "offset": 14,
       "size": 2,
       "type": "u16_le"
     },
     {
-      "name": "game_progress_flags",
-      "offset": 2,
-      "size": 2,
-      "type": "u16_le"
+      "confidence": "likely",
+      "description": "Fixed 7-u16 per-slot record (first of six identical rows packed in order).",
+      "evidence": "FUN_080006dc line 346 packs _DAT_08000a20 (2,7) and FUN_08000cf8 line 656 unpacks the mirror _DAT_0800100c (2,7) via FUN_08000b58/FUN_0800115c.",
+      "name": "pet_record_0",
+      "offset": 16,
+      "size": 14,
+      "type": "bytes"
     },
     {
-      "name": "player_status_payload",
-      "offset": 4,
+      "confidence": "likely",
+      "description": "Fixed 7-u16 per-slot record (second of six identical rows).",
+      "evidence": "FUN_080006dc line 347 packs _DAT_08000a24 (2,7) and FUN_08000cf8 line 657 unpacks the mirror _DAT_08001010 (2,7).",
+      "name": "pet_record_1",
+      "offset": 30,
+      "size": 14,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Fixed 7-u16 per-slot record (third of six identical rows).",
+      "evidence": "FUN_080006dc line 348 packs _DAT_08000a28 (2,7) and FUN_08000cf8 line 658 unpacks the mirror _DAT_08001014 (2,7).",
+      "name": "pet_record_2",
+      "offset": 44,
+      "size": 14,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Fixed 7-u16 per-slot record (fourth of six identical rows).",
+      "evidence": "FUN_080006dc line 349 packs _DAT_08000a2c (2,7) and FUN_08000cf8 line 659 unpacks the mirror _DAT_08001018 (2,7).",
+      "name": "pet_record_3",
+      "offset": 58,
+      "size": 14,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Fixed 7-u16 per-slot record (fifth of six identical rows).",
+      "evidence": "FUN_080006dc line 350 packs _DAT_08000a30 (2,7) and FUN_08000cf8 line 660 unpacks the mirror _DAT_0800101c (2,7).",
+      "name": "pet_record_4",
+      "offset": 72,
+      "size": 14,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Fixed 7-u16 per-slot record (sixth of six identical rows).",
+      "evidence": "FUN_080006dc line 351 packs _DAT_08000a34 (2,7) and FUN_08000cf8 line 661 unpacks the mirror _DAT_08001020 (2,7).",
+      "name": "pet_record_5",
+      "offset": 86,
+      "size": 14,
+      "type": "bytes"
+    },
+    {
+      "confidence": "guessed",
+      "description": "Lone option/flag byte between the record rows and the counter block; mutable config scalar.",
+      "evidence": "FUN_080006dc line 352 packs _DAT_08000a38 (1,1) and FUN_08000cf8 line 662 unpacks _DAT_08001024 (1,1); single-byte width suits an option flag.",
+      "name": "option_flags_byte",
+      "offset": 100,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "guessed",
+      "description": "Two back-to-back u16 tallies ahead of the u32 funds word.",
+      "evidence": "FUN_080006dc lines 353-354 pack _DAT_08000a3c/_DAT_08000a40 (2,1 each); FUN_08000cf8 lines 663-664 mirror _DAT_08001028/_DAT_0800102c.",
+      "name": "care_counters_a",
+      "offset": 101,
+      "size": 4,
+      "type": "bytes"
+    },
+    {
+      "confidence": "guessed",
+      "description": "32-bit accumulator (funds, score, or playtime scale); mutable scalar for live testing.",
+      "evidence": "FUN_080006dc line 355 packs _DAT_08000a44 (4,1) via FUN_08000b58; FUN_08000cf8 line 665 unpacks _DAT_08001030 (4,1) via FUN_0800115c.",
+      "name": "coins_u32",
+      "offset": 105,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "guessed",
+      "description": "Run of seventeen u16 tallies/counters after the funds word.",
+      "evidence": "FUN_080006dc lines 356-372 pack _DAT_08000a48.._DAT_08000a88 (2,1)x17; FUN_08000cf8 lines 666-682 mirror _DAT_08001034.._DAT_08001070.",
+      "name": "care_counters_b",
+      "offset": 109,
+      "size": 34,
+      "type": "bytes"
+    },
+    {
+      "confidence": "guessed",
+      "description": "Nine u16 score/rank entries.",
+      "evidence": "FUN_080006dc line 373 packs _DAT_08000a8c (2,9); FUN_08000cf8 line 683 mirrors _DAT_08001078 (2,9).",
+      "name": "rank_scores_9",
+      "offset": 143,
+      "size": 18,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Nine 64-byte rows of 32 u16 values; largest save table (576 bytes).",
+      "evidence": "FUN_080006dc lines 374-379 loop 9x stride 0x40 packing (2,0x20) and FUN_08000cf8 lines 684-689 loop 9x stride 0x40 unpacking (2,0x20).",
+      "name": "pet_detail_table",
+      "offset": 161,
+      "size": 576,
+      "type": "bytes"
+    },
+    {
+      "confidence": "guessed",
+      "description": "Five u16 values between the two large tables (minigame/contest scores).",
+      "evidence": "FUN_080006dc line 380 packs _DAT_08000a94 (2,5); FUN_08000cf8 line 690 mirrors _DAT_08001080 (2,5).",
+      "name": "minigame_scores_5",
+      "offset": 737,
+      "size": 10,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Nine 16-byte rows of 8 u16 status values.",
+      "evidence": "FUN_080006dc lines 381-386 loop 9x stride 0x10 packing (2,8) and FUN_08000cf8 lines 691-696 loop 9x stride 0x10 unpacking (2,8).",
+      "name": "pet_status_grid_9x8",
+      "offset": 747,
+      "size": 144,
+      "type": "bytes"
+    },
+    {
+      "confidence": "guessed",
+      "description": "Mixed run of u16 triples and singles (progress/unlock counters).",
+      "evidence": "FUN_080006dc lines 387-399 pack _DAT_08000a9c (2,3), _DAT_08000aa0.._DAT_08000aa8 (2,1)x3, _DAT_08000aac/_DAT_08000ab0 (2,3)x2, _DAT_08000ab4.._DAT_08000acc (2,1)x7; FUN_08000cf8 lines 697-709 mirror the same shapes.",
+      "name": "progress_counters",
+      "offset": 891,
+      "size": 38,
+      "type": "bytes"
+    },
+    {
+      "confidence": "guessed",
+      "description": "Second 32-bit accumulator (playtime or secondary funds); mutable scalar.",
+      "evidence": "FUN_080006dc line 400 packs _DAT_08000ad0 (4,1); FUN_08000cf8 line 710 mirrors _DAT_080010bc (4,1).",
+      "name": "playtime_u32",
+      "offset": 929,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Eight 24-byte entries of {u16, u16[7], u16, u16} (inventory/item slots).",
+      "evidence": "FUN_080006dc lines 401-412 loop 8x stride 0x18 packing (2,1)+(2,7)+(2,1)+(2,1); FUN_08000cf8 lines 711-722 loop 8x stride 0x18 with the same sub-shapes.",
+      "name": "inventory_entries_8",
+      "offset": 933,
+      "size": 160,
+      "type": "bytes"
+    },
+    {
+      "confidence": "guessed",
+      "description": "Two trailing 7-u16 blocks (unlock/feature flags).",
+      "evidence": "FUN_080006dc lines 413-414 pack _DAT_08000ad8/_DAT_08000adc (2,7)x2; FUN_08000cf8 lines 723-724 mirror _DAT_080010c4/_DAT_080010c8.",
+      "name": "unlock_flags_block",
+      "offset": 1093,
+      "size": 28,
+      "type": "bytes"
+    },
+    {
+      "confidence": "guessed",
+      "description": "Trailing u16 pair, option byte, and final u16 tally.",
+      "evidence": "FUN_080006dc lines 415-418 pack _DAT_08000ae0/_DAT_08000ae4 (2,1), _DAT_08000ae8 (1,1), _DAT_08000aec (2,1); FUN_08000cf8 lines 725-728 mirror the same shapes.",
+      "name": "trailing_config_block",
+      "offset": 1121,
+      "size": 7,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "16-byte tail inside the 143-block managed blob but past the pack cursor end (0x468); zeros on fresh boot, purpose unknown.",
+      "evidence": "FUN_08000574/FUN_08000c34 block loops move size>>3-rounded 8-byte EEPROM blocks covering [0,0x478) (baseline zero extent) while FUN_080006dc pack order ends at offset 1128 (0x468); FUN_08000b1c checksum + FUN_08000cf8 verify frame the same blob.",
+      "name": "reserved_tail_16",
+      "offset": 1128,
       "size": 16,
       "type": "bytes"
     }
-  ]
+  ],
+  "game_code": "AN3E",
+  "id": "an3e",
+  "magic_signatures": [],
+  "media": "eeprom8k",
+  "size_bytes": 8192,
+  "title": "Catz (USA, Europe)"
 }

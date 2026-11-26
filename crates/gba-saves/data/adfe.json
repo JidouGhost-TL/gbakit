@@ -1,36 +1,194 @@
 {
-  "id": "adfe",
-  "game_code": "ADFE",
-  "title": "Super Dodge Ball Advance (USA)",
-  "media": "sram",
-  "size_bytes": 32768,
+  "checksums": [
+    {
+      "algorithm": "xor8",
+      "covered_end": 2315,
+      "covered_start": 0,
+      "name": "slot_a_checksum",
+      "seed": 0,
+      "stored_offset": 2315,
+      "xor_out": 0
+    },
+    {
+      "algorithm": "xor8",
+      "covered_end": 9263,
+      "covered_start": 6948,
+      "name": "slot_b_checksum",
+      "seed": 0,
+      "stored_offset": 9263,
+      "xor_out": 0
+    }
+  ],
+  "copy_groups": [
+    {
+      "fields": [
+        "config_option_a",
+        "config_option_a_mirror"
+      ],
+      "name": "config_a_mirrors"
+    },
+    {
+      "fields": [
+        "team0_record_primary",
+        "team0_record_primary_mirror"
+      ],
+      "name": "record_mirrors"
+    },
+    {
+      "fields": [
+        "team0_standings_key",
+        "team0_standings_key_mirror"
+      ],
+      "name": "standings_mirrors"
+    }
+  ],
   "eeprom_rev8": false,
-  "magic_signatures": [],
-  "checksums": [],
   "fields": [
     {
-      "name": "slot_counter",
-      "offset": 0,
+      "confidence": "likely",
+      "description": "Slot status marker byte; 0xFF in both live blocks. FUN_080182c4 copies save+4 onward into RAM, FUN_08018384 gates the whole block on the DODG magic.",
+      "evidence": "FUN_080182c4 copies save buffer +4 (0x94 bytes) to RAM; FUN_08018384 validates block magic before use; baseline save+0x05 is 0xFF in both slots.",
+      "name": "save_slot_status",
+      "offset": 5,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Game config/options value at the tail of the 0x94-byte settings block (first options byte).",
+      "evidence": "FUN_080182c4 copies save+4..+0x97 (0x94 bytes) as the settings block into RAM; baseline save+0x8C is 3 in both slots.",
+      "name": "config_option_a",
+      "offset": 140,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Game config/options value at the tail of the 0x94-byte settings block (second options byte).",
+      "evidence": "FUN_080182c4 copies save+4..+0x97 (0x94 bytes) as the settings block into RAM; baseline save+0x8D is 1 in both slots.",
+      "name": "config_option_b",
+      "offset": 141,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Five-byte config/mode flag run closing the 0x94-byte settings block (all 0x03 in the live save).",
+      "evidence": "FUN_080182c4 copies save+4..+0x97 (0x94 bytes) as the settings block into RAM; baseline save+0x90..+0x94 is 03 03 03 03 03 in both slots.",
+      "name": "config_option_block",
+      "offset": 144,
+      "size": 5,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Team 0 table/rank index byte (entry+2 of the 0x90-byte team record). Values across the 15 entries form the permutation 0..13 plus 0xFF for the player-side entry.",
+      "evidence": "FUN_080182c4 loads fifteen 0x90-byte team records from save+0x98; FUN_08017d64 sorts that team array; baseline entry+2 values are a 0..13 permutation with team 0 at 0xFF.",
+      "name": "team0_table_index",
+      "offset": 154,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Team 0 paired record halfwords (entry+4/+5, e.g. wins and its shadow copy). FUN_08017e24 syncs +4 into +5 for all 15 teams every update.",
+      "evidence": "FUN_08017e24 executes *(team+5) = *(team+4) for all 15 entries of the 0x90-stride team array loaded by FUN_080182c4 from save+0x98; baseline save+0x9C..+0x9D is 09 09.",
+      "name": "team0_record_primary",
+      "offset": 156,
       "size": 2,
       "type": "u16_le"
     },
     {
-      "name": "game_progress_flags",
-      "offset": 2,
+      "confidence": "confirmed",
+      "description": "Team 0 standings sort key (entry+6). FUN_08017d64 quicksorts the 15-team table on (signed char)(entry+6)/2.",
+      "evidence": "FUN_08017d64 quicksorts the 0x90-stride team array on *(char *)(base + team*0x90 + 6) / 2 loaded by FUN_080182c4 from save+0x98; baseline save+0x9E is 9.",
+      "name": "team0_standings_key",
+      "offset": 158,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "constraint": {
+        "kind": "enum",
+        "labels": {
+          "0": "locked",
+          "1": "active"
+        },
+        "values": [
+          0,
+          1
+        ]
+      },
+      "confidence": "likely",
+      "description": "Team 0 active/unlocked flag (entry+8): 1 for the 10 active teams, 0 for the 5 locked entries in the live save.",
+      "evidence": "FUN_080182c4 loads fifteen 0x90-byte team records from save+0x98; baseline entry+8 is 1 for entries 0-5,8,10,11 and 0 for entries 6,7,12,13,14.",
+      "name": "team0_active_flag",
+      "offset": 160,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Team 0 first attribute halfword of the stat table starting at entry+0x0C (46 in the live save).",
+      "evidence": "FUN_080182c4 loads fifteen 0x90-byte team records from save+0x98 into RAM via func_0x08050abc; baseline save+0xA4..+0xA5 is 2E 00 (46 LE).",
+      "name": "team0_attr_a",
+      "offset": 164,
       "size": 2,
       "type": "u16_le"
     },
     {
-      "name": "player_status_payload",
-      "offset": 4,
-      "size": 16,
-      "type": "bytes"
+      "confidence": "likely",
+      "description": "Mirror of config_option_a in backup slot B (file offset 0x1B24 + 0x8C). Both slots are byte-identical in the live save.",
+      "evidence": "FUN_080182c4 falls back to slot index +3 (file 0x1B24) via FUN_08018384 when slot A fails; baseline slot B save+0x8C is 3, identical to slot A.",
+      "name": "config_option_a_mirror",
+      "offset": 7088,
+      "size": 1,
+      "type": "u8"
     },
     {
-      "name": "slot_0_payload",
-      "offset": 32,
-      "size": 8160,
-      "type": "bytes"
+      "confidence": "confirmed",
+      "description": "Mirror of team0_record_primary in backup slot B (file offset 0x1B24 + 0x9C).",
+      "evidence": "FUN_080182c4 falls back to slot index +3 (file 0x1B24) via FUN_08018384; FUN_08017e24 syncs entry+4 into +5; baseline slot B bytes are 09 09, identical to slot A.",
+      "name": "team0_record_primary_mirror",
+      "offset": 7136,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Mirror of team0_standings_key in backup slot B (file offset 0x1B24 + 0x9E).",
+      "evidence": "FUN_080182c4 falls back to slot index +3 (file 0x1B24) via FUN_08018384; FUN_08017d64 sorts on entry+6; baseline slot B value is 9, identical to slot A.",
+      "name": "team0_standings_key_mirror",
+      "offset": 7138,
+      "size": 1,
+      "type": "u8"
     }
-  ]
+  ],
+  "game_code": "ADFE",
+  "id": "adfe",
+  "magic_signatures": [
+    {
+      "bytes": [
+        68,
+        79,
+        68,
+        71
+      ],
+      "description": "ASCII 'DODG' block magic, verified in both slots",
+      "offset": 0
+    },
+    {
+      "bytes": [
+        68,
+        79,
+        68,
+        71
+      ],
+      "description": "ASCII 'DODG' block magic, backup slot",
+      "offset": 6948
+    }
+  ],
+  "media": "sram",
+  "size_bytes": 32768,
+  "title": "Super Dodge Ball Advance (USA)"
 }

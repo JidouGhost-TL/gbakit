@@ -1,45 +1,171 @@
 {
-  "id": "ab9e",
-  "game_code": "AB9E",
-  "title": "Dual Blades (USA)",
-  "media": "eeprom512",
-  "size_bytes": 512,
-  "magic_signatures": [
-    {
-      "offset": 0,
-      "bytes": [
-        97,
-        108,
-        66,
-        32
-      ]
-    }
-  ],
   "checksums": [],
+  "copy_groups": [],
+  "eeprom_rev8": true,
   "fields": [
     {
-      "name": "magic_header",
+      "confidence": "confirmed",
+      "description": "16-byte ASCII save header identifying the Dual Blades save block",
+      "evidence": "FUN_0801abcc streams EEPROM blocks from MMIO 0x0D000000 into RAM; rev8-logical bytes 0x00-0x0F of samples/baseline.sav read 'Dual Blades SGM\\0', matching the ROM-side save struct consumed by the FUN_080167a0 save/load orchestration.",
+      "name": "save_magic",
       "offset": 0,
-      "size": 4,
+      "size": 16,
       "type": "ascii"
     },
     {
-      "name": "slot_counter",
-      "offset": 4,
+      "confidence": "likely",
+      "description": "Save/write counter word at the head of the data block",
+      "evidence": "FUN_0801abcc (EEPROM 8-byte block read via 0x0D000000) places rev8-logical block 2 at save offset 0x10; value 0x0000 observed in samples/baseline.sav. Written back through FUN_0801ac7c/FUN_0801adb0 (write + verify, 3 retries) and wrapped by FUN_080198cc/FUN_080198e0.",
+      "name": "save_counter",
+      "offset": 16,
       "size": 2,
       "type": "u16_le"
     },
     {
-      "name": "game_progress_flags",
-      "offset": 6,
+      "confidence": "likely",
+      "description": "Gameplay/config option byte, observed value 1",
+      "evidence": "Byte 0x12 of the rev8-logical image assembled by FUN_0801abcc from 0x0D000000; consumed by the FUN_080167a0 orchestration (serialize func_0x080163f4 / verify func_0x08016244 / load func_0x080161b0). Value 0x01 verified against samples/baseline.sav.",
+      "name": "option_byte_a",
+      "offset": 18,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Gameplay/config option byte, observed value 1",
+      "evidence": "Byte 0x13 of the rev8-logical image assembled by FUN_0801abcc from 0x0D000000; consumed by the FUN_080167a0 orchestration (serialize func_0x080163f4 / verify func_0x08016244 / load func_0x080161b0). Value 0x01 verified against samples/baseline.sav.",
+      "name": "option_byte_b",
+      "offset": 19,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Progress-related 32-bit counter, observed value 30",
+      "evidence": "Rev8-logical u32 at save offset 0x14 (bytes 1e 00 00 00) assembled by FUN_0801abcc from 0x0D000000 and round-tripped by FUN_0801ac7c/FUN_0801adb0; validated by func_0x08016244 in FUN_080167a0. Value 30 verified against samples/baseline.sav.",
+      "name": "progress_points",
+      "offset": 20,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Character/stat word, observed value 64",
+      "evidence": "Rev8-logical u16 at save offset 0x28 (bytes 40 00) assembled by FUN_0801abcc from 0x0D000000; part of the 8-byte EEPROM block persisted by FUN_0801ac7c via FUN_0801adb0 and validated in the FUN_080167a0 save path. Value 64 verified against samples/baseline.sav.",
+      "name": "stat_word_a",
+      "offset": 40,
       "size": 2,
       "type": "u16_le"
     },
     {
-      "name": "player_status_payload",
-      "offset": 8,
-      "size": 16,
-      "type": "bytes"
+      "confidence": "likely",
+      "description": "Character/stat word, observed value 128",
+      "evidence": "Rev8-logical u16 at save offset 0x2A (bytes 80 00) assembled by FUN_0801abcc from 0x0D000000; part of the 8-byte EEPROM block persisted by FUN_0801ac7c via FUN_0801adb0 and validated in the FUN_080167a0 save path. Value 128 verified against samples/baseline.sav.",
+      "name": "stat_word_b",
+      "offset": 42,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Character/stat word, observed value 16",
+      "evidence": "Rev8-logical u16 at save offset 0x2C (bytes 10 00) assembled by FUN_0801abcc from 0x0D000000; part of the 8-byte EEPROM block persisted by FUN_0801ac7c via FUN_0801adb0 and validated in the FUN_080167a0 save path. Value 16 verified against samples/baseline.sav.",
+      "name": "stat_word_c",
+      "offset": 44,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Character/stat word, observed value 32",
+      "evidence": "Rev8-logical u16 at save offset 0x2E (bytes 20 00) assembled by FUN_0801abcc from 0x0D000000; part of the 8-byte EEPROM block persisted by FUN_0801ac7c via FUN_0801adb0 and validated in the FUN_080167a0 save path. Value 32 verified against samples/baseline.sav.",
+      "name": "stat_word_d",
+      "offset": 46,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Stage/progress value, observed 1",
+      "evidence": "Rev8-logical u16 at save offset 0x30 (bytes 01 00) assembled by FUN_0801abcc from 0x0D000000; serialized by func_0x080163f4 and checked by func_0x08016244 in FUN_080167a0. Value 1 verified against samples/baseline.sav.",
+      "name": "stage_value_a",
+      "offset": 48,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Stage/progress value, observed 2",
+      "evidence": "Rev8-logical u16 at save offset 0x32 (bytes 02 00) assembled by FUN_0801abcc from 0x0D000000; serialized by func_0x080163f4 and checked by func_0x08016244 in FUN_080167a0. Value 2 verified against samples/baseline.sav.",
+      "name": "stage_value_b",
+      "offset": 50,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Stage/progress value, observed 512",
+      "evidence": "Rev8-logical u16 at save offset 0x34 (bytes 00 02) assembled by FUN_0801abcc from 0x0D000000; serialized by func_0x080163f4 and checked by func_0x08016244 in FUN_080167a0. Value 512 verified against samples/baseline.sav.",
+      "name": "stage_value_c",
+      "offset": 52,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Stage/progress value, observed 256",
+      "evidence": "Rev8-logical u16 at save offset 0x36 (bytes 00 01) assembled by FUN_0801abcc from 0x0D000000; serialized by func_0x080163f4 and checked by func_0x08016244 in FUN_080167a0. Value 256 verified against samples/baseline.sav.",
+      "name": "stage_value_d",
+      "offset": 54,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Stored checksum word with a custom (non-Schema-v2) algorithm; exposed as data, observed 218",
+      "evidence": "Rev8-logical u32 at save offset 0x38 (bytes da 00 00 00) persisted by FUN_0801ac7c via FUN_0801adb0 (write + FUN_0801ad58 verify, 3 retries). No Schema v2 algorithm reproduces it from samples/baseline.sav, so it is stored as a plain u32_le per the custom-checksum fallback rule.",
+      "name": "stored_checksum_value",
+      "offset": 56,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Trailing 32-bit signature word, observed 0xE231C53A",
+      "evidence": "Rev8-logical u32 at save offset 0x3C (bytes 3a c5 31 e2) closing the 64-byte active image; read by FUN_0801abcc from 0x0D000000 and written by FUN_0801ac7c via FUN_0801adb0. Treated as a signature word (not a verified checksum).",
+      "name": "signature_tail",
+      "offset": 60,
+      "size": 4,
+      "type": "u32_le"
     }
-  ]
+  ],
+  "game_code": "AB9E",
+  "id": "ab9e",
+  "magic_signatures": [
+    {
+      "bytes": [
+        68,
+        117,
+        97,
+        108,
+        32,
+        66,
+        108,
+        97,
+        100,
+        101,
+        115,
+        32,
+        83,
+        71,
+        77,
+        0
+      ],
+      "description": "ASCII 'Dual Blades SGM\\0' header (rev8-logical domain)",
+      "offset": 0
+    }
+  ],
+  "media": "eeprom512",
+  "size_bytes": 512,
+  "title": "Dual Blades (USA)"
 }

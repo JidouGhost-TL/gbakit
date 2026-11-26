@@ -1,36 +1,124 @@
 {
-  "id": "bgwj",
-  "game_code": "BGWJ",
-  "title": "Game Boy Wars Advance 1+2 (Japan) (Virtual Console)",
-  "media": "flash1m",
-  "size_bytes": 131072,
-  "eeprom_rev8": false,
-  "magic_signatures": [],
   "checksums": [],
+  "eeprom_rev8": false,
   "fields": [
     {
-      "name": "slot_counter",
-      "offset": 0,
-      "size": 2,
-      "type": "u16_le"
+      "confidence": "guessed",
+      "description": "Opaque 4-byte tag word after the 'wars' magic (LE u32 0x2bd409aa). Brute-forced sum8/sum16/sum32/xor8/xor16/crc32 over all plausible windows - matches no Schema v2 algorithm, so stored as a field, not a checksum.",
+      "evidence": "File bytes at 0xF004 are aa 09 d4 2b in baseline.sav; RAM save image is zero-initialised by FUN_08009864 before use. No Flash/EEPROM/DMA3 save driver is present in decomp/decompiled.c.gz (zero 0x0E00xxxx / 0x0D00xxxx / 0x040000D4 hits), so no checksum routine can be cited.",
+      "name": "header_tag",
+      "offset": 61444,
+      "size": 4,
+      "type": "u32_le"
     },
     {
-      "name": "game_progress_flags",
-      "offset": 2,
-      "size": 2,
-      "type": "u16_le"
+      "confidence": "likely",
+      "constraint": {
+        "kind": "enum",
+        "labels": {
+          "0": "Empty",
+          "1": "Active"
+        },
+        "values": [
+          0,
+          1
+        ]
+      },
+      "description": "Battle-save slot valid flag (1 = a saved battle is present in this flash sector).",
+      "evidence": "U32 value 1 at file 0xF04C in baseline.sav. Zero-vs-nonzero slot/state dispatch is the decomp-wide idiom (FUN_0800966c, FUN_08009688, FUN_080096a0, FUN_080096c8 all branch on *DAT_0800967c / _DAT_0800969c / _DAT_080096bc / _DAT_080096d8 == 0); FUN_08009864 performs the master zero-init of the save-RAM image.",
+      "name": "slot_active",
+      "offset": 61516,
+      "size": 4,
+      "type": "u32_le"
     },
     {
-      "name": "player_status_payload",
-      "offset": 4,
-      "size": 16,
+      "confidence": "likely",
+      "description": "32-bit campaign/battle progress counter (observed 1304 / 0x518; scale fits funds, play-time ticks, or score - see SPEC.md). Surrounded by zero padding, i.e. a standalone scalar.",
+      "evidence": "U32 value 1304 at file 0xF050 in baseline.sav. Counter bump-and-store idiom matches FUN_0800d010 (param_1[0xd] = param_1[0xd] + 1) and FUN_0800d884 (*(param_1 + 0x34) = *(param_1 + 0x34) + 1); both sit in the map/battle state family that owns the save sector.",
+      "name": "campaign_counter",
+      "offset": 61520,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Commander/player name: 6 Shift-JIS characters (12 bytes, decodes to 6 katakana/kanji glyphs), zero-padded to 0xF38A. Cross-checked by decoding baseline.sav bytes.",
+      "evidence": "Bytes at file 0xF372 are 83 74 83 48 83 93 83 8d 83 62 83 5c, decoding as Shift-JIS in baseline.sav. Table-driven record copy into battle structs is FUN_0800d010 (*(undefined4 *)(puVar2 + 0x40) = *(undefined4 *)(param_2 + iVar3 * 4 + 8)); string-bearing record lists are walked via +0x20/+0x34 links in FUN_0800c4b0.",
+      "name": "commander_name",
+      "offset": 62322,
+      "size": 12,
       "type": "bytes"
     },
     {
-      "name": "sector_0_payload",
-      "offset": 32,
-      "size": 4064,
+      "confidence": "likely",
+      "description": "Stage/mission identifier of the saved battle (observed 10). Head of a packed 8-byte battle-header cluster with battle_mode and day_turn.",
+      "evidence": "U16 value 10 at file 0xF38A in baseline.sav. Map-descriptor select lives in FUN_0800d010, which reads the map header word *(int *)(param_2 + 4) plus entry counts param_2[2] / param_2[3]; the saved cluster at 0xF38A..0xF394 mirrors that (id, mode, turn) layout.",
+      "name": "stage_id",
+      "offset": 62346,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Battle mode/difficulty selector of the saved battle (observed 1).",
+      "evidence": "U32 value 1 at file 0xF38C in baseline.sav, immediately after stage_id. Mode-gated setup branches appear across the battle family (FUN_0800d010 branches on *param_2 == 0 vs (char)param_1[2] != 0; FUN_0800966c / FUN_080096a0 dispatch on state words).",
+      "name": "battle_mode",
+      "offset": 62348,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Day/turn counter of the saved battle (observed 12).",
+      "evidence": "U32 value 12 at file 0xF390 in baseline.sav. Turn/day progression is FUN_0800d134: it decrements *(short *)(param_1 + 0x26) and reloads it from *(short *)(param_1 + 0x24), driving the per-turn unit update loop over the 0x50-byte unit array.",
+      "name": "day_turn",
+      "offset": 62352,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Battle-map tile plane: 272 bytes of repeating LE word ff ff ff 00 (file 0xF422..0xF532, exact clean span verified programmatically).",
+      "evidence": "Byte-exact run verified in baseline.sav (clean span 0xF422..0xF532, len 0x110). Map/unit working set in decomp is built from 0x50-byte unit records striding a shared array: FUN_0800cf98 (init loop *param_2 = 0, param_2 += 0x50), FUN_0800d010 and FUN_0800d134 (per-unit FUN_0800c4b0 calls, puVar2/pbVar4 += 0x50), FUN_0800d884 (pbVar1 += 0x50).",
+      "name": "map_tiles",
+      "offset": 62498,
+      "size": 272,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "First-army funds / resources of the saved battle (observed 499). 16-bit Advance-Wars-scale currency value.",
+      "evidence": "U16 value 499 (bytes f3 01) at file 0xF546 in baseline.sav, the first non-blank scalar after the tile plane. Per-army scalar state is written back into unit records by FUN_0800d884 (pbVar1[0x13] = (byte)((param_3 & 0xffff) >> 2), *pbVar1 |= 3) and FUN_0800d134 (pbVar4[0x13] = (byte)(*(ushort *)(param_1 + 0x28) >> 2)); this tail holds the serialised scalars.",
+      "name": "funds_p1",
+      "offset": 62790,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Serialised battle tail: 25 structured bytes (file 0xF549..0xF561) holding the remaining per-army/unit scalars, including an embedded second funds-like u16 (1180 = 0x049c at +2) and a 0x1e04 (=1054) trailer halfword. Followed by 8 zero bytes then erased (0xff) flash.",
+      "evidence": "Non-blank structured bytes verified in baseline.sav (ff ff 9c 04 c2 24 92 51 06 d8 84 08 ad 20 f0, ff padding, 00, 1e 04). Unit liveness flag byte +0x00 is tested as (*pbVar4 & 0x80) != 0 in FUN_0800c4b0, FUN_0800d134 and FUN_0800d884, with status/HP at +0x13 and cargo words cleared at +0x20/+0x40 (FUN_0800c4b0, FUN_0800d010) - the tail is the serialised form of these records.",
+      "name": "battle_tail",
+      "offset": 62793,
+      "size": 25,
       "type": "bytes"
     }
-  ]
+  ],
+  "game_code": "BGWJ",
+  "id": "bgwj",
+  "magic_signatures": [
+    {
+      "bytes": [
+        119,
+        97,
+        114,
+        115
+      ],
+      "description": "ASCII 'wars' save-sector magic at flash offset 0xF000 (Game Boy Wars sector tag)",
+      "offset": 61440
+    }
+  ],
+  "media": "flash1m",
+  "size_bytes": 131072,
+  "title": "Game Boy Wars Advance 1+2 (Japan) (Virtual Console)"
 }

@@ -4,6 +4,7 @@
   "title": "Zatchbell! - Electric Arena (USA)",
   "media": "eeprom512",
   "size_bytes": 512,
+  "eeprom_rev8": false,
   "magic_signatures": [
     {
       "offset": 0,
@@ -11,35 +12,62 @@
         110,
         48,
         50,
+        51,
+        48,
+        49,
+        49,
         51
-      ]
+      ],
+      "description": "8-byte ASCII save identifier 'n0230113' (block 0 of EEPROM image)"
     }
   ],
   "checksums": [],
   "fields": [
     {
-      "name": "magic_header",
+      "name": "save_id_magic",
       "offset": 0,
-      "size": 4,
-      "type": "ascii"
+      "size": 8,
+      "type": "ascii",
+      "description": "8-byte ASCII save identifier 'n0230113'. Written by FUN_08001088 (8-byte copy into save block 0) and byte-compared on load by FUN_080010f0; all-zero/blank saves are rejected.",
+      "confidence": "confirmed",
+      "evidence": "FUN_08001088 copies 8 bytes into the save staging buffer (_DAT_080010e4/_DAT_080010e8, lines 343-350) and persists them as EEPROM block 0 via FUN_08002578. FUN_080010f0 reads block 0 via FUN_080022fc and accepts the save only if all 8 bytes match the ROM reference (8-iteration compare loop, lines 411-421). Baseline bytes 0-7 decode to 'n0230113'."
     },
     {
-      "name": "slot_counter",
-      "offset": 4,
-      "size": 2,
-      "type": "u16_le"
-    },
-    {
-      "name": "game_progress_flags",
-      "offset": 6,
-      "size": 2,
-      "type": "u16_le"
-    },
-    {
-      "name": "player_status_payload",
+      "name": "save_spare_u32_a",
       "offset": 8,
-      "size": 16,
-      "type": "bytes"
+      "size": 4,
+      "type": "u32_le",
+      "description": "First word of the zero-filled spare region (start of EEPROM block 1). The decomp exposes no reader or writer for this word; it is persisted verbatim by the block-write loop, so it serves as a typed mutation probe.",
+      "confidence": "guessed",
+      "evidence": "FUN_08001088 clears the 128-byte save image via FUN_08004844 (line 340) and writes EEPROM blocks 1-15 from that cleared buffer with FUN_08002578 in a 0x10-iteration loop (lines 354-360); no function in decomp/decompiled.c.gz reads or stores these bytes. Baseline bytes 8-11 are 0x00000000."
+    },
+    {
+      "name": "save_spare_u32_b",
+      "offset": 12,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Second word of the zero-filled spare region (end of EEPROM block 1). No decomp reader/writer; persisted verbatim by the block-write loop; typed mutation probe.",
+      "confidence": "guessed",
+      "evidence": "Same write path as save_spare_u32_a: FUN_08001088 + FUN_08004844 clear, FUN_08002578 block loop (lines 354-360); no readers in decomp. Baseline bytes 12-15 are 0x00000000."
+    },
+    {
+      "name": "save_spare_blocks_low",
+      "offset": 16,
+      "size": 48,
+      "type": "bytes",
+      "description": "Zero-filled spare bytes covering EEPROM blocks 2-7 (save offsets 16-63). Written as zeros, never read back by any decomp routine.",
+      "confidence": "likely",
+      "evidence": "FUN_08001088 writes 16 8-byte EEPROM blocks from the FUN_08004844-cleared buffer via FUN_08002578 (lines 354-360); only block 0 carries data (the 8-byte ID). FUN_080010f0 reads back only block 0 via FUN_080022fc. Baseline bytes 16-63 are all 0x00."
+    },
+    {
+      "name": "save_spare_blocks_high",
+      "offset": 64,
+      "size": 64,
+      "type": "bytes",
+      "description": "Zero-filled spare bytes covering EEPROM blocks 8-15 (save offsets 64-127). Written as zeros, never read back by any decomp routine. Bytes 128-511 are unwritten 0xFF EEPROM fill.",
+      "confidence": "likely",
+      "evidence": "Same FUN_08001088 16-block write span (offsets 0-127); FUN_080010f0 never reads past block 0. Baseline bytes 64-127 are all 0x00 and bytes 128-511 are all 0xFF."
     }
-  ]
+  ],
+  "copy_groups": []
 }

@@ -1,29 +1,157 @@
 {
-  "id": "a2se",
-  "game_code": "A2SE",
-  "title": "Spyro 2 - Season of Flame (USA)",
-  "media": "eeprom8k",
-  "size_bytes": 8192,
-  "magic_signatures": [],
-  "checksums": [],
+  "checksums": [
+    {
+      "algorithm": "sum16_le",
+      "covered_end": 8104,
+      "covered_start": 8072,
+      "name": "slot0_checksum_verify",
+      "seed": 37,
+      "stored_offset": 8104,
+      "xor_out": 0
+    },
+    {
+      "algorithm": "sum16_le",
+      "covered_end": 8144,
+      "covered_start": 8112,
+      "name": "slot1_checksum_verify",
+      "seed": 37,
+      "stored_offset": 8144,
+      "xor_out": 0
+    },
+    {
+      "algorithm": "sum16_le",
+      "covered_end": 8184,
+      "covered_start": 8152,
+      "name": "slot2_checksum_verify",
+      "seed": 37,
+      "stored_offset": 8184,
+      "xor_out": 0
+    }
+  ],
+  "copy_groups": [
+    {
+      "fields": [
+        "starting_counter",
+        "starting_counter_copy1",
+        "starting_counter_copy2"
+      ],
+      "name": "counter_mirrors"
+    },
+    {
+      "fields": [
+        "slot0_checksum",
+        "slot1_checksum",
+        "slot2_checksum"
+      ],
+      "name": "checksum_mirrors"
+    }
+  ],
+  "eeprom_rev8": true,
   "fields": [
     {
-      "name": "slot_counter",
+      "confidence": "likely",
+      "description": "World 0 progress record: first 8-byte entry of the 32-byte save payload. Completion flag for world index 0 is tested at entry byte +6 bit 0.",
+      "evidence": "FUN_080071dc computes *(byte *)((param_1 & 0xff) * 8 + base + 6) & 1; callers pass index 0 (lines 3269, 3278, 3366, 3419). Entry 0 of the slot payload starts at save offset 0x1F88 (logical).",
+      "name": "world0_progress_record",
       "offset": 8072,
-      "size": 2,
-      "type": "u16_le"
-    },
-    {
-      "name": "game_progress_flags",
-      "offset": 8074,
-      "size": 2,
-      "type": "u16_le"
-    },
-    {
-      "name": "player_status_payload",
-      "offset": 8076,
-      "size": 16,
+      "size": 8,
       "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "World 1 progress record: second 8-byte entry of the 32-byte save payload. Completion flag for world index 1 is tested at entry byte +6 bit 0.",
+      "evidence": "FUN_080071dc computes *(byte *)((param_1 & 0xff) * 8 + base + 6) & 1; callers pass index 1 (lines 3269, 3278, 3366, 3419). Entry 1 of the slot payload starts at save offset 0x1F90 (logical).",
+      "name": "world1_progress_record",
+      "offset": 8080,
+      "size": 8,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "World 2 progress record: third 8-byte entry of the 32-byte save payload. Completion flag for world index 2 is tested at entry byte +6 bit 0.",
+      "evidence": "FUN_080071dc computes *(byte *)((param_1 & 0xff) * 8 + base + 6) & 1; callers pass index 2 (lines 3270, 3280, 3367, 3420). Entry 2 of the slot payload starts at save offset 0x1F98 (logical).",
+      "name": "world2_progress_record",
+      "offset": 8088,
+      "size": 8,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Stored gameplay counter inside the fourth 8-byte payload entry (slot +0x18). Fresh-save init writes 1000 here; baseline holds 1000 (0x3E8) in all three slots.",
+      "evidence": "FUN_08006080 fresh-save path writes *(undefined4 *)(save_struct + 0x18) = 1000 (line 2493); value persists at save offsets 0x1FA0/0x1FC8/0x1FF0 (logical) in samples/baseline.sav.",
+      "name": "starting_counter",
+      "offset": 8096,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "guessed",
+      "description": "Trailing 4 bytes of the fourth 8-byte payload entry (slot +0x1C). All zeros in baseline; reserved/unused.",
+      "evidence": "FUN_08006080 checksums a 0x20-byte payload and FUN_08006fd4 stores it verbatim; bytes at slot +0x1C..+0x1F are zero in all three baseline slots (offsets 0x1FA4, 0x1FCC, 0x1FF4 logical).",
+      "name": "record3_reserved",
+      "offset": 8100,
+      "size": 4,
+      "type": "bytes"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Slot 0 integrity checksum: (sum of the 32 payload bytes + seed 0x25) & 0xFFFF. Baseline: payload sums to 235, +37 = 272 (0x0110).",
+      "evidence": "FUN_08006080 accumulates 0x20 payload bytes plus 2 stored bytes onto seed 0x25 (lines 2454-2483) and compares against bytes at slot +0x20; FUN_08006fd4 rebuilds the same checksum (lines 2535-2562). Verified at save offset 0x1FA8 (logical) in samples/baseline.sav.",
+      "name": "slot0_checksum",
+      "offset": 8104,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Slot 0 block padding: 6 zero bytes rounding the 34 meaningful bytes up to 5 EEPROM blocks (40 bytes). Written from the memset-zeroed tail of the save buffer.",
+      "evidence": "FUN_08006fd4 writes (0x22 + 7) >> 3 = 5 EEPROM blocks per slot via FUN_08064188/FUN_08064054 (lines 2571-2574); bytes at 0x1FAA..0x1FAF (logical) are zero in samples/baseline.sav.",
+      "name": "slot0_padding",
+      "offset": 8106,
+      "size": 6,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Mirror of starting_counter in redundant slot 1 (slot +0x18). Baseline holds 1000, matching slot 0.",
+      "evidence": "FUN_08006fd4 writes 3 redundant slot copies (uVar10 0..2, lines 2570-2577) through FUN_08064188/FUN_08064054; mirror value 1000 verified at save offset 0x1FC8 (logical).",
+      "name": "starting_counter_copy1",
+      "offset": 8136,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Slot 1 integrity checksum, same formula as slot 0. Baseline: 272 (0x0110).",
+      "evidence": "FUN_08006080 verifies each redundant slot with the seed-0x25 checksum loop (lines 2448-2484, retry iVar8 += 5); verified at save offset 0x1FD0 (logical) in samples/baseline.sav.",
+      "name": "slot1_checksum",
+      "offset": 8144,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Mirror of starting_counter in redundant slot 2 (slot +0x18). Baseline holds 1000, matching slots 0 and 1.",
+      "evidence": "FUN_08006fd4 writes 3 redundant slot copies (uVar10 0..2, lines 2570-2577) through FUN_08064188/FUN_08064054; mirror value 1000 verified at save offset 0x1FF0 (logical).",
+      "name": "starting_counter_copy2",
+      "offset": 8176,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Slot 2 integrity checksum, same formula as slot 0. Baseline: 272 (0x0110).",
+      "evidence": "FUN_08006080 verifies each redundant slot with the seed-0x25 checksum loop (lines 2448-2484, retry iVar8 += 5); verified at save offset 0x1FF8 (logical) in samples/baseline.sav.",
+      "name": "slot2_checksum",
+      "offset": 8184,
+      "size": 2,
+      "type": "u16_le"
     }
-  ]
+  ],
+  "game_code": "A2SE",
+  "id": "a2se",
+  "magic_signatures": [],
+  "media": "eeprom8k",
+  "size_bytes": 8192,
+  "title": "Spyro 2 - Season of Flame (USA)"
 }

@@ -1,29 +1,254 @@
 {
-  "id": "ajsj",
-  "game_code": "AJSJ",
-  "title": "Space Hexcite - Maetel Legend EX (Japan)",
-  "media": "sram",
-  "size_bytes": 32768,
-  "magic_signatures": [],
   "checksums": [],
+  "copy_groups": [
+    {
+      "fields": [
+        "save_checksum",
+        "save_checksum_mirror"
+      ],
+      "name": "checksum_mirrors"
+    },
+    {
+      "fields": [
+        "save_magic",
+        "save_magic_mirror"
+      ],
+      "name": "magic_mirrors"
+    },
+    {
+      "fields": [
+        "slot_active_flag",
+        "slot_active_flag_mirror"
+      ],
+      "name": "slot_flag_mirrors"
+    },
+    {
+      "fields": [
+        "stage_select_index",
+        "stage_select_index_mirror"
+      ],
+      "name": "select_index_mirrors"
+    },
+    {
+      "fields": [
+        "aux_checksum",
+        "aux_checksum_mirror"
+      ],
+      "name": "aux_checksum_mirrors"
+    }
+  ],
   "fields": [
     {
-      "name": "slot_counter",
+      "confidence": "confirmed",
+      "description": "Stored save-slot checksum: bitwise NOT of (sum of slot bytes with this word zeroed, plus a constant seed). Computed by FUN_080025ac, stored by FUN_08002540, verified on load by FUN_08002460.",
+      "evidence": "FUN_080025ac zeroes *buffer then sums bytes 0..limit and returns ~sum; FUN_08002540 stores it at buffer+0; FUN_08002460 recomputes and compares. Baseline save offset 0 holds 0xfffff9a7.",
+      "name": "save_checksum",
       "offset": 0,
-      "size": 2,
-      "type": "u16_le"
+      "size": 4,
+      "type": "u32_le"
     },
     {
-      "name": "game_progress_flags",
-      "offset": 2,
-      "size": 2,
-      "type": "u16_le"
-    },
-    {
-      "name": "player_status_payload",
+      "confidence": "confirmed",
+      "description": "Save-slot magic identifier 0xABCD. Load path FUN_08002460 compares word at buffer+4 against the expected magic and re-initializes defaults via FUN_08002344 on mismatch.",
+      "evidence": "FUN_08002460 checks *(ushort *)(load_buf+4) == expected magic, else calls FUN_08002344; FUN_08002344 writes (short)_DAT_0800244c at buffer+4. Baseline offsets 4..5 are CD AB (0xABCD).",
+      "name": "save_magic",
       "offset": 4,
-      "size": 16,
-      "type": "bytes"
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Slot status flag, default 1. First config byte of the gameplay struct; set to 1 by the default-init routine.",
+      "evidence": "FUN_08002344 executes *(save_struct+6) = 1 (u32-word index 6 = byte 0x18); baseline byte 0x18 is 0x01; mirror byte 0x4E8 (slot B +0x18) is 0x01.",
+      "name": "slot_active_flag",
+      "offset": 24,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Config triplet group A, entry 0 (default 2). One of two symmetric 3-byte groups flanking the option flags; consistent with per-side (P1/P2 or story/versus) 3-state settings.",
+      "evidence": "FUN_08002344 writes byte 0x1C = 2 (*(save_struct+7)); baseline bytes 0x1C..0x1E are 02 02 02 with mirror bytes 0x4E4..0x4E6 also 02 02 02.",
+      "name": "cfg_group_a0",
+      "offset": 28,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Config triplet group A, entry 1 (default 2).",
+      "evidence": "FUN_08002344 writes byte 0x1D = 2; baseline byte 0x1D is 0x02; slot-B mirror byte 0x4E5 is 0x02.",
+      "name": "cfg_group_a1",
+      "offset": 29,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Config triplet group A, entry 2 (default 2).",
+      "evidence": "FUN_08002344 writes byte 0x1E = 2; baseline byte 0x1E is 0x02; slot-B mirror byte 0x4E6 is 0x02.",
+      "name": "cfg_group_a2",
+      "offset": 30,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Option flag B, default 1. Single flag byte between the two config triplets.",
+      "evidence": "FUN_08002344 writes byte 0x25 = 1; baseline byte 0x25 is 0x01; slot-B mirror byte 0x4ED is 0x01.",
+      "name": "option_flag_b",
+      "offset": 37,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Config triplet group B, entry 0 (default 2). Mirrors group A layout.",
+      "evidence": "FUN_08002344 writes byte 0x28 = 2 (*(save_struct+10)); baseline bytes 0x28..0x2A are 02 02 02 with mirror bytes 0x4F0..0x4F2 also 02 02 02.",
+      "name": "cfg_group_b0",
+      "offset": 40,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Config triplet group B, entry 1 (default 2).",
+      "evidence": "FUN_08002344 writes byte 0x29 = 2; baseline byte 0x29 is 0x02; slot-B mirror byte 0x4F1 is 0x02.",
+      "name": "cfg_group_b1",
+      "offset": 41,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Config triplet group B, entry 2 (default 2).",
+      "evidence": "FUN_08002344 writes byte 0x2A = 2; baseline byte 0x2A is 0x02; slot-B mirror byte 0x4F2 is 0x02.",
+      "name": "cfg_group_b2",
+      "offset": 42,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Option flag C, default 1.",
+      "evidence": "FUN_08002344 writes byte 0x31 = 1; baseline byte 0x31 is 0x01; slot-B mirror byte 0x4F9 is 0x01.",
+      "name": "option_flag_c",
+      "offset": 49,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Option flag D, default 1.",
+      "evidence": "FUN_08002344 writes byte 0x34 = 1 (*(save_struct+0xD)); baseline byte 0x34 is 0x01; slot-B mirror byte 0x4FC is 0x01.",
+      "name": "option_flag_d",
+      "offset": 52,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Option flag E, default 1, in the trailing flag pair near the end of the used slot region.",
+      "evidence": "FUN_08002344 writes byte 0xE9 = 1 (and word-index 0x3A = byte 0xE8 = 1); baseline bytes 0xE8..0xE9 are 01 01 with mirror bytes 0x5B0..0x5B1 also 01 01.",
+      "name": "option_flag_e",
+      "offset": 232,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Option flag F, default 1; pairs with option_flag_e.",
+      "evidence": "FUN_08002344 writes byte 0xE9 = 1; baseline byte 0xE9 is 0x01; slot-B mirror byte 0x5B1 is 0x01.",
+      "name": "option_flag_f",
+      "offset": 233,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Stage/select index (default 1): last used byte of the 0x4C8 slot. Consumed as a table index (multiplied by stride 0x144) to load stage parameters.",
+      "evidence": "FUN_08002344 sets word-index 0x130 = byte 0x4C0 to 1; FUN_0800b550 reads byte (state_base+0x4C0) as index: *(uint)idx * 0x144 + table + 0x10/0x11/0x15/0x16. Baseline 0x4C0 and mirror 0x988 are 0x01.",
+      "name": "stage_select_index",
+      "offset": 1216,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Redundant mirror of save_checksum written by the store path; identical value proves the dual-slot save scheme.",
+      "evidence": "FUN_08002540 writes the same checksum word to SRAM 0x0E000000 and to the mirror SRAM region; baseline 0x0000..0x0003 and 0x04C8..0x04CB are both A7 F9 FF FF.",
+      "name": "save_checksum_mirror",
+      "offset": 1224,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Redundant mirror of save_magic in slot B.",
+      "evidence": "FUN_08002540 mirrors the full 0x4C8 slot; baseline 0x04CC..0x04CD are CD AB (0xABCD), matching slot A.",
+      "name": "save_magic_mirror",
+      "offset": 1228,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Redundant mirror of slot_active_flag in slot B (slot B byte 0x18).",
+      "evidence": "FUN_08002540 mirrors the full 0x4C8 slot; baseline byte 0x4E0 (0x4C8+0x18) is 0x01, matching slot A byte 0x18.",
+      "name": "slot_active_flag_mirror",
+      "offset": 1248,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Redundant mirror of stage_select_index in slot B (slot B byte 0x4C0).",
+      "evidence": "FUN_08002540 mirrors the full 0x4C8 slot; baseline byte 0x988 (0x4C8+0x4C0) is 0x01, matching slot A byte 0x4C0.",
+      "name": "stage_select_index_mirror",
+      "offset": 2440,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Auxiliary-block checksum word (second save region handled by FUN_080024E8/FUN_08002574/FUN_080025E8). Block payload is all zeros in the baseline so only the checksum word is observable.",
+      "evidence": "FUN_080025E8 computes ~sum over the aux RAM struct and FUN_08002574 stores it to two SRAM spots; baseline 0x0990..0x0993 and 0x30D8..0x30DB are both B2 D8 FF FF.",
+      "name": "aux_checksum",
+      "offset": 2448,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Redundant mirror of aux_checksum in the second SRAM location.",
+      "evidence": "FUN_08002574 writes the aux checksum word to two SRAM regions; baseline 0x30D8..0x30DB is B2 D8 FF FF, matching 0x0990..0x0993.",
+      "name": "aux_checksum_mirror",
+      "offset": 12504,
+      "size": 4,
+      "type": "u32_le"
     }
-  ]
+  ],
+  "game_code": "AJSJ",
+  "id": "ajsj",
+  "magic_signatures": [
+    {
+      "bytes": [
+        205,
+        171
+      ],
+      "description": "Save-slot magic 0xABCD at slot A header, checked by FUN_08002460",
+      "offset": 4
+    },
+    {
+      "bytes": [
+        205,
+        171
+      ],
+      "description": "Save-slot magic 0xABCD at slot B (mirror) header",
+      "offset": 1228
+    }
+  ],
+  "media": "sram",
+  "size_bytes": 32768,
+  "title": "Space Hexcite - Maetel Legend EX (Japan)"
 }

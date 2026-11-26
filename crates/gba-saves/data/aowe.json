@@ -1,29 +1,129 @@
 {
-  "id": "aowe",
-  "game_code": "AOWE",
-  "title": "Spyro - Attack of the Rhynocs (USA)",
-  "media": "eeprom8k",
-  "size_bytes": 8192,
-  "magic_signatures": [],
   "checksums": [],
+  "copy_groups": [
+    {
+      "fields": [
+        "slot0_progress_word_00",
+        "slot1_progress_word_00",
+        "slot2_progress_word_00"
+      ],
+      "name": "progress_word_00_mirrors"
+    },
+    {
+      "fields": [
+        "slot0_record_value",
+        "slot1_record_value",
+        "slot2_record_value"
+      ],
+      "name": "record_value_mirrors"
+    }
+  ],
+  "eeprom_rev8": true,
   "fields": [
     {
-      "name": "slot_counter",
+      "confidence": "guessed",
+      "description": "Slot 0 leading 24 zero bytes (logical 0x1EF8-0x1F0F); structural prefix before the repeated-word array.",
+      "evidence": "FUN_080609e0 reads EEPROM (0x0D000000) in 8-byte blocks of 4 u16 into RAM; FUN_08060a90 is the matching 8-byte block writer; logical save offsets 7928-7951 are 0x00 in baseline.sav rev8 view, slot 0 of three 88-byte mirrors at 7928/8016/8104.",
+      "name": "slot0_file_prefix",
       "offset": 7928,
-      "size": 2,
-      "type": "u16_le"
-    },
-    {
-      "name": "game_progress_flags",
-      "offset": 7930,
-      "size": 2,
-      "type": "u16_le"
-    },
-    {
-      "name": "player_status_payload",
-      "offset": 7932,
-      "size": 16,
+      "size": 24,
       "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Slot 0 progress/counter array element 0; u32 5999 (0x176F) repeated across 13 words.",
+      "evidence": "FUN_080609e0/FUN_08060a90 move save data as 8-byte blocks (4 u16 each) via FUN_08060960 DMA; logical offset 7952 (slot 0 base 7928 + 24) decodes to u32 5999 in baseline.sav rev8 view; mirrored at 8040/8128 per FUN_08060bc4 triple write+verify loop.",
+      "name": "slot0_progress_word_00",
+      "offset": 7952,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Slot 0 progress/counter array element 1; u32 5999, second of 13 repeated words.",
+      "evidence": "FUN_080609e0/FUN_08060a90 8-byte block transfer via FUN_08060960; logical offset 7956 (slot 0 +28) is u32 5999 in baseline.sav rev8 view; part of the 13-word 5999 run also seen at raw 0x1F12-0x1F46.",
+      "name": "slot0_progress_word_01",
+      "offset": 7956,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Slot 0 remaining 11 progress/counter words (each u32 5999) plus run continuation; kept as one block.",
+      "evidence": "FUN_080609e0 loop reads 4 u16 per block (do/while bVar1 < 4); logical offsets 7960-8003 hold eleven u32 5999 values in baseline.sav rev8 view; verified byte-identical across slots 0/1/2.",
+      "name": "slot0_progress_words_rest",
+      "offset": 7960,
+      "size": 44,
+      "type": "bytes"
+    },
+    {
+      "confidence": "guessed",
+      "description": "Slot 0 zero separator word between the 5999 run and the record value.",
+      "evidence": "FUN_08060b6c verifies 4-short blocks with FUN_080609e0 reads; logical offset 8004 (slot 0 +76) is u32 0 in baseline.sav rev8 view in all three slots.",
+      "name": "slot0_gap_word",
+      "offset": 8004,
+      "size": 4,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Slot 0 trailing record value; u32 1787 (0x06FB), one per 88-byte slot at +80.",
+      "evidence": "FUN_08060a90 EEPROM write + FUN_08060b6c read-verify compare via FUN_08060bc4 (up to 3 retries); logical offset 8008 (slot 0 +80) is u32 1787 in baseline.sav rev8 view, repeated at 8096/8184 with 88-byte stride.",
+      "name": "slot0_record_value",
+      "offset": 8008,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "guessed",
+      "description": "Slot 0 trailing zero word after the record value.",
+      "evidence": "FUN_080609e0/FUN_08060a90 8-byte block I/O; logical offset 8012 (slot 0 +84) is u32 0 in baseline.sav rev8 view in all three slots.",
+      "name": "slot0_trailer_word",
+      "offset": 8012,
+      "size": 4,
+      "type": "bytes"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Slot 1 mirror of progress word 0; byte-identical to slot 0 element.",
+      "evidence": "FUN_08060bc4 writes then FUN_08060b6c read-verifies each block (3 attempts); logical offset 8040 (slot 1 base 8016 + 24) is u32 5999 in baseline.sav rev8 view, identical to slot 0 offset 7952.",
+      "name": "slot1_progress_word_00",
+      "offset": 8040,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Slot 1 mirror of the trailing record value; u32 1787.",
+      "evidence": "FUN_08060bc4 triple write+verify spreed over mirrored slots; logical offset 8096 (slot 1 +80) is u32 1787 in baseline.sav rev8 view, identical to slot 0 offset 8008.",
+      "name": "slot1_record_value",
+      "offset": 8096,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Slot 2 mirror of progress word 0; byte-identical to slots 0/1.",
+      "evidence": "FUN_08060bc4 retry loop plus FUN_0806085c slot selector (accepts index 0..3); logical offset 8128 (slot 2 base 8104 + 24) is u32 5999 in baseline.sav rev8 view, identical to 7952/8040.",
+      "name": "slot2_progress_word_00",
+      "offset": 8128,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Slot 2 mirror of the trailing record value; u32 1787.",
+      "evidence": "FUN_08060bc4 write with FUN_08060b6c verification; logical offset 8184 (slot 2 +80) is u32 1787 in baseline.sav rev8 view, identical to 8008/8096; 88-byte slot stride 0x1EF8/0x1F50/0x1FA8.",
+      "name": "slot2_record_value",
+      "offset": 8184,
+      "size": 4,
+      "type": "u32_le"
     }
-  ]
+  ],
+  "game_code": "AOWE",
+  "id": "aowe",
+  "magic_signatures": [],
+  "media": "eeprom8k",
+  "size_bytes": 8192,
+  "title": "Spyro - Attack of the Rhynocs (USA)"
 }

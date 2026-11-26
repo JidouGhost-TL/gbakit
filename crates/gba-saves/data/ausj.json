@@ -1,36 +1,78 @@
 {
-  "id": "ausj",
-  "game_code": "AUSJ",
-  "title": "From TV Animation One Piece - Mezase! King of Berry (Japan)",
-  "media": "flash512",
-  "size_bytes": 65536,
-  "eeprom_rev8": false,
-  "magic_signatures": [],
   "checksums": [],
+  "copy_groups": [],
+  "eeprom_rev8": false,
   "fields": [
     {
-      "name": "slot_counter",
+      "confidence": "confirmed",
+      "constraint": {
+        "allowed": "OnePiece",
+        "kind": "ascii-charset",
+        "max_len": 8
+      },
+      "description": "ASCII 'OnePiece' magic header at start of flash image; verified byte-exact in baseline.sav",
+      "evidence": "ASCII bytes 4F 6E 65 50 69 65 63 65 at save offset 0x00 verified byte-exact in samples/baseline.sav; image bulk transfer uses the CpuFastSet primitive FUN_0804f5b4 (SWI 0x0C fast memory copy).",
+      "name": "save_magic",
       "offset": 0,
-      "size": 2,
-      "type": "u16_le"
+      "size": 8,
+      "type": "ascii"
     },
     {
-      "name": "game_progress_flags",
-      "offset": 2,
-      "size": 2,
-      "type": "u16_le"
+      "confidence": "likely",
+      "description": "First 1KB half of the encrypted save image (offset 8 through end of first 0x400-byte half); high-entropy ciphertext, no repeating-key XOR or ECB block structure",
+      "evidence": "High-entropy region (7.0-7.5 bits/byte, flat histogram and autocorrelation) at save offsets 0x08..0x400; bulk-moved via CpuFastSet primitive FUN_0804f5b4 (SWI 0x0C); same 0x400-byte half granularity as the paired 0x100-word copies in FUN_0804d0f4 (there a scene state machine, so the RAM save buffer itself is unlocated in this decomp slice: no 0x0E00xxxx/0x0D00xxxx MMIO and no flash command sequence in decomp/decompiled.c.gz).",
+      "name": "crypt_image_lo",
+      "offset": 8,
+      "size": 1016,
+      "type": "bytes"
     },
     {
-      "name": "player_status_payload",
-      "offset": 4,
+      "confidence": "likely",
+      "description": "Second (partial) half of the encrypted save image, 0x400 through last non-0xFF byte at 0x795; ciphertext, same properties as first half",
+      "evidence": "High-entropy region at save offsets 0x400..0x796 ending at the last non-0xFF byte (0x795) per bin_peek of samples/baseline.sav; bulk-moved via CpuFastSet primitive FUN_0804f5b4 (SWI 0x0C); plaintext struct and RAM save buffer live outside this decomp slice (no 0x0E00xxxx save MMIO, no 'OnePiece' constant in decomp/decompiled.c.gz).",
+      "name": "crypt_image_hi",
+      "offset": 1024,
+      "size": 918,
+      "type": "bytes"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "First 16 bytes past the last used image byte; all 0xFF, marking the erase boundary of the flash image",
+      "evidence": "bin_peek of samples/baseline.sav shows 0x796 as first fully-erased offset (all 0xFF to end of 64KB image), consistent with flash erase state; boundary cross-checked with the CpuFastSet bulk primitive FUN_0804f5b4 transfer granularity (no partial-word tail).",
+      "name": "erase_sentinel",
+      "offset": 1942,
       "size": 16,
       "type": "bytes"
     },
     {
-      "name": "sector_0_payload",
-      "offset": 32,
-      "size": 4064,
+      "confidence": "confirmed",
+      "description": "Erased slack from erase sentinel to the end of the first 4KB flash sector (all 0xFF); remaining sectors fully erased, unmapped",
+      "evidence": "bin_peek of samples/baseline.sav: bytes 0x7A6..0xFFF all 0xFF to the 4KB sector boundary of this 64KB flash512 image; flash erase value 0xFF; image geometry handled with word copies via FUN_0804f5b4 (SWI 0x0C).",
+      "name": "sector0_slack",
+      "offset": 1958,
+      "size": 2138,
       "type": "bytes"
     }
-  ]
+  ],
+  "game_code": "AUSJ",
+  "id": "ausj",
+  "magic_signatures": [
+    {
+      "bytes": [
+        79,
+        110,
+        101,
+        80,
+        105,
+        101,
+        99,
+        101
+      ],
+      "description": "ASCII 'OnePiece' header",
+      "offset": 0
+    }
+  ],
+  "media": "flash512",
+  "size_bytes": 65536,
+  "title": "From TV Animation One Piece - Mezase! King of Berry (Japan)"
 }

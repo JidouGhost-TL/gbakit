@@ -1,29 +1,75 @@
 {
-  "id": "ac5e",
-  "game_code": "AC5E",
-  "title": "DemiKids - Dark Version (USA)",
-  "media": "sram",
-  "size_bytes": 32768,
-  "magic_signatures": [],
-  "checksums": [],
+  "checksums": [
+    {
+      "algorithm": "sum32_le",
+      "covered_end": 4612,
+      "covered_start": 4,
+      "name": "save_checksum",
+      "stored_offset": 0
+    }
+  ],
+  "copy_groups": [],
+  "eeprom_rev8": false,
   "fields": [
     {
-      "name": "slot_counter",
-      "offset": 24436,
-      "size": 2,
-      "type": "u16_le"
+      "confidence": "confirmed",
+      "description": "Stored copy of the byte-sum checksum. FUN_080303bc compares this word against FUN_08030578(buf+4, len).",
+      "evidence": "FUN_080303bc reads *(int *)save_buf (save offset 0) and compares it to the return value of FUN_08030578(save_buf+4, _DAT_080304fc); FUN_08030578 is a plain byte-sum loop returning a 32-bit sum.",
+      "name": "save_checksum",
+      "offset": 0,
+      "size": 4,
+      "type": "u32_le"
     },
     {
-      "name": "game_progress_flags",
-      "offset": 24438,
-      "size": 2,
-      "type": "u16_le"
+      "confidence": "confirmed",
+      "description": "20-byte save header validated word-by-word on load; expected bytes live in ROM and are not recoverable from this decomp slice, so no magic_signatures entry is claimed.",
+      "evidence": "FUN_080303bc loops uStack_e over 0x00..0x13 (20 iterations) comparing *(save_buf+4+uStack_e) against ROM bytes at _DAT_0803053c (save offsets 4..23).",
+      "name": "save_magic",
+      "offset": 4,
+      "size": 20,
+      "type": "bytes"
     },
     {
-      "name": "player_status_payload",
-      "offset": 24440,
+      "confidence": "guessed",
+      "description": "Reserved/unidentified header bytes between the magic and the map-id word; inside the checksummed span, no direct accessor recovered in this decomp slice.",
+      "evidence": "FUN_080303bc checksums save_buf+4 over _DAT_080304fc bytes (covers save offsets 24..39); no dedicated reader/writer for this sub-range was recovered, so semantics are guessed.",
+      "name": "header_reserved",
+      "offset": 24,
       "size": 16,
       "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Current map/area identifier. The ROM rejects a zero value and values above a ROM limit, and several gameplay routines index map/sprite tables by the u16 at struct offset 0x28.",
+      "evidence": "FUN_080303bc rejects the save if *(short *)(save_buf+0x28)==0 or *(ushort *)(save_buf+0x28)>_DAT_08030500 (save offset 0x28); table-index reads of struct offset +0x28 appear in map/sprite code paths (e.g. callers of FUN_0802e158, FUN_08031b0c, FUN_08035e08).",
+      "name": "current_map_id",
+      "offset": 40,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "guessed",
+      "description": "Bulk gameplay state (party/demon, inventory, flags layout not recovered) between the map-id word and the trailing progress byte; fully inside the checksummed span.",
+      "evidence": "FUN_080303bc validates save offsets 0x28 and 0x1200 and checksums save_buf+4 over _DAT_080304fc bytes, so save offsets 42..4607 are checksummed gameplay payload; internal field layout not recovered in this decomp slice, so semantics are guessed.",
+      "name": "quest_data",
+      "offset": 42,
+      "size": 4566,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Late-struct progress byte with a confirmed upper bound of 0x47 (71); exact meaning (story/chapter counter) inferred from position and tight bound.",
+      "evidence": "FUN_080303bc rejects the save if *(byte *)(save_buf+0x1200)>0x47 (save offset 0x1200, max 71).",
+      "name": "story_progress",
+      "offset": 4608,
+      "size": 1,
+      "type": "u8"
     }
-  ]
+  ],
+  "game_code": "AC5E",
+  "id": "ac5e",
+  "magic_signatures": [],
+  "media": "sram",
+  "size_bytes": 32768,
+  "title": "DemiKids - Dark Version (USA)"
 }

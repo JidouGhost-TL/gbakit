@@ -8,22 +8,68 @@
   "checksums": [],
   "fields": [
     {
-      "name": "slot_counter",
+      "name": "slot_ident_w0",
       "offset": 0,
-      "size": 2,
-      "type": "u16_le"
+      "size": 4,
+      "type": "u32_le",
+      "description": "Slot identifier word 0: first word of the 24-byte EEPROM slot header. FUN_08044a8c compares header word 0 against a ROM-resident constant; FUN_08044ee8 zeroes it as the default; FUN_08044f64 writes it as EEPROM block 0 via FUN_08067634 and verifies via FUN_080677a8.",
+      "confidence": "likely",
+      "evidence": "FUN_08044a8c reads EEPROM blocks 0-2 (save offsets 0-23) via FUN_08067584 and validates header word at +0x00; FUN_08044ee8 zeroes slot words at +0x00/+0x04/+0x08; FUN_08044f64 writes slot blocks param_1*3..+2 via FUN_08067634 with FUN_080677a8 verify."
     },
     {
-      "name": "game_progress_flags",
-      "offset": 2,
-      "size": 2,
-      "type": "u16_le"
-    },
-    {
-      "name": "player_status_payload",
+      "name": "region_sum_w1",
       "offset": 4,
-      "size": 16,
-      "type": "bytes"
+      "size": 4,
+      "type": "u32_le",
+      "description": "Stored integrity word: must equal the FUN_08044d8c word-sum computed over the 0x1F60-byte data region (sum of 0x7d7 u32 words starting at region+4). FUN_08044a8c recomputes the sum and re-initializes plus rewrites defaults on mismatch. Kept as a plain u32 field because the covered file bytes are unwritten (0xFF) in the baseline and no Schema v2 checksum entry verifies.",
+      "confidence": "confirmed",
+      "evidence": "FUN_08044d8c sums 0x7d7 words from region base +4; FUN_08044a8c compares header word at +0x04 against that sum and calls FUN_08044ee8 plus FUN_08044f64 on mismatch; FUN_08044ee8 zeroes this word as default."
+    },
+    {
+      "name": "slot_word_w2",
+      "offset": 8,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Slot header word 2 (offset +0x08): zeroed by the FUN_08044ee8 defaults initializer and carried in EEPROM block 1 by the FUN_08044a8c read loop and the FUN_08044f64 write loop. No dedicated role observed in the decompiled slice.",
+      "confidence": "guessed",
+      "evidence": "FUN_08044ee8 zeroes slot words at +0x00/+0x04/+0x08 of the 0x18-byte slot struct; FUN_08044a8c reads 3 EEPROM blocks (uVar3 < 3) via FUN_08067584; FUN_08044f64 writes 3 blocks via FUN_08067634."
+    },
+    {
+      "name": "slot_keep_w3",
+      "offset": 12,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Slot header word 3 (offset +0x0C): the only slot word that FUN_08044ee8 deliberately does NOT zero during defaults initialization (words at +0x00/+0x04/+0x08 and halfwords at +0x10..+0x16 are cleared), so its value survives a reset-to-defaults. Still persisted as part of EEPROM block 1.",
+      "confidence": "likely",
+      "evidence": "FUN_08044ee8 zeroes +0x00/+0x04/+0x08 and +0x10/+0x12/+0x14/+0x16 but skips the word at +0x0C; FUN_08044a8c and FUN_08044f64 transfer all 3 blocks (24 bytes) including this word."
+    },
+    {
+      "name": "slot_ident_w4",
+      "offset": 16,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Slot identifier word 4 (offset +0x10): FUN_08044a8c compares it against a ROM-resident constant and re-initializes plus rewrites defaults on mismatch. Zeroed by FUN_08044ee8; transferred in EEPROM block 2.",
+      "confidence": "likely",
+      "evidence": "FUN_08044a8c checks *(header + 0x10) against ROM constant and calls FUN_08044ee8 plus FUN_08044f64 on mismatch; FUN_08044ee8 zeroes halfwords at +0x10/+0x12; FUN_08067584/FUN_08067634 carry block 2 bytes 16-23."
+    },
+    {
+      "name": "slot_ident_w5",
+      "offset": 20,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Slot identifier word 5 (offset +0x14): FUN_08044a8c compares it against a ROM-resident constant and re-initializes plus rewrites defaults on mismatch. Zeroed by FUN_08044ee8; transferred in EEPROM block 2.",
+      "confidence": "likely",
+      "evidence": "FUN_08044a8c checks *(header + 0x14) against ROM constant and calls FUN_08044ee8 plus FUN_08044f64 on mismatch; FUN_08044ee8 zeroes halfwords at +0x14/+0x16; FUN_08067584/FUN_08067634 carry block 2 bytes 16-23."
+    },
+    {
+      "name": "save_data_region",
+      "offset": 24,
+      "size": 8032,
+      "type": "bytes",
+      "description": "Main 0x1F60-byte data region (EEPROM blocks 3+, 1004 blocks x 8 bytes). FUN_08044fb0 clears a 0x1F60-byte RAM buffer then fills it block-by-block starting at EEPROM block 3 via FUN_08067584; FUN_08044d8c checksums it; RAM-side validation expects region word 1 to equal 0x1F60. Entirely unwritten (0xFF) in the baseline capture.",
+      "confidence": "likely",
+      "evidence": "FUN_08044fb0 memsets 0x1F60 bytes then loops FUN_08067584 from block param_1*0x3ec+3 advancing 8 bytes per block; FUN_08044d8c sums 0x7d7 words (0x1F60 bytes) from region+4; FUN_08044a8c requires region word at +4 to equal 0x1F60."
     }
-  ]
+  ],
+  "copy_groups": []
 }

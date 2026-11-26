@@ -4,42 +4,102 @@
   "title": "Marie, Elie & Anis no Atelier - Soyokaze kara no Dengon (Japan)",
   "media": "eeprom8k",
   "size_bytes": 8192,
+  "eeprom_rev8": true,
   "magic_signatures": [
     {
       "offset": 7520,
       "bytes": [
-        50,
-        82,
+        65,
+        84,
         69,
-        73
-      ]
+        76,
+        73,
+        69,
+        82,
+        50
+      ],
+      "description": "ASCII 'ATELIER2' save-block header (logical rev8 domain)"
     }
   ],
-  "checksums": [],
+  "checksums": [
+    {
+      "name": "save_block_sum32",
+      "algorithm": "sum32_le_words",
+      "covered_start": 7520,
+      "covered_end": 8076,
+      "stored_offset": 8076,
+      "seed": 0,
+      "xor_out": 0
+    }
+  ],
   "fields": [
     {
-      "name": "magic_header",
+      "name": "save_magic_atelier2",
       "offset": 7520,
-      "size": 4,
-      "type": "ascii"
+      "size": 8,
+      "type": "ascii",
+      "description": "Save-block magic header 'ATELIER2' at EEPROM blocks 0x3AC-0x3AC (file offset = eeprom_addr * 8)",
+      "confidence": "confirmed",
+      "evidence": "FUN_08032644 compares the first 8 bytes of the 0x230-byte RAM save buffer against the expected header (uVar4 == 8 check); FUN_080326ec re-initializes those 8 bytes on validation failure; baseline logical bytes at save offsets 7520-7527 read 'ATELIER2'.",
+      "constraint": {
+        "kind": "ascii-charset",
+        "allowed": "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789",
+        "max_len": 8
+      }
     },
     {
-      "name": "slot_counter",
-      "offset": 7524,
-      "size": 2,
-      "type": "u16_le"
-    },
-    {
-      "name": "game_progress_flags",
-      "offset": 7526,
-      "size": 2,
-      "type": "u16_le"
-    },
-    {
-      "name": "player_status_payload",
+      "name": "save_data_u32_0",
       "offset": 7528,
-      "size": 16,
-      "type": "bytes"
+      "size": 4,
+      "type": "u32_le",
+      "description": "First 32-bit word of the save payload after the magic header (zero in fresh baseline; covered by sum32)",
+      "confidence": "guessed",
+      "evidence": "FUN_080326a0 loads EEPROM blocks 0x3AC-0x3F1 (file offsets 7520-8079) 8 bytes at a time via FUN_0804618c into a 0x230-byte RAM buffer; FUN_08032744 writes it back via FUN_08046370; FUN_08032550 checksums the whole 0x230-byte region. Baseline logical word at 7528 is 0x00000000."
+    },
+    {
+      "name": "save_data_u32_1",
+      "offset": 7532,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Second 32-bit word of the save payload (zero in fresh baseline; covered by sum32)",
+      "confidence": "guessed",
+      "evidence": "Same block transfer as save_data_u32_0: FUN_080326a0 / FUN_0804618c load path and FUN_08032744 / FUN_08046370 store path move this word as part of EEPROM blocks 0x3AC-0x3F1; FUN_08032550 includes it in the sum32. Baseline logical word at 7532 is 0x00000000."
+    },
+    {
+      "name": "save_flags_a",
+      "offset": 7536,
+      "size": 2,
+      "type": "bitflags",
+      "description": "16-bit flags slot in the save payload head (zero in fresh baseline; covered by sum32)",
+      "confidence": "guessed",
+      "evidence": "FUN_080326a0 / FUN_08032744 transfer this halfword inside the 0x230-byte save block (EEPROM blocks 0x3AC-0x3F1) via FUN_0804618c / FUN_08046370; FUN_08032550 covers it with the sum32. Baseline logical halfword at 7536 is 0x0000."
+    },
+    {
+      "name": "save_flags_b",
+      "offset": 7538,
+      "size": 2,
+      "type": "bitflags",
+      "description": "Second 16-bit flags slot in the save payload head (zero in fresh baseline; covered by sum32)",
+      "confidence": "guessed",
+      "evidence": "FUN_080326a0 / FUN_08032744 transfer this halfword inside the 0x230-byte save block (EEPROM blocks 0x3AC-0x3F1) via FUN_0804618c / FUN_08046370; FUN_08032550 covers it with the sum32. Baseline logical halfword at 7538 is 0x0000."
+    },
+    {
+      "name": "save_data_main",
+      "offset": 7540,
+      "size": 528,
+      "type": "bytes",
+      "description": "Bulk save payload (all zero in fresh baseline; covered by sum32)",
+      "confidence": "guessed",
+      "evidence": "FUN_080326a0 loops uVar2 over 0x46 (70) EEPROM blocks from base 0x3AC via FUN_0804618c, covering file offsets 7520-8079; FUN_08032744 writes the same span back via FUN_08046370; FUN_08032550 checksums bytes [base, base+556). Baseline logical bytes 7540-8067 are all 0x00."
+    },
+    {
+      "name": "save_data_tail",
+      "offset": 8068,
+      "size": 8,
+      "type": "bytes",
+      "description": "Final 8 payload bytes immediately before the sum32 trailer (all zero in fresh baseline)",
+      "confidence": "guessed",
+      "evidence": "Last payload bytes of the 0x230-byte block loaded by FUN_080326a0 (EEPROM block 0x3F1 tail) via FUN_0804618c and stored by FUN_08032744 via FUN_08046370; covered by the FUN_08032550 sum32 whose result lands at offset 8076. Baseline logical bytes 8068-8075 are all 0x00."
     }
   ]
 }

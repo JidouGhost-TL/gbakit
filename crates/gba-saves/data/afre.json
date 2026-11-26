@@ -4,26 +4,145 @@
   "title": "Frogger's Adventures - Temple of the Frog (USA) (En,Fr,De,Es,It)",
   "media": "eeprom512",
   "size_bytes": 512,
+  "eeprom_rev8": true,
   "magic_signatures": [],
   "checksums": [],
   "fields": [
     {
-      "name": "slot_counter",
+      "name": "slot_unlock_flags",
       "offset": 0,
-      "size": 2,
-      "type": "u16_le"
+      "size": 1,
+      "type": "bitflags",
+      "description": "Four slot/initials flags; bit i selects slot i in the 4-slot apply loop (cleared bits get default initials). Whole byte must stay below 0x10.",
+      "confidence": "confirmed",
+      "evidence": "FUN_08017364 tests ((uStack_28 & 0xff) >> uVar11) & 1 for uVar11 in 0..3 (4 slots) and requires (byte)uStack_28 < 0x10; loaded from EEPROM block 0 by FUN_080177a0 via FUN_080178fc via FUN_08033a70 (0x0D000000). Logical save offset 0 == RAM buffer byte 0.",
+      "constraint": {
+        "kind": "bitmask",
+        "valid_mask": 15,
+        "flag_labels": {
+          "0": "Slot1",
+          "1": "Slot2",
+          "2": "Slot3",
+          "3": "Slot4"
+        }
+      }
     },
     {
-      "name": "game_progress_flags",
+      "name": "language_option",
+      "offset": 1,
+      "size": 1,
+      "type": "u8",
+      "description": "Language/option selector, validated to 0..4 (5 values matching the 5-language En,Fr,De,Es,It ROM). Baseline 0.",
+      "confidence": "likely",
+      "evidence": "FUN_08017364 rejects the save unless (byte)(uStack_28._1_1_) < 5, i.e. logical save offset 1 in 0..4; loaded by FUN_080177a0 (EEPROM block 0) and stored back by FUN_080177d8.",
+      "constraint": {
+        "kind": "enum",
+        "values": [
+          0,
+          1,
+          2,
+          3,
+          4
+        ],
+        "labels": {
+          "0": "English",
+          "1": "French",
+          "2": "German",
+          "3": "Spanish",
+          "4": "Italian"
+        }
+      }
+    },
+    {
+      "name": "difficulty_option",
       "offset": 2,
-      "size": 2,
-      "type": "u16_le"
+      "size": 1,
+      "type": "u8",
+      "description": "Unchecked middle option byte between the validated option bytes; preserved verbatim across EEPROM load/store. Baseline 0.",
+      "confidence": "guessed",
+      "evidence": "Logical save offset 2 (uStack_28 byte 2) is copied by FUN_080177a0/FUN_080177d8 8-byte block transfer (FUN_080178fc/FUN_0801789c, EEPROM block 0) with no range check in FUN_08017364 validation."
     },
     {
-      "name": "player_status_payload",
+      "name": "validity_guard_zero",
+      "offset": 3,
+      "size": 1,
+      "type": "u8",
+      "description": "Must be zero; FUN_08017364 treats any nonzero value as a corrupt save and resets to factory defaults. Baseline 0.",
+      "confidence": "confirmed",
+      "evidence": "FUN_08017364 requires uStack_28._3_1_ == 0 (logical save offset 3), else it zeroes the buffer, restores ROM defaults and rewrites EEPROM via FUN_080177d8.",
+      "constraint": {
+        "kind": "unsigned-range",
+        "minimum": 0,
+        "maximum": 0
+      }
+    },
+    {
+      "name": "sound_fx_flag",
       "offset": 4,
-      "size": 16,
-      "type": "bytes"
+      "size": 1,
+      "type": "u8",
+      "description": "Feature enable flag; zero takes the FUN_08020bf0 disabled path, nonzero skips it. Part of the factory 01 01 05 05 options word (DAT_08017508 / FUN_08000430).",
+      "confidence": "likely",
+      "evidence": "FUN_08017364 gates on *pcVar6 (logical save offset 4, uStack_24 byte 0): if zero calls FUN_08020bf0 (in the 08020bxx audio/apply family); default 1 written by builtin_strncpy(DAT_08017508, \"\\x01\\x01\\x05\\x05\", 4) and by FUN_08000430.",
+      "constraint": {
+        "kind": "enum",
+        "values": [
+          0,
+          1
+        ],
+        "labels": {
+          "0": "Disabled",
+          "1": "Enabled"
+        }
+      }
+    },
+    {
+      "name": "music_flag",
+      "offset": 5,
+      "size": 1,
+      "type": "u8",
+      "description": "Feature enable flag; zero takes the FUN_08020c3c path, nonzero takes FUN_08020c58 which sets status bit 0x10 and applies via FUN_08020e98 12-entry applier.",
+      "confidence": "likely",
+      "evidence": "FUN_08017364 gates on pcVar6[1] (logical save offset 5, uStack_24 byte 1): zero calls FUN_08020c3c, nonzero calls FUN_08020c58 -> FUN_08020e98; default 1 from DAT_08017508 \"\\x01\\x01\\x05\\x05\" default word.",
+      "constraint": {
+        "kind": "enum",
+        "values": [
+          0,
+          1
+        ],
+        "labels": {
+          "0": "Disabled",
+          "1": "Enabled"
+        }
+      }
+    },
+    {
+      "name": "lives_count",
+      "offset": 6,
+      "size": 1,
+      "type": "u8",
+      "description": "Gameplay counter in range 3..9, factory default 5 (second 05 of the 01 01 05 05 word).",
+      "confidence": "likely",
+      "evidence": "FUN_08017364 requires (byte)(uStack_24._2_1_ - 3) < 7, i.e. logical save offset 6 in [3,9]; default 5 written by FUN_08000430 (*DAT_080004b4 bytes) and the DAT_08017508 default word.",
+      "constraint": {
+        "kind": "unsigned-range",
+        "minimum": 3,
+        "maximum": 9
+      }
+    },
+    {
+      "name": "continues_count",
+      "offset": 7,
+      "size": 1,
+      "type": "u8",
+      "description": "Gameplay counter in range 3..9, factory default 5 (third 05 of the 01 01 05 05 word).",
+      "confidence": "likely",
+      "evidence": "FUN_08017364 requires (byte)(uStack_24._3_1_ - 3) < 7, i.e. logical save offset 7 in [3,9]; default 5 written by FUN_08000430 and the DAT_08017508 default word.",
+      "constraint": {
+        "kind": "unsigned-range",
+        "minimum": 3,
+        "maximum": 9
+      }
     }
   ]
 }

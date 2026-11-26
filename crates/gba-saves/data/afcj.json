@@ -1,45 +1,82 @@
 {
-  "id": "afcj",
-  "game_code": "AFCJ",
-  "title": "Rockman & Forte (Japan)",
-  "media": "eeprom8k",
-  "size_bytes": 8192,
-  "magic_signatures": [
+  "checksums": [
     {
-      "offset": 0,
-      "bytes": [
-        48,
-        76,
-        79,
-        70
-      ]
+      "algorithm": "sum8_inv",
+      "covered_end": 126,
+      "covered_start": 0,
+      "name": "header_checksum",
+      "seed": 0,
+      "stored_offset": 126,
+      "xor_out": 0
     }
   ],
-  "checksums": [],
+  "eeprom_rev8": true,
   "fields": [
     {
-      "name": "magic_header",
+      "confidence": "confirmed",
+      "description": "8-byte ASCII header magic 'ROCKFOL0' copied from the ROM magic table to save-buffer offset 0 during finalization.",
+      "evidence": "FUN_0805621c copies 8 bytes from the ROM magic table (_DAT_08056254) to param_1+0 (func_0x0805ba74(param_1,uVar4,8)); FUN_080566a4 finalizes the header buffer (*(cfg+0x38)) with FUN_0805621c(mode 0) and writes 0x80 bytes via FUN_08055c94(mode 0) using size *(cfg+0x30)=0x80 set in FUN_080561d8. Baseline logical bytes [0x00..0x07] read 'ROCKFOL0'.",
+      "name": "save_magic",
       "offset": 0,
-      "size": 4,
+      "size": 8,
       "type": "ascii"
     },
     {
-      "name": "slot_counter",
-      "offset": 4,
-      "size": 2,
-      "type": "u16_le"
-    },
-    {
-      "name": "game_progress_flags",
-      "offset": 6,
-      "size": 2,
-      "type": "u16_le"
-    },
-    {
-      "name": "player_status_payload",
+      "confidence": "confirmed",
+      "description": "Header u16 at save offset 8 that selects the EEPROM base for the 0x80-byte header: 0 selects blocks 0..15 (file bytes 0x00..0x7F), any nonzero value selects blocks 16..31.",
+      "evidence": "FUN_0805670c(param_1==0) loads u16 from header-buffer offset 8 (*(u16*)(*(cfg+0x38)+8)) and returns EEPROM base 0x00 when it is zero, 0x10 otherwise (uVar1=(-v|v)>>0x1f&0x10); FUN_080566a4 passes that base to FUN_08055c94 for the header write. Baseline value is 0, matching the header observed at file bytes 0x00..0x7F.",
+      "name": "slot_select",
       "offset": 8,
-      "size": 16,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "48-byte persisted runtime game state. Copied as a unit between the work area and save-buffer offset 10; exact per-byte gameplay meaning (stages/items/options) is not statically resolved in the decompanied caller graph.",
+      "evidence": "FUN_0805621c(mode 0) copies 0x30 bytes from the work area (*(cfg+0x50)) to param_1+10 for the file; FUN_08055624 copies header-buffer bytes [10..0x40) back into the work area (*(cfg+0x50)) after a valid main-region load (func_0x0805ba74(dst,src+10,0x30)). Covered by header_checksum. Baseline is all zeros (fresh formatted save).",
+      "name": "progress_block",
+      "offset": 10,
+      "size": 48,
       "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "68 bytes never written by the save finalizer but covered by the header checksum; zeros in the baseline formatted save.",
+      "evidence": "FUN_0805621c(mode 0) writes magic [0..8), payload [10..0x40), checksum [0x7E] and marker [0x7F] but never stores to [0x3A..0x7D); FUN_08056788 checksums bytes [0..0x7E) including this span (size *(cfg+0x30)=0x80 from FUN_080561d8, checksum at size-2). Baseline span is all zeros.",
+      "name": "reserved_pad",
+      "offset": 58,
+      "size": 68,
+      "type": "bytes"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Constant 0x88 format marker stored at the last byte of the 0x80-byte header on every finalize; not covered by the checksum.",
+      "evidence": "FUN_0805621c unconditionally stores 0x88 at param_1+(size-1) (pbVar8[1]=0x88 with iVar7=*(cfg+0x30)-2=0x7E, i.e. byte 0x7F); FUN_08056788 only verifies byte [size-2]. Baseline byte 0x7F is 0x88.",
+      "name": "format_marker",
+      "offset": 127,
+      "size": 1,
+      "type": "u8"
     }
-  ]
+  ],
+  "game_code": "AFCJ",
+  "id": "afcj",
+  "magic_signatures": [
+    {
+      "bytes": [
+        82,
+        79,
+        67,
+        75,
+        70,
+        79,
+        76,
+        48
+      ],
+      "description": "ASCII 'ROCKFOL0' header magic at logical offset 0",
+      "offset": 0
+    }
+  ],
+  "media": "eeprom8k",
+  "size_bytes": 8192,
+  "title": "Rockman & Forte (Japan)"
 }

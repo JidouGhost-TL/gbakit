@@ -1,29 +1,138 @@
 {
-  "id": "an6e",
-  "game_code": "AN6E",
-  "title": "Klonoa 2 - Dream Champ Tournament (USA)",
-  "media": "eeprom512",
-  "size_bytes": 512,
-  "magic_signatures": [],
   "checksums": [],
   "fields": [
     {
-      "name": "slot_counter",
-      "offset": 464,
-      "size": 2,
-      "type": "u16_le"
+      "confidence": "confirmed",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 99,
+        "minimum": 0
+      },
+      "description": "Slot 0 two-digit file counter (0-99); loader clamps values >99 to 3, file-select screen renders it as tens+ones decimal digits.",
+      "evidence": "FUN_08039b64 reads EEPROM block 1 byte 0 via FUN_080513b8 into EWRAM save struct +0x14 (clamp '>99 -> 3'); FUN_08047efc renders it via FUN_08051818/FUN_08051890 div/mod 10. Save offset = 1*8+0 = 8.",
+      "name": "slot0_file_counter",
+      "offset": 8,
+      "size": 1,
+      "type": "u8"
     },
     {
-      "name": "game_progress_flags",
-      "offset": 466,
-      "size": 2,
-      "type": "u16_le"
+      "confidence": "likely",
+      "description": "Slot 0 progress tag byte; selects file-select tile variants together with world/stage bytes.",
+      "evidence": "FUN_08039b64 reads EEPROM block 1 byte 1 via FUN_080513b8 into save struct +0x17; FUN_08047efc tests it for tile indices 0x27 vs 0x2d. Save offset = 1*8+1 = 9.",
+      "name": "slot0_progress_tag_a",
+      "offset": 9,
+      "size": 1,
+      "type": "u8"
     },
     {
-      "name": "player_status_payload",
-      "offset": 468,
-      "size": 16,
-      "type": "bytes"
+      "confidence": "likely",
+      "description": "Slot 0 stage/sub-area byte; compared against 9 and 10 to pick file-select tile layout.",
+      "evidence": "FUN_08039b64 reads EEPROM block 1 byte 2 via FUN_080513b8 into save struct +0x1a; FUN_08047efc branches on values 9 (0x09) and 10 (0x0a). Save offset = 1*8+2 = 10.",
+      "name": "slot0_stage_id",
+      "offset": 10,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Slot 0 world/area selector byte; 0 and 7 share one tile branch, 1 and 2 select others.",
+      "evidence": "FUN_08039b64 reads EEPROM block 1 byte 3 via FUN_080513b8 into save struct +0x1d; FUN_08047efc branches on values 0, 7, 1, 2. Save offset = 1*8+3 = 11.",
+      "name": "slot0_world_id",
+      "offset": 11,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Slot 0 progress tag byte; gated through mod-3 check to select alternate tile branch.",
+      "evidence": "FUN_08039b64 reads EEPROM block 1 byte 4 via FUN_080513b8 into save struct +0x20; FUN_08047efc applies FUN_08051890(x,3) with branches on 0/1/2. Save offset = 1*8+4 = 12.",
+      "name": "slot0_progress_tag_b",
+      "offset": 12,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Slot 0 emblem/rank icon byte: 0 hides the icon, 1-5 draw icon tiles, >=6 draws the special icon and sets the 0x80 completion flag at struct +0x29.",
+      "evidence": "FUN_08039b64 reads EEPROM block 6 byte 0 via FUN_080513b8 into save struct +0x23 (flag 0 vs 0x80 at +0x29 on '<6' test); FUN_08047efc draws tile 0x2d+id or 0x32. Save offset = 6*8+0 = 48.",
+      "name": "slot0_emblem_id",
+      "offset": 48,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 99,
+        "minimum": 0
+      },
+      "description": "Slot 1 two-digit file counter (0-99); same loader clamp and decimal rendering as slot 0.",
+      "evidence": "FUN_08039b64 loop iteration 1 (base block 19) reads EEPROM block 20 byte 0 via FUN_080513b8 into save struct +0x14+1; FUN_08047efc renders slot index 1 the same way. Save offset = 20*8+0 = 160.",
+      "name": "slot1_file_counter",
+      "offset": 160,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Slot 1 emblem/rank icon byte, same semantics as slot 0.",
+      "evidence": "FUN_08039b64 loop iteration 1 reads EEPROM block 25 byte 0 via FUN_080513b8 into save struct +0x23+1; FUN_08047efc consumes it for slot index 1. Save offset = 25*8+0 = 200.",
+      "name": "slot1_emblem_id",
+      "offset": 200,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 99,
+        "minimum": 0
+      },
+      "description": "Slot 2 two-digit file counter (0-99); same loader clamp and decimal rendering as slot 0.",
+      "evidence": "FUN_08039b64 loop iteration 2 (base block 38) reads EEPROM block 39 byte 0 via FUN_080513b8 into save struct +0x14+2; FUN_08047efc renders slot index 2 the same way. Save offset = 39*8+0 = 312.",
+      "name": "slot2_file_counter",
+      "offset": 312,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Slot 2 emblem/rank icon byte, same semantics as slot 0.",
+      "evidence": "FUN_08039b64 loop iteration 2 reads EEPROM block 44 byte 0 via FUN_080513b8 into save struct +0x23+2; FUN_08047efc consumes it for slot index 2. Save offset = 44*8+0 = 352.",
+      "name": "slot2_emblem_id",
+      "offset": 352,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "constraint": {
+        "kind": "enum",
+        "labels": {
+          "0": "Option0",
+          "1": "Option1",
+          "2": "Option2"
+        },
+        "values": [
+          0,
+          1,
+          2
+        ]
+      },
+      "description": "Global 3-way option (valid values 0-2); loader resets it to 0 when the stored byte exceeds 2.",
+      "evidence": "FUN_08039b64 reads EEPROM block 0x39 byte 0 via FUN_080513b8 and stores it to global struct +0x12, resetting to 0 when '>2'; invalid-slot path writes default 0 via FUN_08051634. Save offset = 57*8+0 = 456.",
+      "name": "global_option",
+      "offset": 456,
+      "size": 1,
+      "type": "u8"
     }
-  ]
+  ],
+  "game_code": "AN6E",
+  "id": "an6e",
+  "magic_signatures": [],
+  "media": "eeprom512",
+  "size_bytes": 512,
+  "title": "Klonoa 2 - Dream Champ Tournament (USA)"
 }

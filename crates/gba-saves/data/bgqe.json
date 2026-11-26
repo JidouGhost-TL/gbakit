@@ -1,29 +1,235 @@
 {
-  "id": "bgqe",
-  "game_code": "BGQE",
-  "title": "Greg Hastings' Tournament Paintball Max'd (USA)",
-  "media": "eeprom8k",
-  "size_bytes": 8192,
-  "magic_signatures": [],
-  "checksums": [],
+  "checksums": [
+    {
+      "algorithm": "sum16_le_words",
+      "covered_end": 30,
+      "covered_start": 0,
+      "name": "bank0_checksum",
+      "seed": 0,
+      "stored_offset": 30,
+      "xor_out": 0
+    },
+    {
+      "algorithm": "sum16_le_words",
+      "covered_end": 4126,
+      "covered_start": 4096,
+      "name": "bank1_checksum",
+      "seed": 0,
+      "stored_offset": 4126,
+      "xor_out": 0
+    }
+  ],
+  "copy_groups": [
+    {
+      "fields": [
+        "progress_counter",
+        "progress_counter_mirror"
+      ],
+      "name": "progress_counter_mirrors"
+    },
+    {
+      "fields": [
+        "gameplay_state_1",
+        "gameplay_state_1_mirror"
+      ],
+      "name": "gameplay_state_1_mirrors"
+    },
+    {
+      "fields": [
+        "gameplay_state_2",
+        "gameplay_state_2_mirror"
+      ],
+      "name": "gameplay_state_2_mirrors"
+    },
+    {
+      "fields": [
+        "gameplay_state_3",
+        "gameplay_state_3_mirror"
+      ],
+      "name": "gameplay_state_3_mirrors"
+    },
+    {
+      "fields": [
+        "aux_state_1",
+        "aux_state_1_mirror"
+      ],
+      "name": "aux_state_1_mirrors"
+    },
+    {
+      "fields": [
+        "aux_state_2",
+        "aux_state_2_mirror"
+      ],
+      "name": "aux_state_2_mirrors"
+    },
+    {
+      "fields": [
+        "aux_state_3",
+        "aux_state_3_mirror"
+      ],
+      "name": "aux_state_3_mirrors"
+    }
+  ],
+  "eeprom_rev8": true,
   "fields": [
     {
-      "name": "slot_counter",
+      "confidence": "likely",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 11,
+        "minimum": 0
+      },
+      "description": "Bounded progression counter; load path rejects values >= 12 and falls back to ROM defaults. Copied to gameplay RAM on successful load.",
+      "evidence": "FUN_080006b0 checks *_DAT_080006e4 < 0xc then copies word0 to puRam08000718; FUN_08000500 loads it from EEPROM base 0 and FUN_080003c4 stores it to banks 0/0x200.",
+      "name": "progress_counter",
       "offset": 0,
-      "size": 2,
-      "type": "u16_le"
+      "size": 4,
+      "type": "u32_le"
     },
     {
-      "name": "game_progress_flags",
-      "offset": 2,
-      "size": 2,
-      "type": "u16_le"
-    },
-    {
-      "name": "player_status_payload",
+      "confidence": "likely",
+      "description": "Persistent gameplay state word 1; block-copied from the EEPROM read buffer to gameplay RAM by the load routine and covered by the additive checksum.",
+      "evidence": "FUN_080006b0 copies save words1-3 to puRam0800071c after FUN_08000500(0,_DAT_080006e4,4) succeeds; FUN_080003c4 writes them via FUN_08009f60.",
+      "name": "gameplay_state_1",
       "offset": 4,
-      "size": 16,
-      "type": "bytes"
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Persistent gameplay state word 2; block-copied from the EEPROM read buffer to gameplay RAM by the load routine and covered by the additive checksum.",
+      "evidence": "FUN_080006b0 copies save words1-3 to puRam0800071c after FUN_08000500(0,_DAT_080006e4,4) succeeds; FUN_080003c4 writes them via FUN_08009f60.",
+      "name": "gameplay_state_2",
+      "offset": 8,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Persistent gameplay state word 3; block-copied from the EEPROM read buffer to gameplay RAM by the load routine and covered by the additive checksum.",
+      "evidence": "FUN_080006b0 copies save words1-3 to puRam0800071c after FUN_08000500(0,_DAT_080006e4,4) succeeds; FUN_080003c4 writes them via FUN_08009f60.",
+      "name": "gameplay_state_3",
+      "offset": 12,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Auxiliary persistent state word 1; stored to both EEPROM banks and covered by the additive checksum.",
+      "evidence": "FUN_08000500(0,_DAT_080006e4,4) reads 4 EEPROM entries and FUN_08000500 checksum-covers shorts 0-14; FUN_080003c4 stores the word to banks 0 and 0x200 via FUN_08009f60.",
+      "name": "aux_state_1",
+      "offset": 16,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Auxiliary persistent state word 2; stored to both EEPROM banks and covered by the additive checksum.",
+      "evidence": "FUN_08000500(0,_DAT_080006e4,4) reads 4 EEPROM entries and FUN_08000500 checksum-covers shorts 0-14; FUN_080003c4 stores the word to banks 0 and 0x200 via FUN_08009f60.",
+      "name": "aux_state_2",
+      "offset": 20,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Auxiliary persistent state word 3; stored to both EEPROM banks and covered by the additive checksum.",
+      "evidence": "FUN_08000500(0,_DAT_080006e4,4) reads 4 EEPROM entries and FUN_08000500 checksum-covers shorts 0-14; FUN_080003c4 stores the word to banks 0 and 0x200 via FUN_08009f60.",
+      "name": "aux_state_3",
+      "offset": 24,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 11,
+        "minimum": 0
+      },
+      "description": "Mirror-bank copy of the progression counter (EEPROM bank at 0x200, file offset 0x1000). Written and verified in lockstep with the primary bank.",
+      "evidence": "FUN_080003c4 writes every entry twice: FUN_08009f60(param_1+uVar6) and FUN_08009f60(0x200+param_1+uVar6); FUN_08000500 reads back and compares both banks.",
+      "name": "progress_counter_mirror",
+      "offset": 4096,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Mirror-bank copy of gameplay state word 1 (EEPROM bank at 0x200, file offset 0x1000).",
+      "evidence": "FUN_080003c4 writes every entry twice: FUN_08009f60(param_1+uVar6) and FUN_08009f60(0x200+param_1+uVar6); FUN_08000500 reads back and compares both banks.",
+      "name": "gameplay_state_1_mirror",
+      "offset": 4100,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Mirror-bank copy of gameplay state word 2 (EEPROM bank at 0x200, file offset 0x1000).",
+      "evidence": "FUN_080003c4 writes every entry twice: FUN_08009f60(param_1+uVar6) and FUN_08009f60(0x200+param_1+uVar6); FUN_08000500 reads back and compares both banks.",
+      "name": "gameplay_state_2_mirror",
+      "offset": 4104,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Mirror-bank copy of gameplay state word 3 (EEPROM bank at 0x200, file offset 0x1000).",
+      "evidence": "FUN_080003c4 writes every entry twice: FUN_08009f60(param_1+uVar6) and FUN_08009f60(0x200+param_1+uVar6); FUN_08000500 reads back and compares both banks.",
+      "name": "gameplay_state_3_mirror",
+      "offset": 4108,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Mirror-bank copy of auxiliary state word 1 (EEPROM bank at 0x200, file offset 0x1000).",
+      "evidence": "FUN_080003c4 writes every entry twice: FUN_08009f60(param_1+uVar6) and FUN_08009f60(0x200+param_1+uVar6); FUN_08000500 reads back and compares both banks.",
+      "name": "aux_state_1_mirror",
+      "offset": 4112,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Mirror-bank copy of auxiliary state word 2 (EEPROM bank at 0x200, file offset 0x1000).",
+      "evidence": "FUN_080003c4 writes every entry twice: FUN_08009f60(param_1+uVar6) and FUN_08009f60(0x200+param_1+uVar6); FUN_08000500 reads back and compares both banks.",
+      "name": "aux_state_2_mirror",
+      "offset": 4116,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Mirror-bank copy of auxiliary state word 3 (EEPROM bank at 0x200, file offset 0x1000).",
+      "evidence": "FUN_080003c4 writes every entry twice: FUN_08009f60(param_1+uVar6) and FUN_08009f60(0x200+param_1+uVar6); FUN_08000500 reads back and compares both banks.",
+      "name": "aux_state_3_mirror",
+      "offset": 4120,
+      "size": 4,
+      "type": "u32_le"
     }
-  ]
+  ],
+  "game_code": "BGQE",
+  "id": "bgqe",
+  "magic_signatures": [
+    {
+      "bytes": [
+        37,
+        171
+      ],
+      "description": "Validation sentinel: low half of save word7 must equal the runtime sentinel checked on load",
+      "offset": 28
+    },
+    {
+      "bytes": [
+        37,
+        171
+      ],
+      "description": "Validation sentinel mirror in EEPROM bank at 0x200 (file offset 0x1000)",
+      "offset": 4124
+    }
+  ],
+  "media": "eeprom8k",
+  "size_bytes": 8192,
+  "title": "Greg Hastings' Tournament Paintball Max'd (USA)"
 }

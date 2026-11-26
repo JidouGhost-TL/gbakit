@@ -1,29 +1,115 @@
 {
-  "id": "buce",
-  "game_code": "BUCE",
-  "title": "Ultimate Card Games (USA) (Rev 1)",
-  "media": "eeprom8k",
-  "size_bytes": 8192,
-  "magic_signatures": [],
   "checksums": [],
+  "eeprom_rev8": true,
   "fields": [
     {
-      "name": "slot_counter",
+      "confidence": "confirmed",
+      "description": "Stored integrity word for the save header. FUN_0800181c loads the full 0x2000-byte image (EEPROM blocks 0..0x3FF) into the heap save buffer and rejects it unless the u32 at buffer+0 equals the low 16 bits of its table-driven CRC-16 over buffer+4; FUN_08002544 recomputes the same CRC and stamps it here before writing EEPROM block 0. Upper 16 bits are always zero.",
+      "evidence": "FUN_0800181c verifies *puVar9 (save offset 0) against (CRC16 & 0xffff) and sets buffer word 2 on mismatch; FUN_08002544 recomputes the CRC over the buffer and stores it at save offset 0 before calling FUN_080027a4 block 0.",
+      "name": "save_checksum",
       "offset": 0,
-      "size": 2,
-      "type": "u16_le"
+      "size": 4,
+      "type": "u32_le"
     },
     {
-      "name": "game_progress_flags",
-      "offset": 2,
-      "size": 2,
-      "type": "u16_le"
-    },
-    {
-      "name": "player_status_payload",
+      "confidence": "confirmed",
+      "description": "Fixed save-format identifier stamped by the game. FUN_0800181c rejects the loaded image unless the u32 at buffer+4 equals the ROM constant; FUN_08002544 re-stamps the same constant before writing EEPROM block 0. Reads 0xbd2a5921 in the logical (rev8) domain.",
+      "evidence": "FUN_0800181c compares puVar9[1] (save offset 4) against the ROM magic constant; FUN_08002544 writes the constant back to save offset 4 before FUN_080027a4 block 0.",
+      "name": "save_magic",
       "offset": 4,
-      "size": 16,
-      "type": "bytes"
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "kind": "enum",
+        "labels": {
+          "0": "load_ok",
+          "1": "last_load_failed"
+        },
+        "values": [
+          0,
+          1
+        ]
+      },
+      "description": "Load-validity flag. Set to 1 by FUN_0800181c when the checksum or magic check fails (buffer word 2 = 1); cleared to 0 by FUN_08002544 whenever the header is re-stamped. EEPROM block 0.",
+      "evidence": "FUN_0800181c sets puVar9[2] (save offset 8) to 1 on verification failure; FUN_08002544 clears save offset 8 to 0 before FUN_080027a4 block 0.",
+      "name": "load_error_flag",
+      "offset": 8,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Second header status word. Never set in the visible decompilation; zeroed by FUN_08002544 on every header re-stamp and covered by the FUN_0800181c header CRC. Reserved/auxiliary status.",
+      "evidence": "FUN_08002544 clears save offset 12 (puVar15[3] = 0) before recomputing the header CRC and calling FUN_080027a4 block 0; FUN_0800181c covers save offset 12 in its CRC span.",
+      "name": "aux_status_word",
+      "offset": 12,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Select-slot entry 0: 1-based game/select ID (0 = empty). The 8-byte slot at save 0xA0 is copied to RAM at boot by FUN_08001b94 and each of the first four bytes becomes a per-slot object holding (byte - 1) via FUN_080901ac.",
+      "evidence": "FUN_08001b94 copies 8 bytes from save buffer+0xA0; FUN_0800ba8c builds one object per byte and stores (byte - 1) with FUN_080901ac for bytes at save offsets 0xA0..0xA3.",
+      "name": "select_slot_0",
+      "offset": 160,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Select-slot entry 1: 1-based game/select ID (0 = empty). Consumed at boot the same way as select_slot_0.",
+      "evidence": "FUN_08001b94 copies 8 bytes from save buffer+0xA0; FUN_0800ba8c builds one object per byte and stores (byte - 1) with FUN_080901ac for bytes at save offsets 0xA0..0xA3.",
+      "name": "select_slot_1",
+      "offset": 161,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Select-slot entry 2: 1-based game/select ID (0 = empty). Consumed at boot the same way as select_slot_0.",
+      "evidence": "FUN_08001b94 copies 8 bytes from save buffer+0xA0; FUN_0800ba8c builds one object per byte and stores (byte - 1) with FUN_080901ac for bytes at save offsets 0xA0..0xA3.",
+      "name": "select_slot_2",
+      "offset": 162,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Select-slot entry 3: 1-based game/select ID (0 = empty). Consumed at boot the same way as select_slot_0.",
+      "evidence": "FUN_08001b94 copies 8 bytes from save buffer+0xA0; FUN_0800ba8c builds one object per byte and stores (byte - 1) with FUN_080901ac for bytes at save offsets 0xA0..0xA3.",
+      "name": "select_slot_3",
+      "offset": 163,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Slot write-pending word. When nonzero, FUN_08002544 zeroes save bytes 0xA4..0xA7 and rewrites EEPROM block 0x14 (save 0xA0..0xA7); FUN_08002890 also zeroes the whole 8-byte slot when it differs from zeros. Baseline reads 0 (clean).",
+      "evidence": "FUN_08002544 tests puVar15[0x29] (save offset 0xA4): if nonzero it zeroes save 0xA4..0xA7 and calls FUN_080027a4 block 0x14; FUN_08002890 compares save 0xA0..0xA7 against zeros and clears it on mismatch.",
+      "name": "slot_write_pending",
+      "offset": 164,
+      "size": 4,
+      "type": "u32_le"
     }
-  ]
+  ],
+  "game_code": "BUCE",
+  "id": "buce",
+  "magic_signatures": [
+    {
+      "bytes": [
+        33,
+        89,
+        42,
+        189
+      ],
+      "description": "Save-format magic stamped by FUN_08002544 and verified by FUN_0800181c (u32 0xbd2a5921, logical rev8 domain)",
+      "offset": 4
+    }
+  ],
+  "media": "eeprom8k",
+  "size_bytes": 8192,
+  "title": "Ultimate Card Games (USA) (Rev 1)"
 }

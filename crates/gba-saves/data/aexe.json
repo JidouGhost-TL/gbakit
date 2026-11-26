@@ -4,26 +4,1047 @@
   "title": "King of Fighters EX 2, The - Howling Blood (USA)",
   "media": "eeprom512",
   "size_bytes": 512,
-  "magic_signatures": [],
-  "checksums": [],
+  "eeprom_rev8": true,
+  "magic_signatures": [
+    {
+      "offset": 252,
+      "bytes": [
+        175,
+        85
+      ],
+      "description": "Slot0 magic 0x55AF at word 0x7E; checked by FUN_08001afc."
+    },
+    {
+      "offset": 508,
+      "bytes": [
+        175,
+        85
+      ],
+      "description": "Slot1 magic 0x55AF at word 0x7E; checked by FUN_08001afc."
+    }
+  ],
+  "checksums": [
+    {
+      "name": "slot0_checksum",
+      "algorithm": "sum16_le_neg",
+      "covered_start": 0,
+      "covered_end": 256,
+      "stored_offset": 254,
+      "seed": 0,
+      "xor_out": 0
+    },
+    {
+      "name": "slot1_checksum",
+      "algorithm": "sum16_le_neg",
+      "covered_start": 256,
+      "covered_end": 512,
+      "stored_offset": 510,
+      "seed": 0,
+      "xor_out": 0
+    }
+  ],
   "fields": [
     {
-      "name": "slot_counter",
+      "name": "save_counter",
       "offset": 0,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "description": "Save sequence counter. Slot select is counter&1 and the counter is incremented after each successful write.",
+      "confidence": "confirmed",
+      "evidence": "FUN_08001bfc writes EEPROM slot (0, *buf & 1) then does *buf = *buf + 1 on success; FUN_08001b70 loads both slots and prefers slot1 when (ushort)(ctr1 - ctr0) < 0x40. Baseline: slot0=0, slot1=1. Slot0 span [0x000,0x100)."
     },
     {
-      "name": "game_progress_flags",
+      "name": "save_counter_backup",
+      "offset": 256,
+      "size": 2,
+      "type": "u16_le",
+      "description": "Save sequence counter. Slot select is counter&1 and the counter is incremented after each successful write. (redundant slot1 copy).",
+      "confidence": "confirmed",
+      "evidence": "FUN_08001bfc writes EEPROM slot (0, *buf & 1) then does *buf = *buf + 1 on success; FUN_08001b70 loads both slots and prefers slot1 when (ushort)(ctr1 - ctr0) < 0x40. Baseline: slot0=0, slot1=1. Slot1 mirror at [0x100,0x200); FUN_08001b70 verifies both slots and picks the newer counter."
+    },
+    {
+      "name": "best_record_1",
       "offset": 2,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "description": "Top-5 record table entry 1 (u16 LE; 400 in baseline, table descends 400/350/300/250/200).",
+      "confidence": "likely",
+      "evidence": "FUN_080013b0 (pack, 080013b0) copies 10 bytes from EWRAM table _DAT_080015a8 to save+0x02 via func_0x080a5874 (entry 1 at save+0x02). Slot0 span [0x000,0x100)."
     },
     {
-      "name": "player_status_payload",
+      "name": "best_record_1_backup",
+      "offset": 258,
+      "size": 2,
+      "type": "u16_le",
+      "description": "Top-5 record table entry 1 (u16 LE; 400 in baseline, table descends 400/350/300/250/200). (redundant slot1 copy).",
+      "confidence": "likely",
+      "evidence": "FUN_080013b0 (pack, 080013b0) copies 10 bytes from EWRAM table _DAT_080015a8 to save+0x02 via func_0x080a5874 (entry 1 at save+0x02). Slot1 mirror at [0x100,0x200); FUN_08001b70 verifies both slots and picks the newer counter."
+    },
+    {
+      "name": "best_record_2",
       "offset": 4,
-      "size": 16,
-      "type": "bytes"
+      "size": 2,
+      "type": "u16_le",
+      "description": "Top-5 record table entry 2 (u16 LE; 350 in baseline, table descends 400/350/300/250/200).",
+      "confidence": "likely",
+      "evidence": "FUN_080013b0 (pack, 080013b0) copies 10 bytes from EWRAM table _DAT_080015a8 to save+0x02 via func_0x080a5874 (entry 2 at save+0x04). Slot0 span [0x000,0x100)."
+    },
+    {
+      "name": "best_record_2_backup",
+      "offset": 260,
+      "size": 2,
+      "type": "u16_le",
+      "description": "Top-5 record table entry 2 (u16 LE; 350 in baseline, table descends 400/350/300/250/200). (redundant slot1 copy).",
+      "confidence": "likely",
+      "evidence": "FUN_080013b0 (pack, 080013b0) copies 10 bytes from EWRAM table _DAT_080015a8 to save+0x02 via func_0x080a5874 (entry 2 at save+0x04). Slot1 mirror at [0x100,0x200); FUN_08001b70 verifies both slots and picks the newer counter."
+    },
+    {
+      "name": "best_record_3",
+      "offset": 6,
+      "size": 2,
+      "type": "u16_le",
+      "description": "Top-5 record table entry 3 (u16 LE; 300 in baseline, table descends 400/350/300/250/200).",
+      "confidence": "likely",
+      "evidence": "FUN_080013b0 (pack, 080013b0) copies 10 bytes from EWRAM table _DAT_080015a8 to save+0x02 via func_0x080a5874 (entry 3 at save+0x06). Slot0 span [0x000,0x100)."
+    },
+    {
+      "name": "best_record_3_backup",
+      "offset": 262,
+      "size": 2,
+      "type": "u16_le",
+      "description": "Top-5 record table entry 3 (u16 LE; 300 in baseline, table descends 400/350/300/250/200). (redundant slot1 copy).",
+      "confidence": "likely",
+      "evidence": "FUN_080013b0 (pack, 080013b0) copies 10 bytes from EWRAM table _DAT_080015a8 to save+0x02 via func_0x080a5874 (entry 3 at save+0x06). Slot1 mirror at [0x100,0x200); FUN_08001b70 verifies both slots and picks the newer counter."
+    },
+    {
+      "name": "best_record_4",
+      "offset": 8,
+      "size": 2,
+      "type": "u16_le",
+      "description": "Top-5 record table entry 4 (u16 LE; 250 in baseline, table descends 400/350/300/250/200).",
+      "confidence": "likely",
+      "evidence": "FUN_080013b0 (pack, 080013b0) copies 10 bytes from EWRAM table _DAT_080015a8 to save+0x02 via func_0x080a5874 (entry 4 at save+0x08). Slot0 span [0x000,0x100)."
+    },
+    {
+      "name": "best_record_4_backup",
+      "offset": 264,
+      "size": 2,
+      "type": "u16_le",
+      "description": "Top-5 record table entry 4 (u16 LE; 250 in baseline, table descends 400/350/300/250/200). (redundant slot1 copy).",
+      "confidence": "likely",
+      "evidence": "FUN_080013b0 (pack, 080013b0) copies 10 bytes from EWRAM table _DAT_080015a8 to save+0x02 via func_0x080a5874 (entry 4 at save+0x08). Slot1 mirror at [0x100,0x200); FUN_08001b70 verifies both slots and picks the newer counter."
+    },
+    {
+      "name": "best_record_5",
+      "offset": 10,
+      "size": 2,
+      "type": "u16_le",
+      "description": "Top-5 record table entry 5 (u16 LE; 200 in baseline, table descends 400/350/300/250/200).",
+      "confidence": "likely",
+      "evidence": "FUN_080013b0 (pack, 080013b0) copies 10 bytes from EWRAM table _DAT_080015a8 to save+0x02 via func_0x080a5874 (entry 5 at save+0x0a). Slot0 span [0x000,0x100)."
+    },
+    {
+      "name": "best_record_5_backup",
+      "offset": 266,
+      "size": 2,
+      "type": "u16_le",
+      "description": "Top-5 record table entry 5 (u16 LE; 200 in baseline, table descends 400/350/300/250/200). (redundant slot1 copy).",
+      "confidence": "likely",
+      "evidence": "FUN_080013b0 (pack, 080013b0) copies 10 bytes from EWRAM table _DAT_080015a8 to save+0x02 via func_0x080a5874 (entry 5 at save+0x0a). Slot1 mirror at [0x100,0x200); FUN_08001b70 verifies both slots and picks the newer counter."
+    },
+    {
+      "name": "scalar_dword_0c",
+      "offset": 12,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Persisted u32 at save+0x0C (0 in baseline).",
+      "confidence": "guessed",
+      "evidence": "FUN_080013b0 (pack, 080013b0) stores 4 bytes from EWRAM global _DAT_0800155c to save+0x0C. Slot0 span [0x000,0x100)."
+    },
+    {
+      "name": "scalar_dword_0c_backup",
+      "offset": 268,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Persisted u32 at save+0x0C (0 in baseline). (redundant slot1 copy).",
+      "confidence": "guessed",
+      "evidence": "FUN_080013b0 (pack, 080013b0) stores 4 bytes from EWRAM global _DAT_0800155c to save+0x0C. Slot1 mirror at [0x100,0x200); FUN_08001b70 verifies both slots and picks the newer counter."
+    },
+    {
+      "name": "unlock_flags_w0",
+      "offset": 16,
+      "size": 4,
+      "type": "u32_le",
+      "description": "128-bit unlock/progress bitmask word 0 (u32 LE; 0x00050000 in baseline).",
+      "confidence": "likely",
+      "evidence": "FUN_080013b0 (pack, 080013b0) stores _DAT_08001560[0] to save+0x10 (4x u32 to save+0x10). Slot0 span [0x000,0x100)."
+    },
+    {
+      "name": "unlock_flags_w0_backup",
+      "offset": 272,
+      "size": 4,
+      "type": "u32_le",
+      "description": "128-bit unlock/progress bitmask word 0 (u32 LE; 0x00050000 in baseline). (redundant slot1 copy).",
+      "confidence": "likely",
+      "evidence": "FUN_080013b0 (pack, 080013b0) stores _DAT_08001560[0] to save+0x10 (4x u32 to save+0x10). Slot1 mirror at [0x100,0x200); FUN_08001b70 verifies both slots and picks the newer counter."
+    },
+    {
+      "name": "unlock_flags_w1",
+      "offset": 20,
+      "size": 4,
+      "type": "u32_le",
+      "description": "128-bit unlock/progress bitmask word 1 (u32 LE; 0x20108040 in baseline).",
+      "confidence": "likely",
+      "evidence": "FUN_080013b0 (pack, 080013b0) stores _DAT_08001560[1] to save+0x14 (4x u32 to save+0x10). Slot0 span [0x000,0x100)."
+    },
+    {
+      "name": "unlock_flags_w1_backup",
+      "offset": 276,
+      "size": 4,
+      "type": "u32_le",
+      "description": "128-bit unlock/progress bitmask word 1 (u32 LE; 0x20108040 in baseline). (redundant slot1 copy).",
+      "confidence": "likely",
+      "evidence": "FUN_080013b0 (pack, 080013b0) stores _DAT_08001560[1] to save+0x14 (4x u32 to save+0x10). Slot1 mirror at [0x100,0x200); FUN_08001b70 verifies both slots and picks the newer counter."
+    },
+    {
+      "name": "unlock_flags_w2",
+      "offset": 24,
+      "size": 4,
+      "type": "u32_le",
+      "description": "128-bit unlock/progress bitmask word 2 (u32 LE; 0xA0C06060 in baseline).",
+      "confidence": "likely",
+      "evidence": "FUN_080013b0 (pack, 080013b0) stores _DAT_08001560[2] to save+0x18 (4x u32 to save+0x10). Slot0 span [0x000,0x100)."
+    },
+    {
+      "name": "unlock_flags_w2_backup",
+      "offset": 280,
+      "size": 4,
+      "type": "u32_le",
+      "description": "128-bit unlock/progress bitmask word 2 (u32 LE; 0xA0C06060 in baseline). (redundant slot1 copy).",
+      "confidence": "likely",
+      "evidence": "FUN_080013b0 (pack, 080013b0) stores _DAT_08001560[2] to save+0x18 (4x u32 to save+0x10). Slot1 mirror at [0x100,0x200); FUN_08001b70 verifies both slots and picks the newer counter."
+    },
+    {
+      "name": "unlock_flags_w3",
+      "offset": 28,
+      "size": 4,
+      "type": "u32_le",
+      "description": "128-bit unlock/progress bitmask word 3 (u32 LE; 0x000000E0 in baseline).",
+      "confidence": "likely",
+      "evidence": "FUN_080013b0 (pack, 080013b0) stores _DAT_08001560[3] to save+0x1c (4x u32 to save+0x10). Slot0 span [0x000,0x100)."
+    },
+    {
+      "name": "unlock_flags_w3_backup",
+      "offset": 284,
+      "size": 4,
+      "type": "u32_le",
+      "description": "128-bit unlock/progress bitmask word 3 (u32 LE; 0x000000E0 in baseline). (redundant slot1 copy).",
+      "confidence": "likely",
+      "evidence": "FUN_080013b0 (pack, 080013b0) stores _DAT_08001560[3] to save+0x1c (4x u32 to save+0x10). Slot1 mirror at [0x100,0x200); FUN_08001b70 verifies both slots and picks the newer counter."
+    },
+    {
+      "name": "stage_record_1",
+      "offset": 32,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Stage/mode record 1 (u32 LE; 10800 in baseline, table ascends by 1800).",
+      "confidence": "likely",
+      "evidence": "FUN_080013b0 (pack, 080013b0) stores _DAT_08001590[0] to save+0x20 (5x u32 to save+0x20). Slot0 span [0x000,0x100)."
+    },
+    {
+      "name": "stage_record_1_backup",
+      "offset": 288,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Stage/mode record 1 (u32 LE; 10800 in baseline, table ascends by 1800). (redundant slot1 copy).",
+      "confidence": "likely",
+      "evidence": "FUN_080013b0 (pack, 080013b0) stores _DAT_08001590[0] to save+0x20 (5x u32 to save+0x20). Slot1 mirror at [0x100,0x200); FUN_08001b70 verifies both slots and picks the newer counter."
+    },
+    {
+      "name": "stage_record_2",
+      "offset": 36,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Stage/mode record 2 (u32 LE; 12600 in baseline, table ascends by 1800).",
+      "confidence": "likely",
+      "evidence": "FUN_080013b0 (pack, 080013b0) stores _DAT_08001590[1] to save+0x24 (5x u32 to save+0x20). Slot0 span [0x000,0x100)."
+    },
+    {
+      "name": "stage_record_2_backup",
+      "offset": 292,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Stage/mode record 2 (u32 LE; 12600 in baseline, table ascends by 1800). (redundant slot1 copy).",
+      "confidence": "likely",
+      "evidence": "FUN_080013b0 (pack, 080013b0) stores _DAT_08001590[1] to save+0x24 (5x u32 to save+0x20). Slot1 mirror at [0x100,0x200); FUN_08001b70 verifies both slots and picks the newer counter."
+    },
+    {
+      "name": "stage_record_3",
+      "offset": 40,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Stage/mode record 3 (u32 LE; 14400 in baseline, table ascends by 1800).",
+      "confidence": "likely",
+      "evidence": "FUN_080013b0 (pack, 080013b0) stores _DAT_08001590[2] to save+0x28 (5x u32 to save+0x20). Slot0 span [0x000,0x100)."
+    },
+    {
+      "name": "stage_record_3_backup",
+      "offset": 296,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Stage/mode record 3 (u32 LE; 14400 in baseline, table ascends by 1800). (redundant slot1 copy).",
+      "confidence": "likely",
+      "evidence": "FUN_080013b0 (pack, 080013b0) stores _DAT_08001590[2] to save+0x28 (5x u32 to save+0x20). Slot1 mirror at [0x100,0x200); FUN_08001b70 verifies both slots and picks the newer counter."
+    },
+    {
+      "name": "stage_record_4",
+      "offset": 44,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Stage/mode record 4 (u32 LE; 16200 in baseline, table ascends by 1800).",
+      "confidence": "likely",
+      "evidence": "FUN_080013b0 (pack, 080013b0) stores _DAT_08001590[3] to save+0x2c (5x u32 to save+0x20). Slot0 span [0x000,0x100)."
+    },
+    {
+      "name": "stage_record_4_backup",
+      "offset": 300,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Stage/mode record 4 (u32 LE; 16200 in baseline, table ascends by 1800). (redundant slot1 copy).",
+      "confidence": "likely",
+      "evidence": "FUN_080013b0 (pack, 080013b0) stores _DAT_08001590[3] to save+0x2c (5x u32 to save+0x20). Slot1 mirror at [0x100,0x200); FUN_08001b70 verifies both slots and picks the newer counter."
+    },
+    {
+      "name": "stage_record_5",
+      "offset": 48,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Stage/mode record 5 (u32 LE; 18000 in baseline, table ascends by 1800).",
+      "confidence": "likely",
+      "evidence": "FUN_080013b0 (pack, 080013b0) stores _DAT_08001590[4] to save+0x30 (5x u32 to save+0x20). Slot0 span [0x000,0x100)."
+    },
+    {
+      "name": "stage_record_5_backup",
+      "offset": 304,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Stage/mode record 5 (u32 LE; 18000 in baseline, table ascends by 1800). (redundant slot1 copy).",
+      "confidence": "likely",
+      "evidence": "FUN_080013b0 (pack, 080013b0) stores _DAT_08001590[4] to save+0x30 (5x u32 to save+0x20). Slot1 mirror at [0x100,0x200); FUN_08001b70 verifies both slots and picks the newer counter."
+    },
+    {
+      "name": "roster_packed",
+      "offset": 53,
+      "size": 32,
+      "type": "bytes",
+      "description": "32-byte packed roster block: low 7 bits copied from one EWRAM table, presence flag ORed into bit7 from a second table (all zero in baseline).",
+      "confidence": "guessed",
+      "evidence": "FUN_080013b0 (pack, 080013b0) loop (32 iterations) builds save+0x35..0x54 as RAM[iVar2] | (RAM[iVar3] << 7). Slot0 span [0x000,0x100)."
+    },
+    {
+      "name": "roster_packed_backup",
+      "offset": 309,
+      "size": 32,
+      "type": "bytes",
+      "description": "32-byte packed roster block: low 7 bits copied from one EWRAM table, presence flag ORed into bit7 from a second table (all zero in baseline). (redundant slot1 copy).",
+      "confidence": "guessed",
+      "evidence": "FUN_080013b0 (pack, 080013b0) loop (32 iterations) builds save+0x35..0x54 as RAM[iVar2] | (RAM[iVar3] << 7). Slot1 mirror at [0x100,0x200); FUN_08001b70 verifies both slots and picks the newer counter."
+    },
+    {
+      "name": "stats_block_a",
+      "offset": 85,
+      "size": 32,
+      "type": "bytes",
+      "description": "Persisted 32-byte stats block (all zero in baseline).",
+      "confidence": "guessed",
+      "evidence": "FUN_080013b0 (pack, 080013b0) copies 0x20 bytes from EWRAM global _DAT_08001588 to save+0x55 via func_0x080a5874. Slot0 span [0x000,0x100)."
+    },
+    {
+      "name": "stats_block_a_backup",
+      "offset": 341,
+      "size": 32,
+      "type": "bytes",
+      "description": "Persisted 32-byte stats block (all zero in baseline). (redundant slot1 copy).",
+      "confidence": "guessed",
+      "evidence": "FUN_080013b0 (pack, 080013b0) copies 0x20 bytes from EWRAM global _DAT_08001588 to save+0x55 via func_0x080a5874. Slot1 mirror at [0x100,0x200); FUN_08001b70 verifies both slots and picks the newer counter."
+    },
+    {
+      "name": "stats_block_b",
+      "offset": 118,
+      "size": 64,
+      "type": "bytes",
+      "description": "Persisted 64-byte stats block (all zero in baseline).",
+      "confidence": "guessed",
+      "evidence": "FUN_080013b0 (pack, 080013b0) copies 0x40 bytes from EWRAM global _DAT_0800157c to save+0x76 via func_0x080a5874. Slot0 span [0x000,0x100)."
+    },
+    {
+      "name": "stats_block_b_backup",
+      "offset": 374,
+      "size": 64,
+      "type": "bytes",
+      "description": "Persisted 64-byte stats block (all zero in baseline). (redundant slot1 copy).",
+      "confidence": "guessed",
+      "evidence": "FUN_080013b0 (pack, 080013b0) copies 0x40 bytes from EWRAM global _DAT_0800157c to save+0x76 via func_0x080a5874. Slot1 mirror at [0x100,0x200); FUN_08001b70 verifies both slots and picks the newer counter."
+    },
+    {
+      "name": "config_option_0",
+      "offset": 182,
+      "size": 1,
+      "type": "u8",
+      "description": "Persisted option/config byte 0 (2 in baseline; small-int game setting).",
+      "confidence": "likely",
+      "evidence": "FUN_080013b0 (pack, 080013b0) stores byte from EWRAM global _DAT_08001550 to save+0xb6. Slot0 span [0x000,0x100)."
+    },
+    {
+      "name": "config_option_0_backup",
+      "offset": 438,
+      "size": 1,
+      "type": "u8",
+      "description": "Persisted option/config byte 0 (2 in baseline; small-int game setting). (redundant slot1 copy).",
+      "confidence": "likely",
+      "evidence": "FUN_080013b0 (pack, 080013b0) stores byte from EWRAM global _DAT_08001550 to save+0xb6. Slot1 mirror at [0x100,0x200); FUN_08001b70 verifies both slots and picks the newer counter."
+    },
+    {
+      "name": "config_option_1",
+      "offset": 183,
+      "size": 1,
+      "type": "u8",
+      "description": "Persisted option/config byte 1 (2 in baseline; small-int game setting).",
+      "confidence": "likely",
+      "evidence": "FUN_080013b0 (pack, 080013b0) stores byte from EWRAM global _DAT_08001554 to save+0xb7. Slot0 span [0x000,0x100)."
+    },
+    {
+      "name": "config_option_1_backup",
+      "offset": 439,
+      "size": 1,
+      "type": "u8",
+      "description": "Persisted option/config byte 1 (2 in baseline; small-int game setting). (redundant slot1 copy).",
+      "confidence": "likely",
+      "evidence": "FUN_080013b0 (pack, 080013b0) stores byte from EWRAM global _DAT_08001554 to save+0xb7. Slot1 mirror at [0x100,0x200); FUN_08001b70 verifies both slots and picks the newer counter."
+    },
+    {
+      "name": "config_option_2",
+      "offset": 184,
+      "size": 1,
+      "type": "u8",
+      "description": "Persisted option/config byte 2 (1 in baseline; small-int game setting).",
+      "confidence": "likely",
+      "evidence": "FUN_080013b0 (pack, 080013b0) stores byte from EWRAM global _DAT_08001558 to save+0xb8. Slot0 span [0x000,0x100)."
+    },
+    {
+      "name": "config_option_2_backup",
+      "offset": 440,
+      "size": 1,
+      "type": "u8",
+      "description": "Persisted option/config byte 2 (1 in baseline; small-int game setting). (redundant slot1 copy).",
+      "confidence": "likely",
+      "evidence": "FUN_080013b0 (pack, 080013b0) stores byte from EWRAM global _DAT_08001558 to save+0xb8. Slot1 mirror at [0x100,0x200); FUN_08001b70 verifies both slots and picks the newer counter."
+    },
+    {
+      "name": "config_option_3",
+      "offset": 185,
+      "size": 1,
+      "type": "u8",
+      "description": "Persisted option/config byte 3 (0 in baseline; small-int game setting).",
+      "confidence": "likely",
+      "evidence": "FUN_080013b0 (pack, 080013b0) stores byte from EWRAM global _DAT_08001564 to save+0xb9. Slot0 span [0x000,0x100)."
+    },
+    {
+      "name": "config_option_3_backup",
+      "offset": 441,
+      "size": 1,
+      "type": "u8",
+      "description": "Persisted option/config byte 3 (0 in baseline; small-int game setting). (redundant slot1 copy).",
+      "confidence": "likely",
+      "evidence": "FUN_080013b0 (pack, 080013b0) stores byte from EWRAM global _DAT_08001564 to save+0xb9. Slot1 mirror at [0x100,0x200); FUN_08001b70 verifies both slots and picks the newer counter."
+    },
+    {
+      "name": "config_option_4",
+      "offset": 186,
+      "size": 1,
+      "type": "u8",
+      "description": "Persisted option/config byte 4 (1 in baseline; small-int game setting).",
+      "confidence": "likely",
+      "evidence": "FUN_080013b0 (pack, 080013b0) stores byte from EWRAM global _DAT_08001568 to save+0xba. Slot0 span [0x000,0x100)."
+    },
+    {
+      "name": "config_option_4_backup",
+      "offset": 442,
+      "size": 1,
+      "type": "u8",
+      "description": "Persisted option/config byte 4 (1 in baseline; small-int game setting). (redundant slot1 copy).",
+      "confidence": "likely",
+      "evidence": "FUN_080013b0 (pack, 080013b0) stores byte from EWRAM global _DAT_08001568 to save+0xba. Slot1 mirror at [0x100,0x200); FUN_08001b70 verifies both slots and picks the newer counter."
+    },
+    {
+      "name": "config_option_5",
+      "offset": 187,
+      "size": 1,
+      "type": "u8",
+      "description": "Persisted option/config byte 5 (0 in baseline; small-int game setting).",
+      "confidence": "likely",
+      "evidence": "FUN_080013b0 (pack, 080013b0) stores byte from EWRAM global _DAT_0800156c to save+0xbb. Slot0 span [0x000,0x100)."
+    },
+    {
+      "name": "config_option_5_backup",
+      "offset": 443,
+      "size": 1,
+      "type": "u8",
+      "description": "Persisted option/config byte 5 (0 in baseline; small-int game setting). (redundant slot1 copy).",
+      "confidence": "likely",
+      "evidence": "FUN_080013b0 (pack, 080013b0) stores byte from EWRAM global _DAT_0800156c to save+0xbb. Slot1 mirror at [0x100,0x200); FUN_08001b70 verifies both slots and picks the newer counter."
+    },
+    {
+      "name": "config_option_6",
+      "offset": 188,
+      "size": 1,
+      "type": "u8",
+      "description": "Persisted option/config byte 6 (3 in baseline; small-int game setting).",
+      "confidence": "likely",
+      "evidence": "FUN_080013b0 (pack, 080013b0) stores byte from EWRAM global _DAT_08001570 to save+0xbc. Slot0 span [0x000,0x100)."
+    },
+    {
+      "name": "config_option_6_backup",
+      "offset": 444,
+      "size": 1,
+      "type": "u8",
+      "description": "Persisted option/config byte 6 (3 in baseline; small-int game setting). (redundant slot1 copy).",
+      "confidence": "likely",
+      "evidence": "FUN_080013b0 (pack, 080013b0) stores byte from EWRAM global _DAT_08001570 to save+0xbc. Slot1 mirror at [0x100,0x200); FUN_08001b70 verifies both slots and picks the newer counter."
+    },
+    {
+      "name": "config_option_7",
+      "offset": 189,
+      "size": 1,
+      "type": "u8",
+      "description": "Persisted option/config byte 7 (0 in baseline; small-int game setting).",
+      "confidence": "likely",
+      "evidence": "FUN_080013b0 (pack, 080013b0) stores byte from EWRAM global _DAT_08001574 to save+0xbd. Slot0 span [0x000,0x100)."
+    },
+    {
+      "name": "config_option_7_backup",
+      "offset": 445,
+      "size": 1,
+      "type": "u8",
+      "description": "Persisted option/config byte 7 (0 in baseline; small-int game setting). (redundant slot1 copy).",
+      "confidence": "likely",
+      "evidence": "FUN_080013b0 (pack, 080013b0) stores byte from EWRAM global _DAT_08001574 to save+0xbd. Slot1 mirror at [0x100,0x200); FUN_08001b70 verifies both slots and picks the newer counter."
+    },
+    {
+      "name": "config_option_8",
+      "offset": 190,
+      "size": 1,
+      "type": "u8",
+      "description": "Persisted option/config byte 8 (0 in baseline; small-int game setting).",
+      "confidence": "likely",
+      "evidence": "FUN_080013b0 (pack, 080013b0) stores byte from EWRAM global _DAT_08001578 to save+0xbe. Slot0 span [0x000,0x100)."
+    },
+    {
+      "name": "config_option_8_backup",
+      "offset": 446,
+      "size": 1,
+      "type": "u8",
+      "description": "Persisted option/config byte 8 (0 in baseline; small-int game setting). (redundant slot1 copy).",
+      "confidence": "likely",
+      "evidence": "FUN_080013b0 (pack, 080013b0) stores byte from EWRAM global _DAT_08001578 to save+0xbe. Slot1 mirror at [0x100,0x200); FUN_08001b70 verifies both slots and picks the newer counter."
+    },
+    {
+      "name": "team_slot_0",
+      "offset": 191,
+      "size": 5,
+      "type": "bytes",
+      "description": "5-byte team/entry slot 0 (small-int character IDs; _DAT_0800158c in baseline).",
+      "confidence": "likely",
+      "evidence": "FUN_080013b0 (pack, 080013b0) copies 5 bytes from EWRAM global 1c02030100 to save+0xbf via func_0x080a5874. Slot0 span [0x000,0x100)."
+    },
+    {
+      "name": "team_slot_0_backup",
+      "offset": 447,
+      "size": 5,
+      "type": "bytes",
+      "description": "5-byte team/entry slot 0 (small-int character IDs; _DAT_0800158c in baseline). (redundant slot1 copy).",
+      "confidence": "likely",
+      "evidence": "FUN_080013b0 (pack, 080013b0) copies 5 bytes from EWRAM global 1c02030100 to save+0xbf via func_0x080a5874. Slot1 mirror at [0x100,0x200); FUN_08001b70 verifies both slots and picks the newer counter."
+    },
+    {
+      "name": "team_slot_1",
+      "offset": 196,
+      "size": 5,
+      "type": "bytes",
+      "description": "5-byte team/entry slot 1 (small-int character IDs; _DAT_08001594 in baseline).",
+      "confidence": "likely",
+      "evidence": "FUN_080013b0 (pack, 080013b0) copies 5 bytes from EWRAM global 0706050304 to save+0xc4 via func_0x080a5874. Slot0 span [0x000,0x100)."
+    },
+    {
+      "name": "team_slot_1_backup",
+      "offset": 452,
+      "size": 5,
+      "type": "bytes",
+      "description": "5-byte team/entry slot 1 (small-int character IDs; _DAT_08001594 in baseline). (redundant slot1 copy).",
+      "confidence": "likely",
+      "evidence": "FUN_080013b0 (pack, 080013b0) copies 5 bytes from EWRAM global 0706050304 to save+0xc4 via func_0x080a5874. Slot1 mirror at [0x100,0x200); FUN_08001b70 verifies both slots and picks the newer counter."
+    },
+    {
+      "name": "team_slot_2",
+      "offset": 201,
+      "size": 5,
+      "type": "bytes",
+      "description": "5-byte team/entry slot 2 (small-int character IDs; _DAT_08001598 in baseline).",
+      "confidence": "likely",
+      "evidence": "FUN_080013b0 (pack, 080013b0) copies 5 bytes from EWRAM global 1c02030100 to save+0xc9 via func_0x080a5874. Slot0 span [0x000,0x100)."
+    },
+    {
+      "name": "team_slot_2_backup",
+      "offset": 457,
+      "size": 5,
+      "type": "bytes",
+      "description": "5-byte team/entry slot 2 (small-int character IDs; _DAT_08001598 in baseline). (redundant slot1 copy).",
+      "confidence": "likely",
+      "evidence": "FUN_080013b0 (pack, 080013b0) copies 5 bytes from EWRAM global 1c02030100 to save+0xc9 via func_0x080a5874. Slot1 mirror at [0x100,0x200); FUN_08001b70 verifies both slots and picks the newer counter."
+    },
+    {
+      "name": "team_slot_3",
+      "offset": 206,
+      "size": 5,
+      "type": "bytes",
+      "description": "5-byte team/entry slot 3 (small-int character IDs; _DAT_0800159c in baseline).",
+      "confidence": "likely",
+      "evidence": "FUN_080013b0 (pack, 080013b0) copies 5 bytes from EWRAM global 1e19140f0a to save+0xce via func_0x080a5874. Slot0 span [0x000,0x100)."
+    },
+    {
+      "name": "team_slot_3_backup",
+      "offset": 462,
+      "size": 5,
+      "type": "bytes",
+      "description": "5-byte team/entry slot 3 (small-int character IDs; _DAT_0800159c in baseline). (redundant slot1 copy).",
+      "confidence": "likely",
+      "evidence": "FUN_080013b0 (pack, 080013b0) copies 5 bytes from EWRAM global 1e19140f0a to save+0xce via func_0x080a5874. Slot1 mirror at [0x100,0x200); FUN_08001b70 verifies both slots and picks the newer counter."
+    },
+    {
+      "name": "team_slot_4",
+      "offset": 211,
+      "size": 5,
+      "type": "bytes",
+      "description": "5-byte team/entry slot 4 (small-int character IDs; _DAT_080015a0 in baseline).",
+      "confidence": "likely",
+      "evidence": "FUN_080013b0 (pack, 080013b0) copies 5 bytes from EWRAM global 0706030504 to save+0xd3 via func_0x080a5874. Slot0 span [0x000,0x100)."
+    },
+    {
+      "name": "team_slot_4_backup",
+      "offset": 467,
+      "size": 5,
+      "type": "bytes",
+      "description": "5-byte team/entry slot 4 (small-int character IDs; _DAT_080015a0 in baseline). (redundant slot1 copy).",
+      "confidence": "likely",
+      "evidence": "FUN_080013b0 (pack, 080013b0) copies 5 bytes from EWRAM global 0706030504 to save+0xd3 via func_0x080a5874. Slot1 mirror at [0x100,0x200); FUN_08001b70 verifies both slots and picks the newer counter."
+    },
+    {
+      "name": "team_slot_5",
+      "offset": 216,
+      "size": 5,
+      "type": "bytes",
+      "description": "5-byte team/entry slot 5 (small-int character IDs; _DAT_080015a4 in baseline).",
+      "confidence": "likely",
+      "evidence": "FUN_080013b0 (pack, 080013b0) copies 5 bytes from EWRAM global 1c02030100 to save+0xd8 via func_0x080a5874. Slot0 span [0x000,0x100)."
+    },
+    {
+      "name": "team_slot_5_backup",
+      "offset": 472,
+      "size": 5,
+      "type": "bytes",
+      "description": "5-byte team/entry slot 5 (small-int character IDs; _DAT_080015a4 in baseline). (redundant slot1 copy).",
+      "confidence": "likely",
+      "evidence": "FUN_080013b0 (pack, 080013b0) copies 5 bytes from EWRAM global 1c02030100 to save+0xd8 via func_0x080a5874. Slot1 mirror at [0x100,0x200); FUN_08001b70 verifies both slots and picks the newer counter."
+    },
+    {
+      "name": "team_slot_6",
+      "offset": 221,
+      "size": 5,
+      "type": "bytes",
+      "description": "5-byte team/entry slot 6 (small-int character IDs; _DAT_080015ac in baseline).",
+      "confidence": "likely",
+      "evidence": "FUN_080013b0 (pack, 080013b0) copies 5 bytes from EWRAM global 0706030504 to save+0xdd via func_0x080a5874. Slot0 span [0x000,0x100)."
+    },
+    {
+      "name": "team_slot_6_backup",
+      "offset": 477,
+      "size": 5,
+      "type": "bytes",
+      "description": "5-byte team/entry slot 6 (small-int character IDs; _DAT_080015ac in baseline). (redundant slot1 copy).",
+      "confidence": "likely",
+      "evidence": "FUN_080013b0 (pack, 080013b0) copies 5 bytes from EWRAM global 0706030504 to save+0xdd via func_0x080a5874. Slot1 mirror at [0x100,0x200); FUN_08001b70 verifies both slots and picks the newer counter."
+    },
+    {
+      "name": "team_slot_7",
+      "offset": 226,
+      "size": 5,
+      "type": "bytes",
+      "description": "5-byte team/entry slot 7 (small-int character IDs; _DAT_080015b0 in baseline).",
+      "confidence": "likely",
+      "evidence": "FUN_080013b0 (pack, 080013b0) copies 5 bytes from EWRAM global 1c02030100 to save+0xe2 via func_0x080a5874. Slot0 span [0x000,0x100)."
+    },
+    {
+      "name": "team_slot_7_backup",
+      "offset": 482,
+      "size": 5,
+      "type": "bytes",
+      "description": "5-byte team/entry slot 7 (small-int character IDs; _DAT_080015b0 in baseline). (redundant slot1 copy).",
+      "confidence": "likely",
+      "evidence": "FUN_080013b0 (pack, 080013b0) copies 5 bytes from EWRAM global 1c02030100 to save+0xe2 via func_0x080a5874. Slot1 mirror at [0x100,0x200); FUN_08001b70 verifies both slots and picks the newer counter."
+    },
+    {
+      "name": "team_slot_8",
+      "offset": 231,
+      "size": 5,
+      "type": "bytes",
+      "description": "5-byte team/entry slot 8 (small-int character IDs; _DAT_080015b4 in baseline).",
+      "confidence": "likely",
+      "evidence": "FUN_080013b0 (pack, 080013b0) copies 5 bytes from EWRAM global 0000000000 to save+0xe7 via func_0x080a5874. Slot0 span [0x000,0x100)."
+    },
+    {
+      "name": "team_slot_8_backup",
+      "offset": 487,
+      "size": 5,
+      "type": "bytes",
+      "description": "5-byte team/entry slot 8 (small-int character IDs; _DAT_080015b4 in baseline). (redundant slot1 copy).",
+      "confidence": "likely",
+      "evidence": "FUN_080013b0 (pack, 080013b0) copies 5 bytes from EWRAM global 0000000000 to save+0xe7 via func_0x080a5874. Slot1 mirror at [0x100,0x200); FUN_08001b70 verifies both slots and picks the newer counter."
+    },
+    {
+      "name": "team_slot_9",
+      "offset": 236,
+      "size": 5,
+      "type": "bytes",
+      "description": "5-byte team/entry slot 9 (small-int character IDs; _DAT_080015b8 in baseline).",
+      "confidence": "likely",
+      "evidence": "FUN_080013b0 (pack, 080013b0) copies 5 bytes from EWRAM global 0706030504 to save+0xec via func_0x080a5874. Slot0 span [0x000,0x100)."
+    },
+    {
+      "name": "team_slot_9_backup",
+      "offset": 492,
+      "size": 5,
+      "type": "bytes",
+      "description": "5-byte team/entry slot 9 (small-int character IDs; _DAT_080015b8 in baseline). (redundant slot1 copy).",
+      "confidence": "likely",
+      "evidence": "FUN_080013b0 (pack, 080013b0) copies 5 bytes from EWRAM global 0706030504 to save+0xec via func_0x080a5874. Slot1 mirror at [0x100,0x200); FUN_08001b70 verifies both slots and picks the newer counter."
+    },
+    {
+      "name": "config_value_f1",
+      "offset": 241,
+      "size": 1,
+      "type": "u8",
+      "description": "Persisted config byte (0xFF in baseline).",
+      "confidence": "likely",
+      "evidence": "FUN_080013b0 (pack, 080013b0) stores (char)*_DAT_080015bc to save+0xF1. Slot0 span [0x000,0x100)."
+    },
+    {
+      "name": "config_value_f1_backup",
+      "offset": 497,
+      "size": 1,
+      "type": "u8",
+      "description": "Persisted config byte (0xFF in baseline). (redundant slot1 copy).",
+      "confidence": "likely",
+      "evidence": "FUN_080013b0 (pack, 080013b0) stores (char)*_DAT_080015bc to save+0xF1. Slot1 mirror at [0x100,0x200); FUN_08001b70 verifies both slots and picks the newer counter."
+    },
+    {
+      "name": "config_value_f2",
+      "offset": 242,
+      "size": 1,
+      "type": "u8",
+      "description": "Persisted config byte (0x01 in baseline).",
+      "confidence": "likely",
+      "evidence": "FUN_080013b0 (pack, 080013b0) stores byte *_DAT_0800154c to save+0xF2. Slot0 span [0x000,0x100)."
+    },
+    {
+      "name": "config_value_f2_backup",
+      "offset": 498,
+      "size": 1,
+      "type": "u8",
+      "description": "Persisted config byte (0x01 in baseline). (redundant slot1 copy).",
+      "confidence": "likely",
+      "evidence": "FUN_080013b0 (pack, 080013b0) stores byte *_DAT_0800154c to save+0xF2. Slot1 mirror at [0x100,0x200); FUN_08001b70 verifies both slots and picks the newer counter."
+    }
+  ],
+  "copy_groups": [
+    {
+      "name": "save_counter_mirrors",
+      "fields": [
+        "save_counter",
+        "save_counter_backup"
+      ]
+    },
+    {
+      "name": "best_record_1_mirrors",
+      "fields": [
+        "best_record_1",
+        "best_record_1_backup"
+      ]
+    },
+    {
+      "name": "best_record_2_mirrors",
+      "fields": [
+        "best_record_2",
+        "best_record_2_backup"
+      ]
+    },
+    {
+      "name": "best_record_3_mirrors",
+      "fields": [
+        "best_record_3",
+        "best_record_3_backup"
+      ]
+    },
+    {
+      "name": "best_record_4_mirrors",
+      "fields": [
+        "best_record_4",
+        "best_record_4_backup"
+      ]
+    },
+    {
+      "name": "best_record_5_mirrors",
+      "fields": [
+        "best_record_5",
+        "best_record_5_backup"
+      ]
+    },
+    {
+      "name": "scalar_dword_0c_mirrors",
+      "fields": [
+        "scalar_dword_0c",
+        "scalar_dword_0c_backup"
+      ]
+    },
+    {
+      "name": "unlock_flags_w0_mirrors",
+      "fields": [
+        "unlock_flags_w0",
+        "unlock_flags_w0_backup"
+      ]
+    },
+    {
+      "name": "unlock_flags_w1_mirrors",
+      "fields": [
+        "unlock_flags_w1",
+        "unlock_flags_w1_backup"
+      ]
+    },
+    {
+      "name": "unlock_flags_w2_mirrors",
+      "fields": [
+        "unlock_flags_w2",
+        "unlock_flags_w2_backup"
+      ]
+    },
+    {
+      "name": "unlock_flags_w3_mirrors",
+      "fields": [
+        "unlock_flags_w3",
+        "unlock_flags_w3_backup"
+      ]
+    },
+    {
+      "name": "stage_record_1_mirrors",
+      "fields": [
+        "stage_record_1",
+        "stage_record_1_backup"
+      ]
+    },
+    {
+      "name": "stage_record_2_mirrors",
+      "fields": [
+        "stage_record_2",
+        "stage_record_2_backup"
+      ]
+    },
+    {
+      "name": "stage_record_3_mirrors",
+      "fields": [
+        "stage_record_3",
+        "stage_record_3_backup"
+      ]
+    },
+    {
+      "name": "stage_record_4_mirrors",
+      "fields": [
+        "stage_record_4",
+        "stage_record_4_backup"
+      ]
+    },
+    {
+      "name": "stage_record_5_mirrors",
+      "fields": [
+        "stage_record_5",
+        "stage_record_5_backup"
+      ]
+    },
+    {
+      "name": "roster_packed_mirrors",
+      "fields": [
+        "roster_packed",
+        "roster_packed_backup"
+      ]
+    },
+    {
+      "name": "stats_block_a_mirrors",
+      "fields": [
+        "stats_block_a",
+        "stats_block_a_backup"
+      ]
+    },
+    {
+      "name": "stats_block_b_mirrors",
+      "fields": [
+        "stats_block_b",
+        "stats_block_b_backup"
+      ]
+    },
+    {
+      "name": "config_option_0_mirrors",
+      "fields": [
+        "config_option_0",
+        "config_option_0_backup"
+      ]
+    },
+    {
+      "name": "config_option_1_mirrors",
+      "fields": [
+        "config_option_1",
+        "config_option_1_backup"
+      ]
+    },
+    {
+      "name": "config_option_2_mirrors",
+      "fields": [
+        "config_option_2",
+        "config_option_2_backup"
+      ]
+    },
+    {
+      "name": "config_option_3_mirrors",
+      "fields": [
+        "config_option_3",
+        "config_option_3_backup"
+      ]
+    },
+    {
+      "name": "config_option_4_mirrors",
+      "fields": [
+        "config_option_4",
+        "config_option_4_backup"
+      ]
+    },
+    {
+      "name": "config_option_5_mirrors",
+      "fields": [
+        "config_option_5",
+        "config_option_5_backup"
+      ]
+    },
+    {
+      "name": "config_option_6_mirrors",
+      "fields": [
+        "config_option_6",
+        "config_option_6_backup"
+      ]
+    },
+    {
+      "name": "config_option_7_mirrors",
+      "fields": [
+        "config_option_7",
+        "config_option_7_backup"
+      ]
+    },
+    {
+      "name": "config_option_8_mirrors",
+      "fields": [
+        "config_option_8",
+        "config_option_8_backup"
+      ]
+    },
+    {
+      "name": "team_slot_0_mirrors",
+      "fields": [
+        "team_slot_0",
+        "team_slot_0_backup"
+      ]
+    },
+    {
+      "name": "team_slot_1_mirrors",
+      "fields": [
+        "team_slot_1",
+        "team_slot_1_backup"
+      ]
+    },
+    {
+      "name": "team_slot_2_mirrors",
+      "fields": [
+        "team_slot_2",
+        "team_slot_2_backup"
+      ]
+    },
+    {
+      "name": "team_slot_3_mirrors",
+      "fields": [
+        "team_slot_3",
+        "team_slot_3_backup"
+      ]
+    },
+    {
+      "name": "team_slot_4_mirrors",
+      "fields": [
+        "team_slot_4",
+        "team_slot_4_backup"
+      ]
+    },
+    {
+      "name": "team_slot_5_mirrors",
+      "fields": [
+        "team_slot_5",
+        "team_slot_5_backup"
+      ]
+    },
+    {
+      "name": "team_slot_6_mirrors",
+      "fields": [
+        "team_slot_6",
+        "team_slot_6_backup"
+      ]
+    },
+    {
+      "name": "team_slot_7_mirrors",
+      "fields": [
+        "team_slot_7",
+        "team_slot_7_backup"
+      ]
+    },
+    {
+      "name": "team_slot_8_mirrors",
+      "fields": [
+        "team_slot_8",
+        "team_slot_8_backup"
+      ]
+    },
+    {
+      "name": "team_slot_9_mirrors",
+      "fields": [
+        "team_slot_9",
+        "team_slot_9_backup"
+      ]
+    },
+    {
+      "name": "config_value_f1_mirrors",
+      "fields": [
+        "config_value_f1",
+        "config_value_f1_backup"
+      ]
+    },
+    {
+      "name": "config_value_f2_mirrors",
+      "fields": [
+        "config_value_f2",
+        "config_value_f2_backup"
+      ]
     }
   ]
 }

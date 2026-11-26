@@ -1,45 +1,155 @@
 {
-  "id": "agnj",
-  "game_code": "AGNJ",
-  "title": "Goemon - New Age Shutsudou! (Japan)",
-  "media": "eeprom8k",
-  "size_bytes": 8192,
-  "magic_signatures": [
+  "checksums": [
     {
-      "offset": 0,
-      "bytes": [
-        78,
-        32,
-        78,
-        79
-      ]
+      "algorithm": "sum32_le",
+      "covered_end": 136,
+      "covered_start": 24,
+      "name": "slot0_checksum",
+      "stored_offset": 136
+    },
+    {
+      "algorithm": "sum32_le",
+      "covered_end": 392,
+      "covered_start": 280,
+      "name": "slot1_checksum",
+      "stored_offset": 392
+    },
+    {
+      "algorithm": "sum32_le",
+      "covered_end": 648,
+      "covered_start": 536,
+      "name": "slot2_checksum",
+      "stored_offset": 648
     }
   ],
-  "checksums": [],
+  "copy_groups": [
+    {
+      "fields": [
+        "slot0_status",
+        "slot1_status",
+        "slot2_status"
+      ],
+      "name": "slot_status_mirrors"
+    },
+    {
+      "fields": [
+        "slot0_save_data",
+        "slot1_save_data",
+        "slot2_save_data"
+      ],
+      "name": "slot_data_mirrors"
+    }
+  ],
+  "eeprom_rev8": true,
   "fields": [
     {
-      "name": "magic_header",
+      "confidence": "confirmed",
+      "description": "24-byte ROM title string copied to save offset 0 at init; first 3 EEPROM blocks verified against it at boot.",
+      "evidence": "FUN_08005104 copies 0x18 ROM bytes to save offset 0x00; FUN_080050a8 calls FUN_080056f8 which verifies EEPROM blocks 0-2 via FUN_08027618; baseline holds ASCII 'GOEMON NextGeneration'.",
+      "name": "game_title",
       "offset": 0,
-      "size": 4,
+      "size": 24,
       "type": "ascii"
     },
     {
-      "name": "slot_counter",
-      "offset": 4,
+      "confidence": "likely",
+      "description": "Slot 0 init/valid marker: first u16 of the 0x70-byte slot struct, zeroed by the slot init routine.",
+      "evidence": "FUN_08005678 writes *(u16*)slot+0 = 0 for each of 3 slots at save offsets 0x18/0x118/0x218 (stride 0x100); slot base mapped by FUN_08005670 ((id&0xff)*0x20+3 blocks).",
+      "name": "slot0_status",
+      "offset": 24,
       "size": 2,
       "type": "u16_le"
     },
     {
-      "name": "game_progress_flags",
-      "offset": 6,
-      "size": 2,
-      "type": "u16_le"
-    },
-    {
-      "name": "player_status_payload",
-      "offset": 8,
-      "size": 16,
+      "confidence": "likely",
+      "description": "Slot 0 gameplay payload: remaining 0x6E bytes of the checksummed slot struct (uninitialized 0xFF in a fresh save).",
+      "evidence": "FUN_08005678 fills the 0x70-byte slot at save offset 0x18 with 0xFF; FUN_08005788 sums 0x70 bytes for the stored checksum; FUN_08005260 loads the slot via FUN_080055ac (0x100 bytes at block (id&0xff)*0x20+3).",
+      "name": "slot0_save_data",
+      "offset": 26,
+      "size": 110,
       "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Slot 1 init/valid marker, mirror of slot 0 (save offset 0x118).",
+      "evidence": "FUN_08005678 inits 3 slots at stride 0x100 from save offset 0x18 via FUN_08005104 (buffer +0x40 words per slot); FUN_08005670 maps slot 1 to EEPROM block 0x23 (byte 0x118).",
+      "name": "slot1_status",
+      "offset": 280,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Slot 1 gameplay payload, mirror of slot 0 (0x118..0x188).",
+      "evidence": "Same init/load/checksum path as slot 0: FUN_08005678, FUN_08005260 via FUN_080055ac, byte-sum FUN_08005788 over 0x70 bytes stored at 0x188.",
+      "name": "slot1_save_data",
+      "offset": 282,
+      "size": 110,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Slot 2 init/valid marker, mirror of slot 0 (save offset 0x218).",
+      "evidence": "FUN_08005678 inits 3 slots at stride 0x100 from save offset 0x18 via FUN_08005104; FUN_08005670 maps slot 2 to EEPROM block 0x43 (byte 0x218).",
+      "name": "slot2_status",
+      "offset": 536,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Slot 2 gameplay payload, mirror of slot 0 (0x218..0x288).",
+      "evidence": "Same init/load/checksum path as slot 0: FUN_08005678, FUN_08005260 via FUN_080055ac, byte-sum FUN_08005788 over 0x70 bytes stored at 0x288.",
+      "name": "slot2_save_data",
+      "offset": 538,
+      "size": 110,
+      "type": "bytes"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "ROM build timestamp string stored in the file footer (first 0x14 bytes of the footer struct).",
+      "evidence": "FUN_080056a0 copies 0x15 ROM bytes (first 0x14 kept) to footer at save offset 0x318 (buffer +0xc6 words); baseline holds 'Dec  1 2001 23:00:58'.",
+      "name": "build_date",
+      "offset": 792,
+      "size": 20,
+      "type": "ascii"
+    },
+    {
+      "confidence": "likely",
+      "constraint": {
+        "kind": "enum",
+        "labels": {
+          "0": "Empty",
+          "1": "Active"
+        },
+        "values": [
+          0,
+          1
+        ]
+      },
+      "description": "Active-file flag in the footer struct: 0 after init, must be 1 for the file to load.",
+      "evidence": "FUN_080056a0 zeroes the u16 at footer+0x14 (save offset 0x32C); FUN_08005178 (EEPROM block 99 = byte 0x318) and FUN_0801ea64 require *(short*)(buf+0x14) == 1.",
+      "name": "file_valid_flag",
+      "offset": 812,
+      "size": 2,
+      "type": "u16_le"
     }
-  ]
+  ],
+  "game_code": "AGNJ",
+  "id": "agnj",
+  "magic_signatures": [
+    {
+      "bytes": [
+        71,
+        79,
+        69,
+        77
+      ],
+      "description": "ASCII 'GOEM': first 4 bytes of the ROM title string at save offset 0",
+      "offset": 0
+    }
+  ],
+  "media": "eeprom8k",
+  "size_bytes": 8192,
+  "title": "Goemon - New Age Shutsudou! (Japan)"
 }

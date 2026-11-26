@@ -1,9 +1,546 @@
 {
-  "id": "acre",
+  "checksums": [],
+  "copy_groups": [
+    {
+      "fields": [
+        "save_magic",
+        "save_magic_mirror"
+      ],
+      "name": "magic_mirrors"
+    },
+    {
+      "fields": [
+        "puzzle_pack_progress",
+        "puzzle_pack_progress_mirror"
+      ],
+      "name": "pack_progress_mirrors"
+    },
+    {
+      "fields": [
+        "packs_unlocked",
+        "packs_unlocked_mirror"
+      ],
+      "name": "packs_unlocked_mirrors"
+    },
+    {
+      "fields": [
+        "stage_cursor_a",
+        "stage_cursor_a_mirror"
+      ],
+      "name": "cursor_a_mirrors"
+    },
+    {
+      "fields": [
+        "stage_cursor_b",
+        "stage_cursor_b_mirror"
+      ],
+      "name": "cursor_b_mirrors"
+    },
+    {
+      "fields": [
+        "slot_state_word",
+        "slot_state_word_mirror"
+      ],
+      "name": "slot_state_mirrors"
+    },
+    {
+      "fields": [
+        "header_reserved",
+        "header_reserved_mirror"
+      ],
+      "name": "header_reserved_mirrors"
+    },
+    {
+      "fields": [
+        "puzzle_clear_words",
+        "puzzle_clear_words_mirror"
+      ],
+      "name": "clear_words_mirrors"
+    },
+    {
+      "fields": [
+        "time_record_table",
+        "time_record_table_mirror"
+      ],
+      "name": "record_table_mirrors"
+    },
+    {
+      "fields": [
+        "play_state_flags",
+        "play_state_flags_mirror"
+      ],
+      "name": "play_flags_mirrors"
+    },
+    {
+      "fields": [
+        "footer_guard",
+        "footer_guard_mirror"
+      ],
+      "name": "footer_guard_mirrors"
+    },
+    {
+      "fields": [
+        "active_slot_marker",
+        "active_slot_marker_mirror"
+      ],
+      "name": "slot_marker_mirrors"
+    },
+    {
+      "fields": [
+        "crc_block_0",
+        "crc_block_0_mirror"
+      ],
+      "name": "crc_b0_mirrors"
+    },
+    {
+      "fields": [
+        "crc_block_1",
+        "crc_block_1_mirror"
+      ],
+      "name": "crc_b1_mirrors"
+    },
+    {
+      "fields": [
+        "crc_block_2",
+        "crc_block_2_mirror"
+      ],
+      "name": "crc_b2_mirrors"
+    },
+    {
+      "fields": [
+        "crc_block_3",
+        "crc_block_3_mirror"
+      ],
+      "name": "crc_b3_mirrors"
+    },
+    {
+      "fields": [
+        "crc_block_4",
+        "crc_block_4_mirror"
+      ],
+      "name": "crc_b4_mirrors"
+    },
+    {
+      "fields": [
+        "crc_block_5",
+        "crc_block_5_mirror"
+      ],
+      "name": "crc_b5_mirrors"
+    },
+    {
+      "fields": [
+        "crc_block_6",
+        "crc_block_6_mirror"
+      ],
+      "name": "crc_b6_mirrors"
+    },
+    {
+      "fields": [
+        "crc_block_7",
+        "crc_block_7_mirror"
+      ],
+      "name": "crc_b7_mirrors"
+    },
+    {
+      "fields": [
+        "crc_table_self",
+        "crc_table_self_mirror"
+      ],
+      "name": "crc_self_mirrors"
+    }
+  ],
+  "fields": [
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "allowed": "Waka",
+        "kind": "ascii-charset",
+        "max_len": 4
+      },
+      "description": "Save magic 'Waka' at start of each 32KB flash bank. FUN_0801eba4 rejects the bank and writes defaults when this word mismatches.",
+      "evidence": "FUN_0801eba4 reads a 0x8000-byte bank via FUN_0802615c(0,0,buf,0x8000) then checks *piVar1 != _DAT_0801ede0; baseline has 0x57 0x61 0x6B 0x61 at file offsets 0 and 0x8000.",
+      "name": "save_magic",
+      "offset": 0,
+      "size": 4,
+      "type": "ascii"
+    },
+    {
+      "confidence": "likely",
+      "description": "First gameplay progress byte of the save payload; default-initialized to 0 by FUN_0801eba4.",
+      "evidence": "FUN_0801eba4 default-init sequence (*_DAT_0801ede4 = 0, then 1, 2, 2) matches baseline payload bytes 00 01 02 02 at save offsets 0xD14-0xD17; payload base 0xD14 verified non-blank in baseline.",
+      "name": "puzzle_pack_progress",
+      "offset": 3348,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Second progress byte (packs/unlocks count); default-initialized to 1 by FUN_0801eba4.",
+      "evidence": "FUN_0801eba4 default-init stores 1 as the second header value (*_DAT_0801ede8 = 1); baseline byte at save offset 0xD15 is 0x01.",
+      "name": "packs_unlocked",
+      "offset": 3349,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Stage cursor component A; default-initialized to 2 by FUN_0801eba4.",
+      "evidence": "FUN_0801eba4 default-init stores 2 as the third header value (*_DAT_0801edec = 2); baseline byte at save offset 0xD16 is 0x02.",
+      "name": "stage_cursor_a",
+      "offset": 3350,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Stage cursor component B; default-initialized to 2 by FUN_0801eba4.",
+      "evidence": "FUN_0801eba4 default-init stores 2 as the fourth header value (*_DAT_0801edf0 = 2); baseline byte at save offset 0xD17 is 0x02.",
+      "name": "stage_cursor_b",
+      "offset": 3351,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "32-bit slot state word (low bytes reserved-zero, high byte set to 1 by defaults); baseline 0x01000000 LE.",
+      "evidence": "FUN_0801eba4 default-init writes 0,0,0,1 across the next four header bytes (*_DAT_0801edf4.._DAT_0801ee00); baseline bytes at save offsets 0xD18-0xD1B are 00 00 00 01.",
+      "name": "slot_state_word",
+      "offset": 3352,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Reserved header tail; all zeros in baseline (fresh save).",
+      "evidence": "FUN_0801eba4 default-init zeroes the remaining header words (*_DAT_0801ee04, *_DAT_0801ee08, _DAT_0801ee0c region); baseline bytes at save offsets 0xD1C-0xD27 are all 0x00.",
+      "name": "header_reserved",
+      "offset": 3356,
+      "size": 12,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Five u32 stage/puzzle clear words copied between flash image and RAM; all zero (nothing cleared) in baseline.",
+      "evidence": "FUN_0801eba4 copies 5 words (loop uVar14 < 5) from flash image to RAM and FUN_0801eec4 gathers them back; baseline bytes at save offsets 0xD28-0xD3B are all 0x00.",
+      "name": "puzzle_clear_words",
+      "offset": 3368,
+      "size": 20,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Fifty u16 score/time record entries copied between flash image and RAM; all zero in baseline.",
+      "evidence": "FUN_0801eba4 copies 0x32 u16 entries (loop uVar14 < 0x32) and FUN_0801eec4 gathers them back; baseline bytes at save offsets 0xD3C-0xD9F are all 0x00.",
+      "name": "time_record_table",
+      "offset": 3388,
+      "size": 100,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "0x139 state/flag bytes (per-stage unlock and play flags) copied between flash image and RAM; all zero in baseline.",
+      "evidence": "FUN_0801eba4 copies 0x139 bytes (loop uVar14 < 0x139) and FUN_0801eec4 gathers them back; baseline bytes at save offsets 0xDA0-0xED8 are all 0x00.",
+      "name": "play_state_flags",
+      "offset": 3488,
+      "size": 313,
+      "type": "bytes"
+    },
+    {
+      "confidence": "guessed",
+      "description": "Trailing guard byte 0xFF just before the slot marker; possibly an erased-flash default or all-set flag nibble.",
+      "evidence": "Baseline byte at save offset 0xED9 is 0xFF inside an otherwise zero payload written by the FUN_0801eba4/FUN_0801eec4 save path; no decomp store identified, so kept as a guard byte.",
+      "name": "footer_guard",
+      "offset": 3801,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Active-slot marker byte; default-initialized to 4 by FUN_0801eba4.",
+      "evidence": "FUN_0801eba4 default-init stores *puVar3 = 4 for the trailing slot marker; baseline byte at save offset 0xEDA is 0x04.",
+      "name": "active_slot_marker",
+      "offset": 3802,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Stored CRC-32 of bank block 0 (bytes 0x0000-0x0FFF of the bank) computed with the 36-byte table at 0xFDC zeroed. Baseline verified.",
+      "evidence": "FUN_0801ea90 accumulates CRC-32 via the FUN_0801ea64 bit step; FUN_0801eec4 builds one CRC per 0x1000 block and FUN_0801eb20 verifies them. Python CRC-32-IEEE of bank bytes 0x0000-0x0FFF with 0xFDC-0xFFF zeroed equals the stored word.",
+      "name": "crc_block_0",
+      "offset": 4060,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Stored CRC-32 of bank block 1 (all-erased 0xFF fill in baseline). Baseline verified.",
+      "evidence": "FUN_0801ea90/FUN_0801ea64 CRC-32 path, one CRC per 0x1000 block built by FUN_0801eec4 and verified by FUN_0801eb20. Python CRC-32-IEEE of the block equals the stored word.",
+      "name": "crc_block_1",
+      "offset": 4064,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Stored CRC-32 of bank block 2 (all-erased 0xFF fill in baseline). Baseline verified.",
+      "evidence": "FUN_0801ea90/FUN_0801ea64 CRC-32 path, one CRC per 0x1000 block built by FUN_0801eec4 and verified by FUN_0801eb20. Python CRC-32-IEEE of the block equals the stored word.",
+      "name": "crc_block_2",
+      "offset": 4068,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Stored CRC-32 of bank block 3 (all-erased 0xFF fill in baseline). Baseline verified.",
+      "evidence": "FUN_0801ea90/FUN_0801ea64 CRC-32 path, one CRC per 0x1000 block built by FUN_0801eec4 and verified by FUN_0801eb20. Python CRC-32-IEEE of the block equals the stored word.",
+      "name": "crc_block_3",
+      "offset": 4072,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Stored CRC-32 of bank block 4 (all-erased 0xFF fill in baseline). Baseline verified.",
+      "evidence": "FUN_0801ea90/FUN_0801ea64 CRC-32 path, one CRC per 0x1000 block built by FUN_0801eec4 and verified by FUN_0801eb20. Python CRC-32-IEEE of the block equals the stored word.",
+      "name": "crc_block_4",
+      "offset": 4076,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Stored CRC-32 of bank block 5 (all-erased 0xFF fill in baseline). Baseline verified.",
+      "evidence": "FUN_0801ea90/FUN_0801ea64 CRC-32 path, one CRC per 0x1000 block built by FUN_0801eec4 and verified by FUN_0801eb20. Python CRC-32-IEEE of the block equals the stored word.",
+      "name": "crc_block_5",
+      "offset": 4080,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Stored CRC-32 of bank block 6 (all-erased 0xFF fill in baseline). Baseline verified.",
+      "evidence": "FUN_0801ea90/FUN_0801ea64 CRC-32 path, one CRC per 0x1000 block built by FUN_0801eec4 and verified by FUN_0801eb20. Python CRC-32-IEEE of the block equals the stored word.",
+      "name": "crc_block_6",
+      "offset": 4084,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Stored CRC-32 of bank block 7 (all-erased 0xFF fill in baseline). Baseline verified.",
+      "evidence": "FUN_0801ea90/FUN_0801ea64 CRC-32 path, one CRC per 0x1000 block built by FUN_0801eec4 and verified by FUN_0801eb20. Python CRC-32-IEEE of the block equals the stored word.",
+      "name": "crc_block_7",
+      "offset": 4088,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Stored CRC-32 of the eight block-CRC words themselves (table self-check). Baseline verified.",
+      "evidence": "FUN_0801eec4 stores FUN_0801ea90(table, 0x20) after the eight block CRCs and FUN_0801eb20 verifies the 0x20-byte table first. Python CRC-32-IEEE of the eight words equals the stored word.",
+      "name": "crc_table_self",
+      "offset": 4092,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "allowed": "Waka",
+        "kind": "ascii-charset",
+        "max_len": 4
+      },
+      "description": "Mirror of save_magic in the redundant 32KB bank at 0x8000.",
+      "evidence": "FUN_0801eba4 falls back to FUN_0802615c(8,0,buf,0x8000) when the primary bank fails FUN_0801eb20; baseline bytes at 0x8000 are 0x57 0x61 0x6B 0x61.",
+      "name": "save_magic_mirror",
+      "offset": 32768,
+      "size": 4,
+      "type": "ascii"
+    },
+    {
+      "confidence": "likely",
+      "description": "Mirror of puzzle_pack_progress in the redundant bank.",
+      "evidence": "FUN_0801eba4 mirror-bank load path via FUN_0802615c(8,...); baseline byte at 0x8D14 equals bank 0.",
+      "name": "puzzle_pack_progress_mirror",
+      "offset": 36116,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Mirror of packs_unlocked in the redundant bank.",
+      "evidence": "FUN_0801eba4 mirror-bank load path via FUN_0802615c(8,...); baseline byte at 0x8D15 equals bank 0.",
+      "name": "packs_unlocked_mirror",
+      "offset": 36117,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Mirror of stage_cursor_a in the redundant bank.",
+      "evidence": "FUN_0801eba4 mirror-bank load path via FUN_0802615c(8,...); baseline byte at 0x8D16 equals bank 0.",
+      "name": "stage_cursor_a_mirror",
+      "offset": 36118,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Mirror of stage_cursor_b in the redundant bank.",
+      "evidence": "FUN_0801eba4 mirror-bank load path via FUN_0802615c(8,...); baseline byte at 0x8D17 equals bank 0.",
+      "name": "stage_cursor_b_mirror",
+      "offset": 36119,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Mirror of slot_state_word in the redundant bank.",
+      "evidence": "FUN_0801eba4 mirror-bank load path via FUN_0802615c(8,...); baseline word at 0x8D18 equals bank 0.",
+      "name": "slot_state_word_mirror",
+      "offset": 36120,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Mirror of header_reserved in the redundant bank.",
+      "evidence": "FUN_0801eba4 mirror-bank load path via FUN_0802615c(8,...); baseline bytes at 0x8D1C-0x8D27 equal bank 0.",
+      "name": "header_reserved_mirror",
+      "offset": 36124,
+      "size": 12,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Mirror of puzzle_clear_words in the redundant bank.",
+      "evidence": "FUN_0801eba4 mirror-bank load path via FUN_0802615c(8,...); baseline bytes at 0x8D28-0x8D3B equal bank 0.",
+      "name": "puzzle_clear_words_mirror",
+      "offset": 36136,
+      "size": 20,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Mirror of time_record_table in the redundant bank.",
+      "evidence": "FUN_0801eba4 mirror-bank load path via FUN_0802615c(8,...); baseline bytes at 0x8D3C-0x8D9F equal bank 0.",
+      "name": "time_record_table_mirror",
+      "offset": 36156,
+      "size": 100,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Mirror of play_state_flags in the redundant bank.",
+      "evidence": "FUN_0801eba4 mirror-bank load path via FUN_0802615c(8,...); baseline bytes at 0x8DA0-0x8ED8 equal bank 0.",
+      "name": "play_state_flags_mirror",
+      "offset": 36256,
+      "size": 313,
+      "type": "bytes"
+    },
+    {
+      "confidence": "guessed",
+      "description": "Mirror of footer_guard in the redundant bank.",
+      "evidence": "FUN_0801eba4 mirror-bank load path via FUN_0802615c(8,...); baseline byte at 0x8ED9 equals bank 0 (0xFF).",
+      "name": "footer_guard_mirror",
+      "offset": 36569,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Mirror of active_slot_marker in the redundant bank.",
+      "evidence": "FUN_0801eba4 mirror-bank load path via FUN_0802615c(8,...); baseline byte at 0x8EDA equals bank 0 (0x04).",
+      "name": "active_slot_marker_mirror",
+      "offset": 36570,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Mirror of crc_block_0 in the redundant bank.",
+      "evidence": "FUN_0801eec4/FUN_0801eb20 CRC-32 path applied per bank; mirror-bank table word verified by Python CRC-32-IEEE.",
+      "name": "crc_block_0_mirror",
+      "offset": 36828,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Mirror of crc_block_1 in the redundant bank.",
+      "evidence": "FUN_0801eec4/FUN_0801eb20 CRC-32 path applied per bank; mirror-bank table word verified by Python CRC-32-IEEE.",
+      "name": "crc_block_1_mirror",
+      "offset": 36832,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Mirror of crc_block_2 in the redundant bank.",
+      "evidence": "FUN_0801eec4/FUN_0801eb20 CRC-32 path applied per bank; mirror-bank table word verified by Python CRC-32-IEEE.",
+      "name": "crc_block_2_mirror",
+      "offset": 36836,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Mirror of crc_block_3 in the redundant bank.",
+      "evidence": "FUN_0801eec4/FUN_0801eb20 CRC-32 path applied per bank; mirror-bank table word verified by Python CRC-32-IEEE.",
+      "name": "crc_block_3_mirror",
+      "offset": 36840,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Mirror of crc_block_4 in the redundant bank.",
+      "evidence": "FUN_0801eec4/FUN_0801eb20 CRC-32 path applied per bank; mirror-bank table word verified by Python CRC-32-IEEE.",
+      "name": "crc_block_4_mirror",
+      "offset": 36844,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Mirror of crc_block_5 in the redundant bank.",
+      "evidence": "FUN_0801eec4/FUN_0801eb20 CRC-32 path applied per bank; mirror-bank table word verified by Python CRC-32-IEEE.",
+      "name": "crc_block_5_mirror",
+      "offset": 36848,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Mirror of crc_block_6 in the redundant bank.",
+      "evidence": "FUN_0801eec4/FUN_0801eb20 CRC-32 path applied per bank; mirror-bank table word verified by Python CRC-32-IEEE.",
+      "name": "crc_block_6_mirror",
+      "offset": 36852,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Mirror of crc_block_7 in the redundant bank.",
+      "evidence": "FUN_0801eec4/FUN_0801eb20 CRC-32 path applied per bank; mirror-bank table word verified by Python CRC-32-IEEE.",
+      "name": "crc_block_7_mirror",
+      "offset": 36856,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Mirror of crc_table_self in the redundant bank.",
+      "evidence": "FUN_0801eec4/FUN_0801eb20 CRC-32 path applied per bank; mirror-bank table word verified by Python CRC-32-IEEE.",
+      "name": "crc_table_self_mirror",
+      "offset": 36860,
+      "size": 4,
+      "type": "u32_le"
+    }
+  ],
   "game_code": "ACRE",
-  "title": "ChuChu Rocket! (USA) (En,Ja,Fr,De,Es)",
-  "media": "flash512",
-  "size_bytes": 65536,
+  "id": "acre",
   "magic_signatures": [
     {
       "offset": 0,
@@ -12,34 +549,21 @@
         97,
         107,
         97
-      ]
+      ],
+      "description": "ASCII 'Waka' save magic at start of primary bank"
+    },
+    {
+      "bytes": [
+        87,
+        97,
+        107,
+        97
+      ],
+      "description": "ASCII 'Waka' save magic at start of redundant bank",
+      "offset": 32768
     }
   ],
-  "checksums": [],
-  "fields": [
-    {
-      "name": "magic_header",
-      "offset": 0,
-      "size": 4,
-      "type": "ascii"
-    },
-    {
-      "name": "slot_counter",
-      "offset": 4,
-      "size": 2,
-      "type": "u16_le"
-    },
-    {
-      "name": "game_progress_flags",
-      "offset": 6,
-      "size": 2,
-      "type": "u16_le"
-    },
-    {
-      "name": "player_status_payload",
-      "offset": 8,
-      "size": 16,
-      "type": "bytes"
-    }
-  ]
+  "media": "flash512",
+  "size_bytes": 65536,
+  "title": "ChuChu Rocket! (USA) (En,Ja,Fr,De,Es)"
 }

@@ -1,45 +1,510 @@
 {
-  "id": "bzme",
-  "game_code": "BZME",
-  "title": "Legend of Zelda, The - The Minish Cap (USA)",
-  "media": "eeprom8k",
-  "size_bytes": 8192,
-  "magic_signatures": [
+  "checksums": [],
+  "copy_groups": [
     {
-      "offset": 0,
-      "bytes": [
-        65,
-        68,
-        76,
-        69
-      ]
+      "fields": [
+        "header_title",
+        "header_title_mirror"
+      ],
+      "name": "header_title_mirrors"
+    },
+    {
+      "fields": [
+        "file_name",
+        "file_name_mirror"
+      ],
+      "name": "file_name_mirrors"
+    },
+    {
+      "fields": [
+        "checksum_sum",
+        "checksum_sum_mirror"
+      ],
+      "name": "checksum_sum_mirrors"
+    },
+    {
+      "fields": [
+        "checksum_neg",
+        "checksum_neg_mirror"
+      ],
+      "name": "checksum_neg_mirrors"
+    },
+    {
+      "fields": [
+        "data_magic",
+        "data_magic_mirror"
+      ],
+      "name": "data_magic_mirrors"
+    },
+    {
+      "fields": [
+        "init_marker_0",
+        "init_marker_0_mirror"
+      ],
+      "name": "init_marker_0_mirrors"
+    },
+    {
+      "fields": [
+        "init_marker_1",
+        "init_marker_1_mirror"
+      ],
+      "name": "init_marker_1_mirrors"
+    },
+    {
+      "fields": [
+        "init_marker_2",
+        "init_marker_2_mirror"
+      ],
+      "name": "init_marker_2_mirrors"
+    },
+    {
+      "fields": [
+        "init_marker_3",
+        "init_marker_3_mirror"
+      ],
+      "name": "init_marker_3_mirrors"
+    },
+    {
+      "fields": [
+        "footer_magic",
+        "footer_magic_mirror"
+      ],
+      "name": "footer_magic_mirrors"
+    },
+    {
+      "fields": [
+        "active_file_index",
+        "active_file_index_mirror"
+      ],
+      "name": "active_file_index_mirrors"
+    },
+    {
+      "fields": [
+        "option_byte_1",
+        "option_byte_1_mirror"
+      ],
+      "name": "option_byte_1_mirrors"
+    },
+    {
+      "fields": [
+        "option_byte_2",
+        "option_byte_2_mirror"
+      ],
+      "name": "option_byte_2_mirrors"
+    },
+    {
+      "fields": [
+        "option_byte_3",
+        "option_byte_3_mirror"
+      ],
+      "name": "option_byte_3_mirrors"
+    },
+    {
+      "fields": [
+        "player_name",
+        "player_name_mirror"
+      ],
+      "name": "player_name_mirrors"
     }
   ],
-  "checksums": [],
+  "eeprom_rev8": true,
   "fields": [
     {
-      "name": "magic_header",
+      "confidence": "confirmed",
+      "constraint": {
+        "kind": "ascii-charset",
+        "allowed": "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789: ",
+        "max_len": 24
+      },
+      "description": "Fixed game header string identifying the title; identical in both EEPROM copies.",
+      "evidence": "Baseline rev8-logical bytes 0x00-0x17 read 'AGBZELDA:THE MINISH CAP:'; EEPROM driver chain FUN_080b18dc/FUN_080b15e8/FUN_080b16ac via slot writer FUN_0807cf88 persists the whole buffer to both copies (save offsets 0x0000 and 0x1000).",
+      "name": "header_title",
       "offset": 0,
+      "size": 24,
+      "type": "ascii"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "kind": "ascii-charset",
+        "allowed": "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 ",
+        "max_len": 8
+      },
+      "description": "Current file label shown on the file-select screen (NUL-padded).",
+      "evidence": "Baseline rev8-logical bytes 0x18-0x1F read 'ZELDA 5\\u0000'; stored inside the buffer written by FUN_0807cf88 and loaded back by FUN_0807d008 into the EWRAM save buffer at 0x02000000 (cf. file-select slot copy in FUN_080503e4/FUN_0805041c).",
+      "name": "file_name",
+      "offset": 24,
+      "size": 8,
+      "type": "ascii"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Primary half of the stored checksum pair; custom algorithm (not in Schema v2 list) so kept as a field, see SPEC.",
+      "evidence": "FUN_0807cf88 computes sStack_1c = FUN_0807d1a4(seed,4) + FUN_0807d1a4(buffer,size) and stores it with FUN_0807d184; baseline bytes 0x20-0x21 hold 0xe591. FUN_0807d128 validates the pair on load.",
+      "name": "checksum_sum",
+      "offset": 32,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Negated half of the checksum pair; verifies as (sum + neg) & 0xffff == 0 against baseline.",
+      "evidence": "FUN_0807cf88 stores sStack_1a = -sStack_1c beside the sum via FUN_0807d184; baseline bytes 0x22-0x23 hold 0x1a6f and 0xe591 + 0x1a6f == 0x10000. Validated on load by FUN_0807d128.",
+      "name": "checksum_neg",
+      "offset": 34,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "kind": "ascii-charset",
+        "allowed": "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+        "max_len": 4
+      },
+      "description": "Data-section magic guarding the file payload; checked when the slot is verified.",
+      "evidence": "Baseline rev8-logical bytes 0x24-0x27 read '3ZCM' in both copies; slot verify path FUN_0807ce90 -> FUN_0807d24c -> FUN_080b180c compares stored words, and FUN_0807d128 gates load on the magic/sum check.",
+      "name": "data_magic",
+      "offset": 36,
       "size": 4,
       "type": "ascii"
     },
     {
-      "name": "slot_counter",
-      "offset": 4,
+      "confidence": "likely",
+      "constraint": {
+        "kind": "ascii-charset",
+        "allowed": "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+        "max_len": 4
+      },
+      "description": "Default/erased per-file name marker written by the save-init path.",
+      "evidence": "Baseline rev8-logical bytes at save offset 0x34 read 'INIT'; the init path FUN_0807ce90 -> FUN_0807cf68 writes default records via FUN_0807d184/FUN_0807d20c, and the same marker repeats at +0x10 strides (0x44/0x54/0x64).",
+      "name": "init_marker_0",
+      "offset": 52,
+      "size": 4,
+      "type": "ascii"
+    },
+    {
+      "confidence": "likely",
+      "constraint": {
+        "kind": "ascii-charset",
+        "allowed": "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+        "max_len": 4
+      },
+      "description": "Default/erased per-file name marker written by the save-init path.",
+      "evidence": "Baseline rev8-logical bytes at save offset 0x44 read 'INIT'; see init path FUN_0807ce90 -> FUN_0807cf68 via FUN_0807d184/FUN_0807d20c (mirrors init_marker_0 at +0x10 stride).",
+      "name": "init_marker_1",
+      "offset": 68,
+      "size": 4,
+      "type": "ascii"
+    },
+    {
+      "confidence": "likely",
+      "constraint": {
+        "kind": "ascii-charset",
+        "allowed": "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+        "max_len": 4
+      },
+      "description": "Default/erased per-file name marker written by the save-init path.",
+      "evidence": "Baseline rev8-logical bytes at save offset 0x54 read 'INIT'; see init path FUN_0807ce90 -> FUN_0807cf68 via FUN_0807d184/FUN_0807d20c (mirrors init_marker_0 at +0x20 stride).",
+      "name": "init_marker_2",
+      "offset": 84,
+      "size": 4,
+      "type": "ascii"
+    },
+    {
+      "confidence": "likely",
+      "constraint": {
+        "kind": "ascii-charset",
+        "allowed": "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+        "max_len": 4
+      },
+      "description": "Default/erased per-file name marker written by the save-init path.",
+      "evidence": "Baseline rev8-logical bytes at save offset 0x64 read 'INIT'; see init path FUN_0807ce90 -> FUN_0807cf68 via FUN_0807d184/FUN_0807d20c (mirrors init_marker_0 at +0x30 stride).",
+      "name": "init_marker_3",
+      "offset": 100,
+      "size": 4,
+      "type": "ascii"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "kind": "ascii-charset",
+        "allowed": "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+        "max_len": 4
+      },
+      "description": "Footer magic guarding the config/name trailer; identical in both copies.",
+      "evidence": "Baseline rev8-logical bytes 0x70-0x73 read '3ZCM' in both copies; persisted by the slot writer FUN_0807cf88 through FUN_0807d20c/FUN_080b18dc and verified by FUN_0807ce90 -> FUN_0807d24c.",
+      "name": "footer_magic",
+      "offset": 112,
+      "size": 4,
+      "type": "ascii"
+    },
+    {
+      "confidence": "likely",
+      "description": "Zero-based index of the active file (RAM 0x02000004 holds 0-2 per FUN_0805041c); mutable config scalar for live testing.",
+      "evidence": "Baseline rev8-logical byte at save offset 0x74 is 0x00; gameplay file select FUN_0805041c gates param_1 < 3 and stores it to EWRAM uRam02000004, and the buffer is persisted by FUN_0807cf88 / restored by FUN_0807d008.",
+      "name": "active_file_index",
+      "offset": 116,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Config/option byte in the footer trailer; mutable scalar for live testing.",
+      "evidence": "Baseline rev8-logical byte at save offset 0x75 is 0x01; per-file option bytes live in the EWRAM save struct copied by FUN_080503e4 (uRam02000005/uRam02000006) and the whole buffer round-trips through FUN_0807cf88 (write) and FUN_0807d008 (load).",
+      "name": "option_byte_1",
+      "offset": 117,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Config/option byte in the footer trailer; mutable scalar for live testing.",
+      "evidence": "Baseline rev8-logical byte at save offset 0x76 is 0x01; see option-byte evidence for option_byte_1 (FUN_080503e4 RAM struct bytes, FUN_0807cf88 write path, FUN_0807d008 load path).",
+      "name": "option_byte_2",
+      "offset": 118,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Config/option byte in the footer trailer; mutable scalar for live testing.",
+      "evidence": "Baseline rev8-logical byte at save offset 0x77 is 0x01; see option-byte evidence for option_byte_1 (FUN_080503e4 RAM struct bytes, FUN_0807cf88 write path, FUN_0807d008 load path).",
+      "name": "option_byte_3",
+      "offset": 119,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "kind": "ascii-charset",
+        "allowed": "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz",
+        "max_len": 8
+      },
+      "description": "Player name (NUL-padded) shown in-game and on the file screen.",
+      "evidence": "Baseline rev8-logical bytes 0x78-0x7F read 'LINK\\u0000\\u0000\\u0000\\u0000' in both copies; the trailer is part of the buffer written by FUN_0807cf88 via FUN_0807d20c/FUN_080b18dc and read back by FUN_0807d008.",
+      "name": "player_name",
+      "offset": 120,
+      "size": 8,
+      "type": "ascii"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "kind": "ascii-charset",
+        "allowed": "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789: ",
+        "max_len": 24
+      },
+      "description": "Mirror of header_title in the redundant EEPROM copy at 0x1000.",
+      "evidence": "Redundant copy written by FUN_0807cf88 (second slot address puVar2[4]) via FUN_0807d20c/FUN_080b18dc; baseline rev8-logical bytes 0x1000-0x1017 match copy A exactly. Verified on boot by FUN_0807ce90.",
+      "name": "header_title_mirror",
+      "offset": 4096,
+      "size": 24,
+      "type": "ascii"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "kind": "ascii-charset",
+        "allowed": "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 ",
+        "max_len": 8
+      },
+      "description": "Mirror of file_name in the redundant EEPROM copy at 0x1000.",
+      "evidence": "Redundant copy written by FUN_0807cf88 (second slot address puVar2[4]); baseline rev8-logical bytes 0x1018-0x101F match copy A. Verified on boot by FUN_0807ce90.",
+      "name": "file_name_mirror",
+      "offset": 4120,
+      "size": 8,
+      "type": "ascii"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Mirror of checksum_sum in the redundant copy.",
+      "evidence": "Written by FUN_0807cf88 -> FUN_0807d184 to the second slot address; baseline rev8-logical bytes 0x1020-0x1021 hold 0xe591, matching copy A. See FUN_0807d1a4/FUN_0807d128.",
+      "name": "checksum_sum_mirror",
+      "offset": 4128,
       "size": 2,
       "type": "u16_le"
     },
     {
-      "name": "game_progress_flags",
-      "offset": 6,
+      "confidence": "confirmed",
+      "description": "Mirror of checksum_neg in the redundant copy.",
+      "evidence": "Written by FUN_0807cf88 -> FUN_0807d184 to the second slot address; baseline rev8-logical bytes 0x1022-0x1023 hold 0x1a6f, matching copy A. See FUN_0807d128.",
+      "name": "checksum_neg_mirror",
+      "offset": 4130,
       "size": 2,
       "type": "u16_le"
     },
     {
-      "name": "player_status_payload",
-      "offset": 8,
-      "size": 16,
-      "type": "bytes"
+      "confidence": "confirmed",
+      "constraint": {
+        "kind": "ascii-charset",
+        "allowed": "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+        "max_len": 4
+      },
+      "description": "Mirror of data_magic in the redundant copy.",
+      "evidence": "Baseline rev8-logical bytes 0x1024-0x1027 read '3ZCM', matching copy A; written by FUN_0807cf88 via FUN_0807d20c and verified by FUN_0807ce90 -> FUN_0807d24c.",
+      "name": "data_magic_mirror",
+      "offset": 4132,
+      "size": 4,
+      "type": "ascii"
+    },
+    {
+      "confidence": "likely",
+      "constraint": {
+        "kind": "ascii-charset",
+        "allowed": "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+        "max_len": 4
+      },
+      "description": "Mirror of init_marker_0 in the redundant copy.",
+      "evidence": "Baseline rev8-logical bytes at 0x1034 read 'INIT', matching copy A; written by the FUN_0807ce90 -> FUN_0807cf68 init path to both slot addresses.",
+      "name": "init_marker_0_mirror",
+      "offset": 4148,
+      "size": 4,
+      "type": "ascii"
+    },
+    {
+      "confidence": "likely",
+      "constraint": {
+        "kind": "ascii-charset",
+        "allowed": "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+        "max_len": 4
+      },
+      "description": "Mirror of init_marker_1 in the redundant copy.",
+      "evidence": "Baseline rev8-logical bytes at 0x1044 read 'INIT', matching copy A; see init path FUN_0807ce90 -> FUN_0807cf68.",
+      "name": "init_marker_1_mirror",
+      "offset": 4164,
+      "size": 4,
+      "type": "ascii"
+    },
+    {
+      "confidence": "likely",
+      "constraint": {
+        "kind": "ascii-charset",
+        "allowed": "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+        "max_len": 4
+      },
+      "description": "Mirror of init_marker_2 in the redundant copy.",
+      "evidence": "Baseline rev8-logical bytes at 0x1054 read 'INIT', matching copy A; see init path FUN_0807ce90 -> FUN_0807cf68.",
+      "name": "init_marker_2_mirror",
+      "offset": 4180,
+      "size": 4,
+      "type": "ascii"
+    },
+    {
+      "confidence": "likely",
+      "constraint": {
+        "kind": "ascii-charset",
+        "allowed": "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+        "max_len": 4
+      },
+      "description": "Mirror of init_marker_3 in the redundant copy.",
+      "evidence": "Baseline rev8-logical bytes at 0x1064 read 'INIT', matching copy A; see init path FUN_0807ce90 -> FUN_0807cf68.",
+      "name": "init_marker_3_mirror",
+      "offset": 4196,
+      "size": 4,
+      "type": "ascii"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "kind": "ascii-charset",
+        "allowed": "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+        "max_len": 4
+      },
+      "description": "Mirror of footer_magic in the redundant copy.",
+      "evidence": "Baseline rev8-logical bytes 0x1070-0x1073 read '3ZCM', matching copy A; written by FUN_0807cf88 and verified by FUN_0807ce90 -> FUN_0807d24c.",
+      "name": "footer_magic_mirror",
+      "offset": 4208,
+      "size": 4,
+      "type": "ascii"
+    },
+    {
+      "confidence": "likely",
+      "description": "Mirror of active_file_index in the redundant copy; mutable scalar for live testing.",
+      "evidence": "Baseline rev8-logical byte at 0x1074 is 0x00, matching copy A; written by FUN_0807cf88 to the second slot address (cf. FUN_0805041c RAM index uRam02000004).",
+      "name": "active_file_index_mirror",
+      "offset": 4212,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Mirror of option_byte_1 in the redundant copy; mutable scalar for live testing.",
+      "evidence": "Baseline rev8-logical byte at 0x1075 is 0x01, matching copy A; written by FUN_0807cf88 to the second slot address.",
+      "name": "option_byte_1_mirror",
+      "offset": 4213,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Mirror of option_byte_2 in the redundant copy; mutable scalar for live testing.",
+      "evidence": "Baseline rev8-logical byte at 0x1076 is 0x01, matching copy A; written by FUN_0807cf88 to the second slot address.",
+      "name": "option_byte_2_mirror",
+      "offset": 4214,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Mirror of option_byte_3 in the redundant copy; mutable scalar for live testing.",
+      "evidence": "Baseline rev8-logical byte at 0x1077 is 0x01, matching copy A; written by FUN_0807cf88 to the second slot address.",
+      "name": "option_byte_3_mirror",
+      "offset": 4215,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "kind": "ascii-charset",
+        "allowed": "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz",
+        "max_len": 8
+      },
+      "description": "Mirror of player_name in the redundant copy.",
+      "evidence": "Baseline rev8-logical bytes 0x1078-0x107F read 'LINK\\u0000\\u0000\\u0000\\u0000', matching copy A; written by FUN_0807cf88 via FUN_0807d20c and read back by FUN_0807d008.",
+      "name": "player_name_mirror",
+      "offset": 4216,
+      "size": 8,
+      "type": "ascii"
     }
-  ]
+  ],
+  "game_code": "BZME",
+  "id": "bzme",
+  "magic_signatures": [
+    {
+      "bytes": [
+        65,
+        71,
+        66,
+        90
+      ],
+      "description": "ASCII 'AGBZ' game-code header (rev8-logical domain)",
+      "offset": 0
+    },
+    {
+      "bytes": [
+        51,
+        90,
+        67,
+        77
+      ],
+      "description": "ASCII '3ZCM' data-section magic",
+      "offset": 36
+    },
+    {
+      "bytes": [
+        51,
+        90,
+        67,
+        77
+      ],
+      "description": "ASCII '3ZCM' footer magic",
+      "offset": 112
+    }
+  ],
+  "media": "eeprom8k",
+  "size_bytes": 8192,
+  "title": "Legend of Zelda, The - The Minish Cap (USA)"
 }

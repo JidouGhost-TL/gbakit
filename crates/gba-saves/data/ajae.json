@@ -1,45 +1,222 @@
 {
-  "id": "ajae",
+  "checksums": [],
+  "copy_groups": [],
+  "fields": [
+    {
+      "confidence": "likely",
+      "description": "First word of the 25-byte profile block at save offset 0xE0. Cleared to zero by the save-default routine next to FUN_080011a4 and loaded/saved as the head of the 0x19-byte unit in FUN_08001474 / FUN_080014a0; reads as a career/play counter.",
+      "evidence": "FUN_080011a4 zeroes 4 bytes then sets 21 bytes to 1 (matches sav 0xE0..0xF8: 4x00 + 21x01); FUN_08001474 and FUN_080014a0 load/save this 0x19-byte unit with func_0x0802c130 / func_0x0802c194 from SRAM.",
+      "name": "career_counter",
+      "offset": 224,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "21 per-event/per-item progress flags, all set (0x01) in the live baseline. Defaulted to 1 by the init routine next to FUN_080011a4 and persisted as the tail of the 0x19-byte unit.",
+      "evidence": "Init code next to FUN_080011a4 writes 1 to 21 consecutive bytes (sav 0xE4..0xF8 reads 21x01); FUN_08001474 / FUN_080014a0 persist the whole 0x19-byte unit via SRAM helpers func_0x0802c130 / func_0x0802c194.",
+      "name": "unlock_progress_flags",
+      "offset": 228,
+      "size": 21,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Game configuration byte 0 (baseline 0x0E). Defaulted by the init routine next to FUN_080011a4 and persisted in the 6-byte unit handled by FUN_08001474 / FUN_080014a0.",
+      "evidence": "Init routine next to FUN_080011a4 writes 0x0E,0x0E,0x0F,0x0F,0x0F,0x0F (sav 0xF9..0xFE matches exactly); FUN_08001474 / FUN_080014a0 load/save this 6-byte unit with func_0x0802c130 / func_0x0802c194.",
+      "name": "config_option_0",
+      "offset": 249,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Game configuration byte 1 (baseline 0x0E). See config_option_0.",
+      "evidence": "Init routine next to FUN_080011a4 writes 0x0E,0x0E,0x0F,0x0F,0x0F,0x0F (sav 0xF9..0xFE matches exactly); FUN_08001474 / FUN_080014a0 load/save this 6-byte unit.",
+      "name": "config_option_1",
+      "offset": 250,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Game configuration byte 2 (baseline 0x0F). See config_option_0.",
+      "evidence": "Init routine next to FUN_080011a4 writes 0x0E,0x0E,0x0F,0x0F,0x0F,0x0F (sav 0xF9..0xFE matches exactly); FUN_08001474 / FUN_080014a0 load/save this 6-byte unit.",
+      "name": "config_option_2",
+      "offset": 251,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Game configuration byte 3 (baseline 0x0F). See config_option_0.",
+      "evidence": "Init routine next to FUN_080011a4 writes 0x0E,0x0E,0x0F,0x0F,0x0F,0x0F (sav 0xF9..0xFE matches exactly); FUN_08001474 / FUN_080014a0 load/save this 6-byte unit.",
+      "name": "config_option_3",
+      "offset": 252,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Game configuration byte 4 (baseline 0x0F). See config_option_0.",
+      "evidence": "Init routine next to FUN_080011a4 writes 0x0E,0x0E,0x0F,0x0F,0x0F,0x0F (sav 0xF9..0xFE matches exactly); FUN_08001474 / FUN_080014a0 load/save this 6-byte unit.",
+      "name": "config_option_4",
+      "offset": 253,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Game configuration byte 5 (baseline 0x0F). See config_option_0.",
+      "evidence": "Init routine next to FUN_080011a4 writes 0x0E,0x0E,0x0F,0x0F,0x0F,0x0F (sav 0xF9..0xFE matches exactly); FUN_08001474 / FUN_080014a0 load/save this 6-byte unit.",
+      "name": "config_option_5",
+      "offset": 254,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "allowed": "-ABCDEFGHIJKLMNOPRSTUVabcdefghijklmnoprstuvxy",
+        "kind": "ascii-charset",
+        "max_len": 12
+      },
+      "description": "Leaderboard entry 0 driver name, null-padded to 12 bytes (baseline 'Karl'). First of 90 repeating 16-byte (12-byte name + u32_le score) entries forming 18 blocks of 5.",
+      "evidence": "FUN_0800169c writes the 0x5A0-byte table via func_0x0802c268 and FUN_08001620 loads one 0x50-byte block; sav 0xFF..0x69E holds 90 verified 16-byte entries (all names printable ASCII, null-padded; scores cycle 100/75/50/25/10).",
+      "name": "lb_entry_0_name",
+      "offset": 255,
+      "size": 12,
+      "type": "ascii"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Leaderboard entry 0 score (baseline 100).",
+      "evidence": "FUN_0800169c writes the 0x5A0-byte table via func_0x0802c268 and FUN_08001620 loads one 0x50-byte block; sav u32_le at entry end reads 100, cycling 100/75/50/25/10 across each 5-entry block.",
+      "name": "lb_entry_0_score",
+      "offset": 267,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "allowed": "-ABCDEFGHIJKLMNOPRSTUVabcdefghijklmnoprstuvxy",
+        "kind": "ascii-charset",
+        "max_len": 12
+      },
+      "description": "Leaderboard entry 1 driver name (baseline 'Anders').",
+      "evidence": "FUN_0800169c writes the 0x5A0-byte table via func_0x0802c268 and FUN_08001620 loads one 0x50-byte block; sav 16-byte entry at this offset holds a null-padded ASCII name.",
+      "name": "lb_entry_1_name",
+      "offset": 271,
+      "size": 12,
+      "type": "ascii"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Leaderboard entry 1 score (baseline 75).",
+      "evidence": "FUN_0800169c writes the 0x5A0-byte table via func_0x0802c268 and FUN_08001620 loads one 0x50-byte block; sav u32_le at entry end reads 75.",
+      "name": "lb_entry_1_score",
+      "offset": 283,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "allowed": "-ABCDEFGHIJKLMNOPRSTUVabcdefghijklmnoprstuvxy",
+        "kind": "ascii-charset",
+        "max_len": 12
+      },
+      "description": "Leaderboard entry 2 driver name (baseline 'Empa').",
+      "evidence": "FUN_0800169c writes the 0x5A0-byte table via func_0x0802c268 and FUN_08001620 loads one 0x50-byte block; sav 16-byte entry at this offset holds a null-padded ASCII name.",
+      "name": "lb_entry_2_name",
+      "offset": 287,
+      "size": 12,
+      "type": "ascii"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Leaderboard entry 2 score (baseline 50).",
+      "evidence": "FUN_0800169c writes the 0x5A0-byte table via func_0x0802c268 and FUN_08001620 loads one 0x50-byte block; sav u32_le at entry end reads 50.",
+      "name": "lb_entry_2_score",
+      "offset": 299,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "allowed": "-ABCDEFGHIJKLMNOPRSTUVabcdefghijklmnoprstuvxy",
+        "kind": "ascii-charset",
+        "max_len": 12
+      },
+      "description": "Leaderboard entry 3 driver name (baseline 'Henrik').",
+      "evidence": "FUN_0800169c writes the 0x5A0-byte table via func_0x0802c268 and FUN_08001620 loads one 0x50-byte block; sav 16-byte entry at this offset holds a null-padded ASCII name.",
+      "name": "lb_entry_3_name",
+      "offset": 303,
+      "size": 12,
+      "type": "ascii"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Leaderboard entry 3 score (baseline 25).",
+      "evidence": "FUN_0800169c writes the 0x5A0-byte table via func_0x0802c268 and FUN_08001620 loads one 0x50-byte block; sav u32_le at entry end reads 25.",
+      "name": "lb_entry_3_score",
+      "offset": 315,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "allowed": "-ABCDEFGHIJKLMNOPRSTUVabcdefghijklmnoprstuvxy",
+        "kind": "ascii-charset",
+        "max_len": 12
+      },
+      "description": "Leaderboard entry 4 driver name (baseline 'Jay').",
+      "evidence": "FUN_0800169c writes the 0x5A0-byte table via func_0x0802c268 and FUN_08001620 loads one 0x50-byte block; sav 16-byte entry at this offset holds a null-padded ASCII name.",
+      "name": "lb_entry_4_name",
+      "offset": 319,
+      "size": 12,
+      "type": "ascii"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Leaderboard entry 4 score (baseline 10).",
+      "evidence": "FUN_0800169c writes the 0x5A0-byte table via func_0x0802c268 and FUN_08001620 loads one 0x50-byte block; sav u32_le at entry end reads 10.",
+      "name": "lb_entry_4_score",
+      "offset": 331,
+      "size": 4,
+      "type": "u32_le"
+    }
+  ],
   "game_code": "AJAE",
-  "title": "Monster Jam - Maximum Destruction (USA)",
-  "media": "sram",
-  "size_bytes": 32768,
+  "id": "ajae",
   "magic_signatures": [
     {
-      "offset": 0,
       "bytes": [
         66,
         82,
         85,
-        77
-      ]
+        77,
+        32,
+        66,
+        82,
+        85,
+        77,
+        32,
+        86,
+        82,
+        65,
+        76,
+        65,
+        75
+      ],
+      "description": "ASCII 'BRUM BRUM VRALAK' header; verified by FUN_0800d258 against SRAM 0x0E000000 before any save init.",
+      "offset": 0
     }
   ],
-  "checksums": [],
-  "fields": [
-    {
-      "name": "magic_header",
-      "offset": 0,
-      "size": 4,
-      "type": "ascii"
-    },
-    {
-      "name": "slot_counter",
-      "offset": 4,
-      "size": 2,
-      "type": "u16_le"
-    },
-    {
-      "name": "game_progress_flags",
-      "offset": 6,
-      "size": 2,
-      "type": "u16_le"
-    },
-    {
-      "name": "player_status_payload",
-      "offset": 8,
-      "size": 16,
-      "type": "bytes"
-    }
-  ]
+  "media": "sram",
+  "size_bytes": 32768,
+  "title": "Monster Jam - Maximum Destruction (USA)"
 }

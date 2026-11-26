@@ -1,29 +1,167 @@
 {
-  "id": "b8se",
-  "game_code": "B8SE",
-  "title": "Spyro Superpack - Spyro - Season of Ice + Spyro 2 - Season of Flame (USA)",
-  "media": "eeprom8k",
-  "size_bytes": 8192,
-  "magic_signatures": [],
-  "checksums": [],
+  "checksums": [
+    {
+      "algorithm": "sum16_le",
+      "covered_end": 8064,
+      "covered_start": 8056,
+      "description": "Seed-0x25 byte-sum over the 8-byte options payload (EEPROM blocks 0x3e-0x3f data), stored little-endian. Written by FUN_0800a0e0, verified in FUN_08008f50; matches baseline (235 + 37 = 272).",
+      "name": "options_checksum",
+      "seed": 37,
+      "stored_offset": 8064,
+      "xor_out": 0
+    }
+  ],
+  "eeprom_rev8": true,
   "fields": [
     {
-      "name": "slot_counter",
+      "confidence": "likely",
+      "description": "Bit-packed per-level/stage progress entries (24 iterations) plus one u32 word per entry, serialized by FUN_08008f50 into EEPROM blocks 0x00-0x3d. Internal entry boundaries are table-driven (ROM length tables), so the region is mapped as one block.",
+      "evidence": "FUN_08008f50 load loop lines ~1178-1208 and save loop lines ~1345-1376 copy uVar23[i] bit-packed bytes plus 4-byte words for iVar21 in 0..0x17 between the EEPROM stream cursor (*_DAT_08009300 / *_DAT_0800968c) and the 24 x 0x20 live structs at _DAT_08009318.",
+      "name": "progress_level_slots",
       "offset": 7560,
-      "size": 2,
-      "type": "u16_le"
-    },
-    {
-      "name": "game_progress_flags",
-      "offset": 7562,
-      "size": 2,
-      "type": "u16_le"
-    },
-    {
-      "name": "player_status_payload",
-      "offset": 7564,
-      "size": 16,
+      "size": 473,
       "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Global progress counter 0 (first u16 of the fixed record tail). Zero on fresh boot.",
+      "evidence": "FUN_08008f50 deserializes the 9-u16 fixed tail after the level loops (first 2 bytes go to _DAT_08009314+0x60, line ~1212) and FUN_0800a270 boots through FUN_08008f50.",
+      "name": "progress_stat_0",
+      "offset": 8033,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Global progress counter 1. Zero on fresh boot.",
+      "evidence": "FUN_08008f50 fixed-tail copy, second u16 to _DAT_08009314+0x62 (line ~1222).",
+      "name": "progress_stat_1",
+      "offset": 8035,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Global progress counter 2. Zero on fresh boot.",
+      "evidence": "FUN_08008f50 fixed-tail copy, u16 to _DAT_08009324 (line ~1233).",
+      "name": "progress_stat_2",
+      "offset": 8037,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Global progress counter 3. Zero on fresh boot.",
+      "evidence": "FUN_08008f50 fixed-tail copy, u16 to _DAT_08009328 (line ~1244).",
+      "name": "progress_stat_3",
+      "offset": 8039,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Global progress counter 4. Zero on fresh boot.",
+      "evidence": "FUN_08008f50 fixed-tail copy, u16 to _DAT_0800932c (line ~1255).",
+      "name": "progress_stat_4",
+      "offset": 8041,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Global progress counter 5. Zero on fresh boot.",
+      "evidence": "FUN_08008f50 fixed-tail copy, u16 to _DAT_08009330 (line ~1266).",
+      "name": "progress_stat_5",
+      "offset": 8043,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Global progress counter 6. Zero on fresh boot.",
+      "evidence": "FUN_08008f50 fixed-tail copy, u16 to _DAT_08009334 (line ~1277).",
+      "name": "progress_stat_6",
+      "offset": 8045,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Global progress counter 7. Zero on fresh boot.",
+      "evidence": "FUN_08008f50 fixed-tail copy, u16 to _DAT_08009338 (line ~1288).",
+      "name": "progress_stat_7",
+      "offset": 8047,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Global progress counter 8 (last u16 before the flag bytes). Zero on fresh boot.",
+      "evidence": "FUN_08008f50 fixed-tail copy, u16 to _DAT_0800933c (line ~1299).",
+      "name": "progress_stat_8",
+      "offset": 8049,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Progress flag byte A. Zero on fresh boot.",
+      "evidence": "FUN_08008f50 single-byte tail copy to _DAT_08009340 (line ~1307).",
+      "name": "progress_flag_a",
+      "offset": 8051,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Progress flag byte B. Zero on fresh boot.",
+      "evidence": "FUN_08008f50 single-byte tail copy to _DAT_08009344 (line ~1312).",
+      "name": "progress_flag_b",
+      "offset": 8052,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Progress flag byte C. Zero on fresh boot.",
+      "evidence": "FUN_08008f50 single-byte tail copy to _DAT_08009348 (line ~1317).",
+      "name": "progress_flag_c",
+      "offset": 8053,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Stored byte-sum checksum slot of the progress record (last 2 bytes of EEPROM blocks 0x00-0x3d). Reads 0x0000 in the baseline, which does not equal seed 0x25 plus the data sum, so the boot code treats progress as fresh and re-initializes it.",
+      "evidence": "FUN_08008f50 reads the final 2 stream bytes into asStack_24 and compares sVar1 == asStack_24[0] (lines ~1324-1332); mismatch takes the re-init branch.",
+      "name": "progress_checksum",
+      "offset": 8054,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Options/config word persisted in EEPROM blocks 0x3e-0x3f. Baseline holds the firmware default 0x0003e800 written by the verify-fail path.",
+      "evidence": "FUN_0800a0e0 serializes 8 bytes from _DAT_0800a1cc to EEPROM blocks 0x3e+ (lines ~1613-1632); FUN_08008f50 verify-fail path writes default u32 0x0003e800 (lines ~1564-1568: *puVar22 & 0xff | 0x3e800), matching baseline logical bytes 00 e8 03 00 at save offsets 8056-8059.",
+      "name": "config_options_word",
+      "offset": 8056,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Second word of the 8-byte options payload in EEPROM blocks 0x3e-0x3f. Zero in the baseline.",
+      "evidence": "FUN_0800a0e0 8-byte payload from _DAT_0800a1cc (lines ~1613-1623); FUN_08008f50 reads the same 8 bytes back into _DAT_080096d4 (lines ~1539-1549). Baseline logical bytes at 8060-8063 are 00 00 00 00.",
+      "name": "config_extra_word",
+      "offset": 8060,
+      "size": 4,
+      "type": "u32_le"
     }
-  ]
+  ],
+  "game_code": "B8SE",
+  "id": "b8se",
+  "magic_signatures": [],
+  "media": "eeprom8k",
+  "size_bytes": 8192,
+  "title": "Spyro Superpack - Spyro - Season of Ice + Spyro 2 - Season of Flame (USA)"
 }

@@ -1,45 +1,203 @@
 {
-  "id": "almj",
+  "checksums": [
+    {
+      "algorithm": "sum16_le_words",
+      "covered_end": 26716,
+      "covered_start": 26704,
+      "name": "slot2_primary_checksum",
+      "seed": 0,
+      "stored_offset": 26704,
+      "xor_out": 65535
+    },
+    {
+      "algorithm": "sum16_le_words",
+      "covered_end": 26728,
+      "covered_start": 26716,
+      "name": "slot2_backup_checksum",
+      "seed": 0,
+      "stored_offset": 26716,
+      "xor_out": 65535
+    }
+  ],
+  "copy_groups": [
+    {
+      "fields": [
+        "record_checksum",
+        "mirror_record_checksum"
+      ],
+      "name": "checksum_mirrors"
+    },
+    {
+      "fields": [
+        "record_tag",
+        "mirror_record_tag"
+      ],
+      "name": "tag_mirrors"
+    },
+    {
+      "fields": [
+        "record_size",
+        "mirror_record_size"
+      ],
+      "name": "size_mirrors"
+    },
+    {
+      "fields": [
+        "record_spare",
+        "mirror_record_spare"
+      ],
+      "name": "spare_mirrors"
+    },
+    {
+      "fields": [
+        "config_value_a",
+        "mirror_config_value_a"
+      ],
+      "name": "config_a_mirrors"
+    },
+    {
+      "fields": [
+        "config_value_b",
+        "mirror_config_value_b"
+      ],
+      "name": "config_b_mirrors"
+    }
+  ],
+  "fields": [
+    {
+      "confidence": "confirmed",
+      "description": "Stored checksum of slot-2 primary record: bitwise NOT of the u16-LE word sum of the other 5 words (FUN_0801fadc / FUN_0801fb08).",
+      "evidence": "FUN_0801fadc writes *buf = ~sum(words) over 0xC bytes; FUN_0801fb08 accepts iff word-sum == 0xFFFF and u32 buf[4]==len. Baseline save offset 0x6850: words fdf1 0001 000c 0000 0000 0201 sum to 0xFFFF.",
+      "name": "record_checksum",
+      "offset": 26704,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Record tag / validity word of slot-2 primary record; nonzero means a valid record.",
+      "evidence": "FUN_08020890 initialises *(u16*)(RAMbuf+2)=1 for the 0xC-byte slot-2 record saved at save offset 0x6850 via FUN_08020908/FUN_0801f998; FUN_0801f970 returns nonzero iff *(u16*)(buf+2) != 0. Baseline holds 0x0001.",
+      "name": "record_tag",
+      "offset": 26706,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 12,
+        "minimum": 12
+      },
+      "description": "Byte length of the slot-2 record (always 12 / 0x0C).",
+      "evidence": "FUN_0801fadc stores param_2 (0xC from FUN_08020890 and FUN_08020908/FUN_0801f998(2,buf,0xc)) as u32 at RAMbuf+4, i.e. save offset 0x6854; FUN_0801fb08 requires it to equal the record length. Baseline holds 0x0000000C.",
+      "name": "record_size",
+      "offset": 26708,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "guessed",
+      "description": "Spare word of slot-2 primary record; zero in a fresh save.",
+      "evidence": "Bytes at RAMbuf+8..+9 (save offset 0x6858) are covered by the FUN_0801fb08 checksum and copied verbatim by the FUN_0801f864/FUN_0801fa24 save path and FUN_0801fa78 load path; FUN_08020890 defaults them to 0. Baseline holds 0x0000.",
+      "name": "record_spare",
+      "offset": 26712,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Persisted config/option scalar A of the slot-2 record (fresh-save default 1).",
+      "evidence": "FUN_08020890 defaults byte at RAMbuf+10 (save offset 0x685A) to 1; byte is checksummed (FUN_0801fadc/FUN_0801fb08), saved by FUN_08020908/FUN_0801f998 slot 2 to save offset 0x685A and restored by FUN_0801fa78/FUN_0801f970. Baseline holds 0x01.",
+      "name": "config_value_a",
+      "offset": 26714,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Persisted config/option scalar B of the slot-2 record (fresh-save default 2).",
+      "evidence": "FUN_08020890 defaults byte at RAMbuf+11 (save offset 0x685B) to 2; byte is checksummed (FUN_0801fadc/FUN_0801fb08), saved by FUN_08020908/FUN_0801f998 slot 2 to save offset 0x685B and restored by FUN_0801fa78/FUN_0801f970. Baseline holds 0x02.",
+      "name": "config_value_b",
+      "offset": 26715,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Backup copy of the slot-2 record checksum at save offset 0x685C.",
+      "evidence": "FUN_0801fa24 saves each slot twice (primary SRAM address at table+8, backup at table+0xC); FUN_0801fa78 falls back to the backup copy. Baseline bytes at 0x685C match 0x6850 exactly; words sum to 0xFFFF per FUN_0801fb08.",
+      "name": "mirror_record_checksum",
+      "offset": 26716,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Backup copy of the slot-2 record tag.",
+      "evidence": "Mirror of record_tag written by the FUN_0801fa24 dual-save path (backup table entry +0xC) and verified by FUN_0801fb08 on load via FUN_0801fa78. Baseline holds 0x0001.",
+      "name": "mirror_record_tag",
+      "offset": 26718,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 12,
+        "minimum": 12
+      },
+      "description": "Backup copy of the slot-2 record length (always 12).",
+      "evidence": "Mirror of record_size written by the FUN_0801fa24 dual-save path; FUN_0801fb08 requires it to equal 0xC. Baseline holds 0x0000000C.",
+      "name": "mirror_record_size",
+      "offset": 26720,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "guessed",
+      "description": "Backup copy of the slot-2 spare word.",
+      "evidence": "Mirror of record_spare written by the FUN_0801fa24 dual-save path and covered by the FUN_0801fb08 checksum. Baseline holds 0x0000.",
+      "name": "mirror_record_spare",
+      "offset": 26724,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Backup copy of config scalar A.",
+      "evidence": "Mirror of config_value_a written by the FUN_0801fa24 dual-save path (backup table entry +0xC) and restored by FUN_0801fa78. Baseline holds 0x01.",
+      "name": "mirror_config_value_a",
+      "offset": 26726,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Backup copy of config scalar B.",
+      "evidence": "Mirror of config_value_b written by the FUN_0801fa24 dual-save path (backup table entry +0xC) and restored by FUN_0801fa78. Baseline holds 0x02.",
+      "name": "mirror_config_value_b",
+      "offset": 26727,
+      "size": 1,
+      "type": "u8"
+    }
+  ],
   "game_code": "ALMJ",
-  "title": "Pro Yakyuu Team o Tsukurou! Advance (Japan)",
-  "media": "sram",
-  "size_bytes": 32768,
+  "id": "almj",
   "magic_signatures": [
     {
-      "offset": 0,
       "bytes": [
         67,
         79,
         80,
         89
-      ]
+      ],
+      "description": "ASCII 'COPY' header preserved from stub; verified at save offset 0.",
+      "offset": 0
     }
   ],
-  "checksums": [],
-  "fields": [
-    {
-      "name": "magic_header",
-      "offset": 0,
-      "size": 4,
-      "type": "ascii"
-    },
-    {
-      "name": "slot_counter",
-      "offset": 4,
-      "size": 2,
-      "type": "u16_le"
-    },
-    {
-      "name": "game_progress_flags",
-      "offset": 6,
-      "size": 2,
-      "type": "u16_le"
-    },
-    {
-      "name": "player_status_payload",
-      "offset": 8,
-      "size": 16,
-      "type": "bytes"
-    }
-  ]
+  "media": "sram",
+  "size_bytes": 32768,
+  "title": "Pro Yakyuu Team o Tsukurou! Advance (Japan)"
 }

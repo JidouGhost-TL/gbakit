@@ -1,29 +1,210 @@
 {
-  "id": "ammj",
-  "game_code": "AMMJ",
-  "title": "Momotarou Matsuri (Japan) (Rev 1)",
-  "media": "sram",
-  "size_bytes": 32768,
-  "magic_signatures": [],
-  "checksums": [],
+  "checksums": [
+    {
+      "algorithm": "xor16_le",
+      "covered_end": 1336,
+      "covered_start": 0,
+      "name": "primary_block_checksum",
+      "seed": 65535,
+      "stored_offset": 0,
+      "xor_out": 0
+    },
+    {
+      "algorithm": "xor16_le",
+      "covered_end": 17720,
+      "covered_start": 16384,
+      "name": "backup_block_checksum",
+      "seed": 65535,
+      "stored_offset": 16384,
+      "xor_out": 0
+    }
+  ],
+  "copy_groups": [
+    {
+      "fields": [
+        "save_tag",
+        "save_tag_mirror"
+      ],
+      "name": "save_tag_mirrors"
+    }
+  ],
   "fields": [
     {
-      "name": "slot_counter",
+      "confidence": "confirmed",
+      "description": "Stored XOR16 checksum of the 0x538-byte save block, seed 0xFFFF.",
+      "evidence": "FUN_0800acf8 computes func_0x0804404c XOR16 fold (seed _DAT_0804406c=0xFFFF) over save-file offsets [2,0x538); FUN_0800ad14 validates it against save offset 0 on load; FUN_0800afb0 stamps it at save offset 0 on store. Verified: seed 0xFFFF reproduces stored 0x5027 in samples/baseline.sav.",
+      "name": "save_checksum",
       "offset": 0,
       "size": 2,
       "type": "u16_le"
     },
     {
-      "name": "game_progress_flags",
+      "confidence": "confirmed",
+      "description": "Validation tag stamped on every save and mirrored at the end of the block.",
+      "evidence": "FUN_0800afb0 writes constant _DAT_0800b000 (0x1213 in baseline) to save offsets 2 and 0x534; FUN_0800ad14 load path requires save offset 2 to match and to equal save offset 0x534. Baseline has 0x1213 at both offsets.",
+      "name": "save_tag",
       "offset": 2,
       "size": 2,
       "type": "u16_le"
     },
     {
-      "name": "player_status_payload",
-      "offset": 4,
-      "size": 16,
-      "type": "bytes"
+      "confidence": "likely",
+      "description": "Gameplay option/config value in the 0x88 save window.",
+      "evidence": "FUN_0800adf8 initializes the save buffer region based at file offset 0x88 (puVar1=_DAT_0800aec0 maps +0x230 to stock fields at 0x2b8, +0xe to this offset); FUN_0800aec8/FUN_0800aefc shuttle the 0x88 window between the save buffer and game RAM via CpuSet (SWI 0xb); FUN_0800af30 boot path reads an option byte through a save-derived pointer. Baseline holds 0x0002, matching a small option/counter semantic.",
+      "name": "option_slot_a",
+      "offset": 150,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Gameplay option/config value next to option_slot_a.",
+      "evidence": "Same 0x88-window init/shuttle call chain as option_slot_a (FUN_0800adf8, FUN_0800aec8, FUN_0800aefc, boot read in FUN_0800af30). Baseline holds 0x0001.",
+      "name": "option_slot_b",
+      "offset": 152,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "First of three stock/counter values (99 each) ahead of the 0x2c4 window.",
+      "evidence": "FUN_0800adf8 writes 99 three times via *(u16*)(puVar4+uVar6+0x8c) for uVar6 in 0..2, landing at save offsets 0x2b8, 0x2bc, 0x2c0 (puVar4=_DAT_0800aec0 is the save buffer base for the 0x88 region, byte stride 4). Baseline holds 99 (0x63) at all three offsets.",
+      "name": "stock_count_0",
+      "offset": 696,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Second of three stock/counter values.",
+      "evidence": "Same FUN_0800adf8 triple-99 init as stock_count_0 (save offset 0x2bc). Baseline holds 99.",
+      "name": "stock_count_1",
+      "offset": 700,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Third of three stock/counter values.",
+      "evidence": "Same FUN_0800adf8 triple-99 init as stock_count_0 (save offset 0x2c0). Baseline holds 99.",
+      "name": "stock_count_2",
+      "offset": 704,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Low half of the 32-bit record value at the head of the 0x2c4 window.",
+      "evidence": "FUN_0800ad90 writes *puVar1=0x1000 (puVar1=_DAT_0800adc8 maps to save offset 0x2c4: bytes 00 10 00 00 in baseline); FUN_0800aec8/FUN_0800aefc shuttle save offset 0x2c4 window with game RAM. Default 0x1000 preserved in baseline.",
+      "name": "record_base",
+      "offset": 708,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Select/index value in the 0x2c4 window; default 0x28, currently 0x0000 in the live capture.",
+      "evidence": "FUN_0800ad90 writes default 0x28 to save offset 0x2c6 (*(u16*)(_DAT_0800adc8+2)); baseline shows 0x0000, i.e. gameplay overwrote the default. Same 0x2c4-window shuttle (FUN_0800aec8/FUN_0800aefc).",
+      "name": "venue_select",
+      "offset": 710,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Low half of the 32-bit record/total value in the 0x2c4 window (full default 0x4000).",
+      "evidence": "FUN_0800ad90 writes puVar1[1]=0x4000 to save offset 0x2c8 (bytes 00 40 00 00 in baseline); shuttled with game RAM by FUN_0800aec8/FUN_0800aefc. Default low half 0x4000 preserved in baseline.",
+      "name": "record_total_lo",
+      "offset": 712,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "High half of the 32-bit record/total default (0x0000).",
+      "evidence": "Upper half of the puVar1[1]=0x4000 write by FUN_0800ad90 at save offset 0x2ca; baseline holds 0x0000.",
+      "name": "record_total_hi",
+      "offset": 714,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Recorded value written by gameplay into the 0x2c4 window (0x28 observed).",
+      "evidence": "Save offset 0x2cc is not written by the FUN_0800ad90/FUN_0800adf8 defaults yet holds 0x0028 in samples/baseline.sav, so a gameplay caller stored it; it persists through the FUN_0800aec8/FUN_0800aefc 0x2c4-window shuttle and the FUN_0800ad54 dual-copy SRAM write.",
+      "name": "venue_record",
+      "offset": 716,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Progress/config value in the 0x2c4 window.",
+      "evidence": "FUN_0800ad90 writes *(u16*)(puVar1+3)=2 to save offset 0x2d0; baseline holds 0x0002.",
+      "name": "progress_value_a",
+      "offset": 720,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Gameplay progress/config value in the 0x2c4 window.",
+      "evidence": "FUN_0800ad90 writes *(u16*)(puVar1+5)=6 to save offset 0x2d8; baseline holds 0x0006. Shuttled with game RAM by FUN_0800aec8/FUN_0800aefc.",
+      "name": "progress_value_b",
+      "offset": 728,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Gameplay progress/config value in the 0x2c4 window (default 0x68).",
+      "evidence": "FUN_0800ad90 writes *(u16*)(puVar1+0x16/2 equivalent byte +0x16)=0x68 to save offset 0x2da; baseline holds 0x0068.",
+      "name": "progress_value_c",
+      "offset": 730,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Mode flag in the 0x2c4 window (default 1).",
+      "evidence": "FUN_0800ad90 writes *(u16*)(puVar1+6)=1 to save offset 0x2dc; baseline holds 0x0001. Boot flag bit ops in FUN_0800af30 (FUN_0800ac88 clear 0xdc, FUN_0800acac test 0xdb) show nearby flag-bit gameplay.",
+      "name": "play_mode_flag",
+      "offset": 732,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Stage/clear value in the 0x2c4 window (default 5).",
+      "evidence": "FUN_0800ad90 writes *(u16*)(puVar1+7)=5 to save offset 0x2e0; baseline holds 0x0005.",
+      "name": "clear_stage",
+      "offset": 736,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Rank/grade value in the 0x2c4 window (default 7).",
+      "evidence": "FUN_0800ad90 writes *(u16*)(puVar1 byte +0x1e)=7 to save offset 0x2e2; baseline holds 0x0007.",
+      "name": "festival_rank",
+      "offset": 738,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "End-of-block mirror of save_tag used by load validation.",
+      "evidence": "FUN_0800afb0 stamps _DAT_0800b000 to save offset 0x534 (*(u16*)(puVar1+_DAT_0800b004)); FUN_0800ad14 requires it to equal save offset 2. Baseline has 0x1213 here, matching save_tag.",
+      "name": "save_tag_mirror",
+      "offset": 1332,
+      "size": 2,
+      "type": "u16_le"
     }
-  ]
+  ],
+  "game_code": "AMMJ",
+  "id": "ammj",
+  "magic_signatures": [],
+  "media": "sram",
+  "size_bytes": 32768,
+  "title": "Momotarou Matsuri (Japan) (Rev 1)"
 }

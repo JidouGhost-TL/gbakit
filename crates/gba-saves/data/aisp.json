@@ -1,29 +1,84 @@
 {
-  "id": "aisp",
-  "game_code": "AISP",
-  "title": "International Superstar Soccer (Europe)",
-  "media": "eeprom8k",
-  "size_bytes": 8192,
-  "magic_signatures": [],
-  "checksums": [],
+  "checksums": [
+    {
+      "algorithm": "sum16_le_words",
+      "covered_end": 8070,
+      "covered_start": 8064,
+      "name": "settings_block_checksum",
+      "seed": 0,
+      "stored_offset": 8070,
+      "xor_out": 0
+    }
+  ],
+  "eeprom_rev8": true,
   "fields": [
     {
-      "name": "slot_counter",
+      "confidence": "confirmed",
+      "description": "Magic constant word 0 of the 8-byte settings block at EEPROM address 0x3F0 (file offset 0x3F0*8 = 0x1F80). Written from ROM halfword at 0x0801c140, validated on load.",
+      "evidence": "FUN_0801c114 writes (short)_DAT_0801c140 into buffer word 0 and stores the block via FUN_08063170(0x3F0); FUN_0801c184 reloads it via FUN_080630b8(0x3F0) and requires buffer[0] == ROM constant before accepting the save. Baseline logical bytes at 0x1F80 are 0x23 0x01 = 0x0123.",
+      "name": "header_id_a",
       "offset": 8064,
       "size": 2,
       "type": "u16_le"
     },
     {
-      "name": "game_progress_flags",
+      "confidence": "confirmed",
+      "description": "Magic constant word 1 of the settings block. Written from ROM halfword at 0x0801c144, validated on load against the live expected value.",
+      "evidence": "FUN_0801c114 writes (short)_DAT_0801c144 into buffer word 1; FUN_0801c184 requires buffer[1] == uRam0801c210 before accepting the save. Baseline logical bytes at 0x1F82 are 0x67 0x45 = 0x4567.",
+      "name": "header_id_b",
       "offset": 8066,
       "size": 2,
       "type": "u16_le"
     },
     {
-      "name": "player_status_payload",
+      "confidence": "likely",
+      "description": "Live gameplay/config option byte: its low byte is sourced from a RAM setting at save time and restored into a RAM setting variable at boot. Exact in-game meaning (sound/options style flag) is not named in the decomp slice.",
+      "evidence": "FUN_0801c114 stores (ushort)(byte)*_DAT_0801c148 into buffer word 2; FUN_0801c184 restores (char)buffer[2] into *puRam0801c220 after checksum validation. Baseline value is 0x00.",
+      "name": "option_value",
       "offset": 8068,
-      "size": 16,
-      "type": "bytes"
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "High byte of the settings word; always written as zero because only a byte value is stored.",
+      "evidence": "FUN_0801c114 assigns psVar4[2] = (ushort)bVar1 (single byte, high byte zero); FUN_0801c184 only reads the low (char) byte. Baseline value is 0x00.",
+      "name": "option_word_high",
+      "offset": 8069,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Additive checksum word: stored value equals header_id_a + header_id_b + settings word (mod 0x10000). Baseline: 0x0123 + 0x4567 + 0x0000 = 0x468A.",
+      "evidence": "FUN_0801c114 computes psVar4[3] = word2 + word0 + word1 before FUN_08063170(0x3F0); FUN_0801c184 rejects the block unless buffer[3] == buffer[1] + buffer[0] + buffer[2], rewriting defaults via FUN_0801c114 on mismatch. Verified against samples/baseline.sav.",
+      "name": "checksum_store",
+      "offset": 8070,
+      "size": 2,
+      "type": "u16_le"
     }
-  ]
+  ],
+  "game_code": "AISP",
+  "id": "aisp",
+  "magic_signatures": [
+    {
+      "bytes": [
+        35,
+        1
+      ],
+      "description": "ASCII-free magic constant 0x0123, settings block word 0 (logical domain)",
+      "offset": 8064
+    },
+    {
+      "bytes": [
+        103,
+        69
+      ],
+      "description": "Magic constant 0x4567, settings block word 1 (logical domain)",
+      "offset": 8066
+    }
+  ],
+  "media": "eeprom8k",
+  "size_bytes": 8192,
+  "title": "International Superstar Soccer (Europe)"
 }

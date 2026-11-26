@@ -1,45 +1,90 @@
 {
-  "id": "a5bj",
-  "game_code": "A5BJ",
-  "title": "Chocobo Land - A Game of Dice (Japan)",
-  "media": "sram",
-  "size_bytes": 32768,
-  "magic_signatures": [
-    {
-      "offset": 0,
-      "bytes": [
-        68,
-        73,
-        67,
-        69
-      ]
-    }
-  ],
   "checksums": [],
   "fields": [
     {
-      "name": "magic_header",
+      "confidence": "confirmed",
+      "constraint": {
+        "allowed": "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+        "kind": "ascii-charset",
+        "max_len": 4
+      },
+      "description": "Save magic 'DICE' (bytes 44 49 43 45), verified against baseline.sav. Decomp exposes no ROM string table, so no storing function is symbolized; the block-transfer helper FUN_08027bec (invoked from FUN_0805adb0 and FUN_0805ce20 for EWRAM 0x02024AF4/0x02024D74 moves) is the only grounded copy path in decomp.",
+      "evidence": "Baseline bytes 0..4 read 'DICE' (44 49 43 45); stub.json magic_signatures entry verifies 100%. Decomp copy path: FUN_08027bec work-queue submitter called by FUN_0805adb0 (line 34116) and FUN_0805ce20 (line 34738) moving EWRAM 0x02024AF4 to 0x02024D74; no 0x0E000000 SRAM store is symbolized in decomp.",
+      "name": "dice_magic",
       "offset": 0,
       "size": 4,
       "type": "ascii"
     },
     {
-      "name": "slot_counter",
+      "confidence": "likely",
+      "description": "16-bit header flag word, baseline value 0x1FF0 (bits 4..12 set). Exact bit meanings are not symbolized in decomp; treated as a mutable gameplay/config flag word for live verification.",
+      "evidence": "Baseline bytes 4..6 decode little-endian to 0x1FF0 (verified with Python struct). Decomp block-transfer path FUN_08027bec via FUN_0805adb0 (line 34116, EWRAM 0x02024AF4/0x02024D74); save-file offset 0x04 verified against samples/baseline.sav.",
+      "name": "board_flags",
       "offset": 4,
       "size": 2,
       "type": "u16_le"
     },
     {
-      "name": "game_progress_flags",
+      "confidence": "guessed",
+      "description": "16-bit header word paired with board_flags (together they form LE u32 0x00001FF0 at offset 4). Reads 0 in baseline; semantics unknown from decomp, kept as a mutable scalar probe.",
+      "evidence": "Baseline bytes 6..8 decode to 0x0000 (verified with Python struct). Same grounded copy path as board_flags: FUN_08027bec via FUN_0805ce20 (line 34738); no SRAM 0x0E000000 symbol in decomp, offset 0x06 verified against samples/baseline.sav.",
+      "name": "header_word_06",
       "offset": 6,
       "size": 2,
       "type": "u16_le"
     },
     {
-      "name": "player_status_payload",
+      "confidence": "likely",
+      "description": "32-bit header counter/version word, baseline value 1. Reads as a save-slot counter or format version; mutable scalar for live emulator testing.",
+      "evidence": "Baseline bytes 8..12 decode little-endian to 1 (verified with Python struct). Grounded copy path FUN_08027bec via FUN_0805adb0 (line 34116, EWRAM 0x02024AF4/0x02024D74); save-file offset 0x08 verified against samples/baseline.sav.",
+      "name": "save_version",
       "offset": 8,
-      "size": 16,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "guessed",
+      "description": "16-bit progress/config value, baseline value 6. Candidate for board/stage progress in this dice board game; exact semantics not recoverable from the string-less decomp, kept as a mutable scalar probe.",
+      "evidence": "Baseline bytes 12..14 decode little-endian to 6 (verified with Python struct). Grounded copy path FUN_08027bec via FUN_0805ce20 (line 34738); save-file offset 0x0C verified against samples/baseline.sav.",
+      "name": "progress_value_a",
+      "offset": 12,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "guessed",
+      "description": "16-bit progress/config value paired with progress_value_a, baseline value 1. Exact semantics not recoverable from decomp; kept as a mutable scalar probe.",
+      "evidence": "Baseline bytes 14..16 decode little-endian to 1 (verified with Python struct). Grounded copy path FUN_08027bec via FUN_0805adb0 (line 34116); save-file offset 0x0E verified against samples/baseline.sav.",
+      "name": "progress_value_b",
+      "offset": 14,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "256-byte zero region immediately after the 16-byte header; verified all-zero in baseline. Represents unused save workspace (save uses only the first 8 KiB: 16-byte header plus zero fill to 0x2000, then 0xFF fill).",
+      "evidence": "Baseline bytes 16..272 verified all-zero with Python (and 0x10..0x1FFF fully zero). No decomp routine references this range (no 0x0E000000 SRAM symbols; only block-copy helper FUN_08027bec via FUN_0805adb0/FUN_0805ce20 is grounded); save-file offset 0x10 verified against samples/baseline.sav.",
+      "name": "unused_zero_block",
+      "offset": 16,
+      "size": 256,
       "type": "bytes"
     }
-  ]
+  ],
+  "game_code": "A5BJ",
+  "id": "a5bj",
+  "magic_signatures": [
+    {
+      "bytes": [
+        68,
+        73,
+        67,
+        69
+      ],
+      "description": "ASCII 'DICE' header",
+      "offset": 0
+    }
+  ],
+  "media": "sram",
+  "size_bytes": 32768,
+  "title": "Chocobo Land - A Game of Dice (Japan)"
 }

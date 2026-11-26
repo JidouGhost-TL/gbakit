@@ -1,29 +1,184 @@
 {
-  "id": "al2p",
-  "game_code": "AL2P",
-  "title": "LEGO Island 2 - The Brickster's Revenge (Europe) (En,Fr,De,Es,It,Nl,Sv,Da)",
-  "media": "sram",
-  "size_bytes": 32768,
-  "magic_signatures": [],
-  "checksums": [],
+  "checksums": [
+    {
+      "algorithm": "sum32_le",
+      "covered_end": 12100,
+      "covered_start": 8,
+      "name": "save_checksum",
+      "seed": 0,
+      "stored_offset": 4,
+      "xor_out": 0
+    }
+  ],
   "fields": [
     {
-      "name": "slot_counter",
-      "offset": 0,
-      "size": 2,
-      "type": "u16_le"
+      "confidence": "likely",
+      "constraint": {
+        "allowed": "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+        "kind": "ascii-charset",
+        "max_len": 3
+      },
+      "description": "Most recently entered 3-character player initials (name-entry working buffer); copied to save offset 0x2BE0 on store and restored on load.",
+      "evidence": "FUN_08001b9c copies 4 bytes from _DAT_08001c60 to SRAM save offset 0x2BE0 via func_0x0803d0f4; FUN_08001aa8 loads 4 bytes from the same SRAM offset back via func_0x0803d090. Value in baseline.sav is 'SWD\\0', matching the 3-char + NUL initials format written by FUN_080004dc (3-byte copy via func_0x080457a8).",
+      "name": "last_entered_initials",
+      "offset": 11232,
+      "size": 3,
+      "type": "ascii"
     },
     {
-      "name": "game_progress_flags",
-      "offset": 2,
-      "size": 2,
-      "type": "u16_le"
+      "confidence": "confirmed",
+      "constraint": {
+        "allowed": "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+        "kind": "ascii-charset",
+        "max_len": 3
+      },
+      "description": "Course 0x00 top-1 entry initials (first of 3 sorted entries in the 24-byte course record).",
+      "evidence": "FUN_080004dc(course = param_1, record = param_1 * 0x18 + table base) stores a 3-byte name at record + 0x00 via func_0x080457a8; table base maps to save offset 0x2BE4 (FUN_08001b9c writes 0x360 bytes there, FUN_08001aa8 reads them back). Baseline: 'NOR'.",
+      "name": "course_00_first_initials",
+      "offset": 11236,
+      "size": 3,
+      "type": "ascii"
     },
     {
-      "name": "player_status_payload",
-      "offset": 4,
-      "size": 16,
-      "type": "bytes"
+      "confidence": "confirmed",
+      "description": "Course 0x00 top-1 entry score (u32 LE at record + 0x04). Baseline: 300, matching FUN_08000584 default FUN_080004dc(0, 300, ...).",
+      "evidence": "FUN_080004dc keeps the 3-entry table sorted by comparing param_2 against u32 slots at record + 0x04/+0x0C/+0x14 and stores the winner; FUN_08001b9c persists the 0x360-byte table at save offset 0x2BE4.",
+      "name": "course_00_first_score",
+      "offset": 11240,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "allowed": "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+        "kind": "ascii-charset",
+        "max_len": 3
+      },
+      "description": "Course 0x04 top-1 entry initials. Baseline: 'DAL' (player-beaten default).",
+      "evidence": "FUN_080004dc record layout (name at record + 0x00 via 3-byte func_0x080457a8 copy); save offset 0x2BE4 + 0x04 * 0x18 = 0x2C44. FUN_08000584 seeds course 0x04 via FUN_080004dc(4, ...).",
+      "name": "course_04_first_initials",
+      "offset": 11332,
+      "size": 3,
+      "type": "ascii"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Course 0x04 top-1 entry score (u32 LE at record + 0x04). Baseline: 529 (beats the 422 default second entry, proving live sorted-insert).",
+      "evidence": "FUN_080004dc sorted-insert into u32 slot at record + 0x04; sample 529 > default 0x1a6 (422) seeded by FUN_08000584 FUN_080004dc(4, 0x1a6, ...). Persisted by FUN_08001b9c at save offset 0x2C48.",
+      "name": "course_04_first_score",
+      "offset": 11336,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "allowed": "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+        "kind": "ascii-charset",
+        "max_len": 3
+      },
+      "description": "Course 0x1A top-1 entry initials. Baseline: 'NOR'.",
+      "evidence": "FUN_080004dc record = idx * 0x18; save offset 0x2BE4 + 0x1A * 0x18 = 0x2E54, name at record + 0x00. FUN_08000584 seeds course 0x1A with FUN_080004dc(0x1a, 300, ...)/(0x1a, 0x96, ...)/(0x1a, 0x46, ...) matching sample scores 300/150/70.",
+      "name": "course_1a_first_initials",
+      "offset": 11860,
+      "size": 3,
+      "type": "ascii"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Course 0x1A top-1 entry score. Baseline: 300.",
+      "evidence": "FUN_080004dc u32 slot at record + 0x04; save offset 0x2E58. Default 300 via FUN_08000584 FUN_080004dc(0x1a, 300, ...); persisted by FUN_08001b9c.",
+      "name": "course_1a_first_score",
+      "offset": 11864,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "allowed": "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+        "kind": "ascii-charset",
+        "max_len": 3
+      },
+      "description": "Course 0x1A top-2 entry initials. Baseline: 'KTS'.",
+      "evidence": "FUN_080004dc second-entry name slot at record + 0x08 (3-byte func_0x080457a8 copy); save offset 0x2E5C. Default 0x96 (150) via FUN_08000584 FUN_080004dc(0x1a, 0x96, ...).",
+      "name": "course_1a_second_initials",
+      "offset": 11868,
+      "size": 3,
+      "type": "ascii"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Course 0x1A top-2 entry score. Baseline: 150.",
+      "evidence": "FUN_080004dc u32 slot at record + 0x0C; save offset 0x2E60. Persisted by FUN_08001b9c, verified by FUN_08001aa8 checksum.",
+      "name": "course_1a_second_score",
+      "offset": 11872,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "allowed": "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+        "kind": "ascii-charset",
+        "max_len": 3
+      },
+      "description": "Course 0x1A top-3 entry initials. Baseline: 'PIH'.",
+      "evidence": "FUN_080004dc third-entry name slot at record + 0x10 (3-byte func_0x080457a8 copy); save offset 0x2E64. Default 0x46 (70) via FUN_08000584 FUN_080004dc(0x1a, 0x46, ...).",
+      "name": "course_1a_third_initials",
+      "offset": 11876,
+      "size": 3,
+      "type": "ascii"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Course 0x1A top-3 entry score. Baseline: 70.",
+      "evidence": "FUN_080004dc u32 slot at record + 0x14; save offset 0x2E68. Persisted by FUN_08001b9c, verified by FUN_08001aa8 checksum.",
+      "name": "course_1a_third_score",
+      "offset": 11880,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "allowed": "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+        "kind": "ascii-charset",
+        "max_len": 3
+      },
+      "description": "Course 0x21 top-1 entry initials (short-scale scoring course). Baseline: 'LOA'.",
+      "evidence": "FUN_080004dc record = idx * 0x18; save offset 0x2BE4 + 0x21 * 0x18 = 0x2EFC, name at record + 0x00. FUN_08000584 seeds course 0x21 with FUN_080004dc(0x21, 0x7d, ...)/(0x21, 100, ...)/(0x21, 0x37, ...) matching sample scores 125/100/55.",
+      "name": "course_21_first_initials",
+      "offset": 12028,
+      "size": 3,
+      "type": "ascii"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Course 0x21 top-1 entry score. Baseline: 125.",
+      "evidence": "FUN_080004dc u32 slot at record + 0x04; save offset 0x2F00. Default 0x7d (125) via FUN_08000584 FUN_080004dc(0x21, 0x7d, ...); persisted by FUN_08001b9c.",
+      "name": "course_21_first_score",
+      "offset": 12032,
+      "size": 4,
+      "type": "u32_le"
     }
-  ]
+  ],
+  "game_code": "AL2P",
+  "id": "al2p",
+  "magic_signatures": [
+    {
+      "bytes": [
+        41,
+        216,
+        254,
+        72
+      ],
+      "description": "SRAM header magic u32 0x48FED829 at offset 0; FUN_08001aa8 compares *(u32*)save_base to this constant before accepting the save (falls back to FUN_08000584 defaults on mismatch).",
+      "offset": 0
+    }
+  ],
+  "media": "sram",
+  "size_bytes": 32768,
+  "title": "LEGO Island 2 - The Brickster's Revenge (Europe) (En,Fr,De,Es,It,Nl,Sv,Da)"
 }

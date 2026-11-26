@@ -1,45 +1,171 @@
 {
-  "id": "aptp",
-  "game_code": "APTP",
-  "title": "Powerpuff Girls, The - Mojo Jojo A-Go-Go (Europe) (En,Fr,De,Es,It,Nl)",
-  "media": "eeprom512",
-  "size_bytes": 512,
-  "magic_signatures": [
-    {
-      "offset": 0,
-      "bytes": [
-        48,
-        53,
-        49,
-        57
-      ]
-    }
-  ],
   "checksums": [],
+  "eeprom_rev8": true,
   "fields": [
     {
-      "name": "magic_header",
+      "confidence": "confirmed",
+      "description": "8-byte ASCII header tag 'Oct 9150'; EEPROM block 0 read path",
+      "evidence": "FUN_080530f0 reads EEPROM block 0 (8 bytes) into RAM staging buffer; FUN_0805327c verify-reads it back; FUN_08053070 triggers the bus transfer. Logical bytes at save offsets 0x00-0x07 match baseline exactly (raw bytes are bit-reversed per 8-byte block, hence eeprom_rev8).",
+      "name": "header_tag",
       "offset": 0,
+      "size": 8,
+      "type": "ascii"
+    },
+    {
+      "confidence": "likely",
+      "description": "Most recent score; mirrors board_a top entry value 30000",
+      "evidence": "FUN_080531a0 writes logical EEPROM block 3 (offsets 0x18-0x1F) and FUN_080532d4 write-verifies it with up to 3 retries; value 30000 mirrors board_a_entry LEX score at save offset 0x3C/0x60 in baseline.sav.",
+      "name": "last_score",
+      "offset": 24,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Most recent sub-score at a fixed 10:1 ratio to last_score (3000 = 30000/10)",
+      "evidence": "FUN_080531a0/FUN_080532d4 write-verify path for logical EEPROM block 3 (offsets 0x18-0x1F); 10:1 ratio to last_score holds for every name/score record in baseline.sav.",
+      "name": "last_bonus",
+      "offset": 28,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Scoreboard A entry 0 initials 'BOB'",
+      "evidence": "Record bytes at save offsets 0x20-0x2B verified against baseline.sav; transported via the FUN_080530f0 block-read / FUN_080531a0 block-write EEPROM pair driven by FUN_08053070.",
+      "name": "board_a_entry0_name",
+      "offset": 32,
       "size": 4,
       "type": "ascii"
     },
     {
-      "name": "slot_counter",
-      "offset": 4,
-      "size": 2,
-      "type": "u16_le"
+      "confidence": "likely",
+      "description": "Scoreboard A entry 0 primary score 20000",
+      "evidence": "u32_le at save offset 0x24 verified against baseline.sav (20000); persisted through the FUN_080532d4 write + FUN_0805327c verify-read EEPROM path.",
+      "name": "board_a_entry0_score",
+      "offset": 36,
+      "size": 4,
+      "type": "u32_le"
     },
     {
-      "name": "game_progress_flags",
-      "offset": 6,
-      "size": 2,
-      "type": "u16_le"
+      "confidence": "likely",
+      "description": "Scoreboard A entry 0 secondary score 2000 (score/10)",
+      "evidence": "u32_le at save offset 0x28 verified against baseline.sav (2000); same FUN_080531a0/FUN_080532d4 EEPROM write-verify path as the paired score.",
+      "name": "board_a_entry0_bonus",
+      "offset": 40,
+      "size": 4,
+      "type": "u32_le"
     },
     {
-      "name": "player_status_payload",
-      "offset": 8,
-      "size": 16,
+      "confidence": "likely",
+      "description": "Scoreboard A entry 1 initials 'IAN'",
+      "evidence": "Record bytes at save offsets 0x2C-0x37 verified against baseline.sav; transported via the FUN_080530f0 block-read / FUN_080531a0 block-write EEPROM pair driven by FUN_08053070.",
+      "name": "board_a_entry1_name",
+      "offset": 44,
+      "size": 4,
+      "type": "ascii"
+    },
+    {
+      "confidence": "likely",
+      "description": "Scoreboard A entry 1 primary score 10000",
+      "evidence": "u32_le at save offset 0x30 verified against baseline.sav (10000); persisted through the FUN_080532d4 write + FUN_0805327c verify-read EEPROM path.",
+      "name": "board_a_entry1_score",
+      "offset": 48,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Scoreboard A entry 1 secondary score 1000 (score/10)",
+      "evidence": "u32_le at save offset 0x34 verified against baseline.sav (1000); same FUN_080531a0/FUN_080532d4 EEPROM write-verify path as the paired score.",
+      "name": "board_a_entry1_bonus",
+      "offset": 52,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Scoreboard B entry 0 initials 'LEX', values scaled 1/100 vs board A",
+      "evidence": "Record bytes at save offsets 0x110-0x11B verified against baseline.sav; transported via the FUN_080530f0 block-read / FUN_080531a0 block-write EEPROM pair driven by FUN_08053070.",
+      "name": "board_b_entry0_name",
+      "offset": 272,
+      "size": 4,
+      "type": "ascii"
+    },
+    {
+      "confidence": "likely",
+      "description": "Scoreboard B entry 0 primary score 300",
+      "evidence": "u32_le at save offset 0x114 verified against baseline.sav (300); persisted through the FUN_080532d4 write + FUN_0805327c verify-read EEPROM path.",
+      "name": "board_b_entry0_score",
+      "offset": 276,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Scoreboard B entry 0 secondary score 30 (score/10)",
+      "evidence": "u32_le at save offset 0x118 verified against baseline.sav (30); same FUN_080531a0/FUN_080532d4 EEPROM write-verify path as the paired score.",
+      "name": "board_b_entry0_bonus",
+      "offset": 280,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Scoreboard B entry 1 initials 'BOB'",
+      "evidence": "Record bytes at save offsets 0x11C-0x127 verified against baseline.sav; transported via the FUN_080530f0 block-read / FUN_080531a0 block-write EEPROM pair driven by FUN_08053070.",
+      "name": "board_b_entry1_name",
+      "offset": 284,
+      "size": 4,
+      "type": "ascii"
+    },
+    {
+      "confidence": "likely",
+      "description": "Scoreboard B entry 1 primary score 200",
+      "evidence": "u32_le at save offset 0x120 verified against baseline.sav (200); persisted through the FUN_080532d4 write + FUN_0805327c verify-read EEPROM path.",
+      "name": "board_b_entry1_score",
+      "offset": 288,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Scoreboard B entry 1 secondary score 20 (score/10)",
+      "evidence": "u32_le at save offset 0x124 verified against baseline.sav (20); same FUN_080531a0/FUN_080532d4 EEPROM write-verify path as the paired score.",
+      "name": "board_b_entry1_bonus",
+      "offset": 292,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Trailing 24-byte footer after the last scoreboard record; mostly zero with marker bytes 00 C8 C8 00 at 0x188-0x18B",
+      "evidence": "Bytes at save offsets 0x188-0x19F verified against baseline.sav; region is written as whole 8-byte EEPROM blocks via FUN_080531a0/FUN_080532d4. No Schema v2 checksum algorithm verifies against it, so it is kept as raw bytes (see SPEC.md).",
+      "name": "table_footer",
+      "offset": 392,
+      "size": 24,
       "type": "bytes"
     }
-  ]
+  ],
+  "game_code": "APTP",
+  "id": "aptp",
+  "magic_signatures": [
+    {
+      "bytes": [
+        79,
+        99,
+        116,
+        32,
+        57,
+        49,
+        53,
+        48
+      ],
+      "description": "ASCII 'Oct 9150' header tag, logical (un-reversed) domain",
+      "offset": 0
+    }
+  ],
+  "media": "eeprom512",
+  "size_bytes": 512,
+  "title": "Powerpuff Girls, The - Mojo Jojo A-Go-Go (Europe) (En,Fr,De,Es,It,Nl)"
 }

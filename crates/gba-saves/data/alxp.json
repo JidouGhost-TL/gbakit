@@ -1,29 +1,201 @@
 {
-  "id": "alxp",
-  "game_code": "ALXP",
-  "title": "Ace Lightning (Europe)",
-  "media": "eeprom512",
-  "size_bytes": 512,
-  "magic_signatures": [],
-  "checksums": [],
+  "checksums": [
+    {
+      "algorithm": "sum16_be",
+      "covered_end": 512,
+      "covered_start": 3,
+      "name": "save_checksum",
+      "seed": 0,
+      "stored_offset": 1,
+      "xor_out": 0
+    }
+  ],
+  "eeprom_rev8": true,
   "fields": [
     {
-      "name": "slot_counter",
-      "offset": 0,
-      "size": 2,
-      "type": "u16_le"
+      "confidence": "confirmed",
+      "description": "Slot-0 validity marker: init writes 0x26, boot reload checks word == 0x26",
+      "evidence": "FUN_08008618 sets RAM save struct word0 to 0x26 (struct+0x00 = save+3) and after FUN_08001d78 slot-0 load checks *piVar1==0x26; FUN_08001ce0 persists struct via FUN_08001ad8(stride*slot+3).",
+      "name": "slot_valid_marker",
+      "offset": 3,
+      "size": 4,
+      "type": "u32_le"
     },
     {
-      "name": "game_progress_flags",
-      "offset": 2,
-      "size": 2,
-      "type": "u16_le"
+      "confidence": "likely",
+      "description": "Persistent gameplay/config word 1 (init default 1)",
+      "evidence": "FUN_08008618 inits RAM save struct piVar1[1] (struct+0x04 = save+7) to 1; persisted by FUN_08001ce0/FUN_08001d78 slot 0.",
+      "name": "game_param_1",
+      "offset": 7,
+      "size": 4,
+      "type": "u32_le"
     },
     {
-      "name": "player_status_payload",
-      "offset": 4,
-      "size": 16,
+      "confidence": "likely",
+      "description": "Persistent gameplay/config word 2 (init default 0)",
+      "evidence": "FUN_08008618 leaves RAM save struct piVar1[2] (struct+0x08 = save+11) zeroed; persisted by FUN_08001ce0/FUN_08001d78 slot 0.",
+      "name": "game_param_2",
+      "offset": 11,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Persistent gameplay/config word 3 (init default 1)",
+      "evidence": "FUN_08008618 inits RAM save struct piVar1[3] (struct+0x0C = save+15) to 1; persisted by FUN_08001ce0/FUN_08001d78 slot 0.",
+      "name": "game_param_3",
+      "offset": 15,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Persistent option-like word (init default 127)",
+      "evidence": "FUN_08008618 inits RAM save struct piVar1[4] (struct+0x10 = save+19) to 0x7f; persisted by FUN_08001ce0/FUN_08001d78 slot 0.",
+      "name": "game_option_127",
+      "offset": 19,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Persistent gameplay/config word 5 (init default 1)",
+      "evidence": "FUN_08008618 inits RAM save struct piVar1[5] (struct+0x14 = save+23) to 1; persisted by FUN_08001ce0/FUN_08001d78 slot 0.",
+      "name": "game_param_5",
+      "offset": 23,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Persistent progress/flags word (init -1; live capture holds 0x80000000, proving gameplay mutation)",
+      "evidence": "FUN_08008618 inits RAM save struct word6 (struct+0x18 = save+27) to -1; baseline shows 0x80000000 so gameplay rewrites it; persisted by FUN_08001ce0/FUN_08001d78 slot 0.",
+      "name": "progress_flags",
+      "offset": 27,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "High-score entry 0 (default 400000)",
+      "evidence": "FUN_08008618 fills 10 score words (struct+0x1C..+0x43 = save+31..+70) via (11-i)*1000 then ROM defaults _DAT_0800870c.._DAT_08008720; paired with 10 name records; persisted by FUN_08001ce0/FUN_08001d78 slot 0.",
+      "name": "high_score_0",
+      "offset": 31,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "High-score entry 1 (default 300000)",
+      "evidence": "FUN_08008618 fills 10 score words (struct+0x1C..+0x43 = save+31..+70) via (11-i)*1000 then ROM defaults _DAT_0800870c.._DAT_08008720; paired with 10 name records; persisted by FUN_08001ce0/FUN_08001d78 slot 0.",
+      "name": "high_score_1",
+      "offset": 35,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "High-score entry 2 (default 200000)",
+      "evidence": "FUN_08008618 fills 10 score words (struct+0x1C..+0x43 = save+31..+70) via (11-i)*1000 then ROM defaults _DAT_0800870c.._DAT_08008720; paired with 10 name records; persisted by FUN_08001ce0/FUN_08001d78 slot 0.",
+      "name": "high_score_2",
+      "offset": 39,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "High-score entry 3 (default 100000)",
+      "evidence": "FUN_08008618 fills 10 score words (struct+0x1C..+0x43 = save+31..+70) via (11-i)*1000 then ROM defaults _DAT_0800870c.._DAT_08008720; paired with 10 name records; persisted by FUN_08001ce0/FUN_08001d78 slot 0.",
+      "name": "high_score_3",
+      "offset": 43,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "High-score entry 4 (default 50000)",
+      "evidence": "FUN_08008618 fills 10 score words (struct+0x1C..+0x43 = save+31..+70) via (11-i)*1000 then ROM defaults _DAT_0800870c.._DAT_08008720; paired with 10 name records; persisted by FUN_08001ce0/FUN_08001d78 slot 0.",
+      "name": "high_score_4",
+      "offset": 47,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "High-score entry 5 (default 25000)",
+      "evidence": "FUN_08008618 fills 10 score words (struct+0x1C..+0x43 = save+31..+70) via (11-i)*1000 then ROM defaults _DAT_0800870c.._DAT_08008720; paired with 10 name records; persisted by FUN_08001ce0/FUN_08001d78 slot 0.",
+      "name": "high_score_5",
+      "offset": 51,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "High-score entry 6 (default 5000)",
+      "evidence": "FUN_08008618 fills 10 score words (struct+0x1C..+0x43 = save+31..+70) via (11-i)*1000 then ROM defaults _DAT_0800870c.._DAT_08008720; paired with 10 name records; persisted by FUN_08001ce0/FUN_08001d78 slot 0.",
+      "name": "high_score_6",
+      "offset": 55,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "High-score entry 7 (default 4000)",
+      "evidence": "FUN_08008618 fills 10 score words (struct+0x1C..+0x43 = save+31..+70) via (11-i)*1000 then ROM defaults _DAT_0800870c.._DAT_08008720; paired with 10 name records; persisted by FUN_08001ce0/FUN_08001d78 slot 0.",
+      "name": "high_score_7",
+      "offset": 59,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "High-score entry 8 (default 3000)",
+      "evidence": "FUN_08008618 fills 10 score words (struct+0x1C..+0x43 = save+31..+70) via (11-i)*1000 then ROM defaults _DAT_0800870c.._DAT_08008720; paired with 10 name records; persisted by FUN_08001ce0/FUN_08001d78 slot 0.",
+      "name": "high_score_8",
+      "offset": 63,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "High-score entry 9 (default 2000)",
+      "evidence": "FUN_08008618 fills 10 score words (struct+0x1C..+0x43 = save+31..+70) via (11-i)*1000 then ROM defaults _DAT_0800870c.._DAT_08008720; paired with 10 name records; persisted by FUN_08001ce0/FUN_08001d78 slot 0.",
+      "name": "high_score_9",
+      "offset": 67,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Ten packed 8-byte entry name records paired with high_score_0..9 (ASCII text, high bytes 0x00)",
+      "evidence": "FUN_08008618 copies 10x8 bytes from ROM table _DAT_08008708 to struct+0x48 (save+0x4B) with a 10-iteration loop (iVar11+=6); persisted by FUN_08001ce0/FUN_08001d78 slot 0.",
+      "name": "high_score_names",
+      "offset": 75,
+      "size": 80,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Secondary slot: eight 24-byte records (0xFFFFFFFF marker + zeros); untouched defaults in this capture",
+      "evidence": "FUN_08008618 inits eight 24-byte records at _DAT_08008724 (save+0xF3) with 0xffffffff marker + zeros in an 8-iteration loop; saved/loaded by FUN_08001ce0/FUN_08001d78 slot 1 via uRam0800873c.",
+      "name": "slot1_records",
+      "offset": 243,
+      "size": 192,
       "type": "bytes"
     }
-  ]
+  ],
+  "game_code": "ALXP",
+  "id": "alxp",
+  "magic_signatures": [
+    {
+      "bytes": [
+        38
+      ],
+      "description": "ASCII '&' EEPROM validity tag written by format routine",
+      "offset": 0
+    }
+  ],
+  "media": "eeprom512",
+  "size_bytes": 512,
+  "title": "Ace Lightning (Europe)"
 }

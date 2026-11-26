@@ -1,45 +1,253 @@
 {
-  "id": "ahkj",
+  "checksums": [],
+  "fields": [
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "allowed": "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+        "kind": "ascii-charset",
+        "max_len": 8
+      },
+      "description": "8-byte save magic 'ABBACKUP' at SRAM 0x0E000000.",
+      "evidence": "FUN_08000264 reads 8B at SRAM 0x0E000000 (save offset 0x00) and compares against the ROM magic word; FUN_08000304 writes the 8B magic from _DAT_08000350 to 0x0E000000 on format; baseline bytes 0x00-0x07 are 41 42 42 41 43 4B 55 50.",
+      "name": "save_magic",
+      "offset": 0,
+      "size": 8,
+      "type": "ascii"
+    },
+    {
+      "confidence": "guessed",
+      "description": "Reserved 8 bytes between magic and allocation table; zero in baseline.",
+      "evidence": "FUN_08000304 zero-fills all 256 SRAM sectors (0x100 x 0x80B writes from 0x0E000000) then writes only the 8B magic, leaving save offsets 0x08-0x0F zero as seen in baseline; no reader of this range observed in decomp (consistent with reserved header or two freed table entries).",
+      "name": "header_reserved",
+      "offset": 8,
+      "size": 8,
+      "type": "bytes"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 1,
+        "minimum": 0
+      },
+      "description": "Allocation-table entry 0, valid flag: bank 0 (system block) is allocated.",
+      "evidence": "FUN_080003b4 writes entry byte0=0x01 on allocation; FUN_08000360/FUN_080004f8/FUN_08000578 match entries with byte0!=0 and byte1==bank id; baseline offset 0x10 is 0x01.",
+      "name": "bank0_valid",
+      "offset": 16,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 2,
+        "minimum": 0
+      },
+      "description": "Allocation-table entry 0, bank id 0 (system/config block).",
+      "evidence": "FUN_080003b4 stores param_1 (bank id) into entry byte1; wrappers match (byte)pc[1]==param_1; bank id 0 is bound by FUN_0801902c (FUN_080004f8(0,0,0x40,...)); baseline offset 0x11 is 0x00.",
+      "name": "bank0_bank_id",
+      "offset": 17,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 255,
+        "minimum": 4
+      },
+      "description": "Allocation-table entry 0, start sector 4: bank 0 data lives at SRAM 0x0E000200 (file offset 0x200).",
+      "evidence": "FUN_080003b4 writes the allocated sector into entry byte2 via FUN_0800065c; FUN_080004f8/FUN_08000578 compute SRAM address sector*0x80+offset+0x0E000000; baseline offset 0x12 is 0x04, contiguous with bank 1 at sector 5.",
+      "name": "bank0_start_sector",
+      "offset": 18,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 252,
+        "minimum": 1
+      },
+      "description": "Allocation-table entry 0, sector count 1 (0x80B reserved, 0x40B used).",
+      "evidence": "FUN_080003b4 writes (size+0x7F)>>7 into entry byte3 and I/O bounds-checks offset+size<=count*0x80; FUN_0801902c allocates bank 0 with FUN_080003b4(0,0x80) and reads 0x40B; baseline offset 0x13 is 0x01.",
+      "name": "bank0_sector_count",
+      "offset": 19,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 1,
+        "minimum": 0
+      },
+      "description": "Allocation-table entry 1, valid flag: bank 1 (main data block) is allocated.",
+      "evidence": "Same allocator/matcher mechanism as bank0_valid (FUN_080003b4/FUN_08000360/FUN_080004f8/FUN_08000578); baseline offset 0x14 is 0x01.",
+      "name": "bank1_valid",
+      "offset": 20,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 2,
+        "minimum": 0
+      },
+      "description": "Allocation-table entry 1, bank id 1 (main data block).",
+      "evidence": "Bank id 1 is bound by FUN_080190d4 (FUN_080003b4(1,_DAT_08019114), FUN_08000578(1,0,size,...)); baseline offset 0x15 is 0x01.",
+      "name": "bank1_bank_id",
+      "offset": 21,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 255,
+        "minimum": 4
+      },
+      "description": "Allocation-table entry 1, start sector 5: bank 1 data lives at SRAM 0x0E000280 (file offset 0x280).",
+      "evidence": "Sector/count addressing per FUN_080004f8/FUN_08000578 (sector*0x80+0x0E000000); baseline offset 0x16 is 0x05, immediately following bank 0 (sector 4, 1 sector).",
+      "name": "bank1_start_sector",
+      "offset": 22,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 252,
+        "minimum": 1
+      },
+      "description": "Allocation-table entry 1, sector count 39 (0x1380B reserved for main data).",
+      "evidence": "Entry byte3 semantics per FUN_080003b4 ((size+0x7F)>>7); baseline offset 0x17 is 0x27=39, and 5+39=44 exactly equals bank 2 start sector, proving the entry.",
+      "name": "bank1_sector_count",
+      "offset": 23,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 1,
+        "minimum": 0
+      },
+      "description": "Allocation-table entry 2, valid flag: bank 2 (persistent word + arena) is allocated.",
+      "evidence": "Same allocator/matcher mechanism as bank0_valid (FUN_080003b4/FUN_08000360/FUN_080004f8/FUN_08000578); baseline offset 0x18 is 0x01.",
+      "name": "bank2_valid",
+      "offset": 24,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 2,
+        "minimum": 0
+      },
+      "description": "Allocation-table entry 2, bank id 2 (persistent word block).",
+      "evidence": "Bank id 2 is bound by FUN_08015578 (FUN_080003b4(2,_DAT_080155bc), FUN_08000578/FUN_080004f8(2,0,4,...)); baseline offset 0x19 is 0x02.",
+      "name": "bank2_bank_id",
+      "offset": 25,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 255,
+        "minimum": 4
+      },
+      "description": "Allocation-table entry 2, start sector 44: bank 2 data lives at SRAM 0x0E001600 (file offset 0x1600).",
+      "evidence": "Sector addressing per FUN_080004f8/FUN_08000578; baseline offset 0x1A is 0x2C=44, exactly bank 1 start (5) plus bank 1 count (39).",
+      "name": "bank2_start_sector",
+      "offset": 26,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 252,
+        "minimum": 1
+      },
+      "description": "Allocation-table entry 2, sector count 182 (0x5B00B reserved arena).",
+      "evidence": "Entry byte3 semantics per FUN_080003b4; baseline offset 0x1B is 0xB6=182, and 44+182=226 stays within the 252 allocatable sectors (4-255).",
+      "name": "bank2_sector_count",
+      "offset": 27,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Bank 0 data extent (sector 4, 0x80B); first 0x40B are the system/config mirror loaded at boot, rest reserved.",
+      "evidence": "FUN_0801902c allocates bank 0 via FUN_080003b4(0,0x80) then loads 0x40B with FUN_080004f8(0,0,0x40,RAM+0x1C) where RAM base is _DAT_08019070 (same base as _DAT_08017b34 in boot FUN_08017ad4); whole sector zero in baseline (fresh save), so sub-field semantics are unconfirmed.",
+      "name": "bank0_system_block",
+      "offset": 512,
+      "size": 128,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Bank 1 data extent (sectors 5-43, 39*0x80=0x1380B); main save payload stored/loaded as one blob at init.",
+      "evidence": "FUN_080190d4 allocates bank 1 via FUN_080003b4(1,_DAT_08019114) then stores/loads the full struct with FUN_08000578(1,0,size,...) (fresh) into the static RAM struct at _DAT_08019110; all zeros in baseline (fresh save), so inner gameplay struct layout is unconfirmed.",
+      "name": "bank1_data_block",
+      "offset": 640,
+      "size": 4992,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "First persistent word of bank 2 (sector 44); zeroed on first init, otherwise loaded to EWRAM.",
+      "evidence": "FUN_08015578 memsets the EWRAM word at _DAT_080155b4, zeroes it and stores with FUN_08000578(2,0,4,...) when bank 2 is missing, else loads with FUN_080004f8(2,0,4,...); baseline file offset 0x1600 is 0x00000000.",
+      "name": "system_counter",
+      "offset": 5632,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Remainder of the bank 2 sector reservation (sectors 44-225 minus the first word); untouched zeros in baseline.",
+      "evidence": "Descriptor entry 2 reserves 0xB6=182 sectors from sector 44 (file 0x1600-0x70FF) per FUN_080003b4/FUN_08000578 bounds (count*0x80); only the first 4B are touched by FUN_08015578; baseline 0x1604-0x70FF all zero.",
+      "name": "bank2_reserved",
+      "offset": 5636,
+      "size": 23292,
+      "type": "bytes"
+    }
+  ],
   "game_code": "AHKJ",
-  "title": "Hikaru no Go (Japan)",
-  "media": "sram",
-  "size_bytes": 32768,
+  "id": "ahkj",
   "magic_signatures": [
     {
-      "offset": 0,
       "bytes": [
         65,
         66,
         66,
-        65
-      ]
+        65,
+        67,
+        75,
+        85,
+        80
+      ],
+      "description": "ASCII 'ABBACKUP' save magic at SRAM 0x0E000000",
+      "offset": 0
     }
   ],
-  "checksums": [],
-  "fields": [
-    {
-      "name": "magic_header",
-      "offset": 0,
-      "size": 4,
-      "type": "ascii"
-    },
-    {
-      "name": "slot_counter",
-      "offset": 4,
-      "size": 2,
-      "type": "u16_le"
-    },
-    {
-      "name": "game_progress_flags",
-      "offset": 6,
-      "size": 2,
-      "type": "u16_le"
-    },
-    {
-      "name": "player_status_payload",
-      "offset": 8,
-      "size": 16,
-      "type": "bytes"
-    }
-  ]
+  "media": "sram",
+  "size_bytes": 32768,
+  "title": "Hikaru no Go (Japan)"
 }

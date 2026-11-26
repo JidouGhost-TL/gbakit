@@ -1,45 +1,194 @@
 {
-  "id": "by2e",
+  "checksums": [],
+  "eeprom_rev8": false,
+  "fields": [
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "kind": "enum",
+        "labels": {
+          "0": "committed_valid",
+          "3": "update_in_progress"
+        },
+        "values": [
+          0,
+          3
+        ]
+      },
+      "description": "SRAM bank-0 status byte at 0x0E000000. Read by the boot dispatch routine to select the boot path; written as 3 while the save area is being updated and as 0 once the cart ID is committed.",
+      "evidence": "FUN_08000dd0 reads 1 byte from SRAM 0x0E000000 via the SRAM read helper and dispatches on it; FUN_08000e04 writes value 3 to SRAM 0x0E000000 and FUN_08000ec0 writes value 0 to SRAM 0x0E000000 (both single-byte SRAM writes via FUN_08004d34). FUN_08000c78 invokes FUN_08000e04 then FUN_08000ec0 after mirroring the RAM image, so the resting value is 0 (matches baseline byte 0 = 0x00).",
+      "name": "save_status_flag",
+      "offset": 0,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "kind": "ascii-charset",
+        "allowed": "0123456789",
+        "max_len": 6
+      },
+      "description": "First 6 characters of the 18-byte cart/build ID string stored at save offset 1. Read back and byte-compared against the ROM reference by the boot validator; written from ROM by the save init routine. Baseline decodes to '100305'.",
+      "evidence": "FUN_08000d18 reads 0x12 (18) bytes from SRAM into a stack buffer and compares them byte-by-byte against the ROM reference (returns nonzero on full match); FUN_08000e5c writes 0x12 bytes from ROM to SRAM via FUN_08004d34. Baseline save offsets 1..6 hold ASCII '100305'.",
+      "name": "cart_build_code",
+      "offset": 1,
+      "size": 6,
+      "type": "ascii"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "kind": "ascii-charset",
+        "allowed": "_",
+        "max_len": 1
+      },
+      "description": "Separator underscore between the build code and the product code inside the 18-byte cart ID. Covered by the same 18-byte verify/copy as the surrounding ID bytes; baseline byte 7 is 0x5F ('_').",
+      "evidence": "FUN_08000d18 verifies save offsets 1..18 as one 0x12-byte unit (byte 7 included in the compare loop); FUN_08000e5c writes the same 0x12-byte unit via FUN_08004d34. Baseline offset 7 is '_'.",
+      "name": "cart_id_separator_a",
+      "offset": 7,
+      "size": 1,
+      "type": "ascii"
+    },
+    {
+      "confidence": "likely",
+      "constraint": {
+        "kind": "ascii-charset",
+        "allowed": "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789",
+        "max_len": 6
+      },
+      "description": "Middle 6 characters of the cart ID identifying the multicart product ('DM2in1', i.e. Duel Monsters 2-in-1 pack). Part of the verified 18-byte ID unit; baseline offsets 8..13 decode to 'DM2in1'.",
+      "evidence": "FUN_08000d18 verifies save offsets 1..18 as one 0x12-byte unit (offsets 8..13 included); FUN_08000e5c writes the same unit via FUN_08004d34. Baseline offsets 8..13 hold ASCII 'DM2in1'.",
+      "name": "pack_product_code",
+      "offset": 8,
+      "size": 6,
+      "type": "ascii"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "kind": "ascii-charset",
+        "allowed": "_",
+        "max_len": 1
+      },
+      "description": "Separator underscore between the product code and the region/build suffix inside the 18-byte cart ID. Covered by the same 18-byte verify/copy; baseline byte 14 is 0x5F ('_').",
+      "evidence": "FUN_08000d18 verifies save offsets 1..18 as one 0x12-byte unit (byte 14 included in the compare loop); FUN_08000e5c writes the same 0x12-byte unit via FUN_08004d34. Baseline offset 14 is '_'.",
+      "name": "cart_id_separator_b",
+      "offset": 14,
+      "size": 1,
+      "type": "ascii"
+    },
+    {
+      "confidence": "likely",
+      "constraint": {
+        "kind": "ascii-charset",
+        "allowed": "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+        "max_len": 4
+      },
+      "description": "Trailing 4 characters of the cart ID (region/build suffix). Part of the verified 18-byte ID unit; baseline offsets 15..18 decode to 'KDEH'.",
+      "evidence": "FUN_08000d18 verifies save offsets 1..18 as one 0x12-byte unit (offsets 15..18 included); FUN_08000e5c writes the same unit via FUN_08004d34. Baseline offsets 15..18 hold ASCII 'KDEH'.",
+      "name": "build_region_suffix",
+      "offset": 15,
+      "size": 4,
+      "type": "ascii"
+    },
+    {
+      "confidence": "likely",
+      "description": "Remainder of SRAM bank 0 (offsets 0x13..0x1FFF): the tail of the 0x2000-byte RAM save-image mirrored into bank 0. All zeros in the live baseline (fresh/empty RAM image); nonzero gameplay data would appear here once the packed-in titles store state through this buffer.",
+      "evidence": "FUN_08000c78 copies 0x2000 bytes from the RAM save buffer to SRAM 0x0E000000 (bank 0) via FUN_08004d34, which performs the byte copy in FUN_08004c10 plus a read-back verify with up to 3 retries. Baseline offsets 0x13..0x1FFF are all 0x00.",
+      "name": "bank0_ram_image_tail",
+      "offset": 19,
+      "size": 8173,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "First byte of SRAM bank 1 (0x0E002000): copy of RAM save-image byte 0 written by the same mirror loop as bank 0. Bank 1 never receives the status-flag patches (those target bank 0 only), so this is the raw image byte; 0x00 in the baseline.",
+      "evidence": "FUN_08000c78 writes the same 0x2000-byte RAM image to SRAM 0x0E002000 via FUN_08004d34 (second of four mirror writes). Baseline offset 0x2000 is 0x00.",
+      "name": "bank1_status_copy",
+      "offset": 8192,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "First byte of SRAM bank 2 (0x0E004000): copy of RAM save-image byte 0 from the mirror loop. 0x00 in the baseline.",
+      "evidence": "FUN_08000c78 writes the same 0x2000-byte RAM image to SRAM 0x0E004000 via FUN_08004d34 (third of four mirror writes). Baseline offset 0x4000 is 0x00.",
+      "name": "bank2_status_copy",
+      "offset": 16384,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "First byte of SRAM bank 3 (0x0E006000): copy of RAM save-image byte 0 from the mirror loop. 0x00 in the baseline.",
+      "evidence": "FUN_08000c78 writes the same 0x2000-byte RAM image to SRAM 0x0E006000 via FUN_08004d34 (fourth of four mirror writes). Baseline offset 0x6000 is 0x00.",
+      "name": "bank3_status_copy",
+      "offset": 24576,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "SRAM bank 1 payload (offsets 0x2001..0x3FFF): verbatim copy of RAM save-image bytes 1..0x1FFF. All zeros in the baseline.",
+      "evidence": "FUN_08000c78 copies 0x2000 bytes from the RAM save buffer to SRAM 0x0E002000 via FUN_08004d34. Baseline offsets 0x2001..0x3FFF are all 0x00.",
+      "name": "bank1_ram_image_copy",
+      "offset": 8193,
+      "size": 8191,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "SRAM bank 2 payload (offsets 0x4001..0x5FFF): verbatim copy of RAM save-image bytes 1..0x1FFF. All zeros in the baseline.",
+      "evidence": "FUN_08000c78 copies 0x2000 bytes from the RAM save buffer to SRAM 0x0E004000 via FUN_08004d34. Baseline offsets 0x4001..0x5FFF are all 0x00.",
+      "name": "bank2_ram_image_copy",
+      "offset": 16385,
+      "size": 8191,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "SRAM bank 3 payload (offsets 0x6001..0x7FFF): verbatim copy of RAM save-image bytes 1..0x1FFF. All zeros in the baseline.",
+      "evidence": "FUN_08000c78 copies 0x2000 bytes from the RAM save buffer to SRAM 0x0E006000 via FUN_08004d34. Baseline offsets 0x6001..0x7FFF are all 0x00.",
+      "name": "bank3_ram_image_copy",
+      "offset": 24577,
+      "size": 8191,
+      "type": "bytes"
+    }
+  ],
   "game_code": "BY2E",
-  "title": "Yu-Gi-Oh! Double Pack (USA)",
-  "media": "sram",
-  "size_bytes": 32768,
+  "id": "by2e",
   "magic_signatures": [
     {
-      "offset": 1,
       "bytes": [
         49,
         48,
         48,
         51
-      ]
+      ],
+      "description": "First 4 bytes of the cart ID ('1003') at save offset 1",
+      "offset": 1
     }
   ],
-  "checksums": [],
-  "fields": [
+  "media": "sram",
+  "size_bytes": 32768,
+  "title": "Yu-Gi-Oh! Double Pack (USA)",
+  "copy_groups": [
     {
-      "name": "magic_header",
-      "offset": 1,
-      "size": 4,
-      "type": "ascii"
+      "name": "ram_image_status_copies",
+      "fields": [
+        "bank1_status_copy",
+        "bank2_status_copy",
+        "bank3_status_copy"
+      ]
     },
     {
-      "name": "slot_counter",
-      "offset": 5,
-      "size": 2,
-      "type": "u16_le"
-    },
-    {
-      "name": "game_progress_flags",
-      "offset": 7,
-      "size": 2,
-      "type": "u16_le"
-    },
-    {
-      "name": "player_status_payload",
-      "offset": 9,
-      "size": 16,
-      "type": "bytes"
+      "name": "ram_image_payload_copies",
+      "fields": [
+        "bank1_ram_image_copy",
+        "bank2_ram_image_copy",
+        "bank3_ram_image_copy"
+      ]
     }
   ]
 }

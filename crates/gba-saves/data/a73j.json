@@ -11,35 +11,86 @@
         87,
         72,
         73,
-        83
-      ]
+        83,
+        84,
+        76,
+        69,
+        0
+      ],
+      "description": "ASCII 'WHISTLE\\0' save signature written by FUN_080380e4, verified by FUN_080380a8"
     }
   ],
-  "checksums": [],
+  "checksums": [
+    {
+      "name": "payload_bytesum32",
+      "algorithm": "sum32_le",
+      "covered_start": 0,
+      "covered_end": 2224,
+      "stored_offset": 8,
+      "seed": 0,
+      "xor_out": 0
+    }
+  ],
   "fields": [
     {
-      "name": "magic_header",
+      "name": "save_signature_whistle",
       "offset": 0,
+      "size": 8,
+      "type": "ascii",
+      "description": "8-byte save signature, ASCII 'WHISTLE' plus NUL terminator. Written by FUN_080380e4 from the ROM constant at _DAT_08038148 and byte-compared on load by FUN_080380a8 via func_0x0803a958 against _DAT_080380d4.",
+      "confidence": "confirmed",
+      "evidence": "FUN_080380e4 copies 8 bytes (*puVar4/_DAT_08038148) to struct+0x0; FUN_080380a8 validates via func_0x0803a958 vs _DAT_080380d4; baseline bytes 57 48 49 53 54 4C 45 00.",
+      "constraint": {
+        "kind": "ascii-charset",
+        "allowed": "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz! -.",
+        "max_len": 8
+      }
+    },
+    {
+      "name": "payload_status_word",
+      "offset": 12,
       "size": 4,
-      "type": "ascii"
+      "type": "u32_le",
+      "description": "First payload word after the header checksum. The save-init routine FUN_080380e4 explicitly clears struct offset +0xC to zero before recomputing checksums and writing SRAM; zero on a fresh save.",
+      "confidence": "likely",
+      "evidence": "FUN_080380e4 writes *(undefined4 *)(iVar3 + 0xc) = 0 (save-file offset 0xC); persisted by func_0x0803a590 to SRAM 0x0E000000 and reloaded by FUN_080380a8 via func_0x0803a458."
     },
     {
-      "name": "slot_counter",
-      "offset": 4,
-      "size": 2,
-      "type": "u16_le"
+      "name": "gameplay_progress_flags",
+      "offset": 16,
+      "size": 4,
+      "type": "bitflags",
+      "description": "Gameplay progress / unlock bitfield at the head of the save payload region. SRAM mirror (FUN_080380a8 / FUN_080380e4 / FUN_080381a8) persists bytes [0xC, 0x8B0) verbatim; this word is the first generic progress slot after the status word. All bits zero on the fresh baseline save.",
+      "confidence": "guessed",
+      "evidence": "Inside SRAM-mirrored payload [0xC, 0x8B0) managed by FUN_080380a8 (load), FUN_080380e4 (store) and FUN_080381a8 (validate); adjacent to confirmed anchors at struct+0xC (FUN_080380e4) and struct+0x8B0 (FUN_080381a8)."
     },
     {
-      "name": "game_progress_flags",
-      "offset": 6,
-      "size": 2,
-      "type": "u16_le"
+      "name": "config_options_word",
+      "offset": 20,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Configuration / options word (sound, difficulty, display settings class of value) in the save payload head. Preserved verbatim by the SRAM mirror routines; zero on the fresh baseline save.",
+      "confidence": "guessed",
+      "evidence": "Inside SRAM-mirrored payload [0xC, 0x8B0) managed by FUN_080380a8 (load via func_0x0803a458, 0x8000 bytes from 0x0E000000), FUN_080380e4 (store via func_0x0803a590) and FUN_080381a8 (validate)."
     },
     {
-      "name": "player_status_payload",
-      "offset": 8,
-      "size": 16,
-      "type": "bytes"
+      "name": "payload_data_reserved",
+      "offset": 24,
+      "size": 2200,
+      "type": "bytes",
+      "description": "Remainder of the checksummed save payload (up to the trailer checksum). Opaque in this decomp slice: all RAM addresses are DAT-global driven and gameplay accessors dispatch through unrecovered jumptables, so no per-field gameplay accessors are visible. Zero on the fresh baseline save.",
+      "confidence": "guessed",
+      "evidence": "Covered by the FUN_080381fc byte-sum (validated by FUN_080381a8) over the payload up to struct+0x8B0; mirrored to SRAM 0x0E000000 by FUN_080380e4 via func_0x0803a590."
+    },
+    {
+      "name": "checksum_trailer_custom",
+      "offset": 2224,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Trailer checksum word computed by FUN_08038224 with a custom address-weighted accumulation (decompiles as sum of (cursor + *cursor) bytes, i.e. ROM/RAM-address dependent, not expressible in Schema v2 algorithms). Validated by FUN_080381a8 and stored by FUN_080380e4. Value 0xC7FFC242 on baseline.",
+      "confidence": "confirmed",
+      "evidence": "FUN_08038224 accumulates over _DAT_08038244 for _DAT_08038248+1 bytes into struct+0x8B0; FUN_080381a8 zeroes struct+0x8B0, recomputes via func_0x08038224 and compares; FUN_080380e4 stores via func_0x0803a590."
     }
-  ]
+  ],
+  "copy_groups": []
 }

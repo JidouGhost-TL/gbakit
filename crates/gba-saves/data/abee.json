@@ -4,26 +4,625 @@
   "title": "BattleBots - Beyond the BattleBox (USA)",
   "media": "eeprom512",
   "size_bytes": 512,
-  "magic_signatures": [],
-  "checksums": [],
+  "eeprom_rev8": true,
+  "magic_signatures": [
+    {
+      "offset": 504,
+      "bytes": [
+        11,
+        176,
+        11,
+        176,
+        11,
+        176,
+        6,
+        0
+      ],
+      "description": "EEPROM format-valid footer block 63: 3x0xB00B + 0x0006, gated by FUN_08025e08"
+    }
+  ],
+  "checksums": [
+    {
+      "name": "sys_cfg_checksum",
+      "algorithm": "sum16_le",
+      "covered_start": 496,
+      "covered_end": 502,
+      "stored_offset": 502,
+      "seed": 45067,
+      "xor_out": 0
+    }
+  ],
   "fields": [
     {
-      "name": "slot_counter",
+      "name": "sys_cfg_byte0",
+      "offset": 496,
+      "size": 1,
+      "type": "u8",
+      "description": "System option byte 0 (default 2, no range clamp in FUN_08003f74); persisted as EEPROM block 62 byte 0.",
+      "confidence": "guessed",
+      "evidence": "FUN_0802616c serializes 6 option bytes + u16 sum to EEPROM block 0x3E (sav 0x1F0); FUN_0802624c loads block 0x3E and validates sum+DAT_08026314; FUN_08003f74 sets defaults (2,2,4,4,0,0) and clamps byte1<=4, bytes2-3<=8; byte1 consumed by FUN_0800348c/FUN_08003240."
+    },
+    {
+      "name": "sys_sound_setting",
+      "offset": 497,
+      "size": 1,
+      "type": "u8",
+      "description": "Sound setting (default 2); applied via FUN_0800348c and sound-register programming in FUN_08003240.",
+      "confidence": "likely",
+      "evidence": "FUN_0802616c serializes 6 option bytes + u16 sum to EEPROM block 0x3E (sav 0x1F0); FUN_0802624c loads block 0x3E and validates sum+DAT_08026314; FUN_08003f74 sets defaults (2,2,4,4,0,0) and clamps byte1<=4, bytes2-3<=8; byte1 consumed by FUN_0800348c/FUN_08003240.",
+      "constraint": {
+        "kind": "unsigned-range",
+        "minimum": 0,
+        "maximum": 4
+      }
+    },
+    {
+      "name": "sys_volume_a",
+      "offset": 498,
+      "size": 1,
+      "type": "u8",
+      "description": "Volume level A, 0..8 (default 4); 0 triggers mute flag path in FUN_08003f74.",
+      "confidence": "likely",
+      "evidence": "FUN_0802616c serializes 6 option bytes + u16 sum to EEPROM block 0x3E (sav 0x1F0); FUN_0802624c loads block 0x3E and validates sum+DAT_08026314; FUN_08003f74 sets defaults (2,2,4,4,0,0) and clamps byte1<=4, bytes2-3<=8; byte1 consumed by FUN_0800348c/FUN_08003240.",
+      "constraint": {
+        "kind": "unsigned-range",
+        "minimum": 0,
+        "maximum": 8
+      }
+    },
+    {
+      "name": "sys_volume_b",
+      "offset": 499,
+      "size": 1,
+      "type": "u8",
+      "description": "Volume level B, 0..8 (default 4).",
+      "confidence": "likely",
+      "evidence": "FUN_0802616c serializes 6 option bytes + u16 sum to EEPROM block 0x3E (sav 0x1F0); FUN_0802624c loads block 0x3E and validates sum+DAT_08026314; FUN_08003f74 sets defaults (2,2,4,4,0,0) and clamps byte1<=4, bytes2-3<=8; byte1 consumed by FUN_0800348c/FUN_08003240.",
+      "constraint": {
+        "kind": "unsigned-range",
+        "minimum": 0,
+        "maximum": 8
+      }
+    },
+    {
+      "name": "sys_flag_a",
+      "offset": 500,
+      "size": 1,
+      "type": "u8",
+      "description": "System flag byte A (default 0, unvalidated); persisted as EEPROM block 62 byte 4.",
+      "confidence": "guessed",
+      "evidence": "FUN_0802616c serializes 6 option bytes + u16 sum to EEPROM block 0x3E (sav 0x1F0); FUN_0802624c loads block 0x3E and validates sum+DAT_08026314; FUN_08003f74 sets defaults (2,2,4,4,0,0) and clamps byte1<=4, bytes2-3<=8; byte1 consumed by FUN_0800348c/FUN_08003240."
+    },
+    {
+      "name": "sys_flag_b",
+      "offset": 501,
+      "size": 1,
+      "type": "u8",
+      "description": "System flag byte B (default 0, unvalidated); persisted as EEPROM block 62 byte 5.",
+      "confidence": "guessed",
+      "evidence": "FUN_0802616c serializes 6 option bytes + u16 sum to EEPROM block 0x3E (sav 0x1F0); FUN_0802624c loads block 0x3E and validates sum+DAT_08026314; FUN_08003f74 sets defaults (2,2,4,4,0,0) and clamps byte1<=4, bytes2-3<=8; byte1 consumed by FUN_0800348c/FUN_08003240."
+    },
+    {
+      "name": "sys_cfg_checksum",
+      "offset": 502,
+      "size": 2,
+      "type": "u16_le",
+      "description": "Stored u16 checksum of system config block: sum(bytes 0x1F0..0x1F6)+0xB00B (DAT_08026314); entry in checksums[].",
+      "confidence": "confirmed",
+      "evidence": "FUN_0802624c recomputes sum of EEPROM block 0x3E bytes 0..5 plus DAT_08026314 and compares to stored halfword (sav 0x1F6, rev8 logical); FUN_0802616c stores it."
+    },
+    {
+      "name": "slot0_profile_name",
+      "offset": 0,
+      "size": 8,
+      "type": "ascii",
+      "description": "Career-profile name record, 8 chars (empty in baseline); read path appends NUL terminator like robot-name records.",
+      "confidence": "likely",
+      "evidence": "FUN_08025198 reads EEPROM block 0*0x12+0 (sav 0x00) into 8-byte record plus forced 0x00 (uStack_10a), mirroring the four robot-name records; FUN_080244b4 serializes stage-struct bytes 2..9 to this block; defaults zeroed by FUN_08003f74."
+    },
+    {
+      "name": "slot0_format_tag",
       "offset": 8,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "description": "Slot record tag constant 0x0352 from ROM (DAT_08004180); identical in all 3 slots.",
+      "confidence": "confirmed",
+      "evidence": "FUN_080244b4 stores *_DAT_08024864 (ROM constant DAT_08004180) as first halfword of slot header block (sav 0x08, rev8 logical); FUN_08025198 loads it as u16 0x0352."
     },
     {
-      "name": "game_progress_flags",
-      "offset": 10,
+      "name": "slot0_checksum",
+      "offset": 14,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "description": "Stored slot checksum 0x3322 (custom sparse byte-sum + header word; documented in SPEC.md, kept as field).",
+      "confidence": "confirmed",
+      "evidence": "FUN_08025198 verifies slot via 1-arg thumb checksum over the 0x84-byte record against EEPROM header-block halfword 3 (sav 0x0E, rev8 logical), retrying up to 10x; FUN_080244b4 recomputes it on save."
     },
     {
-      "name": "player_status_payload",
-      "offset": 12,
-      "size": 16,
-      "type": "bytes"
+      "name": "slot0_bot0_name",
+      "offset": 16,
+      "size": 8,
+      "type": "ascii",
+      "description": "Garage robot 0 name, 8 chars + NUL (empty in baseline).",
+      "confidence": "likely",
+      "evidence": "FUN_08025198 loads EEPROM blocks base+2 (sav 0x10, rev8 logical) as 8-byte NUL-terminated name record into 4x9-byte table; FUN_080244b4 writes it back from stage struct; FUN_08003f74 zeroes defaults."
+    },
+    {
+      "name": "slot0_bot0_parts",
+      "offset": 24,
+      "size": 8,
+      "type": "bytes",
+      "description": "Garage robot 0 part-selection record (5 meaningful bytes, defaults 0xFF; 3 structural bytes).",
+      "confidence": "likely",
+      "evidence": "FUN_08025198 loads EEPROM blocks base+3 (sav 0x18) as per-robot 5-byte group (struct offsets +0x33/+0x37/+0x3B/+0x3F/+0x43); FUN_080244b4 serializes them; FUN_08003f74 defaults the region to 0xFF."
+    },
+    {
+      "name": "slot0_bot0_stats",
+      "offset": 32,
+      "size": 8,
+      "type": "bytes",
+      "description": "Garage robot 0 stats record (8 numeric bytes, defaults 0x00).",
+      "confidence": "likely",
+      "evidence": "FUN_08025198 loads EEPROM blocks base+4 (sav 0x20) as per-robot 8-byte group (struct offsets +0x18/+0x65/+0x6D etc. per robot); FUN_080244b4 serializes them; baseline all zero."
+    },
+    {
+      "name": "slot0_bot0_setup",
+      "offset": 40,
+      "size": 8,
+      "type": "bytes",
+      "description": "Garage robot 0 setup record (7 meaningful bytes, defaults 0xFF; 1 structural zero).",
+      "confidence": "likely",
+      "evidence": "FUN_08025198 loads EEPROM blocks base+5 (sav 0x28) as per-robot 7-byte group (struct offsets +0x47+7j); FUN_080244b4 serializes them; FUN_08003f74 defaults the region to 0xFF."
+    },
+    {
+      "name": "slot0_bot1_name",
+      "offset": 48,
+      "size": 8,
+      "type": "ascii",
+      "description": "Garage robot 1 name, 8 chars + NUL (empty in baseline).",
+      "confidence": "likely",
+      "evidence": "FUN_08025198 loads EEPROM blocks base+6 (sav 0x30, rev8 logical) as 8-byte NUL-terminated name record into 4x9-byte table; FUN_080244b4 writes it back from stage struct; FUN_08003f74 zeroes defaults."
+    },
+    {
+      "name": "slot0_bot1_parts",
+      "offset": 56,
+      "size": 8,
+      "type": "bytes",
+      "description": "Garage robot 1 part-selection record (5 meaningful bytes, defaults 0xFF; 3 structural bytes).",
+      "confidence": "likely",
+      "evidence": "FUN_08025198 loads EEPROM blocks base+7 (sav 0x38) as per-robot 5-byte group (struct offsets +0x33/+0x37/+0x3B/+0x3F/+0x43); FUN_080244b4 serializes them; FUN_08003f74 defaults the region to 0xFF."
+    },
+    {
+      "name": "slot0_bot1_stats",
+      "offset": 64,
+      "size": 8,
+      "type": "bytes",
+      "description": "Garage robot 1 stats record (8 numeric bytes, defaults 0x00).",
+      "confidence": "likely",
+      "evidence": "FUN_08025198 loads EEPROM blocks base+8 (sav 0x40) as per-robot 8-byte group (struct offsets +0x18/+0x65/+0x6D etc. per robot); FUN_080244b4 serializes them; baseline all zero."
+    },
+    {
+      "name": "slot0_bot1_setup",
+      "offset": 72,
+      "size": 8,
+      "type": "bytes",
+      "description": "Garage robot 1 setup record (7 meaningful bytes, defaults 0xFF; 1 structural zero).",
+      "confidence": "likely",
+      "evidence": "FUN_08025198 loads EEPROM blocks base+9 (sav 0x48) as per-robot 7-byte group (struct offsets +0x47+7j); FUN_080244b4 serializes them; FUN_08003f74 defaults the region to 0xFF."
+    },
+    {
+      "name": "slot0_bot2_name",
+      "offset": 80,
+      "size": 8,
+      "type": "ascii",
+      "description": "Garage robot 2 name, 8 chars + NUL (empty in baseline).",
+      "confidence": "likely",
+      "evidence": "FUN_08025198 loads EEPROM blocks base+10 (sav 0x50, rev8 logical) as 8-byte NUL-terminated name record into 4x9-byte table; FUN_080244b4 writes it back from stage struct; FUN_08003f74 zeroes defaults."
+    },
+    {
+      "name": "slot0_bot2_parts",
+      "offset": 88,
+      "size": 8,
+      "type": "bytes",
+      "description": "Garage robot 2 part-selection record (5 meaningful bytes, defaults 0xFF; 3 structural bytes).",
+      "confidence": "likely",
+      "evidence": "FUN_08025198 loads EEPROM blocks base+11 (sav 0x58) as per-robot 5-byte group (struct offsets +0x33/+0x37/+0x3B/+0x3F/+0x43); FUN_080244b4 serializes them; FUN_08003f74 defaults the region to 0xFF."
+    },
+    {
+      "name": "slot0_bot2_stats",
+      "offset": 96,
+      "size": 8,
+      "type": "bytes",
+      "description": "Garage robot 2 stats record (8 numeric bytes, defaults 0x00).",
+      "confidence": "likely",
+      "evidence": "FUN_08025198 loads EEPROM blocks base+12 (sav 0x60) as per-robot 8-byte group (struct offsets +0x18/+0x65/+0x6D etc. per robot); FUN_080244b4 serializes them; baseline all zero."
+    },
+    {
+      "name": "slot0_bot2_setup",
+      "offset": 104,
+      "size": 8,
+      "type": "bytes",
+      "description": "Garage robot 2 setup record (7 meaningful bytes, defaults 0xFF; 1 structural zero).",
+      "confidence": "likely",
+      "evidence": "FUN_08025198 loads EEPROM blocks base+13 (sav 0x68) as per-robot 7-byte group (struct offsets +0x47+7j); FUN_080244b4 serializes them; FUN_08003f74 defaults the region to 0xFF."
+    },
+    {
+      "name": "slot0_bot3_name",
+      "offset": 112,
+      "size": 8,
+      "type": "ascii",
+      "description": "Garage robot 3 name, 8 chars + NUL (empty in baseline).",
+      "confidence": "likely",
+      "evidence": "FUN_08025198 loads EEPROM blocks base+14 (sav 0x70, rev8 logical) as 8-byte NUL-terminated name record into 4x9-byte table; FUN_080244b4 writes it back from stage struct; FUN_08003f74 zeroes defaults."
+    },
+    {
+      "name": "slot0_bot3_parts",
+      "offset": 120,
+      "size": 8,
+      "type": "bytes",
+      "description": "Garage robot 3 part-selection record (5 meaningful bytes, defaults 0xFF; 3 structural bytes).",
+      "confidence": "likely",
+      "evidence": "FUN_08025198 loads EEPROM blocks base+15 (sav 0x78) as per-robot 5-byte group (struct offsets +0x33/+0x37/+0x3B/+0x3F/+0x43); FUN_080244b4 serializes them; FUN_08003f74 defaults the region to 0xFF."
+    },
+    {
+      "name": "slot0_bot3_stats",
+      "offset": 128,
+      "size": 8,
+      "type": "bytes",
+      "description": "Garage robot 3 stats record (8 numeric bytes, defaults 0x00).",
+      "confidence": "likely",
+      "evidence": "FUN_08025198 loads EEPROM blocks base+16 (sav 0x80) as per-robot 8-byte group (struct offsets +0x18/+0x65/+0x6D etc. per robot); FUN_080244b4 serializes them; baseline all zero."
+    },
+    {
+      "name": "slot0_bot3_setup",
+      "offset": 136,
+      "size": 8,
+      "type": "bytes",
+      "description": "Garage robot 3 setup record (7 meaningful bytes, defaults 0xFF; 1 structural zero).",
+      "confidence": "likely",
+      "evidence": "FUN_08025198 loads EEPROM blocks base+17 (sav 0x88) as per-robot 7-byte group (struct offsets +0x47+7j); FUN_080244b4 serializes them; FUN_08003f74 defaults the region to 0xFF."
+    },
+    {
+      "name": "slot1_profile_name",
+      "offset": 144,
+      "size": 8,
+      "type": "ascii",
+      "description": "Career-profile name record, 8 chars (empty in baseline); read path appends NUL terminator like robot-name records.",
+      "confidence": "likely",
+      "evidence": "FUN_08025198 reads EEPROM block 1*0x12+0 (sav 0x90) into 8-byte record plus forced 0x00 (uStack_10a), mirroring the four robot-name records; FUN_080244b4 serializes stage-struct bytes 2..9 to this block; defaults zeroed by FUN_08003f74."
+    },
+    {
+      "name": "slot1_format_tag",
+      "offset": 152,
+      "size": 2,
+      "type": "u16_le",
+      "description": "Slot record tag constant 0x0352 from ROM (DAT_08004180); identical in all 3 slots.",
+      "confidence": "confirmed",
+      "evidence": "FUN_080244b4 stores *_DAT_08024864 (ROM constant DAT_08004180) as first halfword of slot header block (sav 0x98, rev8 logical); FUN_08025198 loads it as u16 0x0352."
+    },
+    {
+      "name": "slot1_checksum",
+      "offset": 158,
+      "size": 2,
+      "type": "u16_le",
+      "description": "Stored slot checksum 0x3322 (custom sparse byte-sum + header word; documented in SPEC.md, kept as field).",
+      "confidence": "confirmed",
+      "evidence": "FUN_08025198 verifies slot via 1-arg thumb checksum over the 0x84-byte record against EEPROM header-block halfword 3 (sav 0x9E, rev8 logical), retrying up to 10x; FUN_080244b4 recomputes it on save."
+    },
+    {
+      "name": "slot1_bot0_name",
+      "offset": 160,
+      "size": 8,
+      "type": "ascii",
+      "description": "Garage robot 0 name, 8 chars + NUL (empty in baseline).",
+      "confidence": "likely",
+      "evidence": "FUN_08025198 loads EEPROM blocks base+2 (sav 0xA0, rev8 logical) as 8-byte NUL-terminated name record into 4x9-byte table; FUN_080244b4 writes it back from stage struct; FUN_08003f74 zeroes defaults."
+    },
+    {
+      "name": "slot1_bot0_parts",
+      "offset": 168,
+      "size": 8,
+      "type": "bytes",
+      "description": "Garage robot 0 part-selection record (5 meaningful bytes, defaults 0xFF; 3 structural bytes).",
+      "confidence": "likely",
+      "evidence": "FUN_08025198 loads EEPROM blocks base+3 (sav 0xA8) as per-robot 5-byte group (struct offsets +0x33/+0x37/+0x3B/+0x3F/+0x43); FUN_080244b4 serializes them; FUN_08003f74 defaults the region to 0xFF."
+    },
+    {
+      "name": "slot1_bot0_stats",
+      "offset": 176,
+      "size": 8,
+      "type": "bytes",
+      "description": "Garage robot 0 stats record (8 numeric bytes, defaults 0x00).",
+      "confidence": "likely",
+      "evidence": "FUN_08025198 loads EEPROM blocks base+4 (sav 0xB0) as per-robot 8-byte group (struct offsets +0x18/+0x65/+0x6D etc. per robot); FUN_080244b4 serializes them; baseline all zero."
+    },
+    {
+      "name": "slot1_bot0_setup",
+      "offset": 184,
+      "size": 8,
+      "type": "bytes",
+      "description": "Garage robot 0 setup record (7 meaningful bytes, defaults 0xFF; 1 structural zero).",
+      "confidence": "likely",
+      "evidence": "FUN_08025198 loads EEPROM blocks base+5 (sav 0xB8) as per-robot 7-byte group (struct offsets +0x47+7j); FUN_080244b4 serializes them; FUN_08003f74 defaults the region to 0xFF."
+    },
+    {
+      "name": "slot1_bot1_name",
+      "offset": 192,
+      "size": 8,
+      "type": "ascii",
+      "description": "Garage robot 1 name, 8 chars + NUL (empty in baseline).",
+      "confidence": "likely",
+      "evidence": "FUN_08025198 loads EEPROM blocks base+6 (sav 0xC0, rev8 logical) as 8-byte NUL-terminated name record into 4x9-byte table; FUN_080244b4 writes it back from stage struct; FUN_08003f74 zeroes defaults."
+    },
+    {
+      "name": "slot1_bot1_parts",
+      "offset": 200,
+      "size": 8,
+      "type": "bytes",
+      "description": "Garage robot 1 part-selection record (5 meaningful bytes, defaults 0xFF; 3 structural bytes).",
+      "confidence": "likely",
+      "evidence": "FUN_08025198 loads EEPROM blocks base+7 (sav 0xC8) as per-robot 5-byte group (struct offsets +0x33/+0x37/+0x3B/+0x3F/+0x43); FUN_080244b4 serializes them; FUN_08003f74 defaults the region to 0xFF."
+    },
+    {
+      "name": "slot1_bot1_stats",
+      "offset": 208,
+      "size": 8,
+      "type": "bytes",
+      "description": "Garage robot 1 stats record (8 numeric bytes, defaults 0x00).",
+      "confidence": "likely",
+      "evidence": "FUN_08025198 loads EEPROM blocks base+8 (sav 0xD0) as per-robot 8-byte group (struct offsets +0x18/+0x65/+0x6D etc. per robot); FUN_080244b4 serializes them; baseline all zero."
+    },
+    {
+      "name": "slot1_bot1_setup",
+      "offset": 216,
+      "size": 8,
+      "type": "bytes",
+      "description": "Garage robot 1 setup record (7 meaningful bytes, defaults 0xFF; 1 structural zero).",
+      "confidence": "likely",
+      "evidence": "FUN_08025198 loads EEPROM blocks base+9 (sav 0xD8) as per-robot 7-byte group (struct offsets +0x47+7j); FUN_080244b4 serializes them; FUN_08003f74 defaults the region to 0xFF."
+    },
+    {
+      "name": "slot1_bot2_name",
+      "offset": 224,
+      "size": 8,
+      "type": "ascii",
+      "description": "Garage robot 2 name, 8 chars + NUL (empty in baseline).",
+      "confidence": "likely",
+      "evidence": "FUN_08025198 loads EEPROM blocks base+10 (sav 0xE0, rev8 logical) as 8-byte NUL-terminated name record into 4x9-byte table; FUN_080244b4 writes it back from stage struct; FUN_08003f74 zeroes defaults."
+    },
+    {
+      "name": "slot1_bot2_parts",
+      "offset": 232,
+      "size": 8,
+      "type": "bytes",
+      "description": "Garage robot 2 part-selection record (5 meaningful bytes, defaults 0xFF; 3 structural bytes).",
+      "confidence": "likely",
+      "evidence": "FUN_08025198 loads EEPROM blocks base+11 (sav 0xE8) as per-robot 5-byte group (struct offsets +0x33/+0x37/+0x3B/+0x3F/+0x43); FUN_080244b4 serializes them; FUN_08003f74 defaults the region to 0xFF."
+    },
+    {
+      "name": "slot1_bot2_stats",
+      "offset": 240,
+      "size": 8,
+      "type": "bytes",
+      "description": "Garage robot 2 stats record (8 numeric bytes, defaults 0x00).",
+      "confidence": "likely",
+      "evidence": "FUN_08025198 loads EEPROM blocks base+12 (sav 0xF0) as per-robot 8-byte group (struct offsets +0x18/+0x65/+0x6D etc. per robot); FUN_080244b4 serializes them; baseline all zero."
+    },
+    {
+      "name": "slot1_bot2_setup",
+      "offset": 248,
+      "size": 8,
+      "type": "bytes",
+      "description": "Garage robot 2 setup record (7 meaningful bytes, defaults 0xFF; 1 structural zero).",
+      "confidence": "likely",
+      "evidence": "FUN_08025198 loads EEPROM blocks base+13 (sav 0xF8) as per-robot 7-byte group (struct offsets +0x47+7j); FUN_080244b4 serializes them; FUN_08003f74 defaults the region to 0xFF."
+    },
+    {
+      "name": "slot1_bot3_name",
+      "offset": 256,
+      "size": 8,
+      "type": "ascii",
+      "description": "Garage robot 3 name, 8 chars + NUL (empty in baseline).",
+      "confidence": "likely",
+      "evidence": "FUN_08025198 loads EEPROM blocks base+14 (sav 0x100, rev8 logical) as 8-byte NUL-terminated name record into 4x9-byte table; FUN_080244b4 writes it back from stage struct; FUN_08003f74 zeroes defaults."
+    },
+    {
+      "name": "slot1_bot3_parts",
+      "offset": 264,
+      "size": 8,
+      "type": "bytes",
+      "description": "Garage robot 3 part-selection record (5 meaningful bytes, defaults 0xFF; 3 structural bytes).",
+      "confidence": "likely",
+      "evidence": "FUN_08025198 loads EEPROM blocks base+15 (sav 0x108) as per-robot 5-byte group (struct offsets +0x33/+0x37/+0x3B/+0x3F/+0x43); FUN_080244b4 serializes them; FUN_08003f74 defaults the region to 0xFF."
+    },
+    {
+      "name": "slot1_bot3_stats",
+      "offset": 272,
+      "size": 8,
+      "type": "bytes",
+      "description": "Garage robot 3 stats record (8 numeric bytes, defaults 0x00).",
+      "confidence": "likely",
+      "evidence": "FUN_08025198 loads EEPROM blocks base+16 (sav 0x110) as per-robot 8-byte group (struct offsets +0x18/+0x65/+0x6D etc. per robot); FUN_080244b4 serializes them; baseline all zero."
+    },
+    {
+      "name": "slot1_bot3_setup",
+      "offset": 280,
+      "size": 8,
+      "type": "bytes",
+      "description": "Garage robot 3 setup record (7 meaningful bytes, defaults 0xFF; 1 structural zero).",
+      "confidence": "likely",
+      "evidence": "FUN_08025198 loads EEPROM blocks base+17 (sav 0x118) as per-robot 7-byte group (struct offsets +0x47+7j); FUN_080244b4 serializes them; FUN_08003f74 defaults the region to 0xFF."
+    },
+    {
+      "name": "slot2_profile_name",
+      "offset": 288,
+      "size": 8,
+      "type": "ascii",
+      "description": "Career-profile name record, 8 chars (empty in baseline); read path appends NUL terminator like robot-name records.",
+      "confidence": "likely",
+      "evidence": "FUN_08025198 reads EEPROM block 2*0x12+0 (sav 0x120) into 8-byte record plus forced 0x00 (uStack_10a), mirroring the four robot-name records; FUN_080244b4 serializes stage-struct bytes 2..9 to this block; defaults zeroed by FUN_08003f74."
+    },
+    {
+      "name": "slot2_format_tag",
+      "offset": 296,
+      "size": 2,
+      "type": "u16_le",
+      "description": "Slot record tag constant 0x0352 from ROM (DAT_08004180); identical in all 3 slots.",
+      "confidence": "confirmed",
+      "evidence": "FUN_080244b4 stores *_DAT_08024864 (ROM constant DAT_08004180) as first halfword of slot header block (sav 0x128, rev8 logical); FUN_08025198 loads it as u16 0x0352."
+    },
+    {
+      "name": "slot2_checksum",
+      "offset": 302,
+      "size": 2,
+      "type": "u16_le",
+      "description": "Stored slot checksum 0x3322 (custom sparse byte-sum + header word; documented in SPEC.md, kept as field).",
+      "confidence": "confirmed",
+      "evidence": "FUN_08025198 verifies slot via 1-arg thumb checksum over the 0x84-byte record against EEPROM header-block halfword 3 (sav 0x12E, rev8 logical), retrying up to 10x; FUN_080244b4 recomputes it on save."
+    },
+    {
+      "name": "slot2_bot0_name",
+      "offset": 304,
+      "size": 8,
+      "type": "ascii",
+      "description": "Garage robot 0 name, 8 chars + NUL (empty in baseline).",
+      "confidence": "likely",
+      "evidence": "FUN_08025198 loads EEPROM blocks base+2 (sav 0x130, rev8 logical) as 8-byte NUL-terminated name record into 4x9-byte table; FUN_080244b4 writes it back from stage struct; FUN_08003f74 zeroes defaults."
+    },
+    {
+      "name": "slot2_bot0_parts",
+      "offset": 312,
+      "size": 8,
+      "type": "bytes",
+      "description": "Garage robot 0 part-selection record (5 meaningful bytes, defaults 0xFF; 3 structural bytes).",
+      "confidence": "likely",
+      "evidence": "FUN_08025198 loads EEPROM blocks base+3 (sav 0x138) as per-robot 5-byte group (struct offsets +0x33/+0x37/+0x3B/+0x3F/+0x43); FUN_080244b4 serializes them; FUN_08003f74 defaults the region to 0xFF."
+    },
+    {
+      "name": "slot2_bot0_stats",
+      "offset": 320,
+      "size": 8,
+      "type": "bytes",
+      "description": "Garage robot 0 stats record (8 numeric bytes, defaults 0x00).",
+      "confidence": "likely",
+      "evidence": "FUN_08025198 loads EEPROM blocks base+4 (sav 0x140) as per-robot 8-byte group (struct offsets +0x18/+0x65/+0x6D etc. per robot); FUN_080244b4 serializes them; baseline all zero."
+    },
+    {
+      "name": "slot2_bot0_setup",
+      "offset": 328,
+      "size": 8,
+      "type": "bytes",
+      "description": "Garage robot 0 setup record (7 meaningful bytes, defaults 0xFF; 1 structural zero).",
+      "confidence": "likely",
+      "evidence": "FUN_08025198 loads EEPROM blocks base+5 (sav 0x148) as per-robot 7-byte group (struct offsets +0x47+7j); FUN_080244b4 serializes them; FUN_08003f74 defaults the region to 0xFF."
+    },
+    {
+      "name": "slot2_bot1_name",
+      "offset": 336,
+      "size": 8,
+      "type": "ascii",
+      "description": "Garage robot 1 name, 8 chars + NUL (empty in baseline).",
+      "confidence": "likely",
+      "evidence": "FUN_08025198 loads EEPROM blocks base+6 (sav 0x150, rev8 logical) as 8-byte NUL-terminated name record into 4x9-byte table; FUN_080244b4 writes it back from stage struct; FUN_08003f74 zeroes defaults."
+    },
+    {
+      "name": "slot2_bot1_parts",
+      "offset": 344,
+      "size": 8,
+      "type": "bytes",
+      "description": "Garage robot 1 part-selection record (5 meaningful bytes, defaults 0xFF; 3 structural bytes).",
+      "confidence": "likely",
+      "evidence": "FUN_08025198 loads EEPROM blocks base+7 (sav 0x158) as per-robot 5-byte group (struct offsets +0x33/+0x37/+0x3B/+0x3F/+0x43); FUN_080244b4 serializes them; FUN_08003f74 defaults the region to 0xFF."
+    },
+    {
+      "name": "slot2_bot1_stats",
+      "offset": 352,
+      "size": 8,
+      "type": "bytes",
+      "description": "Garage robot 1 stats record (8 numeric bytes, defaults 0x00).",
+      "confidence": "likely",
+      "evidence": "FUN_08025198 loads EEPROM blocks base+8 (sav 0x160) as per-robot 8-byte group (struct offsets +0x18/+0x65/+0x6D etc. per robot); FUN_080244b4 serializes them; baseline all zero."
+    },
+    {
+      "name": "slot2_bot1_setup",
+      "offset": 360,
+      "size": 8,
+      "type": "bytes",
+      "description": "Garage robot 1 setup record (7 meaningful bytes, defaults 0xFF; 1 structural zero).",
+      "confidence": "likely",
+      "evidence": "FUN_08025198 loads EEPROM blocks base+9 (sav 0x168) as per-robot 7-byte group (struct offsets +0x47+7j); FUN_080244b4 serializes them; FUN_08003f74 defaults the region to 0xFF."
+    },
+    {
+      "name": "slot2_bot2_name",
+      "offset": 368,
+      "size": 8,
+      "type": "ascii",
+      "description": "Garage robot 2 name, 8 chars + NUL (empty in baseline).",
+      "confidence": "likely",
+      "evidence": "FUN_08025198 loads EEPROM blocks base+10 (sav 0x170, rev8 logical) as 8-byte NUL-terminated name record into 4x9-byte table; FUN_080244b4 writes it back from stage struct; FUN_08003f74 zeroes defaults."
+    },
+    {
+      "name": "slot2_bot2_parts",
+      "offset": 376,
+      "size": 8,
+      "type": "bytes",
+      "description": "Garage robot 2 part-selection record (5 meaningful bytes, defaults 0xFF; 3 structural bytes).",
+      "confidence": "likely",
+      "evidence": "FUN_08025198 loads EEPROM blocks base+11 (sav 0x178) as per-robot 5-byte group (struct offsets +0x33/+0x37/+0x3B/+0x3F/+0x43); FUN_080244b4 serializes them; FUN_08003f74 defaults the region to 0xFF."
+    },
+    {
+      "name": "slot2_bot2_stats",
+      "offset": 384,
+      "size": 8,
+      "type": "bytes",
+      "description": "Garage robot 2 stats record (8 numeric bytes, defaults 0x00).",
+      "confidence": "likely",
+      "evidence": "FUN_08025198 loads EEPROM blocks base+12 (sav 0x180) as per-robot 8-byte group (struct offsets +0x18/+0x65/+0x6D etc. per robot); FUN_080244b4 serializes them; baseline all zero."
+    },
+    {
+      "name": "slot2_bot2_setup",
+      "offset": 392,
+      "size": 8,
+      "type": "bytes",
+      "description": "Garage robot 2 setup record (7 meaningful bytes, defaults 0xFF; 1 structural zero).",
+      "confidence": "likely",
+      "evidence": "FUN_08025198 loads EEPROM blocks base+13 (sav 0x188) as per-robot 7-byte group (struct offsets +0x47+7j); FUN_080244b4 serializes them; FUN_08003f74 defaults the region to 0xFF."
+    },
+    {
+      "name": "slot2_bot3_name",
+      "offset": 400,
+      "size": 8,
+      "type": "ascii",
+      "description": "Garage robot 3 name, 8 chars + NUL (empty in baseline).",
+      "confidence": "likely",
+      "evidence": "FUN_08025198 loads EEPROM blocks base+14 (sav 0x190, rev8 logical) as 8-byte NUL-terminated name record into 4x9-byte table; FUN_080244b4 writes it back from stage struct; FUN_08003f74 zeroes defaults."
+    },
+    {
+      "name": "slot2_bot3_parts",
+      "offset": 408,
+      "size": 8,
+      "type": "bytes",
+      "description": "Garage robot 3 part-selection record (5 meaningful bytes, defaults 0xFF; 3 structural bytes).",
+      "confidence": "likely",
+      "evidence": "FUN_08025198 loads EEPROM blocks base+15 (sav 0x198) as per-robot 5-byte group (struct offsets +0x33/+0x37/+0x3B/+0x3F/+0x43); FUN_080244b4 serializes them; FUN_08003f74 defaults the region to 0xFF."
+    },
+    {
+      "name": "slot2_bot3_stats",
+      "offset": 416,
+      "size": 8,
+      "type": "bytes",
+      "description": "Garage robot 3 stats record (8 numeric bytes, defaults 0x00).",
+      "confidence": "likely",
+      "evidence": "FUN_08025198 loads EEPROM blocks base+16 (sav 0x1A0) as per-robot 8-byte group (struct offsets +0x18/+0x65/+0x6D etc. per robot); FUN_080244b4 serializes them; baseline all zero."
+    },
+    {
+      "name": "slot2_bot3_setup",
+      "offset": 424,
+      "size": 8,
+      "type": "bytes",
+      "description": "Garage robot 3 setup record (7 meaningful bytes, defaults 0xFF; 1 structural zero).",
+      "confidence": "likely",
+      "evidence": "FUN_08025198 loads EEPROM blocks base+17 (sav 0x1A8) as per-robot 7-byte group (struct offsets +0x47+7j); FUN_080244b4 serializes them; FUN_08003f74 defaults the region to 0xFF."
     }
   ]
 }

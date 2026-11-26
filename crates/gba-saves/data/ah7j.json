@@ -1,29 +1,182 @@
 {
-  "id": "ah7j",
-  "game_code": "AH7J",
-  "title": "Nakayoshi Pet Advance Series 1 - Kawaii Hamster (Japan)",
-  "media": "eeprom8k",
-  "size_bytes": 8192,
-  "magic_signatures": [],
   "checksums": [],
   "fields": [
     {
-      "name": "slot_counter",
+      "confidence": "likely",
+      "description": "14-byte ASCII save tag at file start: written by FUN_0800084c via FUN_080011b0 from a ROM default string, verified by FUN_08001d24 inside FUN_080013b4 (returns 1 on mismatch). Length 14 is fixed by the stored checksum at 0x0E and the field blob starting at 0x10.",
+      "evidence": "FUN_0800084c calls FUN_080011b0 (byte-stream string writer, cursor from 0) before seeking to 0x10 for fields; FUN_080013b4 tail calls FUN_08001d24 (byte-stream string compare from 0 via FUN_08001e08) and reports status 1 on mismatch.",
+      "name": "save_magic_ascii",
       "offset": 0,
+      "size": 14,
+      "type": "ascii"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Stored checksum: (sum of the 625 field-blob bytes at [0x10, 0x281) plus 1) mod 2^16, little-endian. Computed by FUN_080011dc (accumulates FUN_08001e08 stream bytes), written by the FUN_0800084c tail (checksum+1 stored at cursor 0x0E), verified by the FUN_080013b4 tail which returns 2 on mismatch. Custom +1 bias, so no Schema v2 algorithm entry (blank baseline also stores 0x0000, which does not verify).",
+      "evidence": "FUN_080011dc sums FUN_08001e08 stream bytes; FUN_0800084c tail seeks to 0x10, checksums, adds 1, seeks to 0x0E and writes u16; FUN_080013b4 tail recomputes, seeks to 0x0E, reads u16 via FUN_08001d60 and compares against (sum+1)&0xFFFF.",
+      "name": "checksum_stored_u16",
+      "offset": 14,
       "size": 2,
       "type": "u16_le"
     },
     {
-      "name": "game_progress_flags",
-      "offset": 2,
+      "confidence": "likely",
+      "description": "First u16 of the field blob: first serialize entry (size 2, count 1) in FUN_0800084c and first deserialize entry in FUN_080013b4. Record head word (format/slot word).",
+      "evidence": "FUN_0800084c entry 0: FUN_08001218(dst, ROM defaults, size 2, count 1) at blob offset 0 (file 0x10); FUN_080013b4 entry 0: FUN_08001d60(reader, RAM dest, size 2, count 1).",
+      "name": "record_head_u16",
+      "offset": 16,
       "size": 2,
       "type": "u16_le"
     },
     {
-      "name": "player_status_payload",
-      "offset": 4,
-      "size": 16,
+      "confidence": "guessed",
+      "description": "48-byte text area directly after the head word: single (size 1, count 0x30) serialize entry. Profile text region (owner/pet name entry buffer).",
+      "evidence": "FUN_0800084c entry 1: FUN_08001218(dst, ROM defaults, size 1, count 0x30) at file 0x12; FUN_080013b4 entry 1: FUN_08001d60(reader, RAM dest, size 1, count 0x30).",
+      "name": "profile_name_ascii",
+      "offset": 18,
+      "size": 48,
+      "type": "ascii"
+    },
+    {
+      "confidence": "guessed",
+      "description": "Six consecutive 7x-u16 groups (84 bytes): entries 2-7, each (size 2, count 7), in both FUN_0800084c and FUN_080013b4. Grouped per-category 7-entry records (e.g. per-day care logs).",
+      "evidence": "FUN_0800084c entries 2-7: six FUN_08001218(dst, ROM defaults, size 2, count 7) at file 0x42-0x96; mirrored by six FUN_08001d60(reader, RAM dest, size 2, count 7) in FUN_080013b4.",
+      "name": "care_records_blob",
+      "offset": 66,
+      "size": 84,
+      "type": "bytes"
+    },
+    {
+      "confidence": "guessed",
+      "description": "Single option/flag byte after the grouped records: entry 8 (size 1, count 1). Bitfield-style gameplay option flags (e.g. sound toggle).",
+      "evidence": "FUN_0800084c entry 8: FUN_08001218(dst, ROM defaults, size 1, count 1) at file 0x96; FUN_080013b4 entry 8: FUN_08001d60(reader, RAM dest, size 1, count 1).",
+      "name": "option_flags_u8",
+      "offset": 150,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "guessed",
+      "description": "Lone u32 counter: entry 9 (size 4, count 1) at file 0x97. Long gameplay counter (funds/playtime/steps).",
+      "evidence": "FUN_0800084c entry 9: FUN_08001218(dst, ROM defaults, size 4, count 1) at file 0x97; FUN_080013b4 entry 9: FUN_08001d60(reader, RAM dest, size 4, count 1).",
+      "name": "long_counter_u32",
+      "offset": 151,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "guessed",
+      "description": "Six consecutive u16 progress words: entries 10-15, each (size 2, count 1), file 0x9B-0xA7.",
+      "evidence": "FUN_0800084c entries 10-15: six FUN_08001218(dst, ROM defaults, size 2, count 1); mirrored by six FUN_08001d60(reader, RAM dest, size 2, count 1) in FUN_080013b4.",
+      "name": "progress_words_a",
+      "offset": 155,
+      "size": 12,
+      "type": "bytes"
+    },
+    {
+      "confidence": "guessed",
+      "description": "First 5-entry u16 ranking/score table: entry 16 (size 2, count 5) at file 0xA7.",
+      "evidence": "FUN_0800084c entry 16: FUN_08001218(dst, ROM defaults, size 2, count 5) at file 0xA7; FUN_080013b4 entry 16: FUN_08001d60(reader, RAM dest, size 2, count 5).",
+      "name": "rank_table_a",
+      "offset": 167,
+      "size": 10,
+      "type": "bytes"
+    },
+    {
+      "confidence": "guessed",
+      "description": "Isolated u16 progress word between ranking tables: entry 17 (size 2, count 1) at file 0xB1.",
+      "evidence": "FUN_0800084c entry 17: FUN_08001218(dst, ROM defaults, size 2, count 1) at file 0xB1; FUN_080013b4 entry 17: FUN_08001d60(reader, RAM dest, size 2, count 1).",
+      "name": "progress_word_b",
+      "offset": 177,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "guessed",
+      "description": "Second 5-entry u16 ranking/score table: entry 18 (size 2, count 5) at file 0xB3.",
+      "evidence": "FUN_0800084c entry 18: FUN_08001218(dst, ROM defaults, size 2, count 5) at file 0xB3; FUN_080013b4 entry 18: FUN_08001d60(reader, RAM dest, size 2, count 5).",
+      "name": "rank_table_b",
+      "offset": 179,
+      "size": 10,
+      "type": "bytes"
+    },
+    {
+      "confidence": "guessed",
+      "description": "Eleven consecutive u16 parameter words: entries 19-29, each (size 2, count 1), file 0xBD-0xD3.",
+      "evidence": "FUN_0800084c entries 19-29: eleven FUN_08001218(dst, ROM defaults, size 2, count 1); mirrored by eleven FUN_08001d60(reader, RAM dest, size 2, count 1) in FUN_080013b4.",
+      "name": "params_mid_blob",
+      "offset": 189,
+      "size": 22,
+      "type": "bytes"
+    },
+    {
+      "confidence": "guessed",
+      "description": "Two back-to-back 5-entry u16 tables: entries 30-31, each (size 2, count 5), file 0xD3-0xE7.",
+      "evidence": "FUN_0800084c entries 30-31: two FUN_08001218(dst, ROM defaults, size 2, count 5); mirrored by two FUN_08001d60(reader, RAM dest, size 2, count 5) in FUN_080013b4.",
+      "name": "rank_tables_c_d",
+      "offset": 211,
+      "size": 20,
+      "type": "bytes"
+    },
+    {
+      "confidence": "guessed",
+      "description": "Main run of 87 single u16 parameter words: entries 32-118, each (size 2, count 1), file 0xE7-0x195. Largest homogeneous region (per-item/per-record stats).",
+      "evidence": "FUN_0800084c entries 32-118: 87x FUN_08001218(dst, ROM defaults, size 2, count 1); mirrored by 87x FUN_08001d60(reader, RAM dest, size 2, count 1) in FUN_080013b4.",
+      "name": "params_main_blob",
+      "offset": 231,
+      "size": 174,
+      "type": "bytes"
+    },
+    {
+      "confidence": "guessed",
+      "description": "9-entry u16 table: entry 119 (size 2, count 9) at file 0x195.",
+      "evidence": "FUN_0800084c entry 119: FUN_08001218(dst, ROM defaults, size 2, count 9) at file 0x195; FUN_080013b4 entry 119: FUN_08001d60(reader, RAM dest, size 2, count 9).",
+      "name": "table_9_entries",
+      "offset": 405,
+      "size": 18,
+      "type": "bytes"
+    },
+    {
+      "confidence": "guessed",
+      "description": "7-entry u16 table: entry 120 (size 2, count 7) at file 0x1A7.",
+      "evidence": "FUN_0800084c entry 120: FUN_08001218(dst, ROM defaults, size 2, count 7) at file 0x1A7; FUN_080013b4 entry 120: FUN_08001d60(reader, RAM dest, size 2, count 7).",
+      "name": "table_7_entries",
+      "offset": 423,
+      "size": 14,
+      "type": "bytes"
+    },
+    {
+      "confidence": "guessed",
+      "description": "Block of twenty back-to-back 5-entry u16 tables: entries 121-140, each (size 2, count 5), file 0x1B5-0x27D. Ranking/score table bank.",
+      "evidence": "FUN_0800084c entries 121-140: 20x FUN_08001218(dst, ROM defaults, size 2, count 5); mirrored by 20x FUN_08001d60(reader, RAM dest, size 2, count 5) in FUN_080013b4.",
+      "name": "rank_tables_e_block",
+      "offset": 437,
+      "size": 200,
+      "type": "bytes"
+    },
+    {
+      "confidence": "guessed",
+      "description": "Trailing u32 counter closing the record: entry 141 (size 4, count 1) at file 0x27D; last byte of the 641-byte logical record (0x281).",
+      "evidence": "FUN_0800084c entry 141: FUN_08001218(dst, ROM defaults, size 4, count 1) at file 0x27D; FUN_080013b4 entry 141: FUN_08001d60(reader, RAM dest, size 4, count 1).",
+      "name": "trailer_counter_u32",
+      "offset": 637,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Unread EEPROM area: blank baseline shows 0xFF fill from 0x288 to end of the 8 KiB device. No decomp read/write covers it (81 blocks x 8 B = 648 B media use).",
+      "evidence": "FUN_080012f0/FUN_080006e4 transfer ceil(641/8)=81 blocks via FUN_08001380/FUN_08000804; baseline.sav bytes [0x288, 0x2000) are all 0xFF.",
+      "name": "unused_eeprom_fill",
+      "offset": 648,
+      "size": 7544,
       "type": "bytes"
     }
-  ]
+  ],
+  "game_code": "AH7J",
+  "id": "ah7j",
+  "magic_signatures": [],
+  "media": "eeprom8k",
+  "size_bytes": 8192,
+  "title": "Nakayoshi Pet Advance Series 1 - Kawaii Hamster (Japan)"
 }

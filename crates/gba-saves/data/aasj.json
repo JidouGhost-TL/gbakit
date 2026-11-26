@@ -1,45 +1,106 @@
 {
-  "id": "aasj",
-  "game_code": "AASJ",
-  "title": "World Advance Soccer - Shouri e no Michi (Japan)",
-  "media": "eeprom8k",
-  "size_bytes": 8192,
-  "magic_signatures": [
-    {
-      "offset": 0,
-      "bytes": [
-        65,
-        65,
-        45,
-        80
-      ]
-    }
-  ],
   "checksums": [],
+  "copy_groups": [],
+  "eeprom_rev8": true,
   "fields": [
     {
-      "name": "magic_header",
+      "confidence": "confirmed",
+      "constraint": {
+        "allowed": "ABCDEFGHIJKLMNOPQRSTUVWXYZ-",
+        "kind": "ascii-charset",
+        "max_len": 8
+      },
+      "description": "First half of the 16-byte ROM ID header; written byte-by-byte to EWRAM 0x02000000-0x02000007 and verified as u32 word 0 in the save-load path.",
+      "evidence": "FUN_0808e9c4 writes uRam02000000..uRam02000007 ('AGB-P-AA'); FUN_0808eabc loads EEPROM block 0 via FUN_080a34e8(0, 0x2000000) and compares iRam02000000/iRam02000004 against ROM constants DAT_0808eb40/DAT_0808eb44.",
+      "name": "save_magic_line_a",
       "offset": 0,
-      "size": 4,
+      "size": 8,
       "type": "ascii"
     },
     {
-      "name": "slot_counter",
-      "offset": 4,
-      "size": 2,
-      "type": "u16_le"
-    },
-    {
-      "name": "game_progress_flags",
-      "offset": 6,
-      "size": 2,
-      "type": "u16_le"
-    },
-    {
-      "name": "player_status_payload",
+      "confidence": "confirmed",
+      "description": "Second half of the 16-byte ROM ID header including the 0xFF terminator; written to EWRAM 0x02000008-0x0200000F and verified as u32 words 2-3 on load.",
+      "evidence": "FUN_0808e9c4 writes uRam02000008..uRam0200000f ('SJ(JPN)' + 0xFF); FUN_0808eabc loads EEPROM block 1 via FUN_080a34e8(1, 0x2000008) and compares iRam02000008/iRam0200000c against DAT_0808eb48/DAT_0808eb4c.",
+      "name": "save_magic_line_b",
       "offset": 8,
-      "size": 16,
-      "type": "bytes"
+      "size": 8,
+      "type": "ascii"
+    },
+    {
+      "confidence": "guessed",
+      "description": "First 32-bit word of the game-data arena immediately after the header; zero in a fresh init. Interior semantics are not exposed by this decomp slice.",
+      "evidence": "FUN_0808e9c4 bulk-writes EEPROM blocks 0..N from EWRAM 0x02000000+i*8 (block 2 maps to save offset 16); baseline shows offset 16 zeroed. Block transfer primitives FUN_080a34e8/FUN_080a3598/FUN_080a3674.",
+      "name": "arena_data_first_word",
+      "offset": 16,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "guessed",
+      "description": "Low byte of the halfword fetched from EEPROM block 0x17a; companion to validity_marker. Zero in the fresh baseline.",
+      "evidence": "FUN_0808ecac fetches EEPROM block 0x17a into stack via FUN_080a34e8(0x17a, auStack_10) + FUN_080a3674 verify; save offset 0xBD0 is the low byte of auStack_10[0] (little-endian).",
+      "name": "validity_word_low",
+      "offset": 3024,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "constraint": {
+        "kind": "enum",
+        "labels": {
+          "0": "FreshUnset",
+          "33": "SetMarker"
+        },
+        "values": [
+          0,
+          33
+        ]
+      },
+      "description": "Validity marker byte: the save is treated as provisioned when this byte equals 0x21; fresh baseline holds 0x00.",
+      "evidence": "FUN_0808ecac returns (auStack_10[0] >> 8 == 0x21) after FUN_080a34e8(0x17a) loads the block; high byte of the LE halfword at save offset 0xBD0 is byte 0xBD1.",
+      "name": "validity_marker",
+      "offset": 3025,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Last 32-bit word of the zero-written arena; anchors the observed arena end at offset 0x19D0 (block 0x339 written, rest erased 0xFF).",
+      "evidence": "FUN_0808e9c4 DMA-clears EWRAM via func_0x080a32cc then bulk-writes blocks 0..N with FUN_080a3598/FUN_080a3674; baseline logical bytes 16..0x19D0 are 0x00 and 0x19D0..0x2000 are 0xFF (0x19D0 = 826 blocks).",
+      "name": "arena_data_last_word",
+      "offset": 6604,
+      "size": 4,
+      "type": "u32_le"
     }
-  ]
+  ],
+  "game_code": "AASJ",
+  "id": "aasj",
+  "magic_signatures": [
+    {
+      "bytes": [
+        65,
+        71,
+        66,
+        45,
+        80,
+        45,
+        65,
+        65,
+        83,
+        74,
+        40,
+        74,
+        80,
+        78,
+        41,
+        255
+      ],
+      "description": "ASCII 'AGB-P-AASJ(JPN)' + 0xFF terminator (logical rev8 domain)",
+      "offset": 0
+    }
+  ],
+  "media": "eeprom8k",
+  "size_bytes": 8192,
+  "title": "World Advance Soccer - Shouri e no Michi (Japan)"
 }

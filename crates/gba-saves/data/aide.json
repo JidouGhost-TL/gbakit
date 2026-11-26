@@ -1,29 +1,141 @@
 {
-  "id": "aide",
-  "game_code": "AIDE",
-  "title": "Space Invaders (USA, Europe)",
-  "media": "eeprom512",
-  "size_bytes": 512,
-  "magic_signatures": [],
   "checksums": [],
+  "copy_groups": [],
+  "eeprom_rev8": true,
   "fields": [
     {
-      "name": "slot_counter",
+      "confidence": "confirmed",
+      "description": "Save-format magic, little-endian u32 0xBEEFF00D. First word of the 72-byte EEPROM image; verified against samples/baseline.sav in the rev8-logical domain.",
+      "evidence": "EEPROM word 0 is transferred as one 8-byte unit by FUN_08051274 (read) / FUN_0805132c (write) via the FUN_080511f4 bit-bang driver on 0x0D000000, and compared as a full 8-byte word by FUN_08051410. Raw sav bytes 00 00 00 00 BE EF F0 0D reverse (rev8) to logical 0D F0 EF BE 00 00 00 00, i.e. LE u32 0xBEEFF00D at offset 0; all-zero without rev8.",
+      "name": "save_magic",
       "offset": 0,
-      "size": 2,
-      "type": "u16_le"
+      "size": 4,
+      "type": "u32_le"
     },
     {
-      "name": "game_progress_flags",
-      "offset": 2,
-      "size": 2,
-      "type": "u16_le"
-    },
-    {
-      "name": "player_status_payload",
+      "confidence": "likely",
+      "description": "Game options/flags word stored with the magic in EEPROM word 0 (offsets 0-7 are read, written and verified as a single 8-byte unit). Fresh-save default is 0 (sound on, defaults selected).",
+      "evidence": "FUN_08051274 / FUN_0805132c move save data in 8-byte EEPROM words and FUN_08051410 verifies a whole word (4 halfwords) at once, so offsets 0-7 form one integrity unit: magic plus this options word. Mutable gameplay/config scalar for live emulator probing.",
+      "name": "game_options",
       "offset": 4,
-      "size": 16,
+      "size": 4,
+      "type": "bitflags"
+    },
+    {
+      "confidence": "likely",
+      "description": "Rank-1 persistent best score (fresh save: 0, no score recorded yet). Scores render as decimal digit strings via FUN_08026d28.",
+      "evidence": "Save image occupies EEPROM words 0-8 (logical offsets 0x00-0x47; bytes 0x48+ are 0xFF-erased). Each 8-byte EEPROM word is loaded/stored by FUN_08051274 / FUN_0805132c through FUN_080511f4. Score values are formatted for display by the decimal digit renderer FUN_08026d28 (divide helper FUN_080518f4). Mutable gameplay scalar for live emulator probing.",
+      "name": "high_score_1",
+      "offset": 8,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "guessed",
+      "description": "Rank-1 initials/name cell: 3 packed ASCII initials plus one pad byte (NUL in the fresh save). Paired with high_score_1 in a single 8-byte EEPROM word.",
+      "evidence": "One FUN_08051274 / FUN_0805132c call moves exactly 8 bytes (offsets 8-15 = word 1), i.e. score plus name cell travel together. NUL-terminated text is fed to the text system char-by-char by FUN_0805163c / FUN_080515dc (formatted by FUN_08051698 via FUN_08002498). All-zero in samples/baseline.sav (no name entered yet).",
+      "name": "score_initials_1",
+      "offset": 12,
+      "size": 4,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Rank-2 persistent best score (fresh save: 0).",
+      "evidence": "EEPROM word 2 (offsets 16-23) moved as an 8-byte unit by FUN_08051274 / FUN_0805132c via FUN_080511f4; score display path is FUN_08026d28 with divide helper FUN_080518f4. Mutable gameplay scalar for live emulator probing.",
+      "name": "high_score_2",
+      "offset": 16,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "guessed",
+      "description": "Rank-2 initials/name cell (3 packed ASCII initials + pad byte; NUL in the fresh save), paired with high_score_2 in EEPROM word 2.",
+      "evidence": "Offsets 16-23 form one 8-byte EEPROM word per FUN_08051274 / FUN_0805132c; text output path FUN_0805163c / FUN_080515dc / FUN_08051698. All-zero in samples/baseline.sav.",
+      "name": "score_initials_2",
+      "offset": 20,
+      "size": 4,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Rank-3 persistent best score (fresh save: 0).",
+      "evidence": "EEPROM word 3 (offsets 24-31) moved as an 8-byte unit by FUN_08051274 / FUN_0805132c via FUN_080511f4; score display path is FUN_08026d28 with divide helper FUN_080518f4. Mutable gameplay scalar for live emulator probing.",
+      "name": "high_score_3",
+      "offset": 24,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "guessed",
+      "description": "Rank-3 initials/name cell (3 packed ASCII initials + pad byte; NUL in the fresh save), paired with high_score_3 in EEPROM word 3.",
+      "evidence": "Offsets 24-31 form one 8-byte EEPROM word per FUN_08051274 / FUN_0805132c; text output path FUN_0805163c / FUN_080515dc / FUN_08051698. All-zero in samples/baseline.sav.",
+      "name": "score_initials_3",
+      "offset": 28,
+      "size": 4,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Rank-4 persistent best score (fresh save: 0).",
+      "evidence": "EEPROM word 4 (offsets 32-39) moved as an 8-byte unit by FUN_08051274 / FUN_0805132c via FUN_080511f4; score display path is FUN_08026d28 with divide helper FUN_080518f4. Mutable gameplay scalar for live emulator probing.",
+      "name": "high_score_4",
+      "offset": 32,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "guessed",
+      "description": "Rank-4 initials/name cell (3 packed ASCII initials + pad byte; NUL in the fresh save), paired with high_score_4 in EEPROM word 4.",
+      "evidence": "Offsets 32-39 form one 8-byte EEPROM word per FUN_08051274 / FUN_0805132c; text output path FUN_0805163c / FUN_080515dc / FUN_08051698. All-zero in samples/baseline.sav.",
+      "name": "score_initials_4",
+      "offset": 36,
+      "size": 4,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Rank-5 persistent best score (fresh save: 0).",
+      "evidence": "EEPROM word 5 (offsets 40-47) moved as an 8-byte unit by FUN_08051274 / FUN_0805132c via FUN_080511f4; score display path is FUN_08026d28 with divide helper FUN_080518f4. Mutable gameplay scalar for live emulator probing.",
+      "name": "high_score_5",
+      "offset": 40,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "guessed",
+      "description": "Rank-5 initials/name cell (3 packed ASCII initials + pad byte; NUL in the fresh save), paired with high_score_5 in EEPROM word 5.",
+      "evidence": "Offsets 40-47 form one 8-byte EEPROM word per FUN_08051274 / FUN_0805132c; text output path FUN_0805163c / FUN_080515dc / FUN_08051698. All-zero in samples/baseline.sav.",
+      "name": "score_initials_5",
+      "offset": 44,
+      "size": 4,
+      "type": "bytes"
+    },
+    {
+      "confidence": "guessed",
+      "description": "Trailing session/progress block: EEPROM words 6-8 (24 bytes, all zero in the fresh save). Reserved for session progress, play counters or settings the game accumulates after defaults are written.",
+      "evidence": "Bytes 48-71 are 0x00 (written by the game: erased EEPROM reads 0xFF, and offsets 72+ are still 0xFF) and transfer as three 8-byte words via FUN_08051274 / FUN_0805132c. Address guard FUN_08002428 bounds the valid EEPROM word range. Exact per-byte semantics unrecovered (game-level callers are dispatched through unrecovered tailcall jumptables), hence bytes type.",
+      "name": "session_progress",
+      "offset": 48,
+      "size": 24,
       "type": "bytes"
     }
-  ]
+  ],
+  "game_code": "AIDE",
+  "id": "aide",
+  "magic_signatures": [
+    {
+      "bytes": [
+        13,
+        240,
+        239,
+        190
+      ],
+      "description": "LE u32 0xBEEFF00D save magic at logical offset 0 (rev8 domain)",
+      "offset": 0
+    }
+  ],
+  "media": "eeprom512",
+  "size_bytes": 512,
+  "title": "Space Invaders (USA, Europe)"
 }

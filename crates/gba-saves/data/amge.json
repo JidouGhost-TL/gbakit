@@ -11,35 +11,89 @@
         66,
         65,
         83,
-        83
-      ]
+        83,
+        70,
+        73,
+        83,
+        72,
+        73,
+        78,
+        71,
+        95,
+        50,
+        48,
+        48,
+        50
+      ],
+      "description": "ASCII 'BASSFISHING_2002' header, memcmp-checked over 0x10 bytes in FUN_0800e250"
     }
   ],
-  "checksums": [],
+  "checksums": [
+    {
+      "name": "save_checksum",
+      "algorithm": "sum8",
+      "covered_start": 0,
+      "covered_end": 1228,
+      "stored_offset": 1228,
+      "seed": 0,
+      "xor_out": 0
+    }
+  ],
   "fields": [
     {
-      "name": "magic_header",
+      "name": "save_magic",
       "offset": 0,
-      "size": 4,
-      "type": "ascii"
-    },
-    {
-      "name": "slot_counter",
-      "offset": 4,
-      "size": 2,
-      "type": "u16_le"
-    },
-    {
-      "name": "game_progress_flags",
-      "offset": 6,
-      "size": 2,
-      "type": "u16_le"
-    },
-    {
-      "name": "player_status_payload",
-      "offset": 8,
       "size": 16,
-      "type": "bytes"
+      "type": "ascii",
+      "description": "Save magic 'BASSFISHING_2002'; SRAM is accepted only if these 0x10 bytes match the ROM reference",
+      "confidence": "confirmed",
+      "evidence": "FUN_0800e250 loads 0x4d0 bytes from SRAM 0x0E000000 via FUN_0800500c then func_0x0802095c memcmp of 0x10 bytes at save offset 0 against the ROM magic; mismatch triggers full re-init."
+    },
+    {
+      "name": "boot_options_lo",
+      "offset": 16,
+      "size": 2,
+      "type": "u16_le",
+      "description": "Low half of the 4-byte boot config word copied from save offset 0x10 into the work buffer at startup",
+      "confidence": "likely",
+      "evidence": "FUN_0800e1b4 copies 4 bytes from save buffer+0x10 (func_0x08020a04) into the boot work buffer; FUN_0800a320 then consumes the low u16 (*(short *)workbuf) into _DAT_0800a380."
+    },
+    {
+      "name": "boot_options_hi",
+      "offset": 18,
+      "size": 2,
+      "type": "u16_le",
+      "description": "High half of the 4-byte boot config word at save offset 0x10; loaded together with boot_options_lo",
+      "confidence": "likely",
+      "evidence": "Same 4-byte FUN_0800e1b4 copy from save buffer+0x10 covers save offsets 0x10..0x14; this is the upper half not consumed as the low short in FUN_0800a320."
+    },
+    {
+      "name": "angler_name",
+      "offset": 932,
+      "size": 8,
+      "type": "ascii",
+      "description": "Angler/player name, 8 bytes; defaults are copied from ROM and re-checksummed on new-file setup",
+      "confidence": "confirmed",
+      "evidence": "FUN_0800dd78 writes 8 bytes (func_0x08020a04) to save buffer+0x3a4 then recomputes the checksum via FUN_0800db04; FUN_0800a384 supplies the 8-byte ROM default (from _DAT_0800a3ac) and FUN_0800db80 validates this region."
+    },
+    {
+      "name": "player_setting",
+      "offset": 940,
+      "size": 2,
+      "type": "u16_le",
+      "description": "U16 player setting stored right after the angler name; ROM default is 3 on new-file setup",
+      "confidence": "confirmed",
+      "evidence": "FUN_0800ddb4 stores one u16 to save buffer+0x3ac then recomputes the checksum via FUN_0800db04; FUN_0800a384 passes value 3 as the default."
+    },
+    {
+      "name": "angler_name_ext",
+      "offset": 942,
+      "size": 6,
+      "type": "bytes",
+      "description": "Trailing bytes of the 16-byte validation window covering the angler record (name + setting); exact semantics unclear",
+      "confidence": "guessed",
+      "evidence": "FUN_0800db80 copies 16 bytes from the save buffer region anchored at the angler record (same base family as FUN_0800dd78/FUN_0800ddb4, i.e. save+0x3a4) and validates them pairwise via func_0x0800e788; bytes 0x3ae..0x3b4 are the tail of that window past player_setting."
     }
-  ]
+  ],
+  "copy_groups": []
 }

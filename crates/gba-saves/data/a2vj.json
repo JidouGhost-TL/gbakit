@@ -1,29 +1,168 @@
 {
-  "id": "a2vj",
-  "game_code": "A2VJ",
-  "title": "Kisekko Gurumii - Chesty to Nuigurumi-tachi no Mahou no Bouken (Japan)",
-  "media": "eeprom8k",
-  "size_bytes": 8192,
-  "magic_signatures": [],
   "checksums": [],
+  "copy_groups": [
+    {
+      "fields": [
+        "slot_a_integrity_sum",
+        "slot_b_integrity_sum"
+      ],
+      "name": "slot_integrity_sum_mirrors"
+    },
+    {
+      "fields": [
+        "slot_a_identity_magic",
+        "slot_b_identity_magic"
+      ],
+      "name": "slot_identity_magic_mirrors"
+    },
+    {
+      "fields": [
+        "slot_a_integrity_neg",
+        "slot_b_integrity_neg"
+      ],
+      "name": "slot_integrity_neg_mirrors"
+    },
+    {
+      "fields": [
+        "slot_a_save_data",
+        "slot_b_save_data"
+      ],
+      "name": "slot_body_mirrors"
+    }
+  ],
+  "eeprom_rev8": false,
   "fields": [
     {
-      "name": "slot_counter",
+      "confidence": "likely",
+      "description": "Slot A 0x30-byte header reserved prefix (first 8 bytes); all zeros in live baseline, never compared by the validator.",
+      "evidence": "FUN_0800b2f4 case 0 loads EEPROM 0x0000 len 0xE00 and case 10 verifies the leading 0x30 header bytes; FUN_0800ace4 only interprets header words at +0x08/+0x0C/+0x14, leaving +0x00..0x07 unused.",
+      "name": "slot_a_header_prefix",
       "offset": 0,
-      "size": 2,
-      "type": "u16_le"
-    },
-    {
-      "name": "game_progress_flags",
-      "offset": 2,
-      "size": 2,
-      "type": "u16_le"
-    },
-    {
-      "name": "player_status_payload",
-      "offset": 4,
-      "size": 16,
+      "size": 8,
       "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Slot A stored integrity word: byte-sum of the slot RAM mirror. Boot-heal routine requires word[0] to equal the computed byte-sum.",
+      "evidence": "FUN_0800b440 sums bytes over [DAT_0800b4f8, DAT_0800b4f8+DAT_0800b4fc] and requires DAT_0800b4f8[0] == sum; header word addressed as slot base +0x08 per FUN_0800ace4 (EEPROM 0x0000 block via FUN_0800b2f4/FUN_0800b3e4 and FUN_0800b244 param 100 store of 0x30 bytes).",
+      "name": "slot_a_integrity_sum",
+      "offset": 8,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Slot A 8-byte identity/magic compared byte-for-byte against the reference block; all 8 bytes must match for the slot to validate.",
+      "evidence": "FUN_0800ace4 compares 8 bytes at slot base +0x0C against reference DAT_0800ad74 (and slot B +0x3C against DAT_0800ad74+8); header verified as part of the 0x30-byte EEPROM 0x0000/0x0E00 reads in FUN_0800b2f4 case 10.",
+      "name": "slot_a_identity_magic",
+      "offset": 12,
+      "size": 8,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Slot A stored integrity complement: must equal two's-complement negation (~sum+1) of the integrity sum word.",
+      "evidence": "FUN_0800b440 requires DAT_0800b4f8[3] == ~sum+1 (complement at mirror +12 = slot base +0x14); FUN_0800ace4 independently requires *(slot+0x14) == ~*(slot+0x08)+1.",
+      "name": "slot_a_integrity_neg",
+      "offset": 20,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Slot A header tail padding (24 bytes, erased 0xFF in live baseline); never referenced by validator or loader.",
+      "evidence": "FUN_0800b2f4 case 10 moves the full 0x30 header (EEPROM 0x0000) while FUN_0800ace4/FUN_0800b440 only interpret header bytes +0x00..0x17, leaving +0x18..0x2F as padding.",
+      "name": "slot_a_header_tail",
+      "offset": 24,
+      "size": 24,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Slot A gameplay save body (3536 bytes following the 0x30 header). Interior gameplay field layout is opaque in the decomp (all accesses via runtime-resolved DAT pointers); live baseline is erased (0xFF = no valid save written yet).",
+      "evidence": "FUN_0800b2f4 case 0 / FUN_0800b244 case 0 move EEPROM 0x0000 len 0xE00 via FUN_0800b3e4/FUN_0800b390 (block I/O FUN_0800e794/FUN_0800e82c over EEPROM 8-byte units); header occupies the first 0x30 bytes per FUN_0800b2f4 case 10.",
+      "name": "slot_a_save_data",
+      "offset": 48,
+      "size": 3536,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Slot B (mirror/backup of slot A) 0x30-byte header reserved prefix; zeros in live baseline.",
+      "evidence": "FUN_0800b2f4 case 1 loads EEPROM 0x0E00 len 0xE00 and case 10 verifies the leading 0x30 header bytes; FUN_0800ace4 validates the second header copy at RAM mirror +0x30 (checksum +0x38, magic +0x3C, complement +0x44); stored via FUN_0800b244 param 0x65 (0x30 bytes at 0x0E00).",
+      "name": "slot_b_header_prefix",
+      "offset": 3584,
+      "size": 8,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Slot B stored integrity word (byte-sum), mirror of slot A checksum; validated by the same boot-heal routine.",
+      "evidence": "FUN_0800b440 second pass (after FUN_0800b2f4 case 1 load of EEPROM 0x0E00) applies the identical sum/complement check; FUN_0800ace4 checks the mirrored header at +0x38 == ~(+0x44)+1.",
+      "name": "slot_b_integrity_sum",
+      "offset": 3592,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Slot B 8-byte identity/magic, mirror of slot A magic; compared against reference DAT_0800ad74+8.",
+      "evidence": "FUN_0800ace4 compares 8 bytes at mirrored header +0x3C against DAT_0800ad74+8; header moved by FUN_0800b2f4 case 10 (EEPROM 0x0E00, 0x30 bytes).",
+      "name": "slot_b_identity_magic",
+      "offset": 3596,
+      "size": 8,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Slot B stored integrity complement (two's-complement negation of the slot B sum).",
+      "evidence": "FUN_0800b440 second pass requires mirror[3] == ~sum+1; FUN_0800ace4 requires *(mirror+0x44) == ~*(mirror+0x38)+1.",
+      "name": "slot_b_integrity_neg",
+      "offset": 3604,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Slot B header tail padding (24 bytes, erased 0xFF in live baseline).",
+      "evidence": "FUN_0800b2f4 case 10 moves the full 0x30 header at EEPROM 0x0E00 while FUN_0800ace4 only interprets +0x30..0x47 of the joint mirror, leaving +0x48..0x5F as padding.",
+      "name": "slot_b_header_tail",
+      "offset": 3608,
+      "size": 24,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Slot B gameplay save body mirror (3536 bytes); interior layout opaque in the decomp; erased (0xFF) in live baseline.",
+      "evidence": "FUN_0800b2f4 case 1 / FUN_0800b244 case 1 move EEPROM 0x0E00 len 0xE00 via FUN_0800b3e4/FUN_0800b390; first 0x30 bytes are the header per case 10.",
+      "name": "slot_b_save_data",
+      "offset": 3632,
+      "size": 3536,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Shared 8-byte commit footer at EEPROM 0x1C00, low word; written after every slot A or slot B store from per-slot RAM cells.",
+      "evidence": "FUN_0800b244 cases 0/1 issue FUN_0800b390(0x1C00, ram_cell, 8) after the slot store (cells uRam0800b28c/uRam0800b2b0); FUN_0800b2f4 case 10 issues FUN_0800b3e4(0x1C00, cell, 8) on the load path.",
+      "name": "shared_commit_word0",
+      "offset": 7168,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Shared 8-byte commit footer at EEPROM 0x1C00, high word; erased (0xFF) in live baseline.",
+      "evidence": "Same 8-byte EEPROM 0x1C00 transfer as shared_commit_word0 (FUN_0800b244 cases 0/1 store, FUN_0800b2f4 case 10 load); upper half of the footer word pair.",
+      "name": "shared_commit_word1",
+      "offset": 7172,
+      "size": 4,
+      "type": "u32_le"
     }
-  ]
+  ],
+  "game_code": "A2VJ",
+  "id": "a2vj",
+  "magic_signatures": [],
+  "media": "eeprom8k",
+  "size_bytes": 8192,
+  "title": "Kisekko Gurumii - Chesty to Nuigurumi-tachi no Mahou no Bouken (Japan)"
 }

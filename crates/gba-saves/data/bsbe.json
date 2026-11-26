@@ -1,45 +1,90 @@
 {
-  "id": "bsbe",
-  "game_code": "BSBE",
-  "title": "Sonic Battle (USA) (En,Ja,Fr,De,Es,It)",
-  "media": "flash512",
-  "size_bytes": 65536,
-  "magic_signatures": [
-    {
-      "offset": 0,
-      "bytes": [
-        83,
-        66,
-        84,
-        76
-      ]
-    }
-  ],
   "checksums": [],
   "fields": [
     {
-      "name": "magic_header",
+      "confidence": "confirmed",
+      "constraint": {
+        "allowed": "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+        "kind": "ascii-charset",
+        "max_len": 4
+      },
+      "description": "Sector magic 'SBTL' written at buffer offset 0 on every save",
+      "evidence": "FUN_080217d0 stores ROM word _DAT_0802186c to sector buffer offset 0x0 (buffer _DAT_08021868, built with 0x1000-byte memset); baseline bytes at file offset 0 are 53 42 54 4c.",
+      "name": "save_magic_sbtl",
       "offset": 0,
       "size": 4,
       "type": "ascii"
     },
     {
-      "name": "slot_counter",
+      "confidence": "confirmed",
+      "description": "CRC32 (ISO-HDLC/zlib) of the 4096-byte sector with this word treated as zero; not in Schema v2 algorithm list so stored as a plain field",
+      "evidence": "FUN_080217d0 stores func_08021a40 (u32 init 0xFFFFFFFF, table _DAT_08021a80, final bitwise NOT) over 0x1000 bytes at offset 0x4; FUN_080216e4 zeroes buffer+4, recomputes func_08021a40 over 0x1000 and compares per sector; Python zlib.crc32 over baseline[0:0x1000] with bytes 4..7 zeroed equals stored LE value 0x23dfa272.",
+      "name": "sector_crc32",
       "offset": 4,
-      "size": 2,
-      "type": "u16_le"
+      "size": 4,
+      "type": "u32_le"
     },
     {
-      "name": "game_progress_flags",
-      "offset": 6,
-      "size": 2,
-      "type": "u16_le"
-    },
-    {
-      "name": "player_status_payload",
+      "confidence": "confirmed",
+      "description": "Primary save-version counter; loader keeps the sector with the highest (counter_b, counter_a) pair",
+      "evidence": "FUN_080217d0 copies u32 _DAT_08021870[0] to sector offset 0x8; FUN_080216e4 scans 16 sectors via FUN_080218ac and selects max of *(uint*)(buf+0xc) then *(uint*)(buf+0x8); baseline value 1.",
+      "name": "save_version_counter_a",
       "offset": 8,
-      "size": 16,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Secondary save-version counter used together with counter_a for newest-sector arbitration",
+      "evidence": "FUN_080217d0 copies u32 _DAT_08021870[1] to sector offset 0xc; FUN_080216e4 arbitration compares buf+0xc before buf+0x8 across the 16 sectors read by FUN_080218ac; baseline value 0.",
+      "name": "save_version_counter_b",
+      "offset": 12,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "First byte of the RAM game-state struct; chained-additive encode leaves index-0 byte unchanged, so this file byte equals the live struct byte (default-init writes u32 1 at struct+0x0)",
+      "evidence": "FUN_080215a8 writes u32 1 at RAM state struct offset 0x0 (_DAT_080216ac); FUN_080217d0 memcpys 0x4e0 bytes from RAM state (_DAT_08021874) to file offset 0x10; FUN_080219e4 encode loop modifies bytes 1..N only, preserving byte 0; baseline file byte 0x10 is 0x01.",
+      "name": "save_state_active",
+      "offset": 16,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Remainder of the 0x4e0-byte RAM game-state image after chained-additive obfuscation (plaintext not directly readable)",
+      "evidence": "FUN_080217d0 memcpys 0x4e0 bytes from _DAT_08021874 to file offset 0x10, then FUN_080219e4 obfuscates 0xff0 bytes from file offset 0x10 via table _DAT_08021a0c chained adds; first byte split out as save_state_active.",
+      "name": "game_state_encrypted",
+      "offset": 17,
+      "size": 1247,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Encoded zero padding filling the sector past the 0x4e0-byte state image (whole 0x1000 buffer is zeroed before the state copy and the 0xff0-byte encode pass)",
+      "evidence": "FUN_080217d0 zeroes the full 0x1000-byte buffer (_DAT_08021868), copies only 0x4e0 state bytes at offset 0x10, then FUN_080219e4 encodes 0xff0 bytes covering file offsets 0x10..0x1000; 0x10+0x4e0 = 0x4f0 boundary.",
+      "name": "sector_padding_encrypted",
+      "offset": 1264,
+      "size": 2832,
       "type": "bytes"
     }
-  ]
+  ],
+  "game_code": "BSBE",
+  "id": "bsbe",
+  "magic_signatures": [
+    {
+      "bytes": [
+        83,
+        66,
+        84,
+        76
+      ],
+      "description": "ASCII 'SBTL' sector magic written by FUN_080217d0",
+      "offset": 0
+    }
+  ],
+  "media": "flash512",
+  "size_bytes": 65536,
+  "title": "Sonic Battle (USA) (En,Ja,Fr,De,Es,It)"
 }

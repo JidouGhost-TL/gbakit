@@ -1,45 +1,178 @@
 {
-  "id": "afpe",
+  "checksums": [
+    {
+      "name": "save_sum32",
+      "algorithm": "sum32_le",
+      "covered_start": 0,
+      "covered_end": 60672,
+      "stored_offset": 60672
+    }
+  ],
+  "copy_groups": [],
+  "fields": [
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "allowed": "ABCDEFGHIJKLMNOPQRSTUVWXYZ_ACE",
+        "kind": "ascii-charset",
+        "max_len": 8
+      },
+      "description": "Save magic header; full 8-byte field reads 'F_P_ACE\\0' (Fire Pro Wrestling ACE). First 4 bytes match magic_signatures.",
+      "evidence": "Raw bytes at save offset 0x0 in samples/baseline.sav: 46 5F 50 5F 41 43 45 00. Flash sector I/O rooted at FUN_080466e8 / FUN_080467a8 / FUN_08046890 (0x0E000000 range); load path FUN_08038148.",
+      "name": "save_magic",
+      "offset": 0,
+      "size": 8,
+      "type": "ascii"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Slot 0 status flag: 0x80 = active/default wrestler (YAMATO). Observed values across the 200-slot table: 0x80 default, 0x81 edited CAW, 0x00 empty, 0x03 special/boss.",
+      "evidence": "FUN_080377b8 copies one flag byte per slot (save stride 0x48, ROM struct stride 0x1f0, 200 iterations) into the RAM save buffer; slot 0 flag lands at save offset 0xa56c = 0x80 in baseline.sav. Flag-reader loop FUN_080378a4 iterates the same 200 slots.",
+      "name": "wrestler_00_status",
+      "offset": 42348,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "constraint": {
+        "allowed": "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz .-'()/0123456789",
+        "kind": "ascii-charset",
+        "max_len": 18
+      },
+      "description": "Slot 0 family/last ring name, NUL-padded ('YAMATO'). First of the three name blobs copied per slot (0x12 bytes).",
+      "evidence": "FUN_080377b8 second-loop 0x12-byte copy lands at slot_base+1; slot 0 gives save range 0xa56d..0xa57e, ASCII 'YAMATO' in baseline.sav.",
+      "name": "wrestler_00_last_name",
+      "offset": 42349,
+      "size": 18,
+      "type": "ascii"
+    },
+    {
+      "confidence": "likely",
+      "constraint": {
+        "allowed": "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz .-'()/0123456789",
+        "kind": "ascii-charset",
+        "max_len": 20
+      },
+      "description": "Slot 0 given/first name, NUL-padded ('FIGHTER'). Second name blob per slot (0x14 bytes).",
+      "evidence": "FUN_080377b8 second-loop 0x14-byte copy lands at slot_base+0x13; slot 0 gives save range 0xa57f..0xa592, ASCII 'FIGHTER' in baseline.sav.",
+      "name": "wrestler_00_first_name",
+      "offset": 42367,
+      "size": 20,
+      "type": "ascii"
+    },
+    {
+      "confidence": "likely",
+      "constraint": {
+        "allowed": "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz .-'()/0123456789",
+        "kind": "ascii-charset",
+        "max_len": 30
+      },
+      "description": "Slot 0 nickname/title, NUL-padded ('The Dragon'). Third name blob per slot (0x1e bytes).",
+      "evidence": "FUN_080377b8 second-loop 0x1e-byte copy lands at slot_base+0x27; slot 0 gives save range 0xa593..0xa5b0, ASCII 'The Dragon' in baseline.sav.",
+      "name": "wrestler_00_nickname",
+      "offset": 42387,
+      "size": 30,
+      "type": "ascii"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Slot 1 status flag: 0x80 = active/default wrestler (KEISUKE). Confirms the 0x48 stride (slot 1 base = 0xa56c + 0x48).",
+      "evidence": "FUN_080377b8 slot loop steps save offset by 0x48; slot 1 flag at save offset 0xa5b4 = 0x80 in baseline.sav.",
+      "name": "wrestler_01_status",
+      "offset": 42420,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "constraint": {
+        "allowed": "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz .-'()/0123456789",
+        "kind": "ascii-charset",
+        "max_len": 18
+      },
+      "description": "Slot 1 family/last ring name, NUL-padded ('KEISUKE').",
+      "evidence": "FUN_080377b8 0x12-byte copy at slot_base+1; slot 1 gives save range 0xa5b5..0xa5c6, ASCII 'KEISUKE' in baseline.sav.",
+      "name": "wrestler_01_last_name",
+      "offset": 42421,
+      "size": 18,
+      "type": "ascii"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Slot 19 status flag: 0x81 = user-edited CAW slot ('KAMIKAZE' with custom single-char first name 'E'). Only 0x81 in the default roster range, marking a modified record.",
+      "evidence": "FUN_080377b8 slot loop, slot 19 base = 0xa56c + 19*0x48 = 0xaac4; flag byte 0x81 in baseline.sav vs 0x80 for untouched slots.",
+      "name": "wrestler_19_status",
+      "offset": 43716,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Slot 21 status flag: 0x00 = empty/unused slot (still carries default ROM name data 'D.SILVER'). Proves the flag byte, not the name bytes, gates slot use.",
+      "evidence": "FUN_080377b8 slot loop, slot 21 base = 0xa56c + 21*0x48 = 0xab54; flag byte 0x00 in baseline.sav while name bytes remain populated.",
+      "name": "wrestler_21_status",
+      "offset": 43860,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "allowed": "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz .-'()/0123456789",
+        "kind": "ascii-charset",
+        "max_len": 24
+      },
+      "description": "Stable/team entry 0 full name, NUL-padded ('VIEW JAPAN'). First of 16 entries written by the 16-iteration header loop.",
+      "evidence": "FUN_080377b8 first loop (16 iterations, save stride 0x2c) 0x18-byte copy to entry base; entry 0 at save 0xe000..0xe017 = 'VIEW JAPAN' in baseline.sav.",
+      "name": "stable_00_name",
+      "offset": 57344,
+      "size": 24,
+      "type": "ascii"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "allowed": "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz .-'()-",
+        "kind": "ascii-charset",
+        "max_len": 16
+      },
+      "description": "Stable/team entry 0 abbreviation, NUL-padded ('VJP'), at entry base + 0x1a.",
+      "evidence": "FUN_080377b8 first loop 0x10-byte copy to entry base + ROM-stride offset; entry 0 abbrev at save 0xe01a..0xe029 = 'VJP' in baseline.sav.",
+      "name": "stable_00_abbrev",
+      "offset": 57370,
+      "size": 16,
+      "type": "ascii"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "allowed": "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz .-'()/0123456789",
+        "kind": "ascii-charset",
+        "max_len": 24
+      },
+      "description": "Stable/team entry 1 full name, NUL-padded ('TEAM BLACK'). Confirms the 0x2c entry stride (entry 1 base = 0xe000 + 0x2c).",
+      "evidence": "FUN_080377b8 first loop save stride 0x2c; entry 1 at save 0xe02c..0xe043 = 'TEAM BLACK' in baseline.sav.",
+      "name": "stable_01_name",
+      "offset": 57388,
+      "size": 24,
+      "type": "ascii"
+    }
+  ],
   "game_code": "AFPE",
-  "title": "Fire Pro Wrestling (USA, Europe)",
-  "media": "flash512",
-  "size_bytes": 65536,
+  "id": "afpe",
   "magic_signatures": [
     {
-      "offset": 0,
       "bytes": [
         70,
         95,
         80,
         95
-      ]
+      ],
+      "offset": 0
     }
   ],
-  "checksums": [],
-  "fields": [
-    {
-      "name": "magic_header",
-      "offset": 0,
-      "size": 4,
-      "type": "ascii"
-    },
-    {
-      "name": "slot_counter",
-      "offset": 4,
-      "size": 2,
-      "type": "u16_le"
-    },
-    {
-      "name": "game_progress_flags",
-      "offset": 6,
-      "size": 2,
-      "type": "u16_le"
-    },
-    {
-      "name": "player_status_payload",
-      "offset": 8,
-      "size": 16,
-      "type": "bytes"
-    }
-  ]
+  "media": "flash512",
+  "size_bytes": 65536,
+  "title": "Fire Pro Wrestling (USA, Europe)"
 }

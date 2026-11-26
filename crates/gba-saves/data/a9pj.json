@@ -1,29 +1,83 @@
 {
-  "id": "a9pj",
-  "game_code": "A9PJ",
-  "title": "Tales of the World - Summoner's Lineage (Japan)",
-  "media": "sram",
-  "size_bytes": 32768,
-  "magic_signatures": [],
   "checksums": [],
   "fields": [
     {
-      "name": "slot_counter",
+      "confidence": "confirmed",
+      "description": "Stored checksum word of the 20-byte SRAM record",
+      "evidence": "FUN_08083140 reads 0x14 bytes from SRAM 0x0E000000 via FUN_0806c33c, sums bytes [2..20) with FUN_08002180, and accepts iff (u16)(~sum - 0x14) == word at save offset 0. Verified on samples/baseline.sav: byte-sum = 0x326, (~0x326 - 0x14) & 0xFFFF = 0xFCC5 = stored word.",
+      "name": "save_checksum",
       "offset": 0,
       "size": 2,
       "type": "u16_le"
     },
     {
-      "name": "game_progress_flags",
+      "confidence": "likely",
+      "description": "Payload word 0 of the verified 18-byte save payload (file offsets 2..20)",
+      "evidence": "Payload byte range [2..20) established by FUN_08083140 (checksum covers save offsets 2..20) and FUN_08002180 length 0x12; written from RAM by func_0x08083180(0x0E000000, RAM+8) in FUN_080142b0; defaults installed by FUN_08003d2c/FUN_08003e10 when verify fails. Baseline value 200.",
+      "name": "progress_word_0",
       "offset": 2,
       "size": 2,
       "type": "u16_le"
     },
     {
-      "name": "player_status_payload",
+      "confidence": "likely",
+      "description": "Payload word 1 of the verified 18-byte save payload",
+      "evidence": "Same cover/write path as progress_word_0: FUN_08083140 + FUN_08002180 cover save offsets 2..20; func_0x08083180 in FUN_080142b0 writes the block from RAM+8. Baseline value 246.",
+      "name": "progress_word_1",
       "offset": 4,
-      "size": 16,
-      "type": "bytes"
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Payload word 2 of the verified 18-byte save payload",
+      "evidence": "Same cover/write path as progress_word_0: FUN_08083140 + FUN_08002180 cover save offsets 2..20; func_0x08083180 in FUN_080142b0 writes the block from RAM+8. Baseline value 99.",
+      "name": "progress_word_2",
+      "offset": 6,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Payload word 3 of the verified 18-byte save payload",
+      "evidence": "Same cover/write path as progress_word_0: FUN_08083140 + FUN_08002180 cover save offsets 2..20; func_0x08083180 in FUN_080142b0 writes the block from RAM+8. Baseline value 254.",
+      "name": "progress_word_3",
+      "offset": 8,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Low 32 bits of the zeroed 8-byte region inside the save payload",
+      "evidence": "Inside checksum-covered range [2..20) per FUN_08083140/FUN_08002180; zero-filled by default-init path FUN_08003d2c (func_0x0807f2c4 zero-fill, byte enables) and FUN_08003e10 in FUN_080142b0. Baseline value 0.",
+      "name": "progress_flags_low",
+      "offset": 10,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "High 32 bits of the zeroed 8-byte region inside the save payload",
+      "evidence": "Inside checksum-covered range [2..20) per FUN_08083140/FUN_08002180; zero-filled by default-init path FUN_08003d2c (func_0x0807f2c4 zero-fill, byte enables) and FUN_08003e10 in FUN_080142b0. Baseline value 0.",
+      "name": "progress_flags_high",
+      "offset": 14,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Final payload word of the verified 18-byte save payload",
+      "evidence": "Last word of checksum-covered range [2..20) per FUN_08083140/FUN_08002180; written by func_0x08083180 in FUN_080142b0. Baseline value 7.",
+      "name": "progress_word_4",
+      "offset": 18,
+      "size": 2,
+      "type": "u16_le"
     }
-  ]
+  ],
+  "game_code": "A9PJ",
+  "id": "a9pj",
+  "magic_signatures": [],
+  "media": "sram",
+  "size_bytes": 32768,
+  "title": "Tales of the World - Summoner's Lineage (Japan)"
 }

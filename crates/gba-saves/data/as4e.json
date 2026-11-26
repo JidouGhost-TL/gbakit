@@ -1,45 +1,92 @@
 {
-  "id": "as4e",
-  "game_code": "AS4E",
-  "title": "Shrek - Swamp Kart Speedway (USA, Europe) (En,Fr,De,Es,It,Nl)",
-  "media": "eeprom512",
-  "size_bytes": 512,
-  "magic_signatures": [
-    {
-      "offset": 0,
-      "bytes": [
-        116,
-        114,
-        97,
-        107
-      ]
-    }
-  ],
   "checksums": [],
+  "copy_groups": [],
+  "eeprom_rev8": true,
   "fields": [
     {
-      "name": "magic_header",
+      "confidence": "confirmed",
+      "constraint": {
+        "allowed": "abcdefghijklmnopqrstuvwxyz",
+        "kind": "ascii-charset",
+        "max_len": 4
+      },
+      "description": "First word of the 8-byte EEPROM save header, ASCII 'shrk' (Shrek). Written to EEPROM block 0 on first boot and bulk-loaded with the rest of the save.",
+      "evidence": "FUN_08013f78 writes the default 8-byte header from DAT_08013fe0 to EEPROM address 0 via FUN_0801bbb4; FUN_08013edc loads EEPROM block 0 into the RAM save buffer at DAT_08013f08 via FUN_0801b9c0; baseline logical bytes 0..3 are 'shrk'.",
+      "name": "save_tag_prefix",
       "offset": 0,
       "size": 4,
       "type": "ascii"
     },
     {
-      "name": "slot_counter",
+      "confidence": "confirmed",
+      "constraint": {
+        "allowed": "abcdefghijklmnopqrstuvwxyz",
+        "kind": "ascii-charset",
+        "max_len": 4
+      },
+      "description": "Second word of the 8-byte EEPROM save header, ASCII 'kart'. This is the word the loader validates against the ROM constant; a mismatch forces a re-initialization of block 0.",
+      "evidence": "FUN_08013edc compares save-buffer bytes 4..7 against the ROM constant at DAT_08013f50 and returns status 2 on mismatch, which makes FUN_08013f78 rewrite block 0 via FUN_0801bbb4; baseline logical bytes 4..7 are 'kart'.",
+      "name": "save_tag_suffix",
       "offset": 4,
-      "size": 2,
-      "type": "u16_le"
+      "size": 4,
+      "type": "ascii"
     },
     {
-      "name": "game_progress_flags",
-      "offset": 6,
-      "size": 2,
-      "type": "u16_le"
-    },
-    {
-      "name": "player_status_payload",
+      "confidence": "guessed",
+      "description": "First little-endian word of the 448-byte save payload (EEPROM blocks 1..56). Per-field game semantics are not exposed by this decomp slice; exposed as a mutable scalar probe for live testing. Baseline reads erased (0xFFFFFFFF).",
+      "evidence": "FUN_08013edc bulk-loads 0x39 blocks of 8 bytes via FUN_0801b9c0 into the buffer at DAT_08013f08, and FUN_08013f78 bulk-copies 0x1c0 payload bytes; save-file offset 8 is the first payload word past the 8-byte header.",
+      "name": "payload_u32_0",
       "offset": 8,
-      "size": 16,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "guessed",
+      "description": "Second little-endian word of the 448-byte save payload. Same provenance as payload_u32_0; exposed as a second mutable scalar probe for live testing. Baseline reads erased (0xFFFFFFFF).",
+      "evidence": "FUN_08013edc bulk-loads 0x39 blocks of 8 bytes via FUN_0801b9c0 into the buffer at DAT_08013f08, and FUN_08013f78 bulk-copies 0x1c0 payload bytes; save-file offset 12 is the second payload word past the 8-byte header.",
+      "name": "payload_u32_1",
+      "offset": 12,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Remainder of the 448-byte save payload (EEPROM blocks 2..56). Covered by the same bulk load/copy as the payload head; entirely erased (0xFF) in the baseline capture.",
+      "evidence": "FUN_08013edc reads EEPROM blocks 0..0x38 via FUN_0801b9c0 and FUN_08013f78 copies 0x1c0 payload bytes; save-file offsets 16..456 are blocks 2..56, all 0xFF in samples/baseline.sav.",
+      "name": "payload_rest",
+      "offset": 16,
+      "size": 440,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "EEPROM blocks 57..63, past the loader's 0x39-block bound, so never read or written by the save routines. Entirely erased (0xFF) in the baseline capture.",
+      "evidence": "FUN_08013edc loop bound uVar3 < 0x39 proves blocks 57..63 are never loaded; save-file offsets 456..512 are all 0xFF in samples/baseline.sav.",
+      "name": "trailing_unused",
+      "offset": 456,
+      "size": 56,
       "type": "bytes"
     }
-  ]
+  ],
+  "game_code": "AS4E",
+  "id": "as4e",
+  "magic_signatures": [
+    {
+      "bytes": [
+        115,
+        104,
+        114,
+        107,
+        107,
+        97,
+        114,
+        116
+      ],
+      "description": "ASCII 'shrkkart' (Shrek Kart) 8-byte save header at EEPROM block 0, logical domain",
+      "offset": 0
+    }
+  ],
+  "media": "eeprom512",
+  "size_bytes": 512,
+  "title": "Shrek - Swamp Kart Speedway (USA, Europe) (En,Fr,De,Es,It,Nl)"
 }

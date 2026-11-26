@@ -1,45 +1,402 @@
 {
-  "id": "ak2e",
-  "game_code": "AK2E",
-  "title": "Ultimate Muscle - The Kinnikuman Legacy - The Path of the Superhero (USA)",
-  "media": "eeprom512",
-  "size_bytes": 512,
-  "magic_signatures": [
-    {
-      "offset": 0,
-      "bytes": [
-        69,
-        76,
-        67,
-        83
-      ]
-    }
-  ],
   "checksums": [],
+  "copy_groups": [],
+  "eeprom_rev8": true,
   "fields": [
     {
-      "name": "magic_header",
+      "confidence": "confirmed",
+      "constraint": {
+        "allowed": "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+        "kind": "ascii-charset",
+        "max_len": 8
+      },
+      "description": "8-byte save magic 'ULTMSCLE' (Ultimate Muscle tag). Written once by FUN_08032a1c via FUN_08032204 block 0 as 4 halfwords (second = first + 0xFF); verified against rev8-logical baseline bytes.",
+      "evidence": "FUN_08032a1c (line 7415-7419) builds block 0 from _DAT_08032bd0/_DAT_08032bd4/_DAT_08032bd8 with sStack_2e = sStack_30 + 0xFF, matching logical shorts 0x4C55 -> 0x4D54; written with FUN_08032204(&sStack_30,1,0) (EEPROM block 0 = save offsets 0..8).",
+      "name": "save_magic",
       "offset": 0,
-      "size": 4,
+      "size": 8,
       "type": "ascii"
     },
     {
-      "name": "slot_counter",
-      "offset": 4,
-      "size": 2,
-      "type": "u16_le"
-    },
-    {
-      "name": "game_progress_flags",
-      "offset": 6,
-      "size": 2,
-      "type": "u16_le"
-    },
-    {
-      "name": "player_status_payload",
+      "confidence": "likely",
+      "description": "Dual-profile XOR-obfuscated record array A: 11 EEPROM blocks (0x01..0x0B) holding 23 u16 entries x 2 profiles, each halfword XORed with keys from _DAT_0803330c/_DAT_08033314. Written by FUN_08033254, read back and CRC-checked by FUN_08032458 (blocks (uVar6>>1)+1, checksum block 0x0E).",
+      "evidence": "FUN_08033254 (lines 7747-7755) writes blocks 1..0x0B via FUN_08032204((uVar5>>1)+1) from RAM tables _DAT_08033308/_DAT_08033310; FUN_08032458 (lines 7272-7279) reads them back the same way before verifying against block 0x0E.",
+      "name": "record_table_a",
       "offset": 8,
-      "size": 16,
+      "size": 88,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Tail words of record array A (EEPROM block 0x0C): trailing u16 pair of each profile plus two fresh RNG halfwords. Written by FUN_08033254, read by FUN_08032458.",
+      "evidence": "FUN_08033254 (lines 7756-7760) writes block 0x0C via FUN_08032204(...,1,0x0C); FUN_08032458 (line 7280) reads block 0x0C the same way.",
+      "name": "record_table_a_tail",
+      "offset": 96,
+      "size": 8,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Per-save random XOR-key block (EEPROM block 0x0D): 4 fresh halfwords from FUN_0801f9bc that re-mask the checksum records. Rewritten on every checksum refresh by FUN_08032c0c.",
+      "evidence": "FUN_08032c0c (lines 7579-7583) fills block 0x0D with FUN_0801f9bc() output via FUN_08032204(...,1,0x0D); FUN_08032458 never treats it as data.",
+      "name": "rng_key_block_d",
+      "offset": 104,
+      "size": 8,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Stored integrity record for table A (EEPROM block 0x0E): CRC16 of the 23 high-bytes of profile A XORed with 4 per-save key halves. Recomputed by FUN_08032c0c, verified by FUN_08032458 (uStack_26 == crc ^ _DAT_08032860). Custom CRC+XOR scheme, so no Schema checksum entry; kept as raw words.",
+      "evidence": "FUN_08032c0c (lines 7512-7527) CRCs 0x17 u16s from _DAT_08032e14 with table _DAT_08032e10 and writes block 0x0E via FUN_08032204; FUN_08032458 (lines 7292-7293) reads block 0x0E and compares against (crc ^ _DAT_08032860).",
+      "name": "crc_record_block_e",
+      "offset": 112,
+      "size": 8,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Stored integrity record, second copy for table A (EEPROM block 0x0F). Same CRC16+XOR-key construction as block 0x0E; verified by FUN_08032458.",
+      "evidence": "FUN_08032c0c (lines 7562-7578) recomputes the CRC over _DAT_08032e50 and writes block 0x0F; FUN_08032458 (line 7325) reads block 0x0F and verifies it.",
+      "name": "crc_record_block_f",
+      "offset": 120,
+      "size": 8,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Per-save random nonce block (EEPROM block 0x10): 4 fresh halfwords from FUN_0801f9bc, refreshed by FUN_08033318 alongside the config block.",
+      "evidence": "FUN_08033318 (lines 7800-7804) writes block 0x10 with FUN_0801f9bc() output via FUN_08032204(...,1,0x10).",
+      "name": "rng_block_10",
+      "offset": 128,
+      "size": 8,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Per-save random XOR-key block (EEPROM block 0x11): 4 fresh halfwords from FUN_0801f9bc, companion to block 0x0D. Rewritten on every checksum refresh by FUN_08032c0c.",
+      "evidence": "FUN_08032c0c (lines 7584-7588) fills block 0x11 with FUN_0801f9bc() output via FUN_08032204(...,1,0x11).",
+      "name": "rng_key_block_11",
+      "offset": 136,
+      "size": 8,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Master validation record for the config blocks (EEPROM block 0x12): CRC16 over the 16 bytes of blocks 0x1C/0x1D XORed with 4 key halves. Written by FUN_0803364c after every config change; gate-checked by FUN_08032458 before accepting the save.",
+      "evidence": "FUN_0803364c (lines 7974-7997) CRCs blocks 0x1C+0x1D with seed _DAT_080336f8/table _DAT_080336fc and writes block 0x12; FUN_08032458 (lines 7347-7350) reads block 0x12 and re-inits via FUN_08032a1c on mismatch.",
+      "name": "validation_block_12",
+      "offset": 144,
+      "size": 8,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Per-save random nonce block (EEPROM block 0x13): 4 fresh halfwords from FUN_0801f9bc, refreshed by FUN_08033484.",
+      "evidence": "FUN_08033484 (lines 7890-7894) writes block 0x13 with FUN_0801f9bc() output via FUN_08032204(...,1,0x13).",
+      "name": "rng_block_13",
+      "offset": 152,
+      "size": 8,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Stored integrity record for table B (EEPROM block 0x14): CRC16+XOR-key construction over the second record array. Recomputed by FUN_080330c4, verified by FUN_08032458.",
+      "evidence": "FUN_080330c4 (lines 7696-7712) CRCs 0x17 u16s from _DAT_080331c0 and writes block 0x14; FUN_08032458 (line 7347) reads block 0x14 and verifies it.",
+      "name": "crc_record_block_14",
+      "offset": 160,
+      "size": 8,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Stored integrity record for table B, second copy (EEPROM block 0x15). Same CRC16+XOR-key construction; verified by FUN_08032458.",
+      "evidence": "FUN_08032c0c (lines 7528-7544) recomputes the CRC over _DAT_08032e28 and writes block 0x15; FUN_08032458 (line 7303) reads block 0x15 and verifies it.",
+      "name": "crc_record_block_15",
+      "offset": 168,
+      "size": 8,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Per-save random nonce block (EEPROM block 0x16): 4 fresh halfwords from FUN_0801f9bc, refreshed by FUN_08033568.",
+      "evidence": "FUN_08033568 (lines 7942-7946) writes block 0x16 with FUN_0801f9bc() output via FUN_08032204(...,1,0x16).",
+      "name": "rng_block_16",
+      "offset": 176,
+      "size": 8,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Per-save random nonce block (EEPROM block 0x17): 4 fresh halfwords from FUN_0801f9bc, refreshed by FUN_080333f8.",
+      "evidence": "FUN_080333f8 (lines 7838-7842) writes block 0x17 with FUN_0801f9bc() output via FUN_08032204(...,1,0x17).",
+      "name": "rng_block_17",
+      "offset": 184,
+      "size": 8,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Stored integrity record for table C (EEPROM block 0x18): CRC16+XOR-key construction over the third record array. Recomputed by FUN_08032c0c, verified by FUN_08032458.",
+      "evidence": "FUN_08032c0c (lines 7545-7561) CRCs 0x17 u16s from _DAT_08032e3c and writes block 0x18; FUN_08032458 (line 7314) reads block 0x18 and verifies it.",
+      "name": "crc_record_block_18",
+      "offset": 192,
+      "size": 8,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Per-save random nonce block (EEPROM block 0x19): 4 fresh halfwords from FUN_0801f9bc, refreshed by FUN_08033484.",
+      "evidence": "FUN_08033484 (lines 7895-7899) writes block 0x19 with FUN_0801f9bc() output via FUN_08032204(...,1,0x19).",
+      "name": "rng_block_19",
+      "offset": 200,
+      "size": 8,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Stored integrity record, second copy for table C (EEPROM block 0x1A). Same CRC16+XOR-key construction; verified by FUN_08032458.",
+      "evidence": "FUN_080330c4 (lines 7680-7695) recomputes the CRC over _DAT_080331ac and writes block 0x1A; FUN_08032458 (line 7336) reads block 0x1A and verifies it.",
+      "name": "crc_record_block_1a",
+      "offset": 208,
+      "size": 8,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Per-save random nonce block (EEPROM block 0x1B): 4 fresh halfwords from FUN_0801f9bc, refreshed by FUN_08033318.",
+      "evidence": "FUN_08033318 (lines 7805-7809) writes block 0x1B with FUN_0801f9bc() output via FUN_08032204(...,1,0x1B).",
+      "name": "rng_block_1b",
+      "offset": 216,
+      "size": 8,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Gameplay/config value A (u8, stored XOR 0xF2). Set through the FUN_080333f8(param_1) setter (byte0 = param_1 ^ 0xF2) with a RAM mirror at _DAT_08033760 (FUN_08033710); baseline 0xF2 decodes to default 0 from FUN_08032a1c init.",
+      "evidence": "FUN_080333f8 (lines 7833-7836) reads EEPROM block 0x1C via FUN_080322a4, stores param_1 ^ 0xF2 at byte 0, writes back via FUN_08032204(...,1,0x1C); FUN_08033710 (lines 8018-8024) exposes the same byte through RAM mirrors _DAT_08033760/0x08033748.",
+      "name": "config_value_a",
+      "offset": 224,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Gameplay/config value B (u8, stored XOR 0x2E). Set through the FUN_08033484(param_1) setter (byte1 = param_1 ^ 0x2E); baseline 0x2E decodes to default 0.",
+      "evidence": "FUN_08033484 (lines 7879-7883) reads EEPROM block 0x1C via FUN_080322a4, stores param_1 ^ 0x2E at byte 1, writes back via FUN_08032204(...,1,0x1C).",
+      "name": "config_value_b",
+      "offset": 225,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Gameplay/config value C (u8, stored XOR 0x4A). Set through the FUN_08033568(param_1) setter (byte2 = param_1 ^ 0x4A); baseline 0x4A decodes to default 0.",
+      "evidence": "FUN_08033568 (lines 7931-7935) reads EEPROM block 0x1C via FUN_080322a4, stores param_1 ^ 0x4A at byte 2, writes back via FUN_08032204(...,1,0x1C).",
+      "name": "config_value_c",
+      "offset": 226,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Gameplay state byte D (u8, stored XOR 0x53): live RAM state *_DAT_0803355c snapshotted into block 0x1C byte 3 by FUN_08033484; baseline 0x53 decodes to 0.",
+      "evidence": "FUN_08033484 (lines 7879-7883) stores *_DAT_0803355c ^ 0x53 at block 0x1C byte 3 via FUN_08032204(...,1,0x1C).",
+      "name": "config_state_d",
+      "offset": 227,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Gameplay state byte E (u8, stored XOR 0xD3): live RAM state *_DAT_08033640 snapshotted into block 0x1C byte 4 by FUN_08033568; baseline 0xD3 decodes to 0.",
+      "evidence": "FUN_08033568 (lines 7931-7935) stores *_DAT_08033640 ^ 0xD3 at block 0x1C byte 4 via FUN_08032204(...,1,0x1C).",
+      "name": "config_state_e",
+      "offset": 228,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Gameplay state byte F (u8, stored XOR 0x4B): live RAM state *_DAT_08033560 snapshotted into block 0x1C byte 5 by FUN_08033484; baseline 0x4B decodes to 0.",
+      "evidence": "FUN_08033484 (lines 7879-7883) stores *_DAT_08033560 ^ 0x4B at block 0x1C byte 5 via FUN_08032204(...,1,0x1C).",
+      "name": "config_state_f",
+      "offset": 229,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Gameplay state byte G (u8, stored XOR 0xB9): live RAM state *_DAT_08033644 snapshotted into block 0x1C byte 6 by FUN_08033568; baseline 0xB9 decodes to 0.",
+      "evidence": "FUN_08033568 (lines 7931-7935) stores *_DAT_08033644 ^ 0xB9 at block 0x1C byte 6 via FUN_08032204(...,1,0x1C).",
+      "name": "config_state_g",
+      "offset": 230,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Unwritten spare byte of config block 0x1C (byte 7): no setter in FUN_080333f8/FUN_08033484/FUN_08033568 ever stores it, so it keeps erased/stale content (0xFF in baseline). Covered by the block 0x12 validation CRC.",
+      "evidence": "FUN_080333f8/FUN_08033484/FUN_08033568 (lines 7834-7836, 7879-7883, 7931-7935) only store block 0x1C bytes 0..6; FUN_0803364c (lines 7975-7982) CRCs all 8 bytes into block 0x12.",
+      "name": "config_block_1c_reserved",
+      "offset": 231,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Gameplay config byte 0 of block 0x1D (u8, stored XOR 0x42): live RAM state *_DAT_080333e0 snapshotted by FUN_08033318; baseline 0x42 decodes to 0.",
+      "evidence": "FUN_08033318 (lines 7791-7798) stores *_DAT_080333e0 ^ 0x42 at block 0x1D byte 0 via FUN_08032204(...,1,0x1D).",
+      "name": "config_opt_0",
+      "offset": 232,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Gameplay config byte 1 of block 0x1D (u8, stored XOR 0x57): live RAM state *_DAT_080333e4 snapshotted by FUN_08033318; baseline 0x57 decodes to 0.",
+      "evidence": "FUN_08033318 (lines 7791-7798) stores *_DAT_080333e4 ^ 0x57 at block 0x1D byte 1 via FUN_08032204(...,1,0x1D).",
+      "name": "config_opt_1",
+      "offset": 233,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Gameplay config byte 2 of block 0x1D (u8, stored XOR 0x37): live RAM state *_DAT_080333e8 snapshotted by FUN_08033318; baseline 0x37 decodes to 0.",
+      "evidence": "FUN_08033318 (lines 7791-7798) stores *_DAT_080333e8 ^ 0x37 at block 0x1D byte 2 via FUN_08032204(...,1,0x1D).",
+      "name": "config_opt_2",
+      "offset": 234,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Gameplay config byte 3 of block 0x1D (u8, stored XOR 0x84): live RAM state *_DAT_080333ec snapshotted by FUN_08033318; baseline 0x84 decodes to 0.",
+      "evidence": "FUN_08033318 (lines 7791-7798) stores *_DAT_080333ec ^ 0x84 at block 0x1D byte 3 via FUN_08032204(...,1,0x1D).",
+      "name": "config_opt_3",
+      "offset": 235,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Gameplay config byte 4 of block 0x1D (u8, stored XOR 0x67): live RAM state *_DAT_080333f4 snapshotted by FUN_08033318; baseline 0x66 decodes to 1.",
+      "evidence": "FUN_08033318 (lines 7791-7798) stores *_DAT_080333f4 ^ 0x67 at block 0x1D byte 4 via FUN_08032204(...,1,0x1D); baseline byte 0x66 decodes to 1.",
+      "name": "config_opt_4",
+      "offset": 236,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Gameplay config byte 5 of block 0x1D (u8, stored XOR 0x75): live RAM state *_DAT_080333f0 snapshotted by FUN_08033318; baseline 0x75 decodes to 0.",
+      "evidence": "FUN_08033318 (lines 7791-7798) stores *_DAT_080333f0 ^ 0x75 at block 0x1D byte 5 via FUN_08032204(...,1,0x1D).",
+      "name": "config_opt_5",
+      "offset": 237,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Stale tail bytes 6..7 of config block 0x1D: preserved from previous EEPROM content by FUN_08033318 (only bytes 0..5 are rewritten) and covered by the block 0x12 CRC.",
+      "evidence": "FUN_08033318 (lines 7791-7798) rewrites only block 0x1D bytes 0..5; FUN_0803364c (lines 7983-7990) CRCs all 8 bytes into block 0x12.",
+      "name": "config_block_1d_spare",
+      "offset": 238,
+      "size": 2,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Dual-profile XOR-obfuscated record array B: 11 EEPROM blocks (0x1E..0x28) holding 23 u16 entries x 2 profiles with per-region keys (_DAT_080330a8/_DAT_080330b0). Written by FUN_08032f64, read back and CRC-checked by FUN_08032458 (checksum block 0x15).",
+      "evidence": "FUN_08032f64 (lines 7621-7631) writes blocks 0x1E..0x28 via FUN_08032204((uVar5>>1)+0x1E) from RAM tables _DAT_080330a4/_DAT_080330ac; FUN_08032458 (lines 7235-7244) reads them back the same way before verifying against block 0x15.",
+      "name": "record_table_b",
+      "offset": 240,
+      "size": 88,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Tail words of record array B (EEPROM block 0x29): trailing u16 pair of each profile plus two fresh RNG halfwords. Written by FUN_08032f64, read by FUN_08032458.",
+      "evidence": "FUN_08032f64 (lines 7632-7636) writes block 0x29 via FUN_08032204(...,1,0x29); FUN_08032458 (line 7246) reads block 0x29 the same way.",
+      "name": "record_table_b_tail",
+      "offset": 328,
+      "size": 8,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Dual-profile XOR-obfuscated record array C: 11 EEPROM blocks (0x2A..0x34) holding 23 u16 entries x 2 profiles with per-region keys (_DAT_080330b8/_DAT_080330c0). Written by FUN_08032f64, read back and CRC-checked by FUN_08032458 (checksum block 0x18).",
+      "evidence": "FUN_08032f64 (lines 7640-7650) writes blocks 0x2A..0x34 via FUN_08032204((uVar5>>1)+0x2A) from RAM tables _DAT_080330b4/_DAT_080330bc; FUN_08032458 (lines 7252-7261) reads them back the same way before verifying against block 0x18.",
+      "name": "record_table_c",
+      "offset": 336,
+      "size": 88,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Tail words of record array C (EEPROM block 0x35): trailing u16 pair of each profile plus two fresh RNG halfwords. Written by FUN_08032f64, read by FUN_08032458.",
+      "evidence": "FUN_08032f64 (lines 7651-7655) writes block 0x35 via FUN_08032204(...,1,0x35); FUN_08032458 (line 7263) reads block 0x35 the same way.",
+      "name": "record_table_c_tail",
+      "offset": 424,
+      "size": 8,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Per-save random nonce block (EEPROM block 0x36): 4 fresh halfwords from FUN_0801f9bc written at init by FUN_08032a1c; refreshed with block 0x16 by FUN_08033568.",
+      "evidence": "FUN_08032a1c (lines 7441-7454) writes blocks 0x36..0x37 with FUN_0801f9bc() output via FUN_08032204; FUN_08033568 (lines 7947-7951) refreshes block 0x36 the same way.",
+      "name": "nonce_block_36",
+      "offset": 432,
+      "size": 8,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Per-save random nonce block (EEPROM block 0x37): 4 fresh halfwords from FUN_0801f9bc written at init by FUN_08032a1c; refreshed with block 0x17 by FUN_080333f8.",
+      "evidence": "FUN_08032a1c (lines 7441-7454) writes blocks 0x36..0x37 with FUN_0801f9bc() output via FUN_08032204; FUN_080333f8 (lines 7843-7847) refreshes block 0x37 the same way.",
+      "name": "nonce_block_37",
+      "offset": 440,
+      "size": 8,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Never-written erased region (EEPROM blocks 0x38..0x3B, 32 bytes of 0xFF): no accessor in FUN_08032458, FUN_08032a1c, FUN_08032f64, FUN_08033254 or any FUN_08033xxx routine ever reads or writes these blocks.",
+      "evidence": "Full caller sweep of FUN_08032204/FUN_080322a4 shows block indices 0..0x37 plus 0x3C..0x3F only; blocks 0x38..0x3B are absent, and baseline bytes 448..480 are all 0xFF (erased EEPROM value) in both raw and rev8 views.",
+      "name": "unused_erased_region",
+      "offset": 448,
+      "size": 32,
+      "type": "bytes"
+    },
+    {
+      "confidence": "guessed",
+      "description": "32 single-byte slot/flag entries (EEPROM blocks 0x3C..0x3F), all 0x01 in the baseline. Initialized by FUN_08032a1c from a single constant seed replicated across all 4 blocks; no reader was recovered in the decompiled slice, so the per-byte meaning (likely per-slot present/unlock flags defaulting to active) is a guess.",
+      "evidence": "FUN_08032a1c (lines 7420-7440) writes the same sVar1 halfword pair to blocks 0x3C..0x3F via FUN_08032204; baseline bytes 480..512 are uniformly 0x01 in both raw and rev8 views.",
+      "name": "slot_flag_table",
+      "offset": 480,
+      "size": 32,
       "type": "bytes"
     }
-  ]
+  ],
+  "game_code": "AK2E",
+  "id": "ak2e",
+  "magic_signatures": [
+    {
+      "bytes": [
+        85,
+        76,
+        84,
+        77,
+        83,
+        67,
+        76,
+        69
+      ],
+      "description": "ASCII 'ULTMSCLE' header (rev8-logical domain)",
+      "offset": 0
+    }
+  ],
+  "media": "eeprom512",
+  "size_bytes": 512,
+  "title": "Ultimate Muscle - The Kinnikuman Legacy - The Path of the Superhero (USA)"
 }

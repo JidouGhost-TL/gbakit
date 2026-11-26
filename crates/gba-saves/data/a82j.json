@@ -1,45 +1,153 @@
 {
-  "id": "a82j",
-  "game_code": "A82J",
-  "title": "Hamster Paradise - Pure Heart (Japan)",
-  "media": "eeprom8k",
-  "size_bytes": 8192,
-  "magic_signatures": [
-    {
-      "offset": 0,
-      "bytes": [
-        80,
-        85,
-        77,
-        65
-      ]
-    }
-  ],
   "checksums": [],
+  "eeprom_rev8": true,
   "fields": [
     {
-      "name": "magic_header",
+      "confidence": "likely",
+      "description": "Block-0 status/tag byte of the EEPROM header block (logical offset 0). Fresh save holds 0x00, consistent with a valid/new-save marker persisted with the header words.",
+      "evidence": "FUN_0806b2d4 deserializes EEPROM block 0 (8 bytes = 4x u16) via DMA through 0x0D000000/FUN_0806b254 into stack buffer auStack_98 and stores word 0 low byte to save offset 0; FUN_0806b384/FUN_0806b4b8 persist the same block. Value 0x00 verified in samples/baseline.sav (rev8-logical).",
+      "name": "header_status",
       "offset": 0,
-      "size": 4,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Block-0 header code word (logical offsets 1-2, LE value 0x03A9 = 937). Persisted with the magic words; brute-forced sum8/sum16/xor8 over header ranges show it is not a checksum of the magic/progress bytes, so it is carried as a plain version/code word.",
+      "evidence": "FUN_0806b2d4 reads EEPROM block 0 words into (ushort*)(param_2+6..0), covering save offsets 0-7; FUN_0806b384 writes the same layout and FUN_0806b460/FUN_0806b4b8 verify it by read-back compare. Bytes A9 03 verified in samples/baseline.sav (rev8-logical).",
+      "name": "header_code",
+      "offset": 1,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "allowed": "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+        "kind": "ascii-charset",
+        "max_len": 12
+      },
+      "description": "12-character ASCII game identifier 'HAMUPARAPURE' ('Hamster Paradise Pure') starting at logical offset 3 with NUL terminator at offset 15. Only valid when read in the rev8-logical domain (raw bytes are bit-reversed per 8-byte block).",
+      "evidence": "Persisted by the EEPROM block routines FUN_0806b2d4 (read) / FUN_0806b384 (write via FUN_0806b254 DMA to 0x0D000000) / FUN_0806b4b8 (write+verify); logical bytes 48 41 4D 55 50 41 52 41 50 55 52 45 verified in samples/baseline.sav with eeprom_rev8=true.",
+      "name": "save_magic",
+      "offset": 3,
+      "size": 12,
       "type": "ascii"
     },
     {
-      "name": "slot_counter",
-      "offset": 4,
+      "confidence": "likely",
+      "description": "NUL terminator of the save_magic string at logical offset 15 (end of EEPROM block 1). Fresh save holds 0x00.",
+      "evidence": "FUN_0806b2d4 deserializes EEPROM block 1 into save offsets 8-15 and FUN_0806b460 compares all 4 words back on verify; byte 0x00 at offset 15 verified in samples/baseline.sav (rev8-logical).",
+      "name": "magic_terminator",
+      "offset": 15,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Gameplay progress flags word 0 (EEPROM block 2, first word). Fresh save is 0x0000; written/read as part of the 8-byte progress blocks, expected to hold unlock/event flag bits during play.",
+      "evidence": "FUN_0806b2d4 reads 8-byte EEPROM blocks (4x u16) into consecutive save offsets and FUN_0806b384/FUN_0806b4b8 write them back with read-back verification in FUN_0806b460. Zero value verified in samples/baseline.sav (rev8-logical offsets 0x10-0x11).",
+      "name": "progress_flags_a",
+      "offset": 16,
+      "size": 2,
+      "type": "bitflags"
+    },
+    {
+      "confidence": "likely",
+      "description": "Gameplay progress flags word 1 (EEPROM block 2, second word). Fresh save is 0x0000; companion flag bits to progress_flags_a.",
+      "evidence": "Same 4-word block transfer as progress_flags_a: FUN_0806b2d4 (read via FUN_0806b254 DMA from 0x0D000000) / FUN_0806b384 (write) / FUN_0806b460 (compare). Zero value verified in samples/baseline.sav (rev8-logical offsets 0x12-0x13).",
+      "name": "progress_flags_b",
+      "offset": 18,
+      "size": 2,
+      "type": "bitflags"
+    },
+    {
+      "confidence": "likely",
+      "description": "Gameplay counter word 0 (EEPROM block 2, third word; e.g. currency/score-adjacent counter). Fresh save is 0x0000.",
+      "evidence": "Carried in the FUN_0806b2d4 4-word block read into save offsets 0x10-0x17 and persisted by FUN_0806b384/FUN_0806b4b8. Zero value verified in samples/baseline.sav (rev8-logical offsets 0x14-0x15).",
+      "name": "progress_count_a",
+      "offset": 20,
       "size": 2,
       "type": "u16_le"
     },
     {
-      "name": "game_progress_flags",
-      "offset": 6,
+      "confidence": "likely",
+      "description": "Gameplay counter word 1 (EEPROM block 2, fourth word). Fresh save is 0x0000.",
+      "evidence": "Carried in the FUN_0806b2d4 4-word block read into save offsets 0x10-0x17 and persisted by FUN_0806b384/FUN_0806b4b8. Zero value verified in samples/baseline.sav (rev8-logical offsets 0x16-0x17).",
+      "name": "progress_count_b",
+      "offset": 22,
       "size": 2,
       "type": "u16_le"
     },
     {
-      "name": "player_status_payload",
-      "offset": 8,
-      "size": 16,
+      "confidence": "likely",
+      "description": "Gameplay progress value A (EEPROM block 3 as u32 LE; e.g. score/playtime-adjacent accumulator). Fresh save is 0.",
+      "evidence": "EEPROM block 3 (save offsets 0x18-0x1F) moves through the same FUN_0806b2d4 read / FUN_0806b384 write / FUN_0806b460 verify path as 4x u16 words. Zero value verified in samples/baseline.sav (rev8-logical).",
+      "name": "progress_value_a",
+      "offset": 24,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Gameplay progress value B (EEPROM block 4 as u32 LE). Fresh save is 0.",
+      "evidence": "EEPROM block 4 (save offsets 0x20-0x27) moves through FUN_0806b2d4 (read) / FUN_0806b384 (write via FUN_0806b254 to 0x0D000000) / FUN_0806b4b8 (write+verify). Zero value verified in samples/baseline.sav (rev8-logical).",
+      "name": "progress_value_b",
+      "offset": 28,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Extended gameplay data word A (EEPROM block 5, low half). Fresh save is 0.",
+      "evidence": "EEPROM block 5 (save offsets 0x28-0x2F) is the last header-adjacent block transferred by FUN_0806b2d4/FUN_0806b384 as 4x u16. Zero value verified in samples/baseline.sav (rev8-logical).",
+      "name": "gameplay_ext_a",
+      "offset": 32,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Extended gameplay data word B (EEPROM block 5, high half). Fresh save is 0.",
+      "evidence": "EEPROM block 5 high half (save offsets 0x2C-0x2F) transferred by FUN_0806b2d4/FUN_0806b384 as the 4th u16 pair with verification in FUN_0806b460. Zero value verified in samples/baseline.sav (rev8-logical).",
+      "name": "gameplay_ext_b",
+      "offset": 36,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "guessed",
+      "description": "Trailing 8-byte record at logical offset 0x0F40 (EEPROM block 488), all zeros in the fresh save. Present in the live capture but its role is unresolved in the recovered decomp; carried as raw bytes.",
+      "evidence": "8 zero bytes at rev8-logical 0x0F40-0x0F47 verified in samples/baseline.sav; the only recovered EEPROM accessors are the 8-byte block routines FUN_0806b2d4 (read), FUN_0806b384 (write) and FUN_0806b4b8 (write+verify), so this block is only reachable through that same 4-word path.",
+      "name": "far_record",
+      "offset": 3904,
+      "size": 8,
       "type": "bytes"
     }
-  ]
+  ],
+  "game_code": "A82J",
+  "id": "a82j",
+  "magic_signatures": [
+    {
+      "bytes": [
+        72,
+        65,
+        77,
+        85,
+        80,
+        65,
+        82,
+        65,
+        80,
+        85,
+        82,
+        69
+      ],
+      "description": "ASCII 'HAMUPARAPURE' game identifier (rev8-logical domain)",
+      "offset": 3
+    }
+  ],
+  "media": "eeprom8k",
+  "size_bytes": 8192,
+  "title": "Hamster Paradise - Pure Heart (Japan)"
 }
