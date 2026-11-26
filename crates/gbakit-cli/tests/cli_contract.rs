@@ -309,3 +309,199 @@ fn exit_codes_and_json_error_envelopes() {
     assert_eq!(err_v["error"]["code"], "cli_usage");
     assert_eq!(err_v["error"]["exit_code"], 2);
 }
+
+#[test]
+fn asset_map_generate_merge_verify_markdown_and_export_cli() {
+    let dir = TempDir::new("asset_map_e2e");
+
+    // Build synthetic GBA ROM with header, pointer table, palette, LZ77 stream, PACK archive, raw 4bpp tile, trailing 0xFF
+    let mut rom = vec![0u8; 4096];
+    rom[0..4].copy_from_slice(&0xEA00_002Eu32.to_le_bytes());
+    rom[0xA0..0xAC].copy_from_slice(b"MAPCLITEST  ");
+    rom[0xAC..0xB0].copy_from_slice(b"AMCE");
+    rom[0xB0..0xB2].copy_from_slice(b"01");
+    rom[0xB2] = 0x96;
+    rom[0xBD] = compute_header_complement(&rom[0xA0..0xBD]);
+
+    // Pointer table at 0x100 -> palette at 0x200, LZ77 at 0x300
+    rom[0x100..0x104].copy_from_slice(&(0x0800_0200u32).to_le_bytes());
+    rom[0x104..0x108].copy_from_slice(&(0x0800_0300u32).to_le_bytes());
+
+    // 16-color BGR555 palette at 0x200
+    for i in 0..16 {
+        let c = gbakit::gfx::rgb8_to_bgr555((i * 16) as u8, ((15 - i) * 16) as u8, 0x40);
+        rom[0x200 + i * 2..0x200 + i * 2 + 2].copy_from_slice(&c.to_le_bytes());
+    }
+
+    // BIOS LZ77 at 0x300
+    let lz = gbakit::compress::encode_lz77(&vec![0x5Au8; 256]).unwrap();
+    rom[0x300..0x300 + lz.len()].copy_from_slice(&lz);
+
+    // PACK archive at 0x500
+    let pack = pack_archive(
+        ArchiveFormat::Pack,
+        &[("m0", b"member-zero".as_slice()), ("m1", b"member-one".as_slice())],
+    )
+    .unwrap();
+    rom[0x500..0x500 + pack.len()].copy_from_slice(&pack);
+
+    // Raw 4bpp tile at 0x700 (to be mapped manually)
+    for i in 0..32 {
+        rom[0x700 + i] = ((i % 16) as u8) | ((((i + 3) % 16) as u8) << 4);
+    }
+
+    // Trailing 0xFF padding
+    rom[0xC00..0x1000].fill(0xFF);
+
+    let rom_path = dir.path().join("test.gba");
+    fs::write(&rom_path, &rom).unwrap();
+    let map_path = dir.path().join("map.json");
+
+    // 1. map generate --with-code-refs -o map.json
+    let gen = run_cli(&[
+        "map",
+        "generate",
+        rom_path.to_str().unwrap(),
+        "--with-code-refs",
+        "-o",
+        map_path.to_str().unwrap(),
+        "--json",
+    ]);
+    assert_eq!(gen.status.code(), Some(0), "stderr: {}", String::from_utf8_lossy(&gen.stderr));
+    let mut map_v: Value =
+        serde_json::from_str(&fs::read_to_string(&map_path).unwrap()).expect("valid map json");
+    assert_eq!(map_v["schema"], "formatkit.asset-map.v1");
+    assert_eq!(map_v["schema_version"], 1);
+    assert_eq!(map_v["kit"], "gbakit");
+    assert_eq!(map_v["media"]["kind"], "flat-rom");
+    assert_eq!(map_v["media"]["total_bytes"], 4096);
+
+    // Overwrite guard on map generate -o without --force -> exit 2
+    let gen_refused = run_cli(&[
+        "map",
+        "generate",
+        rom_path.to_str().unwrap(),
+        "-o",
+        map_path.to_str().unwrap(),
+        "--json",
+    ]);
+    assert_eq!(gen_refused.status.code(), Some(2));
+
+    // 2. Inject a manual `mapped` raw-image entry paired with the detected palette, then --merge
+    let pal_id = map_v["entries"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|e| e["offset"] == 0x200)
+        .expect("palette entry at 0x200")["id"]
+        .as_str()
+        .unwrap()
+        .to_string();
+
+    map_v["entries"].as_array_mut().unwrap().push(serde_json::json!({
+        "id": "manual_sprite_tile",
+        "offset": 0x700,
+        "size": 32,
+        "status": "mapped",
+        "mapping": {
+            "kind": "raw-image",
+            "params": { "bpp": 4, "tiles_per_row": 1 },
+            "paired_with": pal_id,
+            "evidence": "synthetic contract test"
+        }
+    }));
+    let curated_path = dir.path().join("curated.json");
+    fs::write(&curated_path, serde_json::to_string_pretty(&map_v).unwrap()).unwrap();
+
+    let merged_path = dir.path().join("merged.json");
+    let merge_out = run_cli(&[
+        "map",
+        "generate",
+        rom_path.to_str().unwrap(),
+        "--merge",
+        curated_path.to_str().unwrap(),
+        "-o",
+        merged_path.to_str().unwrap(),
+    ]);
+    assert_eq!(merge_out.status.code(), Some(0));
+    let merged_v: Value =
+        serde_json::from_str(&fs::read_to_string(&merged_path).unwrap()).unwrap();
+    assert!(merged_v["entries"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .any(|e| e["id"] == "manual_sprite_tile" && e["status"] == "mapped"));
+
+    // 3. map verify --json
+    let ver = run_cli(&[
+        "map",
+        "verify",
+        rom_path.to_str().unwrap(),
+        merged_path.to_str().unwrap(),
+        "--json",
+    ]);
+    assert_eq!(ver.status.code(), Some(0), "stderr: {}", String::from_utf8_lossy(&ver.stderr));
+    let ver_v: Value = serde_json::from_slice(&ver.stdout).unwrap();
+    assert_eq!(ver_v["valid"], true);
+    assert_eq!(ver_v["accounted_bytes"], 4096);
+    assert_eq!(ver_v["mapped_bytes"], 32);
+
+    // 4. map markdown --rom
+    let md_path = dir.path().join("map.md");
+    let md_out = run_cli(&[
+        "map",
+        "markdown",
+        merged_path.to_str().unwrap(),
+        "--rom",
+        rom_path.to_str().unwrap(),
+        "-o",
+        md_path.to_str().unwrap(),
+    ]);
+    assert_eq!(md_out.status.code(), Some(0));
+    let md_text = fs::read_to_string(&md_path).unwrap();
+    assert!(md_text.contains("manual_sprite_tile"));
+    assert!(md_text.contains("## Verification"));
+
+    // 5. assets export --asset-map + --force guard
+    let export_dir = dir.path().join("exported");
+    let exp = run_cli(&[
+        "assets",
+        "export",
+        rom_path.to_str().unwrap(),
+        "--asset-map",
+        merged_path.to_str().unwrap(),
+        "-o",
+        export_dir.to_str().unwrap(),
+        "--json",
+    ]);
+    assert_eq!(exp.status.code(), Some(0), "stderr: {}", String::from_utf8_lossy(&exp.stderr));
+    assert!(export_dir.join("manual_sprite_tile.png").is_file());
+    assert!(export_dir.join("export-manifest.json").is_file());
+
+    // Without --force on non-empty directory -> exit 2
+    let exp_refused = run_cli(&[
+        "assets",
+        "export",
+        rom_path.to_str().unwrap(),
+        "--asset-map",
+        merged_path.to_str().unwrap(),
+        "-o",
+        export_dir.to_str().unwrap(),
+        "--json",
+    ]);
+    assert_eq!(exp_refused.status.code(), Some(2));
+    assert!(exp_refused.stdout.is_empty());
+
+    // With --force -> exit 0
+    let exp_forced = run_cli(&[
+        "assets",
+        "export",
+        rom_path.to_str().unwrap(),
+        "--asset-map",
+        merged_path.to_str().unwrap(),
+        "-o",
+        export_dir.to_str().unwrap(),
+        "--force",
+    ]);
+    assert_eq!(exp_forced.status.code(), Some(0));
+}

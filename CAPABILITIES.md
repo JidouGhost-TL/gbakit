@@ -29,6 +29,7 @@ Generated directly from `gbakit capabilities --json` (`formatkit.capabilities.v1
 | `save.gba-schema-v2` | `save` | parse, decode, reproduce, edit | 3 | Declarative Schema v2 save inspection, JSON export/import, field editing, checksum verification/repair, and canonical trimming across EEPROM 512B/8KB, SRAM 32KB, and Flash 64KB/128KB |
 | `patch.ips-bps-ups` | `patch` | parse, decode, reproduce, author | 3 | IPS, BPS, and UPS binary patch creation and CRC-verified application |
 | `link.gba-protocols` | `link` | parse, decode | 3 | Multi-Play 16-bit, MultiBoot, Normal SPI, GameCube JOYBus, and Wireless Adapter (AGB-015 / RFU) capture dissection and virtual link bridge |
+| `map.asset-map-v1` | `map` | parse, decode, reproduce, author | 2 | Declarative formatkit.asset-map.v1 ROM asset map generation, merge, verification, Markdown reporting, and map-driven export |
 
 ## Save Engines
 

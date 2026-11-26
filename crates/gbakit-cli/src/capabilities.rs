@@ -236,6 +236,13 @@ impl CapabilitiesManifest {
                     tier: 3,
                     notes: "Multi-Play 16-bit, MultiBoot, Normal SPI, GameCube JOYBus, and Wireless Adapter (AGB-015 / RFU) capture dissection and virtual link bridge",
                 },
+                FormatCapability {
+                    id: "map.asset-map-v1",
+                    category: "map",
+                    capabilities: vec!["parse", "decode", "reproduce", "author"],
+                    tier: 2,
+                    notes: "Declarative formatkit.asset-map.v1 ROM asset map generation, merge, verification, Markdown reporting, and map-driven export",
+                },
             ],
             save_engines: vec![
                 "gba-save-v2",

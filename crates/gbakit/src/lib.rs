@@ -14,6 +14,7 @@ pub use gba_sound as sound;
 pub use gba_text as text;
 pub use gba_ereader as ereader;
 pub use mobiclip;
+pub mod asset_map;
 pub mod joybus;
 pub mod link;
 pub mod link_bridge;

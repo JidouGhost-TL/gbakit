@@ -48,6 +48,7 @@ mod capabilities;
 mod detect;
 mod ereader;
 mod link;
+mod map;
 mod modding;
 mod text;
 mod video;
@@ -3078,6 +3079,16 @@ enum Commands {
         #[arg(trailing_var_arg = true, allow_hyphen_values = true)]
         args: Vec<String>,
     },
+    /// Generate, merge, verify, and render formatkit.asset-map.v1 ROM asset maps
+    Map {
+        #[command(subcommand)]
+        command: map::MapCommands,
+    },
+    /// Whole-ROM asset export driven by declarative asset maps
+    Assets {
+        #[command(subcommand)]
+        command: map::AssetsCommands,
+    },
 }
 
 #[derive(Serialize)]
@@ -3127,6 +3138,7 @@ fn classify_error(msg: &str) -> (&'static str, u8) {
         || msg.starts_with("invalid arguments")
         || msg.starts_with("invalid target size:")
         || msg.starts_with("invalid vpk0 method")
+        || msg.starts_with("refusing to overwrite ")
     {
         ("cli_usage", 2)
     } else if msg.contains("checksum") || msg.contains("CRC-32 mismatch") {
@@ -3832,6 +3844,8 @@ fn main() -> ExitCode {
             let (full, json) = build_legacy_args("text", args, cli.json);
             (dispatch_legacy(&full), json)
         }
+        Commands::Map { command } => (map::dispatch_map(command, cli.json), cli.json),
+        Commands::Assets { command } => (map::dispatch_assets(command, cli.json), cli.json),
     };
 
     match res {
