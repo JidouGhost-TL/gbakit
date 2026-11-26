@@ -185,10 +185,10 @@ Every write-back pipeline (`gbakit gfx replace`, `gbakit audio replace`, `gbakit
 
 | Pipeline & Title | Operation | Before | After |
 | --- | --- | :---: | :---: |
-| **`gbakit gfx replace`** — *Pokémon FireRed* (`BPRE`) | In-place `lz77-vram` 8bpp BG0 logo (`0xEAB8C4`, `5,590/6,857 B`) | ![FireRed Before](docs/images/modding/bpre_before.png) | ![FireRed After](docs/images/modding/bpre_after.png) |
-| **`gbakit gfx replace`** — *Advance Wars* (`AWRE`) | **Relocated** `lz77-vram` 4bpp OBJ logo (`0x1374A8 → 0x3F7B80`, 1 ptr patched) | ![Advance Wars Before](docs/images/modding/awre_before.png) | ![Advance Wars After](docs/images/modding/awre_after.png) |
-| **`gbakit gfx replace`** — *Metroid: Zero Mission* (`BMXE`) | **Relocated** `lz77-vram` 4bpp OBJ icons (`0x45C0F4 → 0x760D38`, 2 ptrs patched) | ![Metroid ZM Before](docs/images/modding/bmxe_before.png) | ![Metroid ZM After](docs/images/modding/bmxe_after.png) |
-| **`gbakit text replace`** — *Pokémon FireRed* (`BPRE`) | **Relocated** `pokemon-gen3-en` VWF string (`0x1C582D → 0x456734`, 1 ptr patched) | ![FireRed Text Before](docs/images/modding/bpre_text_before.png) | ![FireRed Text After](docs/images/modding/bpre_text_after.png) |
+| **`gbakit gfx replace`** — *Pokémon FireRed* (`BPRE`) | In-place `lz77-vram` 8bpp BG0 logo (`0xEAB8C4`, `5,590/6,857 B`) | ![FireRed Before](https://jidoughost-tl.github.io/gbakit/images/modding/bpre_before.png) | ![FireRed After](https://jidoughost-tl.github.io/gbakit/images/modding/bpre_after.png) |
+| **`gbakit gfx replace`** — *Advance Wars* (`AWRE`) | **Relocated** `lz77-vram` 4bpp OBJ logo (`0x1374A8 → 0x3F7B80`, 1 ptr patched) | ![Advance Wars Before](https://jidoughost-tl.github.io/gbakit/images/modding/awre_before.png) | ![Advance Wars After](https://jidoughost-tl.github.io/gbakit/images/modding/awre_after.png) |
+| **`gbakit gfx replace`** — *Metroid: Zero Mission* (`BMXE`) | **Relocated** `lz77-vram` 4bpp OBJ icons (`0x45C0F4 → 0x760D38`, 2 ptrs patched) | ![Metroid ZM Before](https://jidoughost-tl.github.io/gbakit/images/modding/bmxe_before.png) | ![Metroid ZM After](https://jidoughost-tl.github.io/gbakit/images/modding/bmxe_after.png) |
+| **`gbakit text replace`** — *Pokémon FireRed* (`BPRE`) | **Relocated** `pokemon-gen3-en` VWF string (`0x1C582D → 0x456734`, 1 ptr patched) | ![FireRed Text Before](https://jidoughost-tl.github.io/gbakit/images/modding/bpre_text_before.png) | ![FireRed Text After](https://jidoughost-tl.github.io/gbakit/images/modding/bpre_text_after.png) |
 
 `gbakit audio replace` is likewise live-verified in `libmgba.so.0.10` on *Pokémon FireRed* (`BPRE`, M4A `WaveData` `0x4A741C`, both `in_place` and `relocated` with **23** voicegroup pointers patched, producing `56.28%` / `48.39%` live DirectSound stereo PCM diff over 600 frames).
 

@@ -740,10 +740,17 @@ mod tests {
             rom[table_off + i * 4..table_off + i * 4 + 4].copy_from_slice(&ptr.to_le_bytes());
         }
 
-        // Embed Krawall RCS version tag right after pointer table
+        // Embed Krawall RCS version tag right after pointer table (assembled
+        // without literal RCS/CVS keyword syntax in source).
         let id_off = table_off + ptrs.len() * 4;
-        let tag = b"$Id: Krawall $Date: 2003/09/01 06:51:01 $\0";
-        rom[id_off..id_off + tag.len()].copy_from_slice(tag);
+        let mut tag = Vec::with_capacity(42);
+        tag.push(b'$');
+        tag.extend_from_slice(b"Id: Krawall ");
+        tag.push(b'$');
+        tag.extend_from_slice(b"Date: 2003/09/01 06:51:01 ");
+        tag.push(b'$');
+        tag.push(0);
+        rom[id_off..id_off + tag.len()].copy_from_slice(&tag);
 
         rom
     }
