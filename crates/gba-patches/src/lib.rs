@@ -957,6 +957,38 @@ pub const REGISTRY: &[DebugMenuPatch] = &[
         ips_bytes: &[0x50, 0x41, 0x54, 0x43, 0x48, 0x00, 0x03, 0x9e, 0x00, 0x02, 0x5a, 0x20, 0x45, 0x4f, 0x46],
     },
 
+    // Wave 13 (82 -> 85)
+    DebugMenuPatch {
+        game_code: "A3JJ",
+        release_key: "A3JJ-r0-f45f94483c8cb8e5",
+        display_name: "Gyakuten Saiban 3 (Japan)",
+        description: "Redirect main state table entry 0x0C at 0x081610b8 (0x0800cc09 -> 0x08001a29) to launch 7-entry DEBUG MENU (VRAM VIEW, SOUND TEST, OBJ TEST, MOVIE TEST, FLAG EDIT, SCENARIO, EXIT)",
+        hook_type: "state_jump_table_ptr",
+        target_handler: 0x08001A28,
+        input_sequence: &["A", "DOWN", "DOWN", "DOWN", "A", "RIGHT", "A"],
+        ips_bytes: &[0x50, 0x41, 0x54, 0x43, 0x48, 0x16, 0x10, 0xb8, 0x00, 0x04, 0x29, 0x1a, 0x00, 0x08, 0x45, 0x4f, 0x46],
+    },
+    DebugMenuPatch {
+        game_code: "ALFE",
+        release_key: "ALFE-r0-6e6c370c339ec917",
+        display_name: "Dragon Ball Z - The Legacy of Goku II (USA)",
+        description: "Redirect post-copyright screen constructor call at 0x080001e6 (bl 0x0801d378 -> bl 0x080056b0) to boot directly into interactive DEBUG menu (MUSIC TEST, SAMPLE TEST, MAP TEST, ZONE, AREA, VARIATION)",
+        hook_type: "thumb_bl_redirect",
+        target_handler: 0x080056B0,
+        input_sequence: &["RIGHT", "DOWN"],
+        ips_bytes: &[0x50, 0x41, 0x54, 0x43, 0x48, 0x00, 0x01, 0xe6, 0x00, 0x04, 0x05, 0xf0, 0x63, 0xfa, 0x45, 0x4f, 0x46],
+    },
+    DebugMenuPatch {
+        game_code: "BKTP",
+        release_key: "BKTP-r0-1613cf4a76a01dba",
+        display_name: "Steel Empire (Europe)",
+        description: "Patch boot debug-flag initializer at 0x08000410 (movs r0,#0 -> movs r0,#0xa5) to arm debug mode flag *(u8*)0x03003be4 at boot; press L+SELECT+START to open 6-mode VRAM VIEW debugger",
+        hook_type: "thumb_imm_mode_override",
+        target_handler: 0x08000A64,
+        input_sequence: &["L+SELECT+START", "R"],
+        ips_bytes: &[0x50, 0x41, 0x54, 0x43, 0x48, 0x00, 0x04, 0x10, 0x00, 0x01, 0xa5, 0x45, 0x4f, 0x46],
+    },
+
 ];
 
 /// Look up a verified debug menu patch by 4-character game code (e.g., `"A84E"`).
@@ -1007,7 +1039,7 @@ mod tests {
 
     #[test]
     fn test_registry_size() {
-        assert_eq!(REGISTRY.len(), 82);
+        assert_eq!(REGISTRY.len(), 85);
     }
 
     #[test]
@@ -1082,6 +1114,19 @@ mod tests {
         let afee = find_by_code("AFEE").expect("found AE7E via AFEE alias");
         assert_eq!(afee.game_code, "AE7E");
         assert_eq!(afee.target_handler, 0x08012602);
+
+        // Wave 13 entries
+        let a3jj = find_by_code("A3JJ").expect("found A3JJ (Wave 13)");
+        assert_eq!(a3jj.game_code, "A3JJ");
+        assert_eq!(a3jj.target_handler, 0x08001A28);
+
+        let alfe = find_by_code("ALFE").expect("found ALFE (Wave 13)");
+        assert_eq!(alfe.game_code, "ALFE");
+        assert_eq!(alfe.target_handler, 0x080056B0);
+
+        let bktp = find_by_code("BKTP").expect("found BKTP (Wave 13)");
+        assert_eq!(bktp.game_code, "BKTP");
+        assert_eq!(bktp.target_handler, 0x08000A64);
     }
 
     #[test]
@@ -1278,6 +1323,25 @@ mod tests {
         bd5j_rom[0x39e..0x3a0].copy_from_slice(&[0x20, 0x68]);
         let bd5j_patched = bd5j.apply(&bd5j_rom).expect("applied BD5J");
         assert_eq!(&bd5j_patched[0x39e..0x3a0], &[0x5a, 0x20]);
+
+        // Wave 13 patch application tests
+        let a3jj = find_by_code("A3JJ").expect("found A3JJ");
+        let mut a3jj_rom = vec![0u8; 0x170000];
+        a3jj_rom[0x1610b8..0x1610bc].copy_from_slice(&[0x09, 0xcc, 0x00, 0x08]);
+        let a3jj_patched = a3jj.apply(&a3jj_rom).expect("applied A3JJ");
+        assert_eq!(&a3jj_patched[0x1610b8..0x1610bc], &[0x29, 0x1a, 0x00, 0x08]);
+
+        let alfe = find_by_code("ALFE").expect("found ALFE");
+        let mut alfe_rom = vec![0u8; 0x1000];
+        alfe_rom[0x1e6..0x1ea].copy_from_slice(&[0x1d, 0xf0, 0xc7, 0xf8]);
+        let alfe_patched = alfe.apply(&alfe_rom).expect("applied ALFE");
+        assert_eq!(&alfe_patched[0x1e6..0x1ea], &[0x05, 0xf0, 0x63, 0xfa]);
+
+        let bktp = find_by_code("BKTP").expect("found BKTP");
+        let mut bktp_rom = vec![0u8; 0x1000];
+        bktp_rom[0x410] = 0x00;
+        let bktp_patched = bktp.apply(&bktp_rom).expect("applied BKTP");
+        assert_eq!(bktp_patched[0x410], 0xa5);
     }
 
     #[test]

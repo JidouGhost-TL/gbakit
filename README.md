@@ -2,7 +2,7 @@
 
 A clean-room Game Boy Advance (GBA) format toolkit in Rust built on **[Formatkit](https://github.com/JidouGhost-TL/formatkit)** (`=0.1.10`).
 
-- **Documentation & GBA Research Wiki:** **https://jidoughost-tl.github.io/gbakit/** & **[GitHub Wiki](https://github.com/JidouGhost-TL/gbakit/wiki)** — **3,409 / 3,409** unique GBA ROMs accounted for (3,052 retail + 357 non-retail incl. 32 GBA Video carts), **814 / 814** saving families (1,543 saving ROMs = 100%), **82** verified interactive debug-menu `.ips` micro-patches, **193** verified button-combo cheats (with per-game before/after screenshots), **13** byte-exact standalone GBA synth crates, **2** standalone non-synth format crates (`gba-ereader`, `mobiclip`), 91 Engine/SDK communities, live VRAM/PRAM probes, and DirectSound PCM scans.
+- **Documentation & GBA Research Wiki:** **https://jidoughost-tl.github.io/gbakit/** & **[GitHub Wiki](https://github.com/JidouGhost-TL/gbakit/wiki)** — **3,409 / 3,409** unique GBA ROMs accounted for (3,052 retail + 357 non-retail incl. 32 GBA Video carts), **814 / 814** saving families (1,543 saving ROMs = 100%), **85** verified interactive debug-menu `.ips` micro-patches, **193** verified button-combo cheats (with per-game before/after screenshots), **13** byte-exact standalone GBA synth crates, **2** standalone non-synth format crates (`gba-ereader`, `mobiclip`), 91 Engine/SDK communities, live VRAM/PRAM probes, and DirectSound PCM scans.
 
 ## Workspace Crates
 
@@ -15,7 +15,7 @@ A clean-room Game Boy Advance (GBA) format toolkit in Rust built on **[Formatkit
 | `gba-text` | GBA `.tbl` charmap parser/encoder (8 built-ins: `ascii`, `pokemon-gen3-en`, `shift-jis`, `capcom-megaman-en`, `breath-of-fire-en`, `tactics-ogre-en`, `metroid-fusion-en`, `utf16-le`, plus custom `.tbl`), pointer-table string scanner, raw & BIOS LZ77 text read/write, Intelligent Systems 16-bit Huffman text decode/encode/replace, and 1bpp/2bpp VWF font sheet + width-table dump/replace |
 | `gba-save` | Declarative GBA battery-save schema engine, `SaveGeometry` detection & padding trimming, loose save probing, 25+ checksum algorithms (`sum8`/`16`/`32`, word-sums, `xor8`/`16`/`32`, `sum_xor16`, `rol32_add`, `Crc16` incl. XMODEM), EEPROM `rev8` block reversal, verification, repair, and field decode/edit |
 | `gba-saves` | Embedded registry covering **814 / 814** saving families (**1,543** saving ROMs = 100% corpus coverage) |
-| `gba-patches` | Embedded registry of **82** clean-room verified `.ips` debug-menu micro-patches, **193** 4-way counterfactually verified retail button-combo cheats, and unified IPS / UPS / BPS patcher |
+| `gba-patches` | Embedded registry of **85** clean-room verified `.ips` debug-menu micro-patches, **193** 4-way counterfactually verified retail button-combo cheats, and unified IPS / UPS / BPS patcher |
 | `gbakit` / `gbakit-cli` | Facade crate and CLI (`info`/`inspect`, `analyze`, `rom`, `multiboot`, `compress`, `patch`, `cheat`, `save`, `sound`, `audio`, `gfx`, `text`, `ereader`, `video`, `link`) |
 
 ## Standalone Published Format & Synth Crates (15 Crates)
@@ -151,10 +151,10 @@ gbakit save fix    AHRE damaged.sav -o repaired.sav
 
 ### Debug Menu Micro-Patches & Unified IPS / UPS / BPS (`gbakit patch`)
 
-`gbakit` embeds **82** clean-room verified `.ips` micro-patches (15–45 bytes) to re-enable dormant developer debug menus:
+`gbakit` embeds **85** clean-room verified `.ips` micro-patches (14–45 bytes) to re-enable dormant developer debug menus:
 
 ```sh
-# List all 82 supported games and target addresses
+# List all 85 supported games and target addresses
 gbakit patch list-debug-menus [--json]
 
 # Unlock debug menu automatically by game code (outputs game.debug.gba)
