@@ -11,10 +11,11 @@
 
 use formatkit_core::{u32_at, Endian, Error, Result};
 use formatkit_layout::{
-    parse_aligned_string_bank, parse_counted_offset_array, parse_riff_form_with_options,
-    read_payload_chunk, AlignedStringBankSpec, CountedOffsetArraySpec, IffChunk, IntWidth,
-    OffsetBase, OffsetOrderPolicy, RiffParseOptions, RiffSizeMode, StringBankEncoding,
-    StringBankTermination, RIFF_MAGIC,
+    pack_aligned_string_bank, pack_chunk_stream, parse_aligned_string_bank,
+    parse_counted_offset_array, parse_riff_form_with_options, read_payload_chunk,
+    AlignedStringBankSpec, ChunkInput, ChunkSizeMode, ChunkStreamSpec, CountedOffsetArraySpec,
+    IffChunk, IntFieldSpec, IntWidth, OffsetBase, OffsetOrderPolicy, PackPolicy, RiffParseOptions,
+    RiffSizeMode, StringBankEncoding, StringBankTermination, RIFF_MAGIC,
 };
 
 use super::{align_up_4, is_printable_fourcc, DetectedFormatExtent, FORMAT_ID_RIFF_SCR};
@@ -64,12 +65,120 @@ pub struct StrTableInfo {
 pub struct RiffScrAsset {
     pub kind: RiffScrKind,
     pub form_type: Option<[u8; 4]>,
+    /// Outer RIFF size-word mode (`Exclusive` or `Inclusive`) preserved for exact re-serialization.
+    pub size_mode: RiffSizeMode,
     pub chunks: Vec<IffChunk>,
+    pub chunk_payloads: Vec<Vec<u8>>,
+    pub chunk_pad_bytes: Vec<Option<u8>>,
     pub code_len: usize,
     pub jump_chunk_count: usize,
     pub str_table: Option<StrTableInfo>,
     pub table_entry_count: usize,
+    pub table_entries: Vec<Vec<u8>>,
     pub consumed_end: usize,
+}
+
+impl RiffScrAsset {
+    /// Serialize this container, script, or name table back into its exact binary representation.
+    pub fn to_bytes(&self) -> Result<Vec<u8>> {
+        pack(self)
+    }
+}
+
+/// Serialize a parsed `studio.riff-scr` asset back into its exact binary representation.
+pub fn pack(asset: &RiffScrAsset) -> Result<Vec<u8>> {
+    match asset.kind {
+        RiffScrKind::RiffScr | RiffScrKind::RiffOther => pack_riff(asset),
+        RiffScrKind::ScrCode => pack_scr_code(asset),
+        RiffScrKind::ScrTable => pack_scr_table(asset),
+    }
+}
+
+fn pack_riff(asset: &RiffScrAsset) -> Result<Vec<u8>> {
+    let Some(form_type) = asset.form_type else {
+        return Err(Error::InvalidField {
+            what: "RIFF missing form_type",
+            value: 0,
+        });
+    };
+    if asset.chunks.len() != asset.chunk_payloads.len() {
+        return Err(Error::InvalidField {
+            what: "RIFF chunk payload count mismatch",
+            value: asset.chunk_payloads.len() as u64,
+        });
+    }
+    let mut body = Vec::new();
+    body.extend_from_slice(&form_type);
+    for (idx, (ch, payload)) in asset.chunks.iter().zip(asset.chunk_payloads.iter()).enumerate() {
+        body.extend_from_slice(&ch.id);
+        body.extend_from_slice(&(payload.len() as u32).to_le_bytes());
+        body.extend_from_slice(payload);
+        if (payload.len() & 1) == 1 {
+            if let Some(Some(pad)) = asset.chunk_pad_bytes.get(idx) {
+                body.push(*pad);
+            }
+        }
+    }
+    let outer_size = match asset.size_mode {
+        RiffSizeMode::Inclusive => 8usize.checked_add(body.len()).ok_or(Error::InvalidField {
+            what: "RIFF inclusive size overflow",
+            value: body.len() as u64,
+        })?,
+        RiffSizeMode::Exclusive | RiffSizeMode::Auto => body.len(),
+    };
+    let mut out = Vec::with_capacity(8usize.saturating_add(body.len()));
+    out.extend_from_slice(&RIFF_MAGIC);
+    out.extend_from_slice(&(outer_size as u32).to_le_bytes());
+    out.extend_from_slice(&body);
+    Ok(out)
+}
+
+fn pack_scr_code(asset: &RiffScrAsset) -> Result<Vec<u8>> {
+    if asset.chunks.len() != asset.chunk_payloads.len() || asset.chunks.is_empty() {
+        return Err(Error::InvalidField {
+            what: "SCR CODE chunk count",
+            value: asset.chunks.len() as u64,
+        });
+    }
+    let spec = ChunkStreamSpec::new(
+        4,
+        8,
+        IntFieldSpec::u32_le(4),
+        ChunkSizeMode::PayloadOnly,
+        MAX_JUMP_CHUNKS + 2,
+    )
+    .with_tag(0, 4);
+    let inputs: Vec<ChunkInput<'_>> = asset
+        .chunks
+        .iter()
+        .zip(asset.chunk_payloads.iter())
+        .map(|(ch, payload)| ChunkInput {
+            tag: &ch.id,
+            payload: payload.as_slice(),
+            header_template: None,
+            trailer: None,
+        })
+        .collect();
+    pack_chunk_stream(&spec, &PackPolicy::TIGHT, MAGIC_SCR, &inputs).map_err(|_| {
+        Error::InvalidField {
+            what: "SCR CODE pack_chunk_stream",
+            value: asset.chunks.len() as u64,
+        }
+    })
+}
+
+fn pack_scr_table(asset: &RiffScrAsset) -> Result<Vec<u8>> {
+    let spec = AlignedStringBankSpec::aligned(4, 4, 1024)
+        .with_encoding(StringBankEncoding::PrintableAscii)
+        .with_termination(StringBankTermination::StopOnInvalid)
+        .with_max_entry_len(24);
+    let slices: Vec<&[u8]> = asset.table_entries.iter().map(Vec::as_slice).collect();
+    pack_aligned_string_bank(&spec, &PackPolicy::TIGHT, MAGIC_SCR, &slices).map_err(|_| {
+        Error::InvalidField {
+            what: "SCR table pack_aligned_string_bank",
+            value: asset.table_entries.len() as u64,
+        }
+    })
 }
 
 /// Returns `true` if `data` starts with a valid `RIFF`, `SCR CODE`, or `SCR ` name-table asset.
@@ -131,8 +240,8 @@ fn parse_riff(data: &[u8]) -> Result<RiffScrAsset> {
     // 2. Fall back to header-inclusive framing via FormatKit 0.1.17 `RiffSizeMode::Auto` bounded
     //    to `raw_size` (handles retail header-inclusive `RIFF` `SCR ` inside larger ROMs where
     //    trailing ROM bytes would otherwise look like unprintable chunks under exclusive framing).
-    let form = match standard_form {
-        Some(f) => f,
+    let (form, size_mode) = match standard_form {
+        Some(f) => (f, RiffSizeMode::Exclusive),
         None => {
             let raw_size = u32_at(data, 4)? as usize;
             if raw_size < 20 || raw_size > data.len() {
@@ -141,7 +250,7 @@ fn parse_riff(data: &[u8]) -> Result<RiffScrAsset> {
                     value: raw_size as u64,
                 });
             }
-            parse_riff_form_with_options(
+            let f = parse_riff_form_with_options(
                 &data[..raw_size],
                 RiffParseOptions::new().with_size_mode(RiffSizeMode::Auto),
             )
@@ -150,7 +259,13 @@ fn parse_riff(data: &[u8]) -> Result<RiffScrAsset> {
             .ok_or(Error::InvalidField {
                 what: "RIFF form_type or chunks",
                 value: raw_size as u64,
-            })?
+            })?;
+            let mode = if raw_size == 8usize.saturating_add(f.body_len as usize) {
+                RiffSizeMode::Inclusive
+            } else {
+                RiffSizeMode::Exclusive
+            };
+            (f, mode)
         }
     };
 
@@ -162,21 +277,31 @@ fn parse_riff(data: &[u8]) -> Result<RiffScrAsset> {
             value: u64::from(form.body_len),
         })?;
 
+    let mut chunk_payloads = Vec::with_capacity(form.chunks.len());
+    let mut chunk_pad_bytes = Vec::with_capacity(form.chunks.len());
+    for ch in &form.chunks {
+        let end = ch
+            .payload_offset
+            .checked_add(ch.payload_len)
+            .filter(|&e| e <= consumed_end)
+            .ok_or(Error::InvalidField {
+                what: "RIFF chunk bounds",
+                value: ch.payload_offset as u64,
+            })?;
+        chunk_payloads.push(data[ch.payload_offset..end].to_vec());
+        if (ch.payload_len & 1) == 1 && end < consumed_end {
+            chunk_pad_bytes.push(Some(data[end]));
+        } else {
+            chunk_pad_bytes.push(None);
+        }
+    }
+
     if &form.form_type == MAGIC_SCR {
         // Validate inner SCR CODE / STR structure when present inside RIFF SCR.
         let mut code_len = 0usize;
         let mut jump_chunk_count = 0usize;
         let mut str_table = None;
-        for ch in &form.chunks {
-            let end = ch
-                .payload_offset
-                .checked_add(ch.payload_len)
-                .filter(|&e| e <= consumed_end)
-                .ok_or(Error::InvalidField {
-                    what: "RIFF SCR chunk bounds",
-                    value: ch.payload_offset as u64,
-                })?;
-            let payload = &data[ch.payload_offset..end];
+        for (ch, payload) in form.chunks.iter().zip(chunk_payloads.iter()) {
             if &ch.id == TAG_CODE {
                 if payload.len() < 4 {
                     return Err(Error::InvalidField {
@@ -201,11 +326,15 @@ fn parse_riff(data: &[u8]) -> Result<RiffScrAsset> {
         return Ok(RiffScrAsset {
             kind: RiffScrKind::RiffScr,
             form_type: Some(form.form_type),
+            size_mode,
             chunks: form.chunks,
+            chunk_payloads,
+            chunk_pad_bytes,
             code_len,
             jump_chunk_count,
             str_table,
             table_entry_count: 0,
+            table_entries: Vec::new(),
             consumed_end,
         });
     }
@@ -213,11 +342,15 @@ fn parse_riff(data: &[u8]) -> Result<RiffScrAsset> {
     Ok(RiffScrAsset {
         kind: RiffScrKind::RiffOther,
         form_type: Some(form.form_type),
+        size_mode,
         chunks: form.chunks,
+        chunk_payloads,
+        chunk_pad_bytes,
         code_len: 0,
         jump_chunk_count: 0,
         str_table: None,
         table_entry_count: 0,
+        table_entries: Vec::new(),
         consumed_end,
     })
 }
@@ -255,6 +388,7 @@ fn parse_scr_code(data: &[u8]) -> Result<RiffScrAsset> {
         payload_offset: 12,
         payload_len: section_rest,
     }];
+    let mut chunk_payloads = vec![data[12..pos].to_vec()];
     let mut jump_chunk_count = 0usize;
 
     // Walk 0+ JUMP chunks, then require exactly one STR chunk.
@@ -270,6 +404,7 @@ fn parse_scr_code(data: &[u8]) -> Result<RiffScrAsset> {
                 payload_offset: span.payload.start,
                 payload_len: span.payload.len(),
             });
+            chunk_payloads.push(data[span.payload.clone()].to_vec());
             jump_chunk_count += 1;
             pos = span.payload.end;
             continue;
@@ -282,14 +417,20 @@ fn parse_scr_code(data: &[u8]) -> Result<RiffScrAsset> {
                 payload_offset: span.payload.start,
                 payload_len: span.payload.len(),
             });
+            chunk_payloads.push(str_payload.to_vec());
+            let chunk_pad_bytes = vec![None; chunks.len()];
             return Ok(RiffScrAsset {
                 kind: RiffScrKind::ScrCode,
                 form_type: Some(*MAGIC_SCR),
+                size_mode: RiffSizeMode::Exclusive,
                 chunks,
+                chunk_payloads,
+                chunk_pad_bytes,
                 code_len,
                 jump_chunk_count,
                 str_table: Some(str_info),
                 table_entry_count: 0,
+                table_entries: Vec::new(),
                 consumed_end: span.payload.end,
             });
         }
@@ -411,14 +552,24 @@ fn parse_scr_table(data: &[u8]) -> Result<RiffScrAsset> {
         });
     }
 
+    let table_entries = bank
+        .entries
+        .iter()
+        .map(|e| e.bytes.clone())
+        .collect::<Vec<_>>();
+
     Ok(RiffScrAsset {
         kind: RiffScrKind::ScrTable,
         form_type: Some(*MAGIC_SCR),
+        size_mode: RiffSizeMode::Exclusive,
         chunks: Vec::new(),
+        chunk_payloads: Vec::new(),
+        chunk_pad_bytes: Vec::new(),
         code_len: 0,
         jump_chunk_count: 0,
         str_table: None,
-        table_entry_count: bank.entries.len(),
+        table_entry_count: table_entries.len(),
+        table_entries,
         consumed_end: bank.consumed_end,
     })
 }
@@ -576,6 +727,33 @@ pub(crate) mod tests {
         assert_eq!(t.kind, RiffScrKind::ScrTable);
         assert_eq!(t.table_entry_count, 4);
         assert_eq!(t.consumed_end, tbl.len());
+    }
+
+    #[test]
+    fn roundtrips_riff_scr_code_and_scr_table_byte_identically() {
+        let riff = make_valid_riff_scr_inclusive();
+        let r = parse(&riff).unwrap();
+        assert_eq!(r.to_bytes().unwrap(), riff[..r.consumed_end]);
+
+        // Also test standard exclusive RIFF framing (WAVE)
+        let mut wav = Vec::new();
+        wav.extend_from_slice(&RIFF_MAGIC);
+        wav.extend_from_slice(&20u32.to_le_bytes()); // exclusive body len = 4 + 8 + 8
+        wav.extend_from_slice(b"WAVE");
+        wav.extend_from_slice(b"data");
+        wav.extend_from_slice(&8u32.to_le_bytes());
+        wav.extend_from_slice(&[1, 2, 3, 4, 5, 6, 7, 8]);
+        let w = parse(&wav).unwrap();
+        assert_eq!(w.size_mode, RiffSizeMode::Exclusive);
+        assert_eq!(w.to_bytes().unwrap(), wav[..w.consumed_end]);
+
+        let scr_code = make_valid_scr_code();
+        let sc = parse(&scr_code).unwrap();
+        assert_eq!(sc.to_bytes().unwrap(), scr_code[..sc.consumed_end]);
+
+        let tbl = make_valid_scr_table();
+        let t = parse(&tbl).unwrap();
+        assert_eq!(t.to_bytes().unwrap(), tbl[..t.consumed_end]);
     }
 
     #[test]

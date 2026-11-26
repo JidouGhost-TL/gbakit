@@ -23,10 +23,16 @@ Generated directly from `gbakit capabilities --json` (`formatkit.capabilities.v1
 | `archive.pack` | `archive` | parse, decode, reproduce, edit | 2 | PACK studio container scanning, extraction, repacking, and in-ROM replacement |
 | `archive.wayforward` | `archive` | parse, decode, reproduce, edit | 2 | WAYFORWARD container scanning, extraction, repacking, and in-ROM replacement |
 | `archive.sfcd` | `archive` | parse, decode, reproduce, edit | 2 | SFCD container scanning, extraction, repacking, and in-ROM replacement |
-| `studio.plt-engine` | `studio` | parse, decode | 3 | Unified PLT0/IMG0/PAT0(+TIM0)/SCR0/TON0 multi-asset GBA studio engine container and table scanner |
-| `studio.is-asc03` | `studio` | parse, decode | 3 | IS-ASC03/IS-ACG03/IS-MAP01 chunked map and graphics container (CLRF, CMNT, VER, PNL, MAP, LINK, MODE, END) |
-| `studio.piff-rbhf` | `studio` | parse, decode | 3 | PIFF/RBHF/RBHH relocatable module container (BODY, PACK, PKDW, PKDL, RELC, GLOB) and GLOBAL_SET manifests |
-| `studio.riff-scr` | `studio` | parse, decode | 2 | RIFF (standard and header-inclusive SCR framing), SCR CODE bytecode + STR string tables, and SCR aligned name tables |
+| `studio.plt-engine` | `studio` | parse, decode, reproduce | 3 | Unified PLT0/IMG0/PAT0(+TIM0)/SCR0/TON0 multi-asset GBA studio engine container parser, scanner, and byte-identical packer |
+| `studio.is-asc03` | `studio` | parse, decode, reproduce | 3 | IS-ASC03/IS-ACG03/IS-MAP01 chunked map and graphics container (CLRF, CMNT, VER, PNL, MAP, LINK, MODE, END) with symmetric repacking |
+| `studio.piff-rbhf` | `studio` | parse, decode, reproduce | 3 | PIFF/RBHF/RBHH relocatable module container (BODY, PACK, PKDW, PKDL, RELC, GLOB) and GLOBAL_SET manifests with symmetric repacking |
+| `studio.riff-scr` | `studio` | parse, decode, reproduce | 2 | RIFF (standard and header-inclusive SCR framing), SCR CODE bytecode + STR string tables, and SCR aligned name tables with symmetric repacking |
+| `studio.anim-fram` | `studio` | parse, decode, reproduce | 3 | ANIM/FRAM sprite animation packages (chunked XY/FRAM/PAL/END CHAR, table, inline, name bank, FRAM tables/dirs/pools) with symmetric repacking |
+| `studio.mbm-mcm` | `studio` | parse, decode, reproduce | 3 | Paired MBM0/MCM0 ROM asset packs (raw and 0x203 encoded payloads) with symmetric repacking |
+| `studio.map0` | `studio` | parse, decode, reproduce | 3 | MAP0 4bpp packed-pixel map parser, ROM scanner, and byte-identical packer |
+| `studio.mto0` | `studio` | parse, decode, reproduce | 2 | MTO0 tagged key/value and compact record tables (multi-sentinel termination) with symmetric repacking |
+| `studio.brow` | `studio` | parse, decode, reproduce | 2 | BROWN named record directories (64B/30B fixed-stride) and aligned message banks with symmetric repacking |
+| `studio.pac3` | `studio` | parse, decode, reproduce | 2 | PAC3 tagged control-word stream parser, ROM scanner, and byte-identical packer |
 | `text.charmap-scripts` | `text` | parse, decode, reproduce, edit | 2 | Charmap table scanning, string extraction, and pointer-aware in-ROM replacement |
 | `text.huffman-scripts` | `text` | parse, decode, reproduce, edit | 2 | IS-style and Camelot-style Huffman compressed text extraction and replacement |
 | `text.vwf-fonts` | `text` | parse, decode, reproduce, edit | 2 | 1bpp/2bpp variable-width bitmap font dumping, replacement, and glyph width tables |

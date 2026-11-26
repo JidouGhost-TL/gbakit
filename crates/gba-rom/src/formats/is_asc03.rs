@@ -15,7 +15,8 @@
 
 use formatkit_core::{u16_at, u32_at, Error, Result};
 use formatkit_layout::{
-    parse_chunk_stream_with_extent, ChunkEntry, ChunkSizeMode, ChunkStreamSpec, IntFieldSpec,
+    pack_chunk_stream, parse_chunk_stream_with_extent, ChunkEntry, ChunkInput, ChunkSizeMode,
+    ChunkStreamSpec, IntFieldSpec, PackPolicy,
 };
 
 use super::{DetectedFormatExtent, FORMAT_ID_IS_ASC03};
@@ -86,6 +87,9 @@ pub struct IsAscChunk {
     pub header_offset: usize,
     pub payload_offset: usize,
     pub payload_size: usize,
+    /// Extra header bytes beyond the standard 8-byte `(tag, u32 size)` header (2 bytes for `PNL `).
+    pub extra_header: Vec<u8>,
+    pub payload: Vec<u8>,
 }
 
 /// Parsed `IS-ASC03` / `IS-ACG03` / `IS-MAP01` container metadata and exact byte extent.
@@ -94,7 +98,135 @@ pub struct IsAsc03Asset {
     pub kind: IsAsc03Kind,
     pub version: Option<[u8; 8]>,
     pub chunks: Vec<IsAscChunk>,
+    /// Opaque body bytes situated between `VER `+`END ` and the `CLRF..MODE` footer (`IsAsc03Kind::Ver`).
+    pub inter_body: Vec<u8>,
     pub consumed_end: usize,
+}
+
+impl IsAsc03Asset {
+    /// Serialize this container back into its exact binary representation.
+    pub fn to_bytes(&self) -> Result<Vec<u8>> {
+        pack(self)
+    }
+}
+
+/// Serialize a parsed `studio.is-asc03` container back into its exact binary representation.
+pub fn pack(asset: &IsAsc03Asset) -> Result<Vec<u8>> {
+    match asset.kind {
+        IsAsc03Kind::Clrf | IsAsc03Kind::Cmnt => {
+            let inputs: Vec<ChunkInput<'_>> = asset
+                .chunks
+                .iter()
+                .map(|c| ChunkInput {
+                    tag: &c.tag,
+                    payload: &c.payload,
+                    header_template: None,
+                    trailer: None,
+                })
+                .collect();
+            pack_chunk_stream(&STANDARD_CHUNK_SPEC, &PackPolicy::TIGHT, &[], &inputs).map_err(
+                |_| Error::InvalidField {
+                    what: "IS-ASC03 pack_chunk_stream",
+                    value: asset.chunks.len() as u64,
+                },
+            )
+        }
+        IsAsc03Kind::Ver => {
+            if asset.chunks.len() < 5 {
+                return Err(Error::InvalidField {
+                    what: "IS-ASC03 VER chunk count",
+                    value: asset.chunks.len() as u64,
+                });
+            }
+            let head_inputs: Vec<ChunkInput<'_>> = asset.chunks[..2]
+                .iter()
+                .map(|c| ChunkInput {
+                    tag: &c.tag,
+                    payload: &c.payload,
+                    header_template: None,
+                    trailer: None,
+                })
+                .collect();
+            let mut out =
+                pack_chunk_stream(&STANDARD_CHUNK_SPEC, &PackPolicy::TIGHT, &[], &head_inputs)
+                    .map_err(|_| Error::InvalidField {
+                        what: "IS-ASC03 VER head pack",
+                        value: 2,
+                    })?;
+            out.extend_from_slice(&asset.inter_body);
+            const FOOTER_SPEC: ChunkStreamSpec = ChunkStreamSpec::new(
+                0,
+                8,
+                IntFieldSpec::u32_le(4),
+                ChunkSizeMode::PayloadOnly,
+                16,
+            )
+            .with_tag(0, 4)
+            .with_allowed_tags(&[b"CLRF", b"LINK", b"CMNT", b"CLRC"])
+            .with_terminator_tag(TAG_MODE)
+            .with_emit_terminator(true)
+            .with_stop_on_unknown_tag(true)
+            .with_require_eof_closure(false);
+            let foot_inputs: Vec<ChunkInput<'_>> = asset.chunks[2..]
+                .iter()
+                .map(|c| ChunkInput {
+                    tag: &c.tag,
+                    payload: &c.payload,
+                    header_template: None,
+                    trailer: None,
+                })
+                .collect();
+            let footer = pack_chunk_stream(&FOOTER_SPEC, &PackPolicy::TIGHT, &[], &foot_inputs)
+                .map_err(|_| Error::InvalidField {
+                    what: "IS-ASC03 VER footer pack",
+                    value: foot_inputs.len() as u64,
+                })?;
+            out.extend_from_slice(&footer);
+            Ok(out)
+        }
+        IsAsc03Kind::Pnl => {
+            let mut out = Vec::new();
+            let mut i = 0usize;
+            while i < asset.chunks.len() {
+                if &asset.chunks[i].tag == TAG_PNL {
+                    let ch = &asset.chunks[i];
+                    if ch.extra_header.len() != 2 {
+                        return Err(Error::InvalidField {
+                            what: "IS-ASC03 PNL extra header",
+                            value: ch.extra_header.len() as u64,
+                        });
+                    }
+                    out.extend_from_slice(TAG_PNL);
+                    out.extend_from_slice(&(ch.payload.len() as u32).to_le_bytes());
+                    out.extend_from_slice(&ch.extra_header);
+                    out.extend_from_slice(&ch.payload);
+                    i += 1;
+                } else {
+                    let start = i;
+                    while i < asset.chunks.len() && &asset.chunks[i].tag != TAG_PNL {
+                        i += 1;
+                    }
+                    let run: Vec<ChunkInput<'_>> = asset.chunks[start..i]
+                        .iter()
+                        .map(|c| ChunkInput {
+                            tag: &c.tag,
+                            payload: &c.payload,
+                            header_template: None,
+                            trailer: None,
+                        })
+                        .collect();
+                    let packed =
+                        pack_chunk_stream(&STANDARD_CHUNK_SPEC, &PackPolicy::TIGHT, &[], &run)
+                            .map_err(|_| Error::InvalidField {
+                                what: "IS-ASC03 PNL standard run pack",
+                                value: run.len() as u64,
+                            })?;
+                    out.extend_from_slice(&packed);
+                }
+            }
+            Ok(out)
+        }
+    }
 }
 
 /// Returns `true` if `data` begins with a valid `IS-ASC03` / `IS-ACG03` / `IS-MAP01` container.
@@ -133,15 +265,18 @@ fn is_known_version(bytes: &[u8]) -> bool {
     bytes == VER_IS_ASC03 || bytes == VER_IS_ACG03 || bytes == VER_IS_MAP01
 }
 
-fn to_is_asc_chunk(entry: &ChunkEntry) -> Option<IsAscChunk> {
+fn to_is_asc_chunk(entry: &ChunkEntry, data: &[u8]) -> Option<IsAscChunk> {
     if entry.tag.len() != 4 {
         return None;
     }
+    let payload = entry.payload(data)?.to_vec();
     Some(IsAscChunk {
         tag: [entry.tag[0], entry.tag[1], entry.tag[2], entry.tag[3]],
         header_offset: entry.header_offset,
         payload_offset: entry.payload_offset,
         payload_size: entry.payload_size,
+        extra_header: Vec::new(),
+        payload,
     })
 }
 
@@ -254,13 +389,14 @@ fn parse_clrf(data: &[u8]) -> Result<IsAsc03Asset> {
     let chunks = stream
         .chunks
         .iter()
-        .filter_map(to_is_asc_chunk)
+        .filter_map(|ch| to_is_asc_chunk(ch, data))
         .collect::<Vec<_>>();
 
     Ok(IsAsc03Asset {
         kind: IsAsc03Kind::Clrf,
         version,
         chunks,
+        inter_body: Vec::new(),
         consumed_end: stream.consumed_end,
     })
 }
@@ -323,13 +459,14 @@ fn parse_cmnt(data: &[u8]) -> Result<IsAsc03Asset> {
     let chunks = stream
         .chunks
         .iter()
-        .filter_map(to_is_asc_chunk)
+        .filter_map(|ch| to_is_asc_chunk(ch, data))
         .collect::<Vec<_>>();
 
     Ok(IsAsc03Asset {
         kind: IsAsc03Kind::Cmnt,
         version,
         chunks,
+        inter_body: Vec::new(),
         consumed_end: stream.consumed_end,
     })
 }
@@ -378,12 +515,16 @@ fn parse_ver(data: &[u8]) -> Result<IsAsc03Asset> {
                         header_offset: 0,
                         payload_offset: 8,
                         payload_size: 8,
+                        extra_header: Vec::new(),
+                        payload: version.to_vec(),
                     },
                     IsAscChunk {
                         tag: *TAG_END,
                         header_offset: 16,
                         payload_offset: 24,
                         payload_size: 0,
+                        extra_header: Vec::new(),
+                        payload: Vec::new(),
                     },
                 ];
                 chunks.extend(footer.0);
@@ -391,6 +532,7 @@ fn parse_ver(data: &[u8]) -> Result<IsAsc03Asset> {
                     kind: IsAsc03Kind::Ver,
                     version: Some(version),
                     chunks,
+                    inter_body: data[24..pos].to_vec(),
                     consumed_end: footer.1,
                 });
             }
@@ -465,7 +607,7 @@ fn parse_ver_footer(slice: &[u8], base_offset: usize) -> Result<(Vec<IsAscChunk>
 
     let mut out = Vec::with_capacity(stream.chunks.len());
     for ch in &stream.chunks {
-        let mut c = to_is_asc_chunk(ch).ok_or(Error::InvalidField {
+        let mut c = to_is_asc_chunk(ch, slice).ok_or(Error::InvalidField {
             what: "IS-ASC03 VER chunk tag",
             value: 0,
         })?;
@@ -552,6 +694,8 @@ fn parse_pnl(data: &[u8]) -> Result<IsAsc03Asset> {
                 header_offset: pos,
                 payload_offset: pos + 10,
                 payload_size: size,
+                extra_header: data[pos + 8..pos + 10].to_vec(),
+                payload: data[pos + 10..next].to_vec(),
             });
             pos = next;
             continue;
@@ -608,7 +752,7 @@ fn parse_pnl(data: &[u8]) -> Result<IsAsc03Asset> {
             } else if ch.tag.as_slice() == TAG_END {
                 hit_end = true;
             }
-            if let Some(mut c) = to_is_asc_chunk(ch) {
+            if let Some(mut c) = to_is_asc_chunk(ch, tail) {
                 c.header_offset = pos
                     .checked_add(c.header_offset)
                     .ok_or(Error::InvalidField {
@@ -646,6 +790,7 @@ fn parse_pnl(data: &[u8]) -> Result<IsAsc03Asset> {
         kind: IsAsc03Kind::Pnl,
         version,
         chunks,
+        inter_body: Vec::new(),
         consumed_end: pos,
     })
 }
@@ -790,6 +935,20 @@ pub(crate) mod tests {
         let parsed = parse(&pnl).unwrap();
         assert_eq!(parsed.kind, IsAsc03Kind::Pnl);
         assert_eq!(parsed.consumed_end, pnl.len());
+    }
+
+    #[test]
+    fn roundtrips_all_four_is_asc03_entry_points_byte_identically() {
+        for raw in [
+            make_valid_clrf(),
+            make_valid_cmnt(),
+            make_valid_ver(),
+            make_valid_pnl(),
+        ] {
+            let parsed = parse(&raw).unwrap();
+            let repacked = parsed.to_bytes().unwrap();
+            assert_eq!(repacked, raw[..parsed.consumed_end]);
+        }
     }
 
     #[test]

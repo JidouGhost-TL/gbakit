@@ -18,10 +18,11 @@ use gba_gfx::{
     decode_palette, decode_tile_4bpp, decode_tile_8bpp, render_palette_swatch_rgba, RawPngEncoder,
 };
 use gba_rom::{
-    detect_rom_padding, extract_archive_entries, parse_archive_at, scan_all_wave1_formats,
-    scan_archives, scan_embedded_multiboot, validate_wave1_format_slice, AgbHeader, ArchiveFormat,
-    FORMAT_ID_IS_ASC03, FORMAT_ID_PIFF_RBHF, FORMAT_ID_PLT_ENGINE, FORMAT_ID_RIFF_SCR, HEADER_SIZE,
-    ROM_BUS_BASE,
+    detect_rom_padding, extract_archive_entries, parse_archive_at, scan_all_studio_formats,
+    scan_archives, scan_embedded_multiboot, validate_studio_format_slice, AgbHeader, ArchiveFormat,
+    FORMAT_ID_ANIM_FRAM, FORMAT_ID_BROW, FORMAT_ID_IS_ASC03, FORMAT_ID_MAP0, FORMAT_ID_MBM_MCM,
+    FORMAT_ID_MTO0, FORMAT_ID_PAC3, FORMAT_ID_PIFF_RBHF, FORMAT_ID_PLT_ENGINE, FORMAT_ID_RIFF_SCR,
+    HEADER_SIZE, ROM_BUS_BASE,
 };
 use gba_sound::m4a::{rom_ptr_to_offset, M4aSampleView};
 use gba_sound::{
@@ -477,9 +478,9 @@ pub fn generate_asset_map(
         }
     }
 
-    // 3b. Wave-1 unified studio formats (studio.plt-engine, studio.is-asc03, studio.piff-rbhf, studio.riff-scr)
+    // 3b. Wave-1 & Wave-2 unified studio formats (10 families)
     // PIFF/RBHF uses priority 90 (> archive.pack's 88) to explicitly disambiguate PIFF PACK sub-chunks.
-    for ext in scan_all_wave1_formats(rom) {
+    for ext in scan_all_studio_formats(rom) {
         if ext.size > 0 && ext.offset.checked_add(ext.size).is_some_and(|e| e <= rom.len()) {
             let priority = if ext.format_id == FORMAT_ID_PIFF_RBHF {
                 90
@@ -1424,8 +1425,14 @@ fn test_decode_entry(
             FORMAT_ID_PLT_ENGINE
             | FORMAT_ID_IS_ASC03
             | FORMAT_ID_PIFF_RBHF
-            | FORMAT_ID_RIFF_SCR => {
-                validate_wave1_format_slice(fmt, slice)?;
+            | FORMAT_ID_RIFF_SCR
+            | FORMAT_ID_ANIM_FRAM
+            | FORMAT_ID_MBM_MCM
+            | FORMAT_ID_MAP0
+            | FORMAT_ID_MTO0
+            | FORMAT_ID_BROW
+            | FORMAT_ID_PAC3 => {
+                validate_studio_format_slice(fmt, slice)?;
             }
             "video.mobiclip-v1" => {
                 MobiclipStreamView::parse_at(rom, off).map_err(|e| e.to_string())?;
@@ -2446,6 +2453,66 @@ mod tests {
         riff.extend_from_slice(&riff_body);
         rom[0x1400..0x1400 + riff.len()].copy_from_slice(&riff);
 
+        // 5. studio.anim-fram (FRAM table at 0x1500)
+        let mut fram = Vec::new();
+        fram.extend_from_slice(b"FRAM");
+        fram.extend_from_slice(&20u32.to_le_bytes());
+        fram.extend_from_slice(&2u32.to_le_bytes());
+        fram.extend_from_slice(&0u32.to_le_bytes());
+        fram.extend_from_slice(&[1, 0, 0, 0, 2, 0, 0, 0, 3, 0, 0, 0, 4, 0, 0, 0]);
+        rom[0x1500..0x1500 + fram.len()].copy_from_slice(&fram);
+
+        // 6. studio.mbm-mcm (MBM0+MCM0 raw at 0x1600)
+        let mut mbm = vec![0u8; 48 + 32];
+        mbm[0..4].copy_from_slice(b"MBM\0");
+        mbm[4..8].copy_from_slice(&0x0020_0400u32.to_le_bytes());
+        mbm[8..10].copy_from_slice(&16u16.to_le_bytes());
+        mbm[10..12].copy_from_slice(&16u16.to_le_bytes());
+        mbm[16..20].copy_from_slice(&0x0800_1000u32.to_le_bytes());
+        mbm[20..24].copy_from_slice(&(0x0800_0000u32 + 32).to_le_bytes());
+        mbm[24..28].copy_from_slice(b"MCM\0");
+        mbm[28..32].copy_from_slice(&32u32.to_le_bytes());
+        mbm[32..36].copy_from_slice(&0x1000u32.to_le_bytes());
+        mbm[36..40].copy_from_slice(&1u32.to_le_bytes());
+        mbm[40..44].copy_from_slice(&0u32.to_le_bytes());
+        mbm[44..48].copy_from_slice(&0x0800_0000u32.to_le_bytes());
+        rom[0x1600..0x1600 + mbm.len()].copy_from_slice(&mbm);
+
+        // 7. studio.map0 (8x8 MAP0 at 0x1700)
+        let mut map0 = Vec::new();
+        map0.extend_from_slice(b"MAP\0");
+        map0.extend_from_slice(&8u16.to_le_bytes());
+        map0.extend_from_slice(&8u16.to_le_bytes());
+        map0.extend_from_slice(&[0x12u8; 32]);
+        rom[0x1700..0x1700 + map0.len()].copy_from_slice(&map0);
+
+        // 8. studio.mto0 (MTO0 big table at 0x1800)
+        let mut mto0 = Vec::new();
+        mto0.extend_from_slice(b"MTO\0");
+        mto0.extend_from_slice(&100u32.to_le_bytes());
+        mto0.extend_from_slice(&5u32.to_le_bytes());
+        mto0.extend_from_slice(b"MTO\0");
+        mto0.extend_from_slice(&0xFFFF_FFFFu32.to_le_bytes());
+        mto0.extend_from_slice(&0u32.to_le_bytes());
+        rom[0x1800..0x1800 + mto0.len()].copy_from_slice(&mto0);
+
+        // 9. studio.brow (BROWN small table at 0x1900)
+        let mut brow = Vec::new();
+        brow.extend_from_slice(b"BROWN01\0");
+        for i in 0..11u8 {
+            brow.push(i + 1);
+            brow.push(0);
+        }
+        rom[0x1900..0x1900 + brow.len()].copy_from_slice(&brow);
+
+        // 10. studio.pac3 (PAC3 stream at 0x1A00)
+        let mut pac3 = Vec::new();
+        pac3.extend_from_slice(b"PAC3");
+        for w in [4u32, 0xB000_0001, 1, 0x8000_0001, 0, 0xFFFF_FFFF, 0] {
+            pac3.extend_from_slice(&w.to_le_bytes());
+        }
+        rom[0x1A00..0x1A00 + pac3.len()].copy_from_slice(&pac3);
+
         let map = generate_asset_map(&rom, &GenerateOptions::default(), None);
         let vr = verify_asset_map(&rom, &map);
         assert!(vr.valid, "verify errors: {:?}", vr.errors);
@@ -2455,10 +2522,20 @@ mod tests {
             .iter()
             .filter_map(|e| e.format_id.as_deref())
             .collect();
-        assert!(fmt_ids.contains(&FORMAT_ID_PLT_ENGINE));
-        assert!(fmt_ids.contains(&FORMAT_ID_IS_ASC03));
-        assert!(fmt_ids.contains(&FORMAT_ID_PIFF_RBHF));
-        assert!(fmt_ids.contains(&FORMAT_ID_RIFF_SCR));
+        for expected in [
+            FORMAT_ID_PLT_ENGINE,
+            FORMAT_ID_IS_ASC03,
+            FORMAT_ID_PIFF_RBHF,
+            FORMAT_ID_RIFF_SCR,
+            FORMAT_ID_ANIM_FRAM,
+            FORMAT_ID_MBM_MCM,
+            FORMAT_ID_MAP0,
+            FORMAT_ID_MTO0,
+            FORMAT_ID_BROW,
+            FORMAT_ID_PAC3,
+        ] {
+            assert!(fmt_ids.contains(&expected), "missing format_id {expected}");
+        }
         // Ensure the PACK sub-chunk inside PIFF at 0x1200..0x1300 was NOT misclassified as archive.pack
         assert!(!map.entries.iter().any(|e| {
             e.format_id.as_deref() == Some("archive.pack")

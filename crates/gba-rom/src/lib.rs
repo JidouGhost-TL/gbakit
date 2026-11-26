@@ -186,8 +186,10 @@ pub mod peripherals;
 pub use peripherals::{detect_peripherals, DetectedPeripheral, PeripheralKind};
 pub mod formats;
 pub use formats::{
-    scan_all_wave1_formats, validate_wave1_format_slice, DetectedFormatExtent,
-    FORMAT_ID_IS_ASC03, FORMAT_ID_PIFF_RBHF, FORMAT_ID_PLT_ENGINE, FORMAT_ID_RIFF_SCR,
+    scan_all_studio_formats, scan_all_wave1_formats, validate_studio_format_slice,
+    validate_wave1_format_slice, DetectedFormatExtent, FORMAT_ID_ANIM_FRAM, FORMAT_ID_BROW,
+    FORMAT_ID_IS_ASC03, FORMAT_ID_MAP0, FORMAT_ID_MBM_MCM, FORMAT_ID_MTO0, FORMAT_ID_PAC3,
+    FORMAT_ID_PIFF_RBHF, FORMAT_ID_PLT_ENGINE, FORMAT_ID_RIFF_SCR,
 };
 pub use formatkit_layout::tables::{FixedStrideOffsetTable, TableSizeMode};
 

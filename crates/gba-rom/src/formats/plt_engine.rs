@@ -16,8 +16,8 @@
 
 use formatkit_core::{u16_at, u32_at, Endian, Error, Result};
 use formatkit_layout::{
-    parse_counted_offset_array, CountedOffsetArraySpec, IntWidth, OffsetBase, OffsetOrderPolicy,
-    OffsetSpan,
+    pack_counted_offset_array, parse_counted_offset_array, CountedOffsetArraySpec, IntWidth,
+    OffsetBase, OffsetOrderPolicy, OffsetSpan, PackPolicy,
 };
 
 use super::{align_up_4, DetectedFormatExtent, FORMAT_ID_PLT_ENGINE};
@@ -65,6 +65,7 @@ pub struct ImgAsset {
     pub height: u16,
     pub ecd_chunk_count: usize,
     pub palettes: Vec<ImgPaletteSpan>,
+    pub body: Vec<u8>,
     pub consumed_end: usize,
 }
 
@@ -73,9 +74,11 @@ pub struct ImgAsset {
 pub struct PatAsset {
     pub pat_count: usize,
     pub pat_entries: Vec<OffsetSpan>,
+    pub pat_payloads: Vec<Vec<u8>>,
     pub tim_offset: Option<usize>,
     pub tim_count: usize,
     pub tim_entries: Vec<OffsetSpan>,
+    pub tim_payloads: Vec<Vec<u8>>,
     pub consumed_end: usize,
 }
 
@@ -85,6 +88,7 @@ pub struct ScrAsset {
     pub width_tiles: u8,
     pub height_tiles: u8,
     pub entry_count: usize,
+    pub entries: Vec<u16>,
     pub consumed_end: usize,
 }
 
@@ -95,6 +99,8 @@ pub struct TonTrackInfo {
     pub note_count: u16,
     pub track_id: u16,
     pub byte_size: usize,
+    pub notes: Vec<(u16, u16)>,
+    pub pad_after: Vec<u8>,
 }
 
 /// Parsed `TON\0` multi-track note sequence.
@@ -137,6 +143,193 @@ impl PltEngineAsset {
             Self::Ton(_) => "ton0",
         }
     }
+
+    /// Serialize this asset back into its exact binary representation.
+    pub fn to_bytes(&self) -> Result<Vec<u8>> {
+        pack(self)
+    }
+}
+
+/// Serialize a parsed `studio.plt-engine` asset back into its exact binary representation.
+pub fn pack(asset: &PltEngineAsset) -> Result<Vec<u8>> {
+    match asset {
+        PltEngineAsset::Plt(plt) => pack_plt0(plt),
+        PltEngineAsset::Img(img) => pack_img0(img),
+        PltEngineAsset::Pat(pat) => pack_pat0(pat),
+        PltEngineAsset::Scr(scr) => pack_scr0(scr),
+        PltEngineAsset::Ton(ton) => pack_ton0(ton),
+    }
+}
+
+fn pack_plt0(plt: &PltAsset) -> Result<Vec<u8>> {
+    if plt.tag != PLT0_TAG_EXPECTED {
+        return Err(Error::InvalidField {
+            what: "PLT0 header tag",
+            value: u64::from(plt.tag),
+        });
+    }
+    let mut out = Vec::with_capacity(PLT0_TOTAL_LEN);
+    out.extend_from_slice(MAGIC_PLT);
+    out.extend_from_slice(&plt.tag.to_le_bytes());
+    for &c in &plt.colors_bgr555 {
+        out.extend_from_slice(&c.to_le_bytes());
+    }
+    Ok(out)
+}
+
+fn pack_img0(img: &ImgAsset) -> Result<Vec<u8>> {
+    if img.width == 0 || img.height == 0 || img.width > IMG0_MAX_DIM || img.height > IMG0_MAX_DIM {
+        return Err(Error::InvalidField {
+            what: "IMG0 dimensions",
+            value: (u64::from(img.width) << 16) | u64::from(img.height),
+        });
+    }
+    let mut out = Vec::with_capacity(8usize.saturating_add(img.body.len()));
+    out.extend_from_slice(MAGIC_IMG);
+    out.extend_from_slice(&img.width.to_be_bytes());
+    out.extend_from_slice(&img.height.to_be_bytes());
+    out.extend_from_slice(&img.body);
+    Ok(out)
+}
+
+fn pack_counted_section(
+    magic: &[u8; 4],
+    count: usize,
+    payloads: &[Vec<u8>],
+) -> Result<Vec<u8>> {
+    if count > PAT0_MAX_ENTRIES {
+        return Err(Error::InvalidField {
+            what: "PAT0/TIM0 entry count",
+            value: count as u64,
+        });
+    }
+    let mut header = [0u8; 8];
+    header[..4].copy_from_slice(magic);
+    header[4..8].copy_from_slice(&(count as u32).to_le_bytes());
+    if count == 0 {
+        let mut out = Vec::with_capacity(
+            8usize.saturating_add(payloads.first().map_or(0, Vec::len)),
+        );
+        out.extend_from_slice(&header);
+        if let Some(blob) = payloads.first() {
+            out.extend_from_slice(blob);
+        }
+        return Ok(out);
+    }
+    if payloads.len() != count {
+        return Err(Error::InvalidField {
+            what: "PAT0/TIM0 payload count",
+            value: payloads.len() as u64,
+        });
+    }
+    let spec = CountedOffsetArraySpec::new(
+        8,
+        count,
+        IntWidth::U32,
+        Endian::Little,
+        PAT0_MAX_ENTRIES,
+    )
+    .with_offset_base(OffsetBase::Absolute)
+    .with_order_policy(OffsetOrderPolicy::RequireMonotonic)
+    .with_zero_count_implicit_blob(true);
+    let slices: Vec<&[u8]> = payloads.iter().map(Vec::as_slice).collect();
+    pack_counted_offset_array(&spec, &PackPolicy::TIGHT, &header, &slices).map_err(|_| {
+        Error::InvalidField {
+            what: "PAT0/TIM0 pack_counted_offset_array",
+            value: count as u64,
+        }
+    })
+}
+
+fn pack_pat0(pat: &PatAsset) -> Result<Vec<u8>> {
+    let mut out = pack_counted_section(MAGIC_PAT, pat.pat_count, &pat.pat_payloads)?;
+    if pat.tim_offset.is_some() {
+        let tim_bytes = pack_counted_section(MAGIC_TIM, pat.tim_count, &pat.tim_payloads)?;
+        out.extend_from_slice(&tim_bytes);
+    }
+    Ok(out)
+}
+
+fn pack_scr0(scr: &ScrAsset) -> Result<Vec<u8>> {
+    let expected = (scr.width_tiles as usize)
+        .checked_mul(scr.height_tiles as usize)
+        .ok_or(Error::InvalidField {
+            what: "SCR0 dimensions",
+            value: u64::from(scr.width_tiles),
+        })?;
+    if expected == 0 || scr.entries.len() != expected {
+        return Err(Error::InvalidField {
+            what: "SCR0 entry count",
+            value: scr.entries.len() as u64,
+        });
+    }
+    let total = expected
+        .checked_mul(2)
+        .and_then(|b| b.checked_add(8))
+        .ok_or(Error::InvalidField {
+            what: "SCR0 total size",
+            value: expected as u64,
+        })?;
+    let mut out = Vec::with_capacity(total);
+    out.extend_from_slice(MAGIC_SCR);
+    out.extend_from_slice(&[0, scr.width_tiles, scr.height_tiles, 0]);
+    for &entry in &scr.entries {
+        out.extend_from_slice(&entry.to_le_bytes());
+    }
+    Ok(out)
+}
+
+fn pack_ton0(ton: &TonAsset) -> Result<Vec<u8>> {
+    let track_count = ton.tracks.len();
+    if track_count == 0 || track_count > TON0_MAX_TRACKS {
+        return Err(Error::InvalidField {
+            what: "TON0 track count",
+            value: track_count as u64,
+        });
+    }
+    let mut header = [0u8; 10];
+    header[..4].copy_from_slice(MAGIC_TON);
+    header[4..8].copy_from_slice(&0u32.to_le_bytes());
+    header[8..10].copy_from_slice(&(track_count as u16).to_le_bytes());
+
+    let mut track_bufs: Vec<Vec<u8>> = Vec::with_capacity(track_count);
+    for tr in &ton.tracks {
+        if tr.notes.len() != tr.note_count as usize {
+            return Err(Error::InvalidField {
+                what: "TON0 track note count",
+                value: tr.notes.len() as u64,
+            });
+        }
+        let mut buf = Vec::with_capacity(
+            4usize
+                .saturating_add(tr.notes.len().saturating_mul(4))
+                .saturating_add(tr.pad_after.len()),
+        );
+        buf.extend_from_slice(&tr.note_count.to_le_bytes());
+        buf.extend_from_slice(&tr.track_id.to_le_bytes());
+        for &(a, b) in &tr.notes {
+            buf.extend_from_slice(&a.to_le_bytes());
+            buf.extend_from_slice(&b.to_le_bytes());
+        }
+        buf.extend_from_slice(&tr.pad_after);
+        track_bufs.push(buf);
+    }
+    let slices: Vec<&[u8]> = track_bufs.iter().map(Vec::as_slice).collect();
+    let spec = CountedOffsetArraySpec::new(
+        10,
+        track_count,
+        IntWidth::U16,
+        Endian::Little,
+        TON0_MAX_TRACKS,
+    )
+    .with_offset_base(OffsetBase::Fixed(8))
+    .with_order_policy(OffsetOrderPolicy::RequireMonotonic);
+    pack_counted_offset_array(&spec, &PackPolicy::TIGHT, &header, &slices).map_err(|_| {
+        Error::InvalidField {
+            what: "TON0 pack_counted_offset_array",
+            value: track_count as u64,
+        }
+    })
 }
 
 /// Returns `true` if `data` begins with a valid `PLT\0`, `IMG\0`, `PAT\0`, `SCR\0`, or `TON\0` asset.
@@ -313,6 +506,7 @@ fn parse_img0(data: &[u8]) -> Result<ImgAsset> {
         height,
         ecd_chunk_count,
         palettes,
+        body: data[8..last_chunk_end].to_vec(),
         consumed_end: last_chunk_end,
     })
 }
@@ -421,7 +615,9 @@ fn parse_pat0(data: &[u8], rom_scan_mode: bool) -> Result<PatAsset> {
         });
     }
 
-    let (tim_count, tim_entries, consumed_end) = if let Some(tim_off) = tim_offset {
+    let pat_payloads = extract_section_payloads(&data[..pat_section_end], &pat_entries)?;
+
+    let (tim_count, tim_entries, tim_payloads, consumed_end) = if let Some(tim_off) = tim_offset {
         let tim_slice = &data[tim_off..];
         if tim_slice.len() < 8 {
             return Err(Error::Truncated {
@@ -486,25 +682,40 @@ fn parse_pat0(data: &[u8], rom_scan_mode: bool) -> Result<PatAsset> {
                 value: t_entries.first().map_or(0, |e| e.offset),
             });
         }
+        let t_payloads = extract_section_payloads(&tim_slice[..tim_local_end], &t_entries)?;
         let end = tim_off
             .checked_add(tim_local_end)
             .ok_or(Error::InvalidField {
                 what: "TIM0 end offset",
                 value: tim_off as u64,
             })?;
-        (tc, t_entries, end)
+        (tc, t_entries, t_payloads, end)
     } else {
-        (0, Vec::new(), pat_section_end)
+        (0, Vec::new(), Vec::new(), pat_section_end)
     };
 
     Ok(PatAsset {
         pat_count,
         pat_entries,
+        pat_payloads,
         tim_offset,
         tim_count,
         tim_entries,
+        tim_payloads,
         consumed_end,
     })
+}
+
+fn extract_section_payloads(section: &[u8], spans: &[OffsetSpan]) -> Result<Vec<Vec<u8>>> {
+    let mut out = Vec::with_capacity(spans.len());
+    for span in spans {
+        let slice = span.slice(section).ok_or(Error::InvalidField {
+            what: "PAT0/TIM0 span slice",
+            value: span.offset,
+        })?;
+        out.push(slice.to_vec());
+    }
+    Ok(out)
 }
 
 fn find_tim_marker(data: &[u8], start: usize, end: usize) -> Option<usize> {
@@ -626,10 +837,24 @@ fn parse_scr0(data: &[u8]) -> Result<ScrAsset> {
             available: data.len(),
         });
     }
+    let mut entries = Vec::with_capacity(entry_count);
+    for i in 0..entry_count {
+        let off = 8usize
+            .checked_add(i.checked_mul(2).ok_or(Error::InvalidField {
+                what: "SCR0 entry offset",
+                value: i as u64,
+            })?)
+            .ok_or(Error::InvalidField {
+                what: "SCR0 entry offset",
+                value: i as u64,
+            })?;
+        entries.push(u16_at(data, off)?);
+    }
     Ok(ScrAsset {
         width_tiles,
         height_tiles,
         entry_count,
+        entries,
         consumed_end,
     })
 }
@@ -745,14 +970,29 @@ fn parse_ton0(data: &[u8]) -> Result<TonAsset> {
                 available: data.len().saturating_sub(off),
             });
         }
-        if let Some(next_span) = spans.get(i + 1) {
-            if track_end > next_span.offset as usize {
+        let mut notes = Vec::with_capacity(note_count as usize);
+        for n in 0..(note_count as usize) {
+            let note_off = off
+                .checked_add(4)
+                .and_then(|b| b.checked_add(n.checked_mul(4)?))
+                .ok_or(Error::InvalidField {
+                    what: "TON0 note offset",
+                    value: n as u64,
+                })?;
+            notes.push((u16_at(data, note_off)?, u16_at(data, note_off + 2)?));
+        }
+        let pad_after = if let Some(next_span) = spans.get(i + 1) {
+            let next_off = next_span.offset as usize;
+            if track_end > next_off {
                 return Err(Error::InvalidField {
                     what: "TON0 overlapping track",
                     value: track_end as u64,
                 });
             }
-        }
+            data[track_end..next_off].to_vec()
+        } else {
+            Vec::new()
+        };
         total_notes = total_notes
             .checked_add(note_count as usize)
             .ok_or(Error::InvalidField {
@@ -764,6 +1004,8 @@ fn parse_ton0(data: &[u8]) -> Result<TonAsset> {
             note_count,
             track_id,
             byte_size,
+            notes,
+            pad_after,
         });
         consumed_end = track_end;
     }
@@ -930,6 +1172,29 @@ pub(crate) mod tests {
         let t = parse(&ton).unwrap();
         assert_eq!(t.subkind(), "ton0");
         assert_eq!(t.consumed_end(), 34);
+    }
+
+    #[test]
+    fn roundtrips_all_five_plt_engine_subformats_byte_identically() {
+        let plt = make_valid_plt0();
+        let p = parse(&plt).unwrap();
+        assert_eq!(p.to_bytes().unwrap(), plt[..p.consumed_end()]);
+
+        let img = make_valid_img0();
+        let i = parse(&img).unwrap();
+        assert_eq!(i.to_bytes().unwrap(), img[..i.consumed_end()]);
+
+        let pat = make_valid_pat0_with_tim0();
+        let pa = parse(&pat).unwrap();
+        assert_eq!(pa.to_bytes().unwrap(), pat[..pa.consumed_end()]);
+
+        let scr = make_valid_scr0();
+        let s = parse(&scr).unwrap();
+        assert_eq!(s.to_bytes().unwrap(), scr[..s.consumed_end()]);
+
+        let ton = make_valid_ton0();
+        let t = parse(&ton).unwrap();
+        assert_eq!(t.to_bytes().unwrap(), ton[..t.consumed_end()]);
     }
 
     #[test]

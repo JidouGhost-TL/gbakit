@@ -15,8 +15,9 @@
 
 use formatkit_core::{u32_at, Endian, Error, Result};
 use formatkit_layout::{
-    parse_aligned_string_bank, parse_chunk_stream_with_extent, read_header_inclusive_chunk,
-    AlignedStringBankSpec, ChunkSizeMode, ChunkStreamSpec, IntFieldSpec, StringBankEncoding,
+    pack_aligned_string_bank, pack_chunk_stream, parse_aligned_string_bank,
+    parse_chunk_stream_with_extent, read_header_inclusive_chunk, AlignedStringBankSpec, ChunkInput,
+    ChunkSizeMode, ChunkStreamSpec, IntFieldSpec, PackPolicy, StringBankEncoding,
     StringBankTermination,
 };
 
@@ -67,6 +68,7 @@ pub struct PiffChunk {
     pub header_offset: usize,
     pub payload_offset: usize,
     pub payload_size: usize,
+    pub payload: Vec<u8>,
 }
 
 /// Parsed `studio.piff-rbhf` asset.
@@ -76,7 +78,139 @@ pub struct PiffRbhfAsset {
     pub sections: Vec<PiffSectionEntry>,
     pub chunks: Vec<PiffChunk>,
     pub manifest_entry_count: usize,
+    pub manifest_entries: Vec<Vec<u8>>,
     pub consumed_end: usize,
+}
+
+impl PiffRbhfAsset {
+    /// Serialize this container or manifest back into its exact binary representation.
+    pub fn to_bytes(&self) -> Result<Vec<u8>> {
+        pack(self)
+    }
+}
+
+/// Serialize a parsed `studio.piff-rbhf` asset back into its exact binary representation.
+pub fn pack(asset: &PiffRbhfAsset) -> Result<Vec<u8>> {
+    match asset.kind {
+        PiffRbhfKind::Piff => pack_piff(asset),
+        PiffRbhfKind::GlobalSet => pack_global_set(asset),
+    }
+}
+
+fn pack_piff(asset: &PiffRbhfAsset) -> Result<Vec<u8>> {
+    let Some((glob, inner)) = asset.chunks.split_last() else {
+        return Err(Error::InvalidField {
+            what: "PIFF chunks empty",
+            value: 0,
+        });
+    };
+    if &glob.tag != MAGIC_GLOB {
+        return Err(Error::InvalidField {
+            what: "PIFF missing terminal GLOB",
+            value: 0,
+        });
+    }
+    if asset.sections.is_empty() || asset.sections.len() > MAX_TABLE_ENTRIES {
+        return Err(Error::InvalidField {
+            what: "PIFF section_count",
+            value: asset.sections.len() as u64,
+        });
+    }
+    let table_len = asset
+        .sections
+        .len()
+        .checked_mul(12)
+        .ok_or(Error::InvalidField {
+            what: "PIFF table_len",
+            value: asset.sections.len() as u64,
+        })?;
+    let chunks_start = 20usize.checked_add(table_len).ok_or(Error::InvalidField {
+        what: "PIFF chunks_start",
+        value: table_len as u64,
+    })?;
+    let mut inner_bytes = 0usize;
+    for ch in inner {
+        inner_bytes = inner_bytes
+            .checked_add(8)
+            .and_then(|v| v.checked_add(ch.payload.len()))
+            .ok_or(Error::InvalidField {
+                what: "PIFF inner chunk size",
+                value: ch.payload.len() as u64,
+            })?;
+    }
+    let glob_inclusive = 8usize
+        .checked_add(glob.payload.len())
+        .ok_or(Error::InvalidField {
+            what: "PIFF GLOB inclusive size",
+            value: glob.payload.len() as u64,
+        })?;
+    let total_size = chunks_start
+        .checked_add(inner_bytes)
+        .and_then(|v| v.checked_add(glob_inclusive))
+        .ok_or(Error::InvalidField {
+            what: "PIFF total_size",
+            value: inner_bytes as u64,
+        })?;
+
+    let mut header_prefix = Vec::with_capacity(chunks_start);
+    header_prefix.extend_from_slice(MAGIC_PIFF);
+    header_prefix.extend_from_slice(&(total_size as u32).to_le_bytes());
+    header_prefix.extend_from_slice(MAGIC_RBHF);
+    header_prefix.extend_from_slice(MAGIC_RBHH);
+    header_prefix.extend_from_slice(&(table_len as u32).to_le_bytes());
+    for sec in &asset.sections {
+        header_prefix.extend_from_slice(&sec.field_a.to_le_bytes());
+        header_prefix.extend_from_slice(&sec.decoded_size.to_le_bytes());
+        header_prefix.extend_from_slice(&sec.flags.to_le_bytes());
+    }
+
+    let spec = ChunkStreamSpec::new(
+        chunks_start,
+        8,
+        IntFieldSpec::u32_le(4),
+        ChunkSizeMode::PayloadOnly,
+        MAX_PIFF_CHUNKS,
+    )
+    .with_tag(0, 4)
+    .with_allowed_tags(PIFF_INNER_TAGS)
+    .with_stop_on_unknown_tag(true)
+    .with_require_eof_closure(false);
+
+    let inputs: Vec<ChunkInput<'_>> = inner
+        .iter()
+        .map(|c| ChunkInput {
+            tag: &c.tag,
+            payload: &c.payload,
+            header_template: None,
+            trailer: None,
+        })
+        .collect();
+
+    let mut out = pack_chunk_stream(&spec, &PackPolicy::TIGHT, &header_prefix, &inputs).map_err(
+        |_| Error::InvalidField {
+            what: "PIFF pack_chunk_stream",
+            value: inner.len() as u64,
+        },
+    )?;
+
+    out.extend_from_slice(MAGIC_GLOB);
+    out.extend_from_slice(&(glob_inclusive as u32).to_le_bytes());
+    out.extend_from_slice(&glob.payload);
+    Ok(out)
+}
+
+fn pack_global_set(asset: &PiffRbhfAsset) -> Result<Vec<u8>> {
+    let spec = AlignedStringBankSpec::aligned(0, 4, 2048)
+        .with_encoding(StringBankEncoding::PrintableAscii)
+        .with_termination(StringBankTermination::StopOnInvalid)
+        .with_max_entry_len(260);
+    let slices: Vec<&[u8]> = asset.manifest_entries.iter().map(Vec::as_slice).collect();
+    pack_aligned_string_bank(&spec, &PackPolicy::TIGHT, &[], &slices).map_err(|_| {
+        Error::InvalidField {
+            what: "GLOBAL_SET pack_aligned_string_bank",
+            value: asset.manifest_entries.len() as u64,
+        }
+    })
 }
 
 /// Returns `true` if `data` starts with a valid `PIFF`/`RBHF` container or `GLOBAL_SET` manifest.
@@ -230,11 +364,19 @@ fn parse_piff(data: &[u8]) -> Result<PiffRbhfAsset> {
         if &tag != b"RELC" {
             data_chunk_count += 1;
         }
+        let payload = ch
+            .payload(container)
+            .ok_or(Error::InvalidField {
+                what: "PIFF chunk payload bounds",
+                value: ch.payload_offset as u64,
+            })?
+            .to_vec();
         chunks.push(PiffChunk {
             tag,
             header_offset: ch.header_offset,
             payload_offset: ch.payload_offset,
             payload_size: ch.payload_size,
+            payload,
         });
     }
 
@@ -264,6 +406,7 @@ fn parse_piff(data: &[u8]) -> Result<PiffRbhfAsset> {
         header_offset: glob.whole.start,
         payload_offset: glob.payload.start,
         payload_size: glob.payload.len(),
+        payload: container[glob.payload.clone()].to_vec(),
     });
 
     Ok(PiffRbhfAsset {
@@ -271,6 +414,7 @@ fn parse_piff(data: &[u8]) -> Result<PiffRbhfAsset> {
         sections,
         chunks,
         manifest_entry_count: 0,
+        manifest_entries: Vec::new(),
         consumed_end: total_size,
     })
 }
@@ -311,11 +455,18 @@ fn parse_global_set(data: &[u8]) -> Result<PiffRbhfAsset> {
         });
     }
 
+    let manifest_entries = bank
+        .entries
+        .iter()
+        .map(|e| e.bytes.clone())
+        .collect::<Vec<_>>();
+
     Ok(PiffRbhfAsset {
         kind: PiffRbhfKind::GlobalSet,
         sections: Vec::new(),
         chunks: Vec::new(),
-        manifest_entry_count: bank.entries.len(),
+        manifest_entry_count: manifest_entries.len(),
+        manifest_entries,
         consumed_end: bank.consumed_end,
     })
 }
@@ -462,6 +613,17 @@ pub(crate) mod tests {
         assert_eq!(g.kind, PiffRbhfKind::GlobalSet);
         assert_eq!(g.manifest_entry_count, 9);
         assert_eq!(g.consumed_end, gset.len());
+    }
+
+    #[test]
+    fn roundtrips_piff_and_global_set_byte_identically() {
+        let piff = make_valid_piff();
+        let p = parse(&piff).unwrap();
+        assert_eq!(p.to_bytes().unwrap(), piff[..p.consumed_end]);
+
+        let gset = make_valid_global_set();
+        let g = parse(&gset).unwrap();
+        assert_eq!(g.to_bytes().unwrap(), gset[..g.consumed_end]);
     }
 
     #[test]
