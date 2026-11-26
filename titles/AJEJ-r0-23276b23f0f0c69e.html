@@ -59,6 +59,34 @@ gbakit save fix    AJEJ damaged.sav -o repaired.sav</code></pre>
 
 <h2>ROM Assets, Compression &amp; Audio</h2><dl class='kv'><dt>BIOS Compression</dt><dd>LZ77 (<code>0x10</code>): <strong>0</strong> streams &middot; RLE (<code>0x30</code>): <strong>0</strong> streams</dd><dt>ROM Pointer Tables</dt><dd>115 tables (0 pointing to validated compressed streams)</dd><dt>SDK Backup Tags</dt><dd><code>SRAM_V112</code></dd></dl>
 
+<h2>Asset Map (<code>formatkit.asset-map.v1</code>)</h2>
+
+<p><a class="btn" href="../assets/asset-maps/AJEJ-r0-23276b23f0f0c69e.asset-map.json.gz" download>Download AJEJ-r0-23276b23f0f0c69e.asset-map.json.gz (73,911 B (72.2 KiB))</a>
+<span class="badge badge-emerald">Verified PASS &middot; 22.09% coverage</span></p>
+<table>
+  <thead><tr><th>Metric</th><th class="num">Bytes / Value</th><th class="num">Entries</th></tr></thead>
+  <tbody>
+    <tr><td><strong>Identified</strong></td><td class="num">95,136 B (92.9 KiB) (2.27%)</td><td class="num">698</td></tr>
+    <tr><td><strong>Mapped</strong></td><td class="num">0 B (0.00%)</td><td class="num">0</td></tr>
+    <tr><td><strong>Opaque</strong></td><td class="num">831,536 B (812.0 KiB) (19.83%)</td><td class="num">1</td></tr>
+    <tr><td><strong>Unknown</strong></td><td class="num">3,267,632 B (3.12 MiB) (77.91%)</td><td class="num">601</td></tr>
+    <tr><td><strong>Total ROM Size</strong></td><td class="num">4,194,304 B (4.00 MiB)</td><td class="num">1,300</td></tr>
+    <tr><td><strong>Coverage %</strong></td><td class="num"><strong>22.09%</strong></td><td class="num">—</td></tr>
+    <tr><td><strong>Entries w/ Code Refs</strong></td><td class="num">709 / 1,300 (54.54%)</td><td class="num">—</td></tr>
+  </tbody>
+</table>
+<p><strong>Top Identified Formats:</strong> <code>gfx.gba-palette</code> (696 &middot; 94,272 B (92.1 KiB)) &middot; <code>audio.m4a-song-table</code> (1 &middot; 672 B) &middot; <code>gba.rom-header</code> (1 &middot; 192 B)</p>
+
+<h3>Largest <code>unknown</code> Extents (Headerless / Custom Asset Candidates)</h3>
+<table>
+  <thead><tr><th>Offset</th><th class="num">Size</th><th class="num">Shannon Entropy</th><th class="num">Code Refs</th></tr></thead>
+  <tbody><tr><td><code>0x00240D30</code></td><td class='num'>698,852 B (682.5 KiB)</td><td class='num'><code>5.696</code> bits/B</td><td class='num'>0</td></tr><tr><td><code>0x001C4BC8</code></td><td class='num'>373,824 B (365.1 KiB)</td><td class='num'><code>5.680</code> bits/B</td><td class='num'>8</td></tr><tr><td><code>0x002F51C0</code></td><td class='num'>114,076 B (111.4 KiB)</td><td class='num'><code>0.778</code> bits/B</td><td class='num'>0</td></tr><tr><td><code>0x00045DB0</code></td><td class='num'>98,336 B (96.0 KiB)</td><td class='num'><code>2.332</code> bits/B</td><td class='num'>0</td></tr><tr><td><code>0x001035A0</code></td><td class='num'>90,832 B (88.7 KiB)</td><td class='num'><code>4.432</code> bits/B</td><td class='num'>0</td></tr></tbody>
+</table>
+
+<pre><code>gzip -dk AJEJ-r0-23276b23f0f0c69e.asset-map.json.gz &amp;&amp; gbakit map verify rom.gba AJEJ-r0-23276b23f0f0c69e.asset-map.json
+gbakit assets export rom.gba --asset-map AJEJ-r0-23276b23f0f0c69e.asset-map.json -o out/</code></pre>
+
+
 <h2>Text, Fonts &amp; Scene Data</h2>
 <dl class="kv"><dt>Primary Text Encoding</dt><dd><strong>Compressed / custom-encoded text</strong></dd><dt>Font &amp; VWF Indicators</dt><dd><span class='badge badge-emerald'>VWF Width Table</span> <span class='badge badge-blue'>1bpp Font</span> &middot; BIOS SWIs: BitUnPack <code>0x10</code>: <code>13</code> &middot; LZ77 <code>0x11/12</code>: <code>23</code> &middot; Huffman <code>0x13</code>: <code>5</code> &middot; RLE <code>0x14/15</code>: <code>13</code></dd><dt>Scene &amp; Packaging</dt><dd><code>48</code> ROM pointer tables (&ge;32 entries, <code>4</code> &ge;200) &middot; <code>4</code> relative <code>u32</code> TOCs &middot; <code>156</code> OAM metasprite hits</dd></dl>
 

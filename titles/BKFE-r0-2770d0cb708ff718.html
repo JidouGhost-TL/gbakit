@@ -66,6 +66,34 @@ gbakit save fix    BKFX damaged.sav -o repaired.sav</code></pre>
 
 <h2>ROM Assets, Compression &amp; Audio</h2><dl class='kv'><dt>BIOS Compression</dt><dd>LZ77 (<code>0x10</code>): <strong>0</strong> streams &middot; RLE (<code>0x30</code>): <strong>0</strong> streams</dd><dt>ROM Pointer Tables</dt><dd>8 tables (0 pointing to validated compressed streams)</dd><dt>SDK Backup Tags</dt><dd><code>EEPROM_V124</code></dd></dl>
 
+<h2>Asset Map (<code>formatkit.asset-map.v1</code>)</h2>
+
+<p><a class="btn" href="../assets/asset-maps/BKFE-r0-2770d0cb708ff718.asset-map.json.gz" download>Download BKFE-r0-2770d0cb708ff718.asset-map.json.gz (35,335 B (34.5 KiB))</a>
+<span class="badge badge-emerald">Verified PASS &middot; 22.20% coverage</span></p>
+<table>
+  <thead><tr><th>Metric</th><th class="num">Bytes / Value</th><th class="num">Entries</th></tr></thead>
+  <tbody>
+    <tr><td><strong>Identified</strong></td><td class="num">756,974 B (739.2 KiB) (18.05%)</td><td class="num">309</td></tr>
+    <tr><td><strong>Mapped</strong></td><td class="num">0 B (0.00%)</td><td class="num">0</td></tr>
+    <tr><td><strong>Opaque</strong></td><td class="num">174,072 B (170.0 KiB) (4.15%)</td><td class="num">1</td></tr>
+    <tr><td><strong>Unknown</strong></td><td class="num">3,263,258 B (3.11 MiB) (77.80%)</td><td class="num">290</td></tr>
+    <tr><td><strong>Total ROM Size</strong></td><td class="num">4,194,304 B (4.00 MiB)</td><td class="num">600</td></tr>
+    <tr><td><strong>Coverage %</strong></td><td class="num"><strong>22.20%</strong></td><td class="num">—</td></tr>
+    <tr><td><strong>Entries w/ Code Refs</strong></td><td class="num">313 / 600 (52.17%)</td><td class="num">—</td></tr>
+  </tbody>
+</table>
+<p><strong>Top Identified Formats:</strong> <code>audio.krawall-sample</code> (55 &middot; 740,526 B (723.2 KiB)) &middot; <code>gfx.gba-palette</code> (253 &middot; 16,256 B (15.9 KiB)) &middot; <code>gba.rom-header</code> (1 &middot; 192 B)</p>
+
+<h3>Largest <code>unknown</code> Extents (Headerless / Custom Asset Candidates)</h3>
+<table>
+  <thead><tr><th>Offset</th><th class="num">Size</th><th class="num">Shannon Entropy</th><th class="num">Code Refs</th></tr></thead>
+  <tbody><tr><td><code>0x000601E8</code></td><td class='num'>589,848 B (576.0 KiB)</td><td class='num'><code>2.880</code> bits/B</td><td class='num'>0</td></tr><tr><td><code>0x001596E4</code></td><td class='num'>570,536 B (557.2 KiB)</td><td class='num'><code>4.937</code> bits/B</td><td class='num'>0</td></tr><tr><td><code>0x001E4BAC</code></td><td class='num'>570,452 B (557.1 KiB)</td><td class='num'><code>6.751</code> bits/B</td><td class='num'>0</td></tr><tr><td><code>0x00111940</code></td><td class='num'>294,276 B (287.4 KiB)</td><td class='num'><code>4.400</code> bits/B</td><td class='num'>0</td></tr><tr><td><code>0x00270020</code></td><td class='num'>262,620 B (256.5 KiB)</td><td class='num'><code>4.907</code> bits/B</td><td class='num'>0</td></tr></tbody>
+</table>
+
+<pre><code>gzip -dk BKFE-r0-2770d0cb708ff718.asset-map.json.gz &amp;&amp; gbakit map verify rom.gba BKFE-r0-2770d0cb708ff718.asset-map.json
+gbakit assets export rom.gba --asset-map BKFE-r0-2770d0cb708ff718.asset-map.json -o out/</code></pre>
+
+
 <h2>Text, Fonts &amp; Scene Data</h2>
 <dl class="kv"><dt>Primary Text Encoding</dt><dd><strong>16-bit / UTF-16LE text</strong> (<code>15</code> ASCII strings)</dd><dt>Font &amp; VWF Indicators</dt><dd><span class='badge badge-emerald'>VWF Width Table</span> <span class='badge badge-blue'>1bpp Font</span> &middot; BIOS SWIs: BitUnPack <code>0x10</code>: <code>1</code> &middot; LZ77 <code>0x11/12</code>: <code>2</code> &middot; Huffman <code>0x13</code>: <code>1</code> &middot; RLE <code>0x14/15</code>: <code>1</code></dd><dt>Scene &amp; Packaging</dt><dd><code>5</code> ROM pointer tables (&ge;32 entries, <code>0</code> &ge;200) &middot; <code>35</code> relative <code>u32</code> TOCs &middot; <code>635</code> OAM metasprite hits</dd></dl>
 

@@ -68,6 +68,34 @@ gbakit save fix    AWPJ damaged.sav -o repaired.sav</code></pre>
 
 <h2>ROM Assets, Compression &amp; Audio</h2><dl class='kv'><dt>BIOS Compression</dt><dd>LZ77 (<code>0x10</code>): <strong>66</strong> streams &middot; RLE (<code>0x30</code>): <strong>0</strong> streams</dd><dt>ROM Pointer Tables</dt><dd>15 tables (0 pointing to validated compressed streams)</dd><dt>SDK Backup Tags</dt><dd><code>FLASH_V121</code></dd></dl>
 
+<h2>Asset Map (<code>formatkit.asset-map.v1</code>)</h2>
+<p class='meta'>Family representative map from <code>AWPJ</code> (<code>AWPJ-r2-90d00641c78d8316</code>, header family <code>AWP</code>).</p>
+<p><a class="btn" href="../assets/asset-maps/AWPJ-r2-90d00641c78d8316.asset-map.json.gz" download>Download AWPJ-r2-90d00641c78d8316.asset-map.json.gz (26,615 B (26.0 KiB))</a>
+<span class="badge badge-emerald">Verified PASS &middot; 28.06% coverage</span></p>
+<table>
+  <thead><tr><th>Metric</th><th class="num">Bytes / Value</th><th class="num">Entries</th></tr></thead>
+  <tbody>
+    <tr><td><strong>Identified</strong></td><td class="num">105,960 B (103.5 KiB) (2.53%)</td><td class="num">241</td></tr>
+    <tr><td><strong>Mapped</strong></td><td class="num">0 B (0.00%)</td><td class="num">0</td></tr>
+    <tr><td><strong>Opaque</strong></td><td class="num">1,070,990 B (1.02 MiB) (25.53%)</td><td class="num">1</td></tr>
+    <tr><td><strong>Unknown</strong></td><td class="num">3,017,354 B (2.88 MiB) (71.94%)</td><td class="num">202</td></tr>
+    <tr><td><strong>Total ROM Size</strong></td><td class="num">4,194,304 B (4.00 MiB)</td><td class="num">444</td></tr>
+    <tr><td><strong>Coverage %</strong></td><td class="num"><strong>28.06%</strong></td><td class="num">—</td></tr>
+    <tr><td><strong>Entries w/ Code Refs</strong></td><td class="num">264 / 444 (59.46%)</td><td class="num">—</td></tr>
+  </tbody>
+</table>
+<p><strong>Top Identified Formats:</strong> <code>compress.bios-huffman</code> (7 &middot; 85,056 B (83.1 KiB)) &middot; <code>gfx.gba-palette</code> (232 &middot; 20,384 B (19.9 KiB)) &middot; <code>audio.m4a-song-table</code> (1 &middot; 328 B) &middot; <code>gba.rom-header</code> (1 &middot; 192 B)</p>
+
+<h3>Largest <code>unknown</code> Extents (Headerless / Custom Asset Candidates)</h3>
+<table>
+  <thead><tr><th>Offset</th><th class="num">Size</th><th class="num">Shannon Entropy</th><th class="num">Code Refs</th></tr></thead>
+  <tbody><tr><td><code>0x00080740</code></td><td class='num'>495,204 B (483.6 KiB)</td><td class='num'><code>5.480</code> bits/B</td><td class='num'>0</td></tr><tr><td><code>0x00020E74</code></td><td class='num'>381,048 B (372.1 KiB)</td><td class='num'><code>6.464</code> bits/B</td><td class='num'>1</td></tr><tr><td><code>0x00192F58</code></td><td class='num'>329,184 B (321.5 KiB)</td><td class='num'><code>7.500</code> bits/B</td><td class='num'>0</td></tr><tr><td><code>0x001E88C0</code></td><td class='num'>263,232 B (257.1 KiB)</td><td class='num'><code>7.458</code> bits/B</td><td class='num'>0</td></tr><tr><td><code>0x0026B334</code></td><td class='num'>247,788 B (242.0 KiB)</td><td class='num'><code>4.145</code> bits/B</td><td class='num'>0</td></tr></tbody>
+</table>
+
+<pre><code>gzip -dk AWPJ-r2-90d00641c78d8316.asset-map.json.gz &amp;&amp; gbakit map verify rom.gba AWPJ-r2-90d00641c78d8316.asset-map.json
+gbakit assets export rom.gba --asset-map AWPJ-r2-90d00641c78d8316.asset-map.json -o out/</code></pre>
+
+
 <h2>Text, Fonts &amp; Scene Data</h2>
 <dl class="kv"><dt>Primary Text Encoding</dt><dd><strong>Shift-JIS (uncompressed)</strong> (<code>4</code> ASCII strings &middot; <code>200</code> Shift-JIS runs)</dd><dt>Font &amp; VWF Indicators</dt><dd><span class='badge badge-emerald'>VWF Width Table</span> <span class='badge badge-blue'>1bpp Font</span> &middot; BIOS SWIs: BitUnPack <code>0x10</code>: <code>6</code> &middot; LZ77 <code>0x11/12</code>: <code>16</code> &middot; Huffman <code>0x13</code>: <code>4</code> &middot; RLE <code>0x14/15</code>: <code>5</code></dd><dt>Scene &amp; Packaging</dt><dd><code>16</code> ROM pointer tables (&ge;32 entries, <code>2</code> &ge;200) &middot; <code>25</code> relative <code>u32</code> TOCs &middot; <code>120</code> OAM metasprite hits</dd></dl>
 

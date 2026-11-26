@@ -100,6 +100,34 @@ gbakit save fix    BW6P damaged.sav -o repaired.sav</code></pre>
 
 <h2>ROM Assets, Compression &amp; Audio</h2><dl class='kv'><dt>BIOS Compression</dt><dd>LZ77 (<code>0x10</code>): <strong>754</strong> streams &middot; RLE (<code>0x30</code>): <strong>2</strong> streams</dd><dt>ROM Pointer Tables</dt><dd>259 tables (23 pointing to validated compressed streams)</dd><dt>SDK Backup Tags</dt><dd><code>FLASH512_V133</code>, <code>FLASH512_V133</code>, <code>FLASH512_V133</code></dd></dl>
 
+<h2>Asset Map (<code>formatkit.asset-map.v1</code>)</h2>
+
+<p><a class="btn" href="../assets/asset-maps/BW6P-r0-d55f76fd79b790b4.asset-map.json.gz" download>Download BW6P-r0-d55f76fd79b790b4.asset-map.json.gz (286,311 B (279.6 KiB))</a>
+<span class="badge badge-emerald">Verified PASS &middot; 6.88% coverage</span></p>
+<table>
+  <thead><tr><th>Metric</th><th class="num">Bytes / Value</th><th class="num">Entries</th></tr></thead>
+  <tbody>
+    <tr><td><strong>Identified</strong></td><td class="num">2,164,197 B (2.06 MiB) (6.45%)</td><td class="num">3,040</td></tr>
+    <tr><td><strong>Mapped</strong></td><td class="num">0 B (0.00%)</td><td class="num">0</td></tr>
+    <tr><td><strong>Opaque</strong></td><td class="num">145,110 B (141.7 KiB) (0.43%)</td><td class="num">1</td></tr>
+    <tr><td><strong>Unknown</strong></td><td class="num">31,245,125 B (29.80 MiB) (93.12%)</td><td class="num">2,810</td></tr>
+    <tr><td><strong>Total ROM Size</strong></td><td class="num">33,554,432 B (32.00 MiB)</td><td class="num">5,851</td></tr>
+    <tr><td><strong>Coverage %</strong></td><td class="num"><strong>6.88%</strong></td><td class="num">—</td></tr>
+    <tr><td><strong>Entries w/ Code Refs</strong></td><td class="num">3,133 / 5,851 (53.55%)</td><td class="num">—</td></tr>
+  </tbody>
+</table>
+<p><strong>Top Identified Formats:</strong> <code>compress.bios-lz77</code> (462 &middot; 1,402,163 B (1.34 MiB)) &middot; <code>rom.multiboot</code> (3 &middot; 524,760 B (512.5 KiB)) &middot; <code>gfx.gba-palette</code> (2,565 &middot; 188,640 B (184.2 KiB)) &middot; <code>compress.bios-rle</code> (8 &middot; 41,778 B (40.8 KiB)) &middot; <code>audio.m4a-song-table</code> (1 &middot; 6,664 B (6.5 KiB)) &middot; <code>gba.rom-header</code> (1 &middot; 192 B)</p>
+
+<h3>Largest <code>unknown</code> Extents (Headerless / Custom Asset Candidates)</h3>
+<table>
+  <thead><tr><th>Offset</th><th class="num">Size</th><th class="num">Shannon Entropy</th><th class="num">Code Refs</th></tr></thead>
+  <tbody><tr><td><code>0x01155A40</code></td><td class='num'>11,151,844 B (10.64 MiB)</td><td class='num'><code>3.378</code> bits/B</td><td class='num'>1</td></tr><tr><td><code>0x007EE864</code></td><td class='num'>7,609,236 B (7.26 MiB)</td><td class='num'><code>0.338</code> bits/B</td><td class='num'>1</td></tr><tr><td><code>0x01BF9E2C</code></td><td class='num'>3,091,044 B (2.95 MiB)</td><td class='num'><code>7.027</code> bits/B</td><td class='num'>8</td></tr><tr><td><code>0x01EECA68</code></td><td class='num'>982,722 B (959.7 KiB)</td><td class='num'><code>6.122</code> bits/B</td><td class='num'>2</td></tr><tr><td><code>0x00196420</code></td><td class='num'>387,396 B (378.3 KiB)</td><td class='num'><code>6.296</code> bits/B</td><td class='num'>0</td></tr></tbody>
+</table>
+
+<pre><code>gzip -dk BW6P-r0-d55f76fd79b790b4.asset-map.json.gz &amp;&amp; gbakit map verify rom.gba BW6P-r0-d55f76fd79b790b4.asset-map.json
+gbakit assets export rom.gba --asset-map BW6P-r0-d55f76fd79b790b4.asset-map.json -o out/</code></pre>
+
+
 <h2>Text, Fonts &amp; Scene Data</h2>
 <dl class="kv"><dt>Primary Text Encoding</dt><dd><strong>LZ77-compressed ASCII</strong> (<code>10</code> ASCII strings &middot; <code>200</code> Shift-JIS runs &middot; <code>1</code> LZ77 ASCII blocks)</dd><dt>Font &amp; VWF Indicators</dt><dd><span class='badge badge-emerald'>VWF Width Table</span> <span class='badge badge-blue'>1bpp Font</span> &middot; BIOS SWIs: BitUnPack <code>0x10</code>: <code>16</code> &middot; LZ77 <code>0x11/12</code>: <code>12</code> &middot; Huffman <code>0x13</code>: <code>10</code> &middot; RLE <code>0x14/15</code>: <code>10</code></dd><dt>Scene &amp; Packaging</dt><dd><code>100</code> ROM pointer tables (&ge;32 entries, <code>16</code> &ge;200) &middot; <code>24</code> relative <code>u32</code> TOCs &middot; <code>235</code> OAM metasprite hits</dd></dl>
 

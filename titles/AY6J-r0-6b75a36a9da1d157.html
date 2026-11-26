@@ -84,6 +84,34 @@ gbakit save fix    AY6J damaged.sav -o repaired.sav</code></pre>
 
 <h2>ROM Assets, Compression &amp; Audio</h2><dl class='kv'><dt>BIOS Compression</dt><dd>LZ77 (<code>0x10</code>): <strong>0</strong> streams &middot; RLE (<code>0x30</code>): <strong>0</strong> streams</dd><dt>ROM Pointer Tables</dt><dd>30 tables (0 pointing to validated compressed streams)</dd><dt>SDK Backup Tags</dt><dd><code>SRAM_V112</code></dd></dl>
 
+<h2>Asset Map (<code>formatkit.asset-map.v1</code>)</h2>
+
+<p><a class="btn" href="../assets/asset-maps/AY6J-r0-6b75a36a9da1d157.asset-map.json.gz" download>Download AY6J-r0-6b75a36a9da1d157.asset-map.json.gz (119,469 B (116.7 KiB))</a>
+<span class="badge badge-emerald">Verified PASS &middot; 27.30% coverage</span></p>
+<table>
+  <thead><tr><th>Metric</th><th class="num">Bytes / Value</th><th class="num">Entries</th></tr></thead>
+  <tbody>
+    <tr><td><strong>Identified</strong></td><td class="num">593,809 B (579.9 KiB) (3.54%)</td><td class="num">1,162</td></tr>
+    <tr><td><strong>Mapped</strong></td><td class="num">0 B (0.00%)</td><td class="num">0</td></tr>
+    <tr><td><strong>Opaque</strong></td><td class="num">3,986,188 B (3.80 MiB) (23.76%)</td><td class="num">1</td></tr>
+    <tr><td><strong>Unknown</strong></td><td class="num">12,197,219 B (11.63 MiB) (72.70%)</td><td class="num">1,118</td></tr>
+    <tr><td><strong>Total ROM Size</strong></td><td class="num">16,777,216 B (16.00 MiB)</td><td class="num">2,281</td></tr>
+    <tr><td><strong>Coverage %</strong></td><td class="num"><strong>27.30%</strong></td><td class="num">—</td></tr>
+    <tr><td><strong>Entries w/ Code Refs</strong></td><td class="num">1,147 / 2,281 (50.28%)</td><td class="num">—</td></tr>
+  </tbody>
+</table>
+<p><strong>Top Identified Formats:</strong> <code>audio.konami-sample</code> (62 &middot; 482,122 B (470.8 KiB)) &middot; <code>gfx.gba-palette</code> (1,098 &middot; 91,776 B (89.6 KiB)) &middot; <code>compress.bios-rle</code> (1 &middot; 19,719 B (19.3 KiB)) &middot; <code>gba.rom-header</code> (1 &middot; 192 B)</p>
+
+<h3>Largest <code>unknown</code> Extents (Headerless / Custom Asset Candidates)</h3>
+<table>
+  <thead><tr><th>Offset</th><th class="num">Size</th><th class="num">Shannon Entropy</th><th class="num">Code Refs</th></tr></thead>
+  <tbody><tr><td><code>0x002A9D80</code></td><td class='num'>7,147,792 B (6.82 MiB)</td><td class='num'><code>6.064</code> bits/B</td><td class='num'>0</td></tr><tr><td><code>0x0020D980</code></td><td class='num'>606,856 B (592.6 KiB)</td><td class='num'><code>5.534</code> bits/B</td><td class='num'>0</td></tr><tr><td><code>0x0017C568</code></td><td class='num'>594,936 B (581.0 KiB)</td><td class='num'><code>0.329</code> bits/B</td><td class='num'>0</td></tr><tr><td><code>0x009ADA90</code></td><td class='num'>277,116 B (270.6 KiB)</td><td class='num'><code>6.723</code> bits/B</td><td class='num'>1</td></tr><tr><td><code>0x00BF0D04</code></td><td class='num'>134,112 B (131.0 KiB)</td><td class='num'><code>2.453</code> bits/B</td><td class='num'>0</td></tr></tbody>
+</table>
+
+<pre><code>gzip -dk AY6J-r0-6b75a36a9da1d157.asset-map.json.gz &amp;&amp; gbakit map verify rom.gba AY6J-r0-6b75a36a9da1d157.asset-map.json
+gbakit assets export rom.gba --asset-map AY6J-r0-6b75a36a9da1d157.asset-map.json -o out/</code></pre>
+
+
 <h2>Text, Fonts &amp; Scene Data</h2>
 <dl class="kv"><dt>Primary Text Encoding</dt><dd><strong>Shift-JIS (uncompressed)</strong> (<code>24</code> ASCII strings &middot; <code>200</code> Shift-JIS runs)</dd><dt>Font &amp; VWF Indicators</dt><dd><span class='badge badge-emerald'>VWF Width Table</span> <span class='badge badge-blue'>1bpp Font</span> &middot; BIOS SWIs: BitUnPack <code>0x10</code>: <code>15</code> &middot; LZ77 <code>0x11/12</code>: <code>20</code> &middot; Huffman <code>0x13</code>: <code>7</code> &middot; RLE <code>0x14/15</code>: <code>26</code></dd><dt>Scene &amp; Packaging</dt><dd><code>22</code> ROM pointer tables (&ge;32 entries, <code>4</code> &ge;200) &middot; <code>62</code> relative <code>u32</code> TOCs &middot; <code>261</code> OAM metasprite hits &middot; FourCC: <code>KCEJ</code></dd></dl>
 

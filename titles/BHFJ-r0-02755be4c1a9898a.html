@@ -68,6 +68,34 @@ gbakit save fix    BHFJ damaged.sav -o repaired.sav</code></pre>
 
 <h2>ROM Assets, Compression &amp; Audio</h2><dl class='kv'><dt>BIOS Compression</dt><dd>LZ77 (<code>0x10</code>): <strong>0</strong> streams &middot; RLE (<code>0x30</code>): <strong>0</strong> streams</dd><dt>ROM Pointer Tables</dt><dd>130 tables (0 pointing to validated compressed streams)</dd><dt>SDK Backup Tags</dt><dd><code>EEPROM_V124</code></dd></dl>
 
+<h2>Asset Map (<code>formatkit.asset-map.v1</code>)</h2>
+
+<p><a class="btn" href="../assets/asset-maps/BHFJ-r0-02755be4c1a9898a.asset-map.json.gz" download>Download BHFJ-r0-02755be4c1a9898a.asset-map.json.gz (60,151 B (58.7 KiB))</a>
+<span class="badge badge-emerald">Verified PASS &middot; 1.06% coverage</span></p>
+<table>
+  <thead><tr><th>Metric</th><th class="num">Bytes / Value</th><th class="num">Entries</th></tr></thead>
+  <tbody>
+    <tr><td><strong>Identified</strong></td><td class="num">176,906 B (172.8 KiB) (1.05%)</td><td class="num">479</td></tr>
+    <tr><td><strong>Mapped</strong></td><td class="num">0 B (0.00%)</td><td class="num">0</td></tr>
+    <tr><td><strong>Opaque</strong></td><td class="num">256 B (0.00%)</td><td class="num">1</td></tr>
+    <tr><td><strong>Unknown</strong></td><td class="num">16,600,054 B (15.83 MiB) (98.94%)</td><td class="num">471</td></tr>
+    <tr><td><strong>Total ROM Size</strong></td><td class="num">16,777,216 B (16.00 MiB)</td><td class="num">951</td></tr>
+    <tr><td><strong>Coverage %</strong></td><td class="num"><strong>1.06%</strong></td><td class="num">—</td></tr>
+    <tr><td><strong>Entries w/ Code Refs</strong></td><td class="num">508 / 951 (53.42%)</td><td class="num">—</td></tr>
+  </tbody>
+</table>
+<p><strong>Top Identified Formats:</strong> <code>compress.bios-rle</code> (2 &middot; 95,252 B (93.0 KiB)) &middot; <code>gfx.gba-palette</code> (474 &middot; 77,088 B (75.3 KiB)) &middot; <code>audio.m4a-song-table</code> (1 &middot; 2,640 B (2.6 KiB)) &middot; <code>compress.bios-huffman</code> (1 &middot; 1,734 B (1.7 KiB)) &middot; <code>gba.rom-header</code> (1 &middot; 192 B)</p>
+
+<h3>Largest <code>unknown</code> Extents (Headerless / Custom Asset Candidates)</h3>
+<table>
+  <thead><tr><th>Offset</th><th class="num">Size</th><th class="num">Shannon Entropy</th><th class="num">Code Refs</th></tr></thead>
+  <tbody><tr><td><code>0x009B6950</code></td><td class='num'>6,589,076 B (6.28 MiB)</td><td class='num'><code>0.058</code> bits/B</td><td class='num'>0</td></tr><tr><td><code>0x00690008</code></td><td class='num'>655,344 B (640.0 KiB)</td><td class='num'><code>3.761</code> bits/B</td><td class='num'>0</td></tr><tr><td><code>0x002B2B28</code></td><td class='num'>519,380 B (507.2 KiB)</td><td class='num'><code>6.247</code> bits/B</td><td class='num'>0</td></tr><tr><td><code>0x003557AC</code></td><td class='num'>438,848 B (428.6 KiB)</td><td class='num'><code>6.000</code> bits/B</td><td class='num'>0</td></tr><tr><td><code>0x006101E8</code></td><td class='num'>351,768 B (343.5 KiB)</td><td class='num'><code>3.782</code> bits/B</td><td class='num'>0</td></tr></tbody>
+</table>
+
+<pre><code>gzip -dk BHFJ-r0-02755be4c1a9898a.asset-map.json.gz &amp;&amp; gbakit map verify rom.gba BHFJ-r0-02755be4c1a9898a.asset-map.json
+gbakit assets export rom.gba --asset-map BHFJ-r0-02755be4c1a9898a.asset-map.json -o out/</code></pre>
+
+
 <h2>Text, Fonts &amp; Scene Data</h2>
 <dl class="kv"><dt>Primary Text Encoding</dt><dd><strong>16-bit / UTF-16LE text</strong> (<code>65</code> ASCII strings &middot; <code>3</code> Shift-JIS runs)</dd><dt>Font &amp; VWF Indicators</dt><dd><span class='badge badge-emerald'>VWF Width Table</span> <span class='badge badge-blue'>1bpp Font</span> &middot; BIOS SWIs: BitUnPack <code>0x10</code>: <code>2</code> &middot; LZ77 <code>0x11/12</code>: <code>0</code> &middot; Huffman <code>0x13</code>: <code>0</code> &middot; RLE <code>0x14/15</code>: <code>2</code></dd><dt>Scene &amp; Packaging</dt><dd><code>8</code> ROM pointer tables (&ge;32 entries, <code>0</code> &ge;200) &middot; <code>208</code> relative <code>u32</code> TOCs &middot; <code>179</code> OAM metasprite hits</dd></dl>
 

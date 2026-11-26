@@ -77,6 +77,34 @@ gbakit save fix    ABSE damaged.sav -o repaired.sav</code></pre>
 
 <h2>ROM Assets, Compression &amp; Audio</h2><dl class='kv'><dt>BIOS Compression</dt><dd>LZ77 (<code>0x10</code>): <strong>188</strong> streams &middot; RLE (<code>0x30</code>): <strong>0</strong> streams</dd><dt>ROM Pointer Tables</dt><dd>273 tables (9 pointing to validated compressed streams)</dd><dt>SDK Backup Tags</dt><dd><code>SRAM_V112</code></dd></dl>
 
+<h2>Asset Map (<code>formatkit.asset-map.v1</code>)</h2>
+
+<p><a class="btn" href="../assets/asset-maps/ABSE-r0-e02e6cc3e91f4f4c.asset-map.json.gz" download>Download ABSE-r0-e02e6cc3e91f4f4c.asset-map.json.gz (223,410 B (218.2 KiB))</a>
+<span class="badge badge-emerald">Verified PASS &middot; 48.97% coverage</span></p>
+<table>
+  <thead><tr><th>Metric</th><th class="num">Bytes / Value</th><th class="num">Entries</th></tr></thead>
+  <tbody>
+    <tr><td><strong>Identified</strong></td><td class="num">2,029,197 B (1.94 MiB) (48.38%)</td><td class="num">2,139</td></tr>
+    <tr><td><strong>Mapped</strong></td><td class="num">0 B (0.00%)</td><td class="num">0</td></tr>
+    <tr><td><strong>Opaque</strong></td><td class="num">24,580 B (24.0 KiB) (0.59%)</td><td class="num">1</td></tr>
+    <tr><td><strong>Unknown</strong></td><td class="num">2,140,527 B (2.04 MiB) (51.03%)</td><td class="num">1,700</td></tr>
+    <tr><td><strong>Total ROM Size</strong></td><td class="num">4,194,304 B (4.00 MiB)</td><td class="num">3,840</td></tr>
+    <tr><td><strong>Coverage %</strong></td><td class="num"><strong>48.97%</strong></td><td class="num">—</td></tr>
+    <tr><td><strong>Entries w/ Code Refs</strong></td><td class="num">2,354 / 3,840 (61.30%)</td><td class="num">—</td></tr>
+  </tbody>
+</table>
+<p><strong>Top Identified Formats:</strong> <code>compress.bios-huffman</code> (428 &middot; 1,327,108 B (1.27 MiB)) &middot; <code>compress.bios-lz77</code> (182 &middot; 477,225 B (466.0 KiB)) &middot; <code>gfx.gba-palette</code> (1,525 &middot; 184,640 B (180.3 KiB)) &middot; <code>rom.multiboot</code> (2 &middot; 39,232 B (38.3 KiB)) &middot; <code>audio.m4a-song-table</code> (1 &middot; 800 B) &middot; <code>gba.rom-header</code> (1 &middot; 192 B)</p>
+
+<h3>Largest <code>unknown</code> Extents (Headerless / Custom Asset Candidates)</h3>
+<table>
+  <thead><tr><th>Offset</th><th class="num">Size</th><th class="num">Shannon Entropy</th><th class="num">Code Refs</th></tr></thead>
+  <tbody><tr><td><code>0x00332060</code></td><td class='num'>242,096 B (236.4 KiB)</td><td class='num'><code>7.430</code> bits/B</td><td class='num'>0</td></tr><tr><td><code>0x003C263C</code></td><td class='num'>227,776 B (222.4 KiB)</td><td class='num'><code>0.000</code> bits/B</td><td class='num'>1</td></tr><tr><td><code>0x003A0200</code></td><td class='num'>110,080 B (107.5 KiB)</td><td class='num'><code>5.789</code> bits/B</td><td class='num'>0</td></tr><tr><td><code>0x0038D7C0</code></td><td class='num'>75,840 B (74.1 KiB)</td><td class='num'><code>5.899</code> bits/B</td><td class='num'>1</td></tr><tr><td><code>0x00043A68</code></td><td class='num'>60,892 B (59.5 KiB)</td><td class='num'><code>6.520</code> bits/B</td><td class='num'>0</td></tr></tbody>
+</table>
+
+<pre><code>gzip -dk ABSE-r0-e02e6cc3e91f4f4c.asset-map.json.gz &amp;&amp; gbakit map verify rom.gba ABSE-r0-e02e6cc3e91f4f4c.asset-map.json
+gbakit assets export rom.gba --asset-map ABSE-r0-e02e6cc3e91f4f4c.asset-map.json -o out/</code></pre>
+
+
 <h2>Text, Fonts &amp; Scene Data</h2>
 <dl class="kv"><dt>Primary Text Encoding</dt><dd><strong>Custom 16-bit Huffman</strong> (<code>550</code> ASCII strings &middot; <code>1</code> Shift-JIS runs)</dd><dt>Font &amp; VWF Indicators</dt><dd><span class='badge badge-emerald'>VWF Width Table</span> <span class='badge badge-blue'>1bpp Font</span> &middot; BIOS SWIs: BitUnPack <code>0x10</code>: <code>26</code> &middot; LZ77 <code>0x11/12</code>: <code>29</code> &middot; Huffman <code>0x13</code>: <code>17</code> &middot; RLE <code>0x14/15</code>: <code>9</code></dd><dt>Scene &amp; Packaging</dt><dd><code>94</code> ROM pointer tables (&ge;32 entries, <code>8</code> &ge;200) &middot; <code>13</code> relative <code>u32</code> TOCs &middot; <code>306</code> OAM metasprite hits</dd></dl>
 

@@ -74,6 +74,34 @@ gbakit save fix    AGSE damaged.sav -o repaired.sav</code></pre>
 
 <h2>ROM Assets, Compression &amp; Audio</h2><dl class='kv'><dt>BIOS Compression</dt><dd>LZ77 (<code>0x10</code>): <strong>0</strong> streams &middot; RLE (<code>0x30</code>): <strong>0</strong> streams</dd><dt>ROM Pointer Tables</dt><dd>255 tables (0 pointing to validated compressed streams)</dd><dt>SDK Backup Tags</dt><dd><code>FLASH_V123</code></dd></dl>
 
+<h2>Asset Map (<code>formatkit.asset-map.v1</code>)</h2>
+
+<p><a class="btn" href="../assets/asset-maps/AGSE-r0-c14f1151897e8d73.asset-map.json.gz" download>Download AGSE-r0-c14f1151897e8d73.asset-map.json.gz (85,749 B (83.7 KiB))</a>
+<span class="badge badge-emerald">Verified PASS &middot; 0.79% coverage</span></p>
+<table>
+  <thead><tr><th>Metric</th><th class="num">Bytes / Value</th><th class="num">Entries</th></tr></thead>
+  <tbody>
+    <tr><td><strong>Identified</strong></td><td class="num">54,848 B (53.6 KiB) (0.65%)</td><td class="num">747</td></tr>
+    <tr><td><strong>Mapped</strong></td><td class="num">0 B (0.00%)</td><td class="num">0</td></tr>
+    <tr><td><strong>Opaque</strong></td><td class="num">11,076 B (10.8 KiB) (0.13%)</td><td class="num">1</td></tr>
+    <tr><td><strong>Unknown</strong></td><td class="num">8,322,684 B (7.94 MiB) (99.21%)</td><td class="num">731</td></tr>
+    <tr><td><strong>Total ROM Size</strong></td><td class="num">8,388,608 B (8.00 MiB)</td><td class="num">1,479</td></tr>
+    <tr><td><strong>Coverage %</strong></td><td class="num"><strong>0.79%</strong></td><td class="num">—</td></tr>
+    <tr><td><strong>Entries w/ Code Refs</strong></td><td class="num">822 / 1,479 (55.58%)</td><td class="num">—</td></tr>
+  </tbody>
+</table>
+<p><strong>Top Identified Formats:</strong> <code>gfx.gba-palette</code> (745 &middot; 52,160 B (50.9 KiB)) &middot; <code>audio.m4a-song-table</code> (1 &middot; 2,496 B (2.4 KiB)) &middot; <code>gba.rom-header</code> (1 &middot; 192 B)</p>
+
+<h3>Largest <code>unknown</code> Extents (Headerless / Custom Asset Candidates)</h3>
+<table>
+  <thead><tr><th>Offset</th><th class="num">Size</th><th class="num">Shannon Entropy</th><th class="num">Code Refs</th></tr></thead>
+  <tbody><tr><td><code>0x0051D920</code></td><td class='num'>1,711,844 B (1.63 MiB)</td><td class='num'><code>7.747</code> bits/B</td><td class='num'>0</td></tr><tr><td><code>0x0043C044</code></td><td class='num'>923,836 B (902.2 KiB)</td><td class='num'><code>7.829</code> bits/B</td><td class='num'>0</td></tr><tr><td><code>0x0075A804</code></td><td class='num'>666,808 B (651.2 KiB)</td><td class='num'><code>7.758</code> bits/B</td><td class='num'>0</td></tr><tr><td><code>0x006BF824</code></td><td class='num'>634,816 B (619.9 KiB)</td><td class='num'><code>7.583</code> bits/B</td><td class='num'>0</td></tr><tr><td><code>0x001368E0</code></td><td class='num'>321,312 B (313.8 KiB)</td><td class='num'><code>7.194</code> bits/B</td><td class='num'>0</td></tr></tbody>
+</table>
+
+<pre><code>gzip -dk AGSE-r0-c14f1151897e8d73.asset-map.json.gz &amp;&amp; gbakit map verify rom.gba AGSE-r0-c14f1151897e8d73.asset-map.json
+gbakit assets export rom.gba --asset-map AGSE-r0-c14f1151897e8d73.asset-map.json -o out/</code></pre>
+
+
 <h2>Text, Fonts &amp; Scene Data</h2>
 <dl class="kv"><dt>Primary Text Encoding</dt><dd><strong>Compressed / custom-encoded text</strong> (<code>8</code> ASCII strings &middot; <code>1</code> Shift-JIS runs)</dd><dt>Font &amp; VWF Indicators</dt><dd><span class='badge badge-emerald'>VWF Width Table</span> <span class='badge badge-blue'>1bpp Font</span> &middot; BIOS SWIs: BitUnPack <code>0x10</code>: <code>6</code> &middot; LZ77 <code>0x11/12</code>: <code>35</code> &middot; Huffman <code>0x13</code>: <code>14</code> &middot; RLE <code>0x14/15</code>: <code>23</code></dd><dt>Scene &amp; Packaging</dt><dd><code>125</code> ROM pointer tables (&ge;32 entries, <code>4</code> &ge;200) &middot; <code>29</code> relative <code>u32</code> TOCs &middot; <code>87</code> OAM metasprite hits</dd></dl>
 

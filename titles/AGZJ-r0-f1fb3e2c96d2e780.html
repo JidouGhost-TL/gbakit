@@ -84,6 +84,34 @@ gbakit save fix    AGZJ damaged.sav -o repaired.sav</code></pre>
 
 <h2>ROM Assets, Compression &amp; Audio</h2><dl class='kv'><dt>BIOS Compression</dt><dd>LZ77 (<code>0x10</code>): <strong>3,055</strong> streams &middot; RLE (<code>0x30</code>): <strong>0</strong> streams</dd><dt>ROM Pointer Tables</dt><dd>45 tables (0 pointing to validated compressed streams)</dd><dt>SDK Backup Tags</dt><dd><code>EEPROM_V122</code></dd></dl>
 
+<h2>Asset Map (<code>formatkit.asset-map.v1</code>)</h2>
+
+<p><a class="btn" href="../assets/asset-maps/AGZJ-r0-f1fb3e2c96d2e780.asset-map.json.gz" download>Download AGZJ-r0-f1fb3e2c96d2e780.asset-map.json.gz (241,967 B (236.3 KiB))</a>
+<span class="badge badge-emerald">Verified PASS &middot; 8.42% coverage</span></p>
+<table>
+  <thead><tr><th>Metric</th><th class="num">Bytes / Value</th><th class="num">Entries</th></tr></thead>
+  <tbody>
+    <tr><td><strong>Identified</strong></td><td class="num">378,969 B (370.1 KiB) (2.26%)</td><td class="num">2,152</td></tr>
+    <tr><td><strong>Mapped</strong></td><td class="num">0 B (0.00%)</td><td class="num">0</td></tr>
+    <tr><td><strong>Opaque</strong></td><td class="num">1,032,840 B (1008.6 KiB) (6.16%)</td><td class="num">1</td></tr>
+    <tr><td><strong>Unknown</strong></td><td class="num">15,365,407 B (14.65 MiB) (91.58%)</td><td class="num">1,976</td></tr>
+    <tr><td><strong>Total ROM Size</strong></td><td class="num">16,777,216 B (16.00 MiB)</td><td class="num">4,129</td></tr>
+    <tr><td><strong>Coverage %</strong></td><td class="num"><strong>8.42%</strong></td><td class="num">—</td></tr>
+    <tr><td><strong>Entries w/ Code Refs</strong></td><td class="num">2,310 / 4,129 (55.95%)</td><td class="num">—</td></tr>
+  </tbody>
+</table>
+<p><strong>Top Identified Formats:</strong> <code>compress.bios-lz77</code> (165 &middot; 182,505 B (178.2 KiB)) &middot; <code>gfx.gba-palette</code> (1,984 &middot; 179,648 B (175.4 KiB)) &middot; <code>compress.bios-rle</code> (1 &middot; 13,824 B (13.5 KiB)) &middot; <code>audio.m4a-song-table</code> (1 &middot; 2,800 B (2.7 KiB)) &middot; <code>gba.rom-header</code> (1 &middot; 192 B)</p>
+
+<h3>Largest <code>unknown</code> Extents (Headerless / Custom Asset Candidates)</h3>
+<table>
+  <thead><tr><th>Offset</th><th class="num">Size</th><th class="num">Shannon Entropy</th><th class="num">Code Refs</th></tr></thead>
+  <tbody><tr><td><code>0x001607B0</code></td><td class='num'>917,072 B (895.6 KiB)</td><td class='num'><code>5.513</code> bits/B</td><td class='num'>0</td></tr><tr><td><code>0x00E50660</code></td><td class='num'>465,736 B (454.8 KiB)</td><td class='num'><code>3.390</code> bits/B</td><td class='num'>0</td></tr><tr><td><code>0x00D038D0</code></td><td class='num'>373,488 B (364.7 KiB)</td><td class='num'><code>3.075</code> bits/B</td><td class='num'>0</td></tr><tr><td><code>0x00270820</code></td><td class='num'>338,116 B (330.2 KiB)</td><td class='num'><code>6.792</code> bits/B</td><td class='num'>0</td></tr><tr><td><code>0x00D8F9E0</code></td><td class='num'>277,024 B (270.5 KiB)</td><td class='num'><code>5.324</code> bits/B</td><td class='num'>0</td></tr></tbody>
+</table>
+
+<pre><code>gzip -dk AGZJ-r0-f1fb3e2c96d2e780.asset-map.json.gz &amp;&amp; gbakit map verify rom.gba AGZJ-r0-f1fb3e2c96d2e780.asset-map.json
+gbakit assets export rom.gba --asset-map AGZJ-r0-f1fb3e2c96d2e780.asset-map.json -o out/</code></pre>
+
+
 <h2>Text, Fonts &amp; Scene Data</h2>
 <dl class="kv"><dt>Primary Text Encoding</dt><dd><strong>Shift-JIS (uncompressed)</strong> (<code>26</code> ASCII strings &middot; <code>200</code> Shift-JIS runs)</dd><dt>Font &amp; VWF Indicators</dt><dd><span class='badge badge-emerald'>VWF Width Table</span> <span class='badge badge-blue'>1bpp Font</span> &middot; BIOS SWIs: BitUnPack <code>0x10</code>: <code>4</code> &middot; LZ77 <code>0x11/12</code>: <code>10</code> &middot; Huffman <code>0x13</code>: <code>3</code> &middot; RLE <code>0x14/15</code>: <code>5</code></dd><dt>Scene &amp; Packaging</dt><dd><code>14</code> ROM pointer tables (&ge;32 entries, <code>1</code> &ge;200) &middot; <code>4</code> relative <code>u32</code> TOCs &middot; <code>255</code> OAM metasprite hits</dd></dl>
 

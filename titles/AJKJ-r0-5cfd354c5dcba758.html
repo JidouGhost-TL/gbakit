@@ -84,6 +84,34 @@ gbakit save fix    AJKJ damaged.sav -o repaired.sav</code></pre>
 
 <h2>ROM Assets, Compression &amp; Audio</h2><dl class='kv'><dt>BIOS Compression</dt><dd>LZ77 (<code>0x10</code>): <strong>35</strong> streams &middot; RLE (<code>0x30</code>): <strong>147</strong> streams</dd><dt>ROM Pointer Tables</dt><dd>1,484 tables (2 pointing to validated compressed streams)</dd><dt>SDK Backup Tags</dt><dd><code>EEPROM_V122</code></dd></dl>
 
+<h2>Asset Map (<code>formatkit.asset-map.v1</code>)</h2>
+
+<p><a class="btn" href="../assets/asset-maps/AJKJ-r0-5cfd354c5dcba758.asset-map.json.gz" download>Download AJKJ-r0-5cfd354c5dcba758.asset-map.json.gz (195,669 B (191.1 KiB))</a>
+<span class="badge badge-emerald">Verified PASS &middot; 13.50% coverage</span></p>
+<table>
+  <thead><tr><th>Metric</th><th class="num">Bytes / Value</th><th class="num">Entries</th></tr></thead>
+  <tbody>
+    <tr><td><strong>Identified</strong></td><td class="num">1,043,682 B (1019.2 KiB) (12.44%)</td><td class="num">1,925</td></tr>
+    <tr><td><strong>Mapped</strong></td><td class="num">0 B (0.00%)</td><td class="num">0</td></tr>
+    <tr><td><strong>Opaque</strong></td><td class="num">88,488 B (86.4 KiB) (1.05%)</td><td class="num">1</td></tr>
+    <tr><td><strong>Unknown</strong></td><td class="num">7,256,438 B (6.92 MiB) (86.50%)</td><td class="num">1,694</td></tr>
+    <tr><td><strong>Total ROM Size</strong></td><td class="num">8,388,608 B (8.00 MiB)</td><td class="num">3,620</td></tr>
+    <tr><td><strong>Coverage %</strong></td><td class="num"><strong>13.50%</strong></td><td class="num">—</td></tr>
+    <tr><td><strong>Entries w/ Code Refs</strong></td><td class="num">2,019 / 3,620 (55.77%)</td><td class="num">—</td></tr>
+  </tbody>
+</table>
+<p><strong>Top Identified Formats:</strong> <code>compress.bios-rle</code> (147 &middot; 612,340 B (598.0 KiB)) &middot; <code>compress.bios-lz77</code> (35 &middot; 310,606 B (303.3 KiB)) &middot; <code>gfx.gba-palette</code> (1,742 &middot; 120,544 B (117.7 KiB)) &middot; <code>gba.rom-header</code> (1 &middot; 192 B)</p>
+
+<h3>Largest <code>unknown</code> Extents (Headerless / Custom Asset Candidates)</h3>
+<table>
+  <thead><tr><th>Offset</th><th class="num">Size</th><th class="num">Shannon Entropy</th><th class="num">Code Refs</th></tr></thead>
+  <tbody><tr><td><code>0x00566540</code></td><td class='num'>2,638,104 B (2.52 MiB)</td><td class='num'><code>7.314</code> bits/B</td><td class='num'>0</td></tr><tr><td><code>0x0018E728</code></td><td class='num'>211,180 B (206.2 KiB)</td><td class='num'><code>2.078</code> bits/B</td><td class='num'>0</td></tr><tr><td><code>0x002C2E40</code></td><td class='num'>198,580 B (193.9 KiB)</td><td class='num'><code>1.909</code> bits/B</td><td class='num'>0</td></tr><tr><td><code>0x005227F4</code></td><td class='num'>190,952 B (186.5 KiB)</td><td class='num'><code>7.502</code> bits/B</td><td class='num'>0</td></tr><tr><td><code>0x00271E58</code></td><td class='num'>139,000 B (135.7 KiB)</td><td class='num'><code>2.036</code> bits/B</td><td class='num'>0</td></tr></tbody>
+</table>
+
+<pre><code>gzip -dk AJKJ-r0-5cfd354c5dcba758.asset-map.json.gz &amp;&amp; gbakit map verify rom.gba AJKJ-r0-5cfd354c5dcba758.asset-map.json
+gbakit assets export rom.gba --asset-map AJKJ-r0-5cfd354c5dcba758.asset-map.json -o out/</code></pre>
+
+
 <h2>Text, Fonts &amp; Scene Data</h2>
 <dl class="kv"><dt>Primary Text Encoding</dt><dd><strong>16-bit / UTF-16LE text</strong> (<code>12</code> ASCII strings)</dd><dt>Font &amp; VWF Indicators</dt><dd><span class='badge badge-emerald'>VWF Width Table</span> <span class='badge badge-blue'>1bpp Font</span> &middot; BIOS SWIs: BitUnPack <code>0x10</code>: <code>0</code> &middot; LZ77 <code>0x11/12</code>: <code>2</code> &middot; Huffman <code>0x13</code>: <code>0</code> &middot; RLE <code>0x14/15</code>: <code>4</code></dd><dt>Scene &amp; Packaging</dt><dd><code>39</code> ROM pointer tables (&ge;32 entries, <code>4</code> &ge;200) &middot; <code>10</code> relative <code>u32</code> TOCs &middot; <code>204</code> OAM metasprite hits</dd></dl>
 

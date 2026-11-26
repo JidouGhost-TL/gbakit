@@ -67,6 +67,34 @@
 
 <h2>ROM Assets, Compression &amp; Audio</h2><dl class='kv'><dt>BIOS Compression</dt><dd>LZ77 (<code>0x10</code>): <strong>1,209</strong> streams &middot; RLE (<code>0x30</code>): <strong>0</strong> streams</dd><dt>ROM Pointer Tables</dt><dd>35 tables (8 pointing to validated compressed streams)</dd><dt>SDK Backup Tags</dt><dd><code>EEPROM_V121</code></dd><dt>VRAM / Palette Snapshot</dt><dd>1,077 non-zero 8&times;8 tiles &middot; 31 palettes &middot; Direct ROM matches: <strong>0</strong> VRAM blocks, <strong>4</strong> palette blocks</dd></dl><div class='gallery'><figure><img src='../assets/vram-sheets/AKTJ-r0-6f3d81ae707aa797-vram.png' alt='VRAM 4bpp tile sheet' style='width:256px;height:256px;image-rendering:pixelated' loading='lazy'><figcaption>VRAM 4bpp Tile Sheet</figcaption></figure></div>
 
+<h2>Asset Map (<code>formatkit.asset-map.v1</code>)</h2>
+
+<p><a class="btn" href="../assets/asset-maps/AKTJ-r0-6f3d81ae707aa797.asset-map.json.gz" download>Download AKTJ-r0-6f3d81ae707aa797.asset-map.json.gz (149,815 B (146.3 KiB))</a>
+<span class="badge badge-emerald">Verified PASS &middot; 41.46% coverage</span></p>
+<table>
+  <thead><tr><th>Metric</th><th class="num">Bytes / Value</th><th class="num">Entries</th></tr></thead>
+  <tbody>
+    <tr><td><strong>Identified</strong></td><td class="num">3,412,000 B (3.25 MiB) (40.67%)</td><td class="num">1,883</td></tr>
+    <tr><td><strong>Mapped</strong></td><td class="num">0 B (0.00%)</td><td class="num">0</td></tr>
+    <tr><td><strong>Opaque</strong></td><td class="num">65,702 B (64.2 KiB) (0.78%)</td><td class="num">1</td></tr>
+    <tr><td><strong>Unknown</strong></td><td class="num">4,910,906 B (4.68 MiB) (58.54%)</td><td class="num">1,512</td></tr>
+    <tr><td><strong>Total ROM Size</strong></td><td class="num">8,388,608 B (8.00 MiB)</td><td class="num">3,396</td></tr>
+    <tr><td><strong>Coverage %</strong></td><td class="num"><strong>41.46%</strong></td><td class="num">—</td></tr>
+    <tr><td><strong>Entries w/ Code Refs</strong></td><td class="num">1,915 / 3,396 (56.39%)</td><td class="num">—</td></tr>
+  </tbody>
+</table>
+<p><strong>Top Identified Formats:</strong> <code>compress.bios-lz77</code> (1,409 &middot; 3,301,174 B (3.15 MiB)) &middot; <code>gfx.gba-palette</code> (470 &middot; 106,240 B (103.8 KiB)) &middot; <code>compress.bios-huffman</code> (2 &middot; 3,530 B (3.4 KiB)) &middot; <code>audio.m4a-song-table</code> (1 &middot; 864 B) &middot; <code>gba.rom-header</code> (1 &middot; 192 B)</p>
+
+<h3>Largest <code>unknown</code> Extents (Headerless / Custom Asset Candidates)</h3>
+<table>
+  <thead><tr><th>Offset</th><th class="num">Size</th><th class="num">Shannon Entropy</th><th class="num">Code Refs</th></tr></thead>
+  <tbody><tr><td><code>0x004873B0</code></td><td class='num'>475,824 B (464.7 KiB)</td><td class='num'><code>7.009</code> bits/B</td><td class='num'>0</td></tr><tr><td><code>0x00119C91</code></td><td class='num'>411,127 B (401.5 KiB)</td><td class='num'><code>4.770</code> bits/B</td><td class='num'>0</td></tr><tr><td><code>0x00720BCC</code></td><td class='num'>259,380 B (253.3 KiB)</td><td class='num'><code>4.111</code> bits/B</td><td class='num'>0</td></tr><tr><td><code>0x002BB2B7</code></td><td class='num'>235,937 B (230.4 KiB)</td><td class='num'><code>5.113</code> bits/B</td><td class='num'>0</td></tr><tr><td><code>0x00780730</code></td><td class='num'>164,752 B (160.9 KiB)</td><td class='num'><code>2.694</code> bits/B</td><td class='num'>0</td></tr></tbody>
+</table>
+
+<pre><code>gzip -dk AKTJ-r0-6f3d81ae707aa797.asset-map.json.gz &amp;&amp; gbakit map verify rom.gba AKTJ-r0-6f3d81ae707aa797.asset-map.json
+gbakit assets export rom.gba --asset-map AKTJ-r0-6f3d81ae707aa797.asset-map.json -o out/</code></pre>
+
+
 <h2>Text, Fonts &amp; Scene Data</h2>
 <dl class="kv"><dt>Primary Text Encoding</dt><dd><strong>16-bit / UTF-16LE text</strong> (<code>2</code> ASCII strings &middot; <code>3</code> Shift-JIS runs)</dd><dt>Font &amp; VWF Indicators</dt><dd><span class='badge badge-emerald'>VWF Width Table</span> <span class='badge badge-blue'>1bpp Font</span> &middot; BIOS SWIs: BitUnPack <code>0x10</code>: <code>5</code> &middot; LZ77 <code>0x11/12</code>: <code>11</code> &middot; Huffman <code>0x13</code>: <code>0</code> &middot; RLE <code>0x14/15</code>: <code>3</code></dd><dt>Scene &amp; Packaging</dt><dd><code>49</code> ROM pointer tables (&ge;32 entries, <code>2</code> &ge;200) &middot; <code>8</code> relative <code>u32</code> TOCs &middot; <code>292</code> OAM metasprite hits</dd></dl>
 

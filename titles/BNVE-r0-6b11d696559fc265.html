@@ -85,6 +85,34 @@ gbakit save fix    BNVP damaged.sav -o repaired.sav</code></pre>
 
 <h2>ROM Assets, Compression &amp; Audio</h2><dl class='kv'><dt>BIOS Compression</dt><dd>LZ77 (<code>0x10</code>): <strong>169</strong> streams &middot; RLE (<code>0x30</code>): <strong>0</strong> streams</dd><dt>ROM Pointer Tables</dt><dd>16 tables (0 pointing to validated compressed streams)</dd><dt>SDK Backup Tags</dt><dd><code>EEPROM_V124</code></dd></dl>
 
+<h2>Asset Map (<code>formatkit.asset-map.v1</code>)</h2>
+
+<p><a class="btn" href="../assets/asset-maps/BNVE-r0-6b11d696559fc265.asset-map.json.gz" download>Download BNVE-r0-6b11d696559fc265.asset-map.json.gz (24,546 B (24.0 KiB))</a>
+<span class="badge badge-emerald">Verified PASS &middot; 7.25% coverage</span></p>
+<table>
+  <thead><tr><th>Metric</th><th class="num">Bytes / Value</th><th class="num">Entries</th></tr></thead>
+  <tbody>
+    <tr><td><strong>Identified</strong></td><td class="num">283,420 B (276.8 KiB) (6.76%)</td><td class="num">207</td></tr>
+    <tr><td><strong>Mapped</strong></td><td class="num">0 B (0.00%)</td><td class="num">0</td></tr>
+    <tr><td><strong>Opaque</strong></td><td class="num">20,488 B (20.0 KiB) (0.49%)</td><td class="num">1</td></tr>
+    <tr><td><strong>Unknown</strong></td><td class="num">3,890,396 B (3.71 MiB) (92.75%)</td><td class="num">187</td></tr>
+    <tr><td><strong>Total ROM Size</strong></td><td class="num">4,194,304 B (4.00 MiB)</td><td class="num">395</td></tr>
+    <tr><td><strong>Coverage %</strong></td><td class="num"><strong>7.25%</strong></td><td class="num">—</td></tr>
+    <tr><td><strong>Entries w/ Code Refs</strong></td><td class="num">179 / 395 (45.32%)</td><td class="num">—</td></tr>
+  </tbody>
+</table>
+<p><strong>Top Identified Formats:</strong> <code>audio.engine-sw-sample</code> (40 &middot; 262,556 B (256.4 KiB)) &middot; <code>gfx.gba-palette</code> (166 &middot; 20,672 B (20.2 KiB)) &middot; <code>gba.rom-header</code> (1 &middot; 192 B)</p>
+
+<h3>Largest <code>unknown</code> Extents (Headerless / Custom Asset Candidates)</h3>
+<table>
+  <thead><tr><th>Offset</th><th class="num">Size</th><th class="num">Shannon Entropy</th><th class="num">Code Refs</th></tr></thead>
+  <tbody><tr><td><code>0x00142450</code></td><td class='num'>440,460 B (430.1 KiB)</td><td class='num'><code>5.980</code> bits/B</td><td class='num'>0</td></tr><tr><td><code>0x002A0020</code></td><td class='num'>398,032 B (388.7 KiB)</td><td class='num'><code>6.760</code> bits/B</td><td class='num'>0</td></tr><tr><td><code>0x000F00AC</code></td><td class='num'>336,772 B (328.9 KiB)</td><td class='num'><code>5.848</code> bits/B</td><td class='num'>0</td></tr><tr><td><code>0x003A2B14</code></td><td class='num'>319,744 B (312.2 KiB)</td><td class='num'><code>4.712</code> bits/B</td><td class='num'>0</td></tr><tr><td><code>0x00310A30</code></td><td class='num'>301,896 B (294.8 KiB)</td><td class='num'><code>5.468</code> bits/B</td><td class='num'>0</td></tr></tbody>
+</table>
+
+<pre><code>gzip -dk BNVE-r0-6b11d696559fc265.asset-map.json.gz &amp;&amp; gbakit map verify rom.gba BNVE-r0-6b11d696559fc265.asset-map.json
+gbakit assets export rom.gba --asset-map BNVE-r0-6b11d696559fc265.asset-map.json -o out/</code></pre>
+
+
 <h2>Text, Fonts &amp; Scene Data</h2>
 <dl class="kv"><dt>Primary Text Encoding</dt><dd><strong>Plain ASCII (uncompressed)</strong> (<code>872</code> ASCII strings)</dd><dt>Font &amp; VWF Indicators</dt><dd><span class='badge badge-emerald'>VWF Width Table</span> <span class='badge badge-blue'>1bpp Font</span> &middot; BIOS SWIs: BitUnPack <code>0x10</code>: <code>3</code> &middot; LZ77 <code>0x11/12</code>: <code>6</code> &middot; Huffman <code>0x13</code>: <code>2</code> &middot; RLE <code>0x14/15</code>: <code>2</code></dd><dt>Scene &amp; Packaging</dt><dd><code>29</code> ROM pointer tables (&ge;32 entries, <code>1</code> &ge;200) &middot; <code>82</code> relative <code>u32</code> TOCs &middot; <code>410</code> OAM metasprite hits</dd></dl>
 

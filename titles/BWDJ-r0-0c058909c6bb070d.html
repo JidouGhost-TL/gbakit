@@ -68,6 +68,34 @@ gbakit save fix    BWDJ damaged.sav -o repaired.sav</code></pre>
 
 <h2>ROM Assets, Compression &amp; Audio</h2><dl class='kv'><dt>BIOS Compression</dt><dd>LZ77 (<code>0x10</code>): <strong>355</strong> streams &middot; RLE (<code>0x30</code>): <strong>0</strong> streams</dd><dt>ROM Pointer Tables</dt><dd>47 tables (19 pointing to validated compressed streams)</dd><dt>SDK Backup Tags</dt><dd><code>EEPROM_V122</code></dd></dl>
 
+<h2>Asset Map (<code>formatkit.asset-map.v1</code>)</h2>
+<p class='meta'>Family representative map from <code>BWDJ</code> (<code>BWDJ-r1-ff7b4a6732753453</code>, header family <code>BWD</code>).</p>
+<p><a class="btn" href="../assets/asset-maps/BWDJ-r1-ff7b4a6732753453.asset-map.json.gz" download>Download BWDJ-r1-ff7b4a6732753453.asset-map.json.gz (75,371 B (73.6 KiB))</a>
+<span class="badge badge-emerald">Verified PASS &middot; 69.79% coverage</span></p>
+<table>
+  <thead><tr><th>Metric</th><th class="num">Bytes / Value</th><th class="num">Entries</th></tr></thead>
+  <tbody>
+    <tr><td><strong>Identified</strong></td><td class="num">2,927,204 B (2.79 MiB) (69.79%)</td><td class="num">741</td></tr>
+    <tr><td><strong>Mapped</strong></td><td class="num">0 B (0.00%)</td><td class="num">0</td></tr>
+    <tr><td><strong>Opaque</strong></td><td class="num">0 B (0.00%)</td><td class="num">0</td></tr>
+    <tr><td><strong>Unknown</strong></td><td class="num">1,267,100 B (1.21 MiB) (30.21%)</td><td class="num">662</td></tr>
+    <tr><td><strong>Total ROM Size</strong></td><td class="num">4,194,304 B (4.00 MiB)</td><td class="num">1,403</td></tr>
+    <tr><td><strong>Coverage %</strong></td><td class="num"><strong>69.79%</strong></td><td class="num">—</td></tr>
+    <tr><td><strong>Entries w/ Code Refs</strong></td><td class="num">754 / 1,403 (53.74%)</td><td class="num">—</td></tr>
+  </tbody>
+</table>
+<p><strong>Top Identified Formats:</strong> <code>compress.bios-lz77</code> (362 &middot; 1,814,872 B (1.73 MiB)) &middot; <code>audio.m4a-wavedata</code> (1 &middot; 1,038,164 B (1013.8 KiB)) &middot; <code>gfx.gba-palette</code> (376 &middot; 73,472 B (71.8 KiB)) &middot; <code>audio.m4a-song-table</code> (1 &middot; 504 B) &middot; <code>gba.rom-header</code> (1 &middot; 192 B)</p>
+
+<h3>Largest <code>unknown</code> Extents (Headerless / Custom Asset Candidates)</h3>
+<table>
+  <thead><tr><th>Offset</th><th class="num">Size</th><th class="num">Shannon Entropy</th><th class="num">Code Refs</th></tr></thead>
+  <tbody><tr><td><code>0x00150120</code></td><td class='num'>62,324 B (60.9 KiB)</td><td class='num'><code>3.593</code> bits/B</td><td class='num'>0</td></tr><tr><td><code>0x00008088</code></td><td class='num'>38,328 B (37.4 KiB)</td><td class='num'><code>6.268</code> bits/B</td><td class='num'>0</td></tr><tr><td><code>0x002AEA5D</code></td><td class='num'>35,139 B (34.3 KiB)</td><td class='num'><code>1.705</code> bits/B</td><td class='num'>0</td></tr><tr><td><code>0x00165530</code></td><td class='num'>31,648 B (30.9 KiB)</td><td class='num'><code>3.679</code> bits/B</td><td class='num'>0</td></tr><tr><td><code>0x00011660</code></td><td class='num'>30,512 B (29.8 KiB)</td><td class='num'><code>6.351</code> bits/B</td><td class='num'>0</td></tr></tbody>
+</table>
+
+<pre><code>gzip -dk BWDJ-r1-ff7b4a6732753453.asset-map.json.gz &amp;&amp; gbakit map verify rom.gba BWDJ-r1-ff7b4a6732753453.asset-map.json
+gbakit assets export rom.gba --asset-map BWDJ-r1-ff7b4a6732753453.asset-map.json -o out/</code></pre>
+
+
 <h2>Text, Fonts &amp; Scene Data</h2>
 <dl class="kv"><dt>Primary Text Encoding</dt><dd><strong>Shift-JIS (uncompressed)</strong> (<code>3</code> ASCII strings &middot; <code>200</code> Shift-JIS runs)</dd><dt>Font &amp; VWF Indicators</dt><dd><span class='badge badge-emerald'>VWF Width Table</span> <span class='badge badge-blue'>1bpp Font</span> &middot; BIOS SWIs: BitUnPack <code>0x10</code>: <code>17</code> &middot; LZ77 <code>0x11/12</code>: <code>24</code> &middot; Huffman <code>0x13</code>: <code>6</code> &middot; RLE <code>0x14/15</code>: <code>15</code></dd><dt>Scene &amp; Packaging</dt><dd><code>28</code> ROM pointer tables (&ge;32 entries, <code>6</code> &ge;200) &middot; <code>1</code> relative <code>u32</code> TOCs &middot; <code>185</code> OAM metasprite hits</dd></dl>
 

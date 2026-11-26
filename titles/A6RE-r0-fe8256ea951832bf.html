@@ -84,6 +84,34 @@ gbakit save fix    A6RE damaged.sav -o repaired.sav</code></pre>
 
 <h2>ROM Assets, Compression &amp; Audio</h2><dl class='kv'><dt>BIOS Compression</dt><dd>LZ77 (<code>0x10</code>): <strong>1,904</strong> streams &middot; RLE (<code>0x30</code>): <strong>1,384</strong> streams</dd><dt>ROM Pointer Tables</dt><dd>46 tables (19 pointing to validated compressed streams)</dd><dt>SDK Backup Tags</dt><dd><code>SRAM_F_V102</code></dd></dl>
 
+<h2>Asset Map (<code>formatkit.asset-map.v1</code>)</h2>
+
+<p><a class="btn" href="../assets/asset-maps/A6RE-r0-fe8256ea951832bf.asset-map.json.gz" download>Download A6RE-r0-fe8256ea951832bf.asset-map.json.gz (276,807 B (270.3 KiB))</a>
+<span class="badge badge-emerald">Verified PASS &middot; 70.98% coverage</span></p>
+<table>
+  <thead><tr><th>Metric</th><th class="num">Bytes / Value</th><th class="num">Entries</th></tr></thead>
+  <tbody>
+    <tr><td><strong>Identified</strong></td><td class="num">2,933,405 B (2.80 MiB) (69.94%)</td><td class="num">3,964</td></tr>
+    <tr><td><strong>Mapped</strong></td><td class="num">0 B (0.00%)</td><td class="num">0</td></tr>
+    <tr><td><strong>Opaque</strong></td><td class="num">43,652 B (42.6 KiB) (1.04%)</td><td class="num">1</td></tr>
+    <tr><td><strong>Unknown</strong></td><td class="num">1,217,247 B (1.16 MiB) (29.02%)</td><td class="num">2,786</td></tr>
+    <tr><td><strong>Total ROM Size</strong></td><td class="num">4,194,304 B (4.00 MiB)</td><td class="num">6,751</td></tr>
+    <tr><td><strong>Coverage %</strong></td><td class="num"><strong>70.98%</strong></td><td class="num">—</td></tr>
+    <tr><td><strong>Entries w/ Code Refs</strong></td><td class="num">4,008 / 6,751 (59.37%)</td><td class="num">—</td></tr>
+  </tbody>
+</table>
+<p><strong>Top Identified Formats:</strong> <code>compress.bios-lz77</code> (2,001 &middot; 1,750,662 B (1.67 MiB)) &middot; <code>compress.bios-rle</code> (1,536 &middot; 830,335 B (810.9 KiB)) &middot; <code>compress.bios-huffman</code> (236 &middot; 335,624 B (327.8 KiB)) &middot; <code>gfx.gba-palette</code> (189 &middot; 15,648 B (15.3 KiB)) &middot; <code>audio.m4a-song-table</code> (1 &middot; 944 B) &middot; <code>gba.rom-header</code> (1 &middot; 192 B)</p>
+
+<h3>Largest <code>unknown</code> Extents (Headerless / Custom Asset Candidates)</h3>
+<table>
+  <thead><tr><th>Offset</th><th class="num">Size</th><th class="num">Shannon Entropy</th><th class="num">Code Refs</th></tr></thead>
+  <tbody><tr><td><code>0x00340330</code></td><td class='num'>741,964 B (724.6 KiB)</td><td class='num'><code>6.689</code> bits/B</td><td class='num'>8</td></tr><tr><td><code>0x00317229</code></td><td class='num'>167,255 B (163.3 KiB)</td><td class='num'><code>6.186</code> bits/B</td><td class='num'>0</td></tr><tr><td><code>0x000089EC</code></td><td class='num'>37,728 B (36.8 KiB)</td><td class='num'><code>6.610</code> bits/B</td><td class='num'>0</td></tr><tr><td><code>0x000174D0</code></td><td class='num'>37,420 B (36.5 KiB)</td><td class='num'><code>6.551</code> bits/B</td><td class='num'>0</td></tr><tr><td><code>0x00033124</code></td><td class='num'>35,704 B (34.9 KiB)</td><td class='num'><code>6.660</code> bits/B</td><td class='num'>1</td></tr></tbody>
+</table>
+
+<pre><code>gzip -dk A6RE-r0-fe8256ea951832bf.asset-map.json.gz &amp;&amp; gbakit map verify rom.gba A6RE-r0-fe8256ea951832bf.asset-map.json
+gbakit assets export rom.gba --asset-map A6RE-r0-fe8256ea951832bf.asset-map.json -o out/</code></pre>
+
+
 <h2>Text, Fonts &amp; Scene Data</h2>
 <dl class="kv"><dt>Primary Text Encoding</dt><dd><strong>Custom 16-bit Huffman · custom 1-byte charmap (base &#x27;A&#x27; = 0x26)</strong> (<code>17</code> ASCII strings)</dd><dt>Font &amp; VWF Indicators</dt><dd><span class='badge badge-emerald'>VWF Width Table</span> <span class='badge badge-blue'>1bpp Font</span> &middot; BIOS SWIs: BitUnPack <code>0x10</code>: <code>28</code> &middot; LZ77 <code>0x11/12</code>: <code>26</code> &middot; Huffman <code>0x13</code>: <code>5</code> &middot; RLE <code>0x14/15</code>: <code>13</code></dd><dt>Scene &amp; Packaging</dt><dd><code>18</code> ROM pointer tables (&ge;32 entries, <code>2</code> &ge;200) &middot; <code>6</code> relative <code>u32</code> TOCs &middot; <code>180</code> OAM metasprite hits</dd></dl>
 

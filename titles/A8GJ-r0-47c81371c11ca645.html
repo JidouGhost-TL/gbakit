@@ -77,6 +77,34 @@ gbakit save fix    A8GJ damaged.sav -o repaired.sav</code></pre>
 
 <h2>ROM Assets, Compression &amp; Audio</h2><dl class='kv'><dt>BIOS Compression</dt><dd>LZ77 (<code>0x10</code>): <strong>441</strong> streams &middot; RLE (<code>0x30</code>): <strong>1</strong> streams</dd><dt>ROM Pointer Tables</dt><dd>156 tables (0 pointing to validated compressed streams)</dd><dt>SDK Backup Tags</dt><dd><code>FLASH512_V131</code></dd></dl>
 
+<h2>Asset Map (<code>formatkit.asset-map.v1</code>)</h2>
+
+<p><a class="btn" href="../assets/asset-maps/A8GJ-r0-47c81371c11ca645.asset-map.json.gz" download>Download A8GJ-r0-47c81371c11ca645.asset-map.json.gz (169,055 B (165.1 KiB))</a>
+<span class="badge badge-emerald">Verified PASS &middot; 10.42% coverage</span></p>
+<table>
+  <thead><tr><th>Metric</th><th class="num">Bytes / Value</th><th class="num">Entries</th></tr></thead>
+  <tbody>
+    <tr><td><strong>Identified</strong></td><td class="num">860,287 B (840.1 KiB) (10.26%)</td><td class="num">1,755</td></tr>
+    <tr><td><strong>Mapped</strong></td><td class="num">0 B (0.00%)</td><td class="num">0</td></tr>
+    <tr><td><strong>Opaque</strong></td><td class="num">13,524 B (13.2 KiB) (0.16%)</td><td class="num">1</td></tr>
+    <tr><td><strong>Unknown</strong></td><td class="num">7,514,797 B (7.17 MiB) (89.58%)</td><td class="num">1,537</td></tr>
+    <tr><td><strong>Total ROM Size</strong></td><td class="num">8,388,608 B (8.00 MiB)</td><td class="num">3,293</td></tr>
+    <tr><td><strong>Coverage %</strong></td><td class="num"><strong>10.42%</strong></td><td class="num">—</td></tr>
+    <tr><td><strong>Entries w/ Code Refs</strong></td><td class="num">1,902 / 3,293 (57.76%)</td><td class="num">—</td></tr>
+  </tbody>
+</table>
+<p><strong>Top Identified Formats:</strong> <code>compress.bios-lz77</code> (456 &middot; 575,143 B (561.7 KiB)) &middot; <code>gfx.gba-palette</code> (1,297 &middot; 281,504 B (274.9 KiB)) &middot; <code>audio.m4a-song-table</code> (1 &middot; 3,448 B (3.4 KiB)) &middot; <code>gba.rom-header</code> (1 &middot; 192 B)</p>
+
+<h3>Largest <code>unknown</code> Extents (Headerless / Custom Asset Candidates)</h3>
+<table>
+  <thead><tr><th>Offset</th><th class="num">Size</th><th class="num">Shannon Entropy</th><th class="num">Code Refs</th></tr></thead>
+  <tbody><tr><td><code>0x006E8C78</code></td><td class='num'>584,448 B (570.8 KiB)</td><td class='num'><code>6.087</code> bits/B</td><td class='num'>0</td></tr><tr><td><code>0x00613600</code></td><td class='num'>299,044 B (292.0 KiB)</td><td class='num'><code>6.067</code> bits/B</td><td class='num'>0</td></tr><tr><td><code>0x0036983C</code></td><td class='num'>219,560 B (214.4 KiB)</td><td class='num'><code>7.133</code> bits/B</td><td class='num'>0</td></tr><tr><td><code>0x000000C0</code></td><td class='num'>197,704 B (193.1 KiB)</td><td class='num'><code>6.576</code> bits/B</td><td class='num'>0</td></tr><tr><td><code>0x005D427C</code></td><td class='num'>185,184 B (180.8 KiB)</td><td class='num'><code>5.682</code> bits/B</td><td class='num'>0</td></tr></tbody>
+</table>
+
+<pre><code>gzip -dk A8GJ-r0-47c81371c11ca645.asset-map.json.gz &amp;&amp; gbakit map verify rom.gba A8GJ-r0-47c81371c11ca645.asset-map.json
+gbakit assets export rom.gba --asset-map A8GJ-r0-47c81371c11ca645.asset-map.json -o out/</code></pre>
+
+
 <h2>Text, Fonts &amp; Scene Data</h2>
 <dl class="kv"><dt>Primary Text Encoding</dt><dd><strong>16-bit / UTF-16LE text</strong> (<code>72</code> ASCII strings &middot; <code>1</code> LZ77 ASCII blocks)</dd><dt>Font &amp; VWF Indicators</dt><dd><span class='badge badge-emerald'>VWF Width Table</span> <span class='badge badge-blue'>1bpp Font</span> &middot; BIOS SWIs: BitUnPack <code>0x10</code>: <code>18</code> &middot; LZ77 <code>0x11/12</code>: <code>24</code> &middot; Huffman <code>0x13</code>: <code>9</code> &middot; RLE <code>0x14/15</code>: <code>7</code></dd><dt>Scene &amp; Packaging</dt><dd><code>32</code> ROM pointer tables (&ge;32 entries, <code>4</code> &ge;200) &middot; <code>13</code> relative <code>u32</code> TOCs &middot; <code>437</code> OAM metasprite hits</dd></dl>
 

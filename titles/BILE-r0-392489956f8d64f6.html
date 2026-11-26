@@ -84,6 +84,34 @@ gbakit save fix    BILE damaged.sav -o repaired.sav</code></pre>
 
 <h2>ROM Assets, Compression &amp; Audio</h2><dl class='kv'><dt>BIOS Compression</dt><dd>LZ77 (<code>0x10</code>): <strong>1</strong> streams &middot; RLE (<code>0x30</code>): <strong>0</strong> streams</dd><dt>ROM Pointer Tables</dt><dd>227 tables (0 pointing to validated compressed streams)</dd><dt>SDK Backup Tags</dt><dd><code>EEPROM_V124</code></dd></dl>
 
+<h2>Asset Map (<code>formatkit.asset-map.v1</code>)</h2>
+
+<p><a class="btn" href="../assets/asset-maps/BILE-r0-392489956f8d64f6.asset-map.json.gz" download>Download BILE-r0-392489956f8d64f6.asset-map.json.gz (135,396 B (132.2 KiB))</a>
+<span class="badge badge-emerald">Verified PASS &middot; 9.19% coverage</span></p>
+<table>
+  <thead><tr><th>Metric</th><th class="num">Bytes / Value</th><th class="num">Entries</th></tr></thead>
+  <tbody>
+    <tr><td><strong>Identified</strong></td><td class="num">673,531 B (657.7 KiB) (8.03%)</td><td class="num">1,505</td></tr>
+    <tr><td><strong>Mapped</strong></td><td class="num">0 B (0.00%)</td><td class="num">0</td></tr>
+    <tr><td><strong>Opaque</strong></td><td class="num">97,696 B (95.4 KiB) (1.16%)</td><td class="num">1</td></tr>
+    <tr><td><strong>Unknown</strong></td><td class="num">7,617,381 B (7.26 MiB) (90.81%)</td><td class="num">972</td></tr>
+    <tr><td><strong>Total ROM Size</strong></td><td class="num">8,388,608 B (8.00 MiB)</td><td class="num">2,478</td></tr>
+    <tr><td><strong>Coverage %</strong></td><td class="num"><strong>9.19%</strong></td><td class="num">—</td></tr>
+    <tr><td><strong>Entries w/ Code Refs</strong></td><td class="num">1,698 / 2,478 (68.52%)</td><td class="num">—</td></tr>
+  </tbody>
+</table>
+<p><strong>Top Identified Formats:</strong> <code>gfx.gba-palette</code> (1,457 &middot; 337,024 B (329.1 KiB)) &middot; <code>audio.logik-sample</code> (45 &middot; 334,800 B (327.0 KiB)) &middot; <code>compress.bios-huffman</code> (1 &middot; 836 B) &middot; <code>compress.bios-lz77</code> (1 &middot; 679 B) &middot; <code>gba.rom-header</code> (1 &middot; 192 B)</p>
+
+<h3>Largest <code>unknown</code> Extents (Headerless / Custom Asset Candidates)</h3>
+<table>
+  <thead><tr><th>Offset</th><th class="num">Size</th><th class="num">Shannon Entropy</th><th class="num">Code Refs</th></tr></thead>
+  <tbody><tr><td><code>0x00604624</code></td><td class='num'>1,981,500 B (1.89 MiB)</td><td class='num'><code>6.794</code> bits/B</td><td class='num'>0</td></tr><tr><td><code>0x0028D074</code></td><td class='num'>405,732 B (396.2 KiB)</td><td class='num'><code>6.863</code> bits/B</td><td class='num'>0</td></tr><tr><td><code>0x0032AA28</code></td><td class='num'>188,680 B (184.3 KiB)</td><td class='num'><code>6.769</code> bits/B</td><td class='num'>0</td></tr><tr><td><code>0x002FD358</code></td><td class='num'>185,552 B (181.2 KiB)</td><td class='num'><code>6.799</code> bits/B</td><td class='num'>0</td></tr><tr><td><code>0x0023D9C0</code></td><td class='num'>170,488 B (166.5 KiB)</td><td class='num'><code>6.563</code> bits/B</td><td class='num'>0</td></tr></tbody>
+</table>
+
+<pre><code>gzip -dk BILE-r0-392489956f8d64f6.asset-map.json.gz &amp;&amp; gbakit map verify rom.gba BILE-r0-392489956f8d64f6.asset-map.json
+gbakit assets export rom.gba --asset-map BILE-r0-392489956f8d64f6.asset-map.json -o out/</code></pre>
+
+
 <h2>Text, Fonts &amp; Scene Data</h2>
 <dl class="kv"><dt>Primary Text Encoding</dt><dd><strong>Custom 16-bit Huffman</strong> (<code>1,185</code> ASCII strings &middot; <code>5</code> Shift-JIS runs)</dd><dt>Font &amp; VWF Indicators</dt><dd><span class='badge badge-slate'>No VWF Table</span> <span class='badge badge-blue'>1bpp Font</span> &middot; BIOS SWIs: BitUnPack <code>0x10</code>: <code>0</code> &middot; LZ77 <code>0x11/12</code>: <code>17</code> &middot; Huffman <code>0x13</code>: <code>7</code> &middot; RLE <code>0x14/15</code>: <code>9</code></dd><dt>Scene &amp; Packaging</dt><dd><code>69</code> ROM pointer tables (&ge;32 entries, <code>2</code> &ge;200) &middot; <code>102</code> relative <code>u32</code> TOCs &middot; <code>266</code> OAM metasprite hits &middot; FourCC: <code>GBAMOD30</code></dd></dl>
 

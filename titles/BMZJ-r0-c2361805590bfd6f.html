@@ -75,6 +75,34 @@ gbakit save fix    BMZP damaged.sav -o repaired.sav</code></pre>
 
 <h2>ROM Assets, Compression &amp; Audio</h2><dl class='kv'><dt>VRAM / Palette Snapshot</dt><dd>1,148 non-zero 8&times;8 tiles &middot; 27 palettes &middot; Direct ROM matches: <strong>0</strong> VRAM blocks, <strong>1</strong> palette blocks</dd></dl><div class='gallery'><figure><img src='../assets/vram-sheets/BMZJ-r0-c2361805590bfd6f-vram.png' alt='VRAM 4bpp tile sheet' style='width:256px;height:256px;image-rendering:pixelated' loading='lazy'><figcaption>VRAM 4bpp Tile Sheet</figcaption></figure></div>
 
+<h2>Asset Map (<code>formatkit.asset-map.v1</code>)</h2>
+<p class='meta'>Family representative map from <code>BMZP</code> (<code>BMZP-r0-a63b6ee26bd341c3</code>, header family <code>BMZ</code>).</p>
+<p><a class="btn" href="../assets/asset-maps/BMZP-r0-a63b6ee26bd341c3.asset-map.json.gz" download>Download BMZP-r0-a63b6ee26bd341c3.asset-map.json.gz (236,285 B (230.7 KiB))</a>
+<span class="badge badge-emerald">Verified PASS &middot; 91.30% coverage</span></p>
+<table>
+  <thead><tr><th>Metric</th><th class="num">Bytes / Value</th><th class="num">Entries</th></tr></thead>
+  <tbody>
+    <tr><td><strong>Identified</strong></td><td class="num">7,658,542 B (7.30 MiB) (91.30%)</td><td class="num">3,036</td></tr>
+    <tr><td><strong>Mapped</strong></td><td class="num">0 B (0.00%)</td><td class="num">0</td></tr>
+    <tr><td><strong>Opaque</strong></td><td class="num">0 B (0.00%)</td><td class="num">0</td></tr>
+    <tr><td><strong>Unknown</strong></td><td class="num">730,066 B (713.0 KiB) (8.70%)</td><td class="num">2,380</td></tr>
+    <tr><td><strong>Total ROM Size</strong></td><td class="num">8,388,608 B (8.00 MiB)</td><td class="num">5,416</td></tr>
+    <tr><td><strong>Coverage %</strong></td><td class="num"><strong>91.30%</strong></td><td class="num">—</td></tr>
+    <tr><td><strong>Entries w/ Code Refs</strong></td><td class="num">3,068 / 5,416 (56.65%)</td><td class="num">—</td></tr>
+  </tbody>
+</table>
+<p><strong>Top Identified Formats:</strong> <code>audio.m4a-wavedata</code> (1 &middot; 6,144,416 B (5.86 MiB)) &middot; <code>compress.bios-lz77</code> (2,262 &middot; 1,291,094 B (1.23 MiB)) &middot; <code>gfx.gba-palette</code> (771 &middot; 220,512 B (215.3 KiB)) &middot; <code>audio.m4a-song-table</code> (1 &middot; 2,328 B (2.3 KiB)) &middot; <code>gba.rom-header</code> (1 &middot; 192 B)</p>
+
+<h3>Largest <code>unknown</code> Extents (Headerless / Custom Asset Candidates)</h3>
+<table>
+  <thead><tr><th>Offset</th><th class="num">Size</th><th class="num">Shannon Entropy</th><th class="num">Code Refs</th></tr></thead>
+  <tbody><tr><td><code>0x0019A1C8</code></td><td class='num'>217,984 B (212.9 KiB)</td><td class='num'><code>2.171</code> bits/B</td><td class='num'>1</td></tr><tr><td><code>0x001FAF43</code></td><td class='num'>165,377 B (161.5 KiB)</td><td class='num'><code>5.844</code> bits/B</td><td class='num'>0</td></tr><tr><td><code>0x00015408</code></td><td class='num'>40,064 B (39.1 KiB)</td><td class='num'><code>6.486</code> bits/B</td><td class='num'>0</td></tr><tr><td><code>0x00009E50</code></td><td class='num'>27,824 B (27.2 KiB)</td><td class='num'><code>6.534</code> bits/B</td><td class='num'>0</td></tr><tr><td><code>0x000217B0</code></td><td class='num'>23,436 B (22.9 KiB)</td><td class='num'><code>6.630</code> bits/B</td><td class='num'>0</td></tr></tbody>
+</table>
+
+<pre><code>gzip -dk BMZP-r0-a63b6ee26bd341c3.asset-map.json.gz &amp;&amp; gbakit map verify rom.gba BMZP-r0-a63b6ee26bd341c3.asset-map.json
+gbakit assets export rom.gba --asset-map BMZP-r0-a63b6ee26bd341c3.asset-map.json -o out/</code></pre>
+
+
 <h2>Text, Fonts &amp; Scene Data</h2>
 <dl class="kv"><dt>Primary Text Encoding</dt><dd><strong>16-bit / UTF-16LE text</strong></dd><dt>Font &amp; VWF Indicators</dt><dd><span class='badge badge-emerald'>VWF Width Table</span> <span class='badge badge-blue'>1bpp Font</span> &middot; BIOS SWIs: BitUnPack <code>0x10</code>: <code>20</code> &middot; LZ77 <code>0x11/12</code>: <code>44</code> &middot; Huffman <code>0x13</code>: <code>11</code> &middot; RLE <code>0x14/15</code>: <code>13</code></dd><dt>Scene &amp; Packaging</dt><dd><code>24</code> ROM pointer tables (&ge;32 entries, <code>4</code> &ge;200) &middot; <code>2</code> relative <code>u32</code> TOCs &middot; <code>147</code> OAM metasprite hits</dd></dl>
 

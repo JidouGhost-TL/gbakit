@@ -74,6 +74,34 @@ gbakit save fix    A2AE damaged.sav -o repaired.sav</code></pre>
 
 <h2>ROM Assets, Compression &amp; Audio</h2><dl class='kv'><dt>BIOS Compression</dt><dd>LZ77 (<code>0x10</code>): <strong>60</strong> streams &middot; RLE (<code>0x30</code>): <strong>9,833</strong> streams</dd><dt>ROM Pointer Tables</dt><dd>57 tables (30 pointing to validated compressed streams)</dd><dt>SDK Backup Tags</dt><dd><code>EEPROM_V122</code></dd><dt>VRAM / Palette Snapshot</dt><dd>1,246 non-zero 8&times;8 tiles &middot; 31 palettes &middot; Direct ROM matches: <strong>0</strong> VRAM blocks, <strong>2</strong> palette blocks</dd></dl><div class='gallery'><figure><img src='../assets/vram-sheets/A2AE-r0-2257e2afd309b29a-vram.png' alt='VRAM 4bpp tile sheet' style='width:256px;height:256px;image-rendering:pixelated' loading='lazy'><figcaption>VRAM 4bpp Tile Sheet</figcaption></figure></div>
 
+<h2>Asset Map (<code>formatkit.asset-map.v1</code>)</h2>
+
+<p><a class="btn" href="../assets/asset-maps/A2AE-r0-2257e2afd309b29a.asset-map.json.gz" download>Download A2AE-r0-2257e2afd309b29a.asset-map.json.gz (207,509 B (202.6 KiB))</a>
+<span class="badge badge-emerald">Verified PASS &middot; 25.21% coverage</span></p>
+<table>
+  <thead><tr><th>Metric</th><th class="num">Bytes / Value</th><th class="num">Entries</th></tr></thead>
+  <tbody>
+    <tr><td><strong>Identified</strong></td><td class="num">105,120 B (102.7 KiB) (0.63%)</td><td class="num">2,035</td></tr>
+    <tr><td><strong>Mapped</strong></td><td class="num">0 B (0.00%)</td><td class="num">0</td></tr>
+    <tr><td><strong>Opaque</strong></td><td class="num">4,123,796 B (3.93 MiB) (24.58%)</td><td class="num">1</td></tr>
+    <tr><td><strong>Unknown</strong></td><td class="num">12,548,300 B (11.97 MiB) (74.79%)</td><td class="num">1,824</td></tr>
+    <tr><td><strong>Total ROM Size</strong></td><td class="num">16,777,216 B (16.00 MiB)</td><td class="num">3,860</td></tr>
+    <tr><td><strong>Coverage %</strong></td><td class="num"><strong>25.21%</strong></td><td class="num">—</td></tr>
+    <tr><td><strong>Entries w/ Code Refs</strong></td><td class="num">2,389 / 3,860 (61.89%)</td><td class="num">—</td></tr>
+  </tbody>
+</table>
+<p><strong>Top Identified Formats:</strong> <code>gfx.gba-palette</code> (2,034 &middot; 104,928 B (102.5 KiB)) &middot; <code>gba.rom-header</code> (1 &middot; 192 B)</p>
+
+<h3>Largest <code>unknown</code> Extents (Headerless / Custom Asset Candidates)</h3>
+<table>
+  <thead><tr><th>Offset</th><th class="num">Size</th><th class="num">Shannon Entropy</th><th class="num">Code Refs</th></tr></thead>
+  <tbody><tr><td><code>0x00135A84</code></td><td class='num'>11,385,064 B (10.86 MiB)</td><td class='num'><code>6.883</code> bits/B</td><td class='num'>0</td></tr><tr><td><code>0x00060920</code></td><td class='num'>61,132 B (59.7 KiB)</td><td class='num'><code>6.432</code> bits/B</td><td class='num'>0</td></tr><tr><td><code>0x000133B0</code></td><td class='num'>49,728 B (48.6 KiB)</td><td class='num'><code>6.702</code> bits/B</td><td class='num'>0</td></tr><tr><td><code>0x00027040</code></td><td class='num'>48,756 B (47.6 KiB)</td><td class='num'><code>6.629</code> bits/B</td><td class='num'>0</td></tr><tr><td><code>0x00076474</code></td><td class='num'>40,844 B (39.9 KiB)</td><td class='num'><code>6.406</code> bits/B</td><td class='num'>0</td></tr></tbody>
+</table>
+
+<pre><code>gzip -dk A2AE-r0-2257e2afd309b29a.asset-map.json.gz &amp;&amp; gbakit map verify rom.gba A2AE-r0-2257e2afd309b29a.asset-map.json
+gbakit assets export rom.gba --asset-map A2AE-r0-2257e2afd309b29a.asset-map.json -o out/</code></pre>
+
+
 <h2>Text, Fonts &amp; Scene Data</h2>
 <dl class="kv"><dt>Primary Text Encoding</dt><dd><strong>16-bit / UTF-16LE text</strong> (<code>14</code> ASCII strings)</dd><dt>Font &amp; VWF Indicators</dt><dd><span class='badge badge-emerald'>VWF Width Table</span> <span class='badge badge-blue'>1bpp Font</span> &middot; BIOS SWIs: BitUnPack <code>0x10</code>: <code>1</code> &middot; LZ77 <code>0x11/12</code>: <code>1</code> &middot; Huffman <code>0x13</code>: <code>0</code> &middot; RLE <code>0x14/15</code>: <code>2</code></dd><dt>Scene &amp; Packaging</dt><dd><code>56</code> ROM pointer tables (&ge;32 entries, <code>8</code> &ge;200) &middot; <code>40</code> relative <code>u32</code> TOCs &middot; <code>171</code> OAM metasprite hits</dd></dl>
 

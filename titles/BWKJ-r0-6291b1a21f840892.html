@@ -84,6 +84,34 @@ gbakit save fix    BWKJ damaged.sav -o repaired.sav</code></pre>
 
 <h2>ROM Assets, Compression &amp; Audio</h2><dl class='kv'><dt>BIOS Compression</dt><dd>LZ77 (<code>0x10</code>): <strong>5,089</strong> streams &middot; RLE (<code>0x30</code>): <strong>0</strong> streams</dd><dt>ROM Pointer Tables</dt><dd>38 tables (0 pointing to validated compressed streams)</dd><dt>SDK Backup Tags</dt><dd><code>EEPROM_V124</code></dd></dl>
 
+<h2>Asset Map (<code>formatkit.asset-map.v1</code>)</h2>
+
+<p><a class="btn" href="../assets/asset-maps/BWKJ-r0-6291b1a21f840892.asset-map.json.gz" download>Download BWKJ-r0-6291b1a21f840892.asset-map.json.gz (41,320 B (40.4 KiB))</a>
+<span class="badge badge-emerald">Verified PASS &middot; 29.92% coverage</span></p>
+<table>
+  <thead><tr><th>Metric</th><th class="num">Bytes / Value</th><th class="num">Entries</th></tr></thead>
+  <tbody>
+    <tr><td><strong>Identified</strong></td><td class="num">25,392 B (24.8 KiB) (0.30%)</td><td class="num">357</td></tr>
+    <tr><td><strong>Mapped</strong></td><td class="num">0 B (0.00%)</td><td class="num">0</td></tr>
+    <tr><td><strong>Opaque</strong></td><td class="num">2,484,376 B (2.37 MiB) (29.62%)</td><td class="num">1</td></tr>
+    <tr><td><strong>Unknown</strong></td><td class="num">5,878,840 B (5.61 MiB) (70.08%)</td><td class="num">336</td></tr>
+    <tr><td><strong>Total ROM Size</strong></td><td class="num">8,388,608 B (8.00 MiB)</td><td class="num">694</td></tr>
+    <tr><td><strong>Coverage %</strong></td><td class="num"><strong>29.92%</strong></td><td class="num">—</td></tr>
+    <tr><td><strong>Entries w/ Code Refs</strong></td><td class="num">378 / 694 (54.47%)</td><td class="num">—</td></tr>
+  </tbody>
+</table>
+<p><strong>Top Identified Formats:</strong> <code>gfx.gba-palette</code> (353 &middot; 23,776 B (23.2 KiB)) &middot; <code>audio.m4a-song-table</code> (1 &middot; 1,056 B (1.0 KiB)) &middot; <code>compress.bios-lz77</code> (2 &middot; 368 B) &middot; <code>gba.rom-header</code> (1 &middot; 192 B)</p>
+
+<h3>Largest <code>unknown</code> Extents (Headerless / Custom Asset Candidates)</h3>
+<table>
+  <thead><tr><th>Offset</th><th class="num">Size</th><th class="num">Shannon Entropy</th><th class="num">Code Refs</th></tr></thead>
+  <tbody><tr><td><code>0x00166634</code></td><td class='num'>648,044 B (632.9 KiB)</td><td class='num'><code>6.081</code> bits/B</td><td class='num'>0</td></tr><tr><td><code>0x002747E8</code></td><td class='num'>286,400 B (279.7 KiB)</td><td class='num'><code>5.451</code> bits/B</td><td class='num'>1</td></tr><tr><td><code>0x00552614</code></td><td class='num'>271,664 B (265.3 KiB)</td><td class='num'><code>6.374</code> bits/B</td><td class='num'>0</td></tr><tr><td><code>0x004D086C</code></td><td class='num'>254,452 B (248.5 KiB)</td><td class='num'><code>7.224</code> bits/B</td><td class='num'>0</td></tr><tr><td><code>0x00223058</code></td><td class='num'>252,996 B (247.1 KiB)</td><td class='num'><code>6.187</code> bits/B</td><td class='num'>0</td></tr></tbody>
+</table>
+
+<pre><code>gzip -dk BWKJ-r0-6291b1a21f840892.asset-map.json.gz &amp;&amp; gbakit map verify rom.gba BWKJ-r0-6291b1a21f840892.asset-map.json
+gbakit assets export rom.gba --asset-map BWKJ-r0-6291b1a21f840892.asset-map.json -o out/</code></pre>
+
+
 <h2>Text, Fonts &amp; Scene Data</h2>
 <dl class="kv"><dt>Primary Text Encoding</dt><dd><strong>Custom 16-bit Huffman</strong> (<code>2</code> ASCII strings &middot; <code>200</code> Shift-JIS runs)</dd><dt>Font &amp; VWF Indicators</dt><dd><span class='badge badge-emerald'>VWF Width Table</span> <span class='badge badge-blue'>1bpp Font</span> &middot; BIOS SWIs: BitUnPack <code>0x10</code>: <code>11</code> &middot; LZ77 <code>0x11/12</code>: <code>14</code> &middot; Huffman <code>0x13</code>: <code>14</code> &middot; RLE <code>0x14/15</code>: <code>15</code></dd><dt>Scene &amp; Packaging</dt><dd><code>13</code> ROM pointer tables (&ge;32 entries, <code>1</code> &ge;200) &middot; <code>102</code> relative <code>u32</code> TOCs &middot; <code>182</code> OAM metasprite hits</dd></dl>
 
