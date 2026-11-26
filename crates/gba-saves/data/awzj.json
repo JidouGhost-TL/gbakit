@@ -1,9 +1,168 @@
 {
-  "id": "awzj",
+  "checksums": [],
+  "copy_groups": [],
+  "fields": [
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "allowed": "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789()",
+        "kind": "ascii-charset",
+        "max_len": 16
+      },
+      "description": "Title magic 'WIZARDRY(Ver121)' at save start; extends the verified stub WIZA prefix byte-for-byte.",
+      "evidence": "Baseline bytes 0x00-0x0F equal 'WIZARDRY(Ver121)' (stub magic [87,73,90,65] is its 4-byte prefix). Decomp string table is stripped (only DAT_0000001d-style refs survive, e.g. in FUN_0800d35e), so grounding is byte-level via samples/baseline.sav plus stub.",
+      "name": "title_magic",
+      "offset": 0,
+      "size": 16,
+      "type": "ascii"
+    },
+    {
+      "confidence": "likely",
+      "description": "Header roster slot 0: monster ID 227; same ID space (199-275) as summon move-list tails.",
+      "evidence": "FUN_0800d35e walks a record table (+0x138/entry) with ushort member loads/stores ((unaff_r7+0x39)); save-side u16 at file 0x14 reads 227, matching tail-list ID range; FFFF sentinels at file 0x10 and 0x1E frame the 5-entry roster.",
+      "name": "roster_id_0",
+      "offset": 20,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Header roster slot 1: monster ID 275.",
+      "evidence": "FUN_0800d35e record-table walker with ushort member access; save-side u16 at file 0x16 reads 275, inside the 199-275 tail-list ID space; framed by FFFF sentinels at file 0x10/0x1E.",
+      "name": "roster_id_1",
+      "offset": 22,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Header roster slot 2: monster ID 201.",
+      "evidence": "FUN_0800d35e record-table walker with ushort member access; save-side u16 at file 0x18 reads 201, inside the 199-275 tail-list ID space; framed by FFFF sentinels at file 0x10/0x1E.",
+      "name": "roster_id_2",
+      "offset": 24,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Header roster slot 3: monster ID 215.",
+      "evidence": "FUN_0800d35e record-table walker with ushort member access; save-side u16 at file 0x1A reads 215, inside the 199-275 tail-list ID space; framed by FFFF sentinels at file 0x10/0x1E.",
+      "name": "roster_id_3",
+      "offset": 26,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Header roster slot 4: monster ID 199; also appears as summon0 move 1, linking roster to entries.",
+      "evidence": "FUN_0800d35e record-table walker with ushort member access; save-side u16 at file 0x1C reads 199, equal to the u16 at file 0xFA (summon0 move 1); framed by FFFF sentinels at file 0x10/0x1E.",
+      "name": "roster_id_4",
+      "offset": 28,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Summon entry 0 base ranks: six rank bytes, constant across entries 0-5.",
+      "evidence": "FUN_0800a2f8 indexes a record table (param_1 * 0x3FC stride) with small member loads (+0x26); save-side entries start at file 0x2C with stride 0xE4 and share the 6-byte prefix 08 08 05 08 08 09 across entries 0-5 in samples/baseline.sav.",
+      "name": "summon0_base_ranks",
+      "offset": 44,
+      "size": 6,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Summon entry 0 HP: constant 100 across entries 0-5.",
+      "evidence": "FUN_0800d35e record walker does ushort member access at +0x39 (adjacent to +0x38); save-side u16 at file 0x38 (entry0 +0x0C) reads 100 in each of entries 0-5 in samples/baseline.sav.",
+      "name": "summon0_hp",
+      "offset": 56,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Summon entry 0 stat-cap table: eight 0x0FFF caps.",
+      "evidence": "FUN_0800a2f8 record-table accessor (param_1 * 0x3FC, +0x26 member load); save-side bytes at file 0x44-0x53 (entry0 +0x18) are eight u16 0x0FFF in each of entries 0-5 in samples/baseline.sav.",
+      "name": "summon0_stat_caps",
+      "offset": 68,
+      "size": 16,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Summon entry 0 owned/active marker: 1 in entries 0-5, 0 in empty slots.",
+      "evidence": "FUN_08008098 stores whole-word members at +0x30 in a record struct; save-side u32 at file 0x58 (entry0 +0x2C) reads 1 for entries 0-5 and 0 for empty entry slots in samples/baseline.sav.",
+      "name": "summon0_active_flag",
+      "offset": 88,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Summon entry 0 slot index: 0-5 across entries 0-5, low byte of the +0x30 member.",
+      "evidence": "FUN_08008098 accesses record-struct members at +0x30/+0x32; save-side byte at file 0x5D (entry +0x31) increments 0,1,2,3,4,5 across entries 0-5 in samples/baseline.sav.",
+      "name": "summon0_entry_index",
+      "offset": 93,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Summon entry 0 level: 10 in every populated entry 0-5; primary live-mutation scalar.",
+      "evidence": "FUN_08008098 reads/writes a record-struct member at +0x32 ((int)piVar13 + 0x32); save-side u16 at file 0x5E (entry0 +0x32) reads 10 in each of entries 0-5 in samples/baseline.sav.",
+      "name": "summon0_level",
+      "offset": 94,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Summon entry 0 ability flag bytes: 01 01 01 00 00 01 01 00.",
+      "evidence": "FUN_08008098 writes one-byte record members (e.g. (char *)(extraout_r1_00 + 0x10)); save-side bytes at file 0x68-0x6F (entry0 +0x3C) read 01 01 01 00 00 01 01 00 in samples/baseline.sav.",
+      "name": "summon0_ability_flags",
+      "offset": 104,
+      "size": 8,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Summon entry 0 move slot 0: monster ID 211.",
+      "evidence": "FUN_0800d35e table walker uses ushort member access for ID lists; save-side u16 at file 0xF8 (entry0 +0xCC) reads 211 inside the 199-275 ID space; the list is FFFF-terminated at file 0xFE.",
+      "name": "summon0_move_0",
+      "offset": 248,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Summon entry 0 move slot 1: monster ID 199; equals roster_id_4.",
+      "evidence": "FUN_0800d35e table walker uses ushort member access for ID lists; save-side u16 at file 0xFA (entry0 +0xCE) reads 199, equal to roster slot 4 at file 0x1C; list is FFFF-terminated at file 0xFE.",
+      "name": "summon0_move_1",
+      "offset": 250,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Summon entry 0 move slot 2: monster ID 227; equals roster_id_0.",
+      "evidence": "FUN_0800d35e table walker uses ushort member access for ID lists; save-side u16 at file 0xFC (entry0 +0xD0) reads 227, equal to roster slot 0 at file 0x14; list is FFFF-terminated at file 0xFE.",
+      "name": "summon0_move_2",
+      "offset": 252,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "ROM data-table pointer (0x08042943) stored in the pointer-table region; repeated at +4.",
+      "evidence": "Value at file 0x2E7C is a GBA ROM address (0x08000000 range); FUN_0800fff6 shows the indexed-table-store idiom (param_3 * 0x20) used for pointer tables; bytes verified as 43 29 04 08 in samples/baseline.sav.",
+      "name": "rom_data_ptr",
+      "offset": 11900,
+      "size": 4,
+      "type": "u32_le"
+    }
+  ],
   "game_code": "AWZJ",
-  "title": "Wizardry Summoner (Japan)",
-  "media": "sram",
-  "size_bytes": 32768,
+  "id": "awzj",
   "magic_signatures": [
     {
       "offset": 0,
@@ -11,35 +170,24 @@
         87,
         73,
         90,
-        65
-      ]
+        65,
+        82,
+        68,
+        82,
+        89,
+        40,
+        86,
+        101,
+        114,
+        49,
+        50,
+        49,
+        41
+      ],
+      "description": "ASCII 'WIZARDRY(Ver121)' title magic"
     }
   ],
-  "checksums": [],
-  "fields": [
-    {
-      "name": "magic_header",
-      "offset": 0,
-      "size": 4,
-      "type": "ascii"
-    },
-    {
-      "name": "slot_counter",
-      "offset": 4,
-      "size": 2,
-      "type": "u16_le"
-    },
-    {
-      "name": "game_progress_flags",
-      "offset": 6,
-      "size": 2,
-      "type": "u16_le"
-    },
-    {
-      "name": "player_status_payload",
-      "offset": 8,
-      "size": 16,
-      "type": "bytes"
-    }
-  ]
+  "media": "sram",
+  "size_bytes": 32768,
+  "title": "Wizardry Summoner (Japan)"
 }

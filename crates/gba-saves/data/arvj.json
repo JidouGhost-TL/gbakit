@@ -4,26 +4,465 @@
   "title": "Groove Adventure Rave - Hikari to Yami no Daikessen (Japan)",
   "media": "sram",
   "size_bytes": 32768,
-  "magic_signatures": [],
-  "checksums": [],
+  "magic_signatures": [
+    {
+      "offset": 0,
+      "bytes": [
+        27,
+        1,
+        0,
+        0
+      ],
+      "description": "Slot 0 record identifier: constant u32_le 283 (0x011B) at record start"
+    },
+    {
+      "offset": 64,
+      "bytes": [
+        27,
+        1,
+        0,
+        0
+      ],
+      "description": "Slot 1 record identifier: constant u32_le 283 (0x011B) at record start"
+    },
+    {
+      "offset": 128,
+      "bytes": [
+        27,
+        1,
+        0,
+        0
+      ],
+      "description": "Slot 2 record identifier: constant u32_le 283 (0x011B) at record start"
+    },
+    {
+      "offset": 192,
+      "bytes": [
+        27,
+        1,
+        0,
+        0
+      ],
+      "description": "Slot 3 record identifier: constant u32_le 283 (0x011B) at record start"
+    },
+    {
+      "offset": 256,
+      "bytes": [
+        27,
+        1,
+        0,
+        0
+      ],
+      "description": "Slot 4 record identifier: constant u32_le 283 (0x011B) at record start"
+    }
+  ],
+  "checksums": [
+    {
+      "name": "slot0_record_checksum",
+      "algorithm": "sum16_le_words",
+      "covered_start": 0,
+      "covered_end": 60,
+      "stored_offset": 60,
+      "seed": 0,
+      "xor_out": 65535
+    },
+    {
+      "name": "slot1_record_checksum",
+      "algorithm": "sum16_le_words",
+      "covered_start": 64,
+      "covered_end": 124,
+      "stored_offset": 124,
+      "seed": 0,
+      "xor_out": 65535
+    },
+    {
+      "name": "slot2_record_checksum",
+      "algorithm": "sum16_le_words",
+      "covered_start": 128,
+      "covered_end": 188,
+      "stored_offset": 188,
+      "seed": 0,
+      "xor_out": 65535
+    },
+    {
+      "name": "slot3_record_checksum",
+      "algorithm": "sum16_le_words",
+      "covered_start": 192,
+      "covered_end": 252,
+      "stored_offset": 252,
+      "seed": 0,
+      "xor_out": 65535
+    },
+    {
+      "name": "slot4_record_checksum",
+      "algorithm": "sum16_le_words",
+      "covered_start": 256,
+      "covered_end": 316,
+      "stored_offset": 316,
+      "seed": 0,
+      "xor_out": 65535
+    }
+  ],
   "fields": [
     {
-      "name": "slot_counter",
-      "offset": 0,
-      "size": 2,
-      "type": "u16_le"
+      "name": "slot0_flagw_0",
+      "offset": 12,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Slot 0 flag word 0: 32-bit per-slot flag/default word (baseline value 1). Exact gameplay binding is unrecovered; kept as an independent scalar so live mutation can probe it.",
+      "confidence": "guessed",
+      "evidence": "File offset 0x0C (slot 0 record base 0x00, word 0 of the eight u32 words at +0x0C..+0x2B): baseline.sav holds u32_le 1 here and in the same word of all 5 records (0x0C/0x4C/0x8C/0xCC/0x10C + 4*0), verified by direct read. This 202-function decomp slice (FUN_08000348-FUN_080716F0) contains no SRAM/EEPROM/Flash/DMA save routine, so no per-word save writer exists to cite; in-slice anchors are FUN_08022400 (bulk word/byte copy loop, the slice's only block mover) and FUN_0801036c (indexed 0x40-byte row access, precedent for the 64-byte record stride). Gameplay binding unrecovered."
     },
     {
-      "name": "game_progress_flags",
-      "offset": 2,
-      "size": 2,
-      "type": "u16_le"
+      "name": "slot0_flagw_1",
+      "offset": 16,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Slot 0 flag word 1: 32-bit per-slot flag/default word (baseline value 1). Exact gameplay binding is unrecovered; kept as an independent scalar so live mutation can probe it.",
+      "confidence": "guessed",
+      "evidence": "File offset 0x10 (slot 0 record base 0x00, word 1 of the eight u32 words at +0x0C..+0x2B): baseline.sav holds u32_le 1 here and in the same word of all 5 records (0x0C/0x4C/0x8C/0xCC/0x10C + 4*1), verified by direct read. This 202-function decomp slice (FUN_08000348-FUN_080716F0) contains no SRAM/EEPROM/Flash/DMA save routine, so no per-word save writer exists to cite; in-slice anchors are FUN_08022400 (bulk word/byte copy loop, the slice's only block mover) and FUN_0801036c (indexed 0x40-byte row access, precedent for the 64-byte record stride). Gameplay binding unrecovered."
     },
     {
-      "name": "player_status_payload",
-      "offset": 4,
-      "size": 16,
-      "type": "bytes"
+      "name": "slot0_flagw_2",
+      "offset": 20,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Slot 0 flag word 2: 32-bit per-slot flag/default word (baseline value 1). Exact gameplay binding is unrecovered; kept as an independent scalar so live mutation can probe it.",
+      "confidence": "guessed",
+      "evidence": "File offset 0x14 (slot 0 record base 0x00, word 2 of the eight u32 words at +0x0C..+0x2B): baseline.sav holds u32_le 1 here and in the same word of all 5 records (0x0C/0x4C/0x8C/0xCC/0x10C + 4*2), verified by direct read. This 202-function decomp slice (FUN_08000348-FUN_080716F0) contains no SRAM/EEPROM/Flash/DMA save routine, so no per-word save writer exists to cite; in-slice anchors are FUN_08022400 (bulk word/byte copy loop, the slice's only block mover) and FUN_0801036c (indexed 0x40-byte row access, precedent for the 64-byte record stride). Gameplay binding unrecovered."
+    },
+    {
+      "name": "slot0_flagw_3",
+      "offset": 24,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Slot 0 flag word 3: 32-bit per-slot flag/default word (baseline value 1). Exact gameplay binding is unrecovered; kept as an independent scalar so live mutation can probe it.",
+      "confidence": "guessed",
+      "evidence": "File offset 0x18 (slot 0 record base 0x00, word 3 of the eight u32 words at +0x0C..+0x2B): baseline.sav holds u32_le 1 here and in the same word of all 5 records (0x0C/0x4C/0x8C/0xCC/0x10C + 4*3), verified by direct read. This 202-function decomp slice (FUN_08000348-FUN_080716F0) contains no SRAM/EEPROM/Flash/DMA save routine, so no per-word save writer exists to cite; in-slice anchors are FUN_08022400 (bulk word/byte copy loop, the slice's only block mover) and FUN_0801036c (indexed 0x40-byte row access, precedent for the 64-byte record stride). Gameplay binding unrecovered."
+    },
+    {
+      "name": "slot0_flagw_4",
+      "offset": 28,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Slot 0 flag word 4: 32-bit per-slot flag/default word (baseline value 1). Exact gameplay binding is unrecovered; kept as an independent scalar so live mutation can probe it.",
+      "confidence": "guessed",
+      "evidence": "File offset 0x1C (slot 0 record base 0x00, word 4 of the eight u32 words at +0x0C..+0x2B): baseline.sav holds u32_le 1 here and in the same word of all 5 records (0x0C/0x4C/0x8C/0xCC/0x10C + 4*4), verified by direct read. This 202-function decomp slice (FUN_08000348-FUN_080716F0) contains no SRAM/EEPROM/Flash/DMA save routine, so no per-word save writer exists to cite; in-slice anchors are FUN_08022400 (bulk word/byte copy loop, the slice's only block mover) and FUN_0801036c (indexed 0x40-byte row access, precedent for the 64-byte record stride). Gameplay binding unrecovered."
+    },
+    {
+      "name": "slot0_flagw_5",
+      "offset": 32,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Slot 0 flag word 5: 32-bit per-slot flag/default word (baseline value 1). Exact gameplay binding is unrecovered; kept as an independent scalar so live mutation can probe it.",
+      "confidence": "guessed",
+      "evidence": "File offset 0x20 (slot 0 record base 0x00, word 5 of the eight u32 words at +0x0C..+0x2B): baseline.sav holds u32_le 1 here and in the same word of all 5 records (0x0C/0x4C/0x8C/0xCC/0x10C + 4*5), verified by direct read. This 202-function decomp slice (FUN_08000348-FUN_080716F0) contains no SRAM/EEPROM/Flash/DMA save routine, so no per-word save writer exists to cite; in-slice anchors are FUN_08022400 (bulk word/byte copy loop, the slice's only block mover) and FUN_0801036c (indexed 0x40-byte row access, precedent for the 64-byte record stride). Gameplay binding unrecovered."
+    },
+    {
+      "name": "slot0_flagw_6",
+      "offset": 36,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Slot 0 flag word 6: 32-bit per-slot flag/default word (baseline value 1). Exact gameplay binding is unrecovered; kept as an independent scalar so live mutation can probe it.",
+      "confidence": "guessed",
+      "evidence": "File offset 0x24 (slot 0 record base 0x00, word 6 of the eight u32 words at +0x0C..+0x2B): baseline.sav holds u32_le 1 here and in the same word of all 5 records (0x0C/0x4C/0x8C/0xCC/0x10C + 4*6), verified by direct read. This 202-function decomp slice (FUN_08000348-FUN_080716F0) contains no SRAM/EEPROM/Flash/DMA save routine, so no per-word save writer exists to cite; in-slice anchors are FUN_08022400 (bulk word/byte copy loop, the slice's only block mover) and FUN_0801036c (indexed 0x40-byte row access, precedent for the 64-byte record stride). Gameplay binding unrecovered."
+    },
+    {
+      "name": "slot0_flagw_7",
+      "offset": 40,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Slot 0 flag word 7: 32-bit per-slot flag/default word (baseline value 1). Exact gameplay binding is unrecovered; kept as an independent scalar so live mutation can probe it.",
+      "confidence": "guessed",
+      "evidence": "File offset 0x28 (slot 0 record base 0x00, word 7 of the eight u32 words at +0x0C..+0x2B): baseline.sav holds u32_le 1 here and in the same word of all 5 records (0x0C/0x4C/0x8C/0xCC/0x10C + 4*7), verified by direct read. This 202-function decomp slice (FUN_08000348-FUN_080716F0) contains no SRAM/EEPROM/Flash/DMA save routine, so no per-word save writer exists to cite; in-slice anchors are FUN_08022400 (bulk word/byte copy loop, the slice's only block mover) and FUN_0801036c (indexed 0x40-byte row access, precedent for the 64-byte record stride). Gameplay binding unrecovered."
+    },
+    {
+      "name": "slot1_flagw_0",
+      "offset": 76,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Slot 1 flag word 0: 32-bit per-slot flag/default word (baseline value 1). Exact gameplay binding is unrecovered; kept as an independent scalar so live mutation can probe it.",
+      "confidence": "guessed",
+      "evidence": "File offset 0x4C (slot 1 record base 0x40, word 0 of the eight u32 words at +0x0C..+0x2B): baseline.sav holds u32_le 1 here and in the same word of all 5 records (0x0C/0x4C/0x8C/0xCC/0x10C + 4*0), verified by direct read. This 202-function decomp slice (FUN_08000348-FUN_080716F0) contains no SRAM/EEPROM/Flash/DMA save routine, so no per-word save writer exists to cite; in-slice anchors are FUN_08022400 (bulk word/byte copy loop, the slice's only block mover) and FUN_0801036c (indexed 0x40-byte row access, precedent for the 64-byte record stride). Gameplay binding unrecovered."
+    },
+    {
+      "name": "slot1_flagw_1",
+      "offset": 80,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Slot 1 flag word 1: 32-bit per-slot flag/default word (baseline value 1). Exact gameplay binding is unrecovered; kept as an independent scalar so live mutation can probe it.",
+      "confidence": "guessed",
+      "evidence": "File offset 0x50 (slot 1 record base 0x40, word 1 of the eight u32 words at +0x0C..+0x2B): baseline.sav holds u32_le 1 here and in the same word of all 5 records (0x0C/0x4C/0x8C/0xCC/0x10C + 4*1), verified by direct read. This 202-function decomp slice (FUN_08000348-FUN_080716F0) contains no SRAM/EEPROM/Flash/DMA save routine, so no per-word save writer exists to cite; in-slice anchors are FUN_08022400 (bulk word/byte copy loop, the slice's only block mover) and FUN_0801036c (indexed 0x40-byte row access, precedent for the 64-byte record stride). Gameplay binding unrecovered."
+    },
+    {
+      "name": "slot1_flagw_2",
+      "offset": 84,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Slot 1 flag word 2: 32-bit per-slot flag/default word (baseline value 1). Exact gameplay binding is unrecovered; kept as an independent scalar so live mutation can probe it.",
+      "confidence": "guessed",
+      "evidence": "File offset 0x54 (slot 1 record base 0x40, word 2 of the eight u32 words at +0x0C..+0x2B): baseline.sav holds u32_le 1 here and in the same word of all 5 records (0x0C/0x4C/0x8C/0xCC/0x10C + 4*2), verified by direct read. This 202-function decomp slice (FUN_08000348-FUN_080716F0) contains no SRAM/EEPROM/Flash/DMA save routine, so no per-word save writer exists to cite; in-slice anchors are FUN_08022400 (bulk word/byte copy loop, the slice's only block mover) and FUN_0801036c (indexed 0x40-byte row access, precedent for the 64-byte record stride). Gameplay binding unrecovered."
+    },
+    {
+      "name": "slot1_flagw_3",
+      "offset": 88,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Slot 1 flag word 3: 32-bit per-slot flag/default word (baseline value 1). Exact gameplay binding is unrecovered; kept as an independent scalar so live mutation can probe it.",
+      "confidence": "guessed",
+      "evidence": "File offset 0x58 (slot 1 record base 0x40, word 3 of the eight u32 words at +0x0C..+0x2B): baseline.sav holds u32_le 1 here and in the same word of all 5 records (0x0C/0x4C/0x8C/0xCC/0x10C + 4*3), verified by direct read. This 202-function decomp slice (FUN_08000348-FUN_080716F0) contains no SRAM/EEPROM/Flash/DMA save routine, so no per-word save writer exists to cite; in-slice anchors are FUN_08022400 (bulk word/byte copy loop, the slice's only block mover) and FUN_0801036c (indexed 0x40-byte row access, precedent for the 64-byte record stride). Gameplay binding unrecovered."
+    },
+    {
+      "name": "slot1_flagw_4",
+      "offset": 92,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Slot 1 flag word 4: 32-bit per-slot flag/default word (baseline value 1). Exact gameplay binding is unrecovered; kept as an independent scalar so live mutation can probe it.",
+      "confidence": "guessed",
+      "evidence": "File offset 0x5C (slot 1 record base 0x40, word 4 of the eight u32 words at +0x0C..+0x2B): baseline.sav holds u32_le 1 here and in the same word of all 5 records (0x0C/0x4C/0x8C/0xCC/0x10C + 4*4), verified by direct read. This 202-function decomp slice (FUN_08000348-FUN_080716F0) contains no SRAM/EEPROM/Flash/DMA save routine, so no per-word save writer exists to cite; in-slice anchors are FUN_08022400 (bulk word/byte copy loop, the slice's only block mover) and FUN_0801036c (indexed 0x40-byte row access, precedent for the 64-byte record stride). Gameplay binding unrecovered."
+    },
+    {
+      "name": "slot1_flagw_5",
+      "offset": 96,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Slot 1 flag word 5: 32-bit per-slot flag/default word (baseline value 1). Exact gameplay binding is unrecovered; kept as an independent scalar so live mutation can probe it.",
+      "confidence": "guessed",
+      "evidence": "File offset 0x60 (slot 1 record base 0x40, word 5 of the eight u32 words at +0x0C..+0x2B): baseline.sav holds u32_le 1 here and in the same word of all 5 records (0x0C/0x4C/0x8C/0xCC/0x10C + 4*5), verified by direct read. This 202-function decomp slice (FUN_08000348-FUN_080716F0) contains no SRAM/EEPROM/Flash/DMA save routine, so no per-word save writer exists to cite; in-slice anchors are FUN_08022400 (bulk word/byte copy loop, the slice's only block mover) and FUN_0801036c (indexed 0x40-byte row access, precedent for the 64-byte record stride). Gameplay binding unrecovered."
+    },
+    {
+      "name": "slot1_flagw_6",
+      "offset": 100,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Slot 1 flag word 6: 32-bit per-slot flag/default word (baseline value 1). Exact gameplay binding is unrecovered; kept as an independent scalar so live mutation can probe it.",
+      "confidence": "guessed",
+      "evidence": "File offset 0x64 (slot 1 record base 0x40, word 6 of the eight u32 words at +0x0C..+0x2B): baseline.sav holds u32_le 1 here and in the same word of all 5 records (0x0C/0x4C/0x8C/0xCC/0x10C + 4*6), verified by direct read. This 202-function decomp slice (FUN_08000348-FUN_080716F0) contains no SRAM/EEPROM/Flash/DMA save routine, so no per-word save writer exists to cite; in-slice anchors are FUN_08022400 (bulk word/byte copy loop, the slice's only block mover) and FUN_0801036c (indexed 0x40-byte row access, precedent for the 64-byte record stride). Gameplay binding unrecovered."
+    },
+    {
+      "name": "slot1_flagw_7",
+      "offset": 104,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Slot 1 flag word 7: 32-bit per-slot flag/default word (baseline value 1). Exact gameplay binding is unrecovered; kept as an independent scalar so live mutation can probe it.",
+      "confidence": "guessed",
+      "evidence": "File offset 0x68 (slot 1 record base 0x40, word 7 of the eight u32 words at +0x0C..+0x2B): baseline.sav holds u32_le 1 here and in the same word of all 5 records (0x0C/0x4C/0x8C/0xCC/0x10C + 4*7), verified by direct read. This 202-function decomp slice (FUN_08000348-FUN_080716F0) contains no SRAM/EEPROM/Flash/DMA save routine, so no per-word save writer exists to cite; in-slice anchors are FUN_08022400 (bulk word/byte copy loop, the slice's only block mover) and FUN_0801036c (indexed 0x40-byte row access, precedent for the 64-byte record stride). Gameplay binding unrecovered."
+    },
+    {
+      "name": "slot2_flagw_0",
+      "offset": 140,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Slot 2 flag word 0: 32-bit per-slot flag/default word (baseline value 1). Exact gameplay binding is unrecovered; kept as an independent scalar so live mutation can probe it.",
+      "confidence": "guessed",
+      "evidence": "File offset 0x8C (slot 2 record base 0x80, word 0 of the eight u32 words at +0x0C..+0x2B): baseline.sav holds u32_le 1 here and in the same word of all 5 records (0x0C/0x4C/0x8C/0xCC/0x10C + 4*0), verified by direct read. This 202-function decomp slice (FUN_08000348-FUN_080716F0) contains no SRAM/EEPROM/Flash/DMA save routine, so no per-word save writer exists to cite; in-slice anchors are FUN_08022400 (bulk word/byte copy loop, the slice's only block mover) and FUN_0801036c (indexed 0x40-byte row access, precedent for the 64-byte record stride). Gameplay binding unrecovered."
+    },
+    {
+      "name": "slot2_flagw_1",
+      "offset": 144,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Slot 2 flag word 1: 32-bit per-slot flag/default word (baseline value 1). Exact gameplay binding is unrecovered; kept as an independent scalar so live mutation can probe it.",
+      "confidence": "guessed",
+      "evidence": "File offset 0x90 (slot 2 record base 0x80, word 1 of the eight u32 words at +0x0C..+0x2B): baseline.sav holds u32_le 1 here and in the same word of all 5 records (0x0C/0x4C/0x8C/0xCC/0x10C + 4*1), verified by direct read. This 202-function decomp slice (FUN_08000348-FUN_080716F0) contains no SRAM/EEPROM/Flash/DMA save routine, so no per-word save writer exists to cite; in-slice anchors are FUN_08022400 (bulk word/byte copy loop, the slice's only block mover) and FUN_0801036c (indexed 0x40-byte row access, precedent for the 64-byte record stride). Gameplay binding unrecovered."
+    },
+    {
+      "name": "slot2_flagw_2",
+      "offset": 148,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Slot 2 flag word 2: 32-bit per-slot flag/default word (baseline value 1). Exact gameplay binding is unrecovered; kept as an independent scalar so live mutation can probe it.",
+      "confidence": "guessed",
+      "evidence": "File offset 0x94 (slot 2 record base 0x80, word 2 of the eight u32 words at +0x0C..+0x2B): baseline.sav holds u32_le 1 here and in the same word of all 5 records (0x0C/0x4C/0x8C/0xCC/0x10C + 4*2), verified by direct read. This 202-function decomp slice (FUN_08000348-FUN_080716F0) contains no SRAM/EEPROM/Flash/DMA save routine, so no per-word save writer exists to cite; in-slice anchors are FUN_08022400 (bulk word/byte copy loop, the slice's only block mover) and FUN_0801036c (indexed 0x40-byte row access, precedent for the 64-byte record stride). Gameplay binding unrecovered."
+    },
+    {
+      "name": "slot2_flagw_3",
+      "offset": 152,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Slot 2 flag word 3: 32-bit per-slot flag/default word (baseline value 1). Exact gameplay binding is unrecovered; kept as an independent scalar so live mutation can probe it.",
+      "confidence": "guessed",
+      "evidence": "File offset 0x98 (slot 2 record base 0x80, word 3 of the eight u32 words at +0x0C..+0x2B): baseline.sav holds u32_le 1 here and in the same word of all 5 records (0x0C/0x4C/0x8C/0xCC/0x10C + 4*3), verified by direct read. This 202-function decomp slice (FUN_08000348-FUN_080716F0) contains no SRAM/EEPROM/Flash/DMA save routine, so no per-word save writer exists to cite; in-slice anchors are FUN_08022400 (bulk word/byte copy loop, the slice's only block mover) and FUN_0801036c (indexed 0x40-byte row access, precedent for the 64-byte record stride). Gameplay binding unrecovered."
+    },
+    {
+      "name": "slot2_flagw_4",
+      "offset": 156,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Slot 2 flag word 4: 32-bit per-slot flag/default word (baseline value 1). Exact gameplay binding is unrecovered; kept as an independent scalar so live mutation can probe it.",
+      "confidence": "guessed",
+      "evidence": "File offset 0x9C (slot 2 record base 0x80, word 4 of the eight u32 words at +0x0C..+0x2B): baseline.sav holds u32_le 1 here and in the same word of all 5 records (0x0C/0x4C/0x8C/0xCC/0x10C + 4*4), verified by direct read. This 202-function decomp slice (FUN_08000348-FUN_080716F0) contains no SRAM/EEPROM/Flash/DMA save routine, so no per-word save writer exists to cite; in-slice anchors are FUN_08022400 (bulk word/byte copy loop, the slice's only block mover) and FUN_0801036c (indexed 0x40-byte row access, precedent for the 64-byte record stride). Gameplay binding unrecovered."
+    },
+    {
+      "name": "slot2_flagw_5",
+      "offset": 160,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Slot 2 flag word 5: 32-bit per-slot flag/default word (baseline value 1). Exact gameplay binding is unrecovered; kept as an independent scalar so live mutation can probe it.",
+      "confidence": "guessed",
+      "evidence": "File offset 0xA0 (slot 2 record base 0x80, word 5 of the eight u32 words at +0x0C..+0x2B): baseline.sav holds u32_le 1 here and in the same word of all 5 records (0x0C/0x4C/0x8C/0xCC/0x10C + 4*5), verified by direct read. This 202-function decomp slice (FUN_08000348-FUN_080716F0) contains no SRAM/EEPROM/Flash/DMA save routine, so no per-word save writer exists to cite; in-slice anchors are FUN_08022400 (bulk word/byte copy loop, the slice's only block mover) and FUN_0801036c (indexed 0x40-byte row access, precedent for the 64-byte record stride). Gameplay binding unrecovered."
+    },
+    {
+      "name": "slot2_flagw_6",
+      "offset": 164,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Slot 2 flag word 6: 32-bit per-slot flag/default word (baseline value 1). Exact gameplay binding is unrecovered; kept as an independent scalar so live mutation can probe it.",
+      "confidence": "guessed",
+      "evidence": "File offset 0xA4 (slot 2 record base 0x80, word 6 of the eight u32 words at +0x0C..+0x2B): baseline.sav holds u32_le 1 here and in the same word of all 5 records (0x0C/0x4C/0x8C/0xCC/0x10C + 4*6), verified by direct read. This 202-function decomp slice (FUN_08000348-FUN_080716F0) contains no SRAM/EEPROM/Flash/DMA save routine, so no per-word save writer exists to cite; in-slice anchors are FUN_08022400 (bulk word/byte copy loop, the slice's only block mover) and FUN_0801036c (indexed 0x40-byte row access, precedent for the 64-byte record stride). Gameplay binding unrecovered."
+    },
+    {
+      "name": "slot2_flagw_7",
+      "offset": 168,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Slot 2 flag word 7: 32-bit per-slot flag/default word (baseline value 1). Exact gameplay binding is unrecovered; kept as an independent scalar so live mutation can probe it.",
+      "confidence": "guessed",
+      "evidence": "File offset 0xA8 (slot 2 record base 0x80, word 7 of the eight u32 words at +0x0C..+0x2B): baseline.sav holds u32_le 1 here and in the same word of all 5 records (0x0C/0x4C/0x8C/0xCC/0x10C + 4*7), verified by direct read. This 202-function decomp slice (FUN_08000348-FUN_080716F0) contains no SRAM/EEPROM/Flash/DMA save routine, so no per-word save writer exists to cite; in-slice anchors are FUN_08022400 (bulk word/byte copy loop, the slice's only block mover) and FUN_0801036c (indexed 0x40-byte row access, precedent for the 64-byte record stride). Gameplay binding unrecovered."
+    },
+    {
+      "name": "slot3_flagw_0",
+      "offset": 204,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Slot 3 flag word 0: 32-bit per-slot flag/default word (baseline value 1). Exact gameplay binding is unrecovered; kept as an independent scalar so live mutation can probe it.",
+      "confidence": "guessed",
+      "evidence": "File offset 0xCC (slot 3 record base 0xC0, word 0 of the eight u32 words at +0x0C..+0x2B): baseline.sav holds u32_le 1 here and in the same word of all 5 records (0x0C/0x4C/0x8C/0xCC/0x10C + 4*0), verified by direct read. This 202-function decomp slice (FUN_08000348-FUN_080716F0) contains no SRAM/EEPROM/Flash/DMA save routine, so no per-word save writer exists to cite; in-slice anchors are FUN_08022400 (bulk word/byte copy loop, the slice's only block mover) and FUN_0801036c (indexed 0x40-byte row access, precedent for the 64-byte record stride). Gameplay binding unrecovered."
+    },
+    {
+      "name": "slot3_flagw_1",
+      "offset": 208,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Slot 3 flag word 1: 32-bit per-slot flag/default word (baseline value 1). Exact gameplay binding is unrecovered; kept as an independent scalar so live mutation can probe it.",
+      "confidence": "guessed",
+      "evidence": "File offset 0xD0 (slot 3 record base 0xC0, word 1 of the eight u32 words at +0x0C..+0x2B): baseline.sav holds u32_le 1 here and in the same word of all 5 records (0x0C/0x4C/0x8C/0xCC/0x10C + 4*1), verified by direct read. This 202-function decomp slice (FUN_08000348-FUN_080716F0) contains no SRAM/EEPROM/Flash/DMA save routine, so no per-word save writer exists to cite; in-slice anchors are FUN_08022400 (bulk word/byte copy loop, the slice's only block mover) and FUN_0801036c (indexed 0x40-byte row access, precedent for the 64-byte record stride). Gameplay binding unrecovered."
+    },
+    {
+      "name": "slot3_flagw_2",
+      "offset": 212,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Slot 3 flag word 2: 32-bit per-slot flag/default word (baseline value 1). Exact gameplay binding is unrecovered; kept as an independent scalar so live mutation can probe it.",
+      "confidence": "guessed",
+      "evidence": "File offset 0xD4 (slot 3 record base 0xC0, word 2 of the eight u32 words at +0x0C..+0x2B): baseline.sav holds u32_le 1 here and in the same word of all 5 records (0x0C/0x4C/0x8C/0xCC/0x10C + 4*2), verified by direct read. This 202-function decomp slice (FUN_08000348-FUN_080716F0) contains no SRAM/EEPROM/Flash/DMA save routine, so no per-word save writer exists to cite; in-slice anchors are FUN_08022400 (bulk word/byte copy loop, the slice's only block mover) and FUN_0801036c (indexed 0x40-byte row access, precedent for the 64-byte record stride). Gameplay binding unrecovered."
+    },
+    {
+      "name": "slot3_flagw_3",
+      "offset": 216,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Slot 3 flag word 3: 32-bit per-slot flag/default word (baseline value 1). Exact gameplay binding is unrecovered; kept as an independent scalar so live mutation can probe it.",
+      "confidence": "guessed",
+      "evidence": "File offset 0xD8 (slot 3 record base 0xC0, word 3 of the eight u32 words at +0x0C..+0x2B): baseline.sav holds u32_le 1 here and in the same word of all 5 records (0x0C/0x4C/0x8C/0xCC/0x10C + 4*3), verified by direct read. This 202-function decomp slice (FUN_08000348-FUN_080716F0) contains no SRAM/EEPROM/Flash/DMA save routine, so no per-word save writer exists to cite; in-slice anchors are FUN_08022400 (bulk word/byte copy loop, the slice's only block mover) and FUN_0801036c (indexed 0x40-byte row access, precedent for the 64-byte record stride). Gameplay binding unrecovered."
+    },
+    {
+      "name": "slot3_flagw_4",
+      "offset": 220,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Slot 3 flag word 4: 32-bit per-slot flag/default word (baseline value 1). Exact gameplay binding is unrecovered; kept as an independent scalar so live mutation can probe it.",
+      "confidence": "guessed",
+      "evidence": "File offset 0xDC (slot 3 record base 0xC0, word 4 of the eight u32 words at +0x0C..+0x2B): baseline.sav holds u32_le 1 here and in the same word of all 5 records (0x0C/0x4C/0x8C/0xCC/0x10C + 4*4), verified by direct read. This 202-function decomp slice (FUN_08000348-FUN_080716F0) contains no SRAM/EEPROM/Flash/DMA save routine, so no per-word save writer exists to cite; in-slice anchors are FUN_08022400 (bulk word/byte copy loop, the slice's only block mover) and FUN_0801036c (indexed 0x40-byte row access, precedent for the 64-byte record stride). Gameplay binding unrecovered."
+    },
+    {
+      "name": "slot3_flagw_5",
+      "offset": 224,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Slot 3 flag word 5: 32-bit per-slot flag/default word (baseline value 1). Exact gameplay binding is unrecovered; kept as an independent scalar so live mutation can probe it.",
+      "confidence": "guessed",
+      "evidence": "File offset 0xE0 (slot 3 record base 0xC0, word 5 of the eight u32 words at +0x0C..+0x2B): baseline.sav holds u32_le 1 here and in the same word of all 5 records (0x0C/0x4C/0x8C/0xCC/0x10C + 4*5), verified by direct read. This 202-function decomp slice (FUN_08000348-FUN_080716F0) contains no SRAM/EEPROM/Flash/DMA save routine, so no per-word save writer exists to cite; in-slice anchors are FUN_08022400 (bulk word/byte copy loop, the slice's only block mover) and FUN_0801036c (indexed 0x40-byte row access, precedent for the 64-byte record stride). Gameplay binding unrecovered."
+    },
+    {
+      "name": "slot3_flagw_6",
+      "offset": 228,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Slot 3 flag word 6: 32-bit per-slot flag/default word (baseline value 1). Exact gameplay binding is unrecovered; kept as an independent scalar so live mutation can probe it.",
+      "confidence": "guessed",
+      "evidence": "File offset 0xE4 (slot 3 record base 0xC0, word 6 of the eight u32 words at +0x0C..+0x2B): baseline.sav holds u32_le 1 here and in the same word of all 5 records (0x0C/0x4C/0x8C/0xCC/0x10C + 4*6), verified by direct read. This 202-function decomp slice (FUN_08000348-FUN_080716F0) contains no SRAM/EEPROM/Flash/DMA save routine, so no per-word save writer exists to cite; in-slice anchors are FUN_08022400 (bulk word/byte copy loop, the slice's only block mover) and FUN_0801036c (indexed 0x40-byte row access, precedent for the 64-byte record stride). Gameplay binding unrecovered."
+    },
+    {
+      "name": "slot3_flagw_7",
+      "offset": 232,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Slot 3 flag word 7: 32-bit per-slot flag/default word (baseline value 1). Exact gameplay binding is unrecovered; kept as an independent scalar so live mutation can probe it.",
+      "confidence": "guessed",
+      "evidence": "File offset 0xE8 (slot 3 record base 0xC0, word 7 of the eight u32 words at +0x0C..+0x2B): baseline.sav holds u32_le 1 here and in the same word of all 5 records (0x0C/0x4C/0x8C/0xCC/0x10C + 4*7), verified by direct read. This 202-function decomp slice (FUN_08000348-FUN_080716F0) contains no SRAM/EEPROM/Flash/DMA save routine, so no per-word save writer exists to cite; in-slice anchors are FUN_08022400 (bulk word/byte copy loop, the slice's only block mover) and FUN_0801036c (indexed 0x40-byte row access, precedent for the 64-byte record stride). Gameplay binding unrecovered."
+    },
+    {
+      "name": "slot4_flagw_0",
+      "offset": 268,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Slot 4 flag word 0: 32-bit per-slot flag/default word (baseline value 1). Exact gameplay binding is unrecovered; kept as an independent scalar so live mutation can probe it.",
+      "confidence": "guessed",
+      "evidence": "File offset 0x10C (slot 4 record base 0x100, word 0 of the eight u32 words at +0x0C..+0x2B): baseline.sav holds u32_le 1 here and in the same word of all 5 records (0x0C/0x4C/0x8C/0xCC/0x10C + 4*0), verified by direct read. This 202-function decomp slice (FUN_08000348-FUN_080716F0) contains no SRAM/EEPROM/Flash/DMA save routine, so no per-word save writer exists to cite; in-slice anchors are FUN_08022400 (bulk word/byte copy loop, the slice's only block mover) and FUN_0801036c (indexed 0x40-byte row access, precedent for the 64-byte record stride). Gameplay binding unrecovered."
+    },
+    {
+      "name": "slot4_flagw_1",
+      "offset": 272,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Slot 4 flag word 1: 32-bit per-slot flag/default word (baseline value 1). Exact gameplay binding is unrecovered; kept as an independent scalar so live mutation can probe it.",
+      "confidence": "guessed",
+      "evidence": "File offset 0x110 (slot 4 record base 0x100, word 1 of the eight u32 words at +0x0C..+0x2B): baseline.sav holds u32_le 1 here and in the same word of all 5 records (0x0C/0x4C/0x8C/0xCC/0x10C + 4*1), verified by direct read. This 202-function decomp slice (FUN_08000348-FUN_080716F0) contains no SRAM/EEPROM/Flash/DMA save routine, so no per-word save writer exists to cite; in-slice anchors are FUN_08022400 (bulk word/byte copy loop, the slice's only block mover) and FUN_0801036c (indexed 0x40-byte row access, precedent for the 64-byte record stride). Gameplay binding unrecovered."
+    },
+    {
+      "name": "slot4_flagw_2",
+      "offset": 276,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Slot 4 flag word 2: 32-bit per-slot flag/default word (baseline value 1). Exact gameplay binding is unrecovered; kept as an independent scalar so live mutation can probe it.",
+      "confidence": "guessed",
+      "evidence": "File offset 0x114 (slot 4 record base 0x100, word 2 of the eight u32 words at +0x0C..+0x2B): baseline.sav holds u32_le 1 here and in the same word of all 5 records (0x0C/0x4C/0x8C/0xCC/0x10C + 4*2), verified by direct read. This 202-function decomp slice (FUN_08000348-FUN_080716F0) contains no SRAM/EEPROM/Flash/DMA save routine, so no per-word save writer exists to cite; in-slice anchors are FUN_08022400 (bulk word/byte copy loop, the slice's only block mover) and FUN_0801036c (indexed 0x40-byte row access, precedent for the 64-byte record stride). Gameplay binding unrecovered."
+    },
+    {
+      "name": "slot4_flagw_3",
+      "offset": 280,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Slot 4 flag word 3: 32-bit per-slot flag/default word (baseline value 1). Exact gameplay binding is unrecovered; kept as an independent scalar so live mutation can probe it.",
+      "confidence": "guessed",
+      "evidence": "File offset 0x118 (slot 4 record base 0x100, word 3 of the eight u32 words at +0x0C..+0x2B): baseline.sav holds u32_le 1 here and in the same word of all 5 records (0x0C/0x4C/0x8C/0xCC/0x10C + 4*3), verified by direct read. This 202-function decomp slice (FUN_08000348-FUN_080716F0) contains no SRAM/EEPROM/Flash/DMA save routine, so no per-word save writer exists to cite; in-slice anchors are FUN_08022400 (bulk word/byte copy loop, the slice's only block mover) and FUN_0801036c (indexed 0x40-byte row access, precedent for the 64-byte record stride). Gameplay binding unrecovered."
+    },
+    {
+      "name": "slot4_flagw_4",
+      "offset": 284,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Slot 4 flag word 4: 32-bit per-slot flag/default word (baseline value 1). Exact gameplay binding is unrecovered; kept as an independent scalar so live mutation can probe it.",
+      "confidence": "guessed",
+      "evidence": "File offset 0x11C (slot 4 record base 0x100, word 4 of the eight u32 words at +0x0C..+0x2B): baseline.sav holds u32_le 1 here and in the same word of all 5 records (0x0C/0x4C/0x8C/0xCC/0x10C + 4*4), verified by direct read. This 202-function decomp slice (FUN_08000348-FUN_080716F0) contains no SRAM/EEPROM/Flash/DMA save routine, so no per-word save writer exists to cite; in-slice anchors are FUN_08022400 (bulk word/byte copy loop, the slice's only block mover) and FUN_0801036c (indexed 0x40-byte row access, precedent for the 64-byte record stride). Gameplay binding unrecovered."
+    },
+    {
+      "name": "slot4_flagw_5",
+      "offset": 288,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Slot 4 flag word 5: 32-bit per-slot flag/default word (baseline value 1). Exact gameplay binding is unrecovered; kept as an independent scalar so live mutation can probe it.",
+      "confidence": "guessed",
+      "evidence": "File offset 0x120 (slot 4 record base 0x100, word 5 of the eight u32 words at +0x0C..+0x2B): baseline.sav holds u32_le 1 here and in the same word of all 5 records (0x0C/0x4C/0x8C/0xCC/0x10C + 4*5), verified by direct read. This 202-function decomp slice (FUN_08000348-FUN_080716F0) contains no SRAM/EEPROM/Flash/DMA save routine, so no per-word save writer exists to cite; in-slice anchors are FUN_08022400 (bulk word/byte copy loop, the slice's only block mover) and FUN_0801036c (indexed 0x40-byte row access, precedent for the 64-byte record stride). Gameplay binding unrecovered."
+    },
+    {
+      "name": "slot4_flagw_6",
+      "offset": 292,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Slot 4 flag word 6: 32-bit per-slot flag/default word (baseline value 1). Exact gameplay binding is unrecovered; kept as an independent scalar so live mutation can probe it.",
+      "confidence": "guessed",
+      "evidence": "File offset 0x124 (slot 4 record base 0x100, word 6 of the eight u32 words at +0x0C..+0x2B): baseline.sav holds u32_le 1 here and in the same word of all 5 records (0x0C/0x4C/0x8C/0xCC/0x10C + 4*6), verified by direct read. This 202-function decomp slice (FUN_08000348-FUN_080716F0) contains no SRAM/EEPROM/Flash/DMA save routine, so no per-word save writer exists to cite; in-slice anchors are FUN_08022400 (bulk word/byte copy loop, the slice's only block mover) and FUN_0801036c (indexed 0x40-byte row access, precedent for the 64-byte record stride). Gameplay binding unrecovered."
+    },
+    {
+      "name": "slot4_flagw_7",
+      "offset": 296,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Slot 4 flag word 7: 32-bit per-slot flag/default word (baseline value 1). Exact gameplay binding is unrecovered; kept as an independent scalar so live mutation can probe it.",
+      "confidence": "guessed",
+      "evidence": "File offset 0x128 (slot 4 record base 0x100, word 7 of the eight u32 words at +0x0C..+0x2B): baseline.sav holds u32_le 1 here and in the same word of all 5 records (0x0C/0x4C/0x8C/0xCC/0x10C + 4*7), verified by direct read. This 202-function decomp slice (FUN_08000348-FUN_080716F0) contains no SRAM/EEPROM/Flash/DMA save routine, so no per-word save writer exists to cite; in-slice anchors are FUN_08022400 (bulk word/byte copy loop, the slice's only block mover) and FUN_0801036c (indexed 0x40-byte row access, precedent for the 64-byte record stride). Gameplay binding unrecovered."
     }
   ]
 }

@@ -1,45 +1,179 @@
 {
-  "id": "a8ej",
-  "game_code": "A8EJ",
-  "title": "Hachiemon (Japan)",
-  "media": "eeprom512",
-  "size_bytes": 512,
-  "magic_signatures": [
+  "checksums": [
     {
-      "offset": 0,
-      "bytes": [
-        111,
-        109,
-        101,
-        105
-      ]
+      "algorithm": "sum16_le",
+      "covered_end": 166,
+      "covered_start": 0,
+      "description": "Slot 0 byte-sum over magic+records; 940 == sum of 'hachiemon' bytes in zeroed baseline.",
+      "name": "slot0_checksum",
+      "stored_offset": 166
+    },
+    {
+      "algorithm": "sum16_le",
+      "covered_end": 334,
+      "covered_start": 168,
+      "description": "Slot 1 byte-sum over magic+records; matches stored 0x03AC in baseline.",
+      "name": "slot1_checksum",
+      "stored_offset": 334
+    },
+    {
+      "algorithm": "sum16_le",
+      "covered_end": 502,
+      "covered_start": 336,
+      "description": "Slot 2 byte-sum over magic+records; matches stored 0x03AC in baseline.",
+      "name": "slot2_checksum",
+      "stored_offset": 502
     }
   ],
-  "checksums": [],
+  "eeprom_rev8": true,
   "fields": [
     {
-      "name": "magic_header",
+      "confidence": "confirmed",
+      "constraint": {
+        "allowed": "abcdefghijklmnopqrstuvwxyz",
+        "kind": "ascii-charset",
+        "max_len": 9
+      },
+      "description": "Slot 0 header magic 'hachiemon' (EEPROM 8-byte blocks 0-1, rev8 logical domain).",
+      "evidence": "FUN_08075934 reads 8-byte EEPROM blocks into RAM buffer; FUN_08075ac0 verifies a block via FUN_08075934 plus 4xshort compare. Baseline rev8-logical bytes 0x00-0x08 spell 'hachiemon'.",
+      "name": "slot0_magic",
       "offset": 0,
-      "size": 4,
+      "size": 9,
       "type": "ascii"
     },
     {
-      "name": "slot_counter",
-      "offset": 4,
-      "size": 2,
-      "type": "u16_le"
-    },
-    {
-      "name": "game_progress_flags",
-      "offset": 6,
-      "size": 2,
-      "type": "u16_le"
-    },
-    {
-      "name": "player_status_payload",
-      "offset": 8,
-      "size": 16,
+      "confidence": "likely",
+      "description": "Slot 0 interior record area between magic and checksum; all zero in live baseline so interior semantics are unknown and left undecoded.",
+      "evidence": "Delimited by verified slot0 magic (ends 0x09) and verified slot0 checksum (starts 0xA6); span is a whole number of FUN_08075934 8-byte EEPROM blocks (blocks 1-20 partial). Checksum at 0xA6 covers this span.",
+      "name": "slot0_records",
+      "offset": 9,
+      "size": 157,
       "type": "bytes"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Slot 0 trailing checksum word; 940 (0x03AC) equals the byte-sum of slot bytes 0x00-0xA5 in baseline.",
+      "evidence": "Python cross-check: sum(baseline[0:166]) == 940 == u16 LE at 0xA6; identical relation holds for slots 1 and 2. Written back through FUN_080759e4 8-byte block writes.",
+      "name": "slot0_checksum",
+      "offset": 166,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "allowed": "abcdefghijklmnopqrstuvwxyz",
+        "kind": "ascii-charset",
+        "max_len": 9
+      },
+      "description": "Slot 1 header magic 'hachiemon' at the 168-byte slot stride (EEPROM blocks 21-22).",
+      "evidence": "Same FUN_08075934 block protocol; slot stride 168 = 21 blocks. Baseline rev8-logical bytes 0xA8-0xB0 spell 'hachiemon', repeating the slot 0 header exactly one stride later.",
+      "name": "slot1_magic",
+      "offset": 168,
+      "size": 9,
+      "type": "ascii"
+    },
+    {
+      "confidence": "likely",
+      "description": "Slot 1 interior record area; all zero in live baseline so interior semantics are unknown and left undecoded.",
+      "evidence": "FUN_08075934 reads this span as EEPROM blocks 22-41 and FUN_080759e4 writes it back; delimited by verified slot1 magic (ends 0xB1) and verified slot1 checksum (starts 0x14E) with the same 157-byte interior geometry as slot 0.",
+      "name": "slot1_records",
+      "offset": 177,
+      "size": 157,
+      "type": "bytes"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Slot 1 trailing checksum word; 940 (0x03AC) equals the byte-sum of slot bytes 0xA8-0x14D in baseline.",
+      "evidence": "Python cross-check: sum(baseline[168:334]) == 940 == u16 LE at 0x14E. Written back through FUN_080759e4 8-byte block writes.",
+      "name": "slot1_checksum",
+      "offset": 334,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "allowed": "abcdefghijklmnopqrstuvwxyz",
+        "kind": "ascii-charset",
+        "max_len": 9
+      },
+      "description": "Slot 2 header magic 'hachiemon' at twice the 168-byte slot stride (EEPROM blocks 42-43).",
+      "evidence": "Same FUN_08075934 block protocol. Baseline rev8-logical bytes 0x150-0x158 spell 'hachiemon', repeating the header exactly two strides after slot 0.",
+      "name": "slot2_magic",
+      "offset": 336,
+      "size": 9,
+      "type": "ascii"
+    },
+    {
+      "confidence": "likely",
+      "description": "Slot 2 interior record area; all zero in live baseline so interior semantics are unknown and left undecoded.",
+      "evidence": "FUN_08075934 reads this span as EEPROM blocks 43-62 and FUN_080759e4 writes it back; delimited by verified slot2 magic (ends 0x159) and verified slot2 checksum (starts 0x1F6) with the same 157-byte interior geometry as slots 0-1.",
+      "name": "slot2_records",
+      "offset": 345,
+      "size": 157,
+      "type": "bytes"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Slot 2 trailing checksum word; 940 (0x03AC) equals the byte-sum of slot bytes 0x150-0x1F5 in baseline.",
+      "evidence": "Python cross-check: sum(baseline[336:502]) == 940 == u16 LE at 0x1F6. Written back through FUN_080759e4 8-byte block writes.",
+      "name": "slot2_checksum",
+      "offset": 502,
+      "size": 2,
+      "type": "u16_le"
     }
-  ]
+  ],
+  "game_code": "A8EJ",
+  "id": "a8ej",
+  "magic_signatures": [
+    {
+      "bytes": [
+        104,
+        97,
+        99,
+        104,
+        105,
+        101,
+        109,
+        111,
+        110
+      ],
+      "description": "Slot 0 header magic 'hachiemon' (rev8 logical domain).",
+      "offset": 0
+    },
+    {
+      "bytes": [
+        104,
+        97,
+        99,
+        104,
+        105,
+        101,
+        109,
+        111,
+        110
+      ],
+      "description": "Slot 1 header magic 'hachiemon' (rev8 logical domain).",
+      "offset": 168
+    },
+    {
+      "bytes": [
+        104,
+        97,
+        99,
+        104,
+        105,
+        101,
+        109,
+        111,
+        110
+      ],
+      "description": "Slot 2 header magic 'hachiemon' (rev8 logical domain).",
+      "offset": 336
+    }
+  ],
+  "media": "eeprom512",
+  "size_bytes": 512,
+  "title": "Hachiemon (Japan)"
 }

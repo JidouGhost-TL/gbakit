@@ -1,45 +1,171 @@
 {
-  "id": "akoe",
-  "game_code": "AKOE",
-  "title": "King of Fighters EX, The - NeoBlood (USA)",
-  "media": "eeprom512",
-  "size_bytes": 512,
-  "magic_signatures": [
-    {
-      "offset": 1,
-      "bytes": [
-        48,
-        48,
-        48,
-        50
-      ]
-    }
-  ],
   "checksums": [],
+  "copy_groups": [],
+  "eeprom_rev8": true,
   "fields": [
     {
-      "name": "magic_header",
-      "offset": 1,
+      "confidence": "guessed",
+      "description": "32-bit header/status word after the magic; no Schema v2 checksum algorithm over any covered range reproduces it, so it is kept as a plain field",
+      "evidence": "FUN_0803a2f8 EEPROM block-read maps logical save offset 0x08 (first payload word after 8-byte magic); baseline.sav holds 0x01B86F9D; write path FUN_0803a3a8/FUN_0803a4dc. No checksum formula verified (see SPEC.md).",
+      "name": "header_word",
+      "offset": 8,
       "size": 4,
-      "type": "ascii"
+      "type": "u32_le"
     },
     {
-      "name": "slot_counter",
-      "offset": 5,
+      "confidence": "likely",
+      "description": "Table A rank 1 score (11-byte records, top-5 ranked entries 50000..10000)",
+      "evidence": "FUN_0803a2f8 EEPROM block-read maps logical save offset 0x50; baseline.sav holds LE u16 50000 (0xC350) with 11-byte record stride through 0x86; written via FUN_0803a3a8/FUN_0803a4dc.",
+      "name": "table_a_rank1_score",
+      "offset": 80,
       "size": 2,
       "type": "u16_le"
     },
     {
-      "name": "game_progress_flags",
-      "offset": 7,
+      "confidence": "likely",
+      "description": "Table A rank 2 score",
+      "evidence": "FUN_0803a2f8 EEPROM block-read maps logical save offset 0x5B; baseline.sav holds LE u16 40000 (0x9C40) on the 11-byte record stride from 0x50; written via FUN_0803a3a8/FUN_0803a4dc.",
+      "name": "table_a_rank2_score",
+      "offset": 91,
       "size": 2,
       "type": "u16_le"
     },
     {
-      "name": "player_status_payload",
-      "offset": 9,
-      "size": 16,
-      "type": "bytes"
+      "confidence": "likely",
+      "description": "Table A rank 3 score",
+      "evidence": "FUN_0803a2f8 EEPROM block-read maps logical save offset 0x66; baseline.sav holds LE u16 30000 (0x7530) on the 11-byte record stride from 0x50; written via FUN_0803a3a8/FUN_0803a4dc.",
+      "name": "table_a_rank3_score",
+      "offset": 102,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Table A rank 4 score",
+      "evidence": "FUN_0803a2f8 EEPROM block-read maps logical save offset 0x71; baseline.sav holds LE u16 20000 (0x4E20) on the 11-byte record stride from 0x50; written via FUN_0803a3a8/FUN_0803a4dc.",
+      "name": "table_a_rank4_score",
+      "offset": 113,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Table A rank 5 score",
+      "evidence": "FUN_0803a2f8 EEPROM block-read maps logical save offset 0x7C; baseline.sav holds LE u16 10000 (0x2710) on the 11-byte record stride from 0x50; written via FUN_0803a3a8/FUN_0803a4dc.",
+      "name": "table_a_rank5_score",
+      "offset": 124,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Table B rank 1 score (9-byte records, second ranked table 50000..10000)",
+      "evidence": "FUN_0803a2f8 EEPROM block-read maps logical save offset 0x87; baseline.sav holds LE u16 50000 (0xC350) with 9-byte record stride through 0xB3; written via FUN_0803a3a8/FUN_0803a4dc.",
+      "name": "table_b_rank1_score",
+      "offset": 135,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Table B rank 2 score",
+      "evidence": "FUN_0803a2f8 EEPROM block-read maps logical save offset 0x90; baseline.sav holds LE u16 40000 (0x9C40) on the 9-byte record stride from 0x87; written via FUN_0803a3a8/FUN_0803a4dc.",
+      "name": "table_b_rank2_score",
+      "offset": 144,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Table B rank 3 score",
+      "evidence": "FUN_0803a2f8 EEPROM block-read maps logical save offset 0x99; baseline.sav holds LE u16 30000 (0x7530) on the 9-byte record stride from 0x87; written via FUN_0803a3a8/FUN_0803a4dc.",
+      "name": "table_b_rank3_score",
+      "offset": 153,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Table B rank 4 score",
+      "evidence": "FUN_0803a2f8 EEPROM block-read maps logical save offset 0xA2; baseline.sav holds LE u16 20000 (0x4E20) on the 9-byte record stride from 0x87; written via FUN_0803a3a8/FUN_0803a4dc.",
+      "name": "table_b_rank4_score",
+      "offset": 162,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Table B rank 5 score",
+      "evidence": "FUN_0803a2f8 EEPROM block-read maps logical save offset 0xAB; baseline.sav holds LE u16 10000 (0x2710) on the 9-byte record stride from 0x87; written via FUN_0803a3a8/FUN_0803a4dc.",
+      "name": "table_b_rank5_score",
+      "offset": 171,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Table C rank 1 score (8-byte records, third ranked table 600..3000)",
+      "evidence": "FUN_0803a2f8 EEPROM block-read maps logical save offset 0xB4; baseline.sav holds LE u16 600 (0x0258) with 8-byte record stride through 0xDB; written via FUN_0803a3a8/FUN_0803a4dc.",
+      "name": "table_c_rank1_score",
+      "offset": 180,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Table C rank 2 score",
+      "evidence": "FUN_0803a2f8 EEPROM block-read maps logical save offset 0xBC; baseline.sav holds LE u16 1200 (0x04B0) on the 8-byte record stride from 0xB4; written via FUN_0803a3a8/FUN_0803a4dc.",
+      "name": "table_c_rank2_score",
+      "offset": 188,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Table C rank 3 score",
+      "evidence": "FUN_0803a2f8 EEPROM block-read maps logical save offset 0xC4; baseline.sav holds LE u16 1800 (0x0708) on the 8-byte record stride from 0xB4; written via FUN_0803a3a8/FUN_0803a4dc.",
+      "name": "table_c_rank3_score",
+      "offset": 196,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Table C rank 4 score",
+      "evidence": "FUN_0803a2f8 EEPROM block-read maps logical save offset 0xCC; baseline.sav holds LE u16 2400 (0x0960) on the 8-byte record stride from 0xB4; written via FUN_0803a3a8/FUN_0803a4dc.",
+      "name": "table_c_rank4_score",
+      "offset": 204,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Table C rank 5 score",
+      "evidence": "FUN_0803a2f8 EEPROM block-read maps logical save offset 0xD4; baseline.sav holds LE u16 3000 (0x0BB8) on the 8-byte record stride from 0xB4; written via FUN_0803a3a8/FUN_0803a4dc.",
+      "name": "table_c_rank5_score",
+      "offset": 212,
+      "size": 2,
+      "type": "u16_le"
     }
-  ]
+  ],
+  "game_code": "AKOE",
+  "id": "akoe",
+  "magic_signatures": [
+    {
+      "bytes": [
+        75,
+        79,
+        70,
+        50,
+        48,
+        48,
+        48
+      ],
+      "description": "ASCII 'KOF2000' title magic at start of save (logical domain)",
+      "offset": 0
+    }
+  ],
+  "media": "eeprom512",
+  "size_bytes": 512,
+  "title": "King of Fighters EX, The - NeoBlood (USA)"
 }

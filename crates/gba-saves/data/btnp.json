@@ -1,29 +1,170 @@
 {
-  "id": "btnp",
-  "game_code": "BTNP",
-  "title": "Tron 2.0 - Killer App (Europe)",
-  "media": "eeprom512",
-  "size_bytes": 512,
-  "magic_signatures": [],
-  "checksums": [],
+  "checksums": [
+    {
+      "algorithm": "sum16_le",
+      "covered_end": 508,
+      "covered_start": 368,
+      "description": "Options/settings payload checksum: plain byte sum plus 0x2d seed over logical bytes [368,508), stored u16_le at 508. Seed matches the 0x2d constant written by stream-init FUN_0800f05c/FUN_0800f100; verified 61 == 61 against samples/baseline.sav (seed 0 yields 16 and fails).",
+      "name": "options_checksum",
+      "seed": 45,
+      "stored_offset": 508,
+      "xor_out": 0
+    }
+  ],
+  "copy_groups": [],
+  "eeprom_rev8": true,
   "fields": [
     {
-      "name": "slot_counter",
-      "offset": 368,
+      "confidence": "likely",
+      "description": "Options struct byte +0x5e: 5-bit stage/level parameter (writer FUN_0800fee8 clamps to 0..9 and stores low 5 bits; bit 5 is a toggle read by FUN_0800fe58). Baseline 0x00 = default.",
+      "evidence": "FUN_0800fee8 clamps param_1 to 9 and writes (DAT_0800ff14 + 0x5e) = old & 0xe0 | param & 0x1f; readers FUN_0800ff18 (5-bit signed read of +0x5e) and FUN_0800fe58 ((+0x5e & 0x3f) >> 5). Stored as options payload byte +94 (140-byte payload streamed by FUN_0800f0c0(DAT_0801115c, 0x460) and written to EEPROM blocks 0x2e.. by FUN_08011120).",
+      "name": "options_stage_param",
+      "offset": 462,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "constraint": {
+        "kind": "bitmask",
+        "valid_mask": 7
+      },
+      "description": "Options struct byte +0x5f bits 0-2: sound/music option toggles (bit0 sound-a, bit1 music, bit2 sound-b). Baseline 0x00 = defaults.",
+      "evidence": "Writers FUN_08010620 (bit0 of save-struct +0x5f), FUN_080105a8 (bit1), FUN_08010698 (bit2); post-load appliers in FUN_08010948 route bit0 to FUN_080186a0/FUN_080186c0 (sound) and bit1 to FUN_08018664/FUN_08018680 (music). Stored as options payload byte +95 (FUN_08011120 options-block write path).",
+      "name": "options_sound_flags",
+      "offset": 463,
+      "size": 1,
+      "type": "bitflags"
+    },
+    {
+      "confidence": "likely",
+      "description": "Options struct byte +0x66 (unlock-flags array row 1, flags 8-15): progression/unlock flags. Baseline 0x10 = flag 12 set (fresh defaults with first unlock recorded).",
+      "evidence": "1-bit unlock array rooted at struct +0x65: reader FUN_080106fc / writer FUN_08010720, byte ((param & 0xff) >> 3) + 0x65; setter FUN_08010720(8, 1) fires when progress counter (param_1 + 0x70) exceeds 0x3c; related progress bits 0x2d/0x31/0x4a are validated post-load in FUN_0800f2f4. Stored as options payload byte +102 (FUN_08011120).",
+      "name": "options_unlock_flags",
+      "offset": 470,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "constraint": {
+        "kind": "bitmask",
+        "valid_mask": 32
+      },
+      "description": "Options struct byte +0x6a: progression flag 0x2d (bit 5). Checked after every slot load in FUN_0800f2f4 and ORed into completion flags via FUN_0800f400(2). Baseline 0x00 = locked.",
+      "evidence": "FUN_0800f2f4 calls FUN_080106fc(0x2d) (byte (0x2d >> 3) + 0x65 = struct +0x6a, bit 0x2d & 7 = 5) and on success calls FUN_0800f400(2). Stored as options payload byte +106 (FUN_08011120).",
+      "name": "options_prog_flag_2d",
+      "offset": 474,
+      "size": 1,
+      "type": "bitflags"
+    },
+    {
+      "confidence": "likely",
+      "constraint": {
+        "kind": "bitmask",
+        "valid_mask": 2
+      },
+      "description": "Options struct byte +0x6b: progression flag 0x31 (bit 1). Checked after every slot load in FUN_0800f2f4 and ORed into completion flags via FUN_0800f400(4). Baseline 0x00 = locked.",
+      "evidence": "FUN_0800f2f4 calls FUN_080106fc(0x31) (byte (0x31 >> 3) + 0x65 = struct +0x6b, bit 0x31 & 7 = 1) and on success calls FUN_0800f400(4). Stored as options payload byte +107 (FUN_08011120).",
+      "name": "options_prog_flag_31",
+      "offset": 475,
+      "size": 1,
+      "type": "bitflags"
+    },
+    {
+      "confidence": "likely",
+      "constraint": {
+        "kind": "bitmask",
+        "valid_mask": 4
+      },
+      "description": "Options struct byte +0x6e: progression flag 0x4a (bit 2). Checked after every slot load in FUN_0800f2f4 and ORed into completion flags via FUN_0800f400(3). Baseline 0x00 = locked.",
+      "evidence": "FUN_0800f2f4 calls FUN_080106fc(0x4a) (byte (0x4a >> 3) + 0x65 = struct +0x6e, bit 0x4a & 7 = 2) and on success calls FUN_0800f400(3). Stored as options payload byte +110 (FUN_08011120).",
+      "name": "options_prog_flag_4a",
+      "offset": 478,
+      "size": 1,
+      "type": "bitflags"
+    },
+    {
+      "confidence": "likely",
+      "description": "Options payload byte +35: paired stage-completion nibbles (low nibble = index 0x47, high nibble of next byte = index 0x48). Baseline 0x00 = no completion recorded.",
+      "evidence": "FUN_0800f2f4 validates slots via FUN_0800fc70(0x47) (low nibble of payload byte 35: *(byte)((0x47 >> 1) + base) & 0xf) and FUN_0800fc70(0x48) (high nibble of payload byte 36); nibble pack/unpack pair FUN_08010c90 (puVar9[2..4] = hi << 4 | lo) / FUN_08010948. Stored as options payload byte +35 (FUN_08011120).",
+      "name": "options_stage_nibbles",
+      "offset": 403,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "constraint": {
+        "kind": "bitmask",
+        "valid_mask": 31
+      },
+      "description": "Options struct byte +0x8a bits 0-4: aggregated completion flags (bit0 slot-a valid, bit1 slot-b valid, bit2 flag 0x2d, bit3 flag 0x4a, bit4 flag 0x31). Baseline 0x00 = nothing completed.",
+      "evidence": "FUN_0800f400 sets (1 << param_1) at struct +0x8a for params 0..4; callers in FUN_0800f2f4 map bVar1/bVar10 (nibble checks 0x47/0x48) and bVar7/bVar6/bVar8 (flag checks 0x31/0x2d/0x4a) to params 0..4. Stored as options payload byte +138 (FUN_08011120).",
+      "name": "options_completion_flags",
+      "offset": 506,
+      "size": 1,
+      "type": "bitflags"
+    },
+    {
+      "confidence": "likely",
+      "description": "Slot 0 payload byte +0x5f bits 0-2: sound/music option toggles snapshot (same struct layout as options). Baseline 0xFF = erased slot (no snapshot saved).",
+      "evidence": "Slot 0 image occupies EEPROM blocks 0..14 (bytes 0..119): FUN_08010854/FUN_08010948 loop 15x FUN_080a318c from base (param_1 & 0xff) * 15, then FUN_0800f1ac copies the 0x380-bit (112-byte) payload. Struct +0x5f writers FUN_080105a8/08010620/08010698 and post-load appliers in FUN_08010948 (FUN_080186a0/c0, FUN_08018664/680).",
+      "name": "slot0_audio_flags",
+      "offset": 95,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Slot 0 stored checksum trailer (u16_le) at payload end +112. Baseline 0xFFFF = erased; computed sum16+0x2d of an erased payload is 0x6FBD, so the slot correctly verifies as invalid/empty (FUN_08010854 fallback path).",
+      "evidence": "FUN_0800f1ac streams the 112-byte payload via FUN_0800f020 then FUN_0800f094 compares the accumulated sum against the 0x10-bit trailer that immediately follows the payload in the 15-block (120-byte) slot image loaded by FUN_08010854.",
+      "name": "slot0_trailer_checksum",
+      "offset": 112,
       "size": 2,
       "type": "u16_le"
     },
     {
-      "name": "game_progress_flags",
-      "offset": 370,
+      "confidence": "likely",
+      "description": "Slot 1 payload byte +0x5f bits 0-2: sound/music option toggles snapshot. Baseline 0xFF = erased slot.",
+      "evidence": "Slot 1 image occupies EEPROM blocks 15..29 (bytes 120..239): same 15x FUN_080a318c loop in FUN_08010854/FUN_08010948 with base (param_1 & 0xff) * 15 = 15, validated by FUN_0800f1ac. Struct +0x5f writers FUN_080105a8/08010620/08010698; appliers FUN_08010948.",
+      "name": "slot1_audio_flags",
+      "offset": 215,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Slot 1 stored checksum trailer (u16_le) at payload end +112. Baseline 0xFFFF = erased/invalid (see slot0).",
+      "evidence": "Same trailer mechanism as slot 0 (FUN_0800f094 0x10-bit compare after the 0x380-bit payload) at slot-1 image offset +112, i.e. file offset 120 + 112 = 232.",
+      "name": "slot1_trailer_checksum",
+      "offset": 232,
       "size": 2,
       "type": "u16_le"
     },
     {
-      "name": "player_status_payload",
-      "offset": 372,
-      "size": 16,
-      "type": "bytes"
+      "confidence": "likely",
+      "description": "Slot 2 payload byte +0x5f bits 0-2: sound/music option toggles snapshot. Baseline 0xFF = erased slot.",
+      "evidence": "Slot 2 image occupies EEPROM blocks 30..44 (bytes 240..359): same 15x FUN_080a318c loop with base 30, validated by FUN_0800f1ac. Struct +0x5f writers FUN_080105a8/08010620/08010698; appliers FUN_08010948.",
+      "name": "slot2_audio_flags",
+      "offset": 335,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Slot 2 stored checksum trailer (u16_le) at payload end +112. Baseline 0xFFFF = erased/invalid (see slot0).",
+      "evidence": "Same trailer mechanism as slot 0 (FUN_0800f094 0x10-bit compare after the 0x380-bit payload) at slot-2 image offset +112, i.e. file offset 240 + 112 = 352.",
+      "name": "slot2_trailer_checksum",
+      "offset": 352,
+      "size": 2,
+      "type": "u16_le"
     }
-  ]
+  ],
+  "game_code": "BTNP",
+  "id": "btnp",
+  "magic_signatures": [],
+  "media": "eeprom512",
+  "size_bytes": 512,
+  "title": "Tron 2.0 - Killer App (Europe)"
 }

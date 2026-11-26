@@ -11,35 +11,605 @@
         80,
         74,
         65,
-        71
-      ]
+        71,
+        85,
+        65,
+        82,
+        50,
+        48,
+        48,
+        52,
+        48,
+        50,
+        50,
+        57,
+        0
+      ],
+      "description": "ASCII save-format ID \"PJAGUAR20040229\" + NUL (baseline bytes 0x00-0x0F)"
     }
   ],
-  "checksums": [],
+  "checksums": [
+    {
+      "name": "header_block_checksum",
+      "algorithm": "sum16_le",
+      "covered_start": 0,
+      "covered_end": 1356,
+      "stored_offset": 16,
+      "description": "Byte sum over save header [0x00,0x10) plus record block [0x45C,0x54C); stored u16 treated as zero. Verifies as 0x34D5 against baseline."
+    }
+  ],
   "fields": [
     {
-      "name": "magic_header",
+      "name": "save_id",
       "offset": 0,
+      "size": 15,
+      "type": "ascii",
+      "description": "Save-format identifier \"PJAGUAR20040229\": game tag + ROM build date; written by save-init, checked on load",
+      "confidence": "confirmed",
+      "evidence": "Baseline bytes 0x00-0x0E decode to ASCII \"PJAGUAR20040229\"; full-SRAM transfer chain FUN_0800f4e0 (0x8000-byte copy via FUN_0800da54 DMA setup + FUN_0804f240 CpuSet SWI 0x0B) called from boot dispatcher FUN_0800dbfc persists this header at save offset 0x00.",
+      "constraint": {
+        "kind": "ascii-charset",
+        "allowed": "PJAGUR2049",
+        "max_len": 15
+      }
+    },
+    {
+      "name": "header_checksum",
+      "offset": 16,
+      "size": 2,
+      "type": "u16_le",
+      "description": "Byte-sum checksum (mod 65536) over header bytes [0x00,0x10) and record block [0x45C,0x54C); baseline value 0x34D5",
+      "confidence": "confirmed",
+      "evidence": "Verified computationally: sum(baseline[0:16]) + sum(baseline[0x45C:0x54C]) = 925 + 12600 = 13525 = 0x34D5; gbakit save verify of sum16_le over [0x00,0x54C) with stored bytes zeroed passes. Serialize/verify path: FUN_0800f4e0 / FUN_0800da54 / FUN_0804f240."
+    },
+    {
+      "name": "table_entry_00",
+      "offset": 1116,
       "size": 4,
-      "type": "ascii"
+      "type": "u32_le",
+      "description": "Record slot 0 of 60-word block at save offsets [0x45C,0x54C); baseline default value 0x00034B84",
+      "confidence": "likely",
+      "evidence": "Uniform 4-byte lattice verified in baseline: 60 identical LE u32 0x00034B84 at save offsets 0x45C + 4*0 = 0x45c; block covered by checksum range ending 0x54C; persisted via FUN_0800f4e0 0x8000-byte transfer (FUN_0800da54 + FUN_0804f240) from boot chain FUN_0800dbfc."
     },
     {
-      "name": "slot_counter",
-      "offset": 4,
-      "size": 2,
-      "type": "u16_le"
+      "name": "table_entry_01",
+      "offset": 1120,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Record slot 1 of 60-word block at save offsets [0x45C,0x54C); baseline default value 0x00034B84",
+      "confidence": "likely",
+      "evidence": "Uniform 4-byte lattice verified in baseline: 60 identical LE u32 0x00034B84 at save offsets 0x45C + 4*1 = 0x460; block covered by checksum range ending 0x54C; persisted via FUN_0800f4e0 0x8000-byte transfer (FUN_0800da54 + FUN_0804f240) from boot chain FUN_0800dbfc."
     },
     {
-      "name": "game_progress_flags",
-      "offset": 6,
-      "size": 2,
-      "type": "u16_le"
+      "name": "table_entry_02",
+      "offset": 1124,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Record slot 2 of 60-word block at save offsets [0x45C,0x54C); baseline default value 0x00034B84",
+      "confidence": "likely",
+      "evidence": "Uniform 4-byte lattice verified in baseline: 60 identical LE u32 0x00034B84 at save offsets 0x45C + 4*2 = 0x464; block covered by checksum range ending 0x54C; persisted via FUN_0800f4e0 0x8000-byte transfer (FUN_0800da54 + FUN_0804f240) from boot chain FUN_0800dbfc."
     },
     {
-      "name": "player_status_payload",
-      "offset": 8,
-      "size": 16,
-      "type": "bytes"
+      "name": "table_entry_03",
+      "offset": 1128,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Record slot 3 of 60-word block at save offsets [0x45C,0x54C); baseline default value 0x00034B84",
+      "confidence": "likely",
+      "evidence": "Uniform 4-byte lattice verified in baseline: 60 identical LE u32 0x00034B84 at save offsets 0x45C + 4*3 = 0x468; block covered by checksum range ending 0x54C; persisted via FUN_0800f4e0 0x8000-byte transfer (FUN_0800da54 + FUN_0804f240) from boot chain FUN_0800dbfc."
+    },
+    {
+      "name": "table_entry_04",
+      "offset": 1132,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Record slot 4 of 60-word block at save offsets [0x45C,0x54C); baseline default value 0x00034B84",
+      "confidence": "likely",
+      "evidence": "Uniform 4-byte lattice verified in baseline: 60 identical LE u32 0x00034B84 at save offsets 0x45C + 4*4 = 0x46c; block covered by checksum range ending 0x54C; persisted via FUN_0800f4e0 0x8000-byte transfer (FUN_0800da54 + FUN_0804f240) from boot chain FUN_0800dbfc."
+    },
+    {
+      "name": "table_entry_05",
+      "offset": 1136,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Record slot 5 of 60-word block at save offsets [0x45C,0x54C); baseline default value 0x00034B84",
+      "confidence": "likely",
+      "evidence": "Uniform 4-byte lattice verified in baseline: 60 identical LE u32 0x00034B84 at save offsets 0x45C + 4*5 = 0x470; block covered by checksum range ending 0x54C; persisted via FUN_0800f4e0 0x8000-byte transfer (FUN_0800da54 + FUN_0804f240) from boot chain FUN_0800dbfc."
+    },
+    {
+      "name": "table_entry_06",
+      "offset": 1140,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Record slot 6 of 60-word block at save offsets [0x45C,0x54C); baseline default value 0x00034B84",
+      "confidence": "likely",
+      "evidence": "Uniform 4-byte lattice verified in baseline: 60 identical LE u32 0x00034B84 at save offsets 0x45C + 4*6 = 0x474; block covered by checksum range ending 0x54C; persisted via FUN_0800f4e0 0x8000-byte transfer (FUN_0800da54 + FUN_0804f240) from boot chain FUN_0800dbfc."
+    },
+    {
+      "name": "table_entry_07",
+      "offset": 1144,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Record slot 7 of 60-word block at save offsets [0x45C,0x54C); baseline default value 0x00034B84",
+      "confidence": "likely",
+      "evidence": "Uniform 4-byte lattice verified in baseline: 60 identical LE u32 0x00034B84 at save offsets 0x45C + 4*7 = 0x478; block covered by checksum range ending 0x54C; persisted via FUN_0800f4e0 0x8000-byte transfer (FUN_0800da54 + FUN_0804f240) from boot chain FUN_0800dbfc."
+    },
+    {
+      "name": "table_entry_08",
+      "offset": 1148,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Record slot 8 of 60-word block at save offsets [0x45C,0x54C); baseline default value 0x00034B84",
+      "confidence": "likely",
+      "evidence": "Uniform 4-byte lattice verified in baseline: 60 identical LE u32 0x00034B84 at save offsets 0x45C + 4*8 = 0x47c; block covered by checksum range ending 0x54C; persisted via FUN_0800f4e0 0x8000-byte transfer (FUN_0800da54 + FUN_0804f240) from boot chain FUN_0800dbfc."
+    },
+    {
+      "name": "table_entry_09",
+      "offset": 1152,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Record slot 9 of 60-word block at save offsets [0x45C,0x54C); baseline default value 0x00034B84",
+      "confidence": "likely",
+      "evidence": "Uniform 4-byte lattice verified in baseline: 60 identical LE u32 0x00034B84 at save offsets 0x45C + 4*9 = 0x480; block covered by checksum range ending 0x54C; persisted via FUN_0800f4e0 0x8000-byte transfer (FUN_0800da54 + FUN_0804f240) from boot chain FUN_0800dbfc."
+    },
+    {
+      "name": "table_entry_10",
+      "offset": 1156,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Record slot 10 of 60-word block at save offsets [0x45C,0x54C); baseline default value 0x00034B84",
+      "confidence": "likely",
+      "evidence": "Uniform 4-byte lattice verified in baseline: 60 identical LE u32 0x00034B84 at save offsets 0x45C + 4*10 = 0x484; block covered by checksum range ending 0x54C; persisted via FUN_0800f4e0 0x8000-byte transfer (FUN_0800da54 + FUN_0804f240) from boot chain FUN_0800dbfc."
+    },
+    {
+      "name": "table_entry_11",
+      "offset": 1160,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Record slot 11 of 60-word block at save offsets [0x45C,0x54C); baseline default value 0x00034B84",
+      "confidence": "likely",
+      "evidence": "Uniform 4-byte lattice verified in baseline: 60 identical LE u32 0x00034B84 at save offsets 0x45C + 4*11 = 0x488; block covered by checksum range ending 0x54C; persisted via FUN_0800f4e0 0x8000-byte transfer (FUN_0800da54 + FUN_0804f240) from boot chain FUN_0800dbfc."
+    },
+    {
+      "name": "table_entry_12",
+      "offset": 1164,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Record slot 12 of 60-word block at save offsets [0x45C,0x54C); baseline default value 0x00034B84",
+      "confidence": "likely",
+      "evidence": "Uniform 4-byte lattice verified in baseline: 60 identical LE u32 0x00034B84 at save offsets 0x45C + 4*12 = 0x48c; block covered by checksum range ending 0x54C; persisted via FUN_0800f4e0 0x8000-byte transfer (FUN_0800da54 + FUN_0804f240) from boot chain FUN_0800dbfc."
+    },
+    {
+      "name": "table_entry_13",
+      "offset": 1168,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Record slot 13 of 60-word block at save offsets [0x45C,0x54C); baseline default value 0x00034B84",
+      "confidence": "likely",
+      "evidence": "Uniform 4-byte lattice verified in baseline: 60 identical LE u32 0x00034B84 at save offsets 0x45C + 4*13 = 0x490; block covered by checksum range ending 0x54C; persisted via FUN_0800f4e0 0x8000-byte transfer (FUN_0800da54 + FUN_0804f240) from boot chain FUN_0800dbfc."
+    },
+    {
+      "name": "table_entry_14",
+      "offset": 1172,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Record slot 14 of 60-word block at save offsets [0x45C,0x54C); baseline default value 0x00034B84",
+      "confidence": "likely",
+      "evidence": "Uniform 4-byte lattice verified in baseline: 60 identical LE u32 0x00034B84 at save offsets 0x45C + 4*14 = 0x494; block covered by checksum range ending 0x54C; persisted via FUN_0800f4e0 0x8000-byte transfer (FUN_0800da54 + FUN_0804f240) from boot chain FUN_0800dbfc."
+    },
+    {
+      "name": "table_entry_15",
+      "offset": 1176,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Record slot 15 of 60-word block at save offsets [0x45C,0x54C); baseline default value 0x00034B84",
+      "confidence": "likely",
+      "evidence": "Uniform 4-byte lattice verified in baseline: 60 identical LE u32 0x00034B84 at save offsets 0x45C + 4*15 = 0x498; block covered by checksum range ending 0x54C; persisted via FUN_0800f4e0 0x8000-byte transfer (FUN_0800da54 + FUN_0804f240) from boot chain FUN_0800dbfc."
+    },
+    {
+      "name": "table_entry_16",
+      "offset": 1180,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Record slot 16 of 60-word block at save offsets [0x45C,0x54C); baseline default value 0x00034B84",
+      "confidence": "likely",
+      "evidence": "Uniform 4-byte lattice verified in baseline: 60 identical LE u32 0x00034B84 at save offsets 0x45C + 4*16 = 0x49c; block covered by checksum range ending 0x54C; persisted via FUN_0800f4e0 0x8000-byte transfer (FUN_0800da54 + FUN_0804f240) from boot chain FUN_0800dbfc."
+    },
+    {
+      "name": "table_entry_17",
+      "offset": 1184,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Record slot 17 of 60-word block at save offsets [0x45C,0x54C); baseline default value 0x00034B84",
+      "confidence": "likely",
+      "evidence": "Uniform 4-byte lattice verified in baseline: 60 identical LE u32 0x00034B84 at save offsets 0x45C + 4*17 = 0x4a0; block covered by checksum range ending 0x54C; persisted via FUN_0800f4e0 0x8000-byte transfer (FUN_0800da54 + FUN_0804f240) from boot chain FUN_0800dbfc."
+    },
+    {
+      "name": "table_entry_18",
+      "offset": 1188,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Record slot 18 of 60-word block at save offsets [0x45C,0x54C); baseline default value 0x00034B84",
+      "confidence": "likely",
+      "evidence": "Uniform 4-byte lattice verified in baseline: 60 identical LE u32 0x00034B84 at save offsets 0x45C + 4*18 = 0x4a4; block covered by checksum range ending 0x54C; persisted via FUN_0800f4e0 0x8000-byte transfer (FUN_0800da54 + FUN_0804f240) from boot chain FUN_0800dbfc."
+    },
+    {
+      "name": "table_entry_19",
+      "offset": 1192,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Record slot 19 of 60-word block at save offsets [0x45C,0x54C); baseline default value 0x00034B84",
+      "confidence": "likely",
+      "evidence": "Uniform 4-byte lattice verified in baseline: 60 identical LE u32 0x00034B84 at save offsets 0x45C + 4*19 = 0x4a8; block covered by checksum range ending 0x54C; persisted via FUN_0800f4e0 0x8000-byte transfer (FUN_0800da54 + FUN_0804f240) from boot chain FUN_0800dbfc."
+    },
+    {
+      "name": "table_entry_20",
+      "offset": 1196,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Record slot 20 of 60-word block at save offsets [0x45C,0x54C); baseline default value 0x00034B84",
+      "confidence": "likely",
+      "evidence": "Uniform 4-byte lattice verified in baseline: 60 identical LE u32 0x00034B84 at save offsets 0x45C + 4*20 = 0x4ac; block covered by checksum range ending 0x54C; persisted via FUN_0800f4e0 0x8000-byte transfer (FUN_0800da54 + FUN_0804f240) from boot chain FUN_0800dbfc."
+    },
+    {
+      "name": "table_entry_21",
+      "offset": 1200,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Record slot 21 of 60-word block at save offsets [0x45C,0x54C); baseline default value 0x00034B84",
+      "confidence": "likely",
+      "evidence": "Uniform 4-byte lattice verified in baseline: 60 identical LE u32 0x00034B84 at save offsets 0x45C + 4*21 = 0x4b0; block covered by checksum range ending 0x54C; persisted via FUN_0800f4e0 0x8000-byte transfer (FUN_0800da54 + FUN_0804f240) from boot chain FUN_0800dbfc."
+    },
+    {
+      "name": "table_entry_22",
+      "offset": 1204,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Record slot 22 of 60-word block at save offsets [0x45C,0x54C); baseline default value 0x00034B84",
+      "confidence": "likely",
+      "evidence": "Uniform 4-byte lattice verified in baseline: 60 identical LE u32 0x00034B84 at save offsets 0x45C + 4*22 = 0x4b4; block covered by checksum range ending 0x54C; persisted via FUN_0800f4e0 0x8000-byte transfer (FUN_0800da54 + FUN_0804f240) from boot chain FUN_0800dbfc."
+    },
+    {
+      "name": "table_entry_23",
+      "offset": 1208,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Record slot 23 of 60-word block at save offsets [0x45C,0x54C); baseline default value 0x00034B84",
+      "confidence": "likely",
+      "evidence": "Uniform 4-byte lattice verified in baseline: 60 identical LE u32 0x00034B84 at save offsets 0x45C + 4*23 = 0x4b8; block covered by checksum range ending 0x54C; persisted via FUN_0800f4e0 0x8000-byte transfer (FUN_0800da54 + FUN_0804f240) from boot chain FUN_0800dbfc."
+    },
+    {
+      "name": "table_entry_24",
+      "offset": 1212,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Record slot 24 of 60-word block at save offsets [0x45C,0x54C); baseline default value 0x00034B84",
+      "confidence": "likely",
+      "evidence": "Uniform 4-byte lattice verified in baseline: 60 identical LE u32 0x00034B84 at save offsets 0x45C + 4*24 = 0x4bc; block covered by checksum range ending 0x54C; persisted via FUN_0800f4e0 0x8000-byte transfer (FUN_0800da54 + FUN_0804f240) from boot chain FUN_0800dbfc."
+    },
+    {
+      "name": "table_entry_25",
+      "offset": 1216,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Record slot 25 of 60-word block at save offsets [0x45C,0x54C); baseline default value 0x00034B84",
+      "confidence": "likely",
+      "evidence": "Uniform 4-byte lattice verified in baseline: 60 identical LE u32 0x00034B84 at save offsets 0x45C + 4*25 = 0x4c0; block covered by checksum range ending 0x54C; persisted via FUN_0800f4e0 0x8000-byte transfer (FUN_0800da54 + FUN_0804f240) from boot chain FUN_0800dbfc."
+    },
+    {
+      "name": "table_entry_26",
+      "offset": 1220,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Record slot 26 of 60-word block at save offsets [0x45C,0x54C); baseline default value 0x00034B84",
+      "confidence": "likely",
+      "evidence": "Uniform 4-byte lattice verified in baseline: 60 identical LE u32 0x00034B84 at save offsets 0x45C + 4*26 = 0x4c4; block covered by checksum range ending 0x54C; persisted via FUN_0800f4e0 0x8000-byte transfer (FUN_0800da54 + FUN_0804f240) from boot chain FUN_0800dbfc."
+    },
+    {
+      "name": "table_entry_27",
+      "offset": 1224,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Record slot 27 of 60-word block at save offsets [0x45C,0x54C); baseline default value 0x00034B84",
+      "confidence": "likely",
+      "evidence": "Uniform 4-byte lattice verified in baseline: 60 identical LE u32 0x00034B84 at save offsets 0x45C + 4*27 = 0x4c8; block covered by checksum range ending 0x54C; persisted via FUN_0800f4e0 0x8000-byte transfer (FUN_0800da54 + FUN_0804f240) from boot chain FUN_0800dbfc."
+    },
+    {
+      "name": "table_entry_28",
+      "offset": 1228,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Record slot 28 of 60-word block at save offsets [0x45C,0x54C); baseline default value 0x00034B84",
+      "confidence": "likely",
+      "evidence": "Uniform 4-byte lattice verified in baseline: 60 identical LE u32 0x00034B84 at save offsets 0x45C + 4*28 = 0x4cc; block covered by checksum range ending 0x54C; persisted via FUN_0800f4e0 0x8000-byte transfer (FUN_0800da54 + FUN_0804f240) from boot chain FUN_0800dbfc."
+    },
+    {
+      "name": "table_entry_29",
+      "offset": 1232,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Record slot 29 of 60-word block at save offsets [0x45C,0x54C); baseline default value 0x00034B84",
+      "confidence": "likely",
+      "evidence": "Uniform 4-byte lattice verified in baseline: 60 identical LE u32 0x00034B84 at save offsets 0x45C + 4*29 = 0x4d0; block covered by checksum range ending 0x54C; persisted via FUN_0800f4e0 0x8000-byte transfer (FUN_0800da54 + FUN_0804f240) from boot chain FUN_0800dbfc."
+    },
+    {
+      "name": "table_entry_30",
+      "offset": 1236,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Record slot 30 of 60-word block at save offsets [0x45C,0x54C); baseline default value 0x00034B84",
+      "confidence": "likely",
+      "evidence": "Uniform 4-byte lattice verified in baseline: 60 identical LE u32 0x00034B84 at save offsets 0x45C + 4*30 = 0x4d4; block covered by checksum range ending 0x54C; persisted via FUN_0800f4e0 0x8000-byte transfer (FUN_0800da54 + FUN_0804f240) from boot chain FUN_0800dbfc."
+    },
+    {
+      "name": "table_entry_31",
+      "offset": 1240,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Record slot 31 of 60-word block at save offsets [0x45C,0x54C); baseline default value 0x00034B84",
+      "confidence": "likely",
+      "evidence": "Uniform 4-byte lattice verified in baseline: 60 identical LE u32 0x00034B84 at save offsets 0x45C + 4*31 = 0x4d8; block covered by checksum range ending 0x54C; persisted via FUN_0800f4e0 0x8000-byte transfer (FUN_0800da54 + FUN_0804f240) from boot chain FUN_0800dbfc."
+    },
+    {
+      "name": "table_entry_32",
+      "offset": 1244,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Record slot 32 of 60-word block at save offsets [0x45C,0x54C); baseline default value 0x00034B84",
+      "confidence": "likely",
+      "evidence": "Uniform 4-byte lattice verified in baseline: 60 identical LE u32 0x00034B84 at save offsets 0x45C + 4*32 = 0x4dc; block covered by checksum range ending 0x54C; persisted via FUN_0800f4e0 0x8000-byte transfer (FUN_0800da54 + FUN_0804f240) from boot chain FUN_0800dbfc."
+    },
+    {
+      "name": "table_entry_33",
+      "offset": 1248,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Record slot 33 of 60-word block at save offsets [0x45C,0x54C); baseline default value 0x00034B84",
+      "confidence": "likely",
+      "evidence": "Uniform 4-byte lattice verified in baseline: 60 identical LE u32 0x00034B84 at save offsets 0x45C + 4*33 = 0x4e0; block covered by checksum range ending 0x54C; persisted via FUN_0800f4e0 0x8000-byte transfer (FUN_0800da54 + FUN_0804f240) from boot chain FUN_0800dbfc."
+    },
+    {
+      "name": "table_entry_34",
+      "offset": 1252,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Record slot 34 of 60-word block at save offsets [0x45C,0x54C); baseline default value 0x00034B84",
+      "confidence": "likely",
+      "evidence": "Uniform 4-byte lattice verified in baseline: 60 identical LE u32 0x00034B84 at save offsets 0x45C + 4*34 = 0x4e4; block covered by checksum range ending 0x54C; persisted via FUN_0800f4e0 0x8000-byte transfer (FUN_0800da54 + FUN_0804f240) from boot chain FUN_0800dbfc."
+    },
+    {
+      "name": "table_entry_35",
+      "offset": 1256,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Record slot 35 of 60-word block at save offsets [0x45C,0x54C); baseline default value 0x00034B84",
+      "confidence": "likely",
+      "evidence": "Uniform 4-byte lattice verified in baseline: 60 identical LE u32 0x00034B84 at save offsets 0x45C + 4*35 = 0x4e8; block covered by checksum range ending 0x54C; persisted via FUN_0800f4e0 0x8000-byte transfer (FUN_0800da54 + FUN_0804f240) from boot chain FUN_0800dbfc."
+    },
+    {
+      "name": "table_entry_36",
+      "offset": 1260,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Record slot 36 of 60-word block at save offsets [0x45C,0x54C); baseline default value 0x00034B84",
+      "confidence": "likely",
+      "evidence": "Uniform 4-byte lattice verified in baseline: 60 identical LE u32 0x00034B84 at save offsets 0x45C + 4*36 = 0x4ec; block covered by checksum range ending 0x54C; persisted via FUN_0800f4e0 0x8000-byte transfer (FUN_0800da54 + FUN_0804f240) from boot chain FUN_0800dbfc."
+    },
+    {
+      "name": "table_entry_37",
+      "offset": 1264,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Record slot 37 of 60-word block at save offsets [0x45C,0x54C); baseline default value 0x00034B84",
+      "confidence": "likely",
+      "evidence": "Uniform 4-byte lattice verified in baseline: 60 identical LE u32 0x00034B84 at save offsets 0x45C + 4*37 = 0x4f0; block covered by checksum range ending 0x54C; persisted via FUN_0800f4e0 0x8000-byte transfer (FUN_0800da54 + FUN_0804f240) from boot chain FUN_0800dbfc."
+    },
+    {
+      "name": "table_entry_38",
+      "offset": 1268,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Record slot 38 of 60-word block at save offsets [0x45C,0x54C); baseline default value 0x00034B84",
+      "confidence": "likely",
+      "evidence": "Uniform 4-byte lattice verified in baseline: 60 identical LE u32 0x00034B84 at save offsets 0x45C + 4*38 = 0x4f4; block covered by checksum range ending 0x54C; persisted via FUN_0800f4e0 0x8000-byte transfer (FUN_0800da54 + FUN_0804f240) from boot chain FUN_0800dbfc."
+    },
+    {
+      "name": "table_entry_39",
+      "offset": 1272,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Record slot 39 of 60-word block at save offsets [0x45C,0x54C); baseline default value 0x00034B84",
+      "confidence": "likely",
+      "evidence": "Uniform 4-byte lattice verified in baseline: 60 identical LE u32 0x00034B84 at save offsets 0x45C + 4*39 = 0x4f8; block covered by checksum range ending 0x54C; persisted via FUN_0800f4e0 0x8000-byte transfer (FUN_0800da54 + FUN_0804f240) from boot chain FUN_0800dbfc."
+    },
+    {
+      "name": "table_entry_40",
+      "offset": 1276,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Record slot 40 of 60-word block at save offsets [0x45C,0x54C); baseline default value 0x00034B84",
+      "confidence": "likely",
+      "evidence": "Uniform 4-byte lattice verified in baseline: 60 identical LE u32 0x00034B84 at save offsets 0x45C + 4*40 = 0x4fc; block covered by checksum range ending 0x54C; persisted via FUN_0800f4e0 0x8000-byte transfer (FUN_0800da54 + FUN_0804f240) from boot chain FUN_0800dbfc."
+    },
+    {
+      "name": "table_entry_41",
+      "offset": 1280,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Record slot 41 of 60-word block at save offsets [0x45C,0x54C); baseline default value 0x00034B84",
+      "confidence": "likely",
+      "evidence": "Uniform 4-byte lattice verified in baseline: 60 identical LE u32 0x00034B84 at save offsets 0x45C + 4*41 = 0x500; block covered by checksum range ending 0x54C; persisted via FUN_0800f4e0 0x8000-byte transfer (FUN_0800da54 + FUN_0804f240) from boot chain FUN_0800dbfc."
+    },
+    {
+      "name": "table_entry_42",
+      "offset": 1284,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Record slot 42 of 60-word block at save offsets [0x45C,0x54C); baseline default value 0x00034B84",
+      "confidence": "likely",
+      "evidence": "Uniform 4-byte lattice verified in baseline: 60 identical LE u32 0x00034B84 at save offsets 0x45C + 4*42 = 0x504; block covered by checksum range ending 0x54C; persisted via FUN_0800f4e0 0x8000-byte transfer (FUN_0800da54 + FUN_0804f240) from boot chain FUN_0800dbfc."
+    },
+    {
+      "name": "table_entry_43",
+      "offset": 1288,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Record slot 43 of 60-word block at save offsets [0x45C,0x54C); baseline default value 0x00034B84",
+      "confidence": "likely",
+      "evidence": "Uniform 4-byte lattice verified in baseline: 60 identical LE u32 0x00034B84 at save offsets 0x45C + 4*43 = 0x508; block covered by checksum range ending 0x54C; persisted via FUN_0800f4e0 0x8000-byte transfer (FUN_0800da54 + FUN_0804f240) from boot chain FUN_0800dbfc."
+    },
+    {
+      "name": "table_entry_44",
+      "offset": 1292,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Record slot 44 of 60-word block at save offsets [0x45C,0x54C); baseline default value 0x00034B84",
+      "confidence": "likely",
+      "evidence": "Uniform 4-byte lattice verified in baseline: 60 identical LE u32 0x00034B84 at save offsets 0x45C + 4*44 = 0x50c; block covered by checksum range ending 0x54C; persisted via FUN_0800f4e0 0x8000-byte transfer (FUN_0800da54 + FUN_0804f240) from boot chain FUN_0800dbfc."
+    },
+    {
+      "name": "table_entry_45",
+      "offset": 1296,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Record slot 45 of 60-word block at save offsets [0x45C,0x54C); baseline default value 0x00034B84",
+      "confidence": "likely",
+      "evidence": "Uniform 4-byte lattice verified in baseline: 60 identical LE u32 0x00034B84 at save offsets 0x45C + 4*45 = 0x510; block covered by checksum range ending 0x54C; persisted via FUN_0800f4e0 0x8000-byte transfer (FUN_0800da54 + FUN_0804f240) from boot chain FUN_0800dbfc."
+    },
+    {
+      "name": "table_entry_46",
+      "offset": 1300,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Record slot 46 of 60-word block at save offsets [0x45C,0x54C); baseline default value 0x00034B84",
+      "confidence": "likely",
+      "evidence": "Uniform 4-byte lattice verified in baseline: 60 identical LE u32 0x00034B84 at save offsets 0x45C + 4*46 = 0x514; block covered by checksum range ending 0x54C; persisted via FUN_0800f4e0 0x8000-byte transfer (FUN_0800da54 + FUN_0804f240) from boot chain FUN_0800dbfc."
+    },
+    {
+      "name": "table_entry_47",
+      "offset": 1304,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Record slot 47 of 60-word block at save offsets [0x45C,0x54C); baseline default value 0x00034B84",
+      "confidence": "likely",
+      "evidence": "Uniform 4-byte lattice verified in baseline: 60 identical LE u32 0x00034B84 at save offsets 0x45C + 4*47 = 0x518; block covered by checksum range ending 0x54C; persisted via FUN_0800f4e0 0x8000-byte transfer (FUN_0800da54 + FUN_0804f240) from boot chain FUN_0800dbfc."
+    },
+    {
+      "name": "table_entry_48",
+      "offset": 1308,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Record slot 48 of 60-word block at save offsets [0x45C,0x54C); baseline default value 0x00034B84",
+      "confidence": "likely",
+      "evidence": "Uniform 4-byte lattice verified in baseline: 60 identical LE u32 0x00034B84 at save offsets 0x45C + 4*48 = 0x51c; block covered by checksum range ending 0x54C; persisted via FUN_0800f4e0 0x8000-byte transfer (FUN_0800da54 + FUN_0804f240) from boot chain FUN_0800dbfc."
+    },
+    {
+      "name": "table_entry_49",
+      "offset": 1312,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Record slot 49 of 60-word block at save offsets [0x45C,0x54C); baseline default value 0x00034B84",
+      "confidence": "likely",
+      "evidence": "Uniform 4-byte lattice verified in baseline: 60 identical LE u32 0x00034B84 at save offsets 0x45C + 4*49 = 0x520; block covered by checksum range ending 0x54C; persisted via FUN_0800f4e0 0x8000-byte transfer (FUN_0800da54 + FUN_0804f240) from boot chain FUN_0800dbfc."
+    },
+    {
+      "name": "table_entry_50",
+      "offset": 1316,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Record slot 50 of 60-word block at save offsets [0x45C,0x54C); baseline default value 0x00034B84",
+      "confidence": "likely",
+      "evidence": "Uniform 4-byte lattice verified in baseline: 60 identical LE u32 0x00034B84 at save offsets 0x45C + 4*50 = 0x524; block covered by checksum range ending 0x54C; persisted via FUN_0800f4e0 0x8000-byte transfer (FUN_0800da54 + FUN_0804f240) from boot chain FUN_0800dbfc."
+    },
+    {
+      "name": "table_entry_51",
+      "offset": 1320,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Record slot 51 of 60-word block at save offsets [0x45C,0x54C); baseline default value 0x00034B84",
+      "confidence": "likely",
+      "evidence": "Uniform 4-byte lattice verified in baseline: 60 identical LE u32 0x00034B84 at save offsets 0x45C + 4*51 = 0x528; block covered by checksum range ending 0x54C; persisted via FUN_0800f4e0 0x8000-byte transfer (FUN_0800da54 + FUN_0804f240) from boot chain FUN_0800dbfc."
+    },
+    {
+      "name": "table_entry_52",
+      "offset": 1324,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Record slot 52 of 60-word block at save offsets [0x45C,0x54C); baseline default value 0x00034B84",
+      "confidence": "likely",
+      "evidence": "Uniform 4-byte lattice verified in baseline: 60 identical LE u32 0x00034B84 at save offsets 0x45C + 4*52 = 0x52c; block covered by checksum range ending 0x54C; persisted via FUN_0800f4e0 0x8000-byte transfer (FUN_0800da54 + FUN_0804f240) from boot chain FUN_0800dbfc."
+    },
+    {
+      "name": "table_entry_53",
+      "offset": 1328,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Record slot 53 of 60-word block at save offsets [0x45C,0x54C); baseline default value 0x00034B84",
+      "confidence": "likely",
+      "evidence": "Uniform 4-byte lattice verified in baseline: 60 identical LE u32 0x00034B84 at save offsets 0x45C + 4*53 = 0x530; block covered by checksum range ending 0x54C; persisted via FUN_0800f4e0 0x8000-byte transfer (FUN_0800da54 + FUN_0804f240) from boot chain FUN_0800dbfc."
+    },
+    {
+      "name": "table_entry_54",
+      "offset": 1332,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Record slot 54 of 60-word block at save offsets [0x45C,0x54C); baseline default value 0x00034B84",
+      "confidence": "likely",
+      "evidence": "Uniform 4-byte lattice verified in baseline: 60 identical LE u32 0x00034B84 at save offsets 0x45C + 4*54 = 0x534; block covered by checksum range ending 0x54C; persisted via FUN_0800f4e0 0x8000-byte transfer (FUN_0800da54 + FUN_0804f240) from boot chain FUN_0800dbfc."
+    },
+    {
+      "name": "table_entry_55",
+      "offset": 1336,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Record slot 55 of 60-word block at save offsets [0x45C,0x54C); baseline default value 0x00034B84",
+      "confidence": "likely",
+      "evidence": "Uniform 4-byte lattice verified in baseline: 60 identical LE u32 0x00034B84 at save offsets 0x45C + 4*55 = 0x538; block covered by checksum range ending 0x54C; persisted via FUN_0800f4e0 0x8000-byte transfer (FUN_0800da54 + FUN_0804f240) from boot chain FUN_0800dbfc."
+    },
+    {
+      "name": "table_entry_56",
+      "offset": 1340,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Record slot 56 of 60-word block at save offsets [0x45C,0x54C); baseline default value 0x00034B84",
+      "confidence": "likely",
+      "evidence": "Uniform 4-byte lattice verified in baseline: 60 identical LE u32 0x00034B84 at save offsets 0x45C + 4*56 = 0x53c; block covered by checksum range ending 0x54C; persisted via FUN_0800f4e0 0x8000-byte transfer (FUN_0800da54 + FUN_0804f240) from boot chain FUN_0800dbfc."
+    },
+    {
+      "name": "table_entry_57",
+      "offset": 1344,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Record slot 57 of 60-word block at save offsets [0x45C,0x54C); baseline default value 0x00034B84",
+      "confidence": "likely",
+      "evidence": "Uniform 4-byte lattice verified in baseline: 60 identical LE u32 0x00034B84 at save offsets 0x45C + 4*57 = 0x540; block covered by checksum range ending 0x54C; persisted via FUN_0800f4e0 0x8000-byte transfer (FUN_0800da54 + FUN_0804f240) from boot chain FUN_0800dbfc."
+    },
+    {
+      "name": "table_entry_58",
+      "offset": 1348,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Record slot 58 of 60-word block at save offsets [0x45C,0x54C); baseline default value 0x00034B84",
+      "confidence": "likely",
+      "evidence": "Uniform 4-byte lattice verified in baseline: 60 identical LE u32 0x00034B84 at save offsets 0x45C + 4*58 = 0x544; block covered by checksum range ending 0x54C; persisted via FUN_0800f4e0 0x8000-byte transfer (FUN_0800da54 + FUN_0804f240) from boot chain FUN_0800dbfc."
+    },
+    {
+      "name": "table_entry_59",
+      "offset": 1352,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Record slot 59 of 60-word block at save offsets [0x45C,0x54C); baseline default value 0x00034B84",
+      "confidence": "likely",
+      "evidence": "Uniform 4-byte lattice verified in baseline: 60 identical LE u32 0x00034B84 at save offsets 0x45C + 4*59 = 0x548; block covered by checksum range ending 0x54C; persisted via FUN_0800f4e0 0x8000-byte transfer (FUN_0800da54 + FUN_0804f240) from boot chain FUN_0800dbfc."
+    },
+    {
+      "name": "table_trailer",
+      "offset": 1356,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Trailer word closing the 60-entry record block; baseline value 0x63FFF5DE; excluded from header checksum range",
+      "confidence": "likely",
+      "evidence": "Baseline LE u32 at save offset 0x54C = 0x63FFF5DE, distinct from the 60 preceding 0x00034B84 entries; block geometry [0x45C,0x550) is the only non-blank region besides the header; persisted via FUN_0800f4e0 transfer chain (FUN_0800da54 + FUN_0804f240)."
     }
   ]
 }

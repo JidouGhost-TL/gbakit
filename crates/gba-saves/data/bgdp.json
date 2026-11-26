@@ -9,28 +9,91 @@
   "checksums": [],
   "fields": [
     {
-      "name": "slot_counter",
+      "name": "save_data_lower_head",
       "offset": 0,
-      "size": 2,
-      "type": "u16_le"
+      "size": 208,
+      "type": "bytes",
+      "description": "Head of the lower 256-byte data block (file 0x000-0x0CF). Span is the register range of the lower CRC-8 loop in FUN_08685730; contents unresolved in the partial decomp.",
+      "confidence": "confirmed",
+      "evidence": "FUN_08685730 (lines 515-534) runs a CRC-8 loop over EEPROM-image bytes 0xFF down to 0x00 (hardcoded bounds) and verifies against the byte at 0x1FE; this field is the [0x000,0x0D0) head of that covered block, stopping before the decoded struct-tail bytes."
     },
     {
-      "name": "game_progress_flags",
-      "offset": 2,
-      "size": 2,
-      "type": "u16_le"
+      "name": "save_state_mode",
+      "offset": 208,
+      "size": 1,
+      "type": "u8",
+      "description": "Save-state/mode selector byte in the persistent struct tail: decomp default 0x7C, boot path writes 0x01, menu loop polls it for 0x7D/0x7E/0x7F.",
+      "confidence": "likely",
+      "evidence": "FUN_08685730 line 479 writes default 0x7C to save-struct byte +0xD0; FUN_08697cd8 line 1441 writes 0x01 to struct +0xD0 on the boot path and lines 1521-1531 poll that +0xD0 byte against 0x7D/0x7E/0x7F. Bases _DAT_086857ac/_DAT_08697e10 alias one EWRAM save struct (Ghidra overlap-aliasing); file offset 0xD0 in rev8-logical domain."
     },
     {
-      "name": "player_status_payload",
-      "offset": 4,
-      "size": 16,
-      "type": "bytes"
+      "name": "option_flags",
+      "offset": 209,
+      "size": 1,
+      "type": "bitflags",
+      "description": "Option flags byte; bit 7 is a persisted 1-bit option loaded via the bitstream reader, low 7 bits carry unknown option state (default 0x7F).",
+      "confidence": "likely",
+      "evidence": "FUN_08685d44 line 576 sets bit 7 of struct +0xD1 from a 1-bit value read by bitstream helper FUN_08696e2c; FUN_08685730 line 480 defaults the byte to 0x7F; FUN_08697cd8 line 1442 masks the byte with 0x80, keeping only bit 7. Same EWRAM-save-struct aliasing as save_state_mode; file offset 0xD1.",
+      "constraint": {
+        "kind": "bitmask",
+        "valid_mask": 128,
+        "flag_labels": {
+          "7": "persisted_option_bit"
+        }
+      }
     },
     {
-      "name": "save_block_payload",
-      "offset": 32,
-      "size": 256,
-      "type": "bytes"
+      "name": "save_gate",
+      "offset": 210,
+      "size": 1,
+      "type": "bitflags",
+      "description": "Save-control flags byte; bit 0 gates the erase-and-rewrite path that zeroes the whole image and writes it back to EEPROM.",
+      "confidence": "likely",
+      "evidence": "FUN_08685730 line 548 tests bit 0 of struct +0xD2: when clear it memsets the 512-byte image to zero and calls FUN_086841bc for a full 0x40-block EEPROM rewrite; line 547 records the CRC validity result into flags word _DAT_086858b8. Same save-struct aliasing; file offset 0xD2.",
+      "constraint": {
+        "kind": "bitmask",
+        "valid_mask": 1,
+        "flag_labels": {
+          "0": "erase_writeback_gate"
+        }
+      }
+    },
+    {
+      "name": "save_data_lower_tail",
+      "offset": 211,
+      "size": 45,
+      "type": "bytes",
+      "description": "Tail of the lower 256-byte data block (file 0x0D3-0x0FF). Covered by the same lower CRC-8 loop; contents unresolved in the partial decomp.",
+      "confidence": "confirmed",
+      "evidence": "FUN_08685730 (lines 515-534) CRC-8 loop covers EEPROM-image bytes 0xFF down to 0x00; this field is the [0x0D3,0x100) tail of that covered block, after the decoded struct-tail bytes."
+    },
+    {
+      "name": "save_data_upper",
+      "offset": 256,
+      "size": 254,
+      "type": "bytes",
+      "description": "Upper data block (file 0x100-0x1FD). Covered by the upper CRC-8 loop; contents unresolved in the partial decomp (hero/progress state lives here).",
+      "confidence": "likely",
+      "evidence": "FUN_08685730 (lines 484-503) runs the upper CRC-8 loop from _DAT_086857b4-2 down to hardcoded 0x100; span end 0x1FD follows the _DAT_086857b4=0x1FF deduction (adjacent checksum slots, full non-overlapping coverage; see checksum_crc8_upper)."
+    },
+    {
+      "name": "checksum_crc8_lower",
+      "offset": 510,
+      "size": 1,
+      "type": "u8",
+      "description": "Stored verification byte for file range 0x000-0x0FF (custom CRC-8: MSB-first, poly 0xCD, init 0, 8 zero-bit flush, final XOR 0x22). Kept as u8: custom algorithm has no Schema v2 id and baseline 0xFF does not verify.",
+      "confidence": "confirmed",
+      "evidence": "FUN_08685730 lines 515-543: second CRC-8 loop folds bytes 0xFF..0x00 (MSB-first, overflow XORs 0xCD/0xCC), clocks 8 flush bits, compares (state ^ 0x22) & 0xFF against the EEPROM-image byte at hardcoded file offset 0x1FE."
+    },
+    {
+      "name": "checksum_crc8_upper",
+      "offset": 511,
+      "size": 1,
+      "type": "u8",
+      "description": "Stored verification byte for file range 0x100-0x1FD (same custom CRC-8). Kept as u8 for the same reason as checksum_crc8_lower.",
+      "confidence": "likely",
+      "evidence": "FUN_08685730 lines 484-513: first CRC-8 loop folds bytes from _DAT_086857b4-2 down to hardcoded 0x100 and compares against the byte at _DAT_086857b4. _DAT_086857b4=0x1FF is deduced: it must exceed 0x100 (loop termination), differ from 0x1FE (distinct checksum slot at line 543), and 0x1FF alone yields full non-overlapping coverage (0x100-0x1FD plus checksums at 0x1FE/0x1FF)."
     }
-  ]
+  ],
+  "copy_groups": []
 }

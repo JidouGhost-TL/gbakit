@@ -1,45 +1,205 @@
 {
-  "id": "bmde",
-  "game_code": "BMDE",
-  "title": "Madden NFL 2004 (USA)",
-  "media": "eeprom8k",
-  "size_bytes": 8192,
-  "magic_signatures": [
+  "checksums": [
     {
-      "offset": 4,
-      "bytes": [
-        55,
-        57,
-        68,
-        77
-      ]
+      "algorithm": "sum16_le_words",
+      "covered_end": 118,
+      "covered_start": 28,
+      "name": "records_block_checksum",
+      "seed": 0,
+      "stored_offset": 118,
+      "xor_out": 0
     }
   ],
-  "checksums": [],
+  "eeprom_rev8": true,
   "fields": [
     {
-      "name": "magic_header",
-      "offset": 4,
+      "confidence": "likely",
+      "description": "Numeric record mark, leaderboard column A row 0 (pairs with record_mark_b0; baseline 15).",
+      "evidence": "FUN_0800ad04 (line 6250) transfers one 8-byte EEPROM word per bus address into the caller RAM buffer, so image offset 70 sits in bus word 8; value cross-checked as LE u16 in samples/baseline.sav (rev8-logical domain).",
+      "name": "record_mark_a0",
+      "offset": 70,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Numeric record mark, leaderboard column A row 1 (pairs with record_mark_b1; baseline 22).",
+      "evidence": "FUN_0800ad04 (line 6250) 8-byte-word EEPROM read path; LE u16 at image offset 72 verified in samples/baseline.sav (rev8-logical domain).",
+      "name": "record_mark_a1",
+      "offset": 72,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Numeric record mark, leaderboard column A row 2 (pairs with record_mark_b2; baseline 96).",
+      "evidence": "FUN_0800ad04 (line 6250) 8-byte-word EEPROM read path; LE u16 at image offset 74 verified in samples/baseline.sav (rev8-logical domain).",
+      "name": "record_mark_a2",
+      "offset": 74,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Numeric record mark, leaderboard column A row 3 (pairs with record_mark_b3; baseline 42).",
+      "evidence": "FUN_0800ad04 (line 6250) 8-byte-word EEPROM read path; LE u16 at image offset 76 verified in samples/baseline.sav (rev8-logical domain).",
+      "name": "record_mark_a3",
+      "offset": 76,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Numeric record mark, leaderboard column A row 4 (pairs with record_mark_b4; baseline 53).",
+      "evidence": "FUN_0800ad04 (line 6250) 8-byte-word EEPROM read path; LE u16 at image offset 78 verified in samples/baseline.sav (rev8-logical domain).",
+      "name": "record_mark_a4",
+      "offset": 78,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Numeric record mark, leaderboard column A row 5 (pairs with record_mark_b5; baseline 3).",
+      "evidence": "FUN_0800ad04 (line 6250) 8-byte-word EEPROM read path; LE u16 at image offset 80 verified in samples/baseline.sav (rev8-logical domain).",
+      "name": "record_mark_a5",
+      "offset": 80,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "allowed": "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+        "kind": "ascii-charset",
+        "max_len": 9
+      },
+      "description": "Records-table surname entry 0 (CULPEPPER), NUL-terminated in the image.",
+      "evidence": "Printable surname bytes at image offsets 126..134 verified in samples/baseline.sav (rev8-logical domain); reachable through the FUN_0800ad04 (line 6250) EEPROM read and FUN_0800adb4 (line 6305) write word paths and the FUN_0800ae90 (line 6364) 8-byte verify path.",
+      "name": "record_holder_0_name",
+      "offset": 126,
+      "size": 9,
+      "type": "ascii"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "allowed": "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+        "kind": "ascii-charset",
+        "max_len": 6
+      },
+      "description": "Records-table surname entry 1 (GEORGE), NUL-terminated in the image.",
+      "evidence": "Printable surname bytes at image offsets 141..146 verified in samples/baseline.sav (rev8-logical domain); reachable through the FUN_0800ad04 (line 6250) EEPROM read and FUN_0800adb4 (line 6305) write word paths and the FUN_0800ae90 (line 6364) 8-byte verify path.",
+      "name": "record_holder_1_name",
+      "offset": 141,
+      "size": 6,
+      "type": "ascii"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "allowed": "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+        "kind": "ascii-charset",
+        "max_len": 4
+      },
+      "description": "Records-table surname entry 2 (RICE), NUL-terminated in the image.",
+      "evidence": "Printable surname bytes at image offsets 156..159 verified in samples/baseline.sav (rev8-logical domain); reachable through the FUN_0800ad04 (line 6250) EEPROM read and FUN_0800adb4 (line 6305) write word paths and the FUN_0800ae90 (line 6364) 8-byte verify path.",
+      "name": "record_holder_2_name",
+      "offset": 156,
       "size": 4,
       "type": "ascii"
     },
     {
-      "name": "slot_counter",
-      "offset": 8,
-      "size": 2,
-      "type": "u16_le"
+      "confidence": "confirmed",
+      "constraint": {
+        "allowed": "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+        "kind": "ascii-charset",
+        "max_len": 6
+      },
+      "description": "Records-table surname entry 3 (STALEY), NUL-terminated in the image.",
+      "evidence": "Printable surname bytes at image offsets 171..176 verified in samples/baseline.sav (rev8-logical domain); reachable through the FUN_0800ad04 (line 6250) EEPROM read and FUN_0800adb4 (line 6305) write word paths and the FUN_0800ae90 (line 6364) 8-byte verify path.",
+      "name": "record_holder_3_name",
+      "offset": 171,
+      "size": 6,
+      "type": "ascii"
     },
     {
-      "name": "game_progress_flags",
-      "offset": 10,
-      "size": 2,
-      "type": "u16_le"
+      "confidence": "confirmed",
+      "constraint": {
+        "allowed": "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+        "kind": "ascii-charset",
+        "max_len": 5
+      },
+      "description": "Records-table surname entry 4 (FAULK), NUL-terminated in the image.",
+      "evidence": "Printable surname bytes at image offsets 186..190 verified in samples/baseline.sav (rev8-logical domain); reachable through the FUN_0800ad04 (line 6250) EEPROM read and FUN_0800adb4 (line 6305) write word paths and the FUN_0800ae90 (line 6364) 8-byte verify path.",
+      "name": "record_holder_4_name",
+      "offset": 186,
+      "size": 5,
+      "type": "ascii"
     },
     {
-      "name": "player_status_payload",
-      "offset": 12,
-      "size": 16,
-      "type": "bytes"
+      "confidence": "confirmed",
+      "constraint": {
+        "allowed": "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+        "kind": "ascii-charset",
+        "max_len": 5
+      },
+      "description": "Records-table surname entry 5 (GREEN), NUL-terminated in the image.",
+      "evidence": "Printable surname bytes at image offsets 201..205 verified in samples/baseline.sav (rev8-logical domain); reachable through the FUN_0800ad04 (line 6250) EEPROM read and FUN_0800adb4 (line 6305) write word paths and the FUN_0800ae90 (line 6364) 8-byte verify path.",
+      "name": "record_holder_5_name",
+      "offset": 201,
+      "size": 5,
+      "type": "ascii"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "allowed": "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+        "kind": "ascii-charset",
+        "max_len": 4
+      },
+      "description": "Records-table surname entry 6 (ELAM), NUL-terminated in the image.",
+      "evidence": "Printable surname bytes at image offsets 216..219 verified in samples/baseline.sav (rev8-logical domain); reachable through the FUN_0800ad04 (line 6250) EEPROM read and FUN_0800adb4 (line 6305) write word paths and the FUN_0800ae90 (line 6364) 8-byte verify path.",
+      "name": "record_holder_6_name",
+      "offset": 216,
+      "size": 4,
+      "type": "ascii"
     }
-  ]
+  ],
+  "game_code": "BMDE",
+  "id": "bmde",
+  "magic_signatures": [
+    {
+      "bytes": [
+        77,
+        68,
+        57,
+        55
+      ],
+      "description": "ASCII 'MD97' save magic at start of primary block",
+      "offset": 0
+    },
+    {
+      "bytes": [
+        77,
+        68,
+        57,
+        55
+      ],
+      "description": "ASCII 'MD97' save magic at start of secondary block",
+      "offset": 886
+    },
+    {
+      "bytes": [
+        77,
+        68,
+        57,
+        55
+      ],
+      "description": "ASCII 'MD97' save magic sentinel at end of image",
+      "offset": 8188
+    }
+  ],
+  "media": "eeprom8k",
+  "size_bytes": 8192,
+  "title": "Madden NFL 2004 (USA)"
 }

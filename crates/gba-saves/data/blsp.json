@@ -4,26 +4,191 @@
   "title": "Lilo & Stitch 2 (Europe) (En,Fr,De,Es)",
   "media": "eeprom512",
   "size_bytes": 512,
+  "eeprom_rev8": true,
   "magic_signatures": [],
-  "checksums": [],
+  "checksums": [
+    {
+      "name": "save_checksum_xor32",
+      "algorithm": "xor32_le",
+      "covered_start": 4,
+      "covered_end": 296,
+      "stored_offset": 0,
+      "seed": 0,
+      "xor_out": 2882343476
+    }
+  ],
   "fields": [
     {
-      "name": "slot_counter",
-      "offset": 0,
-      "size": 2,
-      "type": "u16_le"
-    },
-    {
-      "name": "game_progress_flags",
-      "offset": 2,
-      "size": 2,
-      "type": "u16_le"
-    },
-    {
-      "name": "player_status_payload",
+      "name": "config_byte_a",
       "offset": 4,
+      "size": 1,
+      "type": "u8",
+      "description": "Persistent header/config byte, defaults to 1. Set by FUN_0800850c (byte at save-buffer+0x04 = 1), covered by the xor32 checksum, written to EEPROM word 0 by FUN_080082ec. Exact gameplay role is not visible in the decompiled slice.",
+      "confidence": "guessed",
+      "evidence": "FUN_0800850c writes 1 to save-buffer+0x04; FUN_080082ec stores the buffer via FUN_0803d18c EEPROM words 0..36; baseline.sav logical byte 0x04 = 0x01."
+    },
+    {
+      "name": "config_byte_b",
+      "offset": 5,
+      "size": 1,
+      "type": "u8",
+      "description": "Persistent header/config byte, defaults to 1. Set by FUN_0800850c (byte at save-buffer+0x05 = 1), covered by the xor32 checksum, written to EEPROM word 0 by FUN_080082ec. Exact gameplay role is not visible in the decompiled slice.",
+      "confidence": "guessed",
+      "evidence": "FUN_0800850c writes 1 to save-buffer+0x05; FUN_080082ec stores the buffer via FUN_0803d18c EEPROM words 0..36; baseline.sav logical byte 0x05 = 0x01."
+    },
+    {
+      "name": "high_score_1",
+      "offset": 8,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Top-1 high score (default 2500). First of 5 descending u32 defaults (2500, 2000, 1500, 1000, 500) written by FUN_0800850c at save-buffer+0x08. High flag bits (0x7FC0 in upper halfword) are preserved by the init mask pattern.",
+      "confidence": "likely",
+      "evidence": "FUN_0800850c 5-entry loop writes save-buffer+0x08..+0x1B with 2500-500*k; FUN_080082ec persists via FUN_0803d18c EEPROM word 1; baseline.sav logical bytes 08..0B = 0x7FC009C4 (2500)."
+    },
+    {
+      "name": "high_score_2",
+      "offset": 12,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Top-2 high score (default 2000). Second of the 5-entry descending table written by FUN_0800850c at save-buffer+0x0C.",
+      "confidence": "likely",
+      "evidence": "FUN_0800850c 5-entry loop writes save-buffer+0x0C = 2000; FUN_080082ec persists via FUN_0803d18c EEPROM word 1; baseline.sav logical bytes 0C..0F = 0x7FC007D0 (2000)."
+    },
+    {
+      "name": "high_score_3",
+      "offset": 16,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Top-3 high score (default 1500). Third of the 5-entry descending table written by FUN_0800850c at save-buffer+0x10.",
+      "confidence": "likely",
+      "evidence": "FUN_0800850c 5-entry loop writes save-buffer+0x10 = 1500; FUN_080082ec persists via FUN_0803d18c EEPROM word 2; baseline.sav logical bytes 10..13 = 0x7FC005DC (1500)."
+    },
+    {
+      "name": "high_score_4",
+      "offset": 20,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Top-4 high score (default 1000). Fourth of the 5-entry descending table written by FUN_0800850c at save-buffer+0x14.",
+      "confidence": "likely",
+      "evidence": "FUN_0800850c 5-entry loop writes save-buffer+0x14 = 1000; FUN_080082ec persists via FUN_0803d18c EEPROM word 2; baseline.sav logical bytes 14..17 = 0x7FC003E8 (1000)."
+    },
+    {
+      "name": "high_score_5",
+      "offset": 24,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Top-5 high score (default 500). Last of the 5-entry descending table written by FUN_0800850c at save-buffer+0x18.",
+      "confidence": "likely",
+      "evidence": "FUN_0800850c 5-entry loop writes save-buffer+0x18 = 500; FUN_080082ec persists via FUN_0803d18c EEPROM word 3; baseline.sav logical bytes 18..1B = 0x7FC001F4 (500)."
+    },
+    {
+      "name": "score_table_group_0",
+      "offset": 28,
       "size": 16,
-      "type": "bytes"
+      "type": "bytes",
+      "description": "Per-stage score/threshold record group 0: 4 u32 entries defaulting to 500, 550, 600, 650 (500+50*i via the FUN_0800850c formula loop for indices 7..10). Upper halfword flag bits default to 0x7FC0.",
+      "confidence": "likely",
+      "evidence": "FUN_0800850c writes puVar1[7..10] = 500+i*0x32 at save-buffer+0x1C..+0x2B; FUN_080082ec persists via FUN_0803d18c EEPROM words 3..5; baseline.sav logical bytes 1C..2B match 500,550,600,650."
+    },
+    {
+      "name": "score_table_group_1",
+      "offset": 44,
+      "size": 28,
+      "type": "bytes",
+      "description": "Per-stage score/threshold record group 1: 7 u32 entries defaulting to 500, 750, 800, 850, 900, 950, 1000. First entry 500, remainder ascending +50. Initialized by per-index thunks called from FUN_0800850c.",
+      "confidence": "likely",
+      "evidence": "FUN_0800850c per-index init thunks write save-buffer+0x2C..+0x47; FUN_080082ec persists via FUN_0803d18c EEPROM words 5..8; baseline.sav logical bytes 2C..47 = 500,750,...,1000."
+    },
+    {
+      "name": "score_table_group_2",
+      "offset": 72,
+      "size": 28,
+      "type": "bytes",
+      "description": "Per-stage score/threshold record group 2: 7 u32 entries defaulting to 500, 1100, 1150, 1200, 1250, 1300, 1350. NOTE: byte at buffer+0x4A (inside this group) is cleared to 0 in RAM after save (FUN_080082ec) and after load (FUN_0800843c); the stored EEPROM value is preserved. Initialized by per-index thunks called from FUN_0800850c.",
+      "confidence": "likely",
+      "evidence": "FUN_0800850c per-index init thunks write save-buffer+0x48..+0x63; FUN_080082ec persists via FUN_0803d18c EEPROM words 9..12; baseline.sav logical bytes 48..63 = 500,1100,...,1350."
+    },
+    {
+      "name": "score_table_group_3",
+      "offset": 100,
+      "size": 36,
+      "type": "bytes",
+      "description": "Per-stage score/threshold record group 3: 9 u32 entries defaulting to 500, 1450, 1500, 1550, 1600, 1650, 1700, 1750, 1800. Initialized by per-index thunks called from FUN_0800850c.",
+      "confidence": "likely",
+      "evidence": "FUN_0800850c per-index init thunks write save-buffer+0x64..+0x87; FUN_080082ec persists via FUN_0803d18c EEPROM words 12..16; baseline.sav logical bytes 64..87 = 500,1450,...,1800."
+    },
+    {
+      "name": "score_table_group_4",
+      "offset": 136,
+      "size": 28,
+      "type": "bytes",
+      "description": "Per-stage score/threshold record group 4: 7 u32 entries defaulting to 500, 1900, 1950, 2000, 2050, 2100, 2150. Initialized by per-index thunks called from FUN_0800850c.",
+      "confidence": "likely",
+      "evidence": "FUN_0800850c per-index init thunks write save-buffer+0x88..+0xA3; FUN_080082ec persists via FUN_0803d18c EEPROM words 17..20; baseline.sav logical bytes 88..A3 = 500,1900,...,2150."
+    },
+    {
+      "name": "score_table_group_5",
+      "offset": 164,
+      "size": 20,
+      "type": "bytes",
+      "description": "Per-stage score/threshold record group 5: 5 u32 entries defaulting to 500, 2250, 2300, 2350, 2400. Initialized by per-index thunks called from FUN_0800850c.",
+      "confidence": "likely",
+      "evidence": "FUN_0800850c per-index init thunks write save-buffer+0xA4..+0xB7; FUN_080082ec persists via FUN_0803d18c EEPROM words 20..22; baseline.sav logical bytes A4..B7 = 500,2250,...,2400."
+    },
+    {
+      "name": "score_table_group_6",
+      "offset": 184,
+      "size": 16,
+      "type": "bytes",
+      "description": "Per-stage score/threshold record group 6: 4 u32 entries defaulting to 500, 2500, 2550, 2600. Initialized by per-index thunks called from FUN_0800850c.",
+      "confidence": "likely",
+      "evidence": "FUN_0800850c per-index init thunks write save-buffer+0xB8..+0xC7; FUN_080082ec persists via FUN_0803d18c EEPROM words 23..24; baseline.sav logical bytes B8..C7 = 500,2500,2550,2600."
+    },
+    {
+      "name": "score_table_group_7",
+      "offset": 200,
+      "size": 24,
+      "type": "bytes",
+      "description": "Per-stage score/threshold record group 7: 6 u32 entries defaulting to 500, 2700, 2750, 2800, 2850, 2900. Initialized by per-index thunks called from FUN_0800850c.",
+      "confidence": "likely",
+      "evidence": "FUN_0800850c per-index init thunks write save-buffer+0xC8..+0xDF; FUN_080082ec persists via FUN_0803d18c EEPROM words 25..27; baseline.sav logical bytes C8..DF = 500,2700,...,2900."
+    },
+    {
+      "name": "score_table_group_8",
+      "offset": 224,
+      "size": 12,
+      "type": "bytes",
+      "description": "Per-stage score/threshold record group 8: 3 u32 entries defaulting to 500, 3000, 3050. Initialized by per-index thunks called from FUN_0800850c.",
+      "confidence": "likely",
+      "evidence": "FUN_0800850c per-index init thunks write save-buffer+0xE0..+0xEB; FUN_080082ec persists via FUN_0803d18c EEPROM words 28..29; baseline.sav logical bytes E0..EB = 500,3000,3050."
+    },
+    {
+      "name": "save_file_0",
+      "offset": 236,
+      "size": 20,
+      "type": "bytes",
+      "description": "Save file slot 0 record (20 bytes): u16 0x01FE, flags u16 0x0060, u32 0, u32 1, u32 0, u32 0. Initialized by FUN_08008490(slot=0) at save-buffer+0xEC and persisted by FUN_080082ec via FUN_0803d18c EEPROM words 29..31.",
+      "confidence": "likely",
+      "evidence": "FUN_08008490 writes slot record (0x1FE at +0xEC, flag byte ops at +0xEE, u32s 0/1/0/0 at +0xF0..+0xFF); FUN_0800843c loads it via FUN_0803cf10; baseline.sav logical bytes EC..FF = FE 01 60 00 ... 01 ... ."
+    },
+    {
+      "name": "save_file_1",
+      "offset": 256,
+      "size": 20,
+      "type": "bytes",
+      "description": "Save file slot 1 record (20 bytes): identical default layout to slot 0. Initialized by FUN_08008490(slot=1) at save-buffer+0x100 and persisted by FUN_080082ec via FUN_0803d18c EEPROM words 32..33.",
+      "confidence": "likely",
+      "evidence": "FUN_08008490 loop over 3 slots (stride 0x14) writes slot 1 at +0x100; FUN_0800843c loads it via FUN_0803cf10; baseline.sav logical bytes 100..113 match slot defaults."
+    },
+    {
+      "name": "save_file_2",
+      "offset": 276,
+      "size": 20,
+      "type": "bytes",
+      "description": "Save file slot 2 record (20 bytes): identical default layout to slot 0. Initialized by FUN_08008490(slot=2) at save-buffer+0x114 and persisted by FUN_080082ec via FUN_0803d18c EEPROM words 34..36.",
+      "confidence": "likely",
+      "evidence": "FUN_08008490 loop over 3 slots (stride 0x14) writes slot 2 at +0x114; FUN_0800843c loads it via FUN_0803cf10; baseline.sav logical bytes 114..127 match slot defaults."
     }
-  ]
+  ],
+  "copy_groups": []
 }

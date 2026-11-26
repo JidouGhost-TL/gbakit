@@ -1,29 +1,244 @@
 {
-  "id": "a2jj",
-  "game_code": "A2JJ",
-  "title": "J.League Winning Eleven Advance 2002 (Japan)",
-  "media": "eeprom512",
-  "size_bytes": 512,
-  "magic_signatures": [],
-  "checksums": [],
+  "checksums": [
+    {
+      "algorithm": "sum8",
+      "covered_end": 42,
+      "covered_start": 6,
+      "name": "record_0_checksum",
+      "seed": 0,
+      "stored_offset": 2,
+      "xor_out": 0
+    }
+  ],
+  "eeprom_rev8": true,
   "fields": [
     {
-      "name": "slot_counter",
+      "confidence": "likely",
+      "description": "Record-0 data length in bytes (TLV length prefix). Set to 0x24 (36) by FUN_080c2130 (*puVar6 = 0x24) and consumed as the checksum/validation length by FUN_08007dd4.",
+      "evidence": "FUN_080c2130 sets record len 0x24 at save offset 0; FUN_08007dd4 reads it as the data length for the checksum loop; baseline value 36 matches the 36 data bytes at offsets 6..42.",
+      "name": "record_len",
       "offset": 0,
       "size": 2,
       "type": "u16_le"
     },
     {
-      "name": "game_progress_flags",
-      "offset": 2,
+      "confidence": "likely",
+      "description": "System settings halfword A (live-RAM struct P offset +0). Persisted in record-0 data; baseline value 1.",
+      "evidence": "FUN_080c2130 copies live-RAM P+0 to record offset 6 (FUN_0810645c size 2); FUN_080c1fb4 copies record offset 6 back to live RAM; validated as part of record 0 by FUN_08007dd4; block I/O via FUN_08102190/FUN_08007834.",
+      "name": "cfg_opt_a",
+      "offset": 6,
       "size": 2,
       "type": "u16_le"
     },
     {
-      "name": "player_status_payload",
-      "offset": 4,
-      "size": 16,
-      "type": "bytes"
+      "confidence": "likely",
+      "description": "System settings halfword B (live-RAM struct P offset -2). Persisted in record-0 data; baseline value 2.",
+      "evidence": "FUN_080c2130 copies live-RAM P-2 to record offset 8 (FUN_0810645c size 2); FUN_080c1fb4 copies record offset 8 back to live RAM; validated as part of record 0 by FUN_08007dd4; block I/O via FUN_08102190/FUN_08007834.",
+      "name": "cfg_opt_b",
+      "offset": 8,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "System settings halfword C (live-RAM struct P offset +0xC). Persisted in record-0 data; baseline value 1.",
+      "evidence": "FUN_080c2130 copies live-RAM P+0xC to record offset 10 (FUN_0810645c size 2); FUN_080c1fb4 copies record offset 10 back to live RAM; validated as part of record 0 by FUN_08007dd4.",
+      "name": "cfg_opt_c",
+      "offset": 10,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "System settings halfword D (live-RAM struct P offset +0x14). Persisted in record-0 data; baseline value 2.",
+      "evidence": "FUN_080c2130 copies live-RAM P+0x14 to record offset 12 (FUN_0810645c size 2); FUN_080c1fb4 copies record offset 12 back to live RAM; validated as part of record 0 by FUN_08007dd4.",
+      "name": "cfg_opt_d",
+      "offset": 12,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "System settings flag halfword, high-byte range (live-RAM struct P offset +6). Persisted in record-0 data; baseline value 512 (0x0200).",
+      "evidence": "FUN_080c2130 copies live-RAM P+6 to record offset 14 (FUN_0810645c size 2); FUN_080c1fb4 copies record offset 14 back to live RAM; validated as part of record 0 by FUN_08007dd4.",
+      "name": "cfg_flag_hi_a",
+      "offset": 14,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "System settings flag halfword, high-byte range (live-RAM struct P offset +4). Persisted in record-0 data; baseline value 256 (0x0100).",
+      "evidence": "FUN_080c2130 copies live-RAM P+4 to record offset 16 (FUN_0810645c size 2); FUN_080c1fb4 copies record offset 16 back to live RAM; validated as part of record 0 by FUN_08007dd4.",
+      "name": "cfg_flag_hi_b",
+      "offset": 16,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "System settings flag halfword, high-byte range (live-RAM struct P offset +0x12). Persisted in record-0 data; baseline value 768 (0x0300).",
+      "evidence": "FUN_080c2130 copies live-RAM P+0x12 to record offset 18 (FUN_0810645c size 2); FUN_080c1fb4 copies record offset 18 back to live RAM; validated as part of record 0 by FUN_08007dd4.",
+      "name": "cfg_flag_hi_c",
+      "offset": 18,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "System settings 32-bit slot Q (live-RAM struct Q). Persisted in record-0 data; zero in baseline.",
+      "evidence": "FUN_080c2130 copies 4 bytes of live-RAM struct Q to record offset 20 (FUN_0810645c size 4); FUN_080c1fb4 copies record offset 20 back to live RAM; validated as part of record 0 by FUN_08007dd4.",
+      "name": "cfg_dword_a",
+      "offset": 20,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "System settings byte (live-RAM struct R offset +0x66). Persisted in record-0 data; zero in baseline.",
+      "evidence": "FUN_080c2130 copies live-RAM R+0x66 to record offset 24 (FUN_0810645c size 1); FUN_080c1fb4 copies record offset 24 back to live RAM; validated as part of record 0 by FUN_08007dd4.",
+      "name": "cfg_byte_a",
+      "offset": 24,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "System settings byte (live-RAM struct S1 offset +2). Persisted in record-0 data; zero in baseline.",
+      "evidence": "FUN_080c2130 copies live-RAM S1+2 to record offset 25 (FUN_0810645c size 1); FUN_080c1fb4 copies record offset 25 back to live RAM; validated as part of record 0 by FUN_08007dd4.",
+      "name": "cfg_byte_b",
+      "offset": 25,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Sound option byte A (live-RAM struct S1 offset +5). Applied after load by FUN_080c279c into a sound-engine global; baseline value 1.",
+      "evidence": "FUN_080c2130 copies live-RAM S1+5 to record offset 26 and FUN_080c1fb4 copies it back; FUN_080c279c reads S1+5 into a sound-engine global right after record-0 load/deserialize.",
+      "name": "snd_opt_a",
+      "offset": 26,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Sound option byte B (live-RAM struct S1 offset +6). FUN_080c279c branches on it: zero takes the FUN_08100890 stop path, nonzero stores it and may play via FUN_081007c4; baseline value 1.",
+      "evidence": "FUN_080c2130 copies live-RAM S1+6 to record offset 27 and FUN_080c1fb4 copies it back; FUN_080c279c tests S1+6 and dispatches to sound-table players FUN_08100890 / FUN_081007c4.",
+      "name": "snd_opt_b",
+      "offset": 27,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Sound option byte C (live-RAM struct S1 offset +8). Applied after load by FUN_080c279c into a sound-engine global; baseline value 1.",
+      "evidence": "FUN_080c2130 copies live-RAM S1+8 to record offset 28 and FUN_080c1fb4 copies it back; FUN_080c279c reads S1+8 into a sound-engine global right after record-0 load/deserialize.",
+      "name": "snd_opt_c",
+      "offset": 28,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "System settings byte (live-RAM struct S1 offset +10). Persisted in record-0 data; baseline value 62 (0x3E).",
+      "evidence": "FUN_080c2130 copies live-RAM S1+10 to record offset 29 (FUN_0810645c size 1); FUN_080c1fb4 copies record offset 29 back to live RAM; validated as part of record 0 by FUN_08007dd4.",
+      "name": "cfg_byte_c",
+      "offset": 29,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "System settings byte (live-RAM struct S2 offset +7). Persisted in record-0 data; baseline value 1.",
+      "evidence": "FUN_080c2130 copies live-RAM S2+7 to record offset 30 (FUN_0810645c size 1); FUN_080c1fb4 copies record offset 30 back to live RAM; validated as part of record 0 by FUN_08007dd4.",
+      "name": "cfg_opt_e",
+      "offset": 30,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "System settings byte (live-RAM struct S2 offset +0xE). Persisted in record-0 data; baseline value 1.",
+      "evidence": "FUN_080c2130 copies live-RAM S2+0xE to record offset 31 (FUN_0810645c size 1); FUN_080c1fb4 copies record offset 31 back to live RAM; validated as part of record 0 by FUN_08007dd4.",
+      "name": "cfg_opt_f",
+      "offset": 31,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "System settings byte (live-RAM struct S2 offset +0xF). Persisted in record-0 data; zero in baseline.",
+      "evidence": "FUN_080c2130 copies live-RAM S2+0xF to record offset 32 (FUN_0810645c size 1); FUN_080c1fb4 copies record offset 32 back to live RAM; validated as part of record 0 by FUN_08007dd4.",
+      "name": "cfg_opt_g",
+      "offset": 32,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "System settings byte (live-RAM struct S2 offset +0x10). Persisted in record-0 data; baseline value 7.",
+      "evidence": "FUN_080c2130 copies live-RAM S2+0x10 to record offset 33 (FUN_0810645c size 1); FUN_080c1fb4 copies record offset 33 back to live RAM; validated as part of record 0 by FUN_08007dd4.",
+      "name": "cfg_opt_h",
+      "offset": 33,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "System settings byte (live-RAM struct S2 offset +0x12). Persisted in record-0 data; zero in baseline.",
+      "evidence": "FUN_080c2130 copies live-RAM S2+0x12 to record offset 34 (FUN_0810645c size 1); FUN_080c1fb4 copies record offset 34 back to live RAM; validated as part of record 0 by FUN_08007dd4.",
+      "name": "cfg_opt_i",
+      "offset": 34,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "System settings halfword (live-RAM struct S2 offset +0xC). Persisted in record-0 data; zero in baseline.",
+      "evidence": "FUN_080c2130 copies live-RAM S2+0xC to record offset 35 (FUN_0810645c size 2); FUN_080c1fb4 copies record offset 35 back to live RAM; validated as part of record 0 by FUN_08007dd4.",
+      "name": "cfg_opt_j",
+      "offset": 35,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "System settings byte (live-RAM struct S2 offset +0x13). Persisted in record-0 data; zero in baseline.",
+      "evidence": "FUN_080c2130 copies live-RAM S2+0x13 to record offset 37 (FUN_0810645c size 1); FUN_080c1fb4 copies record offset 37 back to live RAM; validated as part of record 0 by FUN_08007dd4.",
+      "name": "cfg_opt_k",
+      "offset": 37,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "System settings 32-bit slot (live-RAM struct S2 offset +8). Persisted in record-0 data; zero in baseline.",
+      "evidence": "FUN_080c2130 copies 4 bytes of live-RAM S2+8 to record offset 38 (FUN_0810645c size 4); FUN_080c1fb4 copies record offset 38 back to live RAM; validated as part of record 0 by FUN_08007dd4.",
+      "name": "cfg_dword_b",
+      "offset": 38,
+      "size": 4,
+      "type": "u32_le"
     }
-  ]
+  ],
+  "game_code": "A2JJ",
+  "id": "a2jj",
+  "magic_signatures": [
+    {
+      "bytes": [
+        240
+      ],
+      "description": "Record-0 header tag 0xF0 (record id 0); checked by FUN_08007dd4 (byte at record+4 minus 0xF0 must equal record id).",
+      "offset": 4
+    },
+    {
+      "bytes": [
+        240
+      ],
+      "description": "Record-0 trailer tag 0xF0 (record id 0); checked by FUN_08007dd4 (byte at record+6+len minus 0xF0 must equal record id).",
+      "offset": 42
+    }
+  ],
+  "media": "eeprom512",
+  "size_bytes": 512,
+  "title": "J.League Winning Eleven Advance 2002 (Japan)"
 }

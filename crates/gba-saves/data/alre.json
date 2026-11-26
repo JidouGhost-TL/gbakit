@@ -1,29 +1,131 @@
 {
-  "id": "alre",
-  "game_code": "ALRE",
-  "title": "LEGO Racers 2 (USA) (En,Fr)",
-  "media": "eeprom512",
-  "size_bytes": 512,
-  "magic_signatures": [],
-  "checksums": [],
+  "checksums": [
+    {
+      "algorithm": "sum32_le",
+      "covered_end": 448,
+      "covered_start": 12,
+      "name": "payload_byte_sum",
+      "seed": 0,
+      "stored_offset": 8,
+      "xor_out": 0
+    }
+  ],
+  "copy_groups": [],
+  "eeprom_rev8": true,
   "fields": [
     {
-      "name": "slot_counter",
-      "offset": 9,
+      "confidence": "confirmed",
+      "description": "Leading 8 bytes of the 448-byte save image (EEPROM block 0 head). Read as zero in the live capture; precedes the checksum slot so the u32 checksum stays 4-aligned.",
+      "evidence": "FUN_0800f4d0 writes 0x38 blocks of 8 bytes from the RAM save-image base (EEPROM addresses 0..0x37, file [0,448) in rev8-logical domain); FUN_0800f77c stores the u32 checksum at image base + 8. Bytes [0,8) are image prologue, all zero in samples/baseline.sav.",
+      "name": "save_image_prefix",
+      "offset": 0,
+      "size": 8,
+      "type": "bytes"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "First persisted payload word at RAM buffer DAT_0800f7f0 + 0. Live value 1 in the captured save; covered by the payload checksum.",
+      "evidence": "FUN_0800f77c checksums 0x1b4 bytes at DAT_0800f7f0 via FUN_0800f568 and persists them with FUN_0800f4d0 starting at EEPROM block 0, so buffer offset +0 maps to file offset 12 (rev8 logical). Live u16_le value 1 verified in samples/baseline.sav.",
+      "name": "payload_word_0",
+      "offset": 12,
       "size": 2,
       "type": "u16_le"
     },
     {
-      "name": "game_progress_flags",
-      "offset": 11,
+      "confidence": "confirmed",
+      "description": "Second persisted payload word at RAM buffer DAT_0800f7f0 + 2. Live value 1 in the captured save; covered by the payload checksum.",
+      "evidence": "Same write path as payload_word_0 (FUN_0800f77c / FUN_0800f568 / FUN_0800f4d0): buffer offset +2 maps to file offset 14 (rev8 logical). Live u16_le value 1 verified in samples/baseline.sav.",
+      "name": "payload_word_1",
+      "offset": 14,
       "size": 2,
       "type": "u16_le"
     },
     {
-      "name": "player_status_payload",
-      "offset": 13,
-      "size": 16,
+      "confidence": "confirmed",
+      "description": "Zero-filled payload span between the leading word pair and the payload-offset-60 word pair. Purpose undecoded; mapped as opaque bytes so no semantics are asserted.",
+      "evidence": "Span lies inside the FUN_0800f568 checksum range [12,448) and the FUN_0800f4d0 0x38-block write window; all 56 bytes read 0x00 in samples/baseline.sav (rev8 logical).",
+      "name": "payload_gap_a",
+      "offset": 16,
+      "size": 56,
+      "type": "bytes"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Persisted payload word at RAM buffer DAT_0800f7f0 + 60. Live value 3 in the captured save; covered by the payload checksum.",
+      "evidence": "Same write path as payload_word_0 (FUN_0800f77c / FUN_0800f568 / FUN_0800f4d0): buffer offset +60 maps to file offset 72 (rev8 logical). Live u16_le value 3 verified in samples/baseline.sav.",
+      "name": "payload_word_30",
+      "offset": 72,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Persisted payload word at RAM buffer DAT_0800f7f0 + 62. Live value 3 in the captured save; covered by the payload checksum.",
+      "evidence": "Same write path as payload_word_0 (FUN_0800f77c / FUN_0800f568 / FUN_0800f4d0): buffer offset +62 maps to file offset 74 (rev8 logical). Live u16_le value 3 verified in samples/baseline.sav.",
+      "name": "payload_word_31",
+      "offset": 74,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Zero-filled payload span between the payload-offset-60 word pair and the 0xFFFF lead word. Purpose undecoded; mapped as opaque bytes.",
+      "evidence": "Span lies inside the FUN_0800f568 checksum range [12,448) and the FUN_0800f4d0 0x38-block write window; all 60 bytes read 0x00 in samples/baseline.sav (rev8 logical).",
+      "name": "payload_gap_b",
+      "offset": 76,
+      "size": 60,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Persisted payload word at RAM buffer DAT_0800f7f0 + 124 reading 0xFFFF in the live capture. Pattern suggests a guard/terminator word ahead of the uniform table, but no accessor was resolved, so this stays a structural reading.",
+      "evidence": "Same write path as payload_word_0 (FUN_0800f77c / FUN_0800f568 / FUN_0800f4d0): buffer offset +124 maps to file offset 136 (rev8 logical). Live u16_le value 0xFFFF verified in samples/baseline.sav; per-field readers sit behind unrecovered indirect calls.",
+      "name": "payload_word_62",
+      "offset": 136,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Six zero bytes directly after the 0xFFFF word and before the uniform table. Purpose undecoded; mapped as opaque bytes.",
+      "evidence": "Span lies inside the FUN_0800f568 checksum range [12,448) and the FUN_0800f4d0 0x38-block write window; all 6 bytes read 0x00 in samples/baseline.sav (rev8 logical).",
+      "name": "payload_tail_zeros",
+      "offset": 138,
+      "size": 6,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "300-byte uniform region repeating the byte pair F0 D2 (u16 0xD2F0 in rev8-logical domain). Game-written and checksum-covered, but encoding is undecoded, so mapped as opaque bytes with no gameplay claim.",
+      "evidence": "Written by the FUN_0800f4d0 block loop (EEPROM blocks 18..55, file [144,444) rev8 logical) and covered by the FUN_0800f568 checksum, which verifies byte-exact over it. Uniform 2-byte period verified in samples/baseline.sav; no constant 0xD2F0/0xF0D2 or accessor appears in the resolved decomp.",
+      "name": "uniform_data_table",
+      "offset": 144,
+      "size": 300,
+      "type": "bytes"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Final word of the 436-byte checksummed payload (buffer offset +432). Reads zero in the live capture.",
+      "evidence": "FUN_0800f568 sums buffer bytes [DAT_0800f7f0, DAT_0800f7f0 + 0x1b4), i.e. file [12,448) rev8 logical; the last word at file [444,448) reads u32_le 0 in samples/baseline.sav.",
+      "name": "payload_trailer",
+      "offset": 444,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Bytes past the 56-block save image. Never written by the game; erased EEPROM state (0xFF).",
+      "evidence": "FUN_0800f4d0 is always called from FUN_0800f77c with count 0x38, so only EEPROM blocks 0..0x37 (file [0,448)) are written; file [448,512) reads 0xFF throughout in samples/baseline.sav.",
+      "name": "unwritten_erased_area",
+      "offset": 448,
+      "size": 64,
       "type": "bytes"
     }
-  ]
+  ],
+  "game_code": "ALRE",
+  "id": "alre",
+  "magic_signatures": [],
+  "media": "eeprom512",
+  "size_bytes": 512,
+  "title": "LEGO Racers 2 (USA) (En,Fr)"
 }

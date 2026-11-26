@@ -1,29 +1,177 @@
 {
-  "id": "bjue",
-  "game_code": "BJUE",
-  "title": "Tak and the Power of Juju (USA)",
-  "media": "eeprom512",
-  "size_bytes": 512,
-  "magic_signatures": [],
   "checksums": [],
+  "copy_groups": [],
+  "eeprom_rev8": true,
   "fields": [
     {
-      "name": "slot_counter",
-      "offset": 0,
-      "size": 2,
-      "type": "u16_le"
-    },
-    {
-      "name": "game_progress_flags",
-      "offset": 2,
-      "size": 2,
-      "type": "u16_le"
-    },
-    {
-      "name": "player_status_payload",
+      "confidence": "confirmed",
+      "description": "File 0 record byte 0: progress value, valid gameplay range 0..60, 0xFF means empty/new file (no constraint: baseline holds 0xFF).",
+      "evidence": "FUN_08010518 validates record byte 0 as 0xFF or <=0x3C; FUN_0801069c writes record byte 0 from live state; FUN_0801056c inits it to 0xFF; logical save offset 4.",
+      "name": "file_0_byte_0",
       "offset": 4,
-      "size": 16,
-      "type": "bytes"
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 1,
+        "minimum": 0
+      },
+      "description": "File 0 record byte 1: boolean flag, must be 0 or 1.",
+      "evidence": "FUN_08010518 rejects record byte 1 > 1; FUN_0801069c writes it from live state; FUN_08010094 loads it via FUN_080107e8; logical save offset 5.",
+      "name": "file_0_flag_1",
+      "offset": 5,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 15,
+        "minimum": 2
+      },
+      "description": "File 0 record byte 2: small counter/state, valid range 2..15.",
+      "evidence": "FUN_08010518 rejects record byte 2 outside 2..15 ((x-2) <= 0x0D); FUN_08010094 loads it via FUN_08010800; logical save offset 6.",
+      "name": "file_0_byte_2",
+      "offset": 6,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 99,
+        "minimum": 3
+      },
+      "description": "File 0 record byte 3: counter with minimum 3 (write path clamps up to 3).",
+      "evidence": "FUN_08010518 rejects record byte 3 outside 3..99 ((x-3) <= 0x60); FUN_0801069c clamps it to minimum 3; FUN_08021b2e resets it to 3 before save; logical save offset 7.",
+      "name": "file_0_byte_3",
+      "offset": 7,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "File 1 record byte 0: progress value, valid gameplay range 0..60, 0xFF means empty/new file (no constraint: baseline holds 0xFF).",
+      "evidence": "FUN_08010518 validates record byte 0 as 0xFF or <=0x3C; FUN_0801069c writes record byte 0 from live state; FUN_0801056c inits it to 0xFF; logical save offset 8.",
+      "name": "file_1_byte_0",
+      "offset": 8,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 1,
+        "minimum": 0
+      },
+      "description": "File 1 record byte 1: boolean flag, must be 0 or 1.",
+      "evidence": "FUN_08010518 rejects record byte 1 > 1; FUN_0801069c writes it from live state; FUN_08010094 loads it via FUN_080107e8; logical save offset 9.",
+      "name": "file_1_flag_1",
+      "offset": 9,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 15,
+        "minimum": 2
+      },
+      "description": "File 1 record byte 2: small counter/state, valid range 2..15.",
+      "evidence": "FUN_08010518 rejects record byte 2 outside 2..15 ((x-2) <= 0x0D); FUN_08010094 loads it via FUN_08010800; logical save offset 10.",
+      "name": "file_1_byte_2",
+      "offset": 10,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 99,
+        "minimum": 3
+      },
+      "description": "File 1 record byte 3: counter with minimum 3 (write path clamps up to 3).",
+      "evidence": "FUN_08010518 rejects record byte 3 outside 3..99 ((x-3) <= 0x60); FUN_0801069c clamps it to minimum 3; FUN_08021b2e resets it to 3 before save; logical save offset 11.",
+      "name": "file_1_byte_3",
+      "offset": 11,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "File 2 record byte 0: progress value, valid gameplay range 0..60, 0xFF means empty/new file (no constraint: baseline holds 0xFF).",
+      "evidence": "FUN_08010518 validates record byte 0 as 0xFF or <=0x3C; FUN_0801069c writes record byte 0 from live state; FUN_0801056c inits it to 0xFF; logical save offset 12.",
+      "name": "file_2_byte_0",
+      "offset": 12,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 1,
+        "minimum": 0
+      },
+      "description": "File 2 record byte 1: boolean flag, must be 0 or 1.",
+      "evidence": "FUN_08010518 rejects record byte 1 > 1; FUN_0801069c writes it from live state; FUN_08010094 loads it via FUN_080107e8; logical save offset 13.",
+      "name": "file_2_flag_1",
+      "offset": 13,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 15,
+        "minimum": 2
+      },
+      "description": "File 2 record byte 2: small counter/state, valid range 2..15.",
+      "evidence": "FUN_08010518 rejects record byte 2 outside 2..15 ((x-2) <= 0x0D); FUN_08010094 loads it via FUN_08010800; logical save offset 14.",
+      "name": "file_2_byte_2",
+      "offset": 14,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 99,
+        "minimum": 3
+      },
+      "description": "File 2 record byte 3: counter with minimum 3 (write path clamps up to 3).",
+      "evidence": "FUN_08010518 rejects record byte 3 outside 3..99 ((x-3) <= 0x60); FUN_0801069c clamps it to minimum 3; FUN_08021b2e resets it to 3 before save; logical save offset 15.",
+      "name": "file_2_byte_3",
+      "offset": 15,
+      "size": 1,
+      "type": "u8"
     }
-  ]
+  ],
+  "game_code": "BJUE",
+  "id": "bjue",
+  "magic_signatures": [
+    {
+      "bytes": [
+        205,
+        251,
+        205,
+        251
+      ],
+      "description": "Save-valid magic header: first u32 of the 16-byte EEPROM struct, equality-checked in FUN_08010518 against the expected constant.",
+      "offset": 0
+    }
+  ],
+  "media": "eeprom512",
+  "size_bytes": 512,
+  "title": "Tak and the Power of Juju (USA)"
 }

@@ -1,29 +1,103 @@
 {
-  "id": "anqe",
-  "game_code": "ANQE",
-  "title": "Nicktoons Racing (USA)",
-  "media": "eeprom512",
-  "size_bytes": 512,
-  "magic_signatures": [],
   "checksums": [],
+  "copy_groups": [],
   "fields": [
     {
-      "name": "slot_counter",
+      "confidence": "likely",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 255,
+        "minimum": 0
+      },
+      "description": "Save format revision tag at start of EEPROM image",
+      "evidence": "FUN_0801a354 reads one 8-byte EEPROM record via DAT_0d000000 into an EWRAM buffer and FUN_0801a4e0 compares the first word back; offset 0x00 holds the revision tag of that record.",
+      "name": "save_format_tag",
       "offset": 0,
       "size": 2,
       "type": "u16_le"
     },
     {
-      "name": "game_progress_flags",
+      "confidence": "likely",
+      "constraint": {
+        "flag_labels": {
+          "0": "Cup0",
+          "8": "Cup4"
+        },
+        "kind": "bitmask",
+        "valid_mask": 511
+      },
+      "description": "Bitflags recording which cups/tracks are unlocked",
+      "evidence": "FUN_0801a4e0 loads the 8-byte record with FUN_0801a354 (DAT_0d000000) and compares 4 words against EWRAM progress state; offset 0x02 word carries unlock flag bits consumed near DAT_02000000 game-state writes.",
+      "name": "cup_unlock_flags",
       "offset": 2,
+      "size": 2,
+      "type": "bitflags"
+    },
+    {
+      "confidence": "likely",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 3,
+        "minimum": 0
+      },
+      "description": "Sound setting selected in the options screen",
+      "evidence": "FUN_0801a404 stores the 4-word EWRAM options block to EEPROM via DAT_0d000000 and FUN_0801a538 retries that write; offset 0x04 byte carries the sound option read back by FUN_0801a354 into EWRAM near DAT_02000000.",
+      "name": "options_sound",
+      "offset": 4,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 3,
+        "minimum": 0
+      },
+      "description": "Display setting selected in the options screen",
+      "evidence": "FUN_0801a404 stores the 4-word EWRAM options block to EEPROM via DAT_0d000000 and FUN_0801a538 retries that write; offset 0x05 byte carries the display option read back by FUN_0801a354 into EWRAM near DAT_02000000.",
+      "name": "options_display",
+      "offset": 5,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 65535,
+        "minimum": 0
+      },
+      "description": "Accumulated grand-prix points counter",
+      "evidence": "FUN_0801a404 writes EWRAM progress words to EEPROM through DAT_0d000000 and FUN_0801a354 reads them back for FUN_0801a4e0 verification; offset 0x06 word holds the points counter kept in EWRAM near DAT_02000000.",
+      "name": "grandprix_points",
+      "offset": 6,
       "size": 2,
       "type": "u16_le"
     },
     {
-      "name": "player_status_payload",
-      "offset": 4,
-      "size": 16,
+      "confidence": "likely",
+      "description": "Bulk record table: repeated per-track entries managed as 8-byte EEPROM records",
+      "evidence": "FUN_0801a404 writes 8-byte records to DAT_0d000000 in a loop retried by FUN_0801a538, and FUN_0801a354 reads them back 4 words at a time; this span holds the repeated record payloads.",
+      "name": "record_table",
+      "offset": 8,
+      "size": 344,
+      "type": "bytes"
+    },
+    {
+      "confidence": "guessed",
+      "description": "Unwritten EEPROM area reading back as erased 0xFF",
+      "evidence": "FUN_0801a354 and FUN_0801a404 only transfer records inside the used prefix via DAT_0d000000, so bytes past the last written record keep the erased EEPROM value observed here.",
+      "name": "erased_spare",
+      "offset": 352,
+      "size": 160,
       "type": "bytes"
     }
-  ]
+  ],
+  "game_code": "ANQE",
+  "id": "anqe",
+  "magic_signatures": [],
+  "media": "eeprom512",
+  "size_bytes": 512,
+  "title": "Nicktoons Racing (USA)"
 }

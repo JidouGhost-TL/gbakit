@@ -1,29 +1,365 @@
 {
-  "id": "bxux",
-  "game_code": "BXUX",
-  "title": "Surf's Up (Europe) (En,Fr,De,Es,It)",
-  "media": "eeprom512",
-  "size_bytes": 512,
-  "magic_signatures": [],
   "checksums": [],
+  "eeprom_rev8": true,
   "fields": [
     {
-      "name": "slot_counter",
-      "offset": 2,
-      "size": 2,
-      "type": "u16_le"
+      "confidence": "confirmed",
+      "description": "Record header magic u32. First word of the 8-byte EEPROM header; verified against all live records in baseline.",
+      "evidence": "FUN_0804ee78 compares first u32 of each 8-byte word to a ROM constant; FUN_0804eac0 requires auStack_34[0]==ROM magic; FUN_0804e960 writes the magic as header word0. Logical offset 0 (rev8 domain).",
+      "name": "slot0_header_magic",
+      "offset": 0,
+      "size": 4,
+      "type": "u32_le"
     },
     {
-      "name": "game_progress_flags",
+      "confidence": "confirmed",
+      "description": "Header complement u16. Equals ~magic_lo (0xBBAA); outer validity check is magic_lo + data-byte-sum + this == 0xFFFF.",
+      "evidence": "FUN_0804e960 constructs header word1 low16 as ~(magic&0xffff); FUN_0804ed88/FUN_0804eac0 verify (header_lo + sum + this)<<16 == ROM const (0xFFFF0000 for zero data). Logical offset 4.",
+      "name": "slot0_header_check",
       "offset": 4,
       "size": 2,
       "type": "u16_le"
     },
     {
-      "name": "player_status_payload",
+      "confidence": "confirmed",
+      "description": "Header reserved u16, always zero in live captures.",
+      "evidence": "FUN_0804e960 writes header word1 = 0x0000BBAA, so high half is zero; baseline logical bytes are 00 00. Logical offset 6.",
+      "name": "slot0_header_reserved",
       "offset": 6,
-      "size": 16,
-      "type": "bytes"
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Inner CRC32 (FUN_0804cbb8: init 0xFFFFFFFF, table-driven, final invert) over record bytes +12..+120; stored here. Not in Schema v2 algorithm list, so kept as a plain field.",
+      "evidence": "FUN_080188c4 line 316 checks func_0x0804cbb8(buf+4, 108) == u32 at buf+0; FUN_0804cbb8 is a standard CRC32. Logical offset 8. Baseline stores 0 vs actual 0x0f7cfdf3, i.e. empty slot.",
+      "name": "slot0_data_crc32",
+      "offset": 8,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "3-character slot name/initials; copied to RAM slot bytes 0..2 with NUL terminator.",
+      "evidence": "FUN_080188c4 lines 367-372 copy 3 bytes from load buffer (record data +4..+6) to RAM slot struct +0..+2 and zero +3. Logical offset 12.",
+      "name": "slot0_name",
+      "offset": 12,
+      "size": 3,
+      "type": "ascii"
+    },
+    {
+      "confidence": "likely",
+      "description": "Primary 32-bit score/counter for slot 0.",
+      "evidence": "FUN_080188c4 line 379 copies u32 from load buffer (record data +8) to per-slot RAM word. Logical offset 16.",
+      "name": "slot0_score",
+      "offset": 16,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Per-slot 16-bit stat counter 0.",
+      "evidence": "FUN_080188c4 lines 408-412 copy 5 u16 values from load buffer (record data +12..+21) to RAM slot. Logical offset 20.",
+      "name": "slot0_stat_0",
+      "offset": 20,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Per-slot 16-bit stat counter 1.",
+      "evidence": "FUN_080188c4 lines 408-412 copy 5 u16 values from load buffer (record data +12..+21) to RAM slot. Logical offset 22.",
+      "name": "slot0_stat_1",
+      "offset": 22,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Per-slot 16-bit stat counter 2.",
+      "evidence": "FUN_080188c4 lines 408-412 copy 5 u16 values from load buffer (record data +12..+21) to RAM slot. Logical offset 24.",
+      "name": "slot0_stat_2",
+      "offset": 24,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Per-slot 16-bit stat counter 3.",
+      "evidence": "FUN_080188c4 lines 408-412 copy 5 u16 values from load buffer (record data +12..+21) to RAM slot. Logical offset 26.",
+      "name": "slot0_stat_3",
+      "offset": 26,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Per-slot 16-bit stat counter 4.",
+      "evidence": "FUN_080188c4 lines 408-412 copy 5 u16 values from load buffer (record data +12..+21) to RAM slot. Logical offset 28.",
+      "name": "slot0_stat_4",
+      "offset": 28,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Single option/flag byte for slot 0 (lands in RAM slot byte +100).",
+      "evidence": "FUN_080188c4 line 380 copies one byte from load buffer (record data +23) to RAM slot +100. Logical offset 31.",
+      "name": "slot0_flags_a",
+      "offset": 31,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "bitfield_array": {
+        "bit_width": 16,
+        "count": 15,
+        "labels": [
+          "g00",
+          "g01",
+          "g02",
+          "g03",
+          "g04",
+          "g05",
+          "g06",
+          "g07",
+          "g08",
+          "g09",
+          "g10",
+          "g11",
+          "g12",
+          "g13",
+          "g14"
+        ]
+      },
+      "confidence": "likely",
+      "description": "5x3 matrix of 16-bit stat values for slot 0.",
+      "evidence": "FUN_080188c4 lines 414-423 copy 15 u16 values (5 rows x 3) from load buffer (record data +24..+53) to RAM slot. Logical offset 32.",
+      "name": "slot0_level_grid",
+      "offset": 32,
+      "size": 30,
+      "type": "bitfield_array"
+    },
+    {
+      "confidence": "likely",
+      "description": "Paired 16-bit value A for slot 0.",
+      "evidence": "FUN_080188c4 line 377 copies u16 from load buffer (record data +54) to RAM slot +0x12. Logical offset 62.",
+      "name": "slot0_pair_a",
+      "offset": 62,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Paired 16-bit value B for slot 0.",
+      "evidence": "FUN_080188c4 line 378 copies u16 from load buffer (record data +56) to RAM slot +0x14. Logical offset 64.",
+      "name": "slot0_pair_b",
+      "offset": 64,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "bitfield_array": {
+        "bit_width": 16,
+        "count": 16,
+        "labels": [
+          "t00",
+          "t01",
+          "t02",
+          "t03",
+          "t04",
+          "t05",
+          "t06",
+          "t07",
+          "t08",
+          "t09",
+          "t10",
+          "t11",
+          "t12",
+          "t13",
+          "t14",
+          "t15"
+        ]
+      },
+      "confidence": "likely",
+      "description": "Table of 16 16-bit record values for slot 0 (e.g. per-track scores).",
+      "evidence": "FUN_080188c4 lines 388-400 copy 16 u16 values from load buffer (record data +58..+89) to RAM slot (plus low-byte view). Logical offset 66.",
+      "name": "slot0_records_table",
+      "offset": 66,
+      "size": 32,
+      "type": "bitfield_array"
+    },
+    {
+      "confidence": "likely",
+      "description": "16-bit parameter for slot 0.",
+      "evidence": "FUN_080188c4 line 376 (via second u16 copy path) loads u16 from buffer (record data +98) to RAM slot +0x5c region. Logical offset 106.",
+      "name": "slot0_param",
+      "offset": 106,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Option byte 0 of 3-byte option group for slot 0.",
+      "evidence": "FUN_080188c4 lines 402-406 copy 3 bytes from load buffer (record data +100..+102) to RAM slot. Logical offset 108.",
+      "name": "slot0_opt_a",
+      "offset": 108,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Option byte 1 of 3-byte option group for slot 0.",
+      "evidence": "FUN_080188c4 lines 402-406 copy 3 bytes from load buffer (record data +100..+102) to RAM slot. Logical offset 109.",
+      "name": "slot0_opt_b",
+      "offset": 109,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Option byte 2 of 3-byte option group for slot 0.",
+      "evidence": "FUN_080188c4 lines 402-406 copy 3 bytes from load buffer (record data +100..+102) to RAM slot. Logical offset 110.",
+      "name": "slot0_opt_c",
+      "offset": 110,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Option byte landing in RAM slot +0x61 (nibble-packed config).",
+      "evidence": "FUN_080188c4 line 385 copies one byte from load buffer (record data +103) to RAM slot +0x61. Logical offset 111.",
+      "name": "slot0_option_byte",
+      "offset": 111,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Config byte whose high nibble merges into RAM slot +99.",
+      "evidence": "FUN_080188c4 lines 381-384 merge buffer byte (record data +104) high nibble into RAM slot +99. Logical offset 112.",
+      "name": "slot0_opt_high",
+      "offset": 112,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Config byte whose low nibble merges into RAM slot +0x62.",
+      "evidence": "FUN_080188c4 line 386 merges buffer byte (record data +105) low nibble into RAM slot +0x62. Logical offset 113.",
+      "name": "slot0_opt_low",
+      "offset": 113,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Record header magic u32 for slot 1 (second 120-byte record).",
+      "evidence": "FUN_0804eac0/FUN_0804ed88 loop over word-addresses 0,15,30 (stride 15 words = 120 bytes); FUN_080188c4 loads 3 slots (uVar11<3). Logical offset 120.",
+      "name": "slot1_header_magic",
+      "offset": 120,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Inner CRC32 over slot 1 record bytes +132..+240.",
+      "evidence": "Same CRC32 mechanism as slot 0 (FUN_0804cbb8 via FUN_080188c4), applied to the second record. Logical offset 128.",
+      "name": "slot1_data_crc32",
+      "offset": 128,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "3-character slot name/initials for slot 1.",
+      "evidence": "Same name copy path as slot 0 (FUN_080188c4 lines 367-372), record index 1. Logical offset 132.",
+      "name": "slot1_name",
+      "offset": 132,
+      "size": 3,
+      "type": "ascii"
+    },
+    {
+      "confidence": "likely",
+      "description": "Primary 32-bit score/counter for slot 1.",
+      "evidence": "Same u32 copy path as slot 0 (FUN_080188c4 line 379), record index 1. Logical offset 136.",
+      "name": "slot1_score",
+      "offset": 136,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Record header magic u32 for slot 2 (third 120-byte record).",
+      "evidence": "FUN_0804eac0/FUN_0804ed88 loop over word-addresses 0,15,30 (stride 15 words = 120 bytes); FUN_080188c4 loads 3 slots (uVar11<3). Logical offset 240.",
+      "name": "slot2_header_magic",
+      "offset": 240,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Inner CRC32 over slot 2 record bytes +252..+360.",
+      "evidence": "Same CRC32 mechanism as slot 0 (FUN_0804cbb8 via FUN_080188c4), applied to the third record. Logical offset 248.",
+      "name": "slot2_data_crc32",
+      "offset": 248,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "3-character slot name/initials for slot 2.",
+      "evidence": "Same name copy path as slot 0 (FUN_080188c4 lines 367-372), record index 2. Logical offset 252.",
+      "name": "slot2_name",
+      "offset": 252,
+      "size": 3,
+      "type": "ascii"
+    },
+    {
+      "confidence": "likely",
+      "description": "Primary 32-bit score/counter for slot 2.",
+      "evidence": "Same u32 copy path as slot 0 (FUN_080188c4 line 379), record index 2. Logical offset 256.",
+      "name": "slot2_score",
+      "offset": 256,
+      "size": 4,
+      "type": "u32_le"
     }
-  ]
+  ],
+  "game_code": "BXUX",
+  "id": "bxux",
+  "magic_signatures": [
+    {
+      "bytes": [
+        85,
+        68,
+        34,
+        0
+      ],
+      "description": "Record header magic u32 0x00224455 (slot 0, rev8-logical domain)",
+      "offset": 0
+    },
+    {
+      "bytes": [
+        85,
+        68,
+        34,
+        0
+      ],
+      "description": "Record header magic u32 0x00224455 (slot 1, rev8-logical domain)",
+      "offset": 120
+    },
+    {
+      "bytes": [
+        85,
+        68,
+        34,
+        0
+      ],
+      "description": "Record header magic u32 0x00224455 (slot 2, rev8-logical domain)",
+      "offset": 240
+    }
+  ],
+  "media": "eeprom512",
+  "size_bytes": 512,
+  "title": "Surf's Up (Europe) (En,Fr,De,Es,It)"
 }

@@ -4,26 +4,442 @@
   "title": "Star Wars Trilogy - Apprentice of the Force (USA) (Beta)",
   "media": "eeprom512",
   "size_bytes": 512,
+  "eeprom_rev8": false,
   "magic_signatures": [],
   "checksums": [],
   "fields": [
     {
-      "name": "slot_counter",
+      "name": "slot00_state",
+      "offset": 0,
+      "size": 2,
+      "type": "u16_le",
+      "description": "Slot 0 header word0: 0x0000 in baseline (all 12 slots fresh/empty). Candidate slot state/sequence flag.",
+      "confidence": "likely",
+      "evidence": "FUN_080a6c50 (EEPROM read: 4 shorts/block into RAM param_2+0..6) / FUN_080a6d14+FUN_080a6d00 (write) / FUN_080a6e74 (read+compare 4 shorts) / FUN_080a6ecc (write+verify x3) via FUN_080a6bd0 bit-DMA to 0x0D000000. Word0 at save offset 0x000 (slot 0 header start, 40-byte stride 0x000=12x0x28 records). Baseline 0x0000."
+    },
+    {
+      "name": "slot00_tag",
       "offset": 2,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "description": "Slot 0 header word1: constant 0xAABB in all 12 baseline slot headers. Candidate record tag word.",
+      "confidence": "likely",
+      "evidence": "FUN_080a6c50 (EEPROM read: 4 shorts/block into RAM param_2+0..6) / FUN_080a6d14+FUN_080a6d00 (write) / FUN_080a6e74 (read+compare 4 shorts) / FUN_080a6ecc (write+verify x3) via FUN_080a6bd0 bit-DMA to 0x0D000000. Word1 at save offset 0x002 (slot 0 header+2). Baseline 0xAABB constant across all 12 slots."
     },
     {
-      "name": "game_progress_flags",
+      "name": "slot00_w2",
       "offset": 4,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "description": "Slot 0 header word2: constant 0x2200 in all 12 baseline slot headers. Role unrecovered (checksum/magic candidate); kept as plain word.",
+      "confidence": "guessed",
+      "evidence": "FUN_080a6c50 (EEPROM read: 4 shorts/block into RAM param_2+0..6) / FUN_080a6d14+FUN_080a6d00 (write) / FUN_080a6e74 (read+compare 4 shorts) / FUN_080a6ecc (write+verify x3) via FUN_080a6bd0 bit-DMA to 0x0D000000. Word2 at save offset 0x004 (slot 0 header+4). Baseline 0x2200."
     },
     {
-      "name": "player_status_payload",
+      "name": "slot00_w3",
       "offset": 6,
-      "size": 16,
-      "type": "bytes"
+      "size": 2,
+      "type": "u16_le",
+      "description": "Slot 0 header word3: constant 0x5544 in all 12 baseline slot headers. Role unrecovered (checksum/magic candidate); kept as plain word.",
+      "confidence": "guessed",
+      "evidence": "FUN_080a6c50 (EEPROM read: 4 shorts/block into RAM param_2+0..6) / FUN_080a6d14+FUN_080a6d00 (write) / FUN_080a6e74 (read+compare 4 shorts) / FUN_080a6ecc (write+verify x3) via FUN_080a6bd0 bit-DMA to 0x0D000000. Word3 at save offset 0x006 (slot 0 header+6). Baseline 0x5544."
+    },
+    {
+      "name": "slot01_state",
+      "offset": 40,
+      "size": 2,
+      "type": "u16_le",
+      "description": "Slot 1 header word0: 0x0000 in baseline (all 12 slots fresh/empty). Candidate slot state/sequence flag.",
+      "confidence": "likely",
+      "evidence": "FUN_080a6c50 (EEPROM read: 4 shorts/block into RAM param_2+0..6) / FUN_080a6d14+FUN_080a6d00 (write) / FUN_080a6e74 (read+compare 4 shorts) / FUN_080a6ecc (write+verify x3) via FUN_080a6bd0 bit-DMA to 0x0D000000. Word0 at save offset 0x028 (slot 1 header start, 40-byte stride 0x028=12x0x28 records). Baseline 0x0000."
+    },
+    {
+      "name": "slot01_tag",
+      "offset": 42,
+      "size": 2,
+      "type": "u16_le",
+      "description": "Slot 1 header word1: constant 0xAABB in all 12 baseline slot headers. Candidate record tag word.",
+      "confidence": "likely",
+      "evidence": "FUN_080a6c50 (EEPROM read: 4 shorts/block into RAM param_2+0..6) / FUN_080a6d14+FUN_080a6d00 (write) / FUN_080a6e74 (read+compare 4 shorts) / FUN_080a6ecc (write+verify x3) via FUN_080a6bd0 bit-DMA to 0x0D000000. Word1 at save offset 0x02A (slot 1 header+2). Baseline 0xAABB constant across all 12 slots."
+    },
+    {
+      "name": "slot01_w2",
+      "offset": 44,
+      "size": 2,
+      "type": "u16_le",
+      "description": "Slot 1 header word2: constant 0x2200 in all 12 baseline slot headers. Role unrecovered (checksum/magic candidate); kept as plain word.",
+      "confidence": "guessed",
+      "evidence": "FUN_080a6c50 (EEPROM read: 4 shorts/block into RAM param_2+0..6) / FUN_080a6d14+FUN_080a6d00 (write) / FUN_080a6e74 (read+compare 4 shorts) / FUN_080a6ecc (write+verify x3) via FUN_080a6bd0 bit-DMA to 0x0D000000. Word2 at save offset 0x02C (slot 1 header+4). Baseline 0x2200."
+    },
+    {
+      "name": "slot01_w3",
+      "offset": 46,
+      "size": 2,
+      "type": "u16_le",
+      "description": "Slot 1 header word3: constant 0x5544 in all 12 baseline slot headers. Role unrecovered (checksum/magic candidate); kept as plain word.",
+      "confidence": "guessed",
+      "evidence": "FUN_080a6c50 (EEPROM read: 4 shorts/block into RAM param_2+0..6) / FUN_080a6d14+FUN_080a6d00 (write) / FUN_080a6e74 (read+compare 4 shorts) / FUN_080a6ecc (write+verify x3) via FUN_080a6bd0 bit-DMA to 0x0D000000. Word3 at save offset 0x02E (slot 1 header+6). Baseline 0x5544."
+    },
+    {
+      "name": "slot02_state",
+      "offset": 80,
+      "size": 2,
+      "type": "u16_le",
+      "description": "Slot 2 header word0: 0x0000 in baseline (all 12 slots fresh/empty). Candidate slot state/sequence flag.",
+      "confidence": "likely",
+      "evidence": "FUN_080a6c50 (EEPROM read: 4 shorts/block into RAM param_2+0..6) / FUN_080a6d14+FUN_080a6d00 (write) / FUN_080a6e74 (read+compare 4 shorts) / FUN_080a6ecc (write+verify x3) via FUN_080a6bd0 bit-DMA to 0x0D000000. Word0 at save offset 0x050 (slot 2 header start, 40-byte stride 0x050=12x0x28 records). Baseline 0x0000."
+    },
+    {
+      "name": "slot02_tag",
+      "offset": 82,
+      "size": 2,
+      "type": "u16_le",
+      "description": "Slot 2 header word1: constant 0xAABB in all 12 baseline slot headers. Candidate record tag word.",
+      "confidence": "likely",
+      "evidence": "FUN_080a6c50 (EEPROM read: 4 shorts/block into RAM param_2+0..6) / FUN_080a6d14+FUN_080a6d00 (write) / FUN_080a6e74 (read+compare 4 shorts) / FUN_080a6ecc (write+verify x3) via FUN_080a6bd0 bit-DMA to 0x0D000000. Word1 at save offset 0x052 (slot 2 header+2). Baseline 0xAABB constant across all 12 slots."
+    },
+    {
+      "name": "slot02_w2",
+      "offset": 84,
+      "size": 2,
+      "type": "u16_le",
+      "description": "Slot 2 header word2: constant 0x2200 in all 12 baseline slot headers. Role unrecovered (checksum/magic candidate); kept as plain word.",
+      "confidence": "guessed",
+      "evidence": "FUN_080a6c50 (EEPROM read: 4 shorts/block into RAM param_2+0..6) / FUN_080a6d14+FUN_080a6d00 (write) / FUN_080a6e74 (read+compare 4 shorts) / FUN_080a6ecc (write+verify x3) via FUN_080a6bd0 bit-DMA to 0x0D000000. Word2 at save offset 0x054 (slot 2 header+4). Baseline 0x2200."
+    },
+    {
+      "name": "slot02_w3",
+      "offset": 86,
+      "size": 2,
+      "type": "u16_le",
+      "description": "Slot 2 header word3: constant 0x5544 in all 12 baseline slot headers. Role unrecovered (checksum/magic candidate); kept as plain word.",
+      "confidence": "guessed",
+      "evidence": "FUN_080a6c50 (EEPROM read: 4 shorts/block into RAM param_2+0..6) / FUN_080a6d14+FUN_080a6d00 (write) / FUN_080a6e74 (read+compare 4 shorts) / FUN_080a6ecc (write+verify x3) via FUN_080a6bd0 bit-DMA to 0x0D000000. Word3 at save offset 0x056 (slot 2 header+6). Baseline 0x5544."
+    },
+    {
+      "name": "slot03_state",
+      "offset": 120,
+      "size": 2,
+      "type": "u16_le",
+      "description": "Slot 3 header word0: 0x0000 in baseline (all 12 slots fresh/empty). Candidate slot state/sequence flag.",
+      "confidence": "likely",
+      "evidence": "FUN_080a6c50 (EEPROM read: 4 shorts/block into RAM param_2+0..6) / FUN_080a6d14+FUN_080a6d00 (write) / FUN_080a6e74 (read+compare 4 shorts) / FUN_080a6ecc (write+verify x3) via FUN_080a6bd0 bit-DMA to 0x0D000000. Word0 at save offset 0x078 (slot 3 header start, 40-byte stride 0x078=12x0x28 records). Baseline 0x0000."
+    },
+    {
+      "name": "slot03_tag",
+      "offset": 122,
+      "size": 2,
+      "type": "u16_le",
+      "description": "Slot 3 header word1: constant 0xAABB in all 12 baseline slot headers. Candidate record tag word.",
+      "confidence": "likely",
+      "evidence": "FUN_080a6c50 (EEPROM read: 4 shorts/block into RAM param_2+0..6) / FUN_080a6d14+FUN_080a6d00 (write) / FUN_080a6e74 (read+compare 4 shorts) / FUN_080a6ecc (write+verify x3) via FUN_080a6bd0 bit-DMA to 0x0D000000. Word1 at save offset 0x07A (slot 3 header+2). Baseline 0xAABB constant across all 12 slots."
+    },
+    {
+      "name": "slot03_w2",
+      "offset": 124,
+      "size": 2,
+      "type": "u16_le",
+      "description": "Slot 3 header word2: constant 0x2200 in all 12 baseline slot headers. Role unrecovered (checksum/magic candidate); kept as plain word.",
+      "confidence": "guessed",
+      "evidence": "FUN_080a6c50 (EEPROM read: 4 shorts/block into RAM param_2+0..6) / FUN_080a6d14+FUN_080a6d00 (write) / FUN_080a6e74 (read+compare 4 shorts) / FUN_080a6ecc (write+verify x3) via FUN_080a6bd0 bit-DMA to 0x0D000000. Word2 at save offset 0x07C (slot 3 header+4). Baseline 0x2200."
+    },
+    {
+      "name": "slot03_w3",
+      "offset": 126,
+      "size": 2,
+      "type": "u16_le",
+      "description": "Slot 3 header word3: constant 0x5544 in all 12 baseline slot headers. Role unrecovered (checksum/magic candidate); kept as plain word.",
+      "confidence": "guessed",
+      "evidence": "FUN_080a6c50 (EEPROM read: 4 shorts/block into RAM param_2+0..6) / FUN_080a6d14+FUN_080a6d00 (write) / FUN_080a6e74 (read+compare 4 shorts) / FUN_080a6ecc (write+verify x3) via FUN_080a6bd0 bit-DMA to 0x0D000000. Word3 at save offset 0x07E (slot 3 header+6). Baseline 0x5544."
+    },
+    {
+      "name": "slot04_state",
+      "offset": 160,
+      "size": 2,
+      "type": "u16_le",
+      "description": "Slot 4 header word0: 0x0000 in baseline (all 12 slots fresh/empty). Candidate slot state/sequence flag.",
+      "confidence": "likely",
+      "evidence": "FUN_080a6c50 (EEPROM read: 4 shorts/block into RAM param_2+0..6) / FUN_080a6d14+FUN_080a6d00 (write) / FUN_080a6e74 (read+compare 4 shorts) / FUN_080a6ecc (write+verify x3) via FUN_080a6bd0 bit-DMA to 0x0D000000. Word0 at save offset 0x0A0 (slot 4 header start, 40-byte stride 0x0A0=12x0x28 records). Baseline 0x0000."
+    },
+    {
+      "name": "slot04_tag",
+      "offset": 162,
+      "size": 2,
+      "type": "u16_le",
+      "description": "Slot 4 header word1: constant 0xAABB in all 12 baseline slot headers. Candidate record tag word.",
+      "confidence": "likely",
+      "evidence": "FUN_080a6c50 (EEPROM read: 4 shorts/block into RAM param_2+0..6) / FUN_080a6d14+FUN_080a6d00 (write) / FUN_080a6e74 (read+compare 4 shorts) / FUN_080a6ecc (write+verify x3) via FUN_080a6bd0 bit-DMA to 0x0D000000. Word1 at save offset 0x0A2 (slot 4 header+2). Baseline 0xAABB constant across all 12 slots."
+    },
+    {
+      "name": "slot04_w2",
+      "offset": 164,
+      "size": 2,
+      "type": "u16_le",
+      "description": "Slot 4 header word2: constant 0x2200 in all 12 baseline slot headers. Role unrecovered (checksum/magic candidate); kept as plain word.",
+      "confidence": "guessed",
+      "evidence": "FUN_080a6c50 (EEPROM read: 4 shorts/block into RAM param_2+0..6) / FUN_080a6d14+FUN_080a6d00 (write) / FUN_080a6e74 (read+compare 4 shorts) / FUN_080a6ecc (write+verify x3) via FUN_080a6bd0 bit-DMA to 0x0D000000. Word2 at save offset 0x0A4 (slot 4 header+4). Baseline 0x2200."
+    },
+    {
+      "name": "slot04_w3",
+      "offset": 166,
+      "size": 2,
+      "type": "u16_le",
+      "description": "Slot 4 header word3: constant 0x5544 in all 12 baseline slot headers. Role unrecovered (checksum/magic candidate); kept as plain word.",
+      "confidence": "guessed",
+      "evidence": "FUN_080a6c50 (EEPROM read: 4 shorts/block into RAM param_2+0..6) / FUN_080a6d14+FUN_080a6d00 (write) / FUN_080a6e74 (read+compare 4 shorts) / FUN_080a6ecc (write+verify x3) via FUN_080a6bd0 bit-DMA to 0x0D000000. Word3 at save offset 0x0A6 (slot 4 header+6). Baseline 0x5544."
+    },
+    {
+      "name": "slot05_state",
+      "offset": 200,
+      "size": 2,
+      "type": "u16_le",
+      "description": "Slot 5 header word0: 0x0000 in baseline (all 12 slots fresh/empty). Candidate slot state/sequence flag.",
+      "confidence": "likely",
+      "evidence": "FUN_080a6c50 (EEPROM read: 4 shorts/block into RAM param_2+0..6) / FUN_080a6d14+FUN_080a6d00 (write) / FUN_080a6e74 (read+compare 4 shorts) / FUN_080a6ecc (write+verify x3) via FUN_080a6bd0 bit-DMA to 0x0D000000. Word0 at save offset 0x0C8 (slot 5 header start, 40-byte stride 0x0C8=12x0x28 records). Baseline 0x0000."
+    },
+    {
+      "name": "slot05_tag",
+      "offset": 202,
+      "size": 2,
+      "type": "u16_le",
+      "description": "Slot 5 header word1: constant 0xAABB in all 12 baseline slot headers. Candidate record tag word.",
+      "confidence": "likely",
+      "evidence": "FUN_080a6c50 (EEPROM read: 4 shorts/block into RAM param_2+0..6) / FUN_080a6d14+FUN_080a6d00 (write) / FUN_080a6e74 (read+compare 4 shorts) / FUN_080a6ecc (write+verify x3) via FUN_080a6bd0 bit-DMA to 0x0D000000. Word1 at save offset 0x0CA (slot 5 header+2). Baseline 0xAABB constant across all 12 slots."
+    },
+    {
+      "name": "slot05_w2",
+      "offset": 204,
+      "size": 2,
+      "type": "u16_le",
+      "description": "Slot 5 header word2: constant 0x2200 in all 12 baseline slot headers. Role unrecovered (checksum/magic candidate); kept as plain word.",
+      "confidence": "guessed",
+      "evidence": "FUN_080a6c50 (EEPROM read: 4 shorts/block into RAM param_2+0..6) / FUN_080a6d14+FUN_080a6d00 (write) / FUN_080a6e74 (read+compare 4 shorts) / FUN_080a6ecc (write+verify x3) via FUN_080a6bd0 bit-DMA to 0x0D000000. Word2 at save offset 0x0CC (slot 5 header+4). Baseline 0x2200."
+    },
+    {
+      "name": "slot05_w3",
+      "offset": 206,
+      "size": 2,
+      "type": "u16_le",
+      "description": "Slot 5 header word3: constant 0x5544 in all 12 baseline slot headers. Role unrecovered (checksum/magic candidate); kept as plain word.",
+      "confidence": "guessed",
+      "evidence": "FUN_080a6c50 (EEPROM read: 4 shorts/block into RAM param_2+0..6) / FUN_080a6d14+FUN_080a6d00 (write) / FUN_080a6e74 (read+compare 4 shorts) / FUN_080a6ecc (write+verify x3) via FUN_080a6bd0 bit-DMA to 0x0D000000. Word3 at save offset 0x0CE (slot 5 header+6). Baseline 0x5544."
+    },
+    {
+      "name": "slot06_state",
+      "offset": 240,
+      "size": 2,
+      "type": "u16_le",
+      "description": "Slot 6 header word0: 0x0000 in baseline (all 12 slots fresh/empty). Candidate slot state/sequence flag.",
+      "confidence": "likely",
+      "evidence": "FUN_080a6c50 (EEPROM read: 4 shorts/block into RAM param_2+0..6) / FUN_080a6d14+FUN_080a6d00 (write) / FUN_080a6e74 (read+compare 4 shorts) / FUN_080a6ecc (write+verify x3) via FUN_080a6bd0 bit-DMA to 0x0D000000. Word0 at save offset 0x0F0 (slot 6 header start, 40-byte stride 0x0F0=12x0x28 records). Baseline 0x0000."
+    },
+    {
+      "name": "slot06_tag",
+      "offset": 242,
+      "size": 2,
+      "type": "u16_le",
+      "description": "Slot 6 header word1: constant 0xAABB in all 12 baseline slot headers. Candidate record tag word.",
+      "confidence": "likely",
+      "evidence": "FUN_080a6c50 (EEPROM read: 4 shorts/block into RAM param_2+0..6) / FUN_080a6d14+FUN_080a6d00 (write) / FUN_080a6e74 (read+compare 4 shorts) / FUN_080a6ecc (write+verify x3) via FUN_080a6bd0 bit-DMA to 0x0D000000. Word1 at save offset 0x0F2 (slot 6 header+2). Baseline 0xAABB constant across all 12 slots."
+    },
+    {
+      "name": "slot06_w2",
+      "offset": 244,
+      "size": 2,
+      "type": "u16_le",
+      "description": "Slot 6 header word2: constant 0x2200 in all 12 baseline slot headers. Role unrecovered (checksum/magic candidate); kept as plain word.",
+      "confidence": "guessed",
+      "evidence": "FUN_080a6c50 (EEPROM read: 4 shorts/block into RAM param_2+0..6) / FUN_080a6d14+FUN_080a6d00 (write) / FUN_080a6e74 (read+compare 4 shorts) / FUN_080a6ecc (write+verify x3) via FUN_080a6bd0 bit-DMA to 0x0D000000. Word2 at save offset 0x0F4 (slot 6 header+4). Baseline 0x2200."
+    },
+    {
+      "name": "slot06_w3",
+      "offset": 246,
+      "size": 2,
+      "type": "u16_le",
+      "description": "Slot 6 header word3: constant 0x5544 in all 12 baseline slot headers. Role unrecovered (checksum/magic candidate); kept as plain word.",
+      "confidence": "guessed",
+      "evidence": "FUN_080a6c50 (EEPROM read: 4 shorts/block into RAM param_2+0..6) / FUN_080a6d14+FUN_080a6d00 (write) / FUN_080a6e74 (read+compare 4 shorts) / FUN_080a6ecc (write+verify x3) via FUN_080a6bd0 bit-DMA to 0x0D000000. Word3 at save offset 0x0F6 (slot 6 header+6). Baseline 0x5544."
+    },
+    {
+      "name": "slot07_state",
+      "offset": 280,
+      "size": 2,
+      "type": "u16_le",
+      "description": "Slot 7 header word0: 0x0000 in baseline (all 12 slots fresh/empty). Candidate slot state/sequence flag.",
+      "confidence": "likely",
+      "evidence": "FUN_080a6c50 (EEPROM read: 4 shorts/block into RAM param_2+0..6) / FUN_080a6d14+FUN_080a6d00 (write) / FUN_080a6e74 (read+compare 4 shorts) / FUN_080a6ecc (write+verify x3) via FUN_080a6bd0 bit-DMA to 0x0D000000. Word0 at save offset 0x118 (slot 7 header start, 40-byte stride 0x118=12x0x28 records). Baseline 0x0000."
+    },
+    {
+      "name": "slot07_tag",
+      "offset": 282,
+      "size": 2,
+      "type": "u16_le",
+      "description": "Slot 7 header word1: constant 0xAABB in all 12 baseline slot headers. Candidate record tag word.",
+      "confidence": "likely",
+      "evidence": "FUN_080a6c50 (EEPROM read: 4 shorts/block into RAM param_2+0..6) / FUN_080a6d14+FUN_080a6d00 (write) / FUN_080a6e74 (read+compare 4 shorts) / FUN_080a6ecc (write+verify x3) via FUN_080a6bd0 bit-DMA to 0x0D000000. Word1 at save offset 0x11A (slot 7 header+2). Baseline 0xAABB constant across all 12 slots."
+    },
+    {
+      "name": "slot07_w2",
+      "offset": 284,
+      "size": 2,
+      "type": "u16_le",
+      "description": "Slot 7 header word2: constant 0x2200 in all 12 baseline slot headers. Role unrecovered (checksum/magic candidate); kept as plain word.",
+      "confidence": "guessed",
+      "evidence": "FUN_080a6c50 (EEPROM read: 4 shorts/block into RAM param_2+0..6) / FUN_080a6d14+FUN_080a6d00 (write) / FUN_080a6e74 (read+compare 4 shorts) / FUN_080a6ecc (write+verify x3) via FUN_080a6bd0 bit-DMA to 0x0D000000. Word2 at save offset 0x11C (slot 7 header+4). Baseline 0x2200."
+    },
+    {
+      "name": "slot07_w3",
+      "offset": 286,
+      "size": 2,
+      "type": "u16_le",
+      "description": "Slot 7 header word3: constant 0x5544 in all 12 baseline slot headers. Role unrecovered (checksum/magic candidate); kept as plain word.",
+      "confidence": "guessed",
+      "evidence": "FUN_080a6c50 (EEPROM read: 4 shorts/block into RAM param_2+0..6) / FUN_080a6d14+FUN_080a6d00 (write) / FUN_080a6e74 (read+compare 4 shorts) / FUN_080a6ecc (write+verify x3) via FUN_080a6bd0 bit-DMA to 0x0D000000. Word3 at save offset 0x11E (slot 7 header+6). Baseline 0x5544."
+    },
+    {
+      "name": "slot08_state",
+      "offset": 320,
+      "size": 2,
+      "type": "u16_le",
+      "description": "Slot 8 header word0: 0x0000 in baseline (all 12 slots fresh/empty). Candidate slot state/sequence flag.",
+      "confidence": "likely",
+      "evidence": "FUN_080a6c50 (EEPROM read: 4 shorts/block into RAM param_2+0..6) / FUN_080a6d14+FUN_080a6d00 (write) / FUN_080a6e74 (read+compare 4 shorts) / FUN_080a6ecc (write+verify x3) via FUN_080a6bd0 bit-DMA to 0x0D000000. Word0 at save offset 0x140 (slot 8 header start, 40-byte stride 0x140=12x0x28 records). Baseline 0x0000."
+    },
+    {
+      "name": "slot08_tag",
+      "offset": 322,
+      "size": 2,
+      "type": "u16_le",
+      "description": "Slot 8 header word1: constant 0xAABB in all 12 baseline slot headers. Candidate record tag word.",
+      "confidence": "likely",
+      "evidence": "FUN_080a6c50 (EEPROM read: 4 shorts/block into RAM param_2+0..6) / FUN_080a6d14+FUN_080a6d00 (write) / FUN_080a6e74 (read+compare 4 shorts) / FUN_080a6ecc (write+verify x3) via FUN_080a6bd0 bit-DMA to 0x0D000000. Word1 at save offset 0x142 (slot 8 header+2). Baseline 0xAABB constant across all 12 slots."
+    },
+    {
+      "name": "slot08_w2",
+      "offset": 324,
+      "size": 2,
+      "type": "u16_le",
+      "description": "Slot 8 header word2: constant 0x2200 in all 12 baseline slot headers. Role unrecovered (checksum/magic candidate); kept as plain word.",
+      "confidence": "guessed",
+      "evidence": "FUN_080a6c50 (EEPROM read: 4 shorts/block into RAM param_2+0..6) / FUN_080a6d14+FUN_080a6d00 (write) / FUN_080a6e74 (read+compare 4 shorts) / FUN_080a6ecc (write+verify x3) via FUN_080a6bd0 bit-DMA to 0x0D000000. Word2 at save offset 0x144 (slot 8 header+4). Baseline 0x2200."
+    },
+    {
+      "name": "slot08_w3",
+      "offset": 326,
+      "size": 2,
+      "type": "u16_le",
+      "description": "Slot 8 header word3: constant 0x5544 in all 12 baseline slot headers. Role unrecovered (checksum/magic candidate); kept as plain word.",
+      "confidence": "guessed",
+      "evidence": "FUN_080a6c50 (EEPROM read: 4 shorts/block into RAM param_2+0..6) / FUN_080a6d14+FUN_080a6d00 (write) / FUN_080a6e74 (read+compare 4 shorts) / FUN_080a6ecc (write+verify x3) via FUN_080a6bd0 bit-DMA to 0x0D000000. Word3 at save offset 0x146 (slot 8 header+6). Baseline 0x5544."
+    },
+    {
+      "name": "slot09_state",
+      "offset": 360,
+      "size": 2,
+      "type": "u16_le",
+      "description": "Slot 9 header word0: 0x0000 in baseline (all 12 slots fresh/empty). Candidate slot state/sequence flag.",
+      "confidence": "likely",
+      "evidence": "FUN_080a6c50 (EEPROM read: 4 shorts/block into RAM param_2+0..6) / FUN_080a6d14+FUN_080a6d00 (write) / FUN_080a6e74 (read+compare 4 shorts) / FUN_080a6ecc (write+verify x3) via FUN_080a6bd0 bit-DMA to 0x0D000000. Word0 at save offset 0x168 (slot 9 header start, 40-byte stride 0x168=12x0x28 records). Baseline 0x0000."
+    },
+    {
+      "name": "slot09_tag",
+      "offset": 362,
+      "size": 2,
+      "type": "u16_le",
+      "description": "Slot 9 header word1: constant 0xAABB in all 12 baseline slot headers. Candidate record tag word.",
+      "confidence": "likely",
+      "evidence": "FUN_080a6c50 (EEPROM read: 4 shorts/block into RAM param_2+0..6) / FUN_080a6d14+FUN_080a6d00 (write) / FUN_080a6e74 (read+compare 4 shorts) / FUN_080a6ecc (write+verify x3) via FUN_080a6bd0 bit-DMA to 0x0D000000. Word1 at save offset 0x16A (slot 9 header+2). Baseline 0xAABB constant across all 12 slots."
+    },
+    {
+      "name": "slot09_w2",
+      "offset": 364,
+      "size": 2,
+      "type": "u16_le",
+      "description": "Slot 9 header word2: constant 0x2200 in all 12 baseline slot headers. Role unrecovered (checksum/magic candidate); kept as plain word.",
+      "confidence": "guessed",
+      "evidence": "FUN_080a6c50 (EEPROM read: 4 shorts/block into RAM param_2+0..6) / FUN_080a6d14+FUN_080a6d00 (write) / FUN_080a6e74 (read+compare 4 shorts) / FUN_080a6ecc (write+verify x3) via FUN_080a6bd0 bit-DMA to 0x0D000000. Word2 at save offset 0x16C (slot 9 header+4). Baseline 0x2200."
+    },
+    {
+      "name": "slot09_w3",
+      "offset": 366,
+      "size": 2,
+      "type": "u16_le",
+      "description": "Slot 9 header word3: constant 0x5544 in all 12 baseline slot headers. Role unrecovered (checksum/magic candidate); kept as plain word.",
+      "confidence": "guessed",
+      "evidence": "FUN_080a6c50 (EEPROM read: 4 shorts/block into RAM param_2+0..6) / FUN_080a6d14+FUN_080a6d00 (write) / FUN_080a6e74 (read+compare 4 shorts) / FUN_080a6ecc (write+verify x3) via FUN_080a6bd0 bit-DMA to 0x0D000000. Word3 at save offset 0x16E (slot 9 header+6). Baseline 0x5544."
+    },
+    {
+      "name": "slot10_state",
+      "offset": 400,
+      "size": 2,
+      "type": "u16_le",
+      "description": "Slot 10 header word0: 0x0000 in baseline (all 12 slots fresh/empty). Candidate slot state/sequence flag.",
+      "confidence": "likely",
+      "evidence": "FUN_080a6c50 (EEPROM read: 4 shorts/block into RAM param_2+0..6) / FUN_080a6d14+FUN_080a6d00 (write) / FUN_080a6e74 (read+compare 4 shorts) / FUN_080a6ecc (write+verify x3) via FUN_080a6bd0 bit-DMA to 0x0D000000. Word0 at save offset 0x190 (slot 10 header start, 40-byte stride 0x190=12x0x28 records). Baseline 0x0000."
+    },
+    {
+      "name": "slot10_tag",
+      "offset": 402,
+      "size": 2,
+      "type": "u16_le",
+      "description": "Slot 10 header word1: constant 0xAABB in all 12 baseline slot headers. Candidate record tag word.",
+      "confidence": "likely",
+      "evidence": "FUN_080a6c50 (EEPROM read: 4 shorts/block into RAM param_2+0..6) / FUN_080a6d14+FUN_080a6d00 (write) / FUN_080a6e74 (read+compare 4 shorts) / FUN_080a6ecc (write+verify x3) via FUN_080a6bd0 bit-DMA to 0x0D000000. Word1 at save offset 0x192 (slot 10 header+2). Baseline 0xAABB constant across all 12 slots."
+    },
+    {
+      "name": "slot10_w2",
+      "offset": 404,
+      "size": 2,
+      "type": "u16_le",
+      "description": "Slot 10 header word2: constant 0x2200 in all 12 baseline slot headers. Role unrecovered (checksum/magic candidate); kept as plain word.",
+      "confidence": "guessed",
+      "evidence": "FUN_080a6c50 (EEPROM read: 4 shorts/block into RAM param_2+0..6) / FUN_080a6d14+FUN_080a6d00 (write) / FUN_080a6e74 (read+compare 4 shorts) / FUN_080a6ecc (write+verify x3) via FUN_080a6bd0 bit-DMA to 0x0D000000. Word2 at save offset 0x194 (slot 10 header+4). Baseline 0x2200."
+    },
+    {
+      "name": "slot10_w3",
+      "offset": 406,
+      "size": 2,
+      "type": "u16_le",
+      "description": "Slot 10 header word3: constant 0x5544 in all 12 baseline slot headers. Role unrecovered (checksum/magic candidate); kept as plain word.",
+      "confidence": "guessed",
+      "evidence": "FUN_080a6c50 (EEPROM read: 4 shorts/block into RAM param_2+0..6) / FUN_080a6d14+FUN_080a6d00 (write) / FUN_080a6e74 (read+compare 4 shorts) / FUN_080a6ecc (write+verify x3) via FUN_080a6bd0 bit-DMA to 0x0D000000. Word3 at save offset 0x196 (slot 10 header+6). Baseline 0x5544."
+    },
+    {
+      "name": "slot11_state",
+      "offset": 440,
+      "size": 2,
+      "type": "u16_le",
+      "description": "Slot 11 header word0: 0x0000 in baseline (all 12 slots fresh/empty). Candidate slot state/sequence flag.",
+      "confidence": "likely",
+      "evidence": "FUN_080a6c50 (EEPROM read: 4 shorts/block into RAM param_2+0..6) / FUN_080a6d14+FUN_080a6d00 (write) / FUN_080a6e74 (read+compare 4 shorts) / FUN_080a6ecc (write+verify x3) via FUN_080a6bd0 bit-DMA to 0x0D000000. Word0 at save offset 0x1B8 (slot 11 header start, 40-byte stride 0x1B8=12x0x28 records). Baseline 0x0000."
+    },
+    {
+      "name": "slot11_tag",
+      "offset": 442,
+      "size": 2,
+      "type": "u16_le",
+      "description": "Slot 11 header word1: constant 0xAABB in all 12 baseline slot headers. Candidate record tag word.",
+      "confidence": "likely",
+      "evidence": "FUN_080a6c50 (EEPROM read: 4 shorts/block into RAM param_2+0..6) / FUN_080a6d14+FUN_080a6d00 (write) / FUN_080a6e74 (read+compare 4 shorts) / FUN_080a6ecc (write+verify x3) via FUN_080a6bd0 bit-DMA to 0x0D000000. Word1 at save offset 0x1BA (slot 11 header+2). Baseline 0xAABB constant across all 12 slots."
+    },
+    {
+      "name": "slot11_w2",
+      "offset": 444,
+      "size": 2,
+      "type": "u16_le",
+      "description": "Slot 11 header word2: constant 0x2200 in all 12 baseline slot headers. Role unrecovered (checksum/magic candidate); kept as plain word.",
+      "confidence": "guessed",
+      "evidence": "FUN_080a6c50 (EEPROM read: 4 shorts/block into RAM param_2+0..6) / FUN_080a6d14+FUN_080a6d00 (write) / FUN_080a6e74 (read+compare 4 shorts) / FUN_080a6ecc (write+verify x3) via FUN_080a6bd0 bit-DMA to 0x0D000000. Word2 at save offset 0x1BC (slot 11 header+4). Baseline 0x2200."
+    },
+    {
+      "name": "slot11_w3",
+      "offset": 446,
+      "size": 2,
+      "type": "u16_le",
+      "description": "Slot 11 header word3: constant 0x5544 in all 12 baseline slot headers. Role unrecovered (checksum/magic candidate); kept as plain word.",
+      "confidence": "guessed",
+      "evidence": "FUN_080a6c50 (EEPROM read: 4 shorts/block into RAM param_2+0..6) / FUN_080a6d14+FUN_080a6d00 (write) / FUN_080a6e74 (read+compare 4 shorts) / FUN_080a6ecc (write+verify x3) via FUN_080a6bd0 bit-DMA to 0x0D000000. Word3 at save offset 0x1BE (slot 11 header+6). Baseline 0x5544."
     }
-  ]
+  ],
+  "copy_groups": []
 }

@@ -1,45 +1,184 @@
 {
-  "id": "b3dj",
+  "checksums": [],
+  "copy_groups": [],
+  "fields": [
+    {
+      "confidence": "confirmed",
+      "description": "File 1 validity marker of first per-file record (init default 1).",
+      "evidence": "FUN_08180c4c writes *puVar1 = 1 with puVar1 = puVar4 + DAT_08180d0c, where puVar4 = param_1 + 0x24 (first per-file validity record). Save file-1 slot offset 0x1170 reads 0x01.",
+      "name": "file1_rec_a_valid",
+      "offset": 4464,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "File 1 guard word of first per-file record (init constant 0xFFFF).",
+      "evidence": "FUN_08180c4c writes *(short *)(puVar1 + 2) = DAT_08180d10 (second word of first record). Save offset 0x1172 reads 0xFFFF in all three file slots, so DAT_08180d10 == 0xFFFF.",
+      "name": "file1_rec_a_guard",
+      "offset": 4466,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "File 1 validity marker of second per-file record (init default 1).",
+      "evidence": "FUN_08180c4c writes *puVar1 = 1 with puVar1 = puVar4 + DAT_08180d14 (second per-file validity record, literal store). Save offset 0x1178 reads 0x01.",
+      "name": "file1_rec_b_valid",
+      "offset": 4472,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "File 1 guard word of second per-file record (init literal 0xFFFF).",
+      "evidence": "FUN_08180c4c writes *(undefined2 *)(puVar1 + 2) = 0xffff literal (second word of second record). Save offset 0x117A reads 0xFFFF.",
+      "name": "file1_rec_b_guard",
+      "offset": 4474,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "File 1 stage/progress origin byte (cleared to 0 by init, advanced by gameplay).",
+      "evidence": "FUN_08180c4c clears *puVar4 = 0 (struct +0x24, per-file progress origin). Save file-1 slot +0x10 (0x1180) reads 0x01, file-2 reads 0x02, unplayed file-3 reads 0xFF (erased). Neighbor init stores +0x25..+0x2A (01 01 00 FF FF FF) match played-file bytes byte-exact, anchoring struct +0x24 to file slot +0x10.",
+      "name": "file1_stage",
+      "offset": 4480,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "File 1 progress flag pair flanking the stage byte (init defaults 1, 1).",
+      "evidence": "FUN_08180c4c writes struct +0x25 = 1 and +0x26 = 1. Save offsets 0x1181-0x1182 read 0x01 0x01 (u16_le 0x0101) in played files, 0xFFFF in erased file-3 region.",
+      "name": "file1_prog_pair",
+      "offset": 4481,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "File 2 validity marker of first per-file record (init default 1).",
+      "evidence": "FUN_08180c4c writes *puVar1 = 1 with puVar1 = puVar4 + DAT_08180d0c (first per-file validity record). Save file-2 slot offset 0x22D4 reads 0x01.",
+      "name": "file2_rec_a_valid",
+      "offset": 8916,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "File 2 guard word of first per-file record (init constant 0xFFFF).",
+      "evidence": "FUN_08180c4c writes *(short *)(puVar1 + 2) = DAT_08180d10 (second word of first record). Save offset 0x22D6 reads 0xFFFF in all three file slots, so DAT_08180d10 == 0xFFFF.",
+      "name": "file2_rec_a_guard",
+      "offset": 8918,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "File 2 validity marker of second per-file record (init default 1).",
+      "evidence": "FUN_08180c4c writes *puVar1 = 1 with puVar1 = puVar4 + DAT_08180d14 (second per-file validity record, literal store). Save offset 0x22DC reads 0x01.",
+      "name": "file2_rec_b_valid",
+      "offset": 8924,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "File 2 guard word of second per-file record (init literal 0xFFFF).",
+      "evidence": "FUN_08180c4c writes *(undefined2 *)(puVar1 + 2) = 0xffff literal (second word of second record). Save offset 0x22DE reads 0xFFFF.",
+      "name": "file2_rec_b_guard",
+      "offset": 8926,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "File 2 stage/progress origin byte (cleared to 0 by init, advanced by gameplay).",
+      "evidence": "FUN_08180c4c clears *puVar4 = 0 (struct +0x24, per-file progress origin). Save file-2 slot +0x10 (0x22E4) reads 0x02, file-1 reads 0x01, unplayed file-3 reads 0xFF (erased). Neighbor init stores +0x25..+0x2A (01 01 00 FF FF FF) match played-file bytes byte-exact, anchoring struct +0x24 to file slot +0x10.",
+      "name": "file2_stage",
+      "offset": 8932,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "File 2 progress flag pair flanking the stage byte (init defaults 1, 1).",
+      "evidence": "FUN_08180c4c writes struct +0x25 = 1 and +0x26 = 1. Save offsets 0x22E5-0x22E6 read 0x01 0x01 (u16_le 0x0101) in played files, 0xFFFF in erased file-3 region.",
+      "name": "file2_prog_pair",
+      "offset": 8933,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "File 3 validity marker of first per-file record (init default 1; file created but never played).",
+      "evidence": "FUN_08180c4c writes *puVar1 = 1 with puVar1 = puVar4 + DAT_08180d0c (first per-file validity record). Save file-3 slot offset 0x3438 reads 0x01.",
+      "name": "file3_rec_a_valid",
+      "offset": 13368,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "File 3 guard word of first per-file record (init constant 0xFFFF).",
+      "evidence": "FUN_08180c4c writes *(short *)(puVar1 + 2) = DAT_08180d10 (second word of first record). Save offset 0x343A reads 0xFFFF in all three file slots, so DAT_08180d10 == 0xFFFF.",
+      "name": "file3_rec_a_guard",
+      "offset": 13370,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "File 3 validity marker of second per-file record (init default 1; file created but never played).",
+      "evidence": "FUN_08180c4c writes *puVar1 = 1 with puVar1 = puVar4 + DAT_08180d14 (second per-file validity record, literal store). Save offset 0x3440 reads 0x01.",
+      "name": "file3_rec_b_valid",
+      "offset": 13376,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "File 3 guard word of second per-file record (init literal 0xFFFF).",
+      "evidence": "FUN_08180c4c writes *(undefined2 *)(puVar1 + 2) = 0xffff literal (second word of second record). Save offset 0x3442 reads 0xFFFF.",
+      "name": "file3_rec_b_guard",
+      "offset": 13378,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "File 3 stage/progress origin byte (erased 0xFF: slot created, never played).",
+      "evidence": "FUN_08180c4c clears *puVar4 = 0 (struct +0x24, per-file progress origin). Save file-3 slot +0x10 (0x3448) reads 0xFF (erased) while played files read 0x01/0x02 at the same relative offset, anchoring struct +0x24 to file slot +0x10.",
+      "name": "file3_stage",
+      "offset": 13384,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "File 3 progress flag pair (erased 0xFFFF: slot created, never played).",
+      "evidence": "FUN_08180c4c writes struct +0x25 = 1 and +0x26 = 1. Save offsets 0x3449-0x344A read 0xFF 0xFF (erased) while played files read 0x01 0x01 at the same relative offsets.",
+      "name": "file3_prog_pair",
+      "offset": 13385,
+      "size": 2,
+      "type": "u16_le"
+    }
+  ],
   "game_code": "B3DJ",
-  "title": "Densetsu no Stafy 3 (Japan)",
-  "media": "sram",
-  "size_bytes": 32768,
+  "id": "b3dj",
   "magic_signatures": [
     {
-      "offset": 0,
       "bytes": [
         83,
         116,
         97,
         102
-      ]
+      ],
+      "offset": 0
     }
   ],
-  "checksums": [],
-  "fields": [
-    {
-      "name": "magic_header",
-      "offset": 0,
-      "size": 4,
-      "type": "ascii"
-    },
-    {
-      "name": "slot_counter",
-      "offset": 4,
-      "size": 2,
-      "type": "u16_le"
-    },
-    {
-      "name": "game_progress_flags",
-      "offset": 6,
-      "size": 2,
-      "type": "u16_le"
-    },
-    {
-      "name": "player_status_payload",
-      "offset": 8,
-      "size": 16,
-      "type": "bytes"
-    }
-  ]
+  "media": "sram",
+  "size_bytes": 32768,
+  "title": "Densetsu no Stafy 3 (Japan)"
 }

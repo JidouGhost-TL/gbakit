@@ -1,29 +1,79 @@
 {
-  "id": "b35p",
-  "game_code": "B35P",
-  "title": "Strawberry Shortcake - Ice Cream Island - Riding Camp (Europe) (En,Fr,De,Es,It,Nl,Pt,Da)",
-  "media": "eeprom512",
-  "size_bytes": 512,
-  "magic_signatures": [],
   "checksums": [],
+  "copy_groups": [],
   "fields": [
     {
-      "name": "slot_counter",
+      "confidence": "confirmed",
+      "constraint": {
+        "kind": "enum",
+        "labels": {
+          "0": "blank pre-init block",
+          "222": "initialized (0xDE)"
+        },
+        "values": [
+          0,
+          222
+        ]
+      },
+      "description": "First byte of the 8-byte EEPROM block-0 save record. Boot loader FUN_08003158 requires 0xDE here (with 0xED next) and re-initializes via FUN_08002e40 otherwise. Baseline 0x00 = blank pre-init state.",
+      "evidence": "FUN_08003158 reads save byte 0 into cStack_c via FUN_08002e5c(&cStack_c,0) -> func_0x08071f7c block 0 -> FUN_08071f7c and requires (cStack_c == -0x22); FUN_08002e40 rewrites the record from ROM default _DAT_08002e54 via FUN_08002e98/FUN_080721f8 when the check fails.",
+      "name": "save_magic_lo",
       "offset": 0,
-      "size": 2,
-      "type": "u16_le"
+      "size": 1,
+      "type": "u8"
     },
     {
-      "name": "game_progress_flags",
+      "confidence": "confirmed",
+      "constraint": {
+        "kind": "enum",
+        "labels": {
+          "0": "blank pre-init block",
+          "237": "initialized (0xED)"
+        },
+        "values": [
+          0,
+          237
+        ]
+      },
+      "description": "Second byte of the 8-byte EEPROM block-0 save record. Boot loader FUN_08003158 requires 0xED here (with 0xDE first) and re-initializes via FUN_08002e40 otherwise. Baseline 0x00 = blank pre-init state.",
+      "evidence": "FUN_08003158 reads save byte 1 into cStack_b via FUN_08002e5c(&cStack_c,0) -> func_0x08071f7c block 0 -> FUN_08071f7c and requires (cStack_b == -0x13); default rewrite path FUN_08002e40 -> FUN_08002e98 -> FUN_080721f8.",
+      "name": "save_magic_hi",
+      "offset": 1,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "First data halfword (bytes 2..3) of the 8-byte EEPROM block-0 save record. Transferred as halfword index 1 of 4 by the EEPROM routines; gameplay role not resolved in the available decomp slice. Baseline 0x0000 (blank).",
+      "evidence": "FUN_08071f7c reconstructs 4 halfwords per EEPROM block (loop bVar1 < 4, store decrementing from dest+6); FUN_08072040 serializes 4 halfwords per block (loop bVar3 < 4); FUN_080721a0 compares 4 halfwords; record accessed via FUN_08002e5c / FUN_08002e98 with byte offset 0.",
+      "name": "save_record_data_1",
       "offset": 2,
       "size": 2,
       "type": "u16_le"
     },
     {
-      "name": "player_status_payload",
+      "confidence": "likely",
+      "description": "Second data halfword (bytes 4..5) of the 8-byte EEPROM block-0 save record. Transferred as halfword index 2 of 4 by the EEPROM routines; gameplay role not resolved in the available decomp slice. Baseline 0x0000 (blank).",
+      "evidence": "FUN_08071f7c reconstructs 4 halfwords per EEPROM block (loop bVar1 < 4, store decrementing from dest+6); FUN_08072040 serializes 4 halfwords per block (loop bVar3 < 4); FUN_080721a0 compares 4 halfwords; record accessed via FUN_08002e5c / FUN_08002e98 with byte offset 0.",
+      "name": "save_record_data_2",
       "offset": 4,
-      "size": 16,
-      "type": "bytes"
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Third data halfword (bytes 6..7) of the 8-byte EEPROM block-0 save record. Transferred as halfword index 3 of 4 by the EEPROM routines; gameplay role not resolved in the available decomp slice. Baseline 0x0000 (blank).",
+      "evidence": "FUN_08071f7c reconstructs 4 halfwords per EEPROM block (loop bVar1 < 4, store decrementing from dest+6); FUN_08072040 serializes 4 halfwords per block (loop bVar3 < 4); FUN_080721a0 compares 4 halfwords; record accessed via FUN_08002e5c / FUN_08002e98 with byte offset 0.",
+      "name": "save_record_data_3",
+      "offset": 6,
+      "size": 2,
+      "type": "u16_le"
     }
-  ]
+  ],
+  "game_code": "B35P",
+  "id": "b35p",
+  "magic_signatures": [],
+  "media": "eeprom512",
+  "size_bytes": 512,
+  "title": "Strawberry Shortcake - Ice Cream Island - Riding Camp (Europe) (En,Fr,De,Es,It,Nl,Pt,Da)"
 }

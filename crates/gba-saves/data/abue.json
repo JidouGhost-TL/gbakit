@@ -1,29 +1,69 @@
 {
-  "id": "abue",
-  "game_code": "ABUE",
-  "title": "Ultimate Brain Games (USA, Europe)",
-  "media": "eeprom512",
-  "size_bytes": 512,
-  "magic_signatures": [],
   "checksums": [],
+  "copy_groups": [],
+  "eeprom_rev8": true,
   "fields": [
     {
-      "name": "slot_counter",
-      "offset": 2,
+      "confidence": "confirmed",
+      "description": "Stored 16-bit checksum of the save image. Recomputed by FUN_0805c778 over the image body on every boot verify (FUN_0805b8bc), and re-stored at image word 0 by FUN_0805c510 (init), FUN_0805bbd4 (entry write) and FUN_0805be8c (record write). Custom table-driven CRC (table/seed are ROM-resident words, not recoverable from code-only decomp), so it is exposed as data rather than a checksums[] spec. Baseline logical value 0xa521.",
+      "evidence": "FUN_0805c778 recomputes the u16 over the save image (called by FUN_0805b8bc for verify and by FUN_0805bbd4 / FUN_0805be8c before store); FUN_0805c510 inits the 512-byte image at DAT_0805c610 and stores the result at words [0..1]; EEPROM logical bytes [0..1] read 0x21 0xa5 in baseline.",
+      "name": "header_checksum",
+      "offset": 0,
       "size": 2,
       "type": "u16_le"
     },
     {
-      "name": "game_progress_flags",
-      "offset": 4,
-      "size": 2,
-      "type": "u16_le"
+      "confidence": "likely",
+      "description": "Player 1 profile name, first 8 characters of the 32-byte player record. 0xFA in the first byte marks an empty/unused slot (fresh save); any other value is the first name character. Text is entered through the FUN_0806043c glyph-buffer path and persisted with FUN_0805be8c; FUN_08061e24 / FUN_08062168 load it with FUN_0805c7bc and fall back to an 8-byte ROM default name when the slot is empty (FUN_0805c7e8 returns 0 when byte0 == 0xFA).",
+      "evidence": "FUN_0805be8c writes 0x20 bytes at EEPROM blocks 0x36+idx*5 (idx 0 => logical bytes [0x1B0..0x1D0)); FUN_0805c7bc reads the same 0x20 bytes back; FUN_0805c7e8 tests record byte0 != 0xFA for slot 0; FUN_08061e24 copies an 8-byte ROM default name and strips trailing bytes below 0x21 from index 7 down.",
+      "name": "player1_name",
+      "offset": 432,
+      "size": 8,
+      "type": "ascii"
     },
     {
-      "name": "player_status_payload",
-      "offset": 6,
-      "size": 16,
+      "confidence": "likely",
+      "description": "Remaining 24 bytes of the 32-byte player 1 record (bytes 8..31). Written/read as part of the same 0x20-byte record by FUN_0805be8c / FUN_0805c7bc (extended text-buffer bytes from FUN_0806043c, zero-padded); all zero in the default save. No per-offset semantics visible in decomp, so kept as opaque bytes.",
+      "evidence": "FUN_0805be8c writes the full 0x20-byte record at logical bytes [0x1B0..0x1D0) via 4 EEPROM blocks; FUN_0805c7bc reads the same span; FUN_0806043c fills record bytes [0..29) from the text-entry glyph buffer. Baseline bytes [0x1B8..0x1D0) are all zero.",
+      "name": "player1_record_tail",
+      "offset": 440,
+      "size": 24,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Player 2 profile name, first 8 characters of the 32-byte player record. Same empty/full convention as player 1 (first byte 0xFA = empty). Saved with FUN_0805be8c slot index 1 and loaded with FUN_0805c7bc slot index 1; FUN_08062168 manages the slot-1 text entry and save-back.",
+      "evidence": "FUN_0805be8c writes 0x20 bytes at EEPROM blocks 0x3B..0x3E (idx 1 => logical bytes [0x1D8..0x1F8)); FUN_0805c7bc reads the same span; FUN_0805c7e8 tests record byte0 != 0xFA for slot 1; FUN_08061e24 / FUN_08062168 apply the same 8-byte default/strip logic to slot 1.",
+      "name": "player2_name",
+      "offset": 472,
+      "size": 8,
+      "type": "ascii"
+    },
+    {
+      "confidence": "likely",
+      "description": "Remaining 24 bytes of the 32-byte player 2 record (bytes 8..31). Same handling as the player 1 tail; all zero in the default save.",
+      "evidence": "FUN_0805be8c writes the full 0x20-byte record at logical bytes [0x1D8..0x1F8) via 4 EEPROM blocks; FUN_0805c7bc reads the same span. Baseline bytes [0x1E0..0x1F8) are all zero.",
+      "name": "player2_record_tail",
+      "offset": 480,
+      "size": 24,
       "type": "bytes"
     }
-  ]
+  ],
+  "game_code": "ABUE",
+  "id": "abue",
+  "magic_signatures": [
+    {
+      "bytes": [
+        13,
+        168,
+        247,
+        129
+      ],
+      "description": "Four constant init bytes written by FUN_0805c510 at image offsets [2..5] (0x0D 0xA8 0xF7 0x81); verified against logical bytes of baseline.sav.",
+      "offset": 2
+    }
+  ],
+  "media": "eeprom512",
+  "size_bytes": 512,
+  "title": "Ultimate Brain Games (USA, Europe)"
 }

@@ -1,29 +1,181 @@
 {
-  "id": "b3xe",
-  "game_code": "B3XE",
-  "title": "X-Men - The Official Game (USA)",
-  "media": "eeprom512",
-  "size_bytes": 512,
-  "magic_signatures": [],
   "checksums": [],
+  "copy_groups": [],
+  "eeprom_rev8": false,
   "fields": [
     {
-      "name": "slot_counter",
+      "confidence": "likely",
+      "description": "State-buffer flag byte at offset +0x00; gates progress into FUN_08038570",
+      "evidence": "FUN_08037ef8 tests *param_1 (buffer byte +0x00): nonzero proceeds to FUN_08038570(param_1,param_2,*param_2,0); baseline 0x15 keeps that path live.",
+      "name": "status_byte_0",
       "offset": 0,
-      "size": 2,
-      "type": "u16_le"
+      "size": 1,
+      "type": "u8"
     },
     {
-      "name": "game_progress_flags",
+      "confidence": "likely",
+      "description": "State-buffer byte at offset +0x01, copied from record table byte +0x5b",
+      "evidence": "FUN_0803884c writes param_1+1 from table byte *(iVar2+0x5b) during state init; baseline 0x62 is the live copied value.",
+      "name": "param_copy_1",
+      "offset": 1,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Table u16 at record offset +2 (0x84-stride record table family)",
+      "evidence": "FUN_08000358 indexes a 0x84-stride record table by (param_1&0xff) and loads u16 at rec+2 into render state; baseline 0x4009.",
+      "name": "table_u16_02",
       "offset": 2,
       "size": 2,
       "type": "u16_le"
     },
     {
-      "name": "player_status_payload",
+      "confidence": "likely",
+      "description": "Table u16 at record offset +4 (0x84-stride record table family)",
+      "evidence": "FUN_08000358 loads u16 at rec+4 from the same 0x84-stride table (and rec+4<<8 into display state); baseline 0x3fc0.",
+      "name": "table_u16_04",
       "offset": 4,
-      "size": 16,
-      "type": "bytes"
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Repeated table dword 0x01400300, first of four identical occurrences",
+      "evidence": "FUN_0800e524 reads a u32 link field at struct offset +8 when dispatching indexed records; baseline dword 0x01400300 repeats at file offsets 0x08/0x10/0x14/0x1c.",
+      "name": "table_u32_08",
+      "offset": 8,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Paired u16 at offset +0x0c (low byte 0xaa alternating-bits marker)",
+      "evidence": "FUN_08038570 reads *(short*)(param_2+0x0c) when computing the entity update term; baseline 0x00aa.",
+      "name": "pair_a_0c",
+      "offset": 12,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Object state byte at +0x12; nonzero gates the FUN_080381c4 path",
+      "evidence": "FUN_08037ef8 branches on param_1[0x12] (zero skips FUN_080381c4) and FUN_080388a4 re-tests (char*)(param_2+0x12); baseline 0x40.",
+      "name": "obj_state_12",
+      "offset": 18,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Object flag byte at +0x13 written through button-mask AND combination",
+      "evidence": "FUN_08037ef8 reads (char*)(param_2+0x13) to select the reset path, and FUN_0800833c writes rec+0x13 as param_4 masked with 0xfb/0xf7/0xfe/0xfd combos; baseline 0x01.",
+      "name": "obj_flag_13",
+      "offset": 19,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Per-tick copy slot at +0x14, refreshed from byte +0x48",
+      "evidence": "FUN_080388a4 copies param_1[0x14]=param_1[0x48] every tick and separately writes [0x14]=-1 on the select path; baseline live value 0x00.",
+      "name": "copy_slot_14",
+      "offset": 20,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Select-path live flag at +0x17, set to 1 when chosen",
+      "evidence": "FUN_080388a4 stores param_1[0x17]=1 on the bVar1==1 select path (else 0); baseline 0x01 matches the selected state.",
+      "name": "live_flag_17",
+      "offset": 23,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 255,
+        "minimum": 0
+      },
+      "description": "Decrementing u8 countdown timer at +0x15",
+      "evidence": "FUN_08037ef8 loads cVar1=param_1[0x15] and stores back cVar1-1 each tick (wrapping u8 countdown); baseline 0x03.",
+      "name": "state_timer_15",
+      "offset": 21,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Record dispatch-test u16 at +0x1c (bit15 tested)",
+      "evidence": "FUN_08003908 loops 0x30 records testing *(ushort*)(rec+0x1c)&0x8000 to dispatch FUN_0800388c; baseline 0x0300 (bit15 clear).",
+      "name": "table_u16_1c",
+      "offset": 28,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Object state byte at +0x1e, cleared on the reset path",
+      "evidence": "FUN_080388a4 writes param_1[0x1e]=0 on the state-reset path (with [0x1f]); baseline live value 0x40.",
+      "name": "obj_state_1e",
+      "offset": 30,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Object state byte at +0x1f, cleared on the reset path",
+      "evidence": "FUN_080388a4 writes param_1[0x1f]=0 on the state-reset path (with [0x1e]); baseline live value 0x01, mirroring the [0x17]=1 live pattern.",
+      "name": "obj_state_1f",
+      "offset": 31,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 65535,
+        "minimum": 0
+      },
+      "description": "Pending-accumulation counter at +0x22, folded into the +0x44 accumulator",
+      "evidence": "FUN_080383f4 reads *(short*)(param_1+0x22) nonzero-gated, adds it into *(short*)(param_1+0x44), then zeroes +0x22 (FUN_08037e94/FUN_08037f8c/FUN_080388a4 also zero it); baseline 0x004e pending.",
+      "name": "state_counter_22",
+      "offset": 34,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 65535,
+        "minimum": 0
+      },
+      "description": "Decrementing short countdown at +0x24; at zero triggers FUN_08037f8c",
+      "evidence": "FUN_08037ef8 loads *(short*)(param_1+0x24), decrements, and on reaching zero calls FUN_08037f8c(param_1,param_2,1); baseline 0xfbff.",
+      "name": "state_counter_24",
+      "offset": 36,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Incrementing cycle counter at +0x26",
+      "evidence": "FUN_080381c4 reads and increments *(ushort*)(param_1+0x26) each cycle (bounded by table byte +0x11); FUN_08037f8c/FUN_080388a4 zero +0x26 on reset paths; baseline 0xFF00 near wrap.",
+      "name": "cycle_counter_26",
+      "offset": 38,
+      "size": 2,
+      "type": "u16_le"
     }
-  ]
+  ],
+  "game_code": "B3XE",
+  "id": "b3xe",
+  "magic_signatures": [],
+  "media": "eeprom512",
+  "size_bytes": 512,
+  "title": "X-Men - The Official Game (USA)"
 }

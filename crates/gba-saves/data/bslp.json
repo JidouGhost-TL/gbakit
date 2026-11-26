@@ -1,29 +1,85 @@
 {
-  "id": "bslp",
-  "game_code": "BSLP",
-  "title": "Tom Clancy's Splinter Cell - Pandora Tomorrow (Europe) (En,Fr,De,Es,It,Nl)",
-  "media": "eeprom512",
-  "size_bytes": 512,
-  "magic_signatures": [],
   "checksums": [],
+  "copy_groups": [],
+  "eeprom_rev8": true,
   "fields": [
     {
-      "name": "slot_counter",
+      "confidence": "likely",
+      "description": "Record 0, EEPROM unit word 0 (baseline 0x4455). First u16 of the 8-byte unit; bitwise complement of record0_sync_pair.",
+      "evidence": "FUN_0807bf98 decodes one 64-bit EEPROM unit into 4 u16 words at param_2+6 downward (bVar1<4 loop); FUN_0807c1bc verifies the same 4-word unit. Logical save offset 0x00, record stride 0x30 observed in baseline.sav.",
+      "name": "record0_sync_word",
+      "offset": 0,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Record 0, EEPROM unit word 1 (baseline 0x0022). Tag/counter word between the sync pair.",
+      "evidence": "FUN_0807bf98 writes 4 u16 words per EEPROM unit (param_2+6 downward loop); logical save offset 0x02 verified as 0x0022 in baseline.sav record 0.",
+      "name": "record0_tag",
       "offset": 2,
       "size": 2,
       "type": "u16_le"
     },
     {
-      "name": "game_progress_flags",
+      "confidence": "likely",
+      "description": "Record 0, EEPROM unit word 2 (baseline 0xBBAA = record0_sync_word ^ 0xFFFF). Integrity complement of word 0, verified across all 10 records in Python.",
+      "evidence": "FUN_0807c1bc compares all 4 u16 words of the EEPROM unit (bVar3<4 loop); FUN_0807c214 write+verify path. Logical save offset 0x04; complement relation word2 == word0 ^ 0xFFFF holds for every record in baseline.sav.",
+      "name": "record0_sync_pair",
       "offset": 4,
       "size": 2,
       "type": "u16_le"
     },
     {
-      "name": "player_status_payload",
+      "confidence": "likely",
+      "description": "Record 0, EEPROM unit word 3 (baseline 0x0000). Zero spare word completing the 8-byte unit.",
+      "evidence": "FUN_0807bf98 always decodes 4 words per unit and FUN_0807c1bc always compares 4 words (bVar3<4), so word 3 at logical save offset 0x06 is part of the verified unit; baseline.sav reads 0x0000.",
+      "name": "record0_unit0_spare",
       "offset": 6,
-      "size": 16,
-      "type": "bytes"
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Record 1, EEPROM unit word 0 (baseline 0x4455). Same sync word one record stride later.",
+      "evidence": "FUN_0807bf98 / FUN_0807c1bc 4-word EEPROM unit grain; logical save offset 0x30 = record stride 0x30 from record 0, verified 0x4455 in baseline.sav.",
+      "name": "record1_sync_word",
+      "offset": 48,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Record 1, EEPROM unit word 1 (baseline 0x0022). Tag/counter word mirroring record 0.",
+      "evidence": "FUN_0807bf98 4-word unit decode; logical save offset 0x32 verified as 0x0022 in baseline.sav record 1.",
+      "name": "record1_tag",
+      "offset": 50,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Record 1, EEPROM unit word 2 (baseline 0xBBAA = record1_sync_word ^ 0xFFFF). Integrity complement.",
+      "evidence": "FUN_0807c1bc 4-word unit compare; FUN_0807c214 write+verify path. Logical save offset 0x34; complement relation holds in baseline.sav record 1.",
+      "name": "record1_sync_pair",
+      "offset": 52,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Record 1, EEPROM unit word 3 (baseline 0x0000). Zero spare word completing the 8-byte unit.",
+      "evidence": "FUN_0807bf98 decodes and FUN_0807c1bc compares all 4 words of each unit; logical save offset 0x36 reads 0x0000 in baseline.sav.",
+      "name": "record1_unit0_spare",
+      "offset": 54,
+      "size": 2,
+      "type": "u16_le"
     }
-  ]
+  ],
+  "game_code": "BSLP",
+  "id": "bslp",
+  "magic_signatures": [],
+  "media": "eeprom512",
+  "size_bytes": 512,
+  "title": "Tom Clancy's Splinter Cell - Pandora Tomorrow (Europe) (En,Fr,De,Es,It,Nl)"
 }

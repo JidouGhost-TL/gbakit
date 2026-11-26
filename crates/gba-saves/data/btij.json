@@ -1,45 +1,90 @@
 {
-  "id": "btij",
+  "checksums": [],
+  "copy_groups": [],
+  "fields": [
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "allowed": "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+        "kind": "ascii-charset",
+        "max_len": 7
+      },
+      "description": "Save magic 'TANTEIQ', strcpy-written into the save struct by FUN_081daffc via FUN_08215b48 and mirrored to SRAM.",
+      "evidence": "FUN_081daffc calls FUN_08215b48 (*DAT_081db044, DAT_081db048) to strcpy the magic; SRAM bytes 0x00-0x06 read back via FUN_08215724 and written via FUN_082155ec; baseline.sav holds 54 41 4E 54 45 49 51.",
+      "name": "save_magic",
+      "offset": 0,
+      "size": 7,
+      "type": "ascii"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 0,
+        "minimum": 0
+      },
+      "description": "NUL terminator of the save magic, always written by the FUN_08215b48 strcpy in FUN_081daffc.",
+      "evidence": "FUN_08215b48 (strcpy) called from FUN_081daffc always stores the NUL; SRAM offset 0x07 is 0x00 in baseline.sav.",
+      "name": "magic_terminator",
+      "offset": 7,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Low validation stamp: ROM-table checksum computed by FUN_081db0a4 and stored at save-struct offset +8 by FUN_081daffc; mirrored to SRAM offset 0x08.",
+      "evidence": "FUN_081daffc stores FUN_081db0a4() result at (*DAT_081db044)+8; SRAM u16_le at 0x08 is 0x0218 in baseline.sav; transferred by FUN_08215724 / FUN_082155ec.",
+      "name": "rom_validation_stamp_lo",
+      "offset": 8,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Scenario-progress flag A: first nonzero gameplay byte in the live-captured save; exact bit meaning unresolved.",
+      "evidence": "Only nonzero gameplay byte region in live baseline.sav besides the stamps; SRAM offset 0x5B9 round-tripped 1:1 by FUN_08215724 (load, DAT_081db04c) and FUN_082155ec (save, DAT_081db890); bracketed by the FUN_081db0a4/FUN_081db0cc validation stamps.",
+      "name": "scenario_progress_flag_a",
+      "offset": 1465,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Scenario-progress flag B: second nonzero gameplay byte in the live-captured save; exact bit meaning unresolved.",
+      "evidence": "Second nonzero gameplay byte in live baseline.sav (offset 0x5BC = 0x01); SRAM round-tripped 1:1 by FUN_08215724 (load, DAT_081db04c) and FUN_082155ec (save, DAT_081db890); bracketed by the FUN_081db0a4/FUN_081db0cc validation stamps.",
+      "name": "scenario_progress_flag_b",
+      "offset": 1470,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "High validation stamp: ROM-table checksum computed by FUN_081db0cc and stored at save-struct offset +0x610 by FUN_081daffc; mirrored to SRAM offset 0x610.",
+      "evidence": "FUN_081daffc stores FUN_081db0cc() result at (*DAT_081db044)+0x610; SRAM u32_le at 0x610 is 0xE3FFC232 in baseline.sav; transferred by FUN_08215724 / FUN_082155ec.",
+      "name": "rom_validation_stamp_hi",
+      "offset": 1552,
+      "size": 4,
+      "type": "u32_le"
+    }
+  ],
   "game_code": "BTIJ",
-  "title": "Tantei Gakuen Q - Kyuukyoku Trick ni Idome! (Japan)",
-  "media": "sram",
-  "size_bytes": 32768,
+  "id": "btij",
   "magic_signatures": [
     {
-      "offset": 0,
       "bytes": [
         84,
         65,
         78,
-        84
-      ]
+        84,
+        69,
+        73,
+        81
+      ],
+      "description": "ASCII 'TANTEIQ' save magic",
+      "offset": 0
     }
   ],
-  "checksums": [],
-  "fields": [
-    {
-      "name": "magic_header",
-      "offset": 0,
-      "size": 4,
-      "type": "ascii"
-    },
-    {
-      "name": "slot_counter",
-      "offset": 4,
-      "size": 2,
-      "type": "u16_le"
-    },
-    {
-      "name": "game_progress_flags",
-      "offset": 6,
-      "size": 2,
-      "type": "u16_le"
-    },
-    {
-      "name": "player_status_payload",
-      "offset": 8,
-      "size": 16,
-      "type": "bytes"
-    }
-  ]
+  "media": "sram",
+  "size_bytes": 32768,
+  "title": "Tantei Gakuen Q - Kyuukyoku Trick ni Idome! (Japan)"
 }

@@ -1,29 +1,76 @@
 {
-  "id": "b27p",
-  "game_code": "B27P",
-  "title": "Top Spin 2 (Europe) (En,Fr,De,Es,It)",
-  "media": "eeprom512",
-  "size_bytes": 512,
-  "magic_signatures": [],
   "checksums": [],
+  "copy_groups": [],
+  "eeprom_rev8": true,
   "fields": [
     {
-      "name": "slot_counter",
+      "confidence": "likely",
+      "description": "Config block bits 0-7 (logical byte 0): low 3-bit config value A (bits 0-2, unpacked to RAM cfg[4]) plus low 5 bits of 8-bit config value B (bits 3-7, unpacked to RAM cfg[1]). Baseline 0x30 => A=0, B low bits=6.",
+      "evidence": "FUN_0804a090 unpacks bits 0-2 via FUN_0805fe98(DAT_0804a19c,0,2) into DAT_0804a1a8[4] and bits 3-10 via FUN_0805fe98(DAT_0804a19c,3,10) into DAT_0804a1a8[1]; FUN_0804a1ac repacks via FUN_0805fe18. EEPROM block 0 read by FUN_08049f64/FUN_0806049c, logical domain after rev8.",
+      "name": "config_value_a_low",
       "offset": 0,
-      "size": 2,
-      "type": "u16_le"
+      "size": 1,
+      "type": "u8"
     },
     {
-      "name": "game_progress_flags",
+      "confidence": "likely",
+      "description": "Config block bits 8-15 (logical byte 1): high 3 bits of 8-bit config value B plus low 5 bits of 8-bit config value C (bits 11-15, unpacked to RAM cfg[0]). Baseline 0xCB matches ROM defaults value B=0x66 / value C=0x99 set in FUN_0804a090.",
+      "evidence": "FUN_0804a090 extracts bits 3-10 into DAT_0804a1a8[1] (default 0x66) and bits 0x0B-0x12 into DAT_0804a1a8[0] (default 0x99) via FUN_0805fe98 on the DAT_0804a19c staging buffer; FUN_0804a1ac writes them back with FUN_0805fe18.",
+      "name": "config_value_b_high",
+      "offset": 1,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Config block bits 16-23 (logical byte 2): high 3 bits of config value C, 1-bit option flag (bit 19, unpacked to bit 1 of RAM cfg[2]), and low nibble of the 16-bit validation marker (bits 20-23). Baseline 0x3C.",
+      "evidence": "FUN_0804a090 reads bits 0x0B-0x12, single bit 0x13 into DAT_0804a1a8[2] (default flag set via DAT_0804a1a8[2]|2), and marker bits 0x14-0x23 via FUN_0805fe98; FUN_0804a1ac repacks the same ranges via FUN_0805fe18.",
+      "name": "config_value_c_flag",
       "offset": 2,
-      "size": 2,
-      "type": "u16_le"
+      "size": 1,
+      "type": "u8"
     },
     {
-      "name": "player_status_payload",
+      "confidence": "confirmed",
+      "description": "Config block bits 24-31 (logical byte 3): middle byte of the 16-bit validation marker. Full marker (bits 20-35) is 0x7A33 in baseline; load path compares it against DAT_0804a1a4 and save path writes DAT_0804a250 here.",
+      "evidence": "FUN_0804a090 validates FUN_0805fe98(uVar1,0x14,0x23) != DAT_0804a1a4 (falls back to backup block 0x100, then defaults); FUN_0804a1ac stores DAT_0804a250 with FUN_0805fe18(uVar2,DAT_0804a250,0x14,0x23).",
+      "name": "config_valid_marker_mid",
+      "offset": 3,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Config block bits 32-39 (logical byte 4): high nibble of the 16-bit validation marker plus low nibble of the 8-bit integrity checksum. Full checksum (bits 36-43) is 0x27, verified by recomputing the custom CRC-8 (FUN_0804aadc, final xor 0x22) over the block with the checksum field zeroed.",
+      "evidence": "FUN_0804a090 compares FUN_0805fe98(uVar1,0x24,0x2b) against FUN_0804aa6c(), which zeroes bits 0x24-0x2b via FUN_0805fe18 then runs FUN_0804aadc (custom CRC-8, not a Schema v2 algorithm); recomputation over baseline yields 0x27.",
+      "name": "config_marker_check",
       "offset": 4,
-      "size": 16,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Config block bits 40-47 (logical byte 5): high nibble of the 8-bit integrity checksum (0x2) plus 4 zero pad bits. Part of the checksummed region; not an independent checksum field.",
+      "evidence": "Upper half of the FUN_0804a090 checksum word FUN_0805fe98(uVar1,0x24,0x2b)=0x27 verified against FUN_0804aa6c/FUN_0804aadc recomputation; FUN_0804a1ac regenerates it via FUN_0805fe18 plus FUN_08049fc4 writes to blocks 0 and 0x100.",
+      "name": "config_checksum_pad",
+      "offset": 5,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Config block bits 48-63 (logical bytes 6-7): reserved, always zero in a valid block. No FUN_0805fe18 call in FUN_0804a1ac encodes above bit 0x2B and no FUN_0805fe98 call in FUN_0804a090 reads above bit 0x2B.",
+      "evidence": "Highest bit range encoded/decoded by the FUN_0804a1ac/FUN_0804a090 bit helpers is 0x24-0x2b (FUN_0805fe18/FUN_0805fe98); bits 44-63 are untouched and read as 0x0000 in samples/baseline.sav (logical domain).",
+      "name": "config_reserved_tail",
+      "offset": 6,
+      "size": 2,
       "type": "bytes"
     }
-  ]
+  ],
+  "game_code": "B27P",
+  "id": "b27p",
+  "magic_signatures": [],
+  "media": "eeprom512",
+  "size_bytes": 512,
+  "title": "Top Spin 2 (Europe) (En,Fr,De,Es,It)"
 }

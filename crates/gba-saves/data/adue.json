@@ -1,45 +1,163 @@
 {
-  "id": "adue",
-  "game_code": "ADUE",
-  "title": "Driver 2 Advance (USA)",
-  "media": "eeprom512",
-  "size_bytes": 512,
-  "magic_signatures": [
-    {
-      "offset": 8,
-      "bytes": [
-        54,
-        48,
-        48,
-        46
-      ]
-    }
-  ],
   "checksums": [],
+  "copy_groups": [],
+  "eeprom_rev8": true,
   "fields": [
     {
-      "name": "magic_header",
+      "confidence": "confirmed",
+      "description": "Save-format version tag; logical-domain ASCII 'Ver1.006' occupying EEPROM block 1 (save offsets 0x08-0x0F).",
+      "evidence": "Logical-domain bytes 56 65 72 31 2E 30 30 36 at save offsets 0x08-0x0F verified byte-exact in samples/baseline.sav via rev8 view (raw file holds the per-8-byte-reversed form '600.1reV'). All EEPROM block traffic flows through FUN_08040f70 (8-byte block read) / FUN_08041020 (8-byte block write) via FUN_08041154 (write+verify), dispatched one block at a time by FUN_08007f04.",
+      "name": "save_version",
       "offset": 8,
-      "size": 4,
+      "size": 8,
       "type": "ascii"
     },
     {
-      "name": "slot_counter",
-      "offset": 12,
-      "size": 2,
-      "type": "u16_le"
-    },
-    {
-      "name": "game_progress_flags",
-      "offset": 14,
-      "size": 2,
-      "type": "u16_le"
-    },
-    {
-      "name": "player_status_payload",
+      "confidence": "likely",
+      "description": "Bank-A record 0 head word (fresh-save value 0x08040100 = 134480128, a ROM-resident word stored as part of the 8-byte EEPROM block).",
+      "evidence": "Save offsets 0x10-0x2F hold four stride-8 records written through FUN_08007f04 -> FUN_08041154 -> FUN_08041020; the 8-byte block unit (4 shorts) is proven by FUN_08041020, FUN_08040f70 and FUN_080410fc, with bus bit-banging in FUN_08040ef0/FUN_08040e24/FUN_08040eac and setup in FUN_08040dec called from FUN_08017c60.",
+      "name": "record_a0_head",
       "offset": 16,
-      "size": 16,
-      "type": "bytes"
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Bank-A record 0 tail word (fresh-save value 0).",
+      "evidence": "Second word of the 8-byte EEPROM block at save offsets 0x10-0x17; block scope proven by FUN_08041020 / FUN_08040f70 4-short transfers via FUN_08041154, dispatched by FUN_08007f04 from FUN_08017c60.",
+      "name": "record_a0_tail",
+      "offset": 20,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Bank-A record 1 head word (fresh-save value 0x08040100 = 134480128).",
+      "evidence": "Save offsets 0x18-0x1F, second stride-8 record of the bank at 0x10-0x2F; written through FUN_08007f04 -> FUN_08041154 -> FUN_08041020 (8-byte blocks per FUN_08041020/FUN_08040f70).",
+      "name": "record_a1_head",
+      "offset": 24,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Bank-A record 1 tail word (fresh-save value 0).",
+      "evidence": "Second word of the 8-byte EEPROM block at save offsets 0x18-0x1F; block scope proven by FUN_08041020 / FUN_08040f70 4-short transfers via FUN_08041154, dispatched by FUN_08007f04.",
+      "name": "record_a1_tail",
+      "offset": 28,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Bank-A record 2 head word (fresh-save value 0x08040100 = 134480128).",
+      "evidence": "Save offsets 0x20-0x27, third stride-8 record of the bank at 0x10-0x2F; written through FUN_08007f04 -> FUN_08041154 -> FUN_08041020 (8-byte blocks per FUN_08041020/FUN_08040f70).",
+      "name": "record_a2_head",
+      "offset": 32,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Bank-A record 2 tail word (fresh-save value 0).",
+      "evidence": "Second word of the 8-byte EEPROM block at save offsets 0x20-0x27; block scope proven by FUN_08041020 / FUN_08040f70 4-short transfers via FUN_08041154, dispatched by FUN_08007f04.",
+      "name": "record_a2_tail",
+      "offset": 36,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Bank-A record 3 head word (fresh-save value 0x08040100 = 134480128).",
+      "evidence": "Save offsets 0x28-0x2F, fourth stride-8 record of the bank at 0x10-0x2F; written through FUN_08007f04 -> FUN_08041154 -> FUN_08041020 (8-byte blocks per FUN_08041020/FUN_08040f70).",
+      "name": "record_a3_head",
+      "offset": 40,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Bank-A record 3 tail word (fresh-save value 0).",
+      "evidence": "Second word of the 8-byte EEPROM block at save offsets 0x28-0x2F; block scope proven by FUN_08041020 / FUN_08040f70 4-short transfers via FUN_08041154, dispatched by FUN_08007f04.",
+      "name": "record_a3_tail",
+      "offset": 44,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Gameplay record 0 (fresh-save value 0x00093B3B = 604987); bytes match the built-in defaults of FUN_08017dec.",
+      "evidence": "Save offsets 0x30-0x33 hold bytes 3B 3B 09 00, exactly the defaults written by FUN_08017dec (*DAT_08017e78=0x3B, *DAT_08017e7c=0x3B, *DAT_08017e80=9, *DAT_08017e74=0); persisted one 8-byte EEPROM block at a time via FUN_08007f04 -> FUN_08041154 -> FUN_08041020 after FUN_08040dec setup in FUN_08017c60.",
+      "name": "record_b0",
+      "offset": 48,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Gameplay record 1 (fresh-save value 0x00093B3B = 604987); bytes match the built-in defaults of FUN_08017dec.",
+      "evidence": "Save offsets 0x34-0x37 hold bytes 3B 3B 09 00, exactly the defaults written by FUN_08017dec (*DAT_08017e78=0x3B, *DAT_08017e7c=0x3B, *DAT_08017e80=9, *DAT_08017e74=0); persisted via FUN_08007f04 -> FUN_08041154 -> FUN_08041020 (FUN_08017c60 path).",
+      "name": "record_b1",
+      "offset": 52,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Gameplay record 2 (fresh-save value 0x00093B3B = 604987); bytes match the built-in defaults of FUN_08017dec.",
+      "evidence": "Save offsets 0x38-0x3B hold bytes 3B 3B 09 00, exactly the defaults written by FUN_08017dec (*DAT_08017e78=0x3B, *DAT_08017e7c=0x3B, *DAT_08017e80=9, *DAT_08017e74=0); persisted via FUN_08007f04 -> FUN_08041154 -> FUN_08041020 (FUN_08017c60 path).",
+      "name": "record_b2",
+      "offset": 56,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Gameplay record 3 (fresh-save value 0x00093B3B = 604987); bytes match the built-in defaults of FUN_08017dec.",
+      "evidence": "Save offsets 0x3C-0x3F hold bytes 3B 3B 09 00, exactly the defaults written by FUN_08017dec (*DAT_08017e78=0x3B, *DAT_08017e7c=0x3B, *DAT_08017e80=9, *DAT_08017e74=0); persisted via FUN_08007f04 -> FUN_08041154 -> FUN_08041020 (FUN_08017c60 path).",
+      "name": "record_b3",
+      "offset": 60,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Gameplay record 4 (fresh-save value 0x00093B3B = 604987); bytes match the built-in defaults of FUN_08017dec.",
+      "evidence": "Save offsets 0x48-0x4B hold bytes 3B 3B 09 00, exactly the defaults written by FUN_08017dec (*DAT_08017e78=0x3B, *DAT_08017e7c=0x3B, *DAT_08017e80=9, *DAT_08017e74=0); persisted via FUN_08007f04 -> FUN_08041154 -> FUN_08041020 (FUN_08017c60 path).",
+      "name": "record_b4",
+      "offset": 72,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Gameplay record 5 (fresh-save value 0x00093B3B = 604987); bytes match the built-in defaults of FUN_08017dec.",
+      "evidence": "Save offsets 0x4C-0x4F hold bytes 3B 3B 09 00, exactly the defaults written by FUN_08017dec (*DAT_08017e78=0x3B, *DAT_08017e7c=0x3B, *DAT_08017e80=9, *DAT_08017e74=0); persisted via FUN_08007f04 -> FUN_08041154 -> FUN_08041020 (FUN_08017c60 path).",
+      "name": "record_b5",
+      "offset": 76,
+      "size": 4,
+      "type": "u32_le"
     }
-  ]
+  ],
+  "game_code": "ADUE",
+  "id": "adue",
+  "magic_signatures": [
+    {
+      "bytes": [
+        86,
+        101,
+        114,
+        49,
+        46,
+        48,
+        48,
+        54
+      ],
+      "description": "ASCII save-format version tag 'Ver1.006' in EEPROM block 1 (logical domain)",
+      "offset": 8
+    }
+  ],
+  "media": "eeprom512",
+  "size_bytes": 512,
+  "title": "Driver 2 Advance (USA)"
 }

@@ -1,29 +1,480 @@
 {
-  "id": "ai7j",
-  "game_code": "AI7J",
-  "title": "Nakayoshi Pet Advance Series 2 - Kawaii Koinu (Japan)",
-  "media": "eeprom8k",
-  "size_bytes": 8192,
-  "magic_signatures": [],
   "checksums": [],
+  "copy_groups": [],
   "fields": [
     {
-      "name": "slot_counter",
+      "confidence": "likely",
+      "description": "14-byte header string slot at stream start; serialized by FUN_08000a4c from *DAT_080009b0 in FUN_080006b4, verified by FUN_08001000 against *DAT_08000fbc in FUN_08000c50.",
+      "evidence": "FUN_080006b4 calls FUN_08000a4c(param_1,*DAT_080009b0) at stream cursor 0 then resets cursor to 0x10; FUN_08000c50 verifies via FUN_08001000(param_1,*DAT_08000fbc); zeros in baseline mean content unconfirmed.",
+      "name": "save_id_string",
       "offset": 0,
+      "size": 14,
+      "type": "ascii"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Stored integrity word at stream cursor 0x0e; computed by FUN_08000a78 as byte-sum over the packed stream plus 1. Kept as a plain field because byte-sum-plus-1 is not a Schema v2 algorithm and baseline zeros cannot verify it.",
+      "evidence": "FUN_080006b4: local_1c=FUN_08000a78(param_1)+1 then FUN_08000ab4(param_1,local_1c,2,1) with cursor *DAT_080009ac=0x0e; FUN_08000c50 recomputes via FUN_08000a78 the same way.",
+      "name": "stored_checksum_word",
+      "offset": 14,
       "size": 2,
       "type": "u16_le"
     },
     {
-      "name": "game_progress_flags",
-      "offset": 2,
+      "confidence": "guessed",
+      "description": "Leading 32-bit counter packed first at stream offset 0x10 (RAM word at DAT_080009b4 / unpacked to DAT_08000f24); likely total playtime or progress tick.",
+      "evidence": "FUN_080006b4: FUN_08000ab4(param_1,DAT_080009b4,4,1) first fixed op after cursor reset to 0x10; mirror FUN_08000c50: FUN_0800103c(param_1,DAT_08000f24,4,1).",
+      "name": "play_counter",
+      "offset": 16,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "guessed",
+      "description": "16-bit config/state word right after the leading counter (DAT_080009b8 / DAT_08000f28).",
+      "evidence": "FUN_080006b4: FUN_08000ab4(param_1,DAT_080009b8,2,1); mirror FUN_08000c50: FUN_0800103c(param_1,DAT_08000f28,2,1) at stream offset 20.",
+      "name": "config_word_0",
+      "offset": 20,
       "size": 2,
       "type": "u16_le"
     },
     {
-      "name": "player_status_payload",
-      "offset": 4,
-      "size": 16,
+      "confidence": "guessed",
+      "description": "First of six consecutive 7-entry u16 tables (DAT_080009bc / DAT_08000f2c); per-day or per-slot stat rows.",
+      "evidence": "FUN_080006b4: FUN_08000ab4(param_1,DAT_080009bc,2,7) at stream offset 22; mirror FUN_08000c50: FUN_0800103c(param_1,DAT_08000f2c,2,7).",
+      "name": "stat_table_0",
+      "offset": 22,
+      "size": 14,
       "type": "bytes"
+    },
+    {
+      "confidence": "guessed",
+      "description": "Second 7-entry u16 table (DAT_080009c0 / DAT_08000f30).",
+      "evidence": "FUN_080006b4: FUN_08000ab4(param_1,DAT_080009c0,2,7) at stream offset 36; mirror FUN_08000c50: FUN_0800103c(param_1,DAT_08000f30,2,7).",
+      "name": "stat_table_1",
+      "offset": 36,
+      "size": 14,
+      "type": "bytes"
+    },
+    {
+      "confidence": "guessed",
+      "description": "Third 7-entry u16 table (DAT_080009c4 / DAT_08000f34).",
+      "evidence": "FUN_080006b4: FUN_08000ab4(param_1,DAT_080009c4,2,7) at stream offset 50; mirror FUN_08000c50: FUN_0800103c(param_1,DAT_08000f34,2,7).",
+      "name": "stat_table_2",
+      "offset": 50,
+      "size": 14,
+      "type": "bytes"
+    },
+    {
+      "confidence": "guessed",
+      "description": "Fourth 7-entry u16 table (DAT_080009c8 / DAT_08000f38).",
+      "evidence": "FUN_080006b4: FUN_08000ab4(param_1,DAT_080009c8,2,7) at stream offset 64; mirror FUN_08000c50: FUN_0800103c(param_1,DAT_08000f38,2,7).",
+      "name": "stat_table_3",
+      "offset": 64,
+      "size": 14,
+      "type": "bytes"
+    },
+    {
+      "confidence": "guessed",
+      "description": "Fifth 7-entry u16 table (DAT_080009cc / DAT_08000f3c).",
+      "evidence": "FUN_080006b4: FUN_08000ab4(param_1,DAT_080009cc,2,7) at stream offset 78; mirror FUN_08000c50: FUN_0800103c(param_1,DAT_08000f3c,2,7).",
+      "name": "stat_table_4",
+      "offset": 78,
+      "size": 14,
+      "type": "bytes"
+    },
+    {
+      "confidence": "guessed",
+      "description": "Sixth 7-entry u16 table (DAT_080009d0 / DAT_08000f40).",
+      "evidence": "FUN_080006b4: FUN_08000ab4(param_1,DAT_080009d0,2,7) at stream offset 92; mirror FUN_08000c50: FUN_0800103c(param_1,DAT_08000f40,2,7).",
+      "name": "stat_table_5",
+      "offset": 92,
+      "size": 14,
+      "type": "bytes"
+    },
+    {
+      "confidence": "guessed",
+      "description": "Lone option/config byte between the 7-entry tables and the scalar run (DAT_080009d4 / DAT_08000f44); sound/text-speed style setting candidate.",
+      "evidence": "FUN_080006b4: FUN_08000ab4(param_1,DAT_080009d4,1,1) at stream offset 106; mirror FUN_08000c50: FUN_0800103c(param_1,DAT_08000f44,1,1).",
+      "name": "option_byte",
+      "offset": 106,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "guessed",
+      "description": "Gameplay/config scalar 0 of a nine-word run (DAT_080009d8 / DAT_08000f48).",
+      "evidence": "FUN_080006b4: FUN_08000ab4(param_1,DAT_080009d8,2,1) at stream offset 107; mirror FUN_08000c50: FUN_0800103c(param_1,DAT_08000f48,2,1).",
+      "name": "cfg_value_0",
+      "offset": 107,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "guessed",
+      "description": "Gameplay/config scalar 1 (DAT_080009dc / DAT_08000f4c).",
+      "evidence": "FUN_080006b4: FUN_08000ab4(param_1,DAT_080009dc,2,1) at stream offset 109; mirror FUN_08000c50: FUN_0800103c(param_1,DAT_08000f4c,2,1).",
+      "name": "cfg_value_1",
+      "offset": 109,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "guessed",
+      "description": "Gameplay/config scalar 2 (DAT_080009e0 / DAT_08000f50).",
+      "evidence": "FUN_080006b4: FUN_08000ab4(param_1,DAT_080009e0,2,1) at stream offset 111; mirror FUN_08000c50: FUN_0800103c(param_1,DAT_08000f50,2,1).",
+      "name": "cfg_value_2",
+      "offset": 111,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "guessed",
+      "description": "Gameplay/config scalar 3 (DAT_080009e4 / DAT_08000f54).",
+      "evidence": "FUN_080006b4: FUN_08000ab4(param_1,DAT_080009e4,2,1) at stream offset 113; mirror FUN_08000c50: FUN_0800103c(param_1,DAT_08000f54,2,1).",
+      "name": "cfg_value_3",
+      "offset": 113,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "guessed",
+      "description": "Gameplay/config scalar 4 (DAT_080009e8 / DAT_08000f58).",
+      "evidence": "FUN_080006b4: FUN_08000ab4(param_1,DAT_080009e8,2,1) at stream offset 115; mirror FUN_08000c50: FUN_0800103c(param_1,DAT_08000f58,2,1).",
+      "name": "cfg_value_4",
+      "offset": 115,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "guessed",
+      "description": "Gameplay/config scalar 5 (DAT_080009ec / DAT_08000f5c).",
+      "evidence": "FUN_080006b4: FUN_08000ab4(param_1,DAT_080009ec,2,1) at stream offset 117; mirror FUN_08000c50: FUN_0800103c(param_1,DAT_08000f5c,2,1).",
+      "name": "cfg_value_5",
+      "offset": 117,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "guessed",
+      "description": "Gameplay/config scalar 6 (DAT_080009f0 / DAT_08000f60).",
+      "evidence": "FUN_080006b4: FUN_08000ab4(param_1,DAT_080009f0,2,1) at stream offset 119; mirror FUN_08000c50: FUN_0800103c(param_1,DAT_08000f60,2,1).",
+      "name": "cfg_value_6",
+      "offset": 119,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "guessed",
+      "description": "Gameplay/config scalar 7 (DAT_080009f4 / DAT_08000f64).",
+      "evidence": "FUN_080006b4: FUN_08000ab4(param_1,DAT_080009f4,2,1) at stream offset 121; mirror FUN_08000c50: FUN_0800103c(param_1,DAT_08000f64,2,1).",
+      "name": "cfg_value_7",
+      "offset": 121,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "guessed",
+      "description": "Gameplay/config scalar 8 (DAT_080009f8 / DAT_08000f68).",
+      "evidence": "FUN_080006b4: FUN_08000ab4(param_1,DAT_080009f8,2,1) at stream offset 123; mirror FUN_08000c50: FUN_0800103c(param_1,DAT_08000f68,2,1).",
+      "name": "cfg_value_8",
+      "offset": 123,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "guessed",
+      "description": "Nine-entry u16 group (DAT_080009fc / DAT_08000f6c), e.g. minigame scores or item counts.",
+      "evidence": "FUN_080006b4: FUN_08000ab4(param_1,DAT_080009fc,2,9) at stream offset 125; mirror FUN_08000c50: FUN_0800103c(param_1,DAT_08000f6c,2,9).",
+      "name": "group_table_9",
+      "offset": 125,
+      "size": 18,
+      "type": "bytes"
+    },
+    {
+      "confidence": "guessed",
+      "description": "Ten-byte flag/option block (DAT_08000a00 / DAT_08000f70); per-feature unlock or option bytes.",
+      "evidence": "FUN_080006b4: FUN_08000ab4(param_1,DAT_08000a00,1,10) at stream offset 143; mirror FUN_08000c50: FUN_0800103c(param_1,DAT_08000f70,1,10).",
+      "name": "flags_bytes_10",
+      "offset": 143,
+      "size": 10,
+      "type": "bytes"
+    },
+    {
+      "confidence": "guessed",
+      "description": "Large record block: nine consecutive 32-entry u16 tables (DAT_08000a04 plus 0x40/0x80/0xc0/0x100/0x140/0x180/0x1c0/0x200 strides); collection or map-progress data.",
+      "evidence": "FUN_080006b4: FUN_08000ab4(param_1,DAT_08000a04,2,0x20) then same call at iVar3+0x40..+0x200 (9x64 bytes) at stream offset 153; mirror FUN_08000c50 with DAT_08000f74 strides.",
+      "name": "big_table_block",
+      "offset": 153,
+      "size": 576,
+      "type": "bytes"
+    },
+    {
+      "confidence": "guessed",
+      "description": "Five-entry u16 table (DAT_08000a08 / DAT_08000f78).",
+      "evidence": "FUN_080006b4: FUN_08000ab4(param_1,DAT_08000a08,2,5) at stream offset 729; mirror FUN_08000c50: FUN_0800103c(param_1,DAT_08000f78,2,5).",
+      "name": "small_table_5",
+      "offset": 729,
+      "size": 10,
+      "type": "bytes"
+    },
+    {
+      "confidence": "guessed",
+      "description": "72-entry u16 table (DAT_08000a0c / DAT_08000f7c), the longest single run; large inventory or progress array.",
+      "evidence": "FUN_080006b4: FUN_08000ab4(param_1,DAT_08000a0c,2,0x48) at stream offset 739; mirror FUN_08000c50: FUN_0800103c(param_1,DAT_08000f7c,2,0x48).",
+      "name": "long_table_72",
+      "offset": 739,
+      "size": 144,
+      "type": "bytes"
+    },
+    {
+      "confidence": "guessed",
+      "description": "Tail scalar group, entry 0 of a 3-word run (DAT_08000a10 / DAT_08000f80).",
+      "evidence": "FUN_080006b4: FUN_08000ab4(param_1,DAT_08000a10,2,3) covers stream offsets 883..889; mirror FUN_08000c50: FUN_0800103c(param_1,DAT_08000f80,2,3).",
+      "name": "tail_value_0",
+      "offset": 883,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "guessed",
+      "description": "Tail scalar group, entry 1 (DAT_08000a10+2 / DAT_08000f80+2).",
+      "evidence": "FUN_080006b4: FUN_08000ab4(param_1,DAT_08000a10,2,3) covers stream offsets 883..889; mirror FUN_08000c50: FUN_0800103c(param_1,DAT_08000f80,2,3).",
+      "name": "tail_value_1",
+      "offset": 885,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "guessed",
+      "description": "Tail scalar group, entry 2 (DAT_08000a10+4 / DAT_08000f80+4).",
+      "evidence": "FUN_080006b4: FUN_08000ab4(param_1,DAT_08000a10,2,3) covers stream offsets 883..889; mirror FUN_08000c50: FUN_0800103c(param_1,DAT_08000f80,2,3).",
+      "name": "tail_value_2",
+      "offset": 887,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "guessed",
+      "description": "Tail scalar (DAT_08000a14 / DAT_08000f84) at stream offset 889.",
+      "evidence": "FUN_080006b4: FUN_08000ab4(param_1,DAT_08000a14,2,1); mirror FUN_08000c50: FUN_0800103c(param_1,DAT_08000f84,2,1).",
+      "name": "tail_value_3",
+      "offset": 889,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "guessed",
+      "description": "Tail scalar (DAT_08000a18 / DAT_08000f88) at stream offset 891.",
+      "evidence": "FUN_080006b4: FUN_08000ab4(param_1,DAT_08000a18,2,1); mirror FUN_08000c50: FUN_0800103c(param_1,DAT_08000f88,2,1).",
+      "name": "tail_value_4",
+      "offset": 891,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "guessed",
+      "description": "Tail scalar (DAT_08000a1c / DAT_08000f8c) at stream offset 893.",
+      "evidence": "FUN_080006b4: FUN_08000ab4(param_1,DAT_08000a1c,2,1); mirror FUN_08000c50: FUN_0800103c(param_1,DAT_08000f8c,2,1).",
+      "name": "tail_value_5",
+      "offset": 893,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "guessed",
+      "description": "Tail scalar group entry 0 of a second 3-word run (DAT_08000a20 / DAT_08000f90) at 895.",
+      "evidence": "FUN_080006b4: FUN_08000ab4(param_1,DAT_08000a20,2,3) covers stream offsets 895..901; mirror FUN_08000c50: FUN_0800103c(param_1,DAT_08000f90,2,3).",
+      "name": "tail_value_6",
+      "offset": 895,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "guessed",
+      "description": "Tail scalar group entry 1 (DAT_08000a20+2 / DAT_08000f90+2) at 897.",
+      "evidence": "FUN_080006b4: FUN_08000ab4(param_1,DAT_08000a20,2,3) covers stream offsets 895..901; mirror FUN_08000c50: FUN_0800103c(param_1,DAT_08000f90,2,3).",
+      "name": "tail_value_7",
+      "offset": 897,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "guessed",
+      "description": "Tail scalar group entry 2 (DAT_08000a20+4 / DAT_08000f90+4) at 899.",
+      "evidence": "FUN_080006b4: FUN_08000ab4(param_1,DAT_08000a20,2,3) covers stream offsets 895..901; mirror FUN_08000c50: FUN_0800103c(param_1,DAT_08000f90,2,3).",
+      "name": "tail_value_8",
+      "offset": 899,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "guessed",
+      "description": "Record 0 of seven 13-byte records; inner layout per loop iteration is 1 + 6 + 1 + 1 + 1 + 3 bytes, the 6-byte run at +1 looking like a short name tag.",
+      "evidence": "FUN_080006b4 record loop (7 iters at DAT_08000a24 strides of 0x10): FUN_08000ab4 1,1 / 1,6 / 1,1 / 1,1 / 1,1 / 1,3 at stream offset 901; mirror loop in FUN_08000c50 at DAT_08000f94.",
+      "name": "pet_record_0",
+      "offset": 901,
+      "size": 13,
+      "type": "bytes"
+    },
+    {
+      "confidence": "guessed",
+      "description": "Record 1 of seven 13-byte records (same 1+6+1+1+1+3 inner layout).",
+      "evidence": "FUN_080006b4 record loop (7 iters at DAT_08000a24 strides of 0x10): FUN_08000ab4 1,1 / 1,6 / 1,1 / 1,1 / 1,1 / 1,3 at stream offset 914; mirror loop in FUN_08000c50 at DAT_08000f94.",
+      "name": "pet_record_1",
+      "offset": 914,
+      "size": 13,
+      "type": "bytes"
+    },
+    {
+      "confidence": "guessed",
+      "description": "Record 2 of seven 13-byte records (same 1+6+1+1+1+3 inner layout).",
+      "evidence": "FUN_080006b4 record loop (7 iters at DAT_08000a24 strides of 0x10): FUN_08000ab4 1,1 / 1,6 / 1,1 / 1,1 / 1,1 / 1,3 at stream offset 927; mirror loop in FUN_08000c50 at DAT_08000f94.",
+      "name": "pet_record_2",
+      "offset": 927,
+      "size": 13,
+      "type": "bytes"
+    },
+    {
+      "confidence": "guessed",
+      "description": "Record 3 of seven 13-byte records (same 1+6+1+1+1+3 inner layout).",
+      "evidence": "FUN_080006b4 record loop (7 iters at DAT_08000a24 strides of 0x10): FUN_08000ab4 1,1 / 1,6 / 1,1 / 1,1 / 1,1 / 1,3 at stream offset 940; mirror loop in FUN_08000c50 at DAT_08000f94.",
+      "name": "pet_record_3",
+      "offset": 940,
+      "size": 13,
+      "type": "bytes"
+    },
+    {
+      "confidence": "guessed",
+      "description": "Record 4 of seven 13-byte records (same 1+6+1+1+1+3 inner layout).",
+      "evidence": "FUN_080006b4 record loop (7 iters at DAT_08000a24 strides of 0x10): FUN_08000ab4 1,1 / 1,6 / 1,1 / 1,1 / 1,1 / 1,3 at stream offset 953; mirror loop in FUN_08000c50 at DAT_08000f94.",
+      "name": "pet_record_4",
+      "offset": 953,
+      "size": 13,
+      "type": "bytes"
+    },
+    {
+      "confidence": "guessed",
+      "description": "Record 5 of seven 13-byte records (same 1+6+1+1+1+3 inner layout).",
+      "evidence": "FUN_080006b4 record loop (7 iters at DAT_08000a24 strides of 0x10): FUN_08000ab4 1,1 / 1,6 / 1,1 / 1,1 / 1,1 / 1,3 at stream offset 966; mirror loop in FUN_08000c50 at DAT_08000f94.",
+      "name": "pet_record_5",
+      "offset": 966,
+      "size": 13,
+      "type": "bytes"
+    },
+    {
+      "confidence": "guessed",
+      "description": "Record 6 of seven 13-byte records (same 1+6+1+1+1+3 inner layout).",
+      "evidence": "FUN_080006b4 record loop (7 iters at DAT_08000a24 strides of 0x10): FUN_08000ab4 1,1 / 1,6 / 1,1 / 1,1 / 1,1 / 1,3 at stream offset 979; mirror loop in FUN_08000c50 at DAT_08000f94.",
+      "name": "pet_record_6",
+      "offset": 979,
+      "size": 13,
+      "type": "bytes"
+    },
+    {
+      "confidence": "guessed",
+      "description": "End scalar group entry 0 of a 3-word run (DAT_08000a28 / DAT_08000f98) at 992.",
+      "evidence": "FUN_080006b4: FUN_08000ab4(param_1,DAT_08000a28,2,3) covers stream offsets 992..998; mirror FUN_08000c50: FUN_0800103c(param_1,DAT_08000f98,2,3).",
+      "name": "end_value_0",
+      "offset": 992,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "guessed",
+      "description": "End scalar group entry 1 (DAT_08000a28+2 / DAT_08000f98+2) at 994.",
+      "evidence": "FUN_080006b4: FUN_08000ab4(param_1,DAT_08000a28,2,3) covers stream offsets 992..998; mirror FUN_08000c50: FUN_0800103c(param_1,DAT_08000f98,2,3).",
+      "name": "end_value_1",
+      "offset": 994,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "guessed",
+      "description": "End scalar group entry 2 (DAT_08000a28+4 / DAT_08000f98+4) at 996.",
+      "evidence": "FUN_080006b4: FUN_08000ab4(param_1,DAT_08000a28,2,3) covers stream offsets 992..998; mirror FUN_08000c50: FUN_0800103c(param_1,DAT_08000f98,2,3).",
+      "name": "end_value_2",
+      "offset": 996,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "guessed",
+      "description": "End scalar (DAT_08000a2c / DAT_08000f9c) at stream offset 998.",
+      "evidence": "FUN_080006b4: FUN_08000ab4(param_1,DAT_08000a2c,2,1); mirror FUN_08000c50: FUN_0800103c(param_1,DAT_08000f9c,2,1).",
+      "name": "end_value_3",
+      "offset": 998,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "guessed",
+      "description": "End scalar (DAT_08000a30 / DAT_08000fa0) at stream offset 1000.",
+      "evidence": "FUN_080006b4: FUN_08000ab4(param_1,DAT_08000a30,2,1); mirror FUN_08000c50: FUN_0800103c(param_1,DAT_08000fa0,2,1).",
+      "name": "end_value_4",
+      "offset": 1000,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "guessed",
+      "description": "End scalar (DAT_08000a34 / DAT_08000fa4) at stream offset 1002.",
+      "evidence": "FUN_080006b4: FUN_08000ab4(param_1,DAT_08000a34,2,1); mirror FUN_08000c50: FUN_0800103c(param_1,DAT_08000fa4,2,1).",
+      "name": "end_value_5",
+      "offset": 1002,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "guessed",
+      "description": "End scalar (DAT_08000a38 / DAT_08000fa8) at stream offset 1004.",
+      "evidence": "FUN_080006b4: FUN_08000ab4(param_1,DAT_08000a38,2,1); mirror FUN_08000c50: FUN_0800103c(param_1,DAT_08000fa8,2,1).",
+      "name": "end_value_6",
+      "offset": 1004,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "guessed",
+      "description": "End scalar (DAT_08000a3c / DAT_08000fac) at stream offset 1006.",
+      "evidence": "FUN_080006b4: FUN_08000ab4(param_1,DAT_08000a3c,2,1); mirror FUN_08000c50: FUN_0800103c(param_1,DAT_08000fac,2,1).",
+      "name": "end_value_7",
+      "offset": 1006,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "guessed",
+      "description": "End scalar (DAT_08000a40 / DAT_08000fb0) at stream offset 1008.",
+      "evidence": "FUN_080006b4: FUN_08000ab4(param_1,DAT_08000a40,2,1); mirror FUN_08000c50: FUN_0800103c(param_1,DAT_08000fb0,2,1).",
+      "name": "end_value_8",
+      "offset": 1008,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "guessed",
+      "description": "Trailing 32-bit value (DAT_08000a44 / DAT_08000fb4); second counter or flags word.",
+      "evidence": "FUN_080006b4: FUN_08000ab4(param_1,DAT_08000a44,4,1) at stream offset 1010; mirror FUN_08000c50: FUN_0800103c(param_1,DAT_08000fb4,4,1).",
+      "name": "final_counter",
+      "offset": 1010,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "guessed",
+      "description": "Final 16-bit word of the 1016-byte stream (DAT_08000a48 / DAT_08000fb8).",
+      "evidence": "FUN_080006b4: FUN_08000ab4(param_1,DAT_08000a48,2,1) at stream offset 1014; mirror FUN_08000c50: FUN_0800103c(param_1,DAT_08000fb8,2,1).",
+      "name": "final_word",
+      "offset": 1014,
+      "size": 2,
+      "type": "u16_le"
     }
-  ]
+  ],
+  "game_code": "AI7J",
+  "id": "ai7j",
+  "magic_signatures": [],
+  "media": "eeprom8k",
+  "size_bytes": 8192,
+  "title": "Nakayoshi Pet Advance Series 2 - Kawaii Koinu (Japan)"
 }

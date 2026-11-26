@@ -4,42 +4,346 @@
   "title": "007 - Everything or Nothing (Japan)",
   "media": "eeprom512",
   "size_bytes": 512,
+  "eeprom_rev8": true,
   "magic_signatures": [
     {
       "offset": 0,
       "bytes": [
-        51,
-        53,
+        66,
+        79,
+        78,
+        68,
         48,
-        48
-      ]
+        48,
+        53,
+        51
+      ],
+      "description": "ASCII 'BOND0053' save tag; validated by FUN_0802dddc 8-byte compare"
     }
   ],
-  "checksums": [],
+  "checksums": [
+    {
+      "name": "header_checksum",
+      "algorithm": "sum16_le_neg",
+      "covered_start": 0,
+      "covered_end": 32,
+      "stored_offset": 30,
+      "seed": 0,
+      "xor_out": 0
+    },
+    {
+      "name": "slot0_checksum",
+      "algorithm": "sum16_le_neg",
+      "covered_start": 32,
+      "covered_end": 192,
+      "stored_offset": 188,
+      "seed": 0,
+      "xor_out": 0
+    },
+    {
+      "name": "slot1_checksum",
+      "algorithm": "sum16_le_neg",
+      "covered_start": 192,
+      "covered_end": 352,
+      "stored_offset": 348,
+      "seed": 0,
+      "xor_out": 0
+    },
+    {
+      "name": "slot2_checksum",
+      "algorithm": "sum16_le_neg",
+      "covered_start": 352,
+      "covered_end": 512,
+      "stored_offset": 508,
+      "seed": 0,
+      "xor_out": 0
+    }
+  ],
   "fields": [
     {
-      "name": "magic_header",
+      "name": "bond_magic_tag",
       "offset": 0,
-      "size": 4,
-      "type": "ascii"
+      "size": 8,
+      "type": "ascii",
+      "description": "Save-system tag 'BOND0053' at header+0x00.",
+      "confidence": "confirmed",
+      "evidence": "FUN_0802dddc reads 4 EEPROM blocks (save offset 0x00, 0x20 bytes) via FUN_0802e164 and compares bytes [0x00..0x08) against the expected tag; FUN_0802e228 rewrites the 0x20-byte header. Baseline logical bytes are 42 4F 4E 44 30 30 35 33.",
+      "constraint": {
+        "kind": "ascii-charset",
+        "allowed": "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789",
+        "max_len": 8
+      }
     },
     {
-      "name": "slot_counter",
-      "offset": 4,
-      "size": 2,
-      "type": "u16_le"
+      "name": "slot0_stat_0",
+      "offset": 44,
+      "size": 1,
+      "type": "u8",
+      "description": "Slot 0 gameplay stat byte 0 (slot+0x0C); ROM default 0x17.",
+      "confidence": "likely",
+      "evidence": "FUN_0802d944 writes 0x17 to slot+0x0C during per-slot default init (called for each 0xA0-byte slot from FUN_0802d8dc); slot 0 base is save offset 0x20; covered by slot neg-checksum validated in FUN_0802dd00."
     },
     {
-      "name": "game_progress_flags",
-      "offset": 6,
-      "size": 2,
-      "type": "u16_le"
+      "name": "slot0_stat_1",
+      "offset": 45,
+      "size": 1,
+      "type": "u8",
+      "description": "Slot 0 gameplay stat byte 1 (slot+0x0D); ROM default 0x00.",
+      "confidence": "likely",
+      "evidence": "FUN_0802d944 writes 0x00 to slot+0x0D during per-slot default init (called for each 0xA0-byte slot from FUN_0802d8dc); slot 0 base is save offset 0x20; covered by slot neg-checksum validated in FUN_0802dd00."
     },
     {
-      "name": "player_status_payload",
-      "offset": 8,
-      "size": 16,
-      "type": "bytes"
+      "name": "slot0_stat_2",
+      "offset": 46,
+      "size": 1,
+      "type": "u8",
+      "description": "Slot 0 gameplay stat byte 2 (slot+0x0E); ROM default 0x1C.",
+      "confidence": "likely",
+      "evidence": "FUN_0802d944 writes 0x1C to slot+0x0E during per-slot default init (called for each 0xA0-byte slot from FUN_0802d8dc); slot 0 base is save offset 0x20; covered by slot neg-checksum validated in FUN_0802dd00."
+    },
+    {
+      "name": "slot0_stat_3",
+      "offset": 47,
+      "size": 1,
+      "type": "u8",
+      "description": "Slot 0 gameplay stat byte 3 (slot+0x0F); ROM default 0x12.",
+      "confidence": "likely",
+      "evidence": "FUN_0802d944 writes 0x12 to slot+0x0F during per-slot default init (called for each 0xA0-byte slot from FUN_0802d8dc); slot 0 base is save offset 0x20; covered by slot neg-checksum validated in FUN_0802dd00."
+    },
+    {
+      "name": "slot0_stat_4",
+      "offset": 48,
+      "size": 1,
+      "type": "u8",
+      "description": "Slot 0 gameplay stat byte 4 (slot+0x10); ROM default 0x0E.",
+      "confidence": "likely",
+      "evidence": "FUN_0802d944 writes 0x0E to slot+0x10 during per-slot default init (called for each 0xA0-byte slot from FUN_0802d8dc); slot 0 base is save offset 0x20; covered by slot neg-checksum validated in FUN_0802dd00."
+    },
+    {
+      "name": "slot0_stat_5",
+      "offset": 49,
+      "size": 1,
+      "type": "u8",
+      "description": "Slot 0 gameplay stat byte 5 (slot+0x11); ROM default 0x18.",
+      "confidence": "likely",
+      "evidence": "FUN_0802d944 writes 0x18 to slot+0x11 during per-slot default init (called for each 0xA0-byte slot from FUN_0802d8dc); slot 0 base is save offset 0x20; covered by slot neg-checksum validated in FUN_0802dd00."
+    },
+    {
+      "name": "slot0_stat_6",
+      "offset": 50,
+      "size": 1,
+      "type": "u8",
+      "description": "Slot 0 gameplay stat byte 6 (slot+0x12); ROM default 0x07.",
+      "confidence": "likely",
+      "evidence": "FUN_0802d944 writes 0x07 to slot+0x12 during per-slot default init (called for each 0xA0-byte slot from FUN_0802d8dc); slot 0 base is save offset 0x20; covered by slot neg-checksum validated in FUN_0802dd00."
+    },
+    {
+      "name": "slot0_stat_7",
+      "offset": 51,
+      "size": 1,
+      "type": "u8",
+      "description": "Slot 0 gameplay stat byte 7 (slot+0x13); ROM default 0x16.",
+      "confidence": "likely",
+      "evidence": "FUN_0802d944 writes 0x16 to slot+0x13 during per-slot default init (called for each 0xA0-byte slot from FUN_0802d8dc); slot 0 base is save offset 0x20; covered by slot neg-checksum validated in FUN_0802dd00."
+    },
+    {
+      "name": "slot0_mission_records",
+      "offset": 100,
+      "size": 48,
+      "type": "bytes",
+      "description": "Slot 0 per-mission record table: 8 records x 6 bytes at slot+0x44, copied from ROM defaults.",
+      "confidence": "likely",
+      "evidence": "FUN_0802d944 loop copies 8 records of 6 bytes from ROM table DAT_0802d9c8 (stride 0x48, source bytes +6) to slot+0x44 (stride 6); slot 0 base is save offset 0x20, so save range [0x64..0x94)."
+    },
+    {
+      "name": "slot0_status_flag",
+      "offset": 148,
+      "size": 1,
+      "type": "u8",
+      "description": "Slot 0 status byte at slot+0x74; cleared to 0x00 by init.",
+      "confidence": "likely",
+      "evidence": "FUN_0802d944 writes 0x00 to slot+0x74 during per-slot default init; slot 0 base is save offset 0x20, so save offset 0x94; covered by slot neg-checksum validated in FUN_0802dd00."
+    },
+    {
+      "name": "slot1_stat_0",
+      "offset": 204,
+      "size": 1,
+      "type": "u8",
+      "description": "Slot 1 gameplay stat byte 0 (slot+0x0C); ROM default 0x17.",
+      "confidence": "likely",
+      "evidence": "FUN_0802d944 writes 0x17 to slot+0x0C during per-slot default init (called for each 0xA0-byte slot from FUN_0802d8dc); slot 1 base is save offset 0xC0; covered by slot neg-checksum validated in FUN_0802dd00."
+    },
+    {
+      "name": "slot1_stat_1",
+      "offset": 205,
+      "size": 1,
+      "type": "u8",
+      "description": "Slot 1 gameplay stat byte 1 (slot+0x0D); ROM default 0x00.",
+      "confidence": "likely",
+      "evidence": "FUN_0802d944 writes 0x00 to slot+0x0D during per-slot default init (called for each 0xA0-byte slot from FUN_0802d8dc); slot 1 base is save offset 0xC0; covered by slot neg-checksum validated in FUN_0802dd00."
+    },
+    {
+      "name": "slot1_stat_2",
+      "offset": 206,
+      "size": 1,
+      "type": "u8",
+      "description": "Slot 1 gameplay stat byte 2 (slot+0x0E); ROM default 0x1C.",
+      "confidence": "likely",
+      "evidence": "FUN_0802d944 writes 0x1C to slot+0x0E during per-slot default init (called for each 0xA0-byte slot from FUN_0802d8dc); slot 1 base is save offset 0xC0; covered by slot neg-checksum validated in FUN_0802dd00."
+    },
+    {
+      "name": "slot1_stat_3",
+      "offset": 207,
+      "size": 1,
+      "type": "u8",
+      "description": "Slot 1 gameplay stat byte 3 (slot+0x0F); ROM default 0x12.",
+      "confidence": "likely",
+      "evidence": "FUN_0802d944 writes 0x12 to slot+0x0F during per-slot default init (called for each 0xA0-byte slot from FUN_0802d8dc); slot 1 base is save offset 0xC0; covered by slot neg-checksum validated in FUN_0802dd00."
+    },
+    {
+      "name": "slot1_stat_4",
+      "offset": 208,
+      "size": 1,
+      "type": "u8",
+      "description": "Slot 1 gameplay stat byte 4 (slot+0x10); ROM default 0x0E.",
+      "confidence": "likely",
+      "evidence": "FUN_0802d944 writes 0x0E to slot+0x10 during per-slot default init (called for each 0xA0-byte slot from FUN_0802d8dc); slot 1 base is save offset 0xC0; covered by slot neg-checksum validated in FUN_0802dd00."
+    },
+    {
+      "name": "slot1_stat_5",
+      "offset": 209,
+      "size": 1,
+      "type": "u8",
+      "description": "Slot 1 gameplay stat byte 5 (slot+0x11); ROM default 0x18.",
+      "confidence": "likely",
+      "evidence": "FUN_0802d944 writes 0x18 to slot+0x11 during per-slot default init (called for each 0xA0-byte slot from FUN_0802d8dc); slot 1 base is save offset 0xC0; covered by slot neg-checksum validated in FUN_0802dd00."
+    },
+    {
+      "name": "slot1_stat_6",
+      "offset": 210,
+      "size": 1,
+      "type": "u8",
+      "description": "Slot 1 gameplay stat byte 6 (slot+0x12); ROM default 0x07.",
+      "confidence": "likely",
+      "evidence": "FUN_0802d944 writes 0x07 to slot+0x12 during per-slot default init (called for each 0xA0-byte slot from FUN_0802d8dc); slot 1 base is save offset 0xC0; covered by slot neg-checksum validated in FUN_0802dd00."
+    },
+    {
+      "name": "slot1_stat_7",
+      "offset": 211,
+      "size": 1,
+      "type": "u8",
+      "description": "Slot 1 gameplay stat byte 7 (slot+0x13); ROM default 0x16.",
+      "confidence": "likely",
+      "evidence": "FUN_0802d944 writes 0x16 to slot+0x13 during per-slot default init (called for each 0xA0-byte slot from FUN_0802d8dc); slot 1 base is save offset 0xC0; covered by slot neg-checksum validated in FUN_0802dd00."
+    },
+    {
+      "name": "slot1_mission_records",
+      "offset": 260,
+      "size": 48,
+      "type": "bytes",
+      "description": "Slot 1 per-mission record table: 8 records x 6 bytes at slot+0x44, copied from ROM defaults.",
+      "confidence": "likely",
+      "evidence": "FUN_0802d944 loop copies 8 records of 6 bytes from ROM table DAT_0802d9c8 (stride 0x48, source bytes +6) to slot+0x44 (stride 6); slot 1 base is save offset 0xC0, so save range [0x104..0x134)."
+    },
+    {
+      "name": "slot1_status_flag",
+      "offset": 308,
+      "size": 1,
+      "type": "u8",
+      "description": "Slot 1 status byte at slot+0x74; cleared to 0x00 by init.",
+      "confidence": "likely",
+      "evidence": "FUN_0802d944 writes 0x00 to slot+0x74 during per-slot default init; slot 1 base is save offset 0xC0, so save offset 0x134; covered by slot neg-checksum validated in FUN_0802dd00."
+    },
+    {
+      "name": "slot2_stat_0",
+      "offset": 364,
+      "size": 1,
+      "type": "u8",
+      "description": "Slot 2 gameplay stat byte 0 (slot+0x0C); ROM default 0x17.",
+      "confidence": "likely",
+      "evidence": "FUN_0802d944 writes 0x17 to slot+0x0C during per-slot default init (called for each 0xA0-byte slot from FUN_0802d8dc); slot 2 base is save offset 0x160; covered by slot neg-checksum validated in FUN_0802dd00."
+    },
+    {
+      "name": "slot2_stat_1",
+      "offset": 365,
+      "size": 1,
+      "type": "u8",
+      "description": "Slot 2 gameplay stat byte 1 (slot+0x0D); ROM default 0x00.",
+      "confidence": "likely",
+      "evidence": "FUN_0802d944 writes 0x00 to slot+0x0D during per-slot default init (called for each 0xA0-byte slot from FUN_0802d8dc); slot 2 base is save offset 0x160; covered by slot neg-checksum validated in FUN_0802dd00."
+    },
+    {
+      "name": "slot2_stat_2",
+      "offset": 366,
+      "size": 1,
+      "type": "u8",
+      "description": "Slot 2 gameplay stat byte 2 (slot+0x0E); ROM default 0x1C.",
+      "confidence": "likely",
+      "evidence": "FUN_0802d944 writes 0x1C to slot+0x0E during per-slot default init (called for each 0xA0-byte slot from FUN_0802d8dc); slot 2 base is save offset 0x160; covered by slot neg-checksum validated in FUN_0802dd00."
+    },
+    {
+      "name": "slot2_stat_3",
+      "offset": 367,
+      "size": 1,
+      "type": "u8",
+      "description": "Slot 2 gameplay stat byte 3 (slot+0x0F); ROM default 0x12.",
+      "confidence": "likely",
+      "evidence": "FUN_0802d944 writes 0x12 to slot+0x0F during per-slot default init (called for each 0xA0-byte slot from FUN_0802d8dc); slot 2 base is save offset 0x160; covered by slot neg-checksum validated in FUN_0802dd00."
+    },
+    {
+      "name": "slot2_stat_4",
+      "offset": 368,
+      "size": 1,
+      "type": "u8",
+      "description": "Slot 2 gameplay stat byte 4 (slot+0x10); ROM default 0x0E.",
+      "confidence": "likely",
+      "evidence": "FUN_0802d944 writes 0x0E to slot+0x10 during per-slot default init (called for each 0xA0-byte slot from FUN_0802d8dc); slot 2 base is save offset 0x160; covered by slot neg-checksum validated in FUN_0802dd00."
+    },
+    {
+      "name": "slot2_stat_5",
+      "offset": 369,
+      "size": 1,
+      "type": "u8",
+      "description": "Slot 2 gameplay stat byte 5 (slot+0x11); ROM default 0x18.",
+      "confidence": "likely",
+      "evidence": "FUN_0802d944 writes 0x18 to slot+0x11 during per-slot default init (called for each 0xA0-byte slot from FUN_0802d8dc); slot 2 base is save offset 0x160; covered by slot neg-checksum validated in FUN_0802dd00."
+    },
+    {
+      "name": "slot2_stat_6",
+      "offset": 370,
+      "size": 1,
+      "type": "u8",
+      "description": "Slot 2 gameplay stat byte 6 (slot+0x12); ROM default 0x07.",
+      "confidence": "likely",
+      "evidence": "FUN_0802d944 writes 0x07 to slot+0x12 during per-slot default init (called for each 0xA0-byte slot from FUN_0802d8dc); slot 2 base is save offset 0x160; covered by slot neg-checksum validated in FUN_0802dd00."
+    },
+    {
+      "name": "slot2_stat_7",
+      "offset": 371,
+      "size": 1,
+      "type": "u8",
+      "description": "Slot 2 gameplay stat byte 7 (slot+0x13); ROM default 0x16.",
+      "confidence": "likely",
+      "evidence": "FUN_0802d944 writes 0x16 to slot+0x13 during per-slot default init (called for each 0xA0-byte slot from FUN_0802d8dc); slot 2 base is save offset 0x160; covered by slot neg-checksum validated in FUN_0802dd00."
+    },
+    {
+      "name": "slot2_mission_records",
+      "offset": 420,
+      "size": 48,
+      "type": "bytes",
+      "description": "Slot 2 per-mission record table: 8 records x 6 bytes at slot+0x44, copied from ROM defaults.",
+      "confidence": "likely",
+      "evidence": "FUN_0802d944 loop copies 8 records of 6 bytes from ROM table DAT_0802d9c8 (stride 0x48, source bytes +6) to slot+0x44 (stride 6); slot 2 base is save offset 0x160, so save range [0x1A4..0x1D4)."
+    },
+    {
+      "name": "slot2_status_flag",
+      "offset": 468,
+      "size": 1,
+      "type": "u8",
+      "description": "Slot 2 status byte at slot+0x74; cleared to 0x00 by init.",
+      "confidence": "likely",
+      "evidence": "FUN_0802d944 writes 0x00 to slot+0x74 during per-slot default init; slot 2 base is save offset 0x160, so save offset 0x1D4; covered by slot neg-checksum validated in FUN_0802dd00."
     }
-  ]
+  ],
+  "copy_groups": []
 }

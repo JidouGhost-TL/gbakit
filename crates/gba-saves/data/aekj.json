@@ -1,45 +1,118 @@
 {
-  "id": "aekj",
-  "game_code": "AEKJ",
-  "title": "Elemix! (Japan)",
-  "media": "eeprom512",
-  "size_bytes": 512,
-  "magic_signatures": [
-    {
-      "offset": 0,
-      "bytes": [
-        69,
-        88,
-        73,
-        77
-      ]
-    }
-  ],
   "checksums": [],
+  "eeprom_rev8": true,
   "fields": [
     {
-      "name": "magic_header",
-      "offset": 0,
+      "confidence": "likely",
+      "description": "Running high score: FUN_0801f498 keeps the maximum of the incoming int score at save offset 0x0C (fresh save is 0).",
+      "evidence": "FUN_0801f498 (result handler): if (*(int*)(iVar2+0x0C) < *param_1) *(int*)(iVar2+0x0C)=*param_1; buffer persisted by FUN_0801f1fc EEPROM-write loop over 0x19 addresses.",
+      "name": "high_score",
+      "offset": 12,
       "size": 4,
-      "type": "ascii"
+      "type": "u32_le"
     },
     {
-      "name": "slot_counter",
-      "offset": 4,
+      "confidence": "likely",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 255,
+        "minimum": 0
+      },
+      "description": "Best sub-score: FUN_0801f498 keeps the maximum of a result byte (param_1+0x4B) at save offset 0x10; stored via a u32 write so it always fits in a byte.",
+      "evidence": "FUN_0801f498: if (*(int*)(iVar2+0x10) < (byte)param_1[0x4B]) *(uint*)(iVar2+0x10)=(byte)param_1[0x4B]; init leaves +0x10 zero (FUN_0801f2b4 memset 0xC4).",
+      "name": "best_combo_value",
+      "offset": 16,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Highest stage/mode index reached (byte-range value in a u32). Init sets 0xFFFFFFFF (-1 = no progress); FUN_0801f70c treats a negative value here as fresh/empty.",
+      "evidence": "FUN_0801f2b4 inits save+0x14 to 0xFFFFFFFF; FUN_0801f498 max-updates it from the mode byte pcVar1[4]; FUN_0801f70c checks *(int*)(base+0x14) < 0 for save validity.",
+      "name": "max_stage",
+      "offset": 20,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 1,
+        "minimum": 0
+      },
+      "description": "Completion/unlock flag: set to 1 when the masked mode bits match (extra clear condition); 0 in a fresh save.",
+      "evidence": "FUN_0801f498: if ((*(uint*)(pcVar1+4) & DAT_0801f53c)==DAT_0801f540) *(u32*)(iVar2+0x18)=1; FUN_0801f2b4 inits save+0x18 to 0.",
+      "name": "completion_unlock_flag",
+      "offset": 24,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "First word of the 11-entry by 12-byte ranked record table at save+0x1C (init fills all 11 entries with the same triple). FUN_0801f434 inserts FUN_0801f410-derived values here in ascending (min-best-first) order.",
+      "evidence": "FUN_0801f2b4 builds 11 x 12-byte entries at save+0x1C from ROM triple (DAT_0801f368/36c/370 = 0xEA60/0x1D4C0/0x0202BF20, ascending); FUN_0801f434 ranked-inserts score iVar1 at base+param_2*0xC+0x1C.",
+      "name": "ranked_record_0",
+      "offset": 28,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Best record (lower is better): FUN_0801f498 stores the minimum nonzero FUN_0801f410 value (course*100+byte) at save offset 0xA0; 0 means unset.",
+      "evidence": "FUN_0801f498: iVar4=FUN_0801f410(short@+0x46,byte@+0x12); if (iVar5==0 || iVar4<iVar5) *(int*)(iVar2+0xA0)=iVar4; FUN_0801f2b4 inits +0xA0 to 0.",
+      "name": "best_record",
+      "offset": 160,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Last result score word copied from the live result struct into save offset 0xA8 on every recorded play.",
+      "evidence": "FUN_0801f498 result-copy branch: *(int*)(iVar4+0xA8)=param_1[0xE]; iVar4 is the save buffer (offsets +0xA4..+0xBC), persisted by FUN_0801f1fc.",
+      "name": "last_score_value",
+      "offset": 168,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Slot-active marker: 0xFF in a fresh save, overwritten with a gameplay byte on the first recorded result; FUN_0801f70c treats a negative (signed) value here as empty.",
+      "evidence": "FUN_0801f2b4 inits save+0xB6 to 0xFF; FUN_0801f498 overwrites it from *(DAT_0801f624+4); FUN_0801f70c checks *(char*)(base+0xB6) < 0.",
+      "name": "save_active_marker",
+      "offset": 182,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Last course/song value (u16): copied from the live result struct; it is also the first input of the FUN_0801f410 score formula used for best_record and the ranked table.",
+      "evidence": "FUN_0801f498 result-copy branch: *(u16*)(iVar4+0xB8)=*(u16*)(param_1+0x46); same source feeds iVar4=FUN_0801f410(short@+0x46,...) for the +0xA0 best update.",
+      "name": "last_course_value",
+      "offset": 184,
       "size": 2,
       "type": "u16_le"
-    },
-    {
-      "name": "game_progress_flags",
-      "offset": 6,
-      "size": 2,
-      "type": "u16_le"
-    },
-    {
-      "name": "player_status_payload",
-      "offset": 8,
-      "size": 16,
-      "type": "bytes"
     }
-  ]
+  ],
+  "game_code": "AEKJ",
+  "id": "aekj",
+  "magic_signatures": [
+    {
+      "bytes": [
+        64,
+        69,
+        76,
+        69,
+        77,
+        73,
+        88,
+        69
+      ],
+      "description": "8-byte ASCII '@ELEMIXE' header written by FUN_0801f2b4 init and verified by FUN_0801f374 (logical rev8 domain).",
+      "offset": 0
+    }
+  ],
+  "media": "eeprom512",
+  "size_bytes": 512,
+  "title": "Elemix! (Japan)"
 }

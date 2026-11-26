@@ -1,29 +1,111 @@
 {
-  "id": "bt6p",
-  "game_code": "BT6P",
-  "title": "Trollz - Hair Affair! (Europe)",
-  "media": "eeprom512",
-  "size_bytes": 512,
-  "magic_signatures": [],
   "checksums": [],
+  "copy_groups": [],
   "fields": [
     {
-      "name": "slot_counter",
+      "confidence": "likely",
+      "description": "First integrity/identity word of the 16-byte EEPROM header (block 0). Stored as-is; no Schema v2 checksum algorithm matched it, so it is a plain field, not a checksum.",
+      "evidence": "FUN_080445e8 EEPROM block-read primitive (param_1 = 0 reads save-file bytes 0x00..0x07 into RAM dst param_2 via FUN_08044568 DMA handshake on 0x0D000000); block also covered by FUN_0804480c read-back verify. Raw baseline bytes bc ea ea 45 = 0x45EAEABC LE.",
+      "name": "eeprom_ident_w0",
       "offset": 0,
-      "size": 2,
-      "type": "u16_le"
+      "size": 4,
+      "type": "u32_le"
     },
     {
-      "name": "game_progress_flags",
-      "offset": 2,
-      "size": 2,
-      "type": "u16_le"
-    },
-    {
-      "name": "player_status_payload",
+      "confidence": "likely",
+      "description": "Second integrity/identity word of the 16-byte EEPROM header (block 0). Stored as-is; no Schema v2 checksum algorithm matched it, so it is a plain field, not a checksum.",
+      "evidence": "FUN_080445e8 EEPROM block-read primitive (param_1 = 0 reads save-file bytes 0x00..0x07 into RAM dst param_2 via FUN_08044568 DMA handshake on 0x0D000000); block also covered by FUN_0804480c read-back verify. Raw baseline bytes fe fe d3 7a = 0x7AD3FEFE LE.",
+      "name": "eeprom_ident_w1",
       "offset": 4,
-      "size": 16,
-      "type": "bytes"
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Nonzero u16 trailer of the 16-byte header (block 1); only nonzero word besides the ident pair, consistent with a save/update sequence counter.",
+      "evidence": "FUN_080445e8 EEPROM block-read primitive (param_1 = 1 reads save-file bytes 0x08..0x0F into RAM dst param_2); writable via FUN_080446ac block-write and checked by FUN_0804480c verify. Baseline 0x4A16 while bytes 0x08..0x0D are zero.",
+      "name": "save_update_counter",
+      "offset": 14,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "guessed",
+      "description": "Cleared progress bit/cell: 0x00 punched into an otherwise 0xFF-erased progress row (block 32). Flipping bits here is the primary live-mutation probe.",
+      "evidence": "FUN_080445e8 block-read (param_1 = 0x20 maps to save-file bytes 0x100..0x107); written by FUN_080446ac block-write and verified by FUN_0804480c. Live libmgba baseline shows 0x00 at 0x105 surrounded by 0xFF erase fill.",
+      "name": "progress_flag_0x105",
+      "offset": 261,
+      "size": 1,
+      "type": "bitflags"
+    },
+    {
+      "confidence": "guessed",
+      "description": "Cleared progress bit/cell adjacent to 0x105 in the same erased progress row (block 32).",
+      "evidence": "FUN_080445e8 block-read (param_1 = 0x20 maps to save-file bytes 0x100..0x107); written by FUN_080446ac block-write and verified by FUN_0804480c. Live libmgba baseline shows 0x00 at 0x106 surrounded by 0xFF erase fill.",
+      "name": "progress_flag_0x106",
+      "offset": 262,
+      "size": 1,
+      "type": "bitflags"
+    },
+    {
+      "confidence": "guessed",
+      "description": "Cleared progress bit/cell adjacent to 0x105 in the same erased progress row (block 32).",
+      "evidence": "FUN_080445e8 block-read (param_1 = 0x20 maps to save-file bytes 0x100..0x107); written by FUN_080446ac block-write and verified by FUN_0804480c. Live libmgba baseline shows 0x00 at 0x107 surrounded by 0xFF erase fill.",
+      "name": "progress_flag_0x107",
+      "offset": 263,
+      "size": 1,
+      "type": "bitflags"
+    },
+    {
+      "confidence": "guessed",
+      "description": "Isolated cleared progress bit/cell: single 0x00 byte inside 0xFF fill (block 35).",
+      "evidence": "FUN_080445e8 block-read (param_1 = 0x23 maps to save-file bytes 0x118..0x11F); written by FUN_080446ac block-write and verified by FUN_0804480c. Live libmgba baseline shows 0x00 at 0x11C surrounded by 0xFF.",
+      "name": "progress_flag_0x11c",
+      "offset": 284,
+      "size": 1,
+      "type": "bitflags"
+    },
+    {
+      "confidence": "guessed",
+      "description": "Small scalar counter/index (baseline 16) flanked by cleared bytes at the tail of the progress region (block 47); consistent with a stage/level or count value and suitable for live-mutation probing.",
+      "evidence": "FUN_080445e8 block-read (param_1 = 0x2F maps to save-file bytes 0x178..0x17F); written by FUN_080446ac block-write and verified by FUN_0804480c. Live libmgba baseline byte at 0x17A is 0x10 while 0x178/0x179/0x17B are 0x00.",
+      "name": "stage_value",
+      "offset": 378,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "guessed",
+      "description": "Trailing config toggle (baseline 1) at the end of stored data (block 48); suitable for live-mutation probing (e.g. sound/language/difficulty-style on/off option).",
+      "evidence": "FUN_080445e8 block-read (param_1 = 0x30 maps to save-file bytes 0x180..0x187); written by FUN_080446ac block-write and verified by FUN_0804480c. Live libmgba baseline byte at 0x183 is 0x01.",
+      "name": "option_flag_a",
+      "offset": 387,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "guessed",
+      "description": "Trailing config toggle (baseline 1) at the end of stored data (block 48).",
+      "evidence": "FUN_080445e8 block-read (param_1 = 0x30 maps to save-file bytes 0x180..0x187); written by FUN_080446ac block-write and verified by FUN_0804480c. Live libmgba baseline byte at 0x184 is 0x01.",
+      "name": "option_flag_b",
+      "offset": 388,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "guessed",
+      "description": "Trailing config toggle (baseline 1) at the end of stored data (block 48).",
+      "evidence": "FUN_080445e8 block-read (param_1 = 0x30 maps to save-file bytes 0x180..0x187); written by FUN_080446ac block-write and verified by FUN_0804480c. Live libmgba baseline byte at 0x185 is 0x01.",
+      "name": "option_flag_c",
+      "offset": 389,
+      "size": 1,
+      "type": "u8"
     }
-  ]
+  ],
+  "game_code": "BT6P",
+  "id": "bt6p",
+  "magic_signatures": [],
+  "media": "eeprom512",
+  "size_bytes": 512,
+  "title": "Trollz - Hair Affair! (Europe)"
 }

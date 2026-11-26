@@ -4,26 +4,111 @@
   "title": "TOCA World Touring Cars (Europe)",
   "media": "eeprom512",
   "size_bytes": 512,
-  "magic_signatures": [],
+  "eeprom_rev8": true,
+  "magic_signatures": [
+    {
+      "offset": 0,
+      "bytes": [
+        94,
+        0,
+        22,
+        0
+      ],
+      "description": "Save-valid marker: '^' (0x5E) with u16 0x0016 at +2. FUN_08023b68 refuses to load unless byte0=='^' and u16 at +2==0x16; FUN_08023b04 stamps bytes [2]=0x16,[3]=0x00 before the 500-byte bulk write; FUN_08023bec stamps [0]=0x5E plus u16 0x16 at init."
+    }
+  ],
   "checksums": [],
   "fields": [
     {
-      "name": "slot_counter",
-      "offset": 5,
-      "size": 2,
-      "type": "u16_le"
+      "name": "best_time_00_value",
+      "offset": 348,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Best lap/time ticks for leaderboard slot 0 (14-entry best-time table at save+0x15C). Lower wins; 0 means empty slot.",
+      "confidence": "confirmed",
+      "evidence": "FUN_08023d24 reads record (param_2*8+0x15C+save_base) slot 0; FUN_0801c494 compares live race time at param_1+0x1D8+idx*4 against this stored u32 and rewrites it via FUN_08023f3c when the new time is lower or stored==0; bulk-persisted by FUN_08023ab8/FUN_08023a18 (500 B from save base through EEPROM block routines FUN_08098128/FUN_0809830c)."
     },
     {
-      "name": "game_progress_flags",
-      "offset": 7,
-      "size": 2,
-      "type": "u16_le"
+      "name": "best_time_00_class",
+      "offset": 352,
+      "size": 1,
+      "type": "u8",
+      "description": "Aux selector byte (vehicle/class id from race state param_1+4) stored with best-time slot 0.",
+      "confidence": "likely",
+      "evidence": "FUN_0801c494 copies one byte from *(param_1+4) into record byte 4 (local_14) and stores the 8-byte record via FUN_08023f3c at save+0x15C+index*8 (reader FUN_08023d24); baseline 0x00."
     },
     {
-      "name": "player_status_payload",
-      "offset": 9,
-      "size": 16,
-      "type": "bytes"
+      "name": "best_time_00_holder",
+      "offset": 353,
+      "size": 3,
+      "type": "ascii",
+      "description": "Driver initials holding best-time slot 0 (3 chars, baseline 'WTC').",
+      "confidence": "likely",
+      "evidence": "FUN_0801c494 copies 3 bytes from DAT_0801c518 (driver-initials buffer) into record bytes 5..7 and stores via FUN_08023f3c at save+0x15C+index*8 (reader FUN_08023d24); baseline reads 'WTC'."
+    },
+    {
+      "name": "best_time_01_value",
+      "offset": 356,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Best lap/time ticks for leaderboard slot 1. Lower wins; 0 means empty slot.",
+      "confidence": "likely",
+      "evidence": "Same access path as slot 0 with index 1: FUN_08023d24/FUN_08023f3c address save+0x15C+index*8, so slot 1 lives at save+0x164; update rule (lower-wins, 0==empty) from FUN_0801c494; persisted by FUN_08023ab8/FUN_08023a18."
+    },
+    {
+      "name": "best_time_01_class",
+      "offset": 360,
+      "size": 1,
+      "type": "u8",
+      "description": "Aux selector byte (vehicle/class id) stored with best-time slot 1.",
+      "confidence": "likely",
+      "evidence": "Same record layout as slot 0 (FUN_0801c494/FUN_08023f3c/FUN_08023d24, save+0x15C+index*8): byte 4 of the slot-1 record at save+0x168; baseline 0x00."
+    },
+    {
+      "name": "best_time_01_holder",
+      "offset": 361,
+      "size": 3,
+      "type": "ascii",
+      "description": "Driver initials holding best-time slot 1 (baseline 'WTC').",
+      "confidence": "likely",
+      "evidence": "Same record layout as slot 0 (FUN_0801c494/FUN_08023f3c/FUN_08023d24, save+0x15C+index*8): bytes 5..7 of the slot-1 record at save+0x169; baseline reads 'WTC'."
+    },
+    {
+      "name": "series_entry_00",
+      "offset": 276,
+      "size": 8,
+      "type": "bytes",
+      "description": "Entry 0 of the 9-entry series table at save+0x114 (default-filled 8-byte record, baseline 00 57 54 43 00 00 00 00). No update path found in decomp.",
+      "confidence": "likely",
+      "evidence": "FUN_08023bec initializes 9x8 B at save+0x114 from ROM defaults at DAT_08023cf8 (uVar7<9 loop, 8-byte stride); no reader/writer other than bulk I/O FUN_08023ab8/FUN_08023a18 touches this range."
+    },
+    {
+      "name": "series_entry_01",
+      "offset": 284,
+      "size": 8,
+      "type": "bytes",
+      "description": "Entry 1 of the 9-entry series table at save+0x114 (default-filled 8-byte record, baseline 00 57 54 43 00 00 00 00).",
+      "confidence": "likely",
+      "evidence": "Same FUN_08023bec 9x8 init loop at save+0x114 (stride 8, source DAT_08023cf8): entry 1 at save+0x11C; only bulk I/O FUN_08023ab8/FUN_08023a18 otherwise touches it."
+    },
+    {
+      "name": "cfg_byte_019",
+      "offset": 25,
+      "size": 1,
+      "type": "u8",
+      "description": "Persistent header byte, defaults to 0xFF. Purpose unconfirmed; kept as a mutable probe byte inside the bulk-persisted header.",
+      "confidence": "guessed",
+      "evidence": "Non-blank (0xFF) byte inside the 500 B region bulk-loaded by FUN_08023ab8 (via FUN_08098128) and defaulted by FUN_08023bec (FUN_08097f14 branch); no dedicated accessor found in decomp."
+    },
+    {
+      "name": "cfg_byte_0a1",
+      "offset": 161,
+      "size": 1,
+      "type": "u8",
+      "description": "Persistent header byte, defaults to 0xFF. Purpose unconfirmed; kept as a mutable probe byte inside the bulk-persisted header.",
+      "confidence": "guessed",
+      "evidence": "Non-blank (0xFF) byte inside the 500 B region bulk-loaded by FUN_08023ab8 (via FUN_08098128) and defaulted by FUN_08023bec (FUN_08097f14 branch); no dedicated accessor found in decomp."
     }
-  ]
+  ],
+  "copy_groups": []
 }

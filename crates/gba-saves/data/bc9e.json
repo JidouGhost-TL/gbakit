@@ -1,36 +1,134 @@
 {
-  "id": "bc9e",
-  "game_code": "BC9E",
-  "title": "Spider-Man - Battle for New York (USA)",
-  "media": "eeprom512",
-  "size_bytes": 512,
+  "checksums": [
+    {
+      "algorithm": "crc16_xmodem",
+      "covered_end": 16,
+      "covered_start": 0,
+      "name": "header_crc",
+      "seed": 0,
+      "stored_offset": 16,
+      "xor_out": 0
+    },
+    {
+      "algorithm": "crc16_xmodem",
+      "covered_end": 186,
+      "covered_start": 104,
+      "name": "record_crc",
+      "seed": 0,
+      "stored_offset": 186,
+      "xor_out": 0
+    }
+  ],
+  "copy_groups": [],
   "eeprom_rev8": true,
-  "magic_signatures": [],
-  "checksums": [],
   "fields": [
     {
-      "name": "slot_counter",
+      "confidence": "confirmed",
+      "description": "Save-block magic word; first u32 of the RAM save struct, initialized from a ROM table word and validated on load.",
+      "evidence": "FUN_0802cf80 writes RAM save struct word0 (*param_1 = DAT_0802cfa4); FUN_0802cf38 validates word0 (*param_1 == DAT_0802cf64); transferred as EEPROM block 0 via FUN_08054418 into file offset 0x00; baseline logical u32@0x00 = 0xC0DE601D.",
+      "name": "header_magic",
       "offset": 0,
-      "size": 2,
-      "type": "u16_le"
+      "size": 4,
+      "type": "u32_le"
     },
     {
-      "name": "game_progress_flags",
-      "offset": 2,
-      "size": 2,
-      "type": "u16_le"
-    },
-    {
-      "name": "player_status_payload",
+      "confidence": "confirmed",
+      "description": "Reserved header word; always zero in the baseline capture.",
+      "evidence": "FUN_0802cf80 sets RAM save struct word1 (param_1[1]) = 0; transferred as EEPROM block 0 via FUN_08054418; baseline logical u32@0x04 = 0.",
+      "name": "header_reserved",
       "offset": 4,
-      "size": 16,
-      "type": "bytes"
+      "size": 4,
+      "type": "u32_le"
     },
     {
-      "name": "save_block_payload",
-      "offset": 32,
-      "size": 256,
-      "type": "bytes"
+      "confidence": "likely",
+      "description": "Primary paired meter value A; default 100 in both init profiles, mutable at runtime.",
+      "evidence": "FUN_0802cf80 sets RAM save struct word2 (param_1[2]) = 100 (alternate defaults via FUN_0802cfac table words); transferred as EEPROM block 1 via FUN_08054418; baseline logical u32@0x08 = 100.",
+      "name": "meter_current",
+      "offset": 8,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Primary paired meter value B; default 100 in both init profiles, mutable at runtime.",
+      "evidence": "FUN_0802cf80 sets RAM save struct word3 (param_1[3]) = 100 (alternate defaults via FUN_0802cfac table words); transferred as EEPROM block 1 via FUN_08054418; baseline logical u32@0x0C = 100.",
+      "name": "meter_max",
+      "offset": 12,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Second half-word of the block-2 trailer; 0xFFFF unset/default marker in the baseline capture.",
+      "evidence": "Second u16 of EEPROM block 2: FUN_08054418 unpacks each 8-byte block into 4 u16s at param_2+0..+6, so file offsets 0x10/0x12 are struct+0x10/+0x12; adjacent to the validated u16 at struct+0x10 (FUN_0802cf38); baseline logical u16@0x12 = 0xFFFF.",
+      "name": "slot_state",
+      "offset": 18,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Second magic word opening the record section; first word of EEPROM block 2 upper half.",
+      "evidence": "First word of the 8-byte chunk at file offset 0x10-0x17 upper half, transferred by FUN_08054418 block reads (block index 2 -> struct/file offset 0x10); baseline logical u32@0x14 = 0xC0DE603D.",
+      "name": "section_magic",
+      "offset": 20,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Trailer half-word preceding the duplicated adjustment value; checksum algorithm for this word is not identified, so it is kept as a plain field.",
+      "evidence": "Non-blank u16 inside EEPROM blocks transferred by FUN_08054418/FUN_080544dc (8-byte blocks, 64 blocks over 512 bytes); sits immediately before the crc-covered record starting at file offset 0x68; baseline logical u16@0x66 = 0x6BFA.",
+      "name": "record_a_value",
+      "offset": 102,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Record adjustment value (raw LE bits of float ~0.63134); duplicated at record_b_adjust.",
+      "evidence": "Non-blank u32 inside EEPROM blocks transferred by FUN_08054418/FUN_080544dc; first word of the crc16_xmodem-covered range [0x68, 0xBA) verified against record_crc; baseline logical u32@0x68 = 0x3F219FC2.",
+      "name": "record_a_adjust",
+      "offset": 104,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Record adjustment value duplicate (raw LE bits of float ~0.63134); mirrors record_a_adjust but is an independent record field, not a backup copy.",
+      "evidence": "Non-blank u32 inside EEPROM blocks transferred by FUN_08054418/FUN_080544dc; immediately follows the record_crc stored word at file offset 0xBA; baseline logical u32@0xBC = 0x3F219FC2, identical to record_a_adjust.",
+      "name": "record_b_adjust",
+      "offset": 188,
+      "size": 4,
+      "type": "u32_le"
     }
-  ]
+  ],
+  "game_code": "BC9E",
+  "id": "bc9e",
+  "magic_signatures": [
+    {
+      "bytes": [
+        29,
+        96,
+        222,
+        192
+      ],
+      "description": "Save-block magic 0xC0DE601D (LE) at header start",
+      "offset": 0
+    },
+    {
+      "bytes": [
+        61,
+        96,
+        222,
+        192
+      ],
+      "description": "Record-section magic 0xC0DE603D (LE)",
+      "offset": 20
+    }
+  ],
+  "media": "eeprom512",
+  "size_bytes": 512,
+  "title": "Spider-Man - Battle for New York (USA)"
 }

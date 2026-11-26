@@ -1,45 +1,131 @@
 {
-  "id": "astc",
+  "checksums": [],
+  "copy_groups": [],
+  "fields": [
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "allowed": "ABCDEFGHIJKLMNOPQRSTUVWXYZ ",
+        "kind": "ascii-charset",
+        "max_len": 8
+      },
+      "description": "8-byte save banner at SRAM 0, verified against baseline bytes 'STAFY OK'.",
+      "evidence": "FUN_080018a4 reads 8 bytes at SRAM offset 0 via FUN_08003e0c and compares each byte against the expected banner at DAT_080018fc (rewrite default from DAT_08001900); baseline file 0x00..0x07 = 53 54 41 46 59 20 4F 4B.",
+      "name": "save_banner",
+      "offset": 0,
+      "size": 8,
+      "type": "ascii"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "First byte of the 300-byte slot-A RAM save buffer; FUN_08001cdc branches on it being zero vs nonzero.",
+      "evidence": "FUN_08001cdc loads pcVar2 = DAT_08001d18 and tests *pcVar2 == 0 before writing 300 bytes via FUN_08003e48 to SRAM 0x10; baseline file 0x10 = 0x00.",
+      "name": "slot_a_present",
+      "offset": 16,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Second byte of the slot-A RAM save buffer, initialized to 0 on load.",
+      "evidence": "FUN_08001b04 with param_1 == 0 selects RAM buffer DAT_08001b74 and SRAM offset 0x10, then stores 0 at buffer +1 via FUN_08003e0c (300-byte SRAM read); baseline file 0x11 = 0x00.",
+      "name": "slot_a_init_zero",
+      "offset": 17,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Slot-A RAM save buffer byte +0x0A, initialized to 5 on load; live-mutable scalar.",
+      "evidence": "FUN_08001b04 stores 5 at (DAT_08001b74 + 10) then FUN_08003e0c reads 300 bytes from SRAM 0x10; baseline file 0x1A (= 0x10 + 0x0A) = 0x05 verifies.",
+      "name": "slot_a_init_five",
+      "offset": 26,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Four 0xFF bytes at slot-A RAM save buffer +0x34..+0x37, set by the init loop on load.",
+      "evidence": "FUN_08001b04 loop stores 0xFF at (DAT_08001b74 + 0x34 + uVar2) for uVar2 in 0..3, then FUN_08003e0c reads 300 bytes from SRAM 0x10; baseline file 0x44..0x47 = FF FF FF FF verifies.",
+      "name": "slot_a_ff_fill",
+      "offset": 68,
+      "size": 4,
+      "type": "bytes"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "First byte of the 300-byte slot-B RAM save buffer; FUN_08001cdc branches on it being zero vs nonzero.",
+      "evidence": "FUN_08001cdc loads pcVar3 = DAT_08001d1c and tests *pcVar3 == 0 before writing 300 bytes via FUN_08003e48 to SRAM 0x810; baseline file 0x810 = 0x00.",
+      "name": "slot_b_present",
+      "offset": 2064,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Second byte of the slot-B RAM save buffer, initialized to 0 on load.",
+      "evidence": "FUN_08001b04 with param_1 == 1 selects RAM buffer DAT_08001b24 and SRAM offset 0x810, then stores 0 at buffer +1 via FUN_08003e0c (300-byte SRAM read); baseline file 0x811 = 0x00.",
+      "name": "slot_b_init_zero",
+      "offset": 2065,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Slot-B RAM save buffer byte +0x0A, initialized to 5 on load; live-mutable scalar.",
+      "evidence": "FUN_08001b04 stores 5 at (DAT_08001b24 + 10) then FUN_08003e0c reads 300 bytes from SRAM 0x810; baseline file 0x81A (= 0x810 + 0x0A) = 0x05 verifies.",
+      "name": "slot_b_init_five",
+      "offset": 2074,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Four 0xFF bytes at slot-B RAM save buffer +0x34..+0x37, set by the init loop on load.",
+      "evidence": "FUN_08001b04 loop stores 0xFF at (DAT_08001b24 + 0x34 + uVar2) for uVar2 in 0..3, then FUN_08003e0c reads 300 bytes from SRAM 0x810; baseline file 0x844..0x847 = FF FF FF FF verifies.",
+      "name": "slot_b_ff_fill",
+      "offset": 2116,
+      "size": 4,
+      "type": "bytes"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Low half of the 4-byte config word at SRAM 0x1000, initialized to 0; live-mutable scalar.",
+      "evidence": "FUN_080021a4 zeroes DAT_080021cc[0] then FUN_08003e0c reads 4 bytes from SRAM 0x1000; baseline file 0x1000..0x1001 = 00 00 verifies.",
+      "name": "cfg_word_lo",
+      "offset": 4096,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "High half of the 4-byte config word at SRAM 0x1000, initialized to 0x80; store path branches when it differs.",
+      "evidence": "FUN_080021a4 sets DAT_080021cc[1] = 0x80 then FUN_08003e0c reads 4 bytes from SRAM 0x1000; FUN_080021d0 writes DAT_08002204 to SRAM 0x1000 and takes the alternate path if buffer[1] != 0x80; baseline file 0x1002..0x1003 = 80 00 verifies.",
+      "name": "cfg_word_hi",
+      "offset": 4098,
+      "size": 2,
+      "type": "u16_le"
+    }
+  ],
   "game_code": "ASTC",
-  "title": "Sitafei De Chuanshuo (China) (Proto)",
-  "media": "sram",
-  "size_bytes": 32768,
+  "id": "astc",
   "magic_signatures": [
     {
-      "offset": 0,
       "bytes": [
         83,
         84,
         65,
-        70
-      ]
+        70,
+        89,
+        32,
+        79,
+        75
+      ],
+      "description": "ASCII 'STAFY OK' banner verified against baseline; checked 8 bytes by FUN_080018a4",
+      "offset": 0
     }
   ],
-  "checksums": [],
-  "fields": [
-    {
-      "name": "magic_header",
-      "offset": 0,
-      "size": 4,
-      "type": "ascii"
-    },
-    {
-      "name": "slot_counter",
-      "offset": 4,
-      "size": 2,
-      "type": "u16_le"
-    },
-    {
-      "name": "game_progress_flags",
-      "offset": 6,
-      "size": 2,
-      "type": "u16_le"
-    },
-    {
-      "name": "player_status_payload",
-      "offset": 8,
-      "size": 16,
-      "type": "bytes"
-    }
-  ]
+  "media": "sram",
+  "size_bytes": 32768,
+  "title": "Sitafei De Chuanshuo (China) (Proto)"
 }

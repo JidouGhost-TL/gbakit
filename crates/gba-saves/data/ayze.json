@@ -4,26 +4,479 @@
   "title": "Rayman 3 (USA) (En,Fr,Es)",
   "media": "eeprom512",
   "size_bytes": 512,
-  "magic_signatures": [],
-  "checksums": [],
+  "eeprom_rev8": true,
+  "magic_signatures": [
+    {
+      "offset": 0,
+      "bytes": [
+        85,
+        68,
+        34,
+        0
+      ],
+      "description": "Slot 0 header magic u32 0x00224455 (written as local_44=DAT_080b0324 in FUN_080b01a8 via FUN_080b33c0/FUN_080b328c; verified structurally by FUN_080b0350 readback in FUN_08000e00)."
+    },
+    {
+      "offset": 152,
+      "bytes": [
+        85,
+        68,
+        34,
+        0
+      ],
+      "description": "Slot 1 header magic u32 0x00224455 (written as local_44=DAT_080b0324 in FUN_080b01a8 via FUN_080b33c0/FUN_080b328c; verified structurally by FUN_080b0350 readback in FUN_08000e00)."
+    },
+    {
+      "offset": 304,
+      "bytes": [
+        85,
+        68,
+        34,
+        0
+      ],
+      "description": "Slot 2 header magic u32 0x00224455 (written as local_44=DAT_080b0324 in FUN_080b01a8 via FUN_080b33c0/FUN_080b328c; verified structurally by FUN_080b0350 readback in FUN_08000e00)."
+    }
+  ],
+  "checksums": [
+    {
+      "name": "slot0_checksum",
+      "algorithm": "sum16_le",
+      "covered_start": 8,
+      "covered_end": 152,
+      "stored_offset": 4,
+      "seed": 17493,
+      "xor_out": 65535
+    },
+    {
+      "name": "slot1_checksum",
+      "algorithm": "sum16_le",
+      "covered_start": 160,
+      "covered_end": 304,
+      "stored_offset": 156,
+      "seed": 17493,
+      "xor_out": 65535
+    },
+    {
+      "name": "slot2_checksum",
+      "algorithm": "sum16_le",
+      "covered_start": 312,
+      "covered_end": 456,
+      "stored_offset": 308,
+      "seed": 17493,
+      "xor_out": 65535
+    }
+  ],
   "fields": [
     {
-      "name": "slot_counter",
-      "offset": 2,
-      "size": 2,
-      "type": "u16_le"
-    },
-    {
-      "name": "game_progress_flags",
+      "name": "slot0_checksum",
       "offset": 4,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "description": "Slot 0 header checksum: stored as ~(0x4455 + sum of 144 payload bytes) & 0xFFFF.",
+      "confidence": "confirmed",
+      "evidence": "FUN_080b01a8 (080b01a8) computes header word from seed DAT_080b031c + byte-sum of 144 payload bytes at EEPROM addrs 19*slot+1..+18 and writes via FUN_080b33c0/FUN_080b328c; FUN_080b0350 (via FUN_08000e00) re-reads and checks (magic_lo + payload sum + stored)==0xFFFF. Baseline logical bytes: AA BB = 0xBBAA = ~0x4455."
     },
     {
-      "name": "player_status_payload",
+      "name": "slot0_header_pad",
       "offset": 6,
-      "size": 16,
-      "type": "bytes"
+      "size": 2,
+      "type": "u16_le",
+      "description": "Slot 0 header pad: upper half of second header u32 word, zero.",
+      "confidence": "confirmed",
+      "evidence": "8-byte header read/written per EEPROM addr (8 bytes) in FUN_080b31dc/FUN_080b328c callers FUN_080b01a8/FUN_080b0350; header u32 word1 = checksum|upper-zero, baseline bytes 00 00."
+    },
+    {
+      "name": "slot0_pickup_bitmap",
+      "offset": 8,
+      "size": 125,
+      "type": "bytes",
+      "description": "Slot 0 1000-bit collectible bitmap (clear bit = collected); source of FUN_08000d78 remaining-count.",
+      "confidence": "likely",
+      "evidence": "FUN_08000d78 counts clear bits at save struct +0x1c up to DAT_08000dbc; FUN_08000230 memsets struct+0x1c len 0x7d (125B); 1000-total corroborated by ==1000 compare in FUN_080195f0 and (level+1)*100 gating in FUN_0800be04/FUN_0800cda4. Save offset = slotbase+8+(0x1c-0x1c)."
+    },
+    {
+      "name": "slot0_cage_bitmap",
+      "offset": 133,
+      "size": 7,
+      "type": "bytes",
+      "description": "Slot 0 50-bit cage/collectible bitmap (clear bit = collected); source of FUN_08000dc0 counter.",
+      "confidence": "confirmed",
+      "evidence": "FUN_08000dc0 counts clear bits over 50 iterations at save struct +0x99 (bytes 0..6); FUN_08000230 memsets struct+0x99 len 7; full-clear == 0x32 tested in FUN_08001a94. Save offset = slotbase+8+(0x99-0x1c)."
+    },
+    {
+      "name": "slot0_stage_current",
+      "offset": 140,
+      "size": 1,
+      "type": "u8",
+      "description": "Slot 0 current stage/level index snapshot, copied from live index at save time.",
+      "confidence": "likely",
+      "evidence": "FUN_08081ec0/FUN_0808418c do *(save+0xa0)=*(save+1) immediately before FUN_08000e40(slot); default 0 in FUN_08000230. Save offset = slotbase+8+(0xa0-0x1c)."
+    },
+    {
+      "name": "slot0_stage_best",
+      "offset": 141,
+      "size": 1,
+      "type": "u8",
+      "description": "Slot 0 highest stage/level index reached (monotonic, capped).",
+      "confidence": "likely",
+      "evidence": "FUN_08081ec0/FUN_0808418c/FUN_0808cbc0 max-update save+0xa1 against live index with <0x28 cap before FUN_08000e40; default 0 in FUN_08000230.",
+      "constraint": {
+        "kind": "unsigned-range",
+        "minimum": 0,
+        "maximum": 39
+      }
+    },
+    {
+      "name": "slot0_chances_left",
+      "offset": 142,
+      "size": 1,
+      "type": "u8",
+      "description": "Slot 0 remaining-chances counter (default 3), cached per slot at runtime+0x44 on load.",
+      "confidence": "likely",
+      "evidence": "Default 3 in FUN_08000230; decremented with 0..0x63 clamp in FUN_08076be4-path (line 72970) and FUN_080826c4-path (line 80487) same-layout +0xa2 counters; FUN_08001a94 copies global +0xa2 to per-slot runtime+0x44.",
+      "constraint": {
+        "kind": "unsigned-range",
+        "minimum": 0,
+        "maximum": 99
+      }
+    },
+    {
+      "name": "slot0_unlock_flags_a",
+      "offset": 143,
+      "size": 1,
+      "type": "bitflags",
+      "description": "Slot 0 level/event unlock flags byte A (bits 0-1 consumed as progress flags on load).",
+      "confidence": "likely",
+      "evidence": "FUN_08000230 clears all 8 bits of save+0xa3 at init; bits 0-1 tested in FUN_08001a94 (drive runtime+0x85/+0x86); bits 3-6 set in FUN_08090a28 event branches before FUN_08000e40; bit 7 set in FUN_08077484.",
+      "constraint": {
+        "kind": "bitmask",
+        "valid_mask": 255,
+        "flag_labels": {
+          "0": "prog_flag0",
+          "1": "prog_flag1",
+          "3": "event_unlock3",
+          "4": "event_unlock4",
+          "5": "event_unlock5",
+          "6": "event_unlock6",
+          "7": "event_flag7"
+        }
+      }
+    },
+    {
+      "name": "slot0_unlock_flags_b",
+      "offset": 144,
+      "size": 1,
+      "type": "bitflags",
+      "description": "Slot 0 level/event unlock flags byte B.",
+      "confidence": "likely",
+      "evidence": "FUN_08000230 clears all 8 bits of save+0xa4 at init; bits 0-1 set/tested in FUN_08077484 same-layout +0xa4 logic.",
+      "constraint": {
+        "kind": "bitmask",
+        "valid_mask": 255,
+        "flag_labels": {
+          "0": "event_flag0",
+          "1": "event_flag1"
+        }
+      }
+    },
+    {
+      "name": "slot0_event_flag_c",
+      "offset": 145,
+      "size": 1,
+      "type": "bitflags",
+      "description": "Slot 0 single-event flag (bit 0, set-once style).",
+      "confidence": "likely",
+      "evidence": "FUN_08000230 clears bit 0 of save+0xa5 at init; same-offset bit0 set-once/test idiom in FUN_0800cda4 and FUN_08061074.",
+      "constraint": {
+        "kind": "bitmask",
+        "valid_mask": 1,
+        "flag_labels": {
+          "0": "event_once"
+        }
+      }
+    },
+    {
+      "name": "slot0_best_value",
+      "offset": 146,
+      "size": 1,
+      "type": "u8",
+      "description": "Slot 0 monotonic best-value byte (max-update from a gameplay counter).",
+      "confidence": "likely",
+      "evidence": "FUN_08076be4-path max-updates save+0xa6 from gameplay counter before FUN_08000e40; default 0 in FUN_08000230."
+    },
+    {
+      "name": "slot1_checksum",
+      "offset": 156,
+      "size": 2,
+      "type": "u16_le",
+      "description": "Slot 1 header checksum: stored as ~(0x4455 + sum of 144 payload bytes) & 0xFFFF.",
+      "confidence": "confirmed",
+      "evidence": "FUN_080b01a8 (080b01a8) computes header word from seed DAT_080b031c + byte-sum of 144 payload bytes at EEPROM addrs 19*slot+1..+18 and writes via FUN_080b33c0/FUN_080b328c; FUN_080b0350 (via FUN_08000e00) re-reads and checks (magic_lo + payload sum + stored)==0xFFFF. Baseline logical bytes: AA BB = 0xBBAA = ~0x4455."
+    },
+    {
+      "name": "slot1_header_pad",
+      "offset": 158,
+      "size": 2,
+      "type": "u16_le",
+      "description": "Slot 1 header pad: upper half of second header u32 word, zero.",
+      "confidence": "confirmed",
+      "evidence": "8-byte header read/written per EEPROM addr (8 bytes) in FUN_080b31dc/FUN_080b328c callers FUN_080b01a8/FUN_080b0350; header u32 word1 = checksum|upper-zero, baseline bytes 00 00."
+    },
+    {
+      "name": "slot1_pickup_bitmap",
+      "offset": 160,
+      "size": 125,
+      "type": "bytes",
+      "description": "Slot 1 1000-bit collectible bitmap (clear bit = collected); source of FUN_08000d78 remaining-count.",
+      "confidence": "likely",
+      "evidence": "FUN_08000d78 counts clear bits at save struct +0x1c up to DAT_08000dbc; FUN_08000230 memsets struct+0x1c len 0x7d (125B); 1000-total corroborated by ==1000 compare in FUN_080195f0 and (level+1)*100 gating in FUN_0800be04/FUN_0800cda4. Save offset = slotbase+8+(0x1c-0x1c)."
+    },
+    {
+      "name": "slot1_cage_bitmap",
+      "offset": 285,
+      "size": 7,
+      "type": "bytes",
+      "description": "Slot 1 50-bit cage/collectible bitmap (clear bit = collected); source of FUN_08000dc0 counter.",
+      "confidence": "confirmed",
+      "evidence": "FUN_08000dc0 counts clear bits over 50 iterations at save struct +0x99 (bytes 0..6); FUN_08000230 memsets struct+0x99 len 7; full-clear == 0x32 tested in FUN_08001a94. Save offset = slotbase+8+(0x99-0x1c)."
+    },
+    {
+      "name": "slot1_stage_current",
+      "offset": 292,
+      "size": 1,
+      "type": "u8",
+      "description": "Slot 1 current stage/level index snapshot, copied from live index at save time.",
+      "confidence": "likely",
+      "evidence": "FUN_08081ec0/FUN_0808418c do *(save+0xa0)=*(save+1) immediately before FUN_08000e40(slot); default 0 in FUN_08000230. Save offset = slotbase+8+(0xa0-0x1c)."
+    },
+    {
+      "name": "slot1_stage_best",
+      "offset": 293,
+      "size": 1,
+      "type": "u8",
+      "description": "Slot 1 highest stage/level index reached (monotonic, capped).",
+      "confidence": "likely",
+      "evidence": "FUN_08081ec0/FUN_0808418c/FUN_0808cbc0 max-update save+0xa1 against live index with <0x28 cap before FUN_08000e40; default 0 in FUN_08000230.",
+      "constraint": {
+        "kind": "unsigned-range",
+        "minimum": 0,
+        "maximum": 39
+      }
+    },
+    {
+      "name": "slot1_chances_left",
+      "offset": 294,
+      "size": 1,
+      "type": "u8",
+      "description": "Slot 1 remaining-chances counter (default 3), cached per slot at runtime+0x44 on load.",
+      "confidence": "likely",
+      "evidence": "Default 3 in FUN_08000230; decremented with 0..0x63 clamp in FUN_08076be4-path (line 72970) and FUN_080826c4-path (line 80487) same-layout +0xa2 counters; FUN_08001a94 copies global +0xa2 to per-slot runtime+0x44.",
+      "constraint": {
+        "kind": "unsigned-range",
+        "minimum": 0,
+        "maximum": 99
+      }
+    },
+    {
+      "name": "slot1_unlock_flags_a",
+      "offset": 295,
+      "size": 1,
+      "type": "bitflags",
+      "description": "Slot 1 level/event unlock flags byte A (bits 0-1 consumed as progress flags on load).",
+      "confidence": "likely",
+      "evidence": "FUN_08000230 clears all 8 bits of save+0xa3 at init; bits 0-1 tested in FUN_08001a94 (drive runtime+0x85/+0x86); bits 3-6 set in FUN_08090a28 event branches before FUN_08000e40; bit 7 set in FUN_08077484.",
+      "constraint": {
+        "kind": "bitmask",
+        "valid_mask": 255,
+        "flag_labels": {
+          "0": "prog_flag0",
+          "1": "prog_flag1",
+          "3": "event_unlock3",
+          "4": "event_unlock4",
+          "5": "event_unlock5",
+          "6": "event_unlock6",
+          "7": "event_flag7"
+        }
+      }
+    },
+    {
+      "name": "slot1_unlock_flags_b",
+      "offset": 296,
+      "size": 1,
+      "type": "bitflags",
+      "description": "Slot 1 level/event unlock flags byte B.",
+      "confidence": "likely",
+      "evidence": "FUN_08000230 clears all 8 bits of save+0xa4 at init; bits 0-1 set/tested in FUN_08077484 same-layout +0xa4 logic.",
+      "constraint": {
+        "kind": "bitmask",
+        "valid_mask": 255,
+        "flag_labels": {
+          "0": "event_flag0",
+          "1": "event_flag1"
+        }
+      }
+    },
+    {
+      "name": "slot1_event_flag_c",
+      "offset": 297,
+      "size": 1,
+      "type": "bitflags",
+      "description": "Slot 1 single-event flag (bit 0, set-once style).",
+      "confidence": "likely",
+      "evidence": "FUN_08000230 clears bit 0 of save+0xa5 at init; same-offset bit0 set-once/test idiom in FUN_0800cda4 and FUN_08061074.",
+      "constraint": {
+        "kind": "bitmask",
+        "valid_mask": 1,
+        "flag_labels": {
+          "0": "event_once"
+        }
+      }
+    },
+    {
+      "name": "slot1_best_value",
+      "offset": 298,
+      "size": 1,
+      "type": "u8",
+      "description": "Slot 1 monotonic best-value byte (max-update from a gameplay counter).",
+      "confidence": "likely",
+      "evidence": "FUN_08076be4-path max-updates save+0xa6 from gameplay counter before FUN_08000e40; default 0 in FUN_08000230."
+    },
+    {
+      "name": "slot2_checksum",
+      "offset": 308,
+      "size": 2,
+      "type": "u16_le",
+      "description": "Slot 2 header checksum: stored as ~(0x4455 + sum of 144 payload bytes) & 0xFFFF.",
+      "confidence": "confirmed",
+      "evidence": "FUN_080b01a8 (080b01a8) computes header word from seed DAT_080b031c + byte-sum of 144 payload bytes at EEPROM addrs 19*slot+1..+18 and writes via FUN_080b33c0/FUN_080b328c; FUN_080b0350 (via FUN_08000e00) re-reads and checks (magic_lo + payload sum + stored)==0xFFFF. Baseline logical bytes: AA BB = 0xBBAA = ~0x4455."
+    },
+    {
+      "name": "slot2_header_pad",
+      "offset": 310,
+      "size": 2,
+      "type": "u16_le",
+      "description": "Slot 2 header pad: upper half of second header u32 word, zero.",
+      "confidence": "confirmed",
+      "evidence": "8-byte header read/written per EEPROM addr (8 bytes) in FUN_080b31dc/FUN_080b328c callers FUN_080b01a8/FUN_080b0350; header u32 word1 = checksum|upper-zero, baseline bytes 00 00."
+    },
+    {
+      "name": "slot2_pickup_bitmap",
+      "offset": 312,
+      "size": 125,
+      "type": "bytes",
+      "description": "Slot 2 1000-bit collectible bitmap (clear bit = collected); source of FUN_08000d78 remaining-count.",
+      "confidence": "likely",
+      "evidence": "FUN_08000d78 counts clear bits at save struct +0x1c up to DAT_08000dbc; FUN_08000230 memsets struct+0x1c len 0x7d (125B); 1000-total corroborated by ==1000 compare in FUN_080195f0 and (level+1)*100 gating in FUN_0800be04/FUN_0800cda4. Save offset = slotbase+8+(0x1c-0x1c)."
+    },
+    {
+      "name": "slot2_cage_bitmap",
+      "offset": 437,
+      "size": 7,
+      "type": "bytes",
+      "description": "Slot 2 50-bit cage/collectible bitmap (clear bit = collected); source of FUN_08000dc0 counter.",
+      "confidence": "confirmed",
+      "evidence": "FUN_08000dc0 counts clear bits over 50 iterations at save struct +0x99 (bytes 0..6); FUN_08000230 memsets struct+0x99 len 7; full-clear == 0x32 tested in FUN_08001a94. Save offset = slotbase+8+(0x99-0x1c)."
+    },
+    {
+      "name": "slot2_stage_current",
+      "offset": 444,
+      "size": 1,
+      "type": "u8",
+      "description": "Slot 2 current stage/level index snapshot, copied from live index at save time.",
+      "confidence": "likely",
+      "evidence": "FUN_08081ec0/FUN_0808418c do *(save+0xa0)=*(save+1) immediately before FUN_08000e40(slot); default 0 in FUN_08000230. Save offset = slotbase+8+(0xa0-0x1c)."
+    },
+    {
+      "name": "slot2_stage_best",
+      "offset": 445,
+      "size": 1,
+      "type": "u8",
+      "description": "Slot 2 highest stage/level index reached (monotonic, capped).",
+      "confidence": "likely",
+      "evidence": "FUN_08081ec0/FUN_0808418c/FUN_0808cbc0 max-update save+0xa1 against live index with <0x28 cap before FUN_08000e40; default 0 in FUN_08000230.",
+      "constraint": {
+        "kind": "unsigned-range",
+        "minimum": 0,
+        "maximum": 39
+      }
+    },
+    {
+      "name": "slot2_chances_left",
+      "offset": 446,
+      "size": 1,
+      "type": "u8",
+      "description": "Slot 2 remaining-chances counter (default 3), cached per slot at runtime+0x44 on load.",
+      "confidence": "likely",
+      "evidence": "Default 3 in FUN_08000230; decremented with 0..0x63 clamp in FUN_08076be4-path (line 72970) and FUN_080826c4-path (line 80487) same-layout +0xa2 counters; FUN_08001a94 copies global +0xa2 to per-slot runtime+0x44.",
+      "constraint": {
+        "kind": "unsigned-range",
+        "minimum": 0,
+        "maximum": 99
+      }
+    },
+    {
+      "name": "slot2_unlock_flags_a",
+      "offset": 447,
+      "size": 1,
+      "type": "bitflags",
+      "description": "Slot 2 level/event unlock flags byte A (bits 0-1 consumed as progress flags on load).",
+      "confidence": "likely",
+      "evidence": "FUN_08000230 clears all 8 bits of save+0xa3 at init; bits 0-1 tested in FUN_08001a94 (drive runtime+0x85/+0x86); bits 3-6 set in FUN_08090a28 event branches before FUN_08000e40; bit 7 set in FUN_08077484.",
+      "constraint": {
+        "kind": "bitmask",
+        "valid_mask": 255,
+        "flag_labels": {
+          "0": "prog_flag0",
+          "1": "prog_flag1",
+          "3": "event_unlock3",
+          "4": "event_unlock4",
+          "5": "event_unlock5",
+          "6": "event_unlock6",
+          "7": "event_flag7"
+        }
+      }
+    },
+    {
+      "name": "slot2_unlock_flags_b",
+      "offset": 448,
+      "size": 1,
+      "type": "bitflags",
+      "description": "Slot 2 level/event unlock flags byte B.",
+      "confidence": "likely",
+      "evidence": "FUN_08000230 clears all 8 bits of save+0xa4 at init; bits 0-1 set/tested in FUN_08077484 same-layout +0xa4 logic.",
+      "constraint": {
+        "kind": "bitmask",
+        "valid_mask": 255,
+        "flag_labels": {
+          "0": "event_flag0",
+          "1": "event_flag1"
+        }
+      }
+    },
+    {
+      "name": "slot2_event_flag_c",
+      "offset": 449,
+      "size": 1,
+      "type": "bitflags",
+      "description": "Slot 2 single-event flag (bit 0, set-once style).",
+      "confidence": "likely",
+      "evidence": "FUN_08000230 clears bit 0 of save+0xa5 at init; same-offset bit0 set-once/test idiom in FUN_0800cda4 and FUN_08061074.",
+      "constraint": {
+        "kind": "bitmask",
+        "valid_mask": 1,
+        "flag_labels": {
+          "0": "event_once"
+        }
+      }
+    },
+    {
+      "name": "slot2_best_value",
+      "offset": 450,
+      "size": 1,
+      "type": "u8",
+      "description": "Slot 2 monotonic best-value byte (max-update from a gameplay counter).",
+      "confidence": "likely",
+      "evidence": "FUN_08076be4-path max-updates save+0xa6 from gameplay counter before FUN_08000e40; default 0 in FUN_08000230."
     }
   ]
 }

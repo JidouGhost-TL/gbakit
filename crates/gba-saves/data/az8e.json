@@ -1,45 +1,162 @@
 {
-  "id": "az8e",
-  "game_code": "AZ8E",
-  "title": "Super Puzzle Fighter II (USA)",
-  "media": "eeprom512",
-  "size_bytes": 512,
-  "magic_signatures": [
-    {
-      "offset": 0,
-      "bytes": [
-        78,
-        73,
-        78,
-        84
-      ]
-    }
-  ],
   "checksums": [],
+  "eeprom_rev8": true,
   "fields": [
     {
-      "name": "magic_header",
+      "confidence": "confirmed",
+      "description": "8-byte ASCII save magic 'SPF2TNIN' (Super Puzzle Fighter 2), EEPROM word 0",
+      "evidence": "Rev8-logical bytes at save offset 0x00 read ASCII 'SPF2TNIN' (53 50 46 32 54 4e 49 4e), verified in samples/baseline.sav via rev8 view (raw file bytes are the per-8-byte reversed form 'NINT2FPS'). 8-byte word size grounded in FUN_08348220 (word read via FUN_083481a0 0x44-unit transfer, lines 14982-14983) and FUN_083483ac (8-byte word verify comparing 4 shorts, lines 15087-15103).",
+      "name": "save_magic",
       "offset": 0,
-      "size": 4,
+      "size": 8,
       "type": "ascii"
     },
     {
-      "name": "slot_counter",
-      "offset": 4,
-      "size": 2,
-      "type": "u16_le"
+      "confidence": "likely",
+      "description": "Rank 1 score, top of descending 6-row ranking table",
+      "evidence": "LE u32 value 5000 (88 13 00 00) at save offset 0x10 verified in samples/baseline.sav rev8-logical view. LE word reassembly grounded in FUN_08348220 lines 14984-14998 (bit-serial 8-byte word rebuilt LSB-first into LE u16 units); matching word-write path FUN_083482d0 lines 15012-15053. Row stride 0x10 = 2 EEPROM words.",
+      "name": "high_score_1",
+      "offset": 16,
+      "size": 4,
+      "type": "u32_le"
     },
     {
-      "name": "game_progress_flags",
-      "offset": 6,
-      "size": 2,
-      "type": "u16_le"
+      "confidence": "likely",
+      "description": "Rank 2 score in descending 6-row ranking table",
+      "evidence": "LE u32 value 4000 (a0 0f 00 00) at save offset 0x20 verified in samples/baseline.sav rev8-logical view. LE/u32 grounding per FUN_08348220 word reassembly (lines 14984-14998); write path FUN_083482d0. Row stride 0x10.",
+      "name": "high_score_2",
+      "offset": 32,
+      "size": 4,
+      "type": "u32_le"
     },
     {
-      "name": "player_status_payload",
-      "offset": 8,
-      "size": 16,
+      "confidence": "likely",
+      "description": "Rank 3 score in descending 6-row ranking table",
+      "evidence": "LE u32 value 3000 (b8 0b 00 00) at save offset 0x30 verified in samples/baseline.sav rev8-logical view. LE/u32 grounding per FUN_08348220 word reassembly (lines 14984-14998); write path FUN_083482d0. Row stride 0x10.",
+      "name": "high_score_3",
+      "offset": 48,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Rank 4 score in descending 6-row ranking table",
+      "evidence": "LE u32 value 2000 (d0 07 00 00) at save offset 0x40 verified in samples/baseline.sav rev8-logical view. LE/u32 grounding per FUN_08348220 word reassembly (lines 14984-14998); write path FUN_083482d0. Row stride 0x10.",
+      "name": "high_score_4",
+      "offset": 64,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Rank 5 score in descending 6-row ranking table",
+      "evidence": "LE u32 value 1000 (e8 03 00 00) at save offset 0x50 verified in samples/baseline.sav rev8-logical view. LE/u32 grounding per FUN_08348220 word reassembly (lines 14984-14998); write path FUN_083482d0. Row stride 0x10.",
+      "name": "high_score_5",
+      "offset": 80,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Rank 6 score (0 = empty/unplayed bottom row of ranking table)",
+      "evidence": "LE u32 value 0 at save offset 0x60 verified in samples/baseline.sav rev8-logical view; completes the 6 x 16-byte geometry (magic 8 + 6 rows = 0x68 = end of first active range). LE/u32 grounding per FUN_08348220 word reassembly (lines 14984-14998); write path FUN_083482d0. Row stride 0x10.",
+      "name": "high_score_6",
+      "offset": 96,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "guessed",
+      "description": "Unidentified 8-byte EEPROM word; preserved opaquely (no verified checksum match)",
+      "evidence": "Word-aligned 8-byte word at save offset 0x120 (EEPROM word 36, bytes f2 77 7b 1c 0d 88 84 e3) verified non-blank in samples/baseline.sav rev8-logical view. Word size/offset grounding per FUN_08348220 (8-byte word read) and FUN_083483ac (8-byte word verify). Tested sum8/sum16/sum32/xor/crc32/crc-hqx over table and counter ranges: none match, so no checksums entry (100%-verification rule).",
+      "name": "word_36_tag",
+      "offset": 288,
+      "size": 8,
       "type": "bytes"
+    },
+    {
+      "confidence": "guessed",
+      "description": "Small LE config/counter word 0 (mode/option/counter binding unidentified)",
+      "evidence": "LE u16 value 2 at save offset 0x128 verified in samples/baseline.sav rev8-logical view; word-aligned small-int run 0x128-0x136. LE u16 grounding per FUN_08348220 lines 14984-14998; write path FUN_083482d0.",
+      "name": "config_value_0",
+      "offset": 296,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "guessed",
+      "description": "Small LE config/counter word 1 (mode/option/counter binding unidentified)",
+      "evidence": "LE u16 value 0 at save offset 0x12a verified in samples/baseline.sav rev8-logical view. LE u16 grounding per FUN_08348220 lines 14984-14998; write path FUN_083482d0.",
+      "name": "config_value_1",
+      "offset": 298,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "guessed",
+      "description": "Small LE config/counter word 2 (mode/option/counter binding unidentified)",
+      "evidence": "LE u16 value 2 at save offset 0x12c verified in samples/baseline.sav rev8-logical view. LE u16 grounding per FUN_08348220 lines 14984-14998; write path FUN_083482d0.",
+      "name": "config_value_2",
+      "offset": 300,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "guessed",
+      "description": "Small LE config/counter word 3 (mode/option/counter binding unidentified)",
+      "evidence": "LE u16 value 2 at save offset 0x12e verified in samples/baseline.sav rev8-logical view. LE u16 grounding per FUN_08348220 lines 14984-14998; write path FUN_083482d0.",
+      "name": "config_value_3",
+      "offset": 302,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "guessed",
+      "description": "Small LE config/counter word 4 (mode/option/counter binding unidentified)",
+      "evidence": "LE u16 value 1 at save offset 0x130 verified in samples/baseline.sav rev8-logical view. LE u16 grounding per FUN_08348220 lines 14984-14998; write path FUN_083482d0.",
+      "name": "config_value_4",
+      "offset": 304,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "guessed",
+      "description": "Small LE config/counter word 5 (mode/option/counter binding unidentified)",
+      "evidence": "LE u16 value 1 at save offset 0x132 verified in samples/baseline.sav rev8-logical view. LE u16 grounding per FUN_08348220 lines 14984-14998; write path FUN_083482d0.",
+      "name": "config_value_5",
+      "offset": 306,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "guessed",
+      "description": "Small LE config/counter word 6 (mode/option/counter binding unidentified)",
+      "evidence": "LE u16 value 4 at save offset 0x134 verified in samples/baseline.sav rev8-logical view. LE u16 grounding per FUN_08348220 lines 14984-14998; write path FUN_083482d0.",
+      "name": "config_value_6",
+      "offset": 308,
+      "size": 2,
+      "type": "u16_le"
     }
-  ]
+  ],
+  "game_code": "AZ8E",
+  "id": "az8e",
+  "magic_signatures": [
+    {
+      "bytes": [
+        83,
+        80,
+        70,
+        50,
+        84,
+        78,
+        73,
+        78
+      ],
+      "description": "ASCII 'SPF2TNIN' header, EEPROM word 0 (rev8-logical domain)",
+      "offset": 0
+    }
+  ],
+  "media": "eeprom512",
+  "size_bytes": 512,
+  "title": "Super Puzzle Fighter II (USA)"
 }

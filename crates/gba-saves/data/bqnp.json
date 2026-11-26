@@ -4,26 +4,301 @@
   "title": "Disney Princess - Royal Adventure (Europe) (En,Fr,De)",
   "media": "eeprom512",
   "size_bytes": 512,
+  "eeprom_rev8": true,
   "magic_signatures": [],
   "checksums": [],
   "fields": [
     {
-      "name": "slot_counter",
+      "name": "slot0_record_tag",
       "offset": 0,
-      "size": 2,
-      "type": "u16_le"
+      "size": 1,
+      "type": "u8",
+      "description": "Record tag byte; init default 0x3C (60).",
+      "confidence": "confirmed",
+      "evidence": "defaults FUN_080189d0 writes *puVar3 (_DAT_08018a34) = 0x3c; baseline byte is 0x3c. 9-block EEPROM transfer via FUN_08009f10 (load) / FUN_08009f78 (store); slot i primary base EEPROM blocks 0x12*i, mirror +9; bit-level IO FUN_0801a5d4 / FUN_0801a850 / FUN_0801a698 over DMA3 FUN_0801a554 at 0x0D000000; load path FUN_08018c30 / FUN_08018e68; store path FUN_08018f08."
     },
     {
-      "name": "game_progress_flags",
+      "name": "slot0_record_subtag",
+      "offset": 1,
+      "size": 1,
+      "type": "u8",
+      "description": "Record subtag byte; init-cleared to 0x00.",
+      "confidence": "confirmed",
+      "evidence": "defaults FUN_080189d0 writes _DAT_08018a34[1] = 0; baseline byte is 0x00. 9-block EEPROM transfer via FUN_08009f10 (load) / FUN_08009f78 (store); slot i primary base EEPROM blocks 0x12*i, mirror +9; bit-level IO FUN_0801a5d4 / FUN_0801a850 / FUN_0801a698 over DMA3 FUN_0801a554 at 0x0D000000; load path FUN_08018c30 / FUN_08018e68; store path FUN_08018f08."
+    },
+    {
+      "name": "slot0_state_word",
       "offset": 2,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "description": "State word; erased-state 0xFFFF, untouched by defaults init, covered by load/store+CRC.",
+      "confidence": "likely",
+      "evidence": "Baseline u16 is 0xffff; covered by FUN_08009f10/FUN_08009f78 9-block window and FUN_08009eb0 CRC range. 9-block EEPROM transfer via FUN_08009f10 (load) / FUN_08009f78 (store); slot i primary base EEPROM blocks 0x12*i, mirror +9; bit-level IO FUN_0801a5d4 / FUN_0801a850 / FUN_0801a698 over DMA3 FUN_0801a554 at 0x0D000000; load path FUN_08018c30 / FUN_08018e68; store path FUN_08018f08."
     },
     {
-      "name": "player_status_payload",
+      "name": "slot0_counter_a",
       "offset": 4,
-      "size": 16,
-      "type": "bytes"
+      "size": 4,
+      "type": "u32_le",
+      "description": "Counter A; init default 0x58 (88).",
+      "confidence": "confirmed",
+      "evidence": "defaults FUN_080189d0 writes *(u32*)(puVar3+4) = 0x58; baseline u32 is 88. 9-block EEPROM transfer via FUN_08009f10 (load) / FUN_08009f78 (store); slot i primary base EEPROM blocks 0x12*i, mirror +9; bit-level IO FUN_0801a5d4 / FUN_0801a850 / FUN_0801a698 over DMA3 FUN_0801a554 at 0x0D000000; load path FUN_08018c30 / FUN_08018e68; store path FUN_08018f08."
+    },
+    {
+      "name": "slot0_counter_b",
+      "offset": 8,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Counter B; init default 0x58 (88).",
+      "confidence": "confirmed",
+      "evidence": "defaults FUN_080189d0 writes *(u32*)(puVar3+8) = 0x58; baseline u32 is 88. 9-block EEPROM transfer via FUN_08009f10 (load) / FUN_08009f78 (store); slot i primary base EEPROM blocks 0x12*i, mirror +9; bit-level IO FUN_0801a5d4 / FUN_0801a850 / FUN_0801a698 over DMA3 FUN_0801a554 at 0x0D000000; load path FUN_08018c30 / FUN_08018e68; store path FUN_08018f08."
+    },
+    {
+      "name": "slot0_progress_0",
+      "offset": 12,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Progress word 0; zero in fresh save, inside CRC-covered data.",
+      "confidence": "likely",
+      "evidence": "Baseline u32 is 0; inside FUN_08009eb0 0x40-byte window and 9-block window. 9-block EEPROM transfer via FUN_08009f10 (load) / FUN_08009f78 (store); slot i primary base EEPROM blocks 0x12*i, mirror +9; bit-level IO FUN_0801a5d4 / FUN_0801a850 / FUN_0801a698 over DMA3 FUN_0801a554 at 0x0D000000; load path FUN_08018c30 / FUN_08018e68; store path FUN_08018f08."
+    },
+    {
+      "name": "slot0_progress_1",
+      "offset": 16,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Progress word 1; zero in fresh save, inside CRC-covered data.",
+      "confidence": "likely",
+      "evidence": "Baseline u32 is 0; inside FUN_08009eb0 0x40-byte window and 9-block window. 9-block EEPROM transfer via FUN_08009f10 (load) / FUN_08009f78 (store); slot i primary base EEPROM blocks 0x12*i, mirror +9; bit-level IO FUN_0801a5d4 / FUN_0801a850 / FUN_0801a698 over DMA3 FUN_0801a554 at 0x0D000000; load path FUN_08018c30 / FUN_08018e68; store path FUN_08018f08."
+    },
+    {
+      "name": "slot0_progress_2",
+      "offset": 20,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Progress word 2; zero in fresh save, inside CRC-covered data.",
+      "confidence": "likely",
+      "evidence": "Baseline u32 is 0; inside FUN_08009eb0 0x40-byte window and 9-block window. 9-block EEPROM transfer via FUN_08009f10 (load) / FUN_08009f78 (store); slot i primary base EEPROM blocks 0x12*i, mirror +9; bit-level IO FUN_0801a5d4 / FUN_0801a850 / FUN_0801a698 over DMA3 FUN_0801a554 at 0x0D000000; load path FUN_08018c30 / FUN_08018e68; store path FUN_08018f08."
+    },
+    {
+      "name": "slot0_progress_3",
+      "offset": 24,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Progress word 3; zero in fresh save, inside CRC-covered data.",
+      "confidence": "likely",
+      "evidence": "Baseline u32 is 0; inside FUN_08009eb0 0x40-byte window and 9-block window. 9-block EEPROM transfer via FUN_08009f10 (load) / FUN_08009f78 (store); slot i primary base EEPROM blocks 0x12*i, mirror +9; bit-level IO FUN_0801a5d4 / FUN_0801a850 / FUN_0801a698 over DMA3 FUN_0801a554 at 0x0D000000; load path FUN_08018c30 / FUN_08018e68; store path FUN_08018f08."
+    },
+    {
+      "name": "slot0_total_0",
+      "offset": 28,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Total word 0; init-cleared to 0.",
+      "confidence": "confirmed",
+      "evidence": "defaults FUN_080189d0 writes *(u32*)(puVar3+0x1c) = 0; baseline u32 is 0. 9-block EEPROM transfer via FUN_08009f10 (load) / FUN_08009f78 (store); slot i primary base EEPROM blocks 0x12*i, mirror +9; bit-level IO FUN_0801a5d4 / FUN_0801a850 / FUN_0801a698 over DMA3 FUN_0801a554 at 0x0D000000; load path FUN_08018c30 / FUN_08018e68; store path FUN_08018f08."
+    },
+    {
+      "name": "slot0_total_1",
+      "offset": 32,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Total word 1; init-cleared to 0.",
+      "confidence": "confirmed",
+      "evidence": "defaults FUN_080189d0 writes *(u32*)(puVar3+0x20) = 0; baseline u32 is 0. 9-block EEPROM transfer via FUN_08009f10 (load) / FUN_08009f78 (store); slot i primary base EEPROM blocks 0x12*i, mirror +9; bit-level IO FUN_0801a5d4 / FUN_0801a850 / FUN_0801a698 over DMA3 FUN_0801a554 at 0x0D000000; load path FUN_08018c30 / FUN_08018e68; store path FUN_08018f08."
+    },
+    {
+      "name": "slot0_unlock_words",
+      "offset": 36,
+      "size": 14,
+      "type": "bitfield_array",
+      "description": "Seven 16-bit unlock words; fresh-save default 0xFFFF each.",
+      "confidence": "likely",
+      "evidence": "defaults FUN_080189d0 fills words at +0x24..+0x30 from _DAT_08018a28 (baseline 0xffff); runtime unlock bitmask builder FUN_08018a3c derives level unlocks nearby. 9-block EEPROM transfer via FUN_08009f10 (load) / FUN_08009f78 (store); slot i primary base EEPROM blocks 0x12*i, mirror +9; bit-level IO FUN_0801a5d4 / FUN_0801a850 / FUN_0801a698 over DMA3 FUN_0801a554 at 0x0D000000; load path FUN_08018c30 / FUN_08018e68; store path FUN_08018f08.",
+      "bitfield_array": {
+        "bit_width": 16,
+        "count": 7,
+        "labels": [
+          "unlock_0",
+          "unlock_1",
+          "unlock_2",
+          "unlock_3",
+          "unlock_4",
+          "unlock_5",
+          "unlock_6"
+        ]
+      }
+    },
+    {
+      "name": "slot0_zero_fill",
+      "offset": 50,
+      "size": 2,
+      "type": "u16_le",
+      "description": "Zero fill word; 0x0000 in fresh save.",
+      "confidence": "confirmed",
+      "evidence": "Untouched by defaults FUN_080189d0; baseline u16 is 0x0000 inside CRC window. 9-block EEPROM transfer via FUN_08009f10 (load) / FUN_08009f78 (store); slot i primary base EEPROM blocks 0x12*i, mirror +9; bit-level IO FUN_0801a5d4 / FUN_0801a850 / FUN_0801a698 over DMA3 FUN_0801a554 at 0x0D000000; load path FUN_08018c30 / FUN_08018e68; store path FUN_08018f08."
+    },
+    {
+      "name": "slot0_flag_a",
+      "offset": 52,
+      "size": 1,
+      "type": "u8",
+      "description": "Flag byte A; init-cleared to 0x00.",
+      "confidence": "confirmed",
+      "evidence": "defaults FUN_080189d0 writes puVar3[0x34] = 0; baseline byte is 0x00. 9-block EEPROM transfer via FUN_08009f10 (load) / FUN_08009f78 (store); slot i primary base EEPROM blocks 0x12*i, mirror +9; bit-level IO FUN_0801a5d4 / FUN_0801a850 / FUN_0801a698 over DMA3 FUN_0801a554 at 0x0D000000; load path FUN_08018c30 / FUN_08018e68; store path FUN_08018f08."
+    },
+    {
+      "name": "slot0_flag_b",
+      "offset": 53,
+      "size": 1,
+      "type": "u8",
+      "description": "Flag byte B; init default 0xFF.",
+      "confidence": "confirmed",
+      "evidence": "defaults FUN_080189d0 writes puVar3[0x35] = 0xff; baseline byte is 0xff. 9-block EEPROM transfer via FUN_08009f10 (load) / FUN_08009f78 (store); slot i primary base EEPROM blocks 0x12*i, mirror +9; bit-level IO FUN_0801a5d4 / FUN_0801a850 / FUN_0801a698 over DMA3 FUN_0801a554 at 0x0D000000; load path FUN_08018c30 / FUN_08018e68; store path FUN_08018f08."
+    },
+    {
+      "name": "slot0_crc8",
+      "offset": 68,
+      "size": 1,
+      "type": "u8",
+      "description": "Stored custom CRC-8 of record bytes 0x00..0x40 (value 0x2d).",
+      "confidence": "confirmed",
+      "evidence": "stored byte transcribed from FUN_08009eb0 custom CRC-8 (init 0xFF, poly-bits 0x18, reflected; do-while covers N+1 bytes); Python replica matches baseline 100%% (slot 0x2d over bytes 0x00..0x40, settings 0x4a over 0x00..0x16). Byte at record +0x44; load path FUN_08018c30/FUN_08018e68 compares FUN_08009eb0(iVar,0x40) against it, falling back to mirror on mismatch. 9-block EEPROM transfer via FUN_08009f10 (load) / FUN_08009f78 (store); slot i primary base EEPROM blocks 0x12*i, mirror +9; bit-level IO FUN_0801a5d4 / FUN_0801a850 / FUN_0801a698 over DMA3 FUN_0801a554 at 0x0D000000; load path FUN_08018c30 / FUN_08018e68; store path FUN_08018f08."
+    },
+    {
+      "name": "slot1_record_tag",
+      "offset": 144,
+      "size": 1,
+      "type": "u8",
+      "description": "Record tag byte; init default 0x3C (60).",
+      "confidence": "confirmed",
+      "evidence": "Identical image to slot0 (byte 0x3c); defaults FUN_080189d0 default; slot 1 primary at EEPROM blocks 0x12*1 via FUN_08018e68/FUN_08009f10(base 0x090). 9-block EEPROM transfer via FUN_08009f10 (load) / FUN_08009f78 (store); slot i primary base EEPROM blocks 0x12*i, mirror +9; bit-level IO FUN_0801a5d4 / FUN_0801a850 / FUN_0801a698 over DMA3 FUN_0801a554 at 0x0D000000; load path FUN_08018c30 / FUN_08018e68; store path FUN_08018f08."
+    },
+    {
+      "name": "slot1_counter_a",
+      "offset": 148,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Counter A; init default 0x58 (88).",
+      "confidence": "confirmed",
+      "evidence": "Baseline u32 is 88, matching defaults FUN_080189d0 0x58 default; same struct as slot0. 9-block EEPROM transfer via FUN_08009f10 (load) / FUN_08009f78 (store); slot i primary base EEPROM blocks 0x12*i, mirror +9; bit-level IO FUN_0801a5d4 / FUN_0801a850 / FUN_0801a698 over DMA3 FUN_0801a554 at 0x0D000000; load path FUN_08018c30 / FUN_08018e68; store path FUN_08018f08."
+    },
+    {
+      "name": "slot1_counter_b",
+      "offset": 152,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Counter B; init default 0x58 (88).",
+      "confidence": "confirmed",
+      "evidence": "Baseline u32 is 88, matching defaults FUN_080189d0 0x58 default; same struct as slot0. 9-block EEPROM transfer via FUN_08009f10 (load) / FUN_08009f78 (store); slot i primary base EEPROM blocks 0x12*i, mirror +9; bit-level IO FUN_0801a5d4 / FUN_0801a850 / FUN_0801a698 over DMA3 FUN_0801a554 at 0x0D000000; load path FUN_08018c30 / FUN_08018e68; store path FUN_08018f08."
+    },
+    {
+      "name": "slot1_crc8",
+      "offset": 212,
+      "size": 1,
+      "type": "u8",
+      "description": "Stored custom CRC-8 of record bytes 0x00..0x40 (value 0x2d).",
+      "confidence": "confirmed",
+      "evidence": "stored byte transcribed from FUN_08009eb0 custom CRC-8 (init 0xFF, poly-bits 0x18, reflected; do-while covers N+1 bytes); Python replica matches baseline 100%% (slot 0x2d over bytes 0x00..0x40, settings 0x4a over 0x00..0x16). Verified 0x2d on this record too. 9-block EEPROM transfer via FUN_08009f10 (load) / FUN_08009f78 (store); slot i primary base EEPROM blocks 0x12*i, mirror +9; bit-level IO FUN_0801a5d4 / FUN_0801a850 / FUN_0801a698 over DMA3 FUN_0801a554 at 0x0D000000; load path FUN_08018c30 / FUN_08018e68; store path FUN_08018f08."
+    },
+    {
+      "name": "slot2_record_tag",
+      "offset": 288,
+      "size": 1,
+      "type": "u8",
+      "description": "Record tag byte; init default 0x3C (60).",
+      "confidence": "confirmed",
+      "evidence": "Identical image to slot0 (byte 0x3c); defaults FUN_080189d0 default; slot 2 primary at EEPROM blocks 0x12*2 via FUN_08018e68/FUN_08009f10(base 0x120). 9-block EEPROM transfer via FUN_08009f10 (load) / FUN_08009f78 (store); slot i primary base EEPROM blocks 0x12*i, mirror +9; bit-level IO FUN_0801a5d4 / FUN_0801a850 / FUN_0801a698 over DMA3 FUN_0801a554 at 0x0D000000; load path FUN_08018c30 / FUN_08018e68; store path FUN_08018f08."
+    },
+    {
+      "name": "slot2_counter_a",
+      "offset": 292,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Counter A; init default 0x58 (88).",
+      "confidence": "confirmed",
+      "evidence": "Baseline u32 is 88, matching defaults FUN_080189d0 0x58 default; same struct as slot0. 9-block EEPROM transfer via FUN_08009f10 (load) / FUN_08009f78 (store); slot i primary base EEPROM blocks 0x12*i, mirror +9; bit-level IO FUN_0801a5d4 / FUN_0801a850 / FUN_0801a698 over DMA3 FUN_0801a554 at 0x0D000000; load path FUN_08018c30 / FUN_08018e68; store path FUN_08018f08."
+    },
+    {
+      "name": "slot2_counter_b",
+      "offset": 296,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Counter B; init default 0x58 (88).",
+      "confidence": "confirmed",
+      "evidence": "Baseline u32 is 88, matching defaults FUN_080189d0 0x58 default; same struct as slot0. 9-block EEPROM transfer via FUN_08009f10 (load) / FUN_08009f78 (store); slot i primary base EEPROM blocks 0x12*i, mirror +9; bit-level IO FUN_0801a5d4 / FUN_0801a850 / FUN_0801a698 over DMA3 FUN_0801a554 at 0x0D000000; load path FUN_08018c30 / FUN_08018e68; store path FUN_08018f08."
+    },
+    {
+      "name": "slot2_crc8",
+      "offset": 356,
+      "size": 1,
+      "type": "u8",
+      "description": "Stored custom CRC-8 of record bytes 0x00..0x40 (value 0x2d).",
+      "confidence": "confirmed",
+      "evidence": "stored byte transcribed from FUN_08009eb0 custom CRC-8 (init 0xFF, poly-bits 0x18, reflected; do-while covers N+1 bytes); Python replica matches baseline 100%% (slot 0x2d over bytes 0x00..0x40, settings 0x4a over 0x00..0x16). Verified 0x2d on this record too. 9-block EEPROM transfer via FUN_08009f10 (load) / FUN_08009f78 (store); slot i primary base EEPROM blocks 0x12*i, mirror +9; bit-level IO FUN_0801a5d4 / FUN_0801a850 / FUN_0801a698 over DMA3 FUN_0801a554 at 0x0D000000; load path FUN_08018c30 / FUN_08018e68; store path FUN_08018f08."
+    },
+    {
+      "name": "settings_opt_a",
+      "offset": 480,
+      "size": 1,
+      "type": "u8",
+      "description": "Option byte A; default 3.",
+      "confidence": "confirmed",
+      "evidence": "Baseline 0x03; settings blocks 0x3a primary / 0x3d mirror, 3 blocks each, via FUN_08018c30 (load+verify) and FUN_08018f08 (store); defaults from FUN_08018c30 init branch (+0x10=3,+0x11=0,+0x12=0,+0x13=1,word +0x14,byte +0x16=0); CRC FUN_08009eb0 over 0x16 bytes stored at +0x17. 9-block EEPROM transfer via FUN_08009f10 (load) / FUN_08009f78 (store); slot i primary base EEPROM blocks 0x12*i, mirror +9; bit-level IO FUN_0801a5d4 / FUN_0801a850 / FUN_0801a698 over DMA3 FUN_0801a554 at 0x0D000000; load path FUN_08018c30 / FUN_08018e68; store path FUN_08018f08."
+    },
+    {
+      "name": "settings_opt_b",
+      "offset": 481,
+      "size": 1,
+      "type": "u8",
+      "description": "Option byte B; default 0.",
+      "confidence": "confirmed",
+      "evidence": "Baseline 0x00; settings blocks 0x3a primary / 0x3d mirror, 3 blocks each, via FUN_08018c30 (load+verify) and FUN_08018f08 (store); defaults from FUN_08018c30 init branch (+0x10=3,+0x11=0,+0x12=0,+0x13=1,word +0x14,byte +0x16=0); CRC FUN_08009eb0 over 0x16 bytes stored at +0x17. 9-block EEPROM transfer via FUN_08009f10 (load) / FUN_08009f78 (store); slot i primary base EEPROM blocks 0x12*i, mirror +9; bit-level IO FUN_0801a5d4 / FUN_0801a850 / FUN_0801a698 over DMA3 FUN_0801a554 at 0x0D000000; load path FUN_08018c30 / FUN_08018e68; store path FUN_08018f08."
+    },
+    {
+      "name": "settings_opt_c",
+      "offset": 482,
+      "size": 1,
+      "type": "u8",
+      "description": "Option byte C; default 0.",
+      "confidence": "confirmed",
+      "evidence": "Baseline 0x00; settings blocks 0x3a primary / 0x3d mirror, 3 blocks each, via FUN_08018c30 (load+verify) and FUN_08018f08 (store); defaults from FUN_08018c30 init branch (+0x10=3,+0x11=0,+0x12=0,+0x13=1,word +0x14,byte +0x16=0); CRC FUN_08009eb0 over 0x16 bytes stored at +0x17. 9-block EEPROM transfer via FUN_08009f10 (load) / FUN_08009f78 (store); slot i primary base EEPROM blocks 0x12*i, mirror +9; bit-level IO FUN_0801a5d4 / FUN_0801a850 / FUN_0801a698 over DMA3 FUN_0801a554 at 0x0D000000; load path FUN_08018c30 / FUN_08018e68; store path FUN_08018f08."
+    },
+    {
+      "name": "settings_opt_d",
+      "offset": 483,
+      "size": 1,
+      "type": "u8",
+      "description": "Option byte D; default 1.",
+      "confidence": "confirmed",
+      "evidence": "Baseline 0x01; settings blocks 0x3a primary / 0x3d mirror, 3 blocks each, via FUN_08018c30 (load+verify) and FUN_08018f08 (store); defaults from FUN_08018c30 init branch (+0x10=3,+0x11=0,+0x12=0,+0x13=1,word +0x14,byte +0x16=0); CRC FUN_08009eb0 over 0x16 bytes stored at +0x17. 9-block EEPROM transfer via FUN_08009f10 (load) / FUN_08009f78 (store); slot i primary base EEPROM blocks 0x12*i, mirror +9; bit-level IO FUN_0801a5d4 / FUN_0801a850 / FUN_0801a698 over DMA3 FUN_0801a554 at 0x0D000000; load path FUN_08018c30 / FUN_08018e68; store path FUN_08018f08."
+    },
+    {
+      "name": "settings_opt_e",
+      "offset": 484,
+      "size": 2,
+      "type": "u16_le",
+      "description": "Option word E; default 3.",
+      "confidence": "confirmed",
+      "evidence": "Baseline u16 is 3 (from _DAT_08018cd0 via FUN_08018c30); settings blocks 0x3a primary / 0x3d mirror, 3 blocks each, via FUN_08018c30 (load+verify) and FUN_08018f08 (store); defaults from FUN_08018c30 init branch (+0x10=3,+0x11=0,+0x12=0,+0x13=1,word +0x14,byte +0x16=0); CRC FUN_08009eb0 over 0x16 bytes stored at +0x17. 9-block EEPROM transfer via FUN_08009f10 (load) / FUN_08009f78 (store); slot i primary base EEPROM blocks 0x12*i, mirror +9; bit-level IO FUN_0801a5d4 / FUN_0801a850 / FUN_0801a698 over DMA3 FUN_0801a554 at 0x0D000000; load path FUN_08018c30 / FUN_08018e68; store path FUN_08018f08."
+    },
+    {
+      "name": "settings_opt_f",
+      "offset": 486,
+      "size": 1,
+      "type": "u8",
+      "description": "Option byte F; default 0.",
+      "confidence": "confirmed",
+      "evidence": "Baseline 0x00; settings blocks 0x3a primary / 0x3d mirror, 3 blocks each, via FUN_08018c30 (load+verify) and FUN_08018f08 (store); defaults from FUN_08018c30 init branch (+0x10=3,+0x11=0,+0x12=0,+0x13=1,word +0x14,byte +0x16=0); CRC FUN_08009eb0 over 0x16 bytes stored at +0x17. 9-block EEPROM transfer via FUN_08009f10 (load) / FUN_08009f78 (store); slot i primary base EEPROM blocks 0x12*i, mirror +9; bit-level IO FUN_0801a5d4 / FUN_0801a850 / FUN_0801a698 over DMA3 FUN_0801a554 at 0x0D000000; load path FUN_08018c30 / FUN_08018e68; store path FUN_08018f08."
+    },
+    {
+      "name": "settings_crc8",
+      "offset": 487,
+      "size": 1,
+      "type": "u8",
+      "description": "Stored custom CRC-8 of settings bytes 0x00..0x16 (value 0x4a).",
+      "confidence": "confirmed",
+      "evidence": "stored byte transcribed from FUN_08009eb0 custom CRC-8 (init 0xFF, poly-bits 0x18, reflected; do-while covers N+1 bytes); Python replica matches baseline 100%% (slot 0x2d over bytes 0x00..0x40, settings 0x4a over 0x00..0x16). Load path FUN_08018c30 falls back to mirror blocks 0x3d on mismatch. 9-block EEPROM transfer via FUN_08009f10 (load) / FUN_08009f78 (store); slot i primary base EEPROM blocks 0x12*i, mirror +9; bit-level IO FUN_0801a5d4 / FUN_0801a850 / FUN_0801a698 over DMA3 FUN_0801a554 at 0x0D000000; load path FUN_08018c30 / FUN_08018e68; store path FUN_08018f08."
     }
   ]
 }

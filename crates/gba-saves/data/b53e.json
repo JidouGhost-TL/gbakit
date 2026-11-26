@@ -1,29 +1,104 @@
 {
-  "id": "b53e",
-  "game_code": "B53E",
-  "title": "Crash & Spyro Superpack - Spyro Orange - The Cortex Conspiracy + Crash Bandicoot Purple - Ripto's Rampage (USA)",
-  "media": "eeprom512",
-  "size_bytes": 512,
-  "magic_signatures": [],
   "checksums": [],
+  "eeprom_rev8": true,
   "fields": [
     {
-      "name": "slot_counter",
+      "confidence": "confirmed",
+      "description": "Save header magic word; logical bytes 2D 61 DE C0 read as LE u32 0xC0DE612D",
+      "evidence": "FUN_0800d648 writes the save-record header defaults and FUN_0800d760 commits the record via FUN_0803b5d8; baseline logical offset 0x00 holds 2D 61 DE C0 (LE u32 0xC0DE612D), 8-byte aligned in the rev8 logical domain.",
+      "name": "save_magic",
       "offset": 0,
-      "size": 2,
-      "type": "u16_le"
+      "size": 4,
+      "type": "u32_le"
     },
     {
-      "name": "game_progress_flags",
-      "offset": 2,
-      "size": 2,
-      "type": "u16_le"
-    },
-    {
-      "name": "player_status_payload",
+      "confidence": "likely",
+      "description": "Save header sequence/validity word following the magic",
+      "evidence": "FUN_0800d664 serializes header words into the RAM save buffer (u32 stores at +0xCC/+0xD0, one sourced from FUN_08019356) and FUN_0800d760 commits the buffer; baseline logical offset 0x04 holds 01 FF FF FF (LE u32 0xFFFFFF01).",
+      "name": "save_sequence",
       "offset": 4,
-      "size": 16,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Stored 32-bit checksum/validation word for slot 0; algorithm not identified so kept as a plain field",
+      "evidence": "FUN_0800d664 record serializer plus slot load family FUN_0800ce88/FUN_0800cf28/FUN_0800cfe0/FUN_0800d00c; baseline logical offset 0x08 holds D2 9E 21 3F (LE u32 0x3F219ED2), repeated verbatim at slot 1/2 checksum offsets.",
+      "name": "slot0_checksum",
+      "offset": 8,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Slot 1 record state word at stride 0xA0 from slot 0 header",
+      "evidence": "Per-slot accessor FUN_0800d750 reads u32 entries by slot index and the slot-select family FUN_0800d044/FUN_0800d75c/FUN_0800ce88 indexes records; baseline logical offset 0xA4 holds F8 0F (LE u16 0x0FF8).",
+      "name": "slot1_state",
+      "offset": 164,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Stored 32-bit checksum/validation word for slot 1, identical to slot 0 for zeroed content",
+      "evidence": "FUN_0800d664 record serializer and slot load routine FUN_0800cf28; baseline logical offset 0xA8 holds D2 9E 21 3F (LE u32 0x3F219ED2), 8-byte aligned.",
+      "name": "slot1_checksum",
+      "offset": 168,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Slot 2 record state word at stride 0xA0 from slot 1",
+      "evidence": "Per-slot accessor FUN_0800d750 and slot-select family FUN_0800d044/FUN_0800d75c/FUN_0800ce88; baseline logical offset 0x144 holds F8 0F (LE u16 0x0FF8).",
+      "name": "slot2_state",
+      "offset": 324,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Stored 32-bit checksum/validation word for slot 2, identical to slots 0/1 for zeroed content",
+      "evidence": "FUN_0800d664 record serializer and slot load routine FUN_0800cf28; baseline logical offset 0x148 holds D2 9E 21 3F (LE u32 0x3F219ED2), 8-byte aligned.",
+      "name": "slot2_checksum",
+      "offset": 328,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Slot 3 record state word at stride 0xA0 from slot 2; slot 3 body is otherwise erased",
+      "evidence": "Per-slot accessor FUN_0800d750 and slot-select family FUN_0800d044/FUN_0800d75c/FUN_0800ce88; baseline logical offset 0x1E4 holds F8 0F (LE u16 0x0FF8).",
+      "name": "slot3_state",
+      "offset": 484,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Erased (never-written) tail of slot 3; EEPROM reads 0xFF when unwritten",
+      "evidence": "Save commit path FUN_0800d760 via FUN_0803b5d8 writes only populated records; baseline logical offsets 0x1E8..0x200 hold 24 x 0xFF while slots 0..2 carry the 0x3F219ED2 checksum word, so slot 3 was never committed.",
+      "name": "slot3_erased",
+      "offset": 488,
+      "size": 24,
       "type": "bytes"
     }
-  ]
+  ],
+  "game_code": "B53E",
+  "id": "b53e",
+  "magic_signatures": [
+    {
+      "bytes": [
+        45,
+        97,
+        222,
+        192
+      ],
+      "description": "Save header magic 2D 61 DE C0 (LE u32 0xC0DE612D) at logical offset 0x00",
+      "offset": 0
+    }
+  ],
+  "media": "eeprom512",
+  "size_bytes": 512,
+  "title": "Crash & Spyro Superpack - Spyro Orange - The Cortex Conspiracy + Crash Bandicoot Purple - Ripto's Rampage (USA)"
 }

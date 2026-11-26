@@ -1,29 +1,248 @@
 {
-  "id": "boae",
-  "game_code": "BOAE",
-  "title": "Open Season (USA) (En,Fr,Es)",
-  "media": "eeprom512",
-  "size_bytes": 512,
-  "magic_signatures": [],
   "checksums": [],
+  "copy_groups": [],
+  "eeprom_rev8": true,
   "fields": [
     {
-      "name": "slot_counter",
-      "offset": 2,
-      "size": 2,
-      "type": "u16_le"
+      "confidence": "confirmed",
+      "description": "Per-slot 8-byte EEPROM header word 0: LE magic 0x00224455 written by the save path and verified on load.",
+      "evidence": "FUN_08067d4c writes the header block at EEPROM block 9*slot via FUN_0806c874/FUN_0806c6a8/FUN_0806c6bc (base constant DAT_08067ec8); FUN_08067ef4 reads it back via FUN_0806c5f8 and rejects mismatches. Slot0 header occupies file 0..7.",
+      "name": "slot_header_magic",
+      "offset": 0,
+      "size": 4,
+      "type": "u32_le"
     },
     {
-      "name": "game_progress_flags",
+      "confidence": "likely",
+      "description": "Per-slot header word 1: stored check value. Baseline satisfies 0x4455 + sum(zero payload) + 0xBBAA == 0xFFFF (expected DAT_08067ecc).",
+      "evidence": "FUN_08067d4c verify loop accumulates header word + payload bytes and requires equality with DAT_08067ecc; baseline slot0 bytes 4..5 are 0xBBAA with header word 0x4455 and zero payload.",
+      "name": "slot_header_check",
       "offset": 4,
       "size": 2,
       "type": "u16_le"
     },
     {
-      "name": "player_status_payload",
-      "offset": 6,
-      "size": 16,
+      "confidence": "confirmed",
+      "description": "CRC32 (custom table/invert routine, not in Schema v2 list) of payload bytes 4..63, stored at payload offset 0. Baseline is format-default zero, not a game-saved CRC.",
+      "evidence": "FUN_0803e6ec stores FUN_08069d40 (CRC32: init 0xFFFFFFFF, table DAT_08069e1c, final invert) over RAM save-struct +0x0e length 0x3c into u16 pair at RAM +0x0a/+0x0c (= file 8..11); called on the FUN_0803d018 save path before FUN_08067d4c.",
+      "name": "payload_crc32",
+      "offset": 8,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "New-game format tag 'B','U','G',0 at payload offset 4. Baseline shows format-default zeros (title formatted EEPROM, never game-saved).",
+      "evidence": "FUN_0803d2e0 writes 0x42/0x55/0x47/0x00 to RAM save-struct +0x0e..+0x11 (= file 12..15) after clearing the 64-byte payload with FUN_0806cb2c.",
+      "name": "format_tag",
+      "offset": 12,
+      "size": 4,
       "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "constraint": {
+        "labels": {
+          "0": "Not set",
+          "1": "Set"
+        },
+        "values": [
+          0,
+          1
+        ],
+        "kind": "enum"
+      },
+      "description": "Per-level progress flag: counted when == 1 on load, treated as locked when == 0.",
+      "evidence": "FUN_0803cf8c counts bytes==1 at RAM +0x32..+0x36 (= file 48..52) after FUN_08067ef4 load; FUN_08038078 returns locked for indices 6..10 when byte at RAM +param+0x2c is 0.",
+      "name": "level_flag_0",
+      "offset": 48,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "constraint": {
+        "labels": {
+          "0": "Not set",
+          "1": "Set"
+        },
+        "values": [
+          0,
+          1
+        ],
+        "kind": "enum"
+      },
+      "description": "Per-level progress flag: counted when == 1 on load, treated as locked when == 0.",
+      "evidence": "FUN_0803cf8c counts bytes==1 at RAM +0x32..+0x36 (= file 48..52) after FUN_08067ef4 load; FUN_08038078 returns locked for indices 6..10 when byte at RAM +param+0x2c is 0.",
+      "name": "level_flag_1",
+      "offset": 49,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "constraint": {
+        "labels": {
+          "0": "Not set",
+          "1": "Set"
+        },
+        "values": [
+          0,
+          1
+        ],
+        "kind": "enum"
+      },
+      "description": "Per-level progress flag: counted when == 1 on load, treated as locked when == 0.",
+      "evidence": "FUN_0803cf8c counts bytes==1 at RAM +0x32..+0x36 (= file 48..52) after FUN_08067ef4 load; FUN_08038078 returns locked for indices 6..10 when byte at RAM +param+0x2c is 0.",
+      "name": "level_flag_2",
+      "offset": 50,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "constraint": {
+        "labels": {
+          "0": "Not set",
+          "1": "Set"
+        },
+        "values": [
+          0,
+          1
+        ],
+        "kind": "enum"
+      },
+      "description": "Per-level progress flag: counted when == 1 on load, treated as locked when == 0.",
+      "evidence": "FUN_0803cf8c counts bytes==1 at RAM +0x32..+0x36 (= file 48..52) after FUN_08067ef4 load; FUN_08038078 returns locked for indices 6..10 when byte at RAM +param+0x2c is 0.",
+      "name": "level_flag_3",
+      "offset": 51,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "constraint": {
+        "labels": {
+          "0": "Not set",
+          "1": "Set"
+        },
+        "values": [
+          0,
+          1
+        ],
+        "kind": "enum"
+      },
+      "description": "Per-level progress flag: counted when == 1 on load, treated as locked when == 0.",
+      "evidence": "FUN_0803cf8c counts bytes==1 at RAM +0x32..+0x36 (= file 48..52) after FUN_08067ef4 load; FUN_08038078 returns locked for indices 6..10 when byte at RAM +param+0x2c is 0.",
+      "name": "level_flag_4",
+      "offset": 52,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Five progress bytes shuttled between the save payload and working state; covered by payload_crc32.",
+      "evidence": "FUN_0803d0a0 copies RAM +0x37..+0x3B (= file 53..57) to working +0x7b..; FUN_0803d170 copies working state back to +0x37..+0x3B at store time.",
+      "name": "progress_bytes",
+      "offset": 53,
+      "size": 5,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Flag-bits byte: single-bit tested by gameplay code and mirrored into the in-RAM slot directory at save time.",
+      "evidence": "FUN_0803886c and FUN_08038934 test bit (1 << (RAM+0x8c)) of RAM +0x3c (= file 58); FUN_0803d018 mirrors +0x3c/+0x3d into DAT_0803d09c + slot*8.",
+      "name": "flag_bits",
+      "offset": 58,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Bit-index byte paired with flag_bits; mirrored into the in-RAM slot directory at save time.",
+      "evidence": "FUN_0803d720 sets RAM +0x3d (= file 59) from working +0x8c; FUN_0803d018 mirrors +0x3d into DAT_0803d09c + slot*8.",
+      "name": "flag_bit_index",
+      "offset": 59,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "u16 counter value shuttled between payload and working state; gameplay code assigns 99.",
+      "evidence": "FUN_0803c510 assigns 99 to u16 at RAM +0x3e (= file 60..61); FUN_0803d0a0/FUN_0803d170 shuttle it with working +0x80; read in FUN_08038050.",
+      "name": "counter_value",
+      "offset": 60,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Persisted byte loaded into runtime per-level array index 5; saved from working mirror.",
+      "evidence": "FUN_0803d018 saves working +0x95 into RAM +0x40 (= file 62); FUN_0803cf8c passes it to FUN_0803e11c(5,.); FUN_0803d170 feeds FUN_0803e11c(5,.) from +0x79.",
+      "name": "array_value_5",
+      "offset": 62,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Stage/table index into stride-12 gameplay tables; also used as a loop bound.",
+      "evidence": "FUN_0803e2d0 and FUN_0803d9f8 index stride-12 tables with RAM +0x41 (= file 63); FUN_0803ef98 loops while uVar < +0x41+1; mirrored with working +0x87 by FUN_0803d0a0/FUN_0803d170.",
+      "name": "stage_index",
+      "offset": 63,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "labels": {
+          "0": "Slot 1",
+          "1": "Slot 2",
+          "2": "Slot 3"
+        },
+        "values": [
+          0,
+          1,
+          2
+        ],
+        "kind": "enum"
+      },
+      "description": "Own game-slot number (0..2), stored into the payload at save time.",
+      "evidence": "FUN_0803d018 stores the slot param (guarded param_1 < 3) into RAM +0x42 (= file 64); FUN_08038934 branches on +0x42 vs 0/1.",
+      "name": "save_slot_index",
+      "offset": 64,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "maximum": 8,
+        "minimum": 0,
+        "kind": "unsigned-range"
+      },
+      "description": "Current level index, range-checked 0..8 by the setter.",
+      "evidence": "FUN_0803e04c writes param_1 to RAM +0x43 (= file 65) only when param_1 < 9; compared against +0x98 in FUN_08038cdc; loop bound in FUN_0803eac0; synced from working +0x88 in FUN_0803d170.",
+      "name": "level_index",
+      "offset": 65,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "8-flag collection with atomic bit set/clear; mirrored with working state.",
+      "evidence": "FUN_0803e18c sets/clears bit (1 << (FUN_080380a4(0) & 0xff)) at RAM +0x44 (= file 66); FUN_0803d0a0/FUN_0803d170 shuttle it with working +0x83.",
+      "name": "unlock_bitflags",
+      "offset": 66,
+      "size": 1,
+      "type": "bitflags"
     }
-  ]
+  ],
+  "game_code": "BOAE",
+  "id": "boae",
+  "magic_signatures": [],
+  "media": "eeprom512",
+  "size_bytes": 512,
+  "title": "Open Season (USA) (En,Fr,Es)"
 }

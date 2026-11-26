@@ -1,36 +1,227 @@
 {
-  "id": "akfe",
-  "game_code": "AKFE",
-  "title": "Sports Illustrated for Kids - Football (USA)",
-  "media": "sram",
-  "size_bytes": 32768,
+  "checksums": [
+    {
+      "algorithm": "sum16_le",
+      "covered_end": 74,
+      "covered_start": 0,
+      "name": "save_checksum",
+      "seed": 0,
+      "stored_offset": 74,
+      "xor_out": 0
+    }
+  ],
   "eeprom_rev8": false,
-  "magic_signatures": [],
-  "checksums": [],
   "fields": [
     {
-      "name": "slot_counter",
+      "confidence": "confirmed",
+      "description": "Save-valid magic word; written by init, checked on load",
+      "evidence": "FUN_0800e890 writes default *param_1=DAT_0800e920 to save offset 0x00; FUN_0800e940 rejects SRAM image unless *param_1==DAT_0800e980; baseline 0x00..0x03 is AA AA AA AA.",
+      "name": "save_magic",
       "offset": 0,
-      "size": 2,
-      "type": "u16_le"
+      "size": 4,
+      "type": "u32_le"
     },
     {
-      "name": "game_progress_flags",
-      "offset": 2,
-      "size": 2,
-      "type": "u16_le"
-    },
-    {
-      "name": "player_status_payload",
+      "confidence": "confirmed",
+      "description": "Custom team name slot 0 (NUL-terminated C string, capacity 11 chars + NUL)",
+      "evidence": "FUN_0800ea6c copies team C-string via FUN_08117fc0 into save offset 0x04+slot*0x0C (slot 0 -> 0x04); FUN_0800ec70 clears slot 0; FUN_080131f4 and FUN_08021480 build team list only if byte at 0x04+slot*0x0C != 0.",
+      "name": "team_name_slot_0",
       "offset": 4,
-      "size": 16,
-      "type": "bytes"
+      "size": 12,
+      "type": "ascii"
     },
     {
-      "name": "slot_0_payload",
-      "offset": 32,
-      "size": 8160,
-      "type": "bytes"
+      "confidence": "confirmed",
+      "description": "Custom team name slot 1 (NUL-terminated C string, capacity 11 chars + NUL)",
+      "evidence": "FUN_0800ea6c copies team C-string via FUN_08117fc0 into save offset 0x04+slot*0x0C (slot 1 -> 0x10); FUN_0800ec70 clears slot 1; FUN_080131f4 and FUN_08021480 build team list only if byte at 0x04+slot*0x0C != 0.",
+      "name": "team_name_slot_1",
+      "offset": 16,
+      "size": 12,
+      "type": "ascii"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Custom team name slot 2 (NUL-terminated C string, capacity 11 chars + NUL)",
+      "evidence": "FUN_0800ea6c copies team C-string via FUN_08117fc0 into save offset 0x04+slot*0x0C (slot 2 -> 0x1C); FUN_0800ec70 clears slot 2; FUN_080131f4 and FUN_08021480 build team list only if byte at 0x04+slot*0x0C != 0.",
+      "name": "team_name_slot_2",
+      "offset": 28,
+      "size": 12,
+      "type": "ascii"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Custom team name slot 3 (NUL-terminated C string, capacity 11 chars + NUL)",
+      "evidence": "FUN_0800ea6c copies team C-string via FUN_08117fc0 into save offset 0x04+slot*0x0C (slot 3 -> 0x28); FUN_0800ec70 clears slot 3; FUN_080131f4 and FUN_08021480 build team list only if byte at 0x04+slot*0x0C != 0.",
+      "name": "team_name_slot_3",
+      "offset": 40,
+      "size": 12,
+      "type": "ascii"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Custom team name slot 4 (NUL-terminated C string, capacity 11 chars + NUL)",
+      "evidence": "FUN_0800ea6c copies team C-string via FUN_08117fc0 into save offset 0x04+slot*0x0C (slot 4 -> 0x34); FUN_0800ec70 clears slot 4; FUN_080131f4 and FUN_08021480 build team list only if byte at 0x04+slot*0x0C != 0.",
+      "name": "team_name_slot_4",
+      "offset": 52,
+      "size": 12,
+      "type": "ascii"
+    },
+    {
+      "confidence": "likely",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 255,
+        "minimum": 0
+      },
+      "description": "Team attribute byte A for slot 0, copied from active team struct +0x0D (formation/playbook-style setting)",
+      "evidence": "FUN_0800ea6c stores *(active_team+0x0D) to save offset 0x40+slot*2 (slot 0 -> 0x40); FUN_0800ec70 zeroes it on slot delete.",
+      "name": "team_attr_a_slot_0",
+      "offset": 64,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 255,
+        "minimum": 0
+      },
+      "description": "Team attribute byte B for slot 0, copied from active team struct +0x0E (formation/playbook-style setting)",
+      "evidence": "FUN_0800ea6c stores *(active_team+0x0E) to save offset 0x41+slot*2 (slot 0 -> 0x41); FUN_0800ec70 zeroes it on slot delete.",
+      "name": "team_attr_b_slot_0",
+      "offset": 65,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 255,
+        "minimum": 0
+      },
+      "description": "Team attribute byte A for slot 1, copied from active team struct +0x0D",
+      "evidence": "FUN_0800ea6c stores *(active_team+0x0D) to save offset 0x40+slot*2 (slot 1 -> 0x42); FUN_0800ec70 zeroes it on slot delete.",
+      "name": "team_attr_a_slot_1",
+      "offset": 66,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 255,
+        "minimum": 0
+      },
+      "description": "Team attribute byte B for slot 1, copied from active team struct +0x0E",
+      "evidence": "FUN_0800ea6c stores *(active_team+0x0E) to save offset 0x40+slot*2+1 (slot 1 -> 0x43); FUN_0800ec70 zeroes it on slot delete.",
+      "name": "team_attr_b_slot_1",
+      "offset": 67,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 255,
+        "minimum": 0
+      },
+      "description": "Team attribute byte A for slot 2, copied from active team struct +0x0D",
+      "evidence": "FUN_0800ea6c stores *(active_team+0x0D) to save offset 0x40+slot*2 (slot 2 -> 0x44); FUN_0800ec70 zeroes it on slot delete.",
+      "name": "team_attr_a_slot_2",
+      "offset": 68,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 255,
+        "minimum": 0
+      },
+      "description": "Team attribute byte B for slot 2, copied from active team struct +0x0E",
+      "evidence": "FUN_0800ea6c stores *(active_team+0x0E) to save offset 0x40+slot*2+1 (slot 2 -> 0x45); FUN_0800ec70 zeroes it on slot delete.",
+      "name": "team_attr_b_slot_2",
+      "offset": 69,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 255,
+        "minimum": 0
+      },
+      "description": "Team attribute byte A for slot 3, copied from active team struct +0x0D",
+      "evidence": "FUN_0800ea6c stores *(active_team+0x0D) to save offset 0x40+slot*2 (slot 3 -> 0x46); FUN_0800ec70 zeroes it on slot delete.",
+      "name": "team_attr_a_slot_3",
+      "offset": 70,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 255,
+        "minimum": 0
+      },
+      "description": "Team attribute byte B for slot 3, copied from active team struct +0x0E",
+      "evidence": "FUN_0800ea6c stores *(active_team+0x0E) to save offset 0x40+slot*2+1 (slot 3 -> 0x47); FUN_0800ec70 zeroes it on slot delete.",
+      "name": "team_attr_b_slot_3",
+      "offset": 71,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 255,
+        "minimum": 0
+      },
+      "description": "Team attribute byte A for slot 4, copied from active team struct +0x0D",
+      "evidence": "FUN_0800ea6c stores *(active_team+0x0D) to save offset 0x40+slot*2 (slot 4 -> 0x48); FUN_0800ec70 zeroes it on slot delete.",
+      "name": "team_attr_a_slot_4",
+      "offset": 72,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 255,
+        "minimum": 0
+      },
+      "description": "Team attribute byte B for slot 4, copied from active team struct +0x0E",
+      "evidence": "FUN_0800ea6c stores *(active_team+0x0E) to save offset 0x40+slot*2+1 (slot 4 -> 0x49); FUN_0800ec70 zeroes it on slot delete.",
+      "name": "team_attr_b_slot_4",
+      "offset": 73,
+      "size": 1,
+      "type": "u8"
     }
-  ]
+  ],
+  "game_code": "AKFE",
+  "id": "akfe",
+  "magic_signatures": [
+    {
+      "bytes": [
+        170,
+        170,
+        170,
+        170
+      ],
+      "description": "Save-valid magic word 0xAAAAAAAA at offset 0x00 (default from FUN_0800e890, checked in FUN_0800e940)",
+      "offset": 0
+    }
+  ],
+  "media": "sram",
+  "size_bytes": 32768,
+  "title": "Sports Illustrated for Kids - Football (USA)"
 }

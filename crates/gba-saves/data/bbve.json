@@ -4,42 +4,102 @@
   "title": "Babar to the Rescue (USA) (En,Fr,Es)",
   "media": "eeprom512",
   "size_bytes": 512,
+  "eeprom_rev8": true,
   "magic_signatures": [
     {
       "offset": 0,
       "bytes": [
-        86,
+        66,
         65,
+        66,
+        65,
+        82,
         83,
-        82
-      ]
+        65,
+        86
+      ],
+      "description": "ASCII 'BABARSAV' save tag, EEPROM record 0 (rev8-logical domain)"
     }
   ],
   "checksums": [],
   "fields": [
     {
-      "name": "magic_header",
+      "name": "save_signature",
       "offset": 0,
-      "size": 4,
-      "type": "ascii"
+      "size": 8,
+      "type": "ascii",
+      "description": "Save tag 'BABARSAV' occupying EEPROM record 0 (first 8-byte record)",
+      "confidence": "confirmed",
+      "evidence": "Rev8-logical bytes 0..8 of samples/baseline.sav decode to ASCII 'BABARSAV' (raw bytes are block-reversed 'VASRABAB'). EEPROM record R/W in FUN_0803f3d4 (reads 4 halfwords/record) and FUN_0803f498 (writes 4 halfwords/record) via DMA3 helper FUN_0803f354 to DAT_0d000000; game file layer opens the save through FUN_0806d130 -> FUN_0802706c -> FUN_08030568 -> FUN_080303e4 -> FUN_080324a8 -> FUN_0803f00c.",
+      "constraint": {
+        "kind": "ascii-charset",
+        "allowed": "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+        "max_len": 8
+      }
     },
     {
-      "name": "slot_counter",
-      "offset": 4,
-      "size": 2,
-      "type": "u16_le"
-    },
-    {
-      "name": "game_progress_flags",
-      "offset": 6,
-      "size": 2,
-      "type": "u16_le"
-    },
-    {
-      "name": "player_status_payload",
+      "name": "save_data_record_01_word_0",
       "offset": 8,
-      "size": 16,
-      "type": "bytes"
+      "size": 2,
+      "type": "u16_le",
+      "description": "Halfword 0 of EEPROM data record 1 (first save-data word after the signature record)",
+      "confidence": "likely",
+      "evidence": "FUN_0803f3d4 stores the 4 received halfwords of one EEPROM record descending from param_2+6 (save-file offsets record*8+6 down to record*8+0), and FUN_0803f498 serializes 4 halfwords ascending from param_2, so file offset 8 maps 1:1 to RAM save-struct byte 8. Record access is wrapped by FUN_0803f650 (read via FUN_0803f484, verify via FUN_0803f5f8, 3 retries). Transport is DMA3 helper FUN_0803f354 to DAT_0d000000."
+    },
+    {
+      "name": "save_data_record_01_word_1",
+      "offset": 10,
+      "size": 2,
+      "type": "u16_le",
+      "description": "Halfword 1 of EEPROM data record 1",
+      "confidence": "likely",
+      "evidence": "Same 4-halfword record layout as save_data_record_01_word_0: FUN_0803f3d4 writes the second received halfword to param_2+4 (save-file offsets record*8+2..record*8+4); FUN_0803f498 serializes param_2[1] as the second halfword. Verified by FUN_0803f5f8 which compares 4 halfwords per record. DMA via FUN_0803f354 to DAT_0d000000."
+    },
+    {
+      "name": "save_data_record_01_word_2",
+      "offset": 12,
+      "size": 2,
+      "type": "u16_le",
+      "description": "Halfword 2 of EEPROM data record 1",
+      "confidence": "likely",
+      "evidence": "Same 4-halfword record layout: FUN_0803f3d4 stores the third received halfword at param_2+2 (save-file offsets record*8+4..record*8+6); FUN_0803f498 serializes param_2[2] third. Read path FUN_0803f484 and verify path FUN_0803f5f8 both move 4 halfwords per record through FUN_0803f354 DMA to DAT_0d000000."
+    },
+    {
+      "name": "save_data_record_01_word_3",
+      "offset": 14,
+      "size": 2,
+      "type": "u16_le",
+      "description": "Halfword 3 of EEPROM data record 1",
+      "confidence": "likely",
+      "evidence": "Same 4-halfword record layout: FUN_0803f3d4 stores the fourth received halfword at param_2+0 (save-file offsets record*8+6..record*8+8); FUN_0803f498 serializes param_2[3] last (transmitted first on the wire, confirming the in-order byte mapping). Wrapper FUN_0803f650 retries the 8-byte record R/W up to 3 times via FUN_0803f484/FUN_0803f5f8."
+    },
+    {
+      "name": "save_data_record_02_dword_0",
+      "offset": 16,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Lower 32-bit word of EEPROM data record 2 (halfwords 0-1 of the record)",
+      "confidence": "likely",
+      "evidence": "EEPROM record 2 (save-file offsets 16..24) handled as 4 halfwords by FUN_0803f3d4 (read) and FUN_0803f498 (write); game-level buffered reads arrive through FUN_0806cae4 -> FUN_0802716c and writes through FUN_0806cd20 -> FUN_080271d8, with device I/O via FUN_0803f094 (read) and FUN_0803f188 (write). DMA transport FUN_0803f354 to DAT_0d000000 preserves byte order."
+    },
+    {
+      "name": "save_data_record_02_dword_1",
+      "offset": 20,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Upper 32-bit word of EEPROM data record 2 (halfwords 2-3 of the record)",
+      "confidence": "likely",
+      "evidence": "EEPROM record 2 upper half (save-file offsets 20..24): FUN_0803f3d4 deposits these bytes from the third/fourth received halfwords at param_2+2/param_2+0 equivalently ordered; FUN_0803f498 emits them from the same RAM offsets. File-layer access FUN_0806cae4/FUN_0806cd20, device layer FUN_0803f094/FUN_0803f188, DMA FUN_0803f354 to DAT_0d000000."
+    },
+    {
+      "name": "save_data_record_03_payload",
+      "offset": 24,
+      "size": 8,
+      "type": "bytes",
+      "description": "Full 8-byte payload of EEPROM data record 3 (four halfwords as stored)",
+      "confidence": "likely",
+      "evidence": "EEPROM record 3 (save-file offsets 24..32) is one atomic 8-byte record: FUN_0803f5f8 verifies exactly 4 halfwords per record and FUN_0803f650 rewrites the record when verification fails; FUN_0803f498 writes the record MSB-first-on-wire but byte-ordered 1:1 with the RAM buffer. Transport FUN_0803f354 (0x44-halfword DMA) to DAT_0d000000."
     }
-  ]
+  ],
+  "copy_groups": []
 }

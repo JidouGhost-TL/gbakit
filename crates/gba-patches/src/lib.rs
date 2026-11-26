@@ -988,6 +988,37 @@ pub const REGISTRY: &[DebugMenuPatch] = &[
         input_sequence: &["L+SELECT+START", "R"],
         ips_bytes: &[0x50, 0x41, 0x54, 0x43, 0x48, 0x00, 0x04, 0x10, 0x00, 0x01, 0xa5, 0x45, 0x4f, 0x46],
     },
+    // Wave 14 (live-verified interactive debug menus)
+    DebugMenuPatch {
+        game_code: "AZQE",
+        release_key: "AZQE-r0-c5e7ac2ffdaa46ab",
+        display_name: "Treasure Planet (USA)",
+        description: "Redirect 16-byte game-state table[0] at 0x080ea2e8 to unreachable state[3] (0x080ea318) to boot into hidden 3-tier Theme Select -> Level Select -> Room Select debug menu (FUN_0801c3e4)",
+        hook_type: "state_table_redirect",
+        target_handler: 0x0801C3E4,
+        input_sequence: &["START", "DOWN", "A"],
+        ips_bytes: &[0x50, 0x41, 0x54, 0x43, 0x48, 0x0e, 0xa2, 0xe8, 0x00, 0x10, 0xed, 0xc7, 0x01, 0x08, 0xd5, 0xc8, 0x01, 0x08, 0x85, 0xc8, 0x01, 0x08, 0x45, 0xc9, 0x01, 0x08, 0x45, 0x4f, 0x46],
+    },
+    DebugMenuPatch {
+        game_code: "BYUE",
+        release_key: "BYUE-r0-27cf19eaced550f3",
+        display_name: "Yggdra Union - We'll Never Fight Alone (USA)",
+        description: "Redirect 12-byte main mode-table triplet at 0x080ad76c to unreachable Debug Test Mode triplet at 0x080ad8c8 (FUN_08005c04/FUN_08005e68/FUN_08006d28) for live Character/BGM/Effect/Event debug tester",
+        hook_type: "mode_table_redirect",
+        target_handler: 0x08005C04,
+        input_sequence: &["START", "DOWN", "RIGHT"],
+        ips_bytes: &[0x50, 0x41, 0x54, 0x43, 0x48, 0x0a, 0xd7, 0x6c, 0x00, 0x0c, 0x05, 0x5c, 0x00, 0x08, 0x69, 0x5e, 0x00, 0x08, 0x29, 0x6d, 0x00, 0x08, 0x45, 0x4f, 0x46],
+    },
+    DebugMenuPatch {
+        game_code: "AORJ",
+        release_key: "AORJ-r0-0e9997636409c477",
+        display_name: "Oriental Blue - Ao no Tengai (Japan)",
+        description: "Redirect boot thread BL at 0x08000b92 to FUN_08074fec (5-entry AGB Sample DEBUG MENU), NOP debug-text guard at 0x0807517e, and NOP AgbMain DISPCNT/PRAM overrides at 0x0807361a/0x08073626",
+        hook_type: "thumb_bl_redirect",
+        target_handler: 0x08074FEC,
+        input_sequence: &["DOWN", "DOWN", "A"],
+        ips_bytes: &[0x50, 0x41, 0x54, 0x43, 0x48, 0x00, 0x0b, 0x92, 0x00, 0x04, 0x74, 0xf0, 0x2b, 0xfa, 0x07, 0x36, 0x1a, 0x00, 0x04, 0xc0, 0x46, 0xc0, 0x46, 0x07, 0x36, 0x26, 0x00, 0x04, 0xc0, 0x46, 0xc0, 0x46, 0x07, 0x51, 0x7e, 0x00, 0x02, 0xc0, 0x46, 0x45, 0x4f, 0x46],
+    },
 
 ];
 
@@ -1039,7 +1070,7 @@ mod tests {
 
     #[test]
     fn test_registry_size() {
-        assert_eq!(REGISTRY.len(), 85);
+        assert_eq!(REGISTRY.len(), 88);
     }
 
     #[test]
@@ -1127,6 +1158,19 @@ mod tests {
         let bktp = find_by_code("BKTP").expect("found BKTP (Wave 13)");
         assert_eq!(bktp.game_code, "BKTP");
         assert_eq!(bktp.target_handler, 0x08000A64);
+
+        // Wave 14 entries
+        let azqe = find_by_code("AZQE").expect("found AZQE (Wave 14)");
+        assert_eq!(azqe.game_code, "AZQE");
+        assert_eq!(azqe.target_handler, 0x0801C3E4);
+
+        let byue = find_by_code("BYUE").expect("found BYUE (Wave 14)");
+        assert_eq!(byue.game_code, "BYUE");
+        assert_eq!(byue.target_handler, 0x08005C04);
+
+        let aorj = find_by_code("AORJ").expect("found AORJ (Wave 14)");
+        assert_eq!(aorj.game_code, "AORJ");
+        assert_eq!(aorj.target_handler, 0x08074FEC);
     }
 
     #[test]
@@ -1342,6 +1386,47 @@ mod tests {
         bktp_rom[0x410] = 0x00;
         let bktp_patched = bktp.apply(&bktp_rom).expect("applied BKTP");
         assert_eq!(bktp_patched[0x410], 0xa5);
+
+        // Wave 14 patch application tests
+        let azqe = find_by_code("AZQE").expect("found AZQE");
+        let mut azqe_rom = vec![0u8; 0x100000];
+        azqe_rom[0x0ea2e8..0x0ea2f8].copy_from_slice(&[
+            0x49, 0xd9, 0x00, 0x08, 0x6d, 0xda, 0x00, 0x08, 0xfd, 0xea, 0x00, 0x08, 0xe9, 0xe6,
+            0x00, 0x08,
+        ]);
+        let azqe_patched = azqe.apply(&azqe_rom).expect("applied AZQE");
+        assert_eq!(
+            &azqe_patched[0x0ea2e8..0x0ea2f8],
+            &[
+                0xed, 0xc7, 0x01, 0x08, 0xd5, 0xc8, 0x01, 0x08, 0x85, 0xc8, 0x01, 0x08, 0x45,
+                0xc9, 0x01, 0x08
+            ]
+        );
+
+        let byue = find_by_code("BYUE").expect("found BYUE");
+        let mut byue_rom = vec![0u8; 0x100000];
+        byue_rom[0x0ad76c..0x0ad778].copy_from_slice(&[
+            0x89, 0xec, 0x06, 0x08, 0x85, 0xee, 0x06, 0x08, 0x5d, 0xf0, 0x06, 0x08,
+        ]);
+        let byue_patched = byue.apply(&byue_rom).expect("applied BYUE");
+        assert_eq!(
+            &byue_patched[0x0ad76c..0x0ad778],
+            &[
+                0x05, 0x5c, 0x00, 0x08, 0x69, 0x5e, 0x00, 0x08, 0x29, 0x6d, 0x00, 0x08
+            ]
+        );
+
+        let aorj = find_by_code("AORJ").expect("found AORJ");
+        let mut aorj_rom = vec![0u8; 0x80000];
+        aorj_rom[0x0b92..0x0b96].copy_from_slice(&[0xff, 0xf7, 0xe5, 0xfe]);
+        aorj_rom[0x7361a..0x7361e].copy_from_slice(&[0x08, 0xf0, 0xed, 0xfe]);
+        aorj_rom[0x73626..0x7362a].copy_from_slice(&[0x05, 0xf0, 0x59, 0xfc]);
+        aorj_rom[0x7517e..0x75180].copy_from_slice(&[0x0c, 0xd0]);
+        let aorj_patched = aorj.apply(&aorj_rom).expect("applied AORJ");
+        assert_eq!(&aorj_patched[0x0b92..0x0b96], &[0x74, 0xf0, 0x2b, 0xfa]);
+        assert_eq!(&aorj_patched[0x7361a..0x7361e], &[0xc0, 0x46, 0xc0, 0x46]);
+        assert_eq!(&aorj_patched[0x73626..0x7362a], &[0xc0, 0x46, 0xc0, 0x46]);
+        assert_eq!(&aorj_patched[0x7517e..0x75180], &[0xc0, 0x46]);
     }
 
     #[test]

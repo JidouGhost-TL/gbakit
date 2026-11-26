@@ -4,26 +4,196 @@
   "title": "Monster House (Europe)",
   "media": "eeprom512",
   "size_bytes": 512,
-  "magic_signatures": [],
-  "checksums": [],
+  "eeprom_rev8": true,
+  "magic_signatures": [
+    {
+      "offset": 6,
+      "bytes": [
+        65,
+        50,
+        77,
+        82
+      ],
+      "description": "ASCII 'A2MR' header tag; written from ROM table _DAT_0803155c by FUN_080314f4 and verified against ROM constant _DAT_08031484 by FUN_0803143c"
+    }
+  ],
+  "checksums": [
+    {
+      "name": "slot_0_checksum",
+      "algorithm": "sum16_le",
+      "covered_start": 16,
+      "covered_end": 264,
+      "stored_offset": 2,
+      "seed": 0,
+      "xor_out": 0
+    },
+    {
+      "name": "slot_1_checksum",
+      "algorithm": "sum16_le",
+      "covered_start": 264,
+      "covered_end": 512,
+      "stored_offset": 4,
+      "seed": 0,
+      "xor_out": 0
+    },
+    {
+      "name": "header_checksum",
+      "algorithm": "sum16_le",
+      "covered_start": 0,
+      "covered_end": 16,
+      "stored_offset": 0,
+      "seed": 0,
+      "xor_out": 0
+    }
+  ],
   "fields": [
     {
-      "name": "slot_counter",
-      "offset": 0,
-      "size": 2,
-      "type": "u16_le"
+      "name": "slot0_index",
+      "offset": 16,
+      "size": 1,
+      "type": "u8",
+      "description": "Slot number of save block 0 (always 0); set by FUN_08031144 (*param_1 = param_2) during FUN_080314f4 init loop over slots 0..1",
+      "confidence": "confirmed",
+      "evidence": "FUN_08031144 writes slot id byte at save-struct +0x00 (file 0x10/0x108); FUN_080314f4 passes uVar3 = 0..1; baseline 0x00.",
+      "constraint": {
+        "kind": "enum",
+        "values": [
+          0,
+          1
+        ],
+        "labels": {
+          "0": "slot_0",
+          "1": "slot_1"
+        }
+      }
     },
     {
-      "name": "game_progress_flags",
-      "offset": 2,
+      "name": "slot0_entry0_stat",
+      "offset": 38,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "description": "Table-scaled 16-bit entry-0 value (slot struct +0x16); FUN_080259b4 adds table byte*8 from _DAT_08025a50 row 0, gated by unlock-flag check FUN_08038054(0x1f)",
+      "confidence": "confirmed",
+      "evidence": "FUN_080259b4 *(short*)(param_1+0x16+param_2*2) += table*8, called from FUN_08031144 for entries 0..2 (file 0x26/0x28/0x2A); baseline 0x0320."
     },
     {
-      "name": "player_status_payload",
-      "offset": 4,
-      "size": 16,
-      "type": "bytes"
+      "name": "slot0_entry1_stat",
+      "offset": 40,
+      "size": 2,
+      "type": "u16_le",
+      "description": "Table-scaled 16-bit entry-1 value (slot struct +0x18); FUN_080259b4 table row 32 addend, always applied for entry index != 0",
+      "confidence": "confirmed",
+      "evidence": "FUN_080259b4 *(short*)(param_1+0x16+param_2*2) with param_2=1 (file 0x28); baseline 0x04B0."
+    },
+    {
+      "name": "slot0_entry2_stat",
+      "offset": 42,
+      "size": 2,
+      "type": "u16_le",
+      "description": "Table-scaled 16-bit entry-2 value (slot struct +0x1A); FUN_080259b4 table row 64 addend, always applied for entry index != 0",
+      "confidence": "confirmed",
+      "evidence": "FUN_080259b4 *(short*)(param_1+0x16+param_2*2) with param_2=2 (file 0x2A); baseline 0x0320."
+    },
+    {
+      "name": "slot0_cfg_progress",
+      "offset": 53,
+      "size": 1,
+      "type": "u8",
+      "description": "Progress/config byte (slot struct +0x25); default 10 written unconditionally by FUN_08031144 alongside the 10/1/5/5/15/5/10/5 block at +0x25..+0x2C",
+      "confidence": "confirmed",
+      "evidence": "FUN_08031144 param_1[0x25] = 10 (file 0x35); baseline 0x0A; sibling defaults +0x22..+0x24 = 1,1,1 verified in baseline."
+    },
+    {
+      "name": "slot0_opt_param_b8",
+      "offset": 200,
+      "size": 2,
+      "type": "u16_le",
+      "description": "Option/parameter short (slot struct +0xB8); FUN_08031144 derives it as (ROM word at _DAT_08031240+0x28) >> 8",
+      "confidence": "confirmed",
+      "evidence": "FUN_08031144 *(short*)(param_1+0xB8) = (short)(*(u32*)(_DAT_08031240+0x28) >> 8) (file 0xC8); baseline 0x09F8."
+    },
+    {
+      "name": "slot0_opt_flag_bc",
+      "offset": 204,
+      "size": 1,
+      "type": "u8",
+      "description": "Option flag byte (slot struct +0xBC); FUN_08031144 writes constant 5",
+      "confidence": "confirmed",
+      "evidence": "FUN_08031144 param_1[0xBC] = 5 (file 0xCC); baseline 0x05."
+    },
+    {
+      "name": "slot1_index",
+      "offset": 264,
+      "size": 1,
+      "type": "u8",
+      "description": "Slot number of save block 1 (always 1); set by FUN_08031144 (*param_1 = param_2) during FUN_080314f4 init loop over slots 0..1",
+      "confidence": "confirmed",
+      "evidence": "FUN_08031144 writes slot id byte at save-struct +0x00 (file 0x108); FUN_080314f4 passes uVar3 = 1; baseline 0x01.",
+      "constraint": {
+        "kind": "enum",
+        "values": [
+          0,
+          1
+        ],
+        "labels": {
+          "0": "slot_0",
+          "1": "slot_1"
+        }
+      }
+    },
+    {
+      "name": "slot1_entry0_stat",
+      "offset": 286,
+      "size": 2,
+      "type": "u16_le",
+      "description": "Table-scaled 16-bit entry-0 value (slot struct +0x16) of block 1; same FUN_080259b4 table path as slot 0",
+      "confidence": "confirmed",
+      "evidence": "FUN_080259b4 *(short*)(param_1+0x16+param_2*2), block-1 base file 0x108 (field file 0x11E); baseline 0x0320."
+    },
+    {
+      "name": "slot1_entry1_stat",
+      "offset": 288,
+      "size": 2,
+      "type": "u16_le",
+      "description": "Table-scaled 16-bit entry-1 value (slot struct +0x18) of block 1; same FUN_080259b4 table path as slot 0",
+      "confidence": "confirmed",
+      "evidence": "FUN_080259b4 *(short*)(param_1+0x16+param_2*2) with param_2=1, block-1 base file 0x108 (field file 0x120); baseline 0x04B0."
+    },
+    {
+      "name": "slot1_entry2_stat",
+      "offset": 290,
+      "size": 2,
+      "type": "u16_le",
+      "description": "Table-scaled 16-bit entry-2 value (slot struct +0x1A) of block 1; same FUN_080259b4 table path as slot 0",
+      "confidence": "confirmed",
+      "evidence": "FUN_080259b4 *(short*)(param_1+0x16+param_2*2) with param_2=2, block-1 base file 0x108 (field file 0x122); baseline 0x0320."
+    },
+    {
+      "name": "slot1_cfg_progress",
+      "offset": 301,
+      "size": 1,
+      "type": "u8",
+      "description": "Progress/config byte (slot struct +0x25) of block 1; default 10 written unconditionally by FUN_08031144",
+      "confidence": "confirmed",
+      "evidence": "FUN_08031144 param_1[0x25] = 10, block-1 base file 0x108 (field file 0x12D); baseline 0x0A."
+    },
+    {
+      "name": "slot1_opt_param_b8",
+      "offset": 448,
+      "size": 2,
+      "type": "u16_le",
+      "description": "Option/parameter short (slot struct +0xB8) of block 1; FUN_08031144 derives it as (ROM word at _DAT_08031240+0x28) >> 8",
+      "confidence": "confirmed",
+      "evidence": "FUN_08031144 *(short*)(param_1+0xB8), block-1 base file 0x108 (field file 0x1C0); baseline 0x09F8."
+    },
+    {
+      "name": "slot1_opt_flag_bc",
+      "offset": 452,
+      "size": 1,
+      "type": "u8",
+      "description": "Option flag byte (slot struct +0xBC) of block 1; FUN_08031144 writes constant 5",
+      "confidence": "confirmed",
+      "evidence": "FUN_08031144 param_1[0xBC] = 5, block-1 base file 0x108 (field file 0x1C4); baseline 0x05."
     }
   ]
 }

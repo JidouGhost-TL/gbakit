@@ -1,36 +1,78 @@
 {
-  "id": "ahmj",
-  "game_code": "AHMJ",
-  "title": "Dai-mahjong. (Japan)",
-  "media": "eeprom512",
-  "size_bytes": 512,
-  "eeprom_rev8": true,
-  "magic_signatures": [],
   "checksums": [],
+  "copy_groups": [],
+  "eeprom_rev8": true,
   "fields": [
     {
-      "name": "slot_counter",
+      "confidence": "confirmed",
+      "constraint": {
+        "allowed": "AMJ-0618",
+        "kind": "ascii-charset",
+        "max_len": 8
+      },
+      "description": "Save-image identifier 'AMJ-0618' (matches game_code AHMJ). Only ASCII/game-code-bearing bytes in the 512-byte image.",
+      "evidence": "samples/baseline.sav rev8-logical bytes 0x00..0x07 read 'AMJ-0618' (raw '8160-JMA' reverses per 8-byte block). Persistent struct owned by FUN_08003384 / FUN_08003470 via pool bases DAT_08003568 (+0x16a), DAT_0800372c / DAT_080038cc / DAT_08003cf0 (+0x160); file offsets equal struct offsets in the logical domain, placing this header at struct+0x0.",
+      "name": "save_magic",
       "offset": 0,
+      "size": 8,
+      "type": "ascii"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Stage/mode unlock bitmask. Tested bit-by-bit for display gating and XOR-toggled on completion confirm.",
+      "evidence": "FUN_08003384:522 (1 << (idx & 0xff) & *(uint *)(DAT_0800372c + 0x160) bit-test for display), FUN_08003384:548 (same test via DAT_080038cc + 0x160), FUN_08003384:662 (XOR-toggle *(uint *)(DAT_08003cf0 + 0x160) ^= 1 << ((r3+r5)*3+r4)); mirrored in FUN_08003470:807,833,947-949. u32 read-modify-write confirmed.",
+      "name": "unlock_flags",
+      "offset": 352,
+      "size": 4,
+      "type": "bitflags"
+    },
+    {
+      "confidence": "likely",
+      "description": "Accumulated score/currency counter (72000 in live capture). Lies inside the confirmed persistent struct between the u32 flags at +0x160 and the results table at +0x16a.",
+      "evidence": "Struct adjacency in FUN_08003384 / FUN_08003470 persistent image: confirmed u32 flags at pool+0x160 (DAT_0800372c/DAT_080038cc/DAT_08003cf0) and confirmed byte table at pool+0x16a (DAT_08003568, FUN_08003384:469, FUN_08003470:754); rev8-logical u32 at file 0x164 decodes to 72000. Exact label value-inferred.",
+      "name": "total_score",
+      "offset": 356,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Best/single-game score record (9999 in live capture). Immediately precedes the results table at +0x16a, so width is u16 (bytes 0x168-0x169; 0x16a belongs to the table).",
+      "evidence": "Struct adjacency in FUN_08003384 / FUN_08003470 persistent image between +0x160 flags and +0x16a table (DAT_08003568, FUN_08003384:469); rev8-logical u16 at file 0x168 decodes to 9999. Exact label value-inferred.",
+      "name": "high_score",
+      "offset": 360,
       "size": 2,
       "type": "u16_le"
     },
     {
-      "name": "game_progress_flags",
-      "offset": 2,
-      "size": 2,
-      "type": "u16_le"
-    },
-    {
-      "name": "player_status_payload",
-      "offset": 4,
-      "size": 16,
-      "type": "bytes"
-    },
-    {
-      "name": "save_block_payload",
-      "offset": 32,
-      "size": 256,
+      "confidence": "likely",
+      "description": "17 per-entry results values shown as 4-digit numbers on the results screen (all zero on this fresh save). Indexed byte array: entry i at +0x16a+i.",
+      "evidence": "FUN_08003384:469 and FUN_08003470:754 read *(undefined1 *)(DAT_08003568 + 0x16a + idx) in a loop (idx from r3*2 while idx < 0x11, i.e. up to 17 entries) and print each via FUN_0801558c(byte,4,0) (decimal, width 4). Single-byte elements confirmed by undefined1 reads.",
+      "name": "round_scores",
+      "offset": 362,
+      "size": 17,
       "type": "bytes"
     }
-  ]
+  ],
+  "game_code": "AHMJ",
+  "id": "ahmj",
+  "magic_signatures": [
+    {
+      "bytes": [
+        65,
+        77,
+        74,
+        45,
+        48,
+        54,
+        49,
+        56
+      ],
+      "description": "ASCII 'AMJ-0618' save identifier (matches game_code AHMJ)",
+      "offset": 0
+    }
+  ],
+  "media": "eeprom512",
+  "size_bytes": 512,
+  "title": "Dai-mahjong. (Japan)"
 }

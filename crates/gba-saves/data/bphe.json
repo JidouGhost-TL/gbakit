@@ -1,29 +1,160 @@
 {
-  "id": "bphe",
-  "game_code": "BPHE",
-  "title": "Pitfall - The Lost Expedition (USA)",
-  "media": "eeprom512",
-  "size_bytes": 512,
-  "magic_signatures": [],
-  "checksums": [],
+  "checksums": [
+    {
+      "algorithm": "crc16_arc",
+      "covered_end": 184,
+      "covered_start": 92,
+      "name": "save_block_crc",
+      "seed": 65535,
+      "stored_offset": 180
+    }
+  ],
+  "eeprom_rev8": true,
   "fields": [
     {
-      "name": "slot_counter",
-      "offset": 88,
-      "size": 2,
-      "type": "u16_le"
+      "confidence": "likely",
+      "evidence": "FUN_0806a5e4 mirrors save-struct+0x48 with runtime word +0x0c before recomputing the block CRC; FUN_0806a418 loads/verifies it as part of the 0x5c-byte block at file offset 0x60 (logical). Value 1 in baseline.",
+      "name": "save_sequence",
+      "offset": 96,
+      "size": 4,
+      "type": "u32_le"
     },
     {
-      "name": "game_progress_flags",
-      "offset": 90,
-      "size": 2,
-      "type": "u16_le"
-    },
-    {
-      "name": "player_status_payload",
-      "offset": 92,
-      "size": 16,
+      "confidence": "confirmed",
+      "evidence": "FUN_0806a680 copies record payload words from save-struct+0x4c/+0x50/+0x54 (stride 0x10 per slot) after FUN_0806a6c4 validates the slot; file offset 0x64 logical. Baseline slot is empty (all zero).",
+      "name": "record_0_data",
+      "offset": 100,
+      "size": 12,
       "type": "bytes"
+    },
+    {
+      "confidence": "confirmed",
+      "evidence": "FUN_0806a6c4 gates slot 0 on nonzero u16 at save-struct+0x58 (uVar4 = -(uint)*(iVar3+0x1c)>>0x1f); file offset 0x70 logical. Baseline 0 = inactive slot.",
+      "name": "record_0_valid",
+      "offset": 112,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "confirmed",
+      "evidence": "FUN_0806a6c4 compares u16 at save-struct+0x5a against FUN_0809cad0 CRC over the 16-byte slot at save-struct+0x4c; file offset 0x72 logical. Baseline 0 (slot empty, CRC unverifiable).",
+      "name": "record_0_crc",
+      "offset": 114,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "confirmed",
+      "evidence": "FUN_0806a680 copies record payload words from save-struct+0x4c/+0x50/+0x54 (stride 0x10 per slot) after FUN_0806a6c4 validates the slot; file offset 0x74 logical. Baseline slot is empty (all zero).",
+      "name": "record_1_data",
+      "offset": 116,
+      "size": 12,
+      "type": "bytes"
+    },
+    {
+      "confidence": "confirmed",
+      "evidence": "FUN_0806a6c4 gates slot 1 on nonzero u16 at save-struct+0x58+0x10; file offset 0x80 logical. Baseline 0 = inactive slot.",
+      "name": "record_1_valid",
+      "offset": 128,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "confirmed",
+      "evidence": "FUN_0806a6c4 compares u16 at save-struct+0x5a+0x10 against FUN_0809cad0 CRC over the 16-byte slot at save-struct+0x5c; file offset 0x82 logical. Baseline 0 (slot empty, CRC unverifiable).",
+      "name": "record_1_crc",
+      "offset": 130,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "confirmed",
+      "evidence": "FUN_0806a680 copies record payload words from save-struct+0x4c/+0x50/+0x54 (stride 0x10 per slot) after FUN_0806a6c4 validates the slot; file offset 0x84 logical. Baseline slot is empty (all zero).",
+      "name": "record_2_data",
+      "offset": 132,
+      "size": 12,
+      "type": "bytes"
+    },
+    {
+      "confidence": "confirmed",
+      "evidence": "FUN_0806a6c4 gates slot 2 on nonzero u16 at save-struct+0x58+0x20; file offset 0x90 logical. Baseline 0 = inactive slot.",
+      "name": "record_2_valid",
+      "offset": 144,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "confirmed",
+      "evidence": "FUN_0806a6c4 compares u16 at save-struct+0x5a+0x20 against FUN_0809cad0 CRC over the 16-byte slot at save-struct+0x6c; file offset 0x92 logical. Baseline 0 (slot empty, CRC unverifiable).",
+      "name": "record_2_crc",
+      "offset": 146,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "confirmed",
+      "evidence": "FUN_0806a680 copies record payload words from save-struct+0x4c/+0x50/+0x54 (stride 0x10 per slot) after FUN_0806a6c4 validates the slot; file offset 0x94 logical. Baseline slot is empty (all zero).",
+      "name": "record_3_data",
+      "offset": 148,
+      "size": 12,
+      "type": "bytes"
+    },
+    {
+      "confidence": "confirmed",
+      "evidence": "FUN_0806a6c4 gates slot 3 on nonzero u16 at save-struct+0x58+0x30; file offset 0xa0 logical. Baseline 0 = inactive slot.",
+      "name": "record_3_valid",
+      "offset": 160,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "confirmed",
+      "evidence": "FUN_0806a6c4 compares u16 at save-struct+0x5a+0x30 against FUN_0809cad0 CRC over the 16-byte slot at save-struct+0x7c; file offset 0xa2 logical. Baseline 0 (slot empty, CRC unverifiable).",
+      "name": "record_3_crc",
+      "offset": 162,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "confirmed",
+      "evidence": "FUN_0806a680 copies record payload words from save-struct+0x4c/+0x50/+0x54 (stride 0x10 per slot) after FUN_0806a6c4 validates the slot; file offset 0xa4 logical. Baseline slot is empty (all zero).",
+      "name": "record_4_data",
+      "offset": 164,
+      "size": 12,
+      "type": "bytes"
+    },
+    {
+      "confidence": "confirmed",
+      "evidence": "FUN_0806a6c4 gates slot 4 on nonzero u16 at save-struct+0x58+0x40; file offset 0xb0 logical. Baseline 0 = inactive slot.",
+      "name": "record_4_valid",
+      "offset": 176,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "confirmed",
+      "evidence": "FUN_0806a6c4 compares u16 at save-struct+0x5a+0x40 against FUN_0809cad0 CRC over the 16-byte slot at save-struct+0x8c; file offset 0xb2 logical. Baseline 0 (slot empty, CRC unverifiable).",
+      "name": "record_4_crc",
+      "offset": 178,
+      "size": 2,
+      "type": "u16_le"
     }
-  ]
+  ],
+  "game_code": "BPHE",
+  "id": "bphe",
+  "magic_signatures": [
+    {
+      "bytes": [
+        208,
+        208,
+        173,
+        222
+      ],
+      "description": "Save-block magic u32 0xDEADD0D0; FUN_0806a418 compares save-struct+0x44 against DAT_0806a548 and re-initializes defaults on mismatch",
+      "offset": 92
+    }
+  ],
+  "media": "eeprom512",
+  "size_bytes": 512,
+  "title": "Pitfall - The Lost Expedition (USA)"
 }

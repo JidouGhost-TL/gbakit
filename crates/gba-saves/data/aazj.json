@@ -12,34 +12,194 @@
         79,
         90,
         79
-      ]
+      ],
+      "description": "ASCII 'AOZO' header prefix of 'AOZORA_YUME_1010'"
     }
   ],
   "checksums": [],
   "fields": [
     {
-      "name": "magic_header",
+      "name": "save_header_id",
       "offset": 0,
-      "size": 4,
-      "type": "ascii"
-    },
-    {
-      "name": "slot_counter",
-      "offset": 4,
-      "size": 2,
-      "type": "u16_le"
-    },
-    {
-      "name": "game_progress_flags",
-      "offset": 6,
-      "size": 2,
-      "type": "u16_le"
-    },
-    {
-      "name": "player_status_payload",
-      "offset": 8,
       "size": 16,
-      "type": "bytes"
+      "type": "ascii",
+      "description": "Save header identifier, ASCII 'AOZORA_YUME_1010' (EEPROM blocks 0-1).",
+      "confidence": "confirmed",
+      "evidence": "Baseline bytes 0x00-0x0F read ASCII 'AOZORA_YUME_1010'; serialized by EEPROM block writer FUN_080085c4 (mode 0 via FUN_0802cb94) dispatched from FUN_08008454/FUN_080083a8, save offset 0x00.",
+      "constraint": {
+        "kind": "ascii-charset",
+        "allowed": "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_",
+        "max_len": 16
+      }
+    },
+    {
+      "name": "score_a",
+      "offset": 16,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Score/counter value A (7000 in baseline), EEPROM block 2.",
+      "confidence": "likely",
+      "evidence": "Save offset 0x10 holds u32_le 7000 in baseline; read/written in 8-byte EEPROM blocks by FUN_080085c4 (mode 1 via FUN_0802c9b0, mode 0 via FUN_0802cb94) under FUN_08008454/FUN_080083a8(0) called from FUN_0800cdc0."
+    },
+    {
+      "name": "record_tag_e00",
+      "offset": 20,
+      "size": 4,
+      "type": "ascii",
+      "description": "Record tag, ASCII '@E00' paired with score_a.",
+      "confidence": "likely",
+      "evidence": "Baseline bytes 0x14-0x17 read ASCII '@E00'; same EEPROM block-serialized region as score_a via FUN_080085c4/FUN_08008454/FUN_080083a8.",
+      "constraint": {
+        "kind": "ascii-charset",
+        "allowed": "@E0",
+        "max_len": 4
+      }
+    },
+    {
+      "name": "score_b",
+      "offset": 24,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Score/counter value B (7000 in baseline), EEPROM block 3.",
+      "confidence": "likely",
+      "evidence": "Save offset 0x18 holds u32_le 7000 in baseline; serialized by FUN_080085c4 8-byte block read/write (FUN_0802c9b0/FUN_0802cb94) under FUN_08008454/FUN_080083a8(0) from FUN_0800cdc0."
+    },
+    {
+      "name": "score_c",
+      "offset": 32,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Score/counter value C (7000 in baseline), EEPROM block 4.",
+      "confidence": "likely",
+      "evidence": "Save offset 0x20 holds u32_le 7000 in baseline; serialized by FUN_080085c4 8-byte block read/write (FUN_0802c9b0/FUN_0802cb94) under FUN_08008454/FUN_080083a8(0) from FUN_0800cdc0."
+    },
+    {
+      "name": "table_entry_count",
+      "offset": 40,
+      "size": 2,
+      "type": "u16_le",
+      "description": "Entry count (8 in baseline) matching the 8-entry u32 table at save offset 0xB0.",
+      "confidence": "likely",
+      "evidence": "Save offset 0x28 holds u16_le 8 in baseline, equal to the 8-word progression table at 0xB0-0xCF; stored via FUN_080085c4 block path (FUN_08008454/FUN_080083a8)."
+    },
+    {
+      "name": "table_guard_word",
+      "offset": 42,
+      "size": 2,
+      "type": "u16_le",
+      "description": "Opaque guard/check word (0xAD86 in baseline); custom algorithm, not a Schema v2 checksum (see SPEC.md).",
+      "confidence": "likely",
+      "evidence": "Save offset 0x2A holds u16_le 0xAD86 in baseline; adjacent to table_entry_count in the FUN_080085c4-serialized header region. Tested sum8/sum16/crc16_arc/kermit/x25/xmodem/record-sum-FFF7 hypotheses in Python: none match, so kept as a plain field."
+    },
+    {
+      "name": "save_format_version",
+      "offset": 46,
+      "size": 2,
+      "type": "ascii",
+      "description": "Save format version tag, ASCII '01'.",
+      "confidence": "likely",
+      "evidence": "Baseline bytes 0x2E-0x2F read ASCII '01'; part of the FUN_080085c4-serialized header region (FUN_08008454/FUN_080083a8).",
+      "constraint": {
+        "kind": "ascii-charset",
+        "allowed": "01",
+        "max_len": 2
+      }
+    },
+    {
+      "name": "bonus_threshold_0",
+      "offset": 176,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Bonus/threshold ladder entry 0 (1000 in baseline).",
+      "confidence": "likely",
+      "evidence": "Save offset 0xB0 holds u32_le 1000 in baseline, start of strict 1000-step arithmetic progression through 0xCF; serialized by FUN_080085c4 8-byte EEPROM blocks (FUN_0802c9b0/FUN_0802cb94) under FUN_08008454/FUN_080083a8."
+    },
+    {
+      "name": "bonus_threshold_1",
+      "offset": 180,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Bonus/threshold ladder entry 1 (2000 in baseline).",
+      "confidence": "likely",
+      "evidence": "Save offset 0xB4 holds u32_le 2000 in baseline, second entry of the 1000-step progression at 0xB0-0xCF; same FUN_080085c4/FUN_08008454/FUN_080083a8 block path."
+    },
+    {
+      "name": "bonus_threshold_2",
+      "offset": 184,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Bonus/threshold ladder entry 2 (3000 in baseline).",
+      "confidence": "likely",
+      "evidence": "Save offset 0xB8 holds u32_le 3000 in baseline, third entry of the 1000-step progression at 0xB0-0xCF; same FUN_080085c4/FUN_08008454/FUN_080083a8 block path."
+    },
+    {
+      "name": "bonus_threshold_3",
+      "offset": 188,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Bonus/threshold ladder entry 3 (4000 in baseline).",
+      "confidence": "likely",
+      "evidence": "Save offset 0xBC holds u32_le 4000 in baseline, fourth entry of the 1000-step progression at 0xB0-0xCF; same FUN_080085c4/FUN_08008454/FUN_080083a8 block path."
+    },
+    {
+      "name": "bonus_threshold_4",
+      "offset": 192,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Bonus/threshold ladder entry 4 (5000 in baseline).",
+      "confidence": "likely",
+      "evidence": "Save offset 0xC0 holds u32_le 5000 in baseline, fifth entry of the 1000-step progression at 0xB0-0xCF; same FUN_080085c4/FUN_08008454/FUN_080083a8 block path."
+    },
+    {
+      "name": "bonus_threshold_5",
+      "offset": 196,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Bonus/threshold ladder entry 5 (6000 in baseline).",
+      "confidence": "likely",
+      "evidence": "Save offset 0xC4 holds u32_le 6000 in baseline, sixth entry of the 1000-step progression at 0xB0-0xCF; same FUN_080085c4/FUN_08008454/FUN_080083a8 block path."
+    },
+    {
+      "name": "bonus_threshold_6",
+      "offset": 200,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Bonus/threshold ladder entry 6 (7000 in baseline).",
+      "confidence": "likely",
+      "evidence": "Save offset 0xC8 holds u32_le 7000 in baseline, seventh entry of the 1000-step progression at 0xB0-0xCF; same FUN_080085c4/FUN_08008454/FUN_080083a8 block path."
+    },
+    {
+      "name": "bonus_threshold_7",
+      "offset": 204,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Bonus/threshold ladder entry 7 (8000 in baseline).",
+      "confidence": "likely",
+      "evidence": "Save offset 0xCC holds u32_le 8000 in baseline, final entry of the 1000-step progression at 0xB0-0xCF; same FUN_080085c4/FUN_08008454/FUN_080083a8 block path."
+    },
+    {
+      "name": "score_final",
+      "offset": 208,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Trailing score/counter value (7000 in baseline), immediately before the footer.",
+      "confidence": "likely",
+      "evidence": "Save offset 0xD0 holds u32_le 7000 in baseline; serialized by FUN_080085c4 8-byte block path (FUN_0802c9b0/FUN_0802cb94) under FUN_08008454/FUN_080083a8(0) from FUN_0800cdc0."
+    },
+    {
+      "name": "save_footer_end",
+      "offset": 212,
+      "size": 4,
+      "type": "ascii",
+      "description": "Save footer magic, ASCII '@END' (EEPROM block 26).",
+      "confidence": "confirmed",
+      "evidence": "Baseline bytes 0xD4-0xD7 read ASCII '@END'; block-serialized by FUN_080085c4 (mode 0 via FUN_0802cb94) under FUN_08008454/FUN_080083a8, save offset 0xD4.",
+      "constraint": {
+        "kind": "ascii-charset",
+        "allowed": "@DEN",
+        "max_len": 4
+      }
     }
-  ]
+  ],
+  "copy_groups": []
 }

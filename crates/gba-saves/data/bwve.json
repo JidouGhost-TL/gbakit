@@ -4,26 +4,94 @@
   "title": "WinX Club - Quest for the Codex (USA)",
   "media": "eeprom512",
   "size_bytes": 512,
+  "eeprom_rev8": false,
   "magic_signatures": [],
   "checksums": [],
   "fields": [
     {
-      "name": "slot_counter",
+      "name": "checksum_lo",
       "offset": 0,
-      "size": 2,
-      "type": "u16_le"
+      "size": 4,
+      "type": "u32_le",
+      "description": "Low half of 64-bit complemented carry-sum integrity checksum over save bytes 8..511.",
+      "confidence": "confirmed",
+      "evidence": "FUN_080059c4 accumulates u32 words of buffer DAT_08005a34 from word index 2 with carry and stores ~sum at save offsets 0..3; FUN_08005b44 re-sums save offsets 0..511 seeded from DAT_08005bb0 and treats the image valid only if the 64-bit total is 0xFFFFFFFFFFFFFFFF."
     },
     {
-      "name": "game_progress_flags",
-      "offset": 2,
-      "size": 2,
-      "type": "u16_le"
-    },
-    {
-      "name": "player_status_payload",
+      "name": "checksum_hi",
       "offset": 4,
-      "size": 16,
-      "type": "bytes"
+      "size": 4,
+      "type": "u32_le",
+      "description": "High half of 64-bit complemented carry-sum integrity checksum over save bytes 8..511.",
+      "confidence": "confirmed",
+      "evidence": "FUN_080059c4 stores the complemented high carry word at save offsets 4..7 (buffer DAT_08005a34 word index 1); FUN_08005b44 validates it as the high half of the 64-bit total over save offsets 0..511."
+    },
+    {
+      "name": "save_magic",
+      "offset": 8,
+      "size": 2,
+      "type": "u16_le",
+      "description": "Save-format magic: must equal the expected constant or the game re-initializes the save.",
+      "confidence": "confirmed",
+      "evidence": "FUN_08005b44 compares the u16 at buffer DAT_08005ba8 word index 2 (save offset 8) against *DAT_08005bac and re-inits otherwise; FUN_08005b44 and FUN_08005c04 stamp the expected constant at save offset 8 on init."
+    },
+    {
+      "name": "progress_flags",
+      "offset": 252,
+      "size": 1,
+      "type": "u8",
+      "description": "Tail config byte ahead of the stage selector; cleared to 0 by save init.",
+      "confidence": "likely",
+      "evidence": "FUN_08005b44 zeroes the tail u32 covering save offsets 252..255 (buffer DAT_08005ba8 word index 63) and FUN_08005c04 stores 0 at save offset 252 (buffer DAT_08005c2c + 0xfc)."
+    },
+    {
+      "name": "current_stage",
+      "offset": 253,
+      "size": 1,
+      "type": "u8",
+      "description": "Current stage/world selector (6-way dispatch); set via the stage setter, read back on boot and map load.",
+      "confidence": "confirmed",
+      "evidence": "FUN_08005f50 returns save offset 253 (buffer DAT_08005f58 + 0xfd); FUN_08005fdc writes it; FUN_08005c34, FUN_08005d00, FUN_08006008, FUN_08006068, FUN_080060c8, FUN_08006128, FUN_08006188 and FUN_08002ef3c each dispatch on this byte with a < 6 range check.",
+      "constraint": {
+        "kind": "enum",
+        "values": [
+          0,
+          1,
+          2,
+          3,
+          4,
+          5
+        ],
+        "labels": {
+          "0": "Stage 0",
+          "1": "Stage 1",
+          "2": "Stage 2",
+          "3": "Stage 3",
+          "4": "Stage 4",
+          "5": "Stage 5"
+        }
+      }
+    },
+    {
+      "name": "stage_valid_flag",
+      "offset": 254,
+      "size": 1,
+      "type": "u8",
+      "description": "Stage-commit marker: set to 1 whenever the stage selector is written and persisted.",
+      "confidence": "likely",
+      "evidence": "FUN_08005fdc stores 1 at save offset 254 (buffer DAT_08005ff4 + 0xfe) immediately after writing the stage byte and calls FUN_08005be0 to persist; cleared to 0 by save init in FUN_08005b44 and FUN_08005c04.",
+      "constraint": {
+        "kind": "enum",
+        "values": [
+          0,
+          1
+        ],
+        "labels": {
+          "0": "Unset",
+          "1": "Committed"
+        }
+      }
     }
-  ]
+  ],
+  "copy_groups": []
 }

@@ -1,45 +1,148 @@
 {
-  "id": "ahne",
+  "checksums": [
+    {
+      "algorithm": "sum16_le_words",
+      "covered_end": 116,
+      "covered_start": 0,
+      "name": "slot0_checksum",
+      "stored_offset": 492
+    },
+    {
+      "algorithm": "sum16_le_words",
+      "covered_end": 232,
+      "covered_start": 116,
+      "name": "slot1_checksum",
+      "stored_offset": 496
+    },
+    {
+      "algorithm": "sum16_le_words",
+      "covered_end": 348,
+      "covered_start": 232,
+      "name": "slot2_checksum",
+      "stored_offset": 500
+    },
+    {
+      "algorithm": "sum16_le_words",
+      "covered_end": 490,
+      "covered_start": 270,
+      "name": "records_checksum",
+      "stored_offset": 508
+    },
+    {
+      "algorithm": "sum16_le_words",
+      "covered_end": 490,
+      "covered_start": 0,
+      "name": "global_checksum",
+      "stored_offset": 504
+    }
+  ],
+  "eeprom_rev8": true,
+  "fields": [
+    {
+      "confidence": "confirmed",
+      "description": "Slot 0 header marker, 8 ASCII dots. Preserved by save-init while slot data words are zeroed.",
+      "evidence": "FUN_080009ec zeroes slot data words [4,58) of each 58-word slot but preserves words [0,4); FUN_08000620 covers bytes [0,116) with slot0 checksum via FUN_08000afc; FUN_0802acf4 writes 8-byte EEPROM blocks.",
+      "name": "slot0_marker",
+      "offset": 0,
+      "size": 8,
+      "type": "ascii"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Slot 1 header marker, 8 ASCII dots. Preserved by save-init while slot data words are zeroed.",
+      "evidence": "FUN_080009ec zeroes slot data words [62,116) (slot1 words [4,58)) but preserves the 8-byte marker; FUN_08000620 covers bytes [116,232) with slot1 checksum via FUN_08000afc.",
+      "name": "slot1_marker",
+      "offset": 116,
+      "size": 8,
+      "type": "ascii"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Slot 2 header marker, 8 ASCII dots. Preserved by save-init while slot data words are zeroed.",
+      "evidence": "FUN_080009ec zeroes slot data words [120,174) (slot2 words [4,58)) but preserves the 8-byte marker; FUN_08000620 covers bytes [232,348) with slot2 checksum via FUN_08000afc.",
+      "name": "slot2_marker",
+      "offset": 232,
+      "size": 8,
+      "type": "ascii"
+    },
+    {
+      "confidence": "likely",
+      "description": "Save identifier tag, ASCII 'SPYHUNT.'. Written by the save-init default fill path.",
+      "evidence": "Present in default save image produced by FUN_080009ec via FUN_080007f8 table fill; covered by FUN_08000620 global checksum (FUN_08000afc words [0,245)) and records checksum (words [135,245)).",
+      "name": "save_tag",
+      "offset": 432,
+      "size": 8,
+      "type": "ascii"
+    },
+    {
+      "confidence": "likely",
+      "description": "High score entry 1 (default 50000). Top of descending default score table.",
+      "evidence": "Default-fill region written by FUN_080009ec/FUN_080007f8 init path; covered by FUN_08000620 global checksum (FUN_08000afc words [0,245)) and records checksum (words [135,245)); u32_le 50000 at file offset 0x1d0.",
+      "name": "high_score_1",
+      "offset": 464,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "High score entry 2 (default 30000).",
+      "evidence": "Default-fill region written by FUN_080009ec/FUN_080007f8 init path; covered by FUN_08000620 checksums via FUN_08000afc; u32_le 30000 at file offset 0x1d4.",
+      "name": "high_score_2",
+      "offset": 468,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "High score entry 3 (default 10000).",
+      "evidence": "Default-fill region written by FUN_080009ec/FUN_080007f8 init path; covered by FUN_08000620 checksums via FUN_08000afc; u32_le 10000 at file offset 0x1d8.",
+      "name": "high_score_3",
+      "offset": 472,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "High score entry 4 (default 1000).",
+      "evidence": "Default-fill region written by FUN_080009ec/FUN_080007f8 init path; covered by FUN_08000620 checksums via FUN_08000afc; u32_le 1000 at file offset 0x1dc.",
+      "name": "high_score_4",
+      "offset": 476,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "High score entry 5 (default 500).",
+      "evidence": "Default-fill region written by FUN_080009ec/FUN_080007f8 init path; covered by FUN_08000620 checksums via FUN_08000afc; u32_le 500 at file offset 0x1e0.",
+      "name": "high_score_5",
+      "offset": 480,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "High score entry 6 (default 200).",
+      "evidence": "Default-fill region written by FUN_080009ec/FUN_080007f8 init path; covered by FUN_08000620 checksums via FUN_08000afc; u32_le 200 at file offset 0x1e4.",
+      "name": "high_score_6",
+      "offset": 484,
+      "size": 4,
+      "type": "u32_le"
+    }
+  ],
   "game_code": "AHNE",
-  "title": "Spy Hunter (USA) (En,Ja,Fr,De,Es)",
-  "media": "eeprom512",
-  "size_bytes": 512,
+  "id": "ahne",
   "magic_signatures": [
     {
-      "offset": 0,
       "bytes": [
         46,
         46,
         46,
         46
-      ]
+      ],
+      "offset": 0
     }
   ],
-  "checksums": [],
-  "fields": [
-    {
-      "name": "magic_header",
-      "offset": 0,
-      "size": 4,
-      "type": "ascii"
-    },
-    {
-      "name": "slot_counter",
-      "offset": 4,
-      "size": 2,
-      "type": "u16_le"
-    },
-    {
-      "name": "game_progress_flags",
-      "offset": 6,
-      "size": 2,
-      "type": "u16_le"
-    },
-    {
-      "name": "player_status_payload",
-      "offset": 8,
-      "size": 16,
-      "type": "bytes"
-    }
-  ]
+  "media": "eeprom512",
+  "size_bytes": 512,
+  "title": "Spy Hunter (USA) (En,Ja,Fr,De,Es)"
 }

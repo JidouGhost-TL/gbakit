@@ -1,45 +1,107 @@
 {
-  "id": "bl7e",
-  "game_code": "BL7E",
-  "title": "LEGO Star Wars II - The Original Trilogy (USA)",
-  "media": "eeprom512",
-  "size_bytes": 512,
-  "magic_signatures": [
+  "checksums": [
     {
-      "offset": 0,
-      "bytes": [
-        48,
-        49,
-        48,
-        50
-      ]
+      "algorithm": "sum16_le_neg",
+      "covered_end": 16,
+      "covered_start": 0,
+      "name": "header_checksum",
+      "stored_offset": 14
     }
   ],
-  "checksums": [],
+  "eeprom_rev8": true,
   "fields": [
     {
-      "name": "magic_header",
+      "confidence": "confirmed",
+      "description": "8-byte ASCII save magic 'LEGO2010'. Read by FUN_0803f9a8 via FUN_08011a64(0,0x10) which loads the 16-byte header, then compares these 8 bytes (iVar3<8 loop vs ROM template at iRam0803f9fc/iRam0803fa00). Rebuilt by FUN_0803fea4 via FUN_08031828 template copy and stored with FUN_08011acc(0,0x10).",
+      "evidence": "FUN_0803f9a8 reads header with FUN_08011a64(0,0x10) and 8-byte magic compare loop; FUN_0803fea4 rebuilds header and writes with FUN_08011acc(0,0x10); low-level EEPROM bit-bang FUN_0804becc/FUN_0804bf90 via FUN_0804be4c and DMA3.",
+      "name": "save_magic",
       "offset": 0,
-      "size": 4,
+      "size": 8,
       "type": "ascii"
     },
     {
-      "name": "slot_counter",
-      "offset": 4,
-      "size": 2,
-      "type": "u16_le"
-    },
-    {
-      "name": "game_progress_flags",
-      "offset": 6,
-      "size": 2,
-      "type": "u16_le"
-    },
-    {
-      "name": "player_status_payload",
+      "confidence": "likely",
+      "description": "Header checksum word [4] (0x8080 in baseline). Covered by the header sum check in FUN_0803f9a8 (sum of 8 LE u16 == 0) and preserved by the FUN_0803fea4 template copy.",
+      "evidence": "FUN_0803f9a8 sums 8 LE shorts over the 0x10-byte header loaded by FUN_08011a64(0,0x10); FUN_0803fea4 recomputes word [7] = -sum via FUN_0803fe80-style loop then FUN_08011acc(0,0x10).",
+      "name": "header_payload_a",
       "offset": 8,
-      "size": 16,
-      "type": "bytes"
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Header checksum word [5] (0x0000 in baseline). Same checksum coverage as header_payload_a.",
+      "evidence": "FUN_0803f9a8 header sum check over FUN_08011a64(0,0x10) bytes; FUN_0803fea4 header rebuild + FUN_08011acc(0,0x10).",
+      "name": "header_payload_b",
+      "offset": 10,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Header checksum word [6] (0x0000 in baseline). Same checksum coverage as header_payload_a.",
+      "evidence": "FUN_0803f9a8 header sum check over FUN_08011a64(0,0x10) bytes; FUN_0803fea4 header rebuild + FUN_08011acc(0,0x10).",
+      "name": "header_payload_c",
+      "offset": 12,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Stored header checksum word [7]. FUN_0803fea4 sets it to (-sum of words [0..6]) so the 8-word LE sum is 0; FUN_0803f9a8 accepts the header only when that sum is 0.",
+      "evidence": "FUN_0803fea4 sets _DAT_0803fee0[7] = -sVar2 (FUN_0803fe80 sum loop) then FUN_08011acc(0,0x10); FUN_0803f9a8 verifies sum == 0 after FUN_08011a64(0,0x10). Baseline words sum to 0x0000, verified in Python.",
+      "name": "header_checksum",
+      "offset": 14,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Save file 0 8-byte progress record (first 8 bytes of the 0xA0-byte slot). Written by the FUN_0803fa84 init loop via FUN_08011acc, loaded with the full slot by FUN_0803fe38 and validated by FUN_0803fe0c/FUN_0803fe80, applied at boot by FUN_0803fd9c/FUN_08027670. Bit assignments are unverified; all-zero (no progress) in baseline.",
+      "evidence": "FUN_0803fa84 writes FUN_08011acc(0x10,8); FUN_0803fe38 reads FUN_08011a64((0*0x14+2)*8,0xA0); FUN_0803fe0c validates via FUN_0803fe80; FUN_0803fd9c applies via FUN_08027670.",
+      "name": "file0_progress",
+      "offset": 16,
+      "size": 8,
+      "type": "bitflags"
+    },
+    {
+      "confidence": "likely",
+      "description": "Save file 1 8-byte progress record (first 8 bytes of the 0xA0-byte slot). Written by the FUN_0803fa84 init loop via FUN_08011acc, loaded with the full slot by FUN_0803fe38 and validated by FUN_0803fe0c/FUN_0803fe80, applied at boot by FUN_0803fd9c/FUN_08027670. Bit assignments are unverified; all-zero (no progress) in baseline.",
+      "evidence": "FUN_0803fa84 writes FUN_08011acc(0xB0,8) (iVar4 0x10/0xB0/0x150 loop); FUN_0803fe38 reads FUN_08011a64((1*0x14+2)*8,0xA0); FUN_0803fe0c validates; FUN_0803fd9c applies via FUN_08027670.",
+      "name": "file1_progress",
+      "offset": 176,
+      "size": 8,
+      "type": "bitflags"
+    },
+    {
+      "confidence": "likely",
+      "description": "Save file 2 8-byte progress record (first 8 bytes of the 0xA0-byte slot). Written by the FUN_0803fa84 init loop via FUN_08011acc, loaded with the full slot by FUN_0803fe38 and validated by FUN_0803fe0c/FUN_0803fe80, applied at boot by FUN_0803fd9c/FUN_08027670. Bit assignments are unverified; all-zero (no progress) in baseline.",
+      "evidence": "FUN_0803fa84 writes FUN_08011acc(0x150,8) (iVar4 0x10/0xB0/0x150 loop); FUN_0803fe38 reads FUN_08011a64((2*0x14+2)*8,0xA0); FUN_0803fe0c validates; FUN_0803fd9c applies via FUN_08027670.",
+      "name": "file2_progress",
+      "offset": 336,
+      "size": 8,
+      "type": "bitflags"
     }
-  ]
+  ],
+  "game_code": "BL7E",
+  "id": "bl7e",
+  "magic_signatures": [
+    {
+      "bytes": [
+        76,
+        69,
+        71,
+        79,
+        50,
+        48,
+        49,
+        48
+      ],
+      "description": "ASCII 'LEGO2010' save magic at start of 16-byte EEPROM header",
+      "offset": 0
+    }
+  ],
+  "media": "eeprom512",
+  "size_bytes": 512,
+  "title": "LEGO Star Wars II - The Original Trilogy (USA)"
 }

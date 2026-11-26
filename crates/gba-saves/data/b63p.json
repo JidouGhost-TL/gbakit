@@ -1,39 +1,69 @@
 {
-  "id": "b63p",
-  "game_code": "B63P",
-  "title": "Big Mutha Truckers (Europe) (En,Fr,De,Es,It)",
-  "media": "eeprom512",
-  "size_bytes": 512,
-  "magic_signatures": [
-    {
-      "offset": 504,
-      "bytes": [
-        83,
-        65,
-        86,
-        48
-      ]
-    }
-  ],
   "checksums": [],
   "fields": [
     {
-      "name": "magic_header",
+      "confidence": "confirmed",
+      "description": "EEPROM blocks 0..62 (file bytes 0..503). Each block is 8 bytes; all bytes are 0xFF (erased EEPROM state) in the live-captured baseline, i.e. no game data has been written to these blocks yet.",
+      "evidence": "FUN_08040008 writes exactly one EEPROM block (4 halfwords = 8 bytes from param_2 source) per call; FUN_0803ff44 reads one block (4 halfwords via FUN_0803fec4 DMA len 0x44) into its param_2 buffer; 512-byte media = 64 blocks x 8 bytes, so offsets 0..503 are blocks 0..62. tools/bin_peek.py confirms every byte in 0x000..0x1F8 is 0xFF in samples/baseline.sav.",
+      "name": "eeprom_data_blocks_00_62",
+      "offset": 0,
+      "size": 504,
+      "type": "bytes"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "allowed": "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789",
+        "kind": "ascii-charset",
+        "max_len": 4
+      },
+      "description": "First word of the last EEPROM block (block #63): ASCII tag 'SAV0'.",
+      "evidence": "Last EEPROM block #63 (file offsets 504..511) is written atomically as one 8-byte block per FUN_08040008; raw bytes at 504..507 are 53 41 56 30 = ASCII 'SAV0' verified in samples/baseline.sav; rev8-logical view shows byte-swapped '0VAS', confirming raw-domain offsets (eeprom_rev8=false).",
+      "name": "last_block_magic_a",
       "offset": 504,
       "size": 4,
       "type": "ascii"
     },
     {
-      "name": "slot_counter",
+      "confidence": "confirmed",
+      "constraint": {
+        "allowed": "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789",
+        "kind": "ascii-charset",
+        "max_len": 4
+      },
+      "description": "Second word of the last EEPROM block (block #63): ASCII tag 'SAV0'.",
+      "evidence": "Last EEPROM block #63 (file offsets 504..511) is written atomically as one 8-byte block per FUN_08040008; raw bytes at 508..511 are 53 41 56 30 = ASCII 'SAV0' verified in samples/baseline.sav; rev8-logical view shows byte-swapped '0VAS', confirming raw-domain offsets (eeprom_rev8=false).",
+      "name": "last_block_magic_b",
       "offset": 508,
-      "size": 2,
-      "type": "u16_le"
+      "size": 4,
+      "type": "ascii"
+    }
+  ],
+  "game_code": "B63P",
+  "id": "b63p",
+  "magic_signatures": [
+    {
+      "bytes": [
+        83,
+        65,
+        86,
+        48
+      ],
+      "description": "ASCII 'SAV0' tag, first word of last EEPROM block",
+      "offset": 504
     },
     {
-      "name": "game_progress_flags",
-      "offset": 510,
-      "size": 2,
-      "type": "u16_le"
+      "bytes": [
+        83,
+        65,
+        86,
+        48
+      ],
+      "description": "ASCII 'SAV0' tag, second word of last EEPROM block",
+      "offset": 508
     }
-  ]
+  ],
+  "media": "eeprom512",
+  "size_bytes": 512,
+  "title": "Big Mutha Truckers (Europe) (En,Fr,De,Es,It)"
 }

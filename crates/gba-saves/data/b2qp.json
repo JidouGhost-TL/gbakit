@@ -1,29 +1,131 @@
 {
-  "id": "b2qp",
-  "game_code": "B2QP",
-  "title": "Prince of Persia - The Sands of Time & Lara Croft Tomb Raider - The Prophecy (Europe) (En,Fr,De,Es,It,Nl+En,Fr,De,Es,It)",
-  "media": "eeprom512",
-  "size_bytes": 512,
-  "magic_signatures": [],
   "checksums": [],
+  "copy_groups": [],
   "fields": [
     {
-      "name": "slot_counter",
+      "confidence": "likely",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 65535,
+        "minimum": 0
+      },
+      "description": "First halfword of the 104-byte block; zero in a fresh image",
+      "evidence": "FUN_083a3a7a clears slot-relative halfwords during block init (e.g. *(undefined2 *)(iVar5 + 0x26) = 0); baseline block 0 starts with 0x0000 here.",
+      "name": "block0_base_word",
+      "offset": 0,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 65535,
+        "minimum": 0
+      },
+      "description": "First sync word of the per-block 6-byte marker (0xaabb in every populated block)",
+      "evidence": "FUN_083a3a7a and FUN_083a3a7c step slot state by +0x68 per block and store halfword markers; baseline repeats 0xaabb at raw offsets 0x02, 0x6a, 0xd2, 0x13a.",
+      "name": "block0_sync_a",
       "offset": 2,
       "size": 2,
       "type": "u16_le"
     },
     {
-      "name": "game_progress_flags",
+      "confidence": "likely",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 65535,
+        "minimum": 0
+      },
+      "description": "Second sync word of the per-block marker (0x2200 in every populated block)",
+      "evidence": "FUN_083a3a7c writes the second marker halfword after the +0x68 stride advance; baseline repeats 0x2200 at raw offsets 0x04, 0x6c, 0xd4, 0x13c.",
+      "name": "block0_sync_b",
       "offset": 4,
       "size": 2,
       "type": "u16_le"
     },
     {
-      "name": "player_status_payload",
+      "confidence": "likely",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 65535,
+        "minimum": 0
+      },
+      "description": "Third sync word of the per-block marker (0x5544 in every populated block)",
+      "evidence": "FUN_083a3b6e stores the trailing marker halfword per 0x68-byte block; baseline repeats 0x5544 at raw offsets 0x06, 0x6e, 0xd6, 0x13e.",
+      "name": "block0_sync_c",
       "offset": 6,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "guessed",
+      "constraint": {
+        "kind": "bitmask",
+        "flag_labels": {
+          "0": "opt0",
+          "1": "opt1",
+          "10": "opt10",
+          "11": "opt11",
+          "12": "opt12",
+          "13": "opt13",
+          "14": "opt14",
+          "15": "opt15",
+          "2": "opt2",
+          "3": "opt3",
+          "4": "opt4",
+          "5": "opt5",
+          "6": "opt6",
+          "7": "opt7",
+          "8": "opt8",
+          "9": "opt9"
+        },
+        "valid_mask": 65535
+      },
+      "description": "Config/option flags immediately after the block marker; all clear in a fresh image",
+      "evidence": "FUN_083a3c62 writes config halfwords at slot-relative offsets after the marker words; baseline holds 0x0000 here while marker words are set.",
+      "name": "option_flags",
+      "offset": 8,
+      "size": 2,
+      "type": "bitflags"
+    },
+    {
+      "confidence": "guessed",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 65535,
+        "minimum": 0
+      },
+      "description": "Gameplay progress counter after the option flags; zero in a fresh image",
+      "evidence": "FUN_083a3a7a accumulates a per-block counter halfword (extraout_r1 + 0x68 stride) into slot state; baseline holds 0x0000 at this counter slot.",
+      "name": "progress_counter",
+      "offset": 10,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "guessed",
+      "description": "Zero gameplay payload following the block header; untouched in a fresh image",
+      "evidence": "FUN_083a3c62 and FUN_083a3b70 leave the payload region after the header words cleared; baseline bytes 0x0c..0x67 are all 0x00.",
+      "name": "block0_payload",
+      "offset": 12,
+      "size": 8,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Erased EEPROM tail (unwritten 8-byte cells read back as 0xFF)",
+      "evidence": "FUN_083a4152 block-write loop stops before the tail region; baseline bytes 0x1a0..0x1ff are all 0xFF, the erased EEPROM cell value.",
+      "name": "erased_tail",
+      "offset": 416,
       "size": 16,
       "type": "bytes"
     }
-  ]
+  ],
+  "game_code": "B2QP",
+  "id": "b2qp",
+  "magic_signatures": [],
+  "media": "eeprom512",
+  "size_bytes": 512,
+  "title": "Prince of Persia - The Sands of Time & Lara Croft Tomb Raider - The Prophecy (Europe) (En,Fr,De,Es,It)"
 }

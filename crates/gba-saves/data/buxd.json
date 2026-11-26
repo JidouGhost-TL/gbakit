@@ -1,29 +1,309 @@
 {
-  "id": "buxd",
-  "game_code": "BUXD",
-  "title": "Bibi und Tina - Ferien auf dem Martinshof (Germany) (Rev 1)",
-  "media": "eeprom512",
-  "size_bytes": 512,
-  "magic_signatures": [],
   "checksums": [],
+  "eeprom_rev8": true,
   "fields": [
     {
-      "name": "slot_counter",
-      "offset": 6,
-      "size": 2,
-      "type": "u16_le"
-    },
-    {
-      "name": "game_progress_flags",
+      "confidence": "confirmed",
+      "description": "Board 0 winner name: 6 characters packed as 5-bit codes (1-26=A-Z, 27-29=German umlauts, 30=space, 0=terminator) in 4 bytes. Baseline decodes to BIBI.",
+      "evidence": "FUN_080e7334 reads EEPROM blocks 1..0x22 via FUN_080e6df0 into a 272-byte buffer and decodes bytes 0-3 of each 30-byte record into 6 chars (5-bit unpack, same codec as FUN_080e8c44); FUN_080e9944 stores the name. File offset 8 = EEPROM block 1 start in rev8-logical domain.",
+      "name": "lb0_top_name",
       "offset": 8,
+      "size": 4,
+      "type": "bytes"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Board 0 winner score (low 16 bits of the 18-bit result field; top 2 bits live in bits 6-7 of the byte at offset 11 and are zero in baseline). Baseline: 2000.",
+      "evidence": "FUN_080e7334 entry word ((byte5<<10)|(byte4<<2)|(byte3>>6)) stored via FUN_080e9964; low 16 bits at record+4. Mutable scalar suitable for live-mutation testing.",
+      "name": "lb0_top_score",
+      "offset": 12,
       "size": 2,
       "type": "u16_le"
     },
     {
-      "name": "player_status_payload",
-      "offset": 10,
-      "size": 16,
+      "confidence": "confirmed",
+      "description": "Board 1 winner name (5-bit packed, 6 chars). Baseline decodes to ALEX.",
+      "evidence": "FUN_080e7334 decodes record at EEPROM blocks 3..4 (file offset 38) via FUN_080e6df0; name stored via FUN_080e9944.",
+      "name": "lb1_top_name",
+      "offset": 38,
+      "size": 4,
       "type": "bytes"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Board 1 winner score. Baseline: 1750.",
+      "evidence": "FUN_080e7334 entry word stored via FUN_080e9964; low 16 bits at record+4.",
+      "name": "lb1_top_score",
+      "offset": 42,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Board 2 winner name (5-bit packed, 6 chars). Baseline decodes to HOLGER.",
+      "evidence": "FUN_080e7334 decodes record at file offset 68 via FUN_080e6df0; name stored via FUN_080e9944.",
+      "name": "lb2_top_name",
+      "offset": 68,
+      "size": 4,
+      "type": "bytes"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Board 2 winner score. Baseline: 1500.",
+      "evidence": "FUN_080e7334 entry word stored via FUN_080e9964; low 16 bits at record+4.",
+      "name": "lb2_top_score",
+      "offset": 72,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Board 3 winner name (5-bit packed, 6 chars). Baseline decodes to TINA.",
+      "evidence": "FUN_080e7334 decodes record at file offset 98 via FUN_080e6df0; name stored via FUN_080e9944.",
+      "name": "lb3_top_name",
+      "offset": 98,
+      "size": 4,
+      "type": "bytes"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Board 3 winner score. Baseline: 1920.",
+      "evidence": "FUN_080e7334 entry word stored via FUN_080e9964; low 16 bits at record+4.",
+      "name": "lb3_top_score",
+      "offset": 102,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Board 4 winner name (5-bit packed, 6 chars). Baseline decodes to BIBI.",
+      "evidence": "FUN_080e7334 decodes record at file offset 128 via FUN_080e6df0; name stored via FUN_080e9944.",
+      "name": "lb4_top_name",
+      "offset": 128,
+      "size": 4,
+      "type": "bytes"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Board 4 winner score. Baseline: 2560.",
+      "evidence": "FUN_080e7334 entry word stored via FUN_080e9964; low 16 bits at record+4.",
+      "name": "lb4_top_score",
+      "offset": 132,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Board 5 winner name (5-bit packed, 6 chars). Baseline decodes to ALEX.",
+      "evidence": "FUN_080e7334 decodes record at file offset 158 via FUN_080e6df0; name stored via FUN_080e9944.",
+      "name": "lb5_top_name",
+      "offset": 158,
+      "size": 4,
+      "type": "bytes"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Board 5 winner score. Baseline: 4480.",
+      "evidence": "FUN_080e7334 entry word stored via FUN_080e9964; low 16 bits at record+4.",
+      "name": "lb5_top_score",
+      "offset": 162,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Board 6 winner name (5-bit packed, 6 chars). Baseline decodes to BIBI.",
+      "evidence": "FUN_080e7334 decodes record at file offset 188 via FUN_080e6df0; name stored via FUN_080e9944.",
+      "name": "lb6_top_name",
+      "offset": 188,
+      "size": 4,
+      "type": "bytes"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Board 6 winner score. Baseline: 4480.",
+      "evidence": "FUN_080e7334 entry word stored via FUN_080e9964; low 16 bits at record+4.",
+      "name": "lb6_top_score",
+      "offset": 192,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Board 7 winner name (5-bit packed, 6 chars). Baseline decodes to TINA.",
+      "evidence": "FUN_080e7334 decodes record at file offset 218 via FUN_080e6df0; name stored via FUN_080e9944.",
+      "name": "lb7_top_name",
+      "offset": 218,
+      "size": 4,
+      "type": "bytes"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Board 7 winner score. Baseline: 5120.",
+      "evidence": "FUN_080e7334 entry word stored via FUN_080e9964; low 16 bits at record+4.",
+      "name": "lb7_top_score",
+      "offset": 222,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Board 8 winner name (5-bit packed, 6 chars). Baseline decodes to ALEX.",
+      "evidence": "FUN_080e7334 decodes record at file offset 248 via FUN_080e6df0; name stored via FUN_080e9944.",
+      "name": "lb8_top_name",
+      "offset": 248,
+      "size": 4,
+      "type": "bytes"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Board 8 winner score. Baseline: 5760.",
+      "evidence": "FUN_080e7334 entry word stored via FUN_080e9964; low 16 bits at record+4.",
+      "name": "lb8_top_score",
+      "offset": 252,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Stored CRC32-MSB (poly 0x04C11DB7, init 0, xorout 0) over board 0 record bytes 8..37. Verified against baseline (dbe30c73). Custom algorithm: no Schema v2 checksum entry; kept as data field.",
+      "evidence": "FUN_080e7334 accumulates each 30-byte record with FUN_080e67b4 (MSB-first table CRC, seed 0) and compares against FUN_080e6df0 block 0x3b word; independently recomputed in Python for all 9 records.",
+      "name": "lb0_crc",
+      "offset": 472,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Stored CRC32-MSB over board 1 record bytes 38..67. Verified (b0f6f87f).",
+      "evidence": "FUN_080e7334 + FUN_080e67b4 per-record checksum vs block 0x3b+1 word; recomputed in Python.",
+      "name": "lb1_crc",
+      "offset": 476,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Stored CRC32-MSB over board 2 record bytes 68..97. Verified (72b16e29).",
+      "evidence": "FUN_080e7334 + FUN_080e67b4 per-record checksum vs block 0x3b+2 word; recomputed in Python.",
+      "name": "lb2_crc",
+      "offset": 480,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Stored CRC32-MSB over board 3 record bytes 98..127. Verified (41ea0991).",
+      "evidence": "FUN_080e7334 + FUN_080e67b4 per-record checksum vs block 0x3b+3 word; recomputed in Python.",
+      "name": "lb3_crc",
+      "offset": 484,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Stored CRC32-MSB over board 4 record bytes 128..157. Verified (8bd6695f).",
+      "evidence": "FUN_080e7334 + FUN_080e67b4 per-record checksum vs block 0x3b+4 word; recomputed in Python.",
+      "name": "lb4_crc",
+      "offset": 488,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Stored CRC32-MSB over board 5 record bytes 158..187. Verified (680a1517).",
+      "evidence": "FUN_080e7334 + FUN_080e67b4 per-record checksum vs block 0x3b+5 word; recomputed in Python.",
+      "name": "lb5_crc",
+      "offset": 492,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Stored CRC32-MSB over board 6 record bytes 188..217. Verified (4d662f0b).",
+      "evidence": "FUN_080e7334 + FUN_080e67b4 per-record checksum vs block 0x3b+6 word; recomputed in Python.",
+      "name": "lb6_crc",
+      "offset": 496,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Stored CRC32-MSB over board 7 record bytes 218..247. Verified (e26f6cfd).",
+      "evidence": "FUN_080e7334 + FUN_080e67b4 per-record checksum vs block 0x3b+7 word; recomputed in Python.",
+      "name": "lb7_crc",
+      "offset": 500,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Stored CRC32-MSB over board 8 record bytes 248..277. Verified (aadfd9a5).",
+      "evidence": "FUN_080e7334 + FUN_080e67b4 per-record checksum vs block 0x3b+8 word; recomputed in Python.",
+      "name": "lb8_crc",
+      "offset": 504,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Player slot 0 rider name: 6 chars 5-bit packed in 4 bytes (same codec as board names). Blank (0xFF) in baseline: slot never written.",
+      "evidence": "FUN_080e7080 / FUN_080e7e48 read 7 blocks from EEPROM block 0x23 (file offset 280) via FUN_080e6df0; first 4 bytes unpack to 6 chars with the FUN_080e7334 5-bit codec.",
+      "name": "slot0_name",
+      "offset": 280,
+      "size": 4,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Stored checksum of player slot 0 (56 bytes at 280..335), computed by FUN_080e985c (FUN_080e67b4 CRC loop over 0x38 bytes) and read from EEPROM block 0x38. Blank (0xFFFFFFFF) in baseline.",
+      "evidence": "FUN_080e9894 reads EEPROM block 0x38 (file offset 448) for slot 0; FUN_080e7080 compares it against FUN_080e985c over the slot buffer.",
+      "name": "slot0_crc",
+      "offset": 448,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Player slot 1 rider name (5-bit packed, 6 chars). Blank in baseline.",
+      "evidence": "FUN_080e7080 / FUN_080e7e48 read 7 blocks from EEPROM block 0x2a (file offset 336) via FUN_080e6df0; same 5-bit name codec.",
+      "name": "slot1_name",
+      "offset": 336,
+      "size": 4,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Stored checksum of player slot 1 (56 bytes at 336..391), read from EEPROM block 0x39. Blank in baseline.",
+      "evidence": "FUN_080e9894 reads EEPROM block 0x39 (file offset 456) for slot 1; verified against FUN_080e7080 compare logic.",
+      "name": "slot1_crc",
+      "offset": 456,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Player slot 2 rider name (5-bit packed, 6 chars). Blank in baseline.",
+      "evidence": "FUN_080e7080 / FUN_080e7e48 read 7 blocks from EEPROM block 0x31 (file offset 392) via FUN_080e6df0; same 5-bit name codec.",
+      "name": "slot2_name",
+      "offset": 392,
+      "size": 4,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Stored checksum of player slot 2 (56 bytes at 392..447), read from EEPROM block 0x3a. Blank in baseline.",
+      "evidence": "FUN_080e9894 reads EEPROM block 0x3a (file offset 464) for slot 2; verified against FUN_080e7080 compare logic.",
+      "name": "slot2_crc",
+      "offset": 464,
+      "size": 4,
+      "type": "u32_le"
     }
-  ]
+  ],
+  "game_code": "BUXD",
+  "id": "buxd",
+  "magic_signatures": [],
+  "media": "eeprom512",
+  "size_bytes": 512,
+  "title": "Bibi und Tina - Ferien auf dem Martinshof (Germany) (Rev 1)"
 }

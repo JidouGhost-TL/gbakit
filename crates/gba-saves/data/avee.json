@@ -4,26 +4,46 @@
   "title": "Ultimate Beach Soccer (USA)",
   "media": "eeprom512",
   "size_bytes": 512,
+  "eeprom_rev8": true,
   "magic_signatures": [],
   "checksums": [],
   "fields": [
     {
-      "name": "slot_counter",
-      "offset": 62,
+      "name": "record_0_marker",
+      "offset": 56,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "description": "Record 0 sync word at record-relative +24 (EEPROM block 7 start). Live capture: 0x1234.",
+      "confidence": "likely",
+      "evidence": "EEPROM block primitives FUN_08000510/FUN_0800057c (density mode via param_3>>15) driven by cache flush FUN_083f3b18/FUN_083f3cec and init FUN_083f3e3c (FUN_0800023c(0x3f) full-EEPROM init); cached halfword reads FUN_083f6b58/FUN_083f6b98 under record count from FUN_0800071c, dispatched by hub FUN_083f50c4. Logical save offset 0x38."
     },
     {
-      "name": "game_progress_flags",
-      "offset": 64,
+      "name": "record_1_marker",
+      "offset": 176,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "description": "Record 1 sync word at record-relative +24 (EEPROM block 22 start). Live capture: 0x1234.",
+      "confidence": "likely",
+      "evidence": "Same EEPROM driver chain as record_0_marker (FUN_08000510/FUN_0800057c <- FUN_083f3b18/FUN_083f3cec/FUN_083f3e3c); per-record cached reads FUN_083f6b58/FUN_083f6b98 for record index 1 gated by FUN_0800071c count in hub FUN_083f50c4 (0,1,0xf0/0xa0 pair reads). Logical save offset 0xb0, stride 120 from record 0."
     },
     {
-      "name": "player_status_payload",
-      "offset": 66,
-      "size": 16,
-      "type": "bytes"
+      "name": "record_2_marker",
+      "offset": 296,
+      "size": 2,
+      "type": "u16_le",
+      "description": "Record 2 sync word at record-relative +24 (EEPROM block 37 start). Live capture: 0x1234.",
+      "confidence": "likely",
+      "evidence": "Same EEPROM driver chain (FUN_08000510/FUN_0800057c <- FUN_083f3b18/FUN_083f3cec/FUN_083f3e3c); per-record cached reads FUN_083f6b58/FUN_083f6b98 for record index 2 gated by FUN_0800071c count in hub FUN_083f50c4 (0,2,0xf0/0xa0 pair reads). Logical save offset 0x128, stride 120."
+    },
+    {
+      "name": "record_3_marker",
+      "offset": 416,
+      "size": 2,
+      "type": "u16_le",
+      "description": "Record 3 sync word at record-relative +24 (EEPROM block 52 start). Live capture: 0x1234.",
+      "confidence": "likely",
+      "evidence": "Same EEPROM driver chain (FUN_08000510/FUN_0800057c <- FUN_083f3b18/FUN_083f3cec/FUN_083f3e3c); per-record cached reads FUN_083f6b58/FUN_083f6b98 for record index 3 gated by FUN_0800071c count in hub FUN_083f50c4 (0,3,0xf0/0xa0 pair reads). Logical save offset 0x1a0, stride 120."
     }
-  ]
+  ],
+  "copy_groups": []
 }

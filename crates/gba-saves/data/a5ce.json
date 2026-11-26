@@ -1,45 +1,74 @@
 {
-  "id": "a5ce",
-  "game_code": "A5CE",
-  "title": "SimCity 2000 (USA)",
-  "media": "eeprom512",
-  "size_bytes": 512,
-  "magic_signatures": [
-    {
-      "offset": 0,
-      "bytes": [
-        108,
-        115,
-        32,
-        121
-      ]
-    }
-  ],
   "checksums": [],
+  "copy_groups": [],
+  "eeprom_rev8": true,
   "fields": [
     {
-      "name": "magic_header",
+      "confidence": "confirmed",
+      "constraint": {
+        "allowed": "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz 0123456789-'.",
+        "kind": "ascii-charset",
+        "max_len": 25
+      },
+      "description": "Save slot display name, NUL-terminated ASCII. Zero-filled (0x19 bytes) by FUN_08062b88 then strcpy'd via FUN_08062c40 on save (FUN_08062488) and on first boot (FUN_08062520, from the scenario/name table indexed by game-state byte +0x13e). Baseline holds default \"Empty slot\".",
+      "evidence": "FUN_08062488 zeroes 0x19 bytes via FUN_08062b88 then FUN_08062c40 strcpy into save offset 0x00; FUN_08062520 builds the same buffer and copies the scenario name table entry; FUN_0806240c loads these bytes from EEPROM chunks 0-3 via FUN_080a53a8.",
+      "name": "slot_name",
       "offset": 0,
-      "size": 4,
+      "size": 25,
       "type": "ascii"
     },
     {
-      "name": "slot_counter",
-      "offset": 4,
-      "size": 2,
-      "type": "u16_le"
+      "confidence": "likely",
+      "description": "Per-slot option/status byte mirrored between the save and the live game-state struct byte (default 0x7f written when no valid save exists). Written on save, restored into game state on valid load.",
+      "evidence": "FUN_08062488 stores the live game-state byte to save offset 0x19; FUN_08062520 writes default 0x7f to the game-state byte and restores it from save offset 0x19 on valid load; baseline logical byte is 0x7f.",
+      "name": "slot_option",
+      "offset": 25,
+      "size": 1,
+      "type": "u8"
     },
     {
-      "name": "game_progress_flags",
-      "offset": 6,
-      "size": 2,
-      "type": "u16_le"
-    },
-    {
-      "name": "player_status_payload",
-      "offset": 8,
-      "size": 16,
+      "confidence": "confirmed",
+      "description": "4-byte save validation magic FE ED FA CE. FUN_080625d0 memcmp's save bytes 0x1A-0x1D against the ROM constant; a mismatch forces the default (wipe + rewrite) path in FUN_08062520.",
+      "evidence": "FUN_080625d0 compares 4 bytes at save offset 0x1a against the ROM constant and gates FUN_08062520 load-vs-default; FUN_08062488 stores these 4 bytes from the ROM table at save offsets 0x1a-0x1d; baseline logical bytes are FE ED FA CE.",
+      "name": "save_magic_tag",
+      "offset": 26,
+      "size": 4,
       "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Low byte of the persisted u16 mirrored with game-state halfword +0x13c (default 0). Stored as two separate byte stores on save.",
+      "evidence": "FUN_08062488 writes save offset 0x1e from game-state u16 +0x13c low byte; FUN_08062520 defaults game-state +0x13c to 0 and restores it from save offset 0x1e on valid load; baseline is 0x00.",
+      "name": "slot_value_lo",
+      "offset": 30,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "High byte of the persisted u16 mirrored with game-state halfword +0x13c (default 0). Stored as two separate byte stores on save.",
+      "evidence": "FUN_08062488 writes save offset 0x1f from game-state u16 +0x13c high byte; FUN_08062520 restores game-state +0x13c from save offsets 0x1e-0x1f as a halfword on valid load; baseline is 0x00.",
+      "name": "slot_value_hi",
+      "offset": 31,
+      "size": 1,
+      "type": "u8"
     }
-  ]
+  ],
+  "game_code": "A5CE",
+  "id": "a5ce",
+  "magic_signatures": [
+    {
+      "bytes": [
+        254,
+        237,
+        250,
+        206
+      ],
+      "description": "Save validation magic FE ED FA CE checked by FUN_080625d0 at logical save offsets 0x1A-0x1D.",
+      "offset": 26
+    }
+  ],
+  "media": "eeprom512",
+  "size_bytes": 512,
+  "title": "SimCity 2000 (USA)"
 }

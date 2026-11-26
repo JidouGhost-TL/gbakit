@@ -1,29 +1,264 @@
 {
-  "id": "bkhp",
-  "game_code": "BKHP",
-  "title": "Kill Switch (Europe) (En,Fr,De,Es,It)",
-  "media": "eeprom512",
-  "size_bytes": 512,
-  "magic_signatures": [],
   "checksums": [],
+  "eeprom_rev8": true,
   "fields": [
     {
-      "name": "slot_counter",
-      "offset": 7,
-      "size": 2,
-      "type": "u16_le"
+      "confidence": "confirmed",
+      "constraint": {
+        "flag_labels": {
+          "0": "routes to settings byte +0x44",
+          "1": "routes to settings byte +0x12",
+          "2": "save-init marker, set by FUN_08008d74",
+          "3": "routes to settings byte +0x69"
+        },
+        "kind": "bitmask",
+        "valid_mask": 15
+      },
+      "description": "Save flag word at EWRAM 0x02000000. FUN_08008d74 sets bit 2 (value 0x04); FUN_0800e0ec unpacks bits 0-3 into settings-struct bytes.",
+      "evidence": "FUN_08008d74 does uRam02000000 |= 4 (EWRAM 0x02000000, save offset 0x00); FUN_0800e0ec copies bits 0-3 of uRam02000000 to settings bytes +0x44/+0x12/+0x6a/+0x69; persisted by FUN_08011834/FUN_0801186c 8-byte EEPROM block I/O via FUN_08021af8/FUN_08021ba8.",
+      "name": "save_flags",
+      "offset": 0,
+      "size": 4,
+      "type": "bitflags"
     },
     {
-      "name": "game_progress_flags",
-      "offset": 9,
-      "size": 2,
-      "type": "u16_le"
+      "confidence": "likely",
+      "description": "Row 0 word 0 of the 5x5 save table at EWRAM 0x0200004C (save offset 0x4C).",
+      "evidence": "FUN_08008d74 copies five 0x14-byte records from ROM defaults to EWRAM 0x0200004C + i*0x14 (save offsets 0x4C-0xB0); FUN_08008e3c indexes table cells as [row*5+col]; persisted by FUN_08011834/FUN_0801186c via FUN_08021af8/FUN_08021ba8.",
+      "name": "table_r0_w0",
+      "offset": 76,
+      "size": 4,
+      "type": "u32_le"
     },
     {
-      "name": "player_status_payload",
-      "offset": 11,
-      "size": 16,
-      "type": "bytes"
+      "confidence": "likely",
+      "description": "Row 0 word 1 of the 5x5 save table at EWRAM 0x02000050 (save offset 0x50).",
+      "evidence": "FUN_08008d74 copies five 0x14-byte records from ROM defaults to EWRAM 0x0200004C + i*0x14 (save offsets 0x4C-0xB0); FUN_08008e3c indexes table cells as [row*5+col]; persisted by FUN_08011834/FUN_0801186c via FUN_08021af8/FUN_08021ba8.",
+      "name": "table_r0_w1",
+      "offset": 80,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Row 0 word 2 of the 5x5 save table at EWRAM 0x02000054 (save offset 0x54).",
+      "evidence": "FUN_08008d74 copies five 0x14-byte records from ROM defaults to EWRAM 0x0200004C + i*0x14 (save offsets 0x4C-0xB0); FUN_08008e3c indexes table cells as [row*5+col]; persisted by FUN_08011834/FUN_0801186c via FUN_08021af8/FUN_08021ba8.",
+      "name": "table_r0_w2",
+      "offset": 84,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Row 0 word 3 of the 5x5 save table at EWRAM 0x02000058 (save offset 0x58).",
+      "evidence": "FUN_08008d74 copies five 0x14-byte records from ROM defaults to EWRAM 0x0200004C + i*0x14 (save offsets 0x4C-0xB0); FUN_08008e3c indexes table cells as [row*5+col]; persisted by FUN_08011834/FUN_0801186c via FUN_08021af8/FUN_08021ba8.",
+      "name": "table_r0_w3",
+      "offset": 88,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Row 0 word 4 of the 5x5 save table at EWRAM 0x0200005C (save offset 0x5C).",
+      "evidence": "FUN_08008d74 copies five 0x14-byte records from ROM defaults to EWRAM 0x0200004C + i*0x14 (save offsets 0x4C-0xB0); FUN_08008e3c indexes table cells as [row*5+col]; persisted by FUN_08011834/FUN_0801186c via FUN_08021af8/FUN_08021ba8.",
+      "name": "table_r0_w4",
+      "offset": 92,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Row 1 word 0 of the 5x5 save table at EWRAM 0x02000060 (save offset 0x60).",
+      "evidence": "FUN_08008d74 copies five 0x14-byte records from ROM defaults to EWRAM 0x0200004C + i*0x14 (save offsets 0x4C-0xB0); FUN_08008e3c indexes table cells as [row*5+col]; persisted by FUN_08011834/FUN_0801186c via FUN_08021af8/FUN_08021ba8.",
+      "name": "table_r1_w0",
+      "offset": 96,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Row 1 word 1 of the 5x5 save table at EWRAM 0x02000064 (save offset 0x64).",
+      "evidence": "FUN_08008d74 copies five 0x14-byte records from ROM defaults to EWRAM 0x0200004C + i*0x14 (save offsets 0x4C-0xB0); FUN_08008e3c indexes table cells as [row*5+col]; persisted by FUN_08011834/FUN_0801186c via FUN_08021af8/FUN_08021ba8.",
+      "name": "table_r1_w1",
+      "offset": 100,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Row 1 word 2 of the 5x5 save table at EWRAM 0x02000068 (save offset 0x68).",
+      "evidence": "FUN_08008d74 copies five 0x14-byte records from ROM defaults to EWRAM 0x0200004C + i*0x14 (save offsets 0x4C-0xB0); FUN_08008e3c indexes table cells as [row*5+col]; persisted by FUN_08011834/FUN_0801186c via FUN_08021af8/FUN_08021ba8.",
+      "name": "table_r1_w2",
+      "offset": 104,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Row 1 word 3 of the 5x5 save table at EWRAM 0x0200006C (save offset 0x6C).",
+      "evidence": "FUN_08008d74 copies five 0x14-byte records from ROM defaults to EWRAM 0x0200004C + i*0x14 (save offsets 0x4C-0xB0); FUN_08008e3c indexes table cells as [row*5+col]; persisted by FUN_08011834/FUN_0801186c via FUN_08021af8/FUN_08021ba8.",
+      "name": "table_r1_w3",
+      "offset": 108,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Row 1 word 4 of the 5x5 save table at EWRAM 0x02000070 (save offset 0x70).",
+      "evidence": "FUN_08008d74 copies five 0x14-byte records from ROM defaults to EWRAM 0x0200004C + i*0x14 (save offsets 0x4C-0xB0); FUN_08008e3c indexes table cells as [row*5+col]; persisted by FUN_08011834/FUN_0801186c via FUN_08021af8/FUN_08021ba8.",
+      "name": "table_r1_w4",
+      "offset": 112,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Row 2 word 0 of the 5x5 save table at EWRAM 0x02000074 (save offset 0x74).",
+      "evidence": "FUN_08008d74 copies five 0x14-byte records from ROM defaults to EWRAM 0x0200004C + i*0x14 (save offsets 0x4C-0xB0); FUN_08008e3c indexes table cells as [row*5+col]; persisted by FUN_08011834/FUN_0801186c via FUN_08021af8/FUN_08021ba8.",
+      "name": "table_r2_w0",
+      "offset": 116,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Row 2 word 1 of the 5x5 save table at EWRAM 0x02000078 (save offset 0x78).",
+      "evidence": "FUN_08008d74 copies five 0x14-byte records from ROM defaults to EWRAM 0x0200004C + i*0x14 (save offsets 0x4C-0xB0); FUN_08008e3c indexes table cells as [row*5+col]; persisted by FUN_08011834/FUN_0801186c via FUN_08021af8/FUN_08021ba8.",
+      "name": "table_r2_w1",
+      "offset": 120,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Row 2 word 2 of the 5x5 save table at EWRAM 0x0200007C (save offset 0x7C).",
+      "evidence": "FUN_08008d74 copies five 0x14-byte records from ROM defaults to EWRAM 0x0200004C + i*0x14 (save offsets 0x4C-0xB0); FUN_08008e3c indexes table cells as [row*5+col]; persisted by FUN_08011834/FUN_0801186c via FUN_08021af8/FUN_08021ba8.",
+      "name": "table_r2_w2",
+      "offset": 124,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Row 2 word 3 of the 5x5 save table at EWRAM 0x02000080 (save offset 0x80).",
+      "evidence": "FUN_08008d74 copies five 0x14-byte records from ROM defaults to EWRAM 0x0200004C + i*0x14 (save offsets 0x4C-0xB0); FUN_08008e3c indexes table cells as [row*5+col]; persisted by FUN_08011834/FUN_0801186c via FUN_08021af8/FUN_08021ba8.",
+      "name": "table_r2_w3",
+      "offset": 128,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Row 2 word 4 of the 5x5 save table at EWRAM 0x02000084 (save offset 0x84).",
+      "evidence": "FUN_08008d74 copies five 0x14-byte records from ROM defaults to EWRAM 0x0200004C + i*0x14 (save offsets 0x4C-0xB0); FUN_08008e3c indexes table cells as [row*5+col]; persisted by FUN_08011834/FUN_0801186c via FUN_08021af8/FUN_08021ba8.",
+      "name": "table_r2_w4",
+      "offset": 132,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Row 3 word 0 of the 5x5 save table at EWRAM 0x02000088 (save offset 0x88).",
+      "evidence": "FUN_08008d74 copies five 0x14-byte records from ROM defaults to EWRAM 0x0200004C + i*0x14 (save offsets 0x4C-0xB0); FUN_08008e3c indexes table cells as [row*5+col]; persisted by FUN_08011834/FUN_0801186c via FUN_08021af8/FUN_08021ba8.",
+      "name": "table_r3_w0",
+      "offset": 136,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Row 3 word 1 of the 5x5 save table at EWRAM 0x0200008C (save offset 0x8C).",
+      "evidence": "FUN_08008d74 copies five 0x14-byte records from ROM defaults to EWRAM 0x0200004C + i*0x14 (save offsets 0x4C-0xB0); FUN_08008e3c indexes table cells as [row*5+col]; persisted by FUN_08011834/FUN_0801186c via FUN_08021af8/FUN_08021ba8.",
+      "name": "table_r3_w1",
+      "offset": 140,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Row 3 word 2 of the 5x5 save table at EWRAM 0x02000090 (save offset 0x90).",
+      "evidence": "FUN_08008d74 copies five 0x14-byte records from ROM defaults to EWRAM 0x0200004C + i*0x14 (save offsets 0x4C-0xB0); FUN_08008e3c indexes table cells as [row*5+col]; persisted by FUN_08011834/FUN_0801186c via FUN_08021af8/FUN_08021ba8.",
+      "name": "table_r3_w2",
+      "offset": 144,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Row 3 word 3 of the 5x5 save table at EWRAM 0x02000094 (save offset 0x94).",
+      "evidence": "FUN_08008d74 copies five 0x14-byte records from ROM defaults to EWRAM 0x0200004C + i*0x14 (save offsets 0x4C-0xB0); FUN_08008e3c indexes table cells as [row*5+col]; persisted by FUN_08011834/FUN_0801186c via FUN_08021af8/FUN_08021ba8.",
+      "name": "table_r3_w3",
+      "offset": 148,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Row 3 word 4 of the 5x5 save table at EWRAM 0x02000098 (save offset 0x98).",
+      "evidence": "FUN_08008d74 copies five 0x14-byte records from ROM defaults to EWRAM 0x0200004C + i*0x14 (save offsets 0x4C-0xB0); FUN_08008e3c indexes table cells as [row*5+col]; persisted by FUN_08011834/FUN_0801186c via FUN_08021af8/FUN_08021ba8.",
+      "name": "table_r3_w4",
+      "offset": 152,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Row 4 word 0 of the 5x5 save table at EWRAM 0x0200009C (save offset 0x9C).",
+      "evidence": "FUN_08008d74 copies five 0x14-byte records from ROM defaults to EWRAM 0x0200004C + i*0x14 (save offsets 0x4C-0xB0); FUN_08008e3c indexes table cells as [row*5+col]; persisted by FUN_08011834/FUN_0801186c via FUN_08021af8/FUN_08021ba8.",
+      "name": "table_r4_w0",
+      "offset": 156,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Row 4 word 1 of the 5x5 save table at EWRAM 0x020000A0 (save offset 0xA0).",
+      "evidence": "FUN_08008d74 copies five 0x14-byte records from ROM defaults to EWRAM 0x0200004C + i*0x14 (save offsets 0x4C-0xB0); FUN_08008e3c indexes table cells as [row*5+col]; persisted by FUN_08011834/FUN_0801186c via FUN_08021af8/FUN_08021ba8.",
+      "name": "table_r4_w1",
+      "offset": 160,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Row 4 word 2 of the 5x5 save table at EWRAM 0x020000A4 (save offset 0xA4).",
+      "evidence": "FUN_08008d74 copies five 0x14-byte records from ROM defaults to EWRAM 0x0200004C + i*0x14 (save offsets 0x4C-0xB0); FUN_08008e3c indexes table cells as [row*5+col]; persisted by FUN_08011834/FUN_0801186c via FUN_08021af8/FUN_08021ba8.",
+      "name": "table_r4_w2",
+      "offset": 164,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Row 4 word 3 of the 5x5 save table at EWRAM 0x020000A8 (save offset 0xA8).",
+      "evidence": "FUN_08008d74 copies five 0x14-byte records from ROM defaults to EWRAM 0x0200004C + i*0x14 (save offsets 0x4C-0xB0); FUN_08008e3c indexes table cells as [row*5+col]; persisted by FUN_08011834/FUN_0801186c via FUN_08021af8/FUN_08021ba8.",
+      "name": "table_r4_w3",
+      "offset": 168,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Row 4 word 4 of the 5x5 save table at EWRAM 0x020000AC (save offset 0xAC).",
+      "evidence": "FUN_08008d74 copies five 0x14-byte records from ROM defaults to EWRAM 0x0200004C + i*0x14 (save offsets 0x4C-0xB0); FUN_08008e3c indexes table cells as [row*5+col]; persisted by FUN_08011834/FUN_0801186c via FUN_08021af8/FUN_08021ba8.",
+      "name": "table_r4_w4",
+      "offset": 172,
+      "size": 4,
+      "type": "u32_le"
     }
-  ]
+  ],
+  "game_code": "BKHP",
+  "id": "bkhp",
+  "magic_signatures": [
+    {
+      "bytes": [
+        172
+      ],
+      "description": "0xAC save-valid sentinel: FUN_0801186c stamps the last save byte 0xAC after writing all blocks (0xFE while writing); FUN_0800e0ec rejects the save unless that byte reads back 0xAC.",
+      "offset": 511
+    }
+  ],
+  "media": "eeprom512",
+  "size_bytes": 512,
+  "title": "Kill Switch (Europe) (En,Fr,De,Es,It)"
 }

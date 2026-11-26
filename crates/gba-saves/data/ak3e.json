@@ -1,45 +1,78 @@
 {
-  "id": "ak3e",
+  "checksums": [
+    {
+      "algorithm": "sum32_le_words",
+      "covered_end": 128,
+      "covered_start": 0,
+      "name": "body_word_sum",
+      "stored_offset": 132
+    }
+  ],
+  "fields": [
+    {
+      "confidence": "confirmed",
+      "evidence": "Baseline bytes 0x00-0x07 are 2D 4E 4F 44 49 52 49 2D ('-NODIRI-') in the raw domain and match stub.json's 4-byte magic prefix; extended to the full 8-byte first EEPROM block. Decomp-wide scan of decomp/decompiled.c.gz found no FUN_08xxxxxx save-I/O routine (zero hits for 0x0D0000/0x0E0000/DMA3 0x040000D4; closest state-transfer primitives are word-copy FUN_08015d6c used at FUN_08018e84 and CpuSet FUN_08015944 used at FUN_08014ad8). Raw domain confirmed: --rev8 view garbles the tag to '-IRIDON-', so eeprom_rev8 stays false.",
+      "name": "save_tag",
+      "offset": 0,
+      "size": 8,
+      "type": "ascii"
+    },
+    {
+      "confidence": "guessed",
+      "description": "First word of the zeroed state region; fresh save holds 0x00000000. Decomposed as a scalar so live libmgba mutation testing can probe it directly.",
+      "evidence": "Baseline u32 LE at file offset 0x08 is 0x00000000; byte lies inside the body_word_sum checksum range [0x00,0x80). No RAM-save-struct accessor was found in decomp/decompiled.c.gz: examined candidate state writers FUN_08014c08 (struct init at +0x0d/param_2 offsets), FUN_08014948 (divide chain via FUN_08019e88 with 0x630/0x1000000), and FUN_08014f50 (4-state mode setter writing 8/0x80) - none maps EWRAM offsets to file offsets, so semantics are unassigned.",
+      "name": "body_head_word",
+      "offset": 8,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "guessed",
+      "description": "Remainder of the zeroed state region in the fresh save; covered by the body_word_sum checksum.",
+      "evidence": "Baseline bytes 0x0C-0x7F are 116 zero bytes inside checksum range [0x00,0x80). Copy/memset primitives in decomp are generic: FUN_08015d6c (word copy), FUN_08015dcc (memset), FUN_08015944 (CpuSet SWI 0xb); none is called with a 120/124-byte save size, so no internal structure can be grounded and the run is kept as one blob.",
+      "name": "body_zero_blob",
+      "offset": 12,
+      "size": 116,
+      "type": "bytes"
+    },
+    {
+      "confidence": "guessed",
+      "description": "First word of the final 8-byte EEPROM block [0x80,0x88); reads 0xFFFFFFFF (erased) in the fresh save. Decomposed as a scalar for live-mutation probing.",
+      "evidence": "Baseline u32 LE at file offset 0x80 is 0xFFFFFFFF; it pairs with the verified checksum word at 0x84 to complete EEPROM block 16. The word is deliberately excluded from body_word_sum coverage: including it would yield 0x7198A075, not the stored 0x7198A076. No decomp accessor found (save-I/O scan: no FUN_08xxxxxx routine references 0x0D0000/0x0E0000; examined FUN_08014ad8 and FUN_080149ec touch only sprite/state globals via DAT_08014b40-class pointers).",
+      "name": "footer_word",
+      "offset": 128,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Stored checksum word; mirrors the body_word_sum checksums[] entry for decode display.",
+      "evidence": "Baseline u32 LE at file offset 0x84 is 0x7198A076, exactly equal to the LE-u32-word sum over [0x00,0x80): 0x444F4E2D + 0x2D495249 with the remaining 30 words zero. Verified 100% by gbakit save verify as sum32_le_words covered 0-128 stored 132 (expected == actual == 1905827958). The storing routine itself is absent from decomp/decompiled.c.gz (only generic arithmetic FUN_08019e88/FUN_08019f20/FUN_08019ff0 and bignum FUN_08018e84 exist), so coverage-end 0x80 is fixed arithmetically by the footer-word exclusion above.",
+      "name": "stored_trailer_sum",
+      "offset": 132,
+      "size": 4,
+      "type": "u32_le"
+    }
+  ],
   "game_code": "AK3E",
-  "title": "Turbo Turtle Adventure (USA)",
-  "media": "eeprom512",
-  "size_bytes": 512,
+  "id": "ak3e",
   "magic_signatures": [
     {
-      "offset": 0,
       "bytes": [
         45,
         78,
         79,
-        68
-      ]
+        68,
+        73,
+        82,
+        73,
+        45
+      ],
+      "description": "ASCII '-NODIRI-' tag, first EEPROM block; verified 1:1 against samples/baseline.sav",
+      "offset": 0
     }
   ],
-  "checksums": [],
-  "fields": [
-    {
-      "name": "magic_header",
-      "offset": 0,
-      "size": 4,
-      "type": "ascii"
-    },
-    {
-      "name": "slot_counter",
-      "offset": 4,
-      "size": 2,
-      "type": "u16_le"
-    },
-    {
-      "name": "game_progress_flags",
-      "offset": 6,
-      "size": 2,
-      "type": "u16_le"
-    },
-    {
-      "name": "player_status_payload",
-      "offset": 8,
-      "size": 16,
-      "type": "bytes"
-    }
-  ]
+  "media": "eeprom512",
+  "size_bytes": 512,
+  "title": "Turbo Turtle Adventure (USA)"
 }

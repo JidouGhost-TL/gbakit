@@ -1,45 +1,122 @@
 {
-  "id": "aipe",
-  "game_code": "AIPE",
-  "title": "Silent Scope (USA) (En,Fr,De,Es,It)",
-  "media": "eeprom512",
-  "size_bytes": 512,
-  "magic_signatures": [
-    {
-      "offset": 0,
-      "bytes": [
-        97,
-        83,
-        95,
-        115
-      ]
-    }
-  ],
   "checksums": [],
+  "eeprom_rev8": true,
   "fields": [
     {
-      "name": "magic_header",
+      "confidence": "confirmed",
+      "description": "Stored integrity word: low u16 of the custom table-driven CRC (FUN_08001fc0) computed over save[2:size). Verified on load with up to 3 retries.",
+      "evidence": "FUN_08054134 computes FUN_08001fc0(size-2, buf+2) and stores the low u16 at save+0x00; FUN_080541a0 recomputes FUN_08001fc0(size-2, buf+2) and compares it against save+0x00 (up to 3 read retries). Custom CRC-16 (seed DAT_08001ff8, table DAT_08001ffc, final bitwise NOT) is not in the Schema v2 algorithm list, so it is stored as a plain field. Baseline logical u16 @0x00 = 0xC283.",
+      "name": "save_checksum",
       "offset": 0,
-      "size": 4,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "kind": "enum",
+        "values": [
+          1
+        ],
+        "labels": {
+          "1": "save data valid"
+        }
+      },
+      "description": "Save-valid marker: must be 0x01 for the load path to accept the save.",
+      "evidence": "FUN_080541a0 requires byte at save+0x02 == 0x01, else the save is rejected (*DAT_08054294 = 0xFFFFFFFF path); FUN_080542d0 sets save+0x02 = 1 when initializing the save buffer. Baseline = 1.",
+      "name": "save_valid_flag",
+      "offset": 2,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "kind": "ascii-charset",
+        "allowed": "Ss_aveE",
+        "max_len": 8
+      },
+      "description": "Fixed NUL-terminated ROM magic copied into the save on init and compared with strcmp on load.",
+      "evidence": "FUN_080542d0 runs FUN_08000328 strcpy(save+0x03, DAT_08054300); FUN_080541a0 runs FUN_08000310 strcmp(save+0x03, DAT_0805426c). Baseline logical save[0x03:0x0B] is ASCII 'Ss_SaveE' followed by a NUL at 0x0B.",
+      "name": "save_magic",
+      "offset": 3,
+      "size": 8,
       "type": "ascii"
     },
     {
-      "name": "slot_counter",
-      "offset": 4,
-      "size": 2,
-      "type": "u16_le"
+      "confidence": "likely",
+      "description": "Game configuration block copied from working RAM / ROM defaults (small-int option enumerations in the first 16 bytes, zero tail).",
+      "evidence": "FUN_080542d0 copies 0x18 bytes DAT_08054308 -> save+0x10; FUN_0805430c copies 0x18 bytes DAT_08054334 -> save+0x10. Baseline logical save[0x10:0x20] = 04 03 01 00 00 0F 01 00 00 01 02 00 00 02 01 00, save[0x20:0x28] all zero.",
+      "name": "config_options_block",
+      "offset": 16,
+      "size": 24,
+      "type": "bytes"
     },
     {
-      "name": "game_progress_flags",
-      "offset": 6,
-      "size": 2,
-      "type": "u16_le"
+      "confidence": "likely",
+      "description": "Per-stage progress record area copied from working RAM / ROM defaults; five nonzero u16 0x3B3B slots spaced 0x14 apart, remainder zero.",
+      "evidence": "FUN_080542d0 copies 0xC4 bytes *DAT_08054304 -> save+0x40; FUN_0805430c copies 0xC4 bytes *DAT_08054330 -> save+0x40. Baseline logical bytes show nonzero u16 0x3B3B at save+0x51+k*0x14 for k=0..4, zeros elsewhere in save[0x40:0x104].",
+      "name": "stage_progress_records",
+      "offset": 64,
+      "size": 196,
+      "type": "bytes"
     },
     {
-      "name": "player_status_payload",
-      "offset": 8,
-      "size": 16,
+      "confidence": "likely",
+      "description": "Top score (10000) of ranking table A: first LE u32 of the 8-entry table at save+0x108.",
+      "evidence": "Save-I/O FUN_08054134 (write via FUN_080575f0, 57 x 8-byte EEPROM blocks) and FUN_080541a0 (read via FUN_0805740c) transfer the whole 0x1C8-byte buffer including save[0x108:0x1C8]. Baseline shows two 8-entry tables of LE u32 scores descending 10000..3000 (step 1000) with 3-byte initials and a constant 0x0C suffix byte; table A head at save+0x108 = 10000 (0x2710).",
+      "name": "ranking_score_best_a",
+      "offset": 264,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Ranking table A entries 2..8 (7 x 12 bytes: LE u32 score, LE u32 sub-value, 3 initials bytes, 0x0C suffix).",
+      "evidence": "Same save-I/O coverage as ranking_score_best_a (FUN_08054134 / FUN_080541a0, EEPROM blocks 33..40). Baseline save[0x10C:0x168] holds scores 9000..3000 with per-entry sub-values 45..15 and initials bytes.",
+      "name": "ranking_table_a_rest",
+      "offset": 268,
+      "size": 92,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Top score (10000) of ranking table B (second mode): first LE u32 of the 8-entry table at save+0x168.",
+      "evidence": "Same save-I/O coverage as ranking_score_best_a (FUN_08054134 / FUN_080541a0, EEPROM blocks 41..48). Baseline LE u32 at save+0x168 = 10000 (0x2710), head of the second 8-entry score table with distinct initials from table A.",
+      "name": "ranking_score_best_b",
+      "offset": 360,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Ranking table B entries 2..8 (7 x 12 bytes: LE u32 score, LE u32 sub-value, 3 initials bytes, 0x0C suffix).",
+      "evidence": "Same save-I/O coverage as ranking_score_best_b (FUN_08054134 / FUN_080541a0, EEPROM blocks 41..56). Baseline save[0x16C:0x1C8] holds scores 9000..3000 with per-entry sub-values 45..15 and initials bytes distinct from table A.",
+      "name": "ranking_table_b_rest",
+      "offset": 364,
+      "size": 92,
       "type": "bytes"
     }
-  ]
+  ],
+  "game_code": "AIPE",
+  "id": "aipe",
+  "magic_signatures": [
+    {
+      "bytes": [
+        83,
+        115,
+        95,
+        83,
+        97,
+        118,
+        101,
+        69
+      ],
+      "description": "ASCII 'Ss_SaveE' header written by strcpy on init, checked by strcmp on load",
+      "offset": 3
+    }
+  ],
+  "media": "eeprom512",
+  "size_bytes": 512,
+  "title": "Silent Scope (USA) (En,Fr,De,Es,It)"
 }

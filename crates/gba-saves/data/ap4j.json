@@ -1,45 +1,101 @@
 {
-  "id": "ap4j",
+  "checksums": [],
+  "copy_groups": [
+    {
+      "fields": [
+        "game_title_id",
+        "game_title_id_backup"
+      ],
+      "name": "title_id_mirrors"
+    }
+  ],
+  "fields": [
+    {
+      "confidence": "likely",
+      "constraint": {
+        "allowed": "KCEOPAW 4",
+        "kind": "ascii-charset",
+        "max_len": 16
+      },
+      "description": "Primary 16-byte title ID block: ASCII 'KCEO PAWAPOKE4' plus two NUL terminators",
+      "evidence": "Save offsets 0x00..0x10 hold ASCII 'KCEO PAWAPOKE4'. FUN_080004c4, FUN_080004f0 and FUN_08000520 each issue 16-byte CpuSet copies via FUN_080cc9f4 (SWI 0xb CpuSet), matching this 16-byte header block size duplicated at save offsets 0x00 and 0x10.",
+      "name": "game_title_id",
+      "offset": 0,
+      "size": 16,
+      "type": "ascii"
+    },
+    {
+      "confidence": "likely",
+      "constraint": {
+        "allowed": "KCEOPAW 4",
+        "kind": "ascii-charset",
+        "max_len": 16
+      },
+      "description": "Redundant mirror copy of the 16-byte title ID block: ASCII 'KCEO PAWAPOKE4' plus two NUL terminators",
+      "evidence": "Save offsets 0x10..0x20 are byte-identical to offsets 0x00..0x10. Same 16-byte CpuSet primitives FUN_080004c4/FUN_080004f0/FUN_08000520 via FUN_080cc9f4 duplicate the header block; kept as the mirror member of copy group title_id_mirrors.",
+      "name": "game_title_id_backup",
+      "offset": 16,
+      "size": 16,
+      "type": "ascii"
+    },
+    {
+      "confidence": "likely",
+      "constraint": {
+        "allowed": "M6O5",
+        "kind": "ascii-charset",
+        "max_len": 4
+      },
+      "description": "4-character tag of the active gameplay/config block at save offset 0x60 ('M6O5')",
+      "evidence": "Save offsets 0x60..0x64 hold ASCII 'M6O5' inside the only other non-blank save region (0x60..0x70). FUN_08095adc reads and range-checks the IWRAM game-state struct at _DAT_030055f0 plus small offsets +0x60/+0x68/+0x6c/+0x7a, showing live gameplay state words live in a +0x60 region parallel to this save block.",
+      "name": "config_block_tag",
+      "offset": 96,
+      "size": 4,
+      "type": "ascii"
+    },
+    {
+      "confidence": "likely",
+      "description": "Gameplay/config word in the active 0x60 block (baseline 0x3812 = 14354); exact gameplay meaning unidentified, structural evidence only",
+      "evidence": "Save offset 0x64 holds nonzero word 0x3812 inside the active 0x60..0x70 region. FUN_08095adc accesses the IWRAM game-state struct _DAT_030055f0 at +0x60 as a u16 with range checks and neighboring words at +0x68/+0x6c/+0x7c, grounding a live state word in the +0x60 region that this save word parallels.",
+      "name": "config_param_word",
+      "offset": 100,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Gameplay/config status byte at the end of the active 0x60 block (baseline 0x51 = 81); exact gameplay meaning unidentified, structural evidence only",
+      "evidence": "Save offset 0x6F holds nonzero byte 0x51 closing the active 0x60..0x70 region. FUN_08095adc touches IWRAM game-state bytes across _DAT_030055f0+0x60..+0x7a, and FUN_080ee4f6 initializes per-object state bytes including [0x51] and [0x68..0x6b], grounding small status bytes in this offset window.",
+      "name": "config_status_byte",
+      "offset": 111,
+      "size": 1,
+      "type": "u8"
+    }
+  ],
   "game_code": "AP4J",
-  "title": "Power Pro Kun Pocket 4 (Japan)",
-  "media": "sram",
-  "size_bytes": 32768,
+  "id": "ap4j",
   "magic_signatures": [
     {
-      "offset": 0,
       "bytes": [
         75,
         67,
         69,
         79
-      ]
+      ],
+      "description": "ASCII 'KCEO' title prefix, verified against baseline.sav",
+      "offset": 0
+    },
+    {
+      "bytes": [
+        75,
+        67,
+        69,
+        79
+      ],
+      "description": "ASCII 'KCEO' title prefix of the mirror copy, verified against baseline.sav",
+      "offset": 16
     }
   ],
-  "checksums": [],
-  "fields": [
-    {
-      "name": "magic_header",
-      "offset": 0,
-      "size": 4,
-      "type": "ascii"
-    },
-    {
-      "name": "slot_counter",
-      "offset": 4,
-      "size": 2,
-      "type": "u16_le"
-    },
-    {
-      "name": "game_progress_flags",
-      "offset": 6,
-      "size": 2,
-      "type": "u16_le"
-    },
-    {
-      "name": "player_status_payload",
-      "offset": 8,
-      "size": 16,
-      "type": "bytes"
-    }
-  ]
+  "media": "sram",
+  "size_bytes": 32768,
+  "title": "Power Pro Kun Pocket 4 (Japan)"
 }

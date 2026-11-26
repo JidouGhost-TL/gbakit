@@ -1,45 +1,309 @@
 {
-  "id": "apbj",
+  "checksums": [
+    {
+      "algorithm": "sum8",
+      "covered_end": 40,
+      "covered_start": 16,
+      "name": "header_checksum",
+      "seed": 0,
+      "stored_offset": 16,
+      "xor_out": 0
+    },
+    {
+      "algorithm": "sum8",
+      "covered_end": 2104,
+      "covered_start": 40,
+      "name": "slot0_checksum",
+      "seed": 0,
+      "stored_offset": 40,
+      "xor_out": 0
+    },
+    {
+      "algorithm": "sum8",
+      "covered_end": 4184,
+      "covered_start": 2120,
+      "name": "slot1_checksum",
+      "seed": 0,
+      "stored_offset": 2120,
+      "xor_out": 0
+    },
+    {
+      "algorithm": "sum8",
+      "covered_end": 6264,
+      "covered_start": 4200,
+      "name": "slot2_checksum",
+      "seed": 0,
+      "stored_offset": 4200,
+      "xor_out": 0
+    },
+    {
+      "algorithm": "sum8",
+      "covered_end": 8344,
+      "covered_start": 6280,
+      "name": "slot3_checksum",
+      "seed": 0,
+      "stored_offset": 6280,
+      "xor_out": 0
+    },
+    {
+      "algorithm": "sum8",
+      "covered_end": 10424,
+      "covered_start": 8360,
+      "name": "slot4_checksum",
+      "seed": 0,
+      "stored_offset": 8360,
+      "xor_out": 0
+    },
+    {
+      "algorithm": "sum8",
+      "covered_end": 12504,
+      "covered_start": 10440,
+      "name": "slot5_checksum",
+      "seed": 0,
+      "stored_offset": 10440,
+      "xor_out": 0
+    },
+    {
+      "algorithm": "sum8",
+      "covered_end": 12544,
+      "covered_start": 12504,
+      "name": "backup_header_checksum",
+      "seed": 0,
+      "stored_offset": 12504,
+      "xor_out": 0
+    }
+  ],
+  "copy_groups": [],
+  "fields": [
+    {
+      "confidence": "confirmed",
+      "description": "Stored byte-sum (mod 256) of the 24-byte header block; verified by FUN_08008410.",
+      "evidence": "FUN_080076f0(0) loads SRAM 0x0E000000+0x10 len 0x18 via FUN_08008218; FUN_08008410 zeroes block byte 0, sums 0x18 bytes with FUN_08008470, stores low byte back and reports mismatch.",
+      "name": "header_checksum",
+      "offset": 16,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Remaining 23 bytes of the 24-byte header block (all zero in a fresh save; purpose unknown).",
+      "evidence": "Same 0x18-byte header block loaded by FUN_080076f0(0) via FUN_08008218(0x10, buf, 0x18) and checksummed by FUN_08008410 over all 0x18 bytes.",
+      "name": "header_data",
+      "offset": 17,
+      "size": 23,
+      "type": "bytes"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Stored byte-sum (mod 256) of file 0 primary slot image; verified by FUN_08008440.",
+      "evidence": "FUN_080078f0 reads 0x820 bytes via FUN_08008218 from the SRAM-offset table at _DAT_08007928 into the buffer at _DAT_0800792c; FUN_08008440 verifies it with FUN_08008470 (stored sum at image byte 0); FUN_080075c4 orchestrates slot retries.",
+      "name": "slot0_checksum",
+      "offset": 40,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "16-bit file stat copied from slot image offset +0x0C into the active file entry (+0x18); likely score/counter.",
+      "evidence": "FUN_0800772c loops files 0..2, reads each 0x820-byte image via FUN_08008218 into uRam0800777c, then copies u16 at image+0x0C to file entry+0x18.",
+      "name": "slot0_stat_0c",
+      "offset": 52,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Stage-progression byte A of file 0 (paired with stage_6d; derived file stage capped at 0x16/22).",
+      "evidence": "FUN_0800772c derives file entry+0x1A from image bytes +0x6C/+0x6D with cap 0x16: next=(buf[0x6C]+1), clamped against buf[0x6D] and 0x16.",
+      "name": "slot0_stage_6c",
+      "offset": 148,
+      "size": 1,
+      "type": "u8",
+      "constraint": {
+        "kind": "unsigned-range",
+        "minimum": 0,
+        "maximum": 22
+      }
+    },
+    {
+      "confidence": "likely",
+      "description": "Stage-progression byte B of file 0 (upper bound compared against stage_6c+1).",
+      "evidence": "FUN_0800772c compares (image+0x6C)+1 against image+0x6D when computing file entry+0x1A, capped at 0x16.",
+      "name": "slot0_stage_6d",
+      "offset": 149,
+      "size": 1,
+      "type": "u8",
+      "constraint": {
+        "kind": "unsigned-range",
+        "minimum": 0,
+        "maximum": 22
+      }
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Stored byte-sum (mod 256) of file 1 primary slot image; verified by FUN_08008440.",
+      "evidence": "FUN_080078f0 reads 0x820 bytes via FUN_08008218 from the SRAM-offset table at _DAT_08007928; FUN_08008440 verifies it with FUN_08008470 (stored sum at image byte 0); FUN_080075c4 iterates files 2,1,0.",
+      "name": "slot1_checksum",
+      "offset": 2120,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "16-bit file stat copied from slot image offset +0x0C into the active file entry (+0x18).",
+      "evidence": "FUN_0800772c loops files 0..2 (uVar5*4 table at iRam08007778), reads each 0x820-byte image via FUN_08008218 into uRam0800777c, copies u16 at image+0x0C to entry+0x18.",
+      "name": "slot1_stat_0c",
+      "offset": 2132,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Stage-progression byte A of file 1 (cap 0x16/22).",
+      "evidence": "FUN_0800772c derives file entry+0x1A from image bytes +0x6C/+0x6D with cap 0x16, applied uniformly to files 0..2.",
+      "name": "slot1_stage_6c",
+      "offset": 2228,
+      "size": 1,
+      "type": "u8",
+      "constraint": {
+        "kind": "unsigned-range",
+        "minimum": 0,
+        "maximum": 22
+      }
+    },
+    {
+      "confidence": "likely",
+      "description": "Stage-progression byte B of file 1.",
+      "evidence": "FUN_0800772c compares (image+0x6C)+1 against image+0x6D for each of files 0..2, capped at 0x16.",
+      "name": "slot1_stage_6d",
+      "offset": 2229,
+      "size": 1,
+      "type": "u8",
+      "constraint": {
+        "kind": "unsigned-range",
+        "minimum": 0,
+        "maximum": 22
+      }
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Stored byte-sum (mod 256) of file 2 primary slot image; verified by FUN_08008440.",
+      "evidence": "FUN_080078f0 reads 0x820 bytes via FUN_08008218 from the SRAM-offset table at _DAT_08007928; FUN_08008440 verifies it with FUN_08008470 (stored sum at image byte 0); FUN_080075c4 iterates files 2,1,0.",
+      "name": "slot2_checksum",
+      "offset": 4200,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "16-bit file stat copied from slot image offset +0x0C into the active file entry (+0x18).",
+      "evidence": "FUN_0800772c loops files 0..2, reads each 0x820-byte image via FUN_08008218 into uRam0800777c, copies u16 at image+0x0C to entry+0x18.",
+      "name": "slot2_stat_0c",
+      "offset": 4212,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Stage-progression byte A of file 2 (cap 0x16/22).",
+      "evidence": "FUN_0800772c derives file entry+0x1A from image bytes +0x6C/+0x6D with cap 0x16, applied uniformly to files 0..2.",
+      "name": "slot2_stage_6c",
+      "offset": 4308,
+      "size": 1,
+      "type": "u8",
+      "constraint": {
+        "kind": "unsigned-range",
+        "minimum": 0,
+        "maximum": 22
+      }
+    },
+    {
+      "confidence": "likely",
+      "description": "Stage-progression byte B of file 2.",
+      "evidence": "FUN_0800772c compares (image+0x6C)+1 against image+0x6D for each of files 0..2, capped at 0x16.",
+      "name": "slot2_stage_6d",
+      "offset": 4309,
+      "size": 1,
+      "type": "u8",
+      "constraint": {
+        "kind": "unsigned-range",
+        "minimum": 0,
+        "maximum": 22
+      }
+    },
+    {
+      "confidence": "likely",
+      "description": "Stored byte-sum of mirror slot 3 (retry copy for file 0: FUN_080075c4 tries slot uVar3+3 on primary failure).",
+      "evidence": "FUN_080075c4 second-chance path calls FUN_080078f0((uVar3+3)&0xFF) then FUN_08008440; slot stride 0x820 from the _DAT_08007928 table; geometry 0x28+6*0x820+0x18 fills exactly the 0x3100 written region.",
+      "name": "slot3_checksum",
+      "offset": 6280,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Stored byte-sum of mirror slot 4 (retry copy for file 1).",
+      "evidence": "FUN_080075c4 retry path FUN_080078f0((uVar3+3)&0xFF) + FUN_08008440 verify; contiguous 0x820 stride inferred from exact 0x3100-region fit.",
+      "name": "slot4_checksum",
+      "offset": 8360,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Stored byte-sum of mirror slot 5 (retry copy for file 2).",
+      "evidence": "FUN_080075c4 retry path FUN_080078f0((uVar3+3)&0xFF) + FUN_08008440 verify; contiguous 0x820 stride inferred from exact 0x3100-region fit.",
+      "name": "slot5_checksum",
+      "offset": 10440,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Stored byte-sum (mod 256) of the backup 24-byte header block.",
+      "evidence": "FUN_080076f0(1) loads an alternate 0x18-byte header via FUN_08008218(_DAT_08007724, buf, 0x18); placed at 0x30E8 so header+6 slots+backup fills exactly the observed 0x3100 written region.",
+      "name": "backup_header_checksum",
+      "offset": 12504,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Remaining 23 bytes of the backup 24-byte header block (all zero in a fresh save).",
+      "evidence": "Same alternate 0x18-byte header read by FUN_080076f0(1) and verified by FUN_08008410 over 0x18 bytes; tail position 0x30E8..0x3100 completes the written region.",
+      "name": "backup_header_data",
+      "offset": 12505,
+      "size": 23,
+      "type": "bytes"
+    }
+  ],
   "game_code": "APBJ",
-  "title": "Pinobee no Daibouken (Japan)",
-  "media": "sram",
-  "size_bytes": 32768,
+  "id": "apbj",
   "magic_signatures": [
     {
-      "offset": 0,
       "bytes": [
         80,
         73,
         78,
-        79
-      ]
+        79,
+        66,
+        69,
+        69,
+        32,
+        77,
+        65,
+        83,
+        84,
+        69,
+        82,
+        48,
+        0
+      ],
+      "description": "ASCII 'PINOBEE MASTER0' title header",
+      "offset": 0
     }
   ],
-  "checksums": [],
-  "fields": [
-    {
-      "name": "magic_header",
-      "offset": 0,
-      "size": 4,
-      "type": "ascii"
-    },
-    {
-      "name": "slot_counter",
-      "offset": 4,
-      "size": 2,
-      "type": "u16_le"
-    },
-    {
-      "name": "game_progress_flags",
-      "offset": 6,
-      "size": 2,
-      "type": "u16_le"
-    },
-    {
-      "name": "player_status_payload",
-      "offset": 8,
-      "size": 16,
-      "type": "bytes"
-    }
-  ]
+  "media": "sram",
+  "size_bytes": 32768,
+  "title": "Pinobee no Daibouken (Japan)"
 }

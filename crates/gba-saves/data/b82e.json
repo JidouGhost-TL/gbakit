@@ -1,45 +1,118 @@
 {
-  "id": "b82e",
-  "game_code": "B82E",
-  "title": "Dogz (USA)",
-  "media": "eeprom512",
-  "size_bytes": 512,
-  "magic_signatures": [
+  "checksums": [
     {
-      "offset": 0,
-      "bytes": [
-        50,
-        50,
-        48,
-        49
-      ]
+      "algorithm": "sum16_le",
+      "covered_end": 504,
+      "covered_start": 16,
+      "name": "payload_checksum",
+      "seed": 1,
+      "stored_offset": 14,
+      "xor_out": 0
     }
   ],
-  "checksums": [],
+  "eeprom_rev8": true,
   "fields": [
     {
-      "name": "magic_header",
+      "confidence": "confirmed",
+      "constraint": {
+        "allowed": "0123456789DOG",
+        "kind": "ascii-charset",
+        "max_len": 12
+      },
+      "description": "NUL-terminated ROM signature compared on load and written on save",
+      "evidence": "FUN_08001594 validates the buffer via FUN_08001624 NUL-terminated compare (decomp lines 759, 781-804); FUN_080012e4 writes it via FUN_08001360 (decomp lines 538, 555-570). Verified as ASCII only in the rev8-logical domain.",
+      "name": "save_magic",
       "offset": 0,
-      "size": 4,
+      "size": 12,
       "type": "ascii"
     },
     {
-      "name": "slot_counter",
-      "offset": 4,
+      "confidence": "likely",
+      "description": "Two zero bytes between magic end and checksum store; never written by save core",
+      "evidence": "Magic write (FUN_08001360 via FUN_080012e4:538) stops at NUL so cursor ends at 12; checksum store starts at cursor 0x0E (FUN_080012e4:544-548, read back FUN_08001594:763-764); checksum region starts at cursor 0x10 (FUN_080012e4:544-545, FUN_08001594:761-762). Reads 0x0000 in baseline.",
+      "name": "header_reserved",
+      "offset": 12,
+      "size": 2,
+      "type": "bytes"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Stored checksum: (sum of bytes [0x10,0x1F8) + 1) & 0xFFFF, little-endian",
+      "evidence": "Byte sum loop FUN_0800138c (decomp 583-587), +1 at FUN_080012e4:545-546, stored via FUN_080013c8 at cursor 0x0E (FUN_080012e4:547-548), read back via FUN_08001660 at cursor 0x0E (FUN_08001594:763-764) and compared (FUN_08001594:765). Baseline: sum=29, stored=30. Mirrored by checksums[] entry (sum16_le, seed 1).",
+      "name": "checksum_value",
+      "offset": 14,
       "size": 2,
       "type": "u16_le"
     },
     {
-      "name": "game_progress_flags",
-      "offset": 6,
-      "size": 2,
-      "type": "u16_le"
+      "confidence": "likely",
+      "description": "Checksum-covered payload segment; all zero in the live-captured baseline",
+      "evidence": "Inside checksum region starting at cursor 0x10 (FUN_080012e4:544-545, FUN_08001594:761-762, sum loop FUN_0800138c); bulk-transferred EEPROM word-wise by FUN_08001560 on load and FUN_0800129c on save (decomp 712-737, 494-522) via FUN_08082af0/FUN_08082bb4/FUN_08082a70 on DAT_0d000000. All 0x00 in baseline.",
+      "name": "data_block_a",
+      "offset": 16,
+      "size": 319,
+      "type": "bytes"
     },
     {
-      "name": "player_status_payload",
-      "offset": 8,
-      "size": 16,
+      "confidence": "likely",
+      "description": "Nonzero game-written byte inside checksum-covered payload; exact gameplay accessor not recoverable from code-only decomp, kept as mutable probe for live persistence testing",
+      "evidence": "Reads 0x1B (27) in baseline inside verified checksum range [0x10,0x1F8); preserved verbatim by bulk word I/O FUN_08001560/FUN_0800129c via FUN_08082af0/FUN_08082bb4; integrity-covered by FUN_0800138c/FUN_08001594. Gameplay touches it through the RAM mirror via ROM pointer constants (no per-field accessor in decomp).",
+      "name": "data_byte_014f",
+      "offset": 335,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Checksum-covered payload segment; all zero in the live-captured baseline",
+      "evidence": "Inside checksum region starting at cursor 0x10 (FUN_080012e4:544-545, FUN_08001594:761-762, sum loop FUN_0800138c); bulk-transferred EEPROM word-wise by FUN_08001560 on load and FUN_0800129c on save (decomp 712-737, 494-522) via FUN_08082af0/FUN_08082bb4/FUN_08082a70 on DAT_0d000000. All 0x00 in baseline.",
+      "name": "data_block_b",
+      "offset": 336,
+      "size": 160,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Nonzero game-written byte inside checksum-covered payload; exact gameplay accessor not recoverable from code-only decomp, kept as mutable probe for live persistence testing",
+      "evidence": "Reads 0x02 (2) in baseline inside verified checksum range [0x10,0x1F8); preserved verbatim by bulk word I/O FUN_08001560/FUN_0800129c via FUN_08082af0/FUN_08082bb4; integrity-covered by FUN_0800138c/FUN_08001594. Gameplay touches it through the RAM mirror via ROM pointer constants (no per-field accessor in decomp).",
+      "name": "data_byte_01f0",
+      "offset": 496,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Trailing checksum-covered payload segment; all zero in the live-captured baseline",
+      "evidence": "Inside checksum region ending at 0x1F8 (covered_end of verified sum16_le/seed-1 checksum: sum[0x10,0x1F8)+1 == stored u16 at 0x0E); bulk-transferred by FUN_08001560/FUN_0800129c via FUN_08082af0/FUN_08082bb4. All 0x00 in baseline.",
+      "name": "data_block_c",
+      "offset": 497,
+      "size": 7,
       "type": "bytes"
     }
-  ]
+  ],
+  "game_code": "B82E",
+  "id": "b82e",
+  "magic_signatures": [
+    {
+      "bytes": [
+        50,
+        48,
+        48,
+        52,
+        49,
+        48,
+        50,
+        50,
+        68,
+        79,
+        71,
+        50
+      ],
+      "description": "ASCII '20041022DOG2' header (rev8-logical domain)",
+      "offset": 0
+    }
+  ],
+  "media": "eeprom512",
+  "size_bytes": 512,
+  "title": "Dogz (USA)"
 }

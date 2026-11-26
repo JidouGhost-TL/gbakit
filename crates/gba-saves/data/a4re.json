@@ -1,29 +1,103 @@
 {
-  "id": "a4re",
-  "game_code": "A4RE",
-  "title": "Rock 'N Roll Racing (USA)",
-  "media": "eeprom512",
-  "size_bytes": 512,
-  "magic_signatures": [],
   "checksums": [],
+  "copy_groups": [],
+  "eeprom_rev8": true,
   "fields": [
     {
-      "name": "slot_counter",
+      "confidence": "confirmed",
+      "constraint": {
+        "kind": "enum",
+        "labels": {
+          "48879": "Initialized-save sentinel"
+        },
+        "values": [
+          48879
+        ]
+      },
+      "description": "Init sentinel: first u32 of the RAM save struct. FUN_08000ca4 compares it against the expected value and, on mismatch, zeroes 0xDC bytes and rewrites it before calling FUN_08000d80. Baseline logical bytes are EF BE 00 00 = 0x0000BEEF.",
+      "evidence": "FUN_08000ca4 compares *piVar1 (buffer word 0) to the expected sentinel and rewrites it on mismatch; FUN_08000d30 loads it via FUN_08073614 EEPROM address 0 into RAM offset 0; FUN_08000d80 stores it via FUN_080736c4. Baseline logical offset 0 reads 0xBEEF.",
+      "name": "save_init_sentinel",
       "offset": 0,
-      "size": 2,
-      "type": "u16_le"
+      "size": 4,
+      "type": "u32_le"
     },
     {
-      "name": "game_progress_flags",
-      "offset": 2,
-      "size": 2,
-      "type": "u16_le"
-    },
-    {
-      "name": "player_status_payload",
+      "confidence": "likely",
+      "description": "Spare word: second u32 of EEPROM address-0 block. Transferred verbatim by the FUN_08000d30 load loop (address 0, RAM/save offset 4) and the FUN_08000d80 store loop; zero in the fresh-init baseline. Per-word role unresolved from code-only decomp.",
+      "evidence": "FUN_08000d30 loops 0x1b EEPROM addresses with +8 stride via FUN_08073614 into RAM/save offsets addr*8; FUN_08000d80 mirrors it via FUN_080736c4 with FUN_080737a0 verify. Offset 4 is the tail of address-0 block.",
+      "name": "block00_spare",
       "offset": 4,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "First word of the EEPROM address-1 block (start of the gameplay data area at save offset 8). Round-trips through FUN_08000d30/FUN_08000d80 block loops; zero in the fresh-init baseline. Exposed as a scalar so live mutation testing can probe it.",
+      "evidence": "FUN_08000d30 reads EEPROM address 1 via FUN_08073614 into RAM/save offsets 8..15; FUN_08000d80 writes it back via FUN_080736c4 (address 1) and verifies via FUN_080737a0.",
+      "name": "blocks01_08_first_word",
+      "offset": 8,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Remaining 60 bytes of EEPROM address blocks 1..8 (save offsets 12..71). Bulk gameplay data region transferred by the FUN_08000d30 (+8 stride, 0x1b iterations) and FUN_08000d80 loops; all zero in the fresh-init baseline.",
+      "evidence": "FUN_08000d30 loads EEPROM addresses 1..8 via FUN_08073614 into RAM/save offsets 8..71; FUN_08000d80 stores them via FUN_080736c4 with FUN_080737a0 read-back verify.",
+      "name": "blocks01_08_rest",
+      "offset": 12,
+      "size": 60,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "First word of the EEPROM address-9 block (save offset 72). Round-trips through FUN_08000d30/FUN_08000d80 block loops; zero in the fresh-init baseline. Exposed as a scalar so live mutation testing can probe it.",
+      "evidence": "FUN_08000d30 reads EEPROM address 9 via FUN_08073614 into RAM/save offsets 72..79; FUN_08000d80 writes it back via FUN_080736c4 (address 9) and verifies via FUN_080737a0.",
+      "name": "blocks09_16_first_word",
+      "offset": 72,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Remaining 60 bytes of EEPROM address blocks 9..16 (save offsets 76..135). Bulk gameplay data region transferred by the FUN_08000d30 and FUN_08000d80 loops; all zero in the fresh-init baseline.",
+      "evidence": "FUN_08000d30 loads EEPROM addresses 9..16 via FUN_08073614 into RAM/save offsets 72..135; FUN_08000d80 stores them via FUN_080736c4 with FUN_080737a0 read-back verify.",
+      "name": "blocks09_16_rest",
+      "offset": 76,
+      "size": 60,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Full 64 bytes of EEPROM address blocks 17..24 (save offsets 136..199). Bulk gameplay data region transferred by the FUN_08000d30 and FUN_08000d80 loops; all zero in the fresh-init baseline.",
+      "evidence": "FUN_08000d30 loads EEPROM addresses 17..24 via FUN_08073614 into RAM/save offsets 136..199; FUN_08000d80 stores them via FUN_080736c4 with FUN_080737a0 read-back verify.",
+      "name": "blocks17_24",
+      "offset": 136,
+      "size": 64,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Full 16 bytes of EEPROM address blocks 25..26 (save offsets 200..215), the last written blocks. FUN_08000d30/FUN_08000d80 loop bound is 0x1b (27 addresses: 0..26), so offsets 216+ are never written and read back as erased 0xFF.",
+      "evidence": "FUN_08000d30 and FUN_08000d80 iterate addresses while index < 0x1b with +8 stride, covering save offsets 200..215 via FUN_08073614/FUN_080736c4; baseline offsets 216..511 are erased 0xFF, proving nothing is stored there.",
+      "name": "blocks25_26",
+      "offset": 200,
       "size": 16,
       "type": "bytes"
     }
-  ]
+  ],
+  "game_code": "A4RE",
+  "id": "a4re",
+  "magic_signatures": [
+    {
+      "bytes": [
+        239,
+        190
+      ],
+      "description": "Init sentinel 0xBEEF at logical offset 0 (little-endian EF BE); rewritten by FUN_08000ca4 whenever the save is uninitialized.",
+      "offset": 0
+    }
+  ],
+  "media": "eeprom512",
+  "size_bytes": 512,
+  "title": "Rock 'N Roll Racing (USA)"
 }

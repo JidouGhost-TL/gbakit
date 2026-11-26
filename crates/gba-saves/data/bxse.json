@@ -1,29 +1,200 @@
 {
-  "id": "bxse",
-  "game_code": "BXSE",
-  "title": "Tony Hawk's Downhill Jam (USA)",
-  "media": "eeprom512",
-  "size_bytes": 512,
-  "magic_signatures": [],
-  "checksums": [],
+  "checksums": [
+    {
+      "algorithm": "xor32_le",
+      "covered_end": 400,
+      "covered_start": 0,
+      "description": "XOR of the first 100 little-endian u32 words (save slots + header) stored at 0x1f8; written by FUN_080190b8.",
+      "name": "save_xor32",
+      "seed": 0,
+      "stored_offset": 504,
+      "xor_out": 0
+    }
+  ],
+  "copy_groups": [],
+  "eeprom_rev8": true,
   "fields": [
     {
-      "name": "slot_counter",
-      "offset": 120,
-      "size": 2,
-      "type": "u16_le"
+      "confidence": "confirmed",
+      "description": "File 0 profile initials (3 chars); first byte 0 means empty slot.",
+      "evidence": "FUN_0800bfcc copies 3 bytes via FUN_08021ce8 to 0x02000045 + slot*0x90; FUN_0800c730 loops 3 slots (stride 0x90) and treats name[0]==0 as empty.",
+      "name": "file0_name",
+      "offset": 69,
+      "size": 3,
+      "type": "ascii"
     },
     {
-      "name": "game_progress_flags",
-      "offset": 122,
+      "confidence": "likely",
+      "description": "File 0 rider/character selection id; used as lookup-table index.",
+      "evidence": "FUN_0801a540 reads i16 at slot*0x90 + 0x4e and indexes rider data tables with it (lines near 0x200004e).",
+      "name": "file0_rider_select",
+      "offset": 78,
       "size": 2,
-      "type": "u16_le"
+      "type": "i16_le"
     },
     {
-      "name": "player_status_payload",
-      "offset": 124,
-      "size": 16,
+      "confidence": "likely",
+      "description": "File 0 board/gear selection id; bounded menu range.",
+      "evidence": "FUN_0801a540 range-checks i16 at slot*0x90 + 0x50: (x-5)<7 and (x-9)<3, i.e. values 5..11.",
+      "name": "file0_board_select",
+      "offset": 80,
+      "size": 2,
+      "type": "i16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "File 0 trick/style selection id; special-cases value 6.",
+      "evidence": "FUN_0801a540 branches on i16 at slot*0x90 + 0x52 == 6 and range-checks (x-7)<2, i.e. values 7..8.",
+      "name": "file0_trick_select",
+      "offset": 82,
+      "size": 2,
+      "type": "i16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "File 0 extra loadout selection id; used as table index.",
+      "evidence": "FUN_0801a540 reads i16 at slot*0x90 + 0x54 and indexes a data table with it (*2 + table base).",
+      "name": "file0_extra_select",
+      "offset": 84,
+      "size": 2,
+      "type": "i16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "File 0 stat/table parameter; scaled by 0x15 for lookups.",
+      "evidence": "FUN_0801a540 reads i16 at slot*0x90 + 0x56 and multiplies by 0x15 to index a stat table.",
+      "name": "file0_stat_param",
+      "offset": 86,
+      "size": 2,
+      "type": "i16_le"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "File 0 currency (shop money); compared against prices and subtracted on purchase.",
+      "evidence": "FUN_0800ec44 compares u32 at slot*0x90 + 0x58 against cost tables and subtracts the price on buy; displays it via FUN_0800ea58.",
+      "name": "file0_currency",
+      "offset": 88,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "File 0 per-level unlock/medal bitfield (first u16 entry).",
+      "evidence": "FUN_080054c0 / FUN_080057cc test and set bits in u16 array at slot*0x90 + 0x5c + level*2; FUN_0800ff18 checks nibble/mask patterns for medal display.",
+      "name": "file0_unlock_flags",
+      "offset": 92,
+      "size": 2,
+      "type": "bitflags"
+    },
+    {
+      "confidence": "likely",
+      "description": "Save header marker bytes (0xFC, 0xFC) ahead of slot 0.",
+      "evidence": "FUN_080190b8 stores the byte from save base + 0x140 (init 0xFC by FUN_0800862c) to buffer + slot*0x90 + 0x7f/0x80; baseline slot 0 shows FC FC at logical 0x7f/0x80.",
+      "name": "header_markers",
+      "offset": 127,
+      "size": 2,
       "type": "bytes"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "File 0 per-level handicap/rank modifier; clamped to [-5, 10].",
+      "evidence": "FUN_0801a39c adjusts i8 at slot*0x90 + 0x82 + level_id by +-2 and clamps to [-5,10]; FUN_0801a3d8 reads it (callers FUN_080148b4, FUN_08016f72).",
+      "name": "file0_handicap",
+      "offset": 130,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "File 0 defaulted tuning word A (init 0x0100).",
+      "evidence": "FUN_0801a288 writes 0x0100 to slot*0x90 + 0x8c during per-slot init; file-select FUN_0800c730 re-applies it for empty slots.",
+      "name": "file0_tune_a",
+      "offset": 140,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "File 0 defaulted tuning word B (init 0x0100).",
+      "evidence": "FUN_0801a288 writes 0x0100 to slot*0x90 + 0x8e during per-slot init; file-select FUN_0800c730 re-applies it for empty slots.",
+      "name": "file0_tune_b",
+      "offset": 142,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "File 0 defaulted tuning word C (init 0x0100).",
+      "evidence": "FUN_0801a288 writes 0x0100 to slot*0x90 + 0x90 during per-slot init; file-select FUN_0800c730 re-applies it for empty slots.",
+      "name": "file0_tune_c",
+      "offset": 144,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "File 0 per-level stage state bytes (0 = locked/unplayed, 5 = cleared).",
+      "evidence": "FUN_0800ff18 branches level display on byte at slot*0x90 + level_id + 0x3b == 0; FUN_080133a8 requires value 5 for cleared state.",
+      "name": "file0_stage_state",
+      "offset": 59,
+      "size": 8,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "File 1 profile initials; same 3-byte layout as file 0 at slot stride 0x90.",
+      "evidence": "FUN_0800c730 iterates all 3 slots with stride 0x90 from 0x02000045; file 1 name sits at 0x45 + 0x90.",
+      "name": "file1_name",
+      "offset": 213,
+      "size": 3,
+      "type": "ascii"
+    },
+    {
+      "confidence": "likely",
+      "description": "File 1 currency; same slot-relative offset as file 0.",
+      "evidence": "FUN_0800ec44 accesses currency at slot*0x90 + 0x58 for the active slot; file 1 copy at 0x58 + 0x90.",
+      "name": "file1_currency",
+      "offset": 232,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "File 2 profile initials; same 3-byte layout at slot stride 2*0x90.",
+      "evidence": "FUN_0800c730 iterates all 3 slots with stride 0x90 from 0x02000045; file 2 name sits at 0x45 + 2*0x90.",
+      "name": "file2_name",
+      "offset": 357,
+      "size": 3,
+      "type": "ascii"
+    },
+    {
+      "confidence": "likely",
+      "description": "File 2 currency; same slot-relative offset as file 0.",
+      "evidence": "FUN_0800ec44 accesses currency at slot*0x90 + 0x58 for the active slot; file 2 copy at 0x58 + 2*0x90.",
+      "name": "file2_currency",
+      "offset": 376,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Active file/slot index (0-2); selects which 0x90-byte slot is live.",
+      "evidence": "FUN_0800862c inits _DAT_020001b4 = 0; FUN_0800c730 assigns values < 3; every save accessor multiplies it by 0x90.",
+      "name": "active_file_index",
+      "offset": 436,
+      "size": 4,
+      "type": "u32_le",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 2,
+        "minimum": 0
+      }
     }
-  ]
+  ],
+  "game_code": "BXSE",
+  "id": "bxse",
+  "magic_signatures": [],
+  "media": "eeprom512",
+  "size_bytes": 512,
+  "title": "Tony Hawk's Downhill Jam (USA)"
 }

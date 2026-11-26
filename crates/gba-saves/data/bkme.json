@@ -1,45 +1,220 @@
 {
-  "id": "bkme",
-  "game_code": "BKME",
-  "title": "Kim Possible 2 - Drakken's Demise (USA) (En,Fr)",
-  "media": "eeprom512",
-  "size_bytes": 512,
-  "magic_signatures": [
+  "checksums": [
     {
-      "offset": 0,
-      "bytes": [
-        49,
-        77,
-        50,
-        65
-      ]
+      "algorithm": "sum16_le",
+      "covered_end": 88,
+      "covered_start": 16,
+      "name": "slot0_checksum",
+      "seed": 0,
+      "stored_offset": 8,
+      "xor_out": 0
+    },
+    {
+      "algorithm": "sum16_le",
+      "covered_end": 160,
+      "covered_start": 88,
+      "name": "slot1_checksum",
+      "seed": 0,
+      "stored_offset": 10,
+      "xor_out": 0
+    },
+    {
+      "algorithm": "sum16_le",
+      "covered_end": 232,
+      "covered_start": 160,
+      "name": "slot2_checksum",
+      "seed": 0,
+      "stored_offset": 12,
+      "xor_out": 0
+    },
+    {
+      "algorithm": "sum16_le",
+      "covered_end": 16,
+      "covered_start": 0,
+      "name": "header_checksum",
+      "seed": 0,
+      "stored_offset": 0,
+      "xor_out": 0
     }
   ],
-  "checksums": [],
+  "eeprom_rev8": true,
   "fields": [
     {
-      "name": "magic_header",
-      "offset": 0,
-      "size": 4,
-      "type": "ascii"
+      "confidence": "confirmed",
+      "constraint": {
+        "kind": "bitmask",
+        "valid_mask": 7
+      },
+      "description": "Bit per save file marking it saved through the per-slot path; set via (1 << slot) in FUN_0803108c, tested as occupied bits (0x01/0x02/0x04) in FUN_0802e188. Zero here = factory-init image (FUN_08031208 never sets bits).",
+      "evidence": "FUN_0803108c does *(byte *)(DAT_080310e0 + 0xe) |= (1 << param_1) before EEPROM write; FUN_0802e188 tests (byte)(iVar4 + 0xe) & 1 / & 2 / & 4 for slot 0/1/2 occupied. Baseline logical byte 0x00.",
+      "name": "slots_occupied_flags",
+      "offset": 14,
+      "size": 1,
+      "type": "bitflags"
     },
     {
-      "name": "slot_counter",
-      "offset": 4,
-      "size": 2,
-      "type": "u16_le"
+      "confidence": "confirmed",
+      "constraint": {
+        "kind": "enum",
+        "labels": {
+          "0": "File 1",
+          "1": "File 2",
+          "2": "File 3"
+        },
+        "values": [
+          0,
+          1,
+          2
+        ]
+      },
+      "description": "File index stored inside slot 0; written as the init parameter.",
+      "evidence": "FUN_08030f4c writes *(byte *)((int)puVar2 + 0x36) = param_1 where puVar2 = slot * 0x48 + DAT_08030fc4. Baseline logical slot0+0x36 = 0x00.",
+      "name": "slot0_file_index",
+      "offset": 70,
+      "size": 1,
+      "type": "u8"
     },
     {
-      "name": "game_progress_flags",
-      "offset": 6,
-      "size": 2,
-      "type": "u16_le"
+      "confidence": "likely",
+      "description": "Raw progress counter for slot 0; file-select tier shown = counter / 5 (quotient via FUN_080396e8), tier 4 clamped to 3. Factory default 0.",
+      "evidence": "FUN_0802e188 computes FUN_080396e8(*(byte *)(base + 0x47), 5) with 0x48-strided slot array (header-relative +0x47 = slot-relative +0x37), clamping tier 4 to 3; FUN_08030f4c zeroes slot +0x1e..+0x31 (covers +0x37). Baseline logical slot0+0x37 = 0x00.",
+      "name": "slot0_progress_count",
+      "offset": 71,
+      "size": 1,
+      "type": "u8"
     },
     {
-      "name": "player_status_payload",
-      "offset": 8,
-      "size": 16,
-      "type": "bytes"
+      "confidence": "likely",
+      "description": "Slot-independent setting byte; carried over from the active work slot across file switches instead of being replaced by the loaded file. Factory default 1.",
+      "evidence": "FUN_0802e2cc saves DAT_0802e328 + 0x39 across FUN_0803102c slot load then restores it; FUN_08030f4c sets slot +0x39 = 1. Baseline logical slot0+0x39 = 0x01.",
+      "name": "slot0_setting_a",
+      "offset": 73,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Slot-independent setting byte; carried over from the active work slot across file switches instead of being replaced by the loaded file. Factory default 1.",
+      "evidence": "FUN_0802e2cc saves DAT_0802e328 + 0x3a across FUN_0803102c slot load then restores it; FUN_08030f4c sets slot +0x3a = 1. Baseline logical slot0+0x3a = 0x01.",
+      "name": "slot0_setting_b",
+      "offset": 74,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "kind": "enum",
+        "labels": {
+          "0": "File 1",
+          "1": "File 2",
+          "2": "File 3"
+        },
+        "values": [
+          0,
+          1,
+          2
+        ]
+      },
+      "description": "File index stored inside slot 1; written as the init parameter.",
+      "evidence": "FUN_08030f4c writes *(byte *)((int)puVar2 + 0x36) = param_1 where puVar2 = slot * 0x48 + DAT_08030fc4. Baseline logical slot1+0x36 = 0x01.",
+      "name": "slot1_file_index",
+      "offset": 142,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Raw progress counter for slot 1; file-select tier shown = counter / 5 (quotient via FUN_080396e8), tier 4 clamped to 3. Factory default 0.",
+      "evidence": "FUN_0802e188 computes FUN_080396e8(*(byte *)(base + 0x8f), 5) with 0x48-strided slot array (header-relative +0x8f = slot-relative +0x37), clamping tier 4 to 3; FUN_08030f4c zeroes slot +0x1e..+0x31 (covers +0x37). Baseline logical slot1+0x37 = 0x00.",
+      "name": "slot1_progress_count",
+      "offset": 143,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Slot-independent setting byte; carried over from the active work slot across file switches instead of being replaced by the loaded file. Factory default 1.",
+      "evidence": "FUN_0802e2cc saves DAT_0802e328 + 0x39 across FUN_0803102c slot load then restores it; FUN_08030f4c sets slot +0x39 = 1. Baseline logical slot1+0x39 = 0x01.",
+      "name": "slot1_setting_a",
+      "offset": 145,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Slot-independent setting byte; carried over from the active work slot across file switches instead of being replaced by the loaded file. Factory default 1.",
+      "evidence": "FUN_0802e2cc saves DAT_0802e328 + 0x3a across FUN_0803102c slot load then restores it; FUN_08030f4c sets slot +0x3a = 1. Baseline logical slot1+0x3a = 0x01.",
+      "name": "slot1_setting_b",
+      "offset": 146,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "kind": "enum",
+        "labels": {
+          "0": "File 1",
+          "1": "File 2",
+          "2": "File 3"
+        },
+        "values": [
+          0,
+          1,
+          2
+        ]
+      },
+      "description": "File index stored inside slot 2; written as the init parameter.",
+      "evidence": "FUN_08030f4c writes *(byte *)((int)puVar2 + 0x36) = param_1 where puVar2 = slot * 0x48 + DAT_08030fc4. Baseline logical slot2+0x36 = 0x02.",
+      "name": "slot2_file_index",
+      "offset": 214,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Raw progress counter for slot 2; file-select tier shown = counter / 5 (quotient via FUN_080396e8), tier 4 clamped to 3. Factory default 0.",
+      "evidence": "FUN_0802e188 computes FUN_080396e8(*(byte *)(base + 0xd7), 5) with 0x48-strided slot array (header-relative +0xd7 = slot-relative +0x37), clamping tier 4 to 3; FUN_08030f4c zeroes slot +0x1e..+0x31 (covers +0x37). Baseline logical slot2+0x37 = 0x00.",
+      "name": "slot2_progress_count",
+      "offset": 215,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Slot-independent setting byte; carried over from the active work slot across file switches instead of being replaced by the loaded file. Factory default 1.",
+      "evidence": "FUN_0802e2cc saves DAT_0802e328 + 0x39 across FUN_0803102c slot load then restores it; FUN_08030f4c sets slot +0x39 = 1. Baseline logical slot2+0x39 = 0x01.",
+      "name": "slot2_setting_a",
+      "offset": 217,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Slot-independent setting byte; carried over from the active work slot across file switches instead of being replaced by the loaded file. Factory default 1.",
+      "evidence": "FUN_0802e2cc saves DAT_0802e328 + 0x3a across FUN_0803102c slot load then restores it; FUN_08030f4c sets slot +0x3a = 1. Baseline logical slot2+0x3a = 0x01.",
+      "name": "slot2_setting_b",
+      "offset": 218,
+      "size": 1,
+      "type": "u8"
     }
-  ]
+  ],
+  "game_code": "BKME",
+  "id": "bkme",
+  "magic_signatures": [
+    {
+      "bytes": [
+        65,
+        50,
+        77,
+        49
+      ],
+      "description": "Header identifier at save-image +4 (seen as '1M2A' in raw .sav bytes due to EEPROM bit-serial byte mirroring)",
+      "offset": 4
+    }
+  ],
+  "media": "eeprom512",
+  "size_bytes": 512,
+  "title": "Kim Possible 2 - Drakken's Demise (USA) (En,Fr)"
 }

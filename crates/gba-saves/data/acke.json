@@ -4,26 +4,64 @@
   "title": "Backyard Baseball (USA)",
   "media": "eeprom512",
   "size_bytes": 512,
+  "eeprom_rev8": true,
   "magic_signatures": [],
   "checksums": [],
   "fields": [
     {
-      "name": "slot_counter",
-      "offset": 4,
+      "name": "header_word_lo",
+      "offset": 0,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "description": "Low word of the 4-byte save header (logical bytes 06 8B, value 0x8B06). Probably a sequence/tag word paired with format_marker; exposed as a plain word because no checksum or fixed-magic comparison for it survives in the recovered decomp slice.",
+      "confidence": "likely",
+      "evidence": "Logical (rev8-unswapped) save offsets 0x00..0x04 hold 06 8B 34 12 per python rev8 analysis of samples/baseline.sav. Engine analogue: FUN_08004600 returns a 16-bit global mode word (*DAT_08004608) that FUN_0800a234 gates boot flow on (line 2867: if (iVar3 != 0x12)). EEPROM bus driver itself is outside the recovered 268-function decomp slice (no 0x0D000000/DAT_0d references)."
     },
     {
-      "name": "game_progress_flags",
-      "offset": 6,
+      "name": "format_marker",
+      "offset": 2,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "description": "Save format marker with the classic value 0x1234 (logical bytes 34 12) at header offset +2. Read-only in practice; kept as a mutable-typed scalar (not a magic_signature) because only one baseline sample pins it.",
+      "confidence": "likely",
+      "evidence": "Logical save offset 0x02 reads LE u16 0x1234 in samples/baseline.sav after rev8 unswap (raw bytes at 0x04..0x06 are 12 34, i.e. the marker only aligns at offset +2 in the unswapped domain, supporting eeprom_rev8=true). Engine analogue: FUN_0803179c compares a 32-bit state/mode word against a ROM constant before acting (line 7358: *(int *)(param_1 + 0x34) == DAT_0803180c)."
     },
     {
-      "name": "player_status_payload",
-      "offset": 8,
-      "size": 16,
-      "type": "bytes"
+      "name": "status_flags",
+      "offset": 355,
+      "size": 1,
+      "type": "u8",
+      "description": "Flag byte at the head of the 88-byte data block (value 0x80, bit 7 set, rest zero). Plausibly a status/valid bitmask for the block that follows; exact bit meanings are unknown from one sample.",
+      "confidence": "guessed",
+      "evidence": "Logical save offset 0x163 holds 0x80 (first byte of the 0x163..0x1BB active run) in samples/baseline.sav. Engine analogue: FUN_0803177c sets/clears flag bits (0x0C vs 0x03) at state-struct offset +0 and clears bytes at +0x16/+0x1A predicated on the byte at +0x18 (lines 7335-7343)."
+    },
+    {
+      "name": "counter_a",
+      "offset": 385,
+      "size": 2,
+      "type": "u16_le",
+      "description": "Small LE counter inside the data block (value 2, bytes 02 00). Could be a count, index, or stage selector; width is inferred from the zero high byte.",
+      "confidence": "guessed",
+      "evidence": "Logical save offsets 0x181..0x183 read 02 00 (LE u16 = 2) in the rev8-unswapped image of samples/baseline.sav. Engine analogue: FUN_0800a234 keeps a u16 counter at *DAT_0800a318 + 0x220 that it increments by 1 and clamps to 0xFF (lines 2889-2896)."
+    },
+    {
+      "name": "counter_b",
+      "offset": 414,
+      "size": 2,
+      "type": "u16_le",
+      "description": "Small LE counter inside the data block (value 8, bytes 08 00). Could be a count, size, or option level; width is inferred from the zero high byte.",
+      "confidence": "guessed",
+      "evidence": "Logical save offsets 0x19E..0x1A0 read 08 00 (LE u16 = 8) in the rev8-unswapped image of samples/baseline.sav. Engine analogue: FUN_0803179c walks a counted-down loop (uVar2 = *(byte *)(param_1 + 8), decrement-and-test at lines 7360-7372) over state records."
+    },
+    {
+      "name": "status_byte",
+      "offset": 483,
+      "size": 1,
+      "type": "u8",
+      "description": "Standalone status/config byte near the end of the image (value 0x95). No 0x95 constant or checksum relation was found, so it is exposed as an opaque mutable byte rather than a checksum or enum.",
+      "confidence": "guessed",
+      "evidence": "Logical save offset 0x1E3 holds 0x95 in samples/baseline.sav (sole non-FF byte of the 0x1C0..0x200 tail). Engine analogue: FUN_0803110c writes small status codes (0x80, 0x08, 0x00) into state bytes selected by a mode parameter (lines 6963-6984); no 0x95 literal occurs anywhere in the decomp, so no enum is asserted."
     }
-  ]
+  ],
+  "copy_groups": []
 }

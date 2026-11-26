@@ -4,42 +4,151 @@
   "title": "Hamster Paradise Advanchu (Japan)",
   "media": "eeprom8k",
   "size_bytes": 8192,
+  "eeprom_rev8": true,
   "magic_signatures": [
     {
       "offset": 0,
       "bytes": [
-        95,
+        72,
+        65,
+        77,
+        80,
         65,
         82,
-        65
-      ]
+        65,
+        95,
+        71,
+        66,
+        65,
+        32,
+        48,
+        48,
+        65,
+        95
+      ],
+      "description": "ASCII 'HAMPARA_GBA 00A_' header (logical domain)"
     }
   ],
   "checksums": [],
   "fields": [
     {
-      "name": "magic_header",
+      "name": "save_magic",
       "offset": 0,
-      "size": 4,
-      "type": "ascii"
-    },
-    {
-      "name": "slot_counter",
-      "offset": 4,
-      "size": 2,
-      "type": "u16_le"
-    },
-    {
-      "name": "game_progress_flags",
-      "offset": 6,
-      "size": 2,
-      "type": "u16_le"
-    },
-    {
-      "name": "player_status_payload",
-      "offset": 8,
       "size": 16,
-      "type": "bytes"
+      "type": "ascii",
+      "description": "Save header magic 'HAMPARA_GBA 00A_' (HAMPARA = Hamster Paradise), first EEPROM table entries",
+      "confidence": "confirmed",
+      "evidence": "Logical-domain (rev8) bytes 0x00-0x0F read 'HAMPARA_GBA 00A_'; raw file bytes are bit-reversed per 8B block. Written by grouped EEPROM transfer FUN_080089b8 (8-byte words via FUN_08052da0 write / FUN_08052bbc read, ops 0/1/2/3) as the first table entries.",
+      "constraint": {
+        "kind": "ascii-charset",
+        "allowed": "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_ ",
+        "max_len": 16
+      }
+    },
+    {
+      "name": "save_counter",
+      "offset": 16,
+      "size": 1,
+      "type": "u8",
+      "description": "Per-save incrementing counter byte, copied from save-state byte +0xb into record byte 0",
+      "confidence": "likely",
+      "evidence": "FUN_080080c4 writes record byte0 from state byte +0xb (*(DAT_0800810c)+0x1c buffer); FUN_08007fb8 increments DAT_0800808c[0xb] on every save commit. Fresh baseline value 0x00."
+    },
+    {
+      "name": "header_xor",
+      "offset": 17,
+      "size": 1,
+      "type": "u8",
+      "description": "Record validation byte: XOR of save-state bytes +2 and +3",
+      "confidence": "likely",
+      "evidence": "FUN_080080c4 sets record byte1 to *(state+2) ^ *(state+3) before the 6-word checksum loop. Fresh baseline value 0x00."
+    },
+    {
+      "name": "header_checksum",
+      "offset": 18,
+      "size": 2,
+      "type": "u16_le",
+      "description": "Custom 12-byte-record checksum word: stored = ~sum(other 5 words) - 8, i.e. whole-record word sum == 0xFFF7 (-9). Custom algorithm, not in Schema v2 list, so stored as plain u16.",
+      "confidence": "likely",
+      "evidence": "FUN_080080c4 sums 6 u16 words with stored word zeroed then stores ~sum-8 at record+2; FUN_08008114 validates each record with (sum of 6 words == -9). Fresh baseline value 0x0000 (record not yet checksummed)."
+    },
+    {
+      "name": "record_payload_a",
+      "offset": 20,
+      "size": 4,
+      "type": "u32_le",
+      "description": "First payload word of the 12-byte save record (CpuSet-copied record bytes +4..+7)",
+      "confidence": "likely",
+      "evidence": "FUN_080080c4 CpuSets (FUN_08052994 = SWI CpuSet) record bytes +4.. into the save buffer (ROM defaults from DAT_08008110). Fresh baseline value 0x00000000."
+    },
+    {
+      "name": "status_flags",
+      "offset": 48,
+      "size": 2,
+      "type": "bitflags",
+      "description": "Packed status flags built from save-state bytes +2/+3/+7/+8 and mode bits (bits 0x80, 0x1000, 0x2000 observed)",
+      "confidence": "likely",
+      "evidence": "FUN_08007fb8 packs DAT_0800808c bytes +2,+3,+7,+8 into a status u16: bit7 set when byte0==8, 0x1000 when byte7!=0, 0x2000 when (mode&0x3f)>>4>1, bit15 from byte8>>3. Fresh baseline value 0x0000.",
+      "constraint": {
+        "kind": "bitmask",
+        "valid_mask": 65535,
+        "flag_labels": {
+          "7": "state_is_8",
+          "12": "byte7_set",
+          "13": "mode_high"
+        }
+      }
+    },
+    {
+      "name": "mode_bits",
+      "offset": 50,
+      "size": 2,
+      "type": "u16_le",
+      "description": "Mode/state word tested against masks 0x300/0x1000/0x2000/0x8000 with 2-bit submode in bits 0-1",
+      "confidence": "likely",
+      "evidence": "FUN_08008664 tests *(DAT_08008698+4) against 0x300, 0x1000, 0x2000, 0x8000 and merges (value&3) into the option byte. Fresh baseline value 0x0000."
+    },
+    {
+      "name": "option_byte",
+      "offset": 52,
+      "size": 1,
+      "type": "u8",
+      "description": "Option/state byte: keeps bits 0x50, sets 0x10/0x04/0x80|submode per game state",
+      "confidence": "likely",
+      "evidence": "FUN_08008664 reads/writes DAT_08008698+1 with mask 0x50 kept and sets 0x10, 0x04, or 0x84|(mode&3) depending on state-word tests. Fresh baseline value 0x00."
+    },
+    {
+      "name": "play_counter",
+      "offset": 53,
+      "size": 1,
+      "type": "u8",
+      "description": "Small counter capped at 0x10 (16) in save-state handling",
+      "confidence": "likely",
+      "evidence": "FUN_08008664 only increments *(DAT_08008698+0x18) while it is <= 0x10; FUN_080081c0 manages related record bytes +0x14..0x18. Fresh baseline value 0x00 satisfies 0..16.",
+      "constraint": {
+        "kind": "unsigned-range",
+        "minimum": 0,
+        "maximum": 16
+      }
+    },
+    {
+      "name": "extended_data_lo",
+      "offset": 3120,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Extended save-region data word (EEPROM word 0x186), written by grouped transfer; dual-region layout matches the two-record save/load path",
+      "confidence": "likely",
+      "evidence": "Game-written zero word at logical 0x0C30 (EEPROM word 0x186) via FUN_080089b8 grouped transfer dispatched by FUN_08008848 (param_1 group accumulation); second-region layout consistent with the two 0x10-byte slot records validated in FUN_08008114 (called from save commit FUN_08007fb8). Fresh baseline value 0x00000000."
+    },
+    {
+      "name": "extended_data_hi",
+      "offset": 3124,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Extended save-region data word 2 (EEPROM word 0x186 high half)",
+      "confidence": "likely",
+      "evidence": "Game-written zero word at logical 0x0C34 via FUN_080089b8 grouped transfer (FUN_08008848 dispatcher); see extended_data_lo. Fresh baseline value 0x00000000."
     }
-  ]
+  ],
+  "copy_groups": []
 }

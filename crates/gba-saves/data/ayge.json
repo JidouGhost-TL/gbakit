@@ -1,29 +1,75 @@
 {
-  "id": "ayge",
-  "game_code": "AYGE",
-  "title": "Gauntlet - Dark Legacy (USA)",
-  "media": "eeprom512",
-  "size_bytes": 512,
-  "magic_signatures": [],
   "checksums": [],
+  "eeprom_rev8": true,
   "fields": [
     {
-      "name": "slot_counter",
+      "confidence": "likely",
+      "description": "Persistent word 0 of EEPROM block 0 (first 8 bytes of the 236-byte persistent save struct). Factory default copied from ROM by FUN_0801b3f4; observed value 1 in samples/baseline.sav (logical domain). Round-trips on every save/load as element 0 of the ushort[4] block payload.",
+      "evidence": "FUN_0801b3f4 copies 8 ROM-default bytes via FUN_080274cc(dst, DAT_0801b444, 8) then FUN_0801b360(buf, 0, 1) writes them as EEPROM block 0; FUN_0802713c serializes ushort[4] (loop bVar2 < 4, 16 bits LSB-first each); FUN_0802708c deserializes 4xu16; block stride is 8 bytes (param_1 + 8) in FUN_0801b360/FUN_0801b2f4.",
+      "name": "block0_word_0",
       "offset": 0,
       "size": 2,
       "type": "u16_le"
     },
     {
-      "name": "game_progress_flags",
+      "confidence": "likely",
+      "description": "Persistent word 1 of EEPROM block 0. Factory default copied from ROM by FUN_0801b3f4; observed value 4 in samples/baseline.sav (logical domain). Round-trips on every save/load as element 1 of the ushort[4] block payload.",
+      "evidence": "Same block-0 path as block0_word_0: FUN_0801b3f4 + FUN_080274cc (8 bytes from DAT_0801b444) + FUN_0801b360(addr 0, count 1); element 1 of the ushort[4] serialized by FUN_0802713c (bVar2 < 4) and read back by FUN_0802708c (bVar1 < 4).",
+      "name": "block0_word_1",
       "offset": 2,
       "size": 2,
       "type": "u16_le"
     },
     {
-      "name": "player_status_payload",
+      "confidence": "likely",
+      "description": "Persistent word 2 of EEPROM block 0. Factory default copied from ROM by FUN_0801b3f4; observed value 9 in samples/baseline.sav (logical domain). Round-trips on every save/load as element 2 of the ushort[4] block payload.",
+      "evidence": "Same block-0 path: FUN_0801b3f4 init (FUN_080274cc 8 bytes from DAT_0801b444, FUN_0801b360 count 1 at address 0); element 2 of the ushort[4] written by FUN_0802713c and read by FUN_0802708c; full saves/loads move it as part of block index 0 in FUN_0801b360/FUN_0801b2f4 (count 0x1d from address 0).",
+      "name": "block0_word_2",
       "offset": 4,
-      "size": 16,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Persistent word 3 of EEPROM block 0. Factory default copied from ROM by FUN_0801b3f4; observed value 16 in samples/baseline.sav (logical domain). Round-trips on every save/load as element 3 of the ushort[4] block payload.",
+      "evidence": "Same block-0 path: FUN_0801b3f4 (FUN_080274cc 8 bytes from DAT_0801b444, FUN_0801b360 count 1 at address 0); element 3 of the ushort[4] serialized by FUN_0802713c (bVar2 < 4) and deserialized by FUN_0802708c (bVar1 < 4); carried as block index 0 by FUN_0801b360/FUN_0801b2f4.",
+      "name": "block0_word_3",
+      "offset": 6,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Stored 32-bit checksum slot at save-struct offset 8. FUN_0801b470 stores the FUN_0801b3dc byte-sum (length 0xe0) here as u32; FUN_0801b4d8 recomputes and compares against this slot before accepting a load. Reads 0xFFFFFFFF in samples/baseline.sav (erased: no 29-block full save has run yet), so no checksum entry is declared.",
+      "evidence": "FUN_0801b470: uVar5 = FUN_0801b3dc(DAT_0801b4d0, 0xe0) then *(undefined4 *)(iVar2 + -4) = uVar5 with iVar2 = DAT_0801b4d0 (slot = buffer start + 8 = file offset 8); FUN_0801b4d8: iVar4 = FUN_0801b3dc(DAT_0801b54c, 0xe0) compared with *(int *)(iVar5 + -4).",
+      "name": "save_checksum_slot",
+      "offset": 8,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Persistent gameplay-data region: file bytes 12..232 (EEPROM blocks 1..28 plus the tail of block 1). Written by the 29-block full save in FUN_0801b470 and read back by FUN_0801b4d8; covered by the FUN_0801b3dc byte-sum. All 0xFF in samples/baseline.sav because only the 1-block init (FUN_0801b3f4) has run, so no per-field semantics are claimed for this region yet.",
+      "evidence": "FUN_0801b470: FUN_0801b360(iVar2 + -0xc, 0, 0x1d) writes 29 blocks (232 bytes) from the RAM save struct; FUN_0801b4d8: FUN_0801b2f4(DAT_0801b52c, 0, 0x1d) reads 29 blocks; FUN_0801b470 is triggered from the name-entry confirm path in FUN_080074dc and FUN_0801b4d8 from the boot path in FUN_08018d3c.",
+      "name": "save_data_area",
+      "offset": 12,
+      "size": 220,
+      "type": "bytes"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Never-written EEPROM area. The save layer only ever addresses blocks 0..28 (29 x 8 = 232 bytes), so offsets 232..512 stay erased (0xFF) in every capture.",
+      "evidence": "FUN_0801b360 and FUN_0801b2f4 are only ever called with counts 1 (FUN_0801b3f4 init at address 0) and 0x1d (FUN_0801b470 full save / FUN_0801b4d8 full load from address 0); no call site addresses EEPROM block 29 or higher, and samples/baseline.sav reads 0xFF throughout 232..512.",
+      "name": "never_written_erased_tail",
+      "offset": 232,
+      "size": 280,
       "type": "bytes"
     }
-  ]
+  ],
+  "game_code": "AYGE",
+  "id": "ayge",
+  "magic_signatures": [],
+  "media": "eeprom512",
+  "size_bytes": 512,
+  "title": "Gauntlet - Dark Legacy (USA)"
 }

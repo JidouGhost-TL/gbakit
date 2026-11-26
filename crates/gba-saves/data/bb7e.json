@@ -1,29 +1,100 @@
 {
-  "id": "bb7e",
-  "game_code": "BB7E",
-  "title": "Backyard Sports - Basketball 2007 (USA)",
-  "media": "eeprom512",
-  "size_bytes": 512,
-  "magic_signatures": [],
   "checksums": [],
+  "copy_groups": [],
   "fields": [
     {
-      "name": "slot_counter",
+      "confidence": "likely",
+      "constraint": {
+        "flag_labels": {
+          "0": "cfg_bit0",
+          "1": "cfg_bit1",
+          "10": "cfg_bit10",
+          "11": "cfg_bit11",
+          "13": "cfg_bit13",
+          "15": "cfg_bit15",
+          "5": "cfg_bit5",
+          "7": "cfg_bit7"
+        },
+        "kind": "bitmask",
+        "valid_mask": 65535
+      },
+      "description": "Configuration bitflags loaded from EEPROM at boot",
+      "evidence": "FUN_080659e4 reads 4 save halfwords through FUN_08065964 from DAT_0d000000 (EEPROM) into RAM at param_2+6; baseline halfword at raw offset 5 decodes via that path.",
+      "name": "config_option_bits",
       "offset": 5,
       "size": 2,
-      "type": "u16_le"
+      "type": "bitflags"
     },
     {
-      "name": "game_progress_flags",
+      "confidence": "likely",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 1000,
+        "minimum": 0
+      },
+      "description": "Season/career progress counter persisted to EEPROM",
+      "evidence": "FUN_080659e4 bounds param_1 against table limit then shifts save halfwords into RAM; FUN_08065aa8 serializes the matching RAM halfwords back via FUN_08065964 to DAT_0d000000.",
+      "name": "season_progress",
       "offset": 7,
       "size": 2,
       "type": "u16_le"
     },
     {
-      "name": "player_status_payload",
+      "confidence": "likely",
+      "description": "Team stats block persisted through the EEPROM read/write path",
+      "evidence": "FUN_080659e4 bulk-loads save halfwords from DAT_0d000000 into RAM and FUN_08065aa8 writes the same width block back through FUN_08065964; raw offsets 9..17 sit inside that active EEPROM window.",
+      "name": "team_stats_block",
       "offset": 9,
-      "size": 16,
+      "size": 8,
       "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 1023,
+        "minimum": 0
+      },
+      "description": "Match settings value persisted to EEPROM",
+      "evidence": "FUN_08065aa8 serializes RAM halfwords bit-by-bit into the EEPROM stream via FUN_08065964 to DAT_0d000000; FUN_080659e4 reconstructs them on load. Baseline raw offset 25 reads 240.",
+      "name": "match_settings",
+      "offset": 25,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 8191,
+        "minimum": 0
+      },
+      "description": "Tournament stage counter persisted to EEPROM",
+      "evidence": "FUN_080659e4 shifts EEPROM bits from DAT_0d000000 into RAM halfwords and FUN_08065aa8 performs the inverse store; raw offset 29 baseline value 3840 sits in that window.",
+      "name": "tournament_stage",
+      "offset": 29,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 255,
+        "minimum": 0
+      },
+      "description": "Unlocked-items counter persisted to EEPROM",
+      "evidence": "FUN_08065aa8 writes RAM halfwords to DAT_0d000000 through FUN_08065964 and FUN_080659e4 reads them back; raw offset 35 baseline value 62 is inside the active range.",
+      "name": "unlock_count",
+      "offset": 35,
+      "size": 2,
+      "type": "u16_le"
     }
-  ]
+  ],
+  "game_code": "BB7E",
+  "id": "bb7e",
+  "magic_signatures": [],
+  "media": "eeprom512",
+  "size_bytes": 512,
+  "title": "Backyard Sports - Basketball 2007 (USA)"
 }

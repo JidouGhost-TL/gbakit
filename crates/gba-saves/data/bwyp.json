@@ -1,29 +1,184 @@
 {
-  "id": "bwyp",
-  "game_code": "BWYP",
-  "title": "Winter Sports (Europe) (En,Fr,De,Es,It)",
-  "media": "eeprom512",
-  "size_bytes": 512,
-  "magic_signatures": [],
   "checksums": [],
+  "copy_groups": [],
+  "eeprom_rev8": true,
   "fields": [
     {
-      "name": "slot_counter",
-      "offset": 2,
+      "confidence": "likely",
+      "description": "Fixed 8-byte phase tag (variant W) heading the 20-byte table header; identical constant recurs as every 5th record tag",
+      "evidence": "Baseline bytes 0x00-0x07 (rev8-logical) equal record phase tag W seen at FUN_0800052e-sequenced table records g0[3], g0[8], g1[4], g1[9], g2[4], g2[9]; tag cycle verified with tools/bin_peek.py --rev8; table machinery FUN_080016b0 / DAT_08001718 table descriptors.",
+      "name": "table_header_tag_w",
+      "offset": 0,
+      "size": 8,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "First header word after tag W; zero in baseline capture",
+      "evidence": "u16_le at rev8-logical offset 0x08 reads 0x0000 in samples/baseline.sav; header layout (W tag + 2 words + X tag) verified via tools/bin_peek.py --rev8; init sequencing FUN_0800052e -> FUN_080007f0.",
+      "name": "table_header_word_a",
+      "offset": 8,
       "size": 2,
       "type": "u16_le"
     },
     {
-      "name": "game_progress_flags",
-      "offset": 4,
+      "confidence": "likely",
+      "description": "Second header word; 0x1537 (5431) in baseline capture",
+      "evidence": "u16_le at rev8-logical offset 0x0A reads 0x1537 in samples/baseline.sav; header layout verified via tools/bin_peek.py --rev8; init sequencing FUN_0800052e -> FUN_080007f0.",
+      "name": "table_header_word_b",
+      "offset": 10,
       "size": 2,
       "type": "u16_le"
     },
     {
-      "name": "player_status_payload",
-      "offset": 6,
-      "size": 16,
+      "confidence": "likely",
+      "description": "Fixed 8-byte phase tag (variant X) closing the 20-byte table header; identical constant recurs as every 5th record tag",
+      "evidence": "Baseline bytes 0x0C-0x13 (rev8-logical) equal record phase tag X seen at g0[4], g1[0], g1[5], g2[0], g2[5], g3[0]; verified with tools/bin_peek.py --rev8; table machinery FUN_080016b0.",
+      "name": "table_header_tag_x",
+      "offset": 12,
+      "size": 8,
+      "type": "bytes"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Sequence id of first group-0 record; group-0 ids run 0x0001-0x0004 then 0x0505-0x0509 at stride 0x0C",
+      "evidence": "u16_le seq stride 0x0C verified for all 9 group-0 records starting here (FUN_080016b0 bounded record-table copy loop; stage dispatcher FUN_0800052e -> FUN_080008a0 / FUN_08000990 path; offsets in rev8-logical domain, eeprom_rev8=true).",
+      "name": "group0_rec0_seq",
+      "offset": 20,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Value word paired with group-0 record seq 0x0001; 0x3037 (12343) in baseline",
+      "evidence": "u16_le at rev8-logical offset 0x16 paired with seq at 0x14 inside a 12-byte record (tag Y0 follows); record framing verified with tools/bin_peek.py --rev8; table copy loop FUN_080016b0.",
+      "name": "group0_rec0_value",
+      "offset": 22,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Sequence id of fifth group-0 record, head of the 0x0505-0x0509 sub-run at stride 0x0C",
+      "evidence": "u16_le seq stride 0x0C verified across group-0 sub-run 0x0505..0x0509 at 0x44,0x50,0x5C,0x68,0x74 (rev8-logical); record-table loop FUN_080016b0; dispatcher FUN_0800052e.",
+      "name": "group0_rec4_seq",
+      "offset": 68,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Value word paired with group-0 record seq 0x0505; 0x9040 in baseline",
+      "evidence": "u16_le at rev8-logical offset 0x46 paired with seq 0x0505 inside a 12-byte record (tag X follows); framing verified with tools/bin_peek.py --rev8; table copy loop FUN_080016b0.",
+      "name": "group0_rec4_value",
+      "offset": 70,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Sequence id of first entry of the 10-entry group-1 ladder; ids run 0x0100-0x0109 at stride 0x0C",
+      "evidence": "u16_le seq stride 0x0C verified for all 10 group-1 records from 0x80 (values decrease monotonically 0x40 down to 0x26, rank-ladder order); record-table loop FUN_080016b0; dispatcher FUN_0800052e.",
+      "name": "group1_rank1_seq",
+      "offset": 128,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Top value of the group-1 ladder; 0x0040 (64), largest of the monotonic 64..38 run in baseline",
+      "evidence": "u16_le at rev8-logical offset 0x82 paired with seq 0x0100 (tag X follows); monotonic decrease across the 10 records verified with tools/bin_peek.py --rev8; table copy loop FUN_080016b0.",
+      "name": "group1_rank1_value",
+      "offset": 130,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Mid-ladder value of group-1 (5th of 10); 0x0036 (54) in baseline",
+      "evidence": "u16_le at rev8-logical offset 0xB2 paired with seq 0x0104 (tag W follows); position 5 of the monotonic 10-record ladder verified with tools/bin_peek.py --rev8; table loop FUN_080016b0.",
+      "name": "group1_rank5_value",
+      "offset": 178,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Sequence id of last entry of the group-1 ladder (0x0109)",
+      "evidence": "u16_le seq 0x0109 at rev8-logical offset 0xEC, tenth stride-0x0C step from 0x80; ladder framing verified with tools/bin_peek.py --rev8; record-table loop FUN_080016b0; dispatcher FUN_0800052e.",
+      "name": "group1_rank10_seq",
+      "offset": 236,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Bottom value of the group-1 ladder; 0x0026 (38), smallest of the monotonic run in baseline",
+      "evidence": "u16_le at rev8-logical offset 0xEE paired with seq 0x0109 (tag W follows); monotonic ladder verified with tools/bin_peek.py --rev8; table copy loop FUN_080016b0.",
+      "name": "group1_rank10_value",
+      "offset": 238,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Sequence id of first entry of the 10-entry group-2 table; ids run 0x0100-0x0109 at stride 0x0C",
+      "evidence": "u16_le seq stride 0x0C verified for all 10 group-2 records from 0xF8 (second table reusing the 0x0100 block with different values/tags); record-table loop FUN_080016b0; dispatcher FUN_0800052e.",
+      "name": "group2_rec0_seq",
+      "offset": 248,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Value word paired with group-2 record seq 0x0100; 0x2008 (8200) in baseline; not monotonic, kept as opaque record value",
+      "evidence": "u16_le at rev8-logical offset 0xFA paired with seq 0x0100 (tag X follows); record framing verified with tools/bin_peek.py --rev8; table copy loop FUN_080016b0.",
+      "name": "group2_rec0_value",
+      "offset": 250,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Sequence id of first entry of the 5-entry group-3 ladder (0x0400); ids run 0x0400-0x0404 at stride 0x0C",
+      "evidence": "u16_le seq stride 0x0C verified for group-3 records at 0x170,0x17C,0x188,0x194,0x1A0 (values decrease monotonically 0x70 down to 0x50); record-table loop FUN_080016b0; dispatcher FUN_0800052e.",
+      "name": "group3_rank1_seq",
+      "offset": 368,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Top value of the group-3 ladder; 0x0070 (112), largest of the monotonic 112..80 run in baseline",
+      "evidence": "u16_le at rev8-logical offset 0x172 paired with seq 0x0400 (tag X follows); monotonic decrease verified with tools/bin_peek.py --rev8; table copy loop FUN_080016b0.",
+      "name": "group3_rank1_value",
+      "offset": 370,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Bottom value of the group-3 ladder; 0x0050 (80) in baseline; final record entry is seq+value only (tag half blank)",
+      "evidence": "u16_le at rev8-logical offset 0x1A2 paired with seq 0x0404; last of the monotonic 5-record ladder verified with tools/bin_peek.py --rev8; table loop FUN_080016b0.",
+      "name": "group3_rank5_value",
+      "offset": 418,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Opaque 60-byte trailing region (starts 0x44 0x25, then zeros, then Thumb-like bytes from 0x1D2); preserved verbatim with no gameplay-semantic claim",
+      "evidence": "Rev8-logical range 0x1C4-0x1FF verified non-blank with tools/bin_peek.py --rev8 (zero gap 0x1AC-0x1C3 separates it from record tables); retained opaquely — no EEPROM MMIO routine survived in decomp (save-io search: 0 matches), so no I/O function is cited for this region beyond the shared table/dispatcher context FUN_080016b0 / FUN_0800052e.",
+      "name": "tail_blob",
+      "offset": 452,
+      "size": 60,
       "type": "bytes"
     }
-  ]
+  ],
+  "game_code": "BWYP",
+  "id": "bwyp",
+  "magic_signatures": [],
+  "media": "eeprom512",
+  "size_bytes": 512,
+  "title": "Winter Sports (Europe) (En,Fr,De,Es,It)"
 }

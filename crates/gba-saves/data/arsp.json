@@ -1,9 +1,191 @@
 {
-  "id": "arsp",
+  "checksums": [],
+  "fields": [
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "allowed": "TRAW",
+        "kind": "ascii-charset",
+        "max_len": 4
+      },
+      "description": "Save signature; raw bytes 0x04..0x07 read 54 52 41 57 ('TRAW'), preserved from stub and verified against baseline.sav",
+      "evidence": "Raw bytes at save offsets 0x04..0x07 are 54 52 41 57 ('TRAW'), matching the verified stub magic_signature at offset 4. The EEPROM transfer driver itself is absent from this 436-function decomp slice (no 0x0D000000/0x0E000000 references); the closest save-validity idiom is the data-present predicate FUN_0802fe84 (returns *DAT_0802fe94 == 1), called from the menu boot path FUN_0802e300.",
+      "name": "save_magic_traw",
+      "offset": 4,
+      "size": 4,
+      "type": "ascii"
+    },
+    {
+      "confidence": "guessed",
+      "description": "Header configuration byte at save offset 0x09 (baseline 0x07)",
+      "evidence": "Non-blank header byte; selection/config values in this binary are stored through bounded-index idioms such as FUN_0802e300 (stores selected u16 index to *DAT_0802e440 after checking uVar1 < 0x52) and the presence predicate FUN_0802fe84.",
+      "name": "config_param_09",
+      "offset": 9,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "guessed",
+      "description": "Header configuration byte at save offset 0x0A (baseline 0x05)",
+      "evidence": "Non-blank header byte adjacent to config_param_09; same bounded-selection idiom as FUN_0802e300 (uVar1 < 0x52 bound, index stored to *DAT_0802e440) and presence check FUN_0802fe84.",
+      "name": "config_param_0a",
+      "offset": 10,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "guessed",
+      "description": "Header configuration byte at save offset 0x0B (baseline 0x05)",
+      "evidence": "Non-blank header byte adjacent to config_param_09/0a; same bounded-selection idiom as FUN_0802e300 (uVar1 < 0x52) with dispatch helpers FUN_0802e4a8 and FUN_0802e724.",
+      "name": "config_param_0b",
+      "offset": 11,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 81,
+        "minimum": 0
+      },
+      "description": "Selected profile/slot index byte at save offset 0x13 (baseline 0x03); index range 0..81 comes from the decomp unlock-gate bound",
+      "evidence": "FUN_08025f48 gates an entry index with (param_1 < 0x51) before consulting the unlock predicates FUN_0801693c and FUN_080169d0; the menu layer FUN_0802e300 likewise bounds a u16 selection (uVar1 < 0x52) and stores it to *DAT_0802e440.",
+      "name": "profile_select_index",
+      "offset": 19,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 9,
+        "minimum": 0
+      },
+      "description": "Slot/profile status code at save offset 0x14 (baseline 0x02); status codes 0/1/2/8/9 are the slot-list filter values",
+      "evidence": "Slot-list builders filter records by status: FUN_08017938 keeps records with *(short *)(iVar7 * 0x16 + iVar1) != 0, FUN_080179fc filters != 1, FUN_08017b10 filters != 2, and FUN_08017d00 treats codes 8 and 9 as special (compares against 8, then 9).",
+      "name": "profile_slot_status",
+      "offset": 20,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 81,
+        "minimum": 0
+      },
+      "description": "Secondary profile/sub index byte at save offset 0x15 (baseline 0x01)",
+      "evidence": "FUN_08017d00 switches on a (ushort)param_1[1] profile index against DAT_08017d6c[1] and walks a 0x16-stride record array; the same < 0x51 index bound from FUN_08025f48 applies to entry selection.",
+      "name": "profile_sub_index",
+      "offset": 21,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "constraint": {
+        "kind": "enum",
+        "labels": {
+          "0": "Inactive",
+          "255": "Active"
+        },
+        "values": [
+          0,
+          255
+        ]
+      },
+      "description": "Slot active marker at save offset 0x17 (baseline 0xFF = erased/active); single-byte boolean idiom",
+      "evidence": "Boolean presence idiom FUN_0802fe84 (returns *DAT_0802fe94 == 1) and sentinel init FUN_080304b4 which presets table words to 0xFFFF; erased EEPROM reads 0xFF, matching the baseline value.",
+      "name": "slot_active_marker",
+      "offset": 23,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "constraint": {
+        "kind": "bitmask",
+        "valid_mask": 18446744073709551615
+      },
+      "description": "Unlock/progress bitflag bank covering save bytes 0x50..0x57 (baseline FF FF FF FF 00 00 00 00)",
+      "evidence": "Bit-test predicate FUN_0801693c checks bit (param_1 & 7) of byte ((param_1 & 0xff) >> 3) + DAT_08016960 + 0x1c; twin predicate FUN_080169d0 tests the same bit against table DAT_080169f4; setter FUN_08016990 sets bit (param_1 & 7) at ((param_1 & 0xff) >> 3) + DAT_080169cc; all gated by FUN_08025f48 index bound param_1 < 0x51.",
+      "name": "unlock_flags_bank0",
+      "offset": 80,
+      "size": 8,
+      "type": "bitflags"
+    },
+    {
+      "confidence": "likely",
+      "constraint": {
+        "kind": "bitmask",
+        "valid_mask": 18446744073709551615
+      },
+      "description": "Unlock/progress bitflag bank covering save bytes 0x78..0x7F (baseline FF FF FF FF 00 00 FF FF)",
+      "evidence": "Same unlock bit-array idiom as bank0: bit tests FUN_0801693c (table DAT_08016960 + 0x1c) and FUN_080169d0 (table DAT_080169f4), bit setter FUN_08016990 (table DAT_080169cc), index bound param_1 < 0x51 in FUN_08025f48.",
+      "name": "unlock_flags_bank1",
+      "offset": 120,
+      "size": 8,
+      "type": "bitflags"
+    },
+    {
+      "confidence": "likely",
+      "constraint": {
+        "kind": "bitmask",
+        "valid_mask": 18446744073709551615
+      },
+      "description": "Unlock/progress bitflag bank covering save bytes 0xA0..0xA7 (baseline FF FF FF FF 00 00 FF FF)",
+      "evidence": "Same unlock bit-array idiom: bit tests FUN_0801693c / FUN_080169d0 over tables DAT_08016960 + 0x1c and DAT_080169f4, setter FUN_08016990 over DAT_080169cc, gated by FUN_08025f48 (param_1 < 0x51).",
+      "name": "unlock_flags_bank2",
+      "offset": 160,
+      "size": 8,
+      "type": "bitflags"
+    },
+    {
+      "confidence": "likely",
+      "constraint": {
+        "kind": "bitmask",
+        "valid_mask": 18446744073709551615
+      },
+      "description": "Unlock/progress bitflag bank covering save bytes 0xC8..0xCF (baseline 00 00 00 00 00 00 FF FF)",
+      "evidence": "Same unlock bit-array idiom: bit tests FUN_0801693c / FUN_080169d0, setter FUN_08016990, index bound param_1 < 0x51 in FUN_08025f48; this bank is fully cleared (unlocked) in baseline.",
+      "name": "unlock_flags_bank3",
+      "offset": 200,
+      "size": 8,
+      "type": "bitflags"
+    },
+    {
+      "confidence": "likely",
+      "constraint": {
+        "kind": "bitmask",
+        "valid_mask": 18446744073709551615
+      },
+      "description": "Trailing record-table flags covering save bytes 0x16A..0x171 (baseline FF followed by seven 0x00)",
+      "evidence": "Record allocator FUN_08016a44 manages stride-0x10 records (state u16 at +0 flipped 0 -> 1, u32 payloads at +8/+0xC, live count at *DAT_08016aa8); table default-init FUN_080304b4 presets record words (base +8/+10/+12) to 0xFFFF.",
+      "name": "record_table_tail",
+      "offset": 362,
+      "size": 8,
+      "type": "bitflags"
+    },
+    {
+      "confidence": "likely",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 255,
+        "minimum": 0
+      },
+      "description": "Trailing sentinel byte at save offset 0x173 (baseline 0xFF)",
+      "evidence": "Sentinel default-init idiom FUN_080304b4 presets table words to 0xFFFF (blank/erased state); erased EEPROM reads 0xFF, matching the baseline value at this tail offset.",
+      "name": "save_tail_marker",
+      "offset": 371,
+      "size": 1,
+      "type": "u8"
+    }
+  ],
   "game_code": "ARSP",
-  "title": "Robot Wars - Extreme Destruction (Europe) (En,Fr,De,Es,It,Nl)",
-  "media": "eeprom512",
-  "size_bytes": 512,
+  "id": "arsp",
   "magic_signatures": [
     {
       "offset": 4,
@@ -12,34 +194,11 @@
         82,
         65,
         87
-      ]
+      ],
+      "description": "ASCII 'TRAW' save signature"
     }
   ],
-  "checksums": [],
-  "fields": [
-    {
-      "name": "magic_header",
-      "offset": 4,
-      "size": 4,
-      "type": "ascii"
-    },
-    {
-      "name": "slot_counter",
-      "offset": 8,
-      "size": 2,
-      "type": "u16_le"
-    },
-    {
-      "name": "game_progress_flags",
-      "offset": 10,
-      "size": 2,
-      "type": "u16_le"
-    },
-    {
-      "name": "player_status_payload",
-      "offset": 12,
-      "size": 16,
-      "type": "bytes"
-    }
-  ]
+  "media": "eeprom512",
+  "size_bytes": 512,
+  "title": "Robot Wars - Extreme Destruction (Europe) (En,Fr,De,Es,It,Nl)"
 }

@@ -1,29 +1,403 @@
 {
-  "id": "ah6e",
-  "game_code": "AH6E",
-  "title": "Hardcore Pinball (USA, Europe)",
-  "media": "eeprom512",
-  "size_bytes": 512,
-  "magic_signatures": [],
-  "checksums": [],
+  "checksums": [
+    {
+      "algorithm": "sum32_le",
+      "covered_end": 99,
+      "covered_start": 0,
+      "description": "Byte sum of struct bytes 0..98 (FUN_0800d48c) stored at slot0+0x68; verified against baseline.",
+      "name": "slot0_checksum",
+      "seed": 0,
+      "stored_offset": 104,
+      "xor_out": 0
+    },
+    {
+      "algorithm": "sum32_le",
+      "covered_end": 227,
+      "covered_start": 128,
+      "description": "Byte sum of struct bytes 0..98 of slot 1 (FUN_0800d48c) stored at slot1+0x68; verified against baseline.",
+      "name": "slot1_checksum",
+      "seed": 0,
+      "stored_offset": 232,
+      "xor_out": 0
+    },
+    {
+      "algorithm": "sum32_le",
+      "covered_end": 355,
+      "covered_start": 256,
+      "description": "Byte sum of struct bytes 0..98 of slot 2 (FUN_0800d48c) stored at slot2+0x68; verified against baseline.",
+      "name": "slot2_checksum",
+      "seed": 0,
+      "stored_offset": 360,
+      "xor_out": 0
+    },
+    {
+      "algorithm": "sum32_le",
+      "covered_end": 483,
+      "covered_start": 384,
+      "description": "Byte sum of struct bytes 0..98 of slot 3 (FUN_0800d48c) stored at slot3+0x68; verified against baseline.",
+      "name": "slot3_checksum",
+      "seed": 0,
+      "stored_offset": 488,
+      "xor_out": 0
+    }
+  ],
+  "eeprom_rev8": true,
   "fields": [
     {
-      "name": "slot_counter",
+      "confidence": "confirmed",
+      "description": "Table 0, rank 0 high-score value (u32 LE). Displayed by FUN_08006a54 via FUN_0800693c; zeroed by FUN_0800d4a8.",
+      "evidence": "FUN_08006a54 reads u32 at save-struct base + table*0x18 + rank*8 (line ~5021) and renders it via FUN_0800693c; FUN_0800d4a8 zeroes the 12 score words.",
+      "name": "table0_score0",
       "offset": 0,
-      "size": 2,
-      "type": "u16_le"
+      "size": 4,
+      "type": "u32_le"
     },
     {
-      "name": "game_progress_flags",
-      "offset": 2,
-      "size": 2,
-      "type": "u16_le"
-    },
-    {
-      "name": "player_status_payload",
+      "confidence": "confirmed",
+      "description": "Table 0, rank 0 initials (3 glyph indices 0..39).",
+      "evidence": "FUN_08006a54 displays 3 bytes at entry+4 via FUN_08006984 and edits them with 0x27 wrap (lines ~5024-5064); FUN_0800d4a8 zeroes entry bytes +4..+6.",
+      "name": "table0_initials0",
       "offset": 4,
-      "size": 16,
+      "size": 3,
       "type": "bytes"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Table 0, rank 1 high-score value (u32 LE).",
+      "evidence": "FUN_08006a54 reads u32 at save-struct base + table*0x18 + rank*8 and renders it via FUN_0800693c; FUN_0800d4a8 zeroes the score words.",
+      "name": "table0_score1",
+      "offset": 8,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Table 0, rank 1 initials (3 glyph indices 0..39).",
+      "evidence": "FUN_08006a54 displays/edits 3 bytes at entry+4 with 0x27 wrap; FUN_0800d4a8 zeroes entry bytes +4..+6.",
+      "name": "table0_initials1",
+      "offset": 12,
+      "size": 3,
+      "type": "bytes"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Table 0, rank 2 high-score value (u32 LE).",
+      "evidence": "FUN_08006a54 reads u32 at save-struct base + table*0x18 + rank*8 and renders it via FUN_0800693c; FUN_0800d4a8 zeroes the score words.",
+      "name": "table0_score2",
+      "offset": 16,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Table 0, rank 2 initials (3 glyph indices 0..39).",
+      "evidence": "FUN_08006a54 displays/edits 3 bytes at entry+4 with 0x27 wrap; FUN_0800d4a8 zeroes entry bytes +4..+6.",
+      "name": "table0_initials2",
+      "offset": 20,
+      "size": 3,
+      "type": "bytes"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Table 1, rank 0 high-score value (u32 LE).",
+      "evidence": "FUN_08006a54 reads u32 at save-struct base + table*0x18 + rank*8 and renders it via FUN_0800693c; FUN_0800d4a8 zeroes the score words.",
+      "name": "table1_score0",
+      "offset": 24,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Table 1, rank 0 initials (3 glyph indices 0..39).",
+      "evidence": "FUN_08006a54 displays/edits 3 bytes at entry+4 with 0x27 wrap; FUN_0800d4a8 zeroes entry bytes +4..+6.",
+      "name": "table1_initials0",
+      "offset": 28,
+      "size": 3,
+      "type": "bytes"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Table 1, rank 1 high-score value (u32 LE).",
+      "evidence": "FUN_08006a54 reads u32 at save-struct base + table*0x18 + rank*8 and renders it via FUN_0800693c; FUN_0800d4a8 zeroes the score words.",
+      "name": "table1_score1",
+      "offset": 32,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Table 1, rank 1 initials (3 glyph indices 0..39).",
+      "evidence": "FUN_08006a54 displays/edits 3 bytes at entry+4 with 0x27 wrap; FUN_0800d4a8 zeroes entry bytes +4..+6.",
+      "name": "table1_initials1",
+      "offset": 36,
+      "size": 3,
+      "type": "bytes"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Table 1, rank 2 high-score value (u32 LE).",
+      "evidence": "FUN_08006a54 reads u32 at save-struct base + table*0x18 + rank*8 and renders it via FUN_0800693c; FUN_0800d4a8 zeroes the score words.",
+      "name": "table1_score2",
+      "offset": 40,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Table 1, rank 2 initials (3 glyph indices 0..39).",
+      "evidence": "FUN_08006a54 displays/edits 3 bytes at entry+4 with 0x27 wrap; FUN_0800d4a8 zeroes entry bytes +4..+6.",
+      "name": "table1_initials2",
+      "offset": 44,
+      "size": 3,
+      "type": "bytes"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Table 2, rank 0 high-score value (u32 LE).",
+      "evidence": "FUN_08006a54 reads u32 at save-struct base + table*0x18 + rank*8 and renders it via FUN_0800693c; FUN_0800d4a8 zeroes the score words.",
+      "name": "table2_score0",
+      "offset": 48,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Table 2, rank 0 initials (3 glyph indices 0..39).",
+      "evidence": "FUN_08006a54 displays/edits 3 bytes at entry+4 with 0x27 wrap; FUN_0800d4a8 zeroes entry bytes +4..+6.",
+      "name": "table2_initials0",
+      "offset": 52,
+      "size": 3,
+      "type": "bytes"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Table 2, rank 1 high-score value (u32 LE).",
+      "evidence": "FUN_08006a54 reads u32 at save-struct base + table*0x18 + rank*8 and renders it via FUN_0800693c; FUN_0800d4a8 zeroes the score words.",
+      "name": "table2_score1",
+      "offset": 56,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Table 2, rank 1 initials (3 glyph indices 0..39).",
+      "evidence": "FUN_08006a54 displays/edits 3 bytes at entry+4 with 0x27 wrap; FUN_0800d4a8 zeroes entry bytes +4..+6.",
+      "name": "table2_initials1",
+      "offset": 60,
+      "size": 3,
+      "type": "bytes"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Table 2, rank 2 high-score value (u32 LE).",
+      "evidence": "FUN_08006a54 reads u32 at save-struct base + table*0x18 + rank*8 and renders it via FUN_0800693c; FUN_0800d4a8 zeroes the score words.",
+      "name": "table2_score2",
+      "offset": 64,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Table 2, rank 2 initials (3 glyph indices 0..39).",
+      "evidence": "FUN_08006a54 displays/edits 3 bytes at entry+4 with 0x27 wrap; FUN_0800d4a8 zeroes entry bytes +4..+6.",
+      "name": "table2_initials2",
+      "offset": 68,
+      "size": 3,
+      "type": "bytes"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Table 3, rank 0 high-score value (u32 LE).",
+      "evidence": "FUN_08006a54 reads u32 at save-struct base + table*0x18 + rank*8 and renders it via FUN_0800693c; FUN_0800d4a8 zeroes the score words.",
+      "name": "table3_score0",
+      "offset": 72,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Table 3, rank 0 initials (3 glyph indices 0..39).",
+      "evidence": "FUN_08006a54 displays/edits 3 bytes at entry+4 with 0x27 wrap; FUN_0800d4a8 zeroes entry bytes +4..+6.",
+      "name": "table3_initials0",
+      "offset": 76,
+      "size": 3,
+      "type": "bytes"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Table 3, rank 1 high-score value (u32 LE).",
+      "evidence": "FUN_08006a54 reads u32 at save-struct base + table*0x18 + rank*8 and renders it via FUN_0800693c; FUN_0800d4a8 zeroes the score words.",
+      "name": "table3_score1",
+      "offset": 80,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Table 3, rank 1 initials (3 glyph indices 0..39).",
+      "evidence": "FUN_08006a54 displays/edits 3 bytes at entry+4 with 0x27 wrap; FUN_0800d4a8 zeroes entry bytes +4..+6.",
+      "name": "table3_initials1",
+      "offset": 84,
+      "size": 3,
+      "type": "bytes"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Table 3, rank 2 high-score value (u32 LE).",
+      "evidence": "FUN_08006a54 reads u32 at save-struct base + table*0x18 + rank*8 and renders it via FUN_0800693c; FUN_0800d4a8 zeroes the score words.",
+      "name": "table3_score2",
+      "offset": 88,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Table 3, rank 2 initials (3 glyph indices 0..39).",
+      "evidence": "FUN_08006a54 displays/edits 3 bytes at entry+4 with 0x27 wrap; FUN_0800d4a8 zeroes entry bytes +4..+6.",
+      "name": "table3_initials2",
+      "offset": 92,
+      "size": 3,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "constraint": {
+        "kind": "enum",
+        "values": [
+          0,
+          1
+        ]
+      },
+      "description": "User-toggleable option flag (e.g. sound on/off). Toggled in FUN_08006168 then persisted by FUN_0800d700; booleanized on load in FUN_0800d8c4.",
+      "evidence": "FUN_08006168 flips a settings word (*DAT_08006418 == 0) and marks save dirty; FUN_0800d700 derives save byte 99 from game-state sign and FUN_0800d8c4 booleanizes byte 99 via -(u8)>>31.",
+      "name": "option_toggle_flag",
+      "offset": 99,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 100,
+        "minimum": 0
+      },
+      "description": "Config value A, range 0..100 (e.g. volume level). Low byte of the u32 at struct+100.",
+      "evidence": "FUN_0800d700 writes it as low byte of CONCAT11 u32 at struct+100; FUN_0800d8c4 clamps it to <= 100 on load.",
+      "name": "setting_value_a",
+      "offset": 100,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 100,
+        "minimum": 0
+      },
+      "description": "Config value B, range 0..100 (e.g. volume level). High byte of the u32 at struct+100.",
+      "evidence": "FUN_0800d700 writes it as high byte of CONCAT11 u32 at struct+100; FUN_0800d8c4 clamps (u32>>8)&0xFF to <= 100 on load.",
+      "name": "setting_value_b",
+      "offset": 101,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Bitwise complement of slot0_checksum (~sum). No sum32_inv algorithm exists in Schema v2, so it is a plain field.",
+      "evidence": "FUN_0800d4a8 stores ~sum at struct+0x6C and FUN_0800d5ac verifies ~sum == stored word; baseline holds 0xFFFFF40B = ~0xBF4.",
+      "name": "slot0_checksum_complement",
+      "offset": 108,
+      "size": 4,
+      "type": "u32_le"
     }
-  ]
+  ],
+  "game_code": "AH6E",
+  "id": "ah6e",
+  "magic_signatures": [
+    {
+      "bytes": [
+        120,
+        86,
+        52,
+        18
+      ],
+      "description": "Magic constant 0x12345678 LE written by FUN_0800d4a8 at struct+0x70, verified by FUN_0800d5ac.",
+      "offset": 112
+    },
+    {
+      "bytes": [
+        240,
+        222,
+        188,
+        154
+      ],
+      "description": "Magic constant 0x9ABCDEF0 LE written by FUN_0800d4a8 at struct+0x74, verified by FUN_0800d5ac.",
+      "offset": 116
+    },
+    {
+      "bytes": [
+        120,
+        86,
+        52,
+        18
+      ],
+      "description": "Slot 1 copy of the 0x12345678 magic at struct+0x70.",
+      "offset": 240
+    },
+    {
+      "bytes": [
+        240,
+        222,
+        188,
+        154
+      ],
+      "description": "Slot 1 copy of the 0x9ABCDEF0 magic at struct+0x74.",
+      "offset": 244
+    },
+    {
+      "bytes": [
+        120,
+        86,
+        52,
+        18
+      ],
+      "description": "Slot 2 copy of the 0x12345678 magic at struct+0x70.",
+      "offset": 368
+    },
+    {
+      "bytes": [
+        240,
+        222,
+        188,
+        154
+      ],
+      "description": "Slot 2 copy of the 0x9ABCDEF0 magic at struct+0x74.",
+      "offset": 372
+    },
+    {
+      "bytes": [
+        120,
+        86,
+        52,
+        18
+      ],
+      "description": "Slot 3 copy of the 0x12345678 magic at struct+0x70.",
+      "offset": 496
+    },
+    {
+      "bytes": [
+        240,
+        222,
+        188,
+        154
+      ],
+      "description": "Slot 3 copy of the 0x9ABCDEF0 magic at struct+0x74.",
+      "offset": 500
+    }
+  ],
+  "media": "eeprom512",
+  "size_bytes": 512,
+  "title": "Hardcore Pinball (USA, Europe)"
 }

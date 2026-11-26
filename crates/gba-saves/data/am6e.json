@@ -1,29 +1,108 @@
 {
-  "id": "am6e",
-  "game_code": "AM6E",
-  "title": "Mike Tyson Boxing (USA) (En,Fr,De,Es,It)",
-  "media": "eeprom512",
-  "size_bytes": 512,
-  "magic_signatures": [],
   "checksums": [],
+  "copy_groups": [],
+  "eeprom_rev8": true,
   "fields": [
     {
-      "name": "slot_counter",
+      "confidence": "likely",
+      "constraint": null,
+      "description": "Bit-packed career/boxer record region (248 bytes). Read by FUN_0801bd90 from EEPROM address 0x1F into RAM and bit-unpacked field-by-field by FUN_0801820c (6-/5-/4-/2-bit groups). Fully erased (0xFF) in baseline: no career progress saved yet.",
+      "evidence": "FUN_0801bd90 reads 0xF8 bytes from EEPROM address 0x1F (file bytes 248..495) via FUN_0801ba80; caller FUN_08019678 passes the buffer to FUN_0801820c which bit-unpacks boxer records.",
+      "name": "career_data_packed",
+      "offset": 248,
+      "size": 248,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "constraint": null,
+      "description": "Config payload word 3 (buffer word 4). Stored from DAT_0801bc48[2] by FUN_0801bc0c and restored into DAT_0801bcdc[2] by FUN_0801bc58. Erased (0xFFFF) in baseline.",
+      "evidence": "FUN_0801bc58 loads 16-byte block via FUN_0801ba80(0,buf,0x3e,0x10); payload word maps to DAT_0801bc48[2]/DAT_0801bcdc[2]; defaults written by FUN_0801bc0c.",
+      "name": "config_word_3",
       "offset": 496,
       "size": 2,
       "type": "u16_le"
     },
     {
-      "name": "game_progress_flags",
-      "offset": 498,
+      "confidence": "confirmed",
+      "constraint": null,
+      "description": "Additive checksum word (buffer word 6): FUN_0801ba80 write path stores -(sum of buffer words 0..5); read path requires sum of buffer words 0..6 == 0 mod 0x10000. Custom algorithm with non-contiguous file coverage (blocks stored swapped), so represented as a plain u16_le field; see SPEC.md. Verifies 0xABB5 against baseline in the rev8 logical domain.",
+      "evidence": "FUN_0801ba80 write path sets buf[u16count-2] = -sum(buf words); read path returns 0x1000 unless sum == 0. Baseline: 0x0000+0x0001+0xFFFF*3+0x544D+0xABB5 == 0x10000.",
+      "name": "config_checksum",
+      "offset": 500,
       "size": 2,
       "type": "u16_le"
     },
     {
-      "name": "player_status_payload",
-      "offset": 500,
-      "size": 12,
-      "type": "bytes"
+      "confidence": "confirmed",
+      "constraint": null,
+      "description": "Write-counter mirror (buffer word 7). Must equal config_save_counter; FUN_0801ba80 read path rejects the block (0x1000) on mismatch.",
+      "evidence": "FUN_0801ba80 read path requires *buf == buf[wordcount-1]; write path sets both to previous counter + 1. Baseline 0x0000 == counter.",
+      "name": "config_save_counter_mirror",
+      "offset": 502,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": null,
+      "description": "Config-block write counter (buffer word 0). Incremented on every save by the FUN_0801ba80 write path; must equal the mirror word or the block is rejected.",
+      "evidence": "FUN_0801ba80 write path (param_1 != 0) sets buf[0] = buf[wordcount-1] = old counter + 1 via FUN_0801c3d4/FUN_0801c484; read path requires equality. Baseline 0x0000.",
+      "name": "config_save_counter",
+      "offset": 504,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "constraint": {
+        "flag_labels": {
+          "9": "init-select flag (tested as bit 0x200 in FUN_0801bc0c)"
+        },
+        "kind": "bitmask",
+        "valid_mask": 65535
+      },
+      "description": "Config payload word 0 (buffer word 1). Mirrors *DAT_0801bc44 into the save and restores it into *DAT_0801bcd8 on load; bit 9 (0x200) selects the init path in FUN_0801bc0c. Baseline 0x0001.",
+      "evidence": "FUN_0801bc58 loads it as local_12 from FUN_0801ba80(0,buf,0x3e,0x10) buffer and stores to *DAT_0801bcd8; FUN_0801bc0c sources defaults from *DAT_0801bc44 and tests bit 0x200.",
+      "name": "config_word_0",
+      "offset": 506,
+      "size": 2,
+      "type": "bitflags"
+    },
+    {
+      "confidence": "likely",
+      "constraint": null,
+      "description": "Config payload word 1 (buffer word 2). Stored from DAT_0801bc48[0] by FUN_0801bc0c and restored into DAT_0801bcdc[0] by FUN_0801bc58. Erased (0xFFFF) in baseline.",
+      "evidence": "FUN_0801bc58 loads 16-byte block via FUN_0801ba80(0,buf,0x3e,0x10); payload word maps to DAT_0801bc48[0]/DAT_0801bcdc[0]; defaults written by FUN_0801bc0c.",
+      "name": "config_word_1",
+      "offset": 508,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "constraint": null,
+      "description": "Config payload word 2 (buffer word 3). Stored from DAT_0801bc48[1] by FUN_0801bc0c and restored into DAT_0801bcdc[1] by FUN_0801bc58. Erased (0xFFFF) in baseline.",
+      "evidence": "FUN_0801bc58 loads 16-byte block via FUN_0801ba80(0,buf,0x3e,0x10); payload word maps to DAT_0801bc48[1]/DAT_0801bcdc[1]; defaults written by FUN_0801bc0c.",
+      "name": "config_word_2",
+      "offset": 510,
+      "size": 2,
+      "type": "u16_le"
     }
-  ]
+  ],
+  "game_code": "AM6E",
+  "id": "am6e",
+  "magic_signatures": [
+    {
+      "bytes": [
+        77,
+        84
+      ],
+      "description": "ASCII 'MT' config-block tag (buffer word 5). FUN_0801bc58 compares it against ROM constant DAT_0801bca4 and re-initializes defaults on mismatch.",
+      "offset": 498
+    }
+  ],
+  "media": "eeprom512",
+  "size_bytes": 512,
+  "title": "Mike Tyson Boxing (USA) (En,Fr,De,Es,It)"
 }

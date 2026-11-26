@@ -4,26 +4,81 @@
   "title": "Virtual Kasparov (Europe) (En,Fr,De,Es,It)",
   "media": "eeprom512",
   "size_bytes": 512,
-  "magic_signatures": [],
+  "eeprom_rev8": true,
+  "magic_signatures": [
+    {
+      "offset": 160,
+      "bytes": [
+        238,
+        238
+      ],
+      "description": "Slot 1 validity marker 0xEEEE at EEPROM block 20 (first u16)"
+    },
+    {
+      "offset": 320,
+      "bytes": [
+        221,
+        221
+      ],
+      "description": "Slot 2 validity marker 0xDDDD at EEPROM block 40 (first u16)"
+    }
+  ],
   "checksums": [],
   "fields": [
     {
-      "name": "slot_counter",
+      "name": "slot0_magic",
+      "offset": 0,
+      "size": 2,
+      "type": "u16_le",
+      "description": "Slot 0 validity marker: first u16 of EEPROM block 0, checked at load and written at init",
+      "confidence": "likely",
+      "evidence": "FUN_08003984 reads EEPROM block 0 via FUN_08048760 and compares the first u16 against the expected marker, and writes the marker to block 0 via FUN_08048818 on the first-time-init path. Baseline holds 0xFFFF here, which also equals the erased-EEPROM value, so the exact constant is likely rather than confirmed."
+    },
+    {
+      "name": "slot0_name",
       "offset": 8,
-      "size": 2,
-      "type": "u16_le"
+      "size": 32,
+      "type": "bytes",
+      "description": "Slot 0 save name: 16 UTF-16LE characters (10 used as 'NEW GAME  ' plus 6 NUL padding in a fresh save)",
+      "confidence": "confirmed",
+      "evidence": "FUN_08003984 builds the 16-byte RAM name buffer 'NEW GAME  ' and FUN_080033d8 expands each of the 16 bytes to one LE u16 and writes 5 EEPROM blocks starting at block 1 (save bytes 8..47). Baseline save bytes 8..39 decode as UTF-16LE 'NEW GAME  ' followed by NULs."
     },
     {
-      "name": "game_progress_flags",
-      "offset": 10,
+      "name": "slot1_magic",
+      "offset": 160,
       "size": 2,
-      "type": "u16_le"
+      "type": "u16_le",
+      "description": "Slot 1 validity marker 0xEEEE: first u16 of EEPROM block 20, checked at load and written at init",
+      "confidence": "confirmed",
+      "evidence": "FUN_08003984 reads EEPROM block 0x14 via FUN_08048760 and compares the first u16 against the expected marker, and writes the marker to block 0x14 via FUN_08048818 on the first-time-init path. Baseline save bytes 160..161 read 0xEEEE in the rev8 logical domain."
     },
     {
-      "name": "player_status_payload",
-      "offset": 12,
-      "size": 16,
-      "type": "bytes"
+      "name": "slot1_name",
+      "offset": 168,
+      "size": 32,
+      "type": "bytes",
+      "description": "Slot 1 save name: 16 UTF-16LE characters (10 used as 'NEW GAME  ' plus 6 NUL padding in a fresh save)",
+      "confidence": "confirmed",
+      "evidence": "FUN_08003984 builds the 16-byte RAM name buffer 'NEW GAME  ' and FUN_080033d8 expands each of the 16 bytes to one LE u16 and writes 5 EEPROM blocks starting at block 0x15 (save bytes 168..207). Baseline save bytes 168..199 decode as UTF-16LE 'NEW GAME  ' followed by NULs."
+    },
+    {
+      "name": "slot2_magic",
+      "offset": 320,
+      "size": 2,
+      "type": "u16_le",
+      "description": "Slot 2 validity marker 0xDDDD: first u16 of EEPROM block 40, checked at load and written at init",
+      "confidence": "confirmed",
+      "evidence": "FUN_08003984 reads EEPROM block 0x28 via FUN_08048760 and compares the first u16 against the expected marker, and writes the marker to block 0x28 via FUN_08048818 on the first-time-init path. Baseline save bytes 320..321 read 0xDDDD in the rev8 logical domain."
+    },
+    {
+      "name": "slot2_name",
+      "offset": 328,
+      "size": 32,
+      "type": "bytes",
+      "description": "Slot 2 save name: 16 UTF-16LE characters (10 used as 'NEW GAME  ' plus 6 NUL padding in a fresh save)",
+      "confidence": "confirmed",
+      "evidence": "FUN_08003984 builds the 16-byte RAM name buffer 'NEW GAME  ' and FUN_080033d8 expands each of the 16 bytes to one LE u16 and writes 5 EEPROM blocks starting at block 0x29 (save bytes 328..367). Baseline save bytes 328..359 decode as UTF-16LE 'NEW GAME  ' followed by NULs."
     }
-  ]
+  ],
+  "copy_groups": []
 }

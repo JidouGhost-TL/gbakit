@@ -1,39 +1,87 @@
 {
-  "id": "bcze",
-  "game_code": "BCZE",
-  "title": "Street Racing Syndicate (USA)",
-  "media": "eeprom512",
-  "size_bytes": 512,
-  "magic_signatures": [
-    {
-      "offset": 504,
-      "bytes": [
-        83,
-        65,
-        86,
-        48
-      ]
-    }
-  ],
   "checksums": [],
   "fields": [
     {
-      "name": "magic_header",
+      "confidence": "confirmed",
+      "description": "Career-record validation word: first 4 bytes of the career record (EEPROM block 0). Written from ROM constant DAT_0800340c and compared against ROM default DAT_080032d8 on load.",
+      "evidence": "FUN_080033a4 stages 4-byte header DAT_0800340c at buffer cursor 0 via FUN_08031e50 (len 4) and stores it with FUN_08031cf8/FUN_0803fad0 to EEPROM block 0 (save offsets 0-3). FUN_08003264 loads it back with FUN_08031bcc(mode 1, bitoff 0, bitlen 4 = 1 block at EEPROM addr 0)/FUN_0803fa20 into the 0x200-byte RAM buffer (FUN_0802797c in FUN_08031b2c) and extracts 4 bytes at cursor 0 via FUN_08031e98 into iStack_10, compared against DAT_080032d8.",
+      "name": "record_tag",
+      "offset": 0,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "First packed word of the career payload (save offsets 4-7): head of the FUN_080314fc bit-packed stream holding career fields 0-6 sourced from game-state words at DAT_08002cc8 plus DAT_08002ccc/DAT_08002cd0/DAT_08002cd4+.",
+      "evidence": "FUN_08002c18 packs career fields 0,1,2,3,4,5,6 via FUN_080314fc from game state at DAT_08002cc8 plus DAT_08002ccc/DAT_08002cd0/DAT_08002cd4/DAT_08002cd8/DAT_08002cdc/DAT_08002ce0/DAT_08002ce4; FUN_080033a4 stages the packed buffer at cursor 4 via FUN_08031e50 (save offset 4+) and writes it with FUN_08031cf8/FUN_0803fad0 (EEPROM blocks 0+, 8 bytes per FUN_0803fa20 block transfer).",
+      "name": "career_data_word0",
+      "offset": 4,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Second packed word of the career payload (save offsets 8-11, EEPROM block 1): continuation of the FUN_080314fc packed stream (10-entry field 7 array from DAT_08002cc8 plus DAT_08002d18, then 9-char folded player-name field 8 from DAT_08002d1c).",
+      "evidence": "FUN_08002c18 packs field 7 (10 entries) and field 8 (9 chars) after fields 0-6 via FUN_080314fc; FUN_08031bcc/FUN_08031cf8 transport the record in a multi-block loop (iVar8 over block count, 8 bytes per FUN_0803fa20/FUN_0803fad0 block), so staged payload bytes past the first block land at save offsets 8+.",
+      "name": "career_data_word1",
+      "offset": 8,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "allowed": "SAV0",
+        "kind": "ascii-charset",
+        "max_len": 4
+      },
+      "description": "First validation magic word (EEPROM block 63, low word): ASCII 'SAV0' written at save offsets 504-507.",
+      "evidence": "FUN_080318f4 writes EEPROM block 63 (save offsets 504-511) with duplicated u32 iStack_1c/iStack_18 = *DAT_0803193c + DAT_08031940 ('SAV0' = 0x30564153); FUN_080319b8 reads block 63 via FUN_0803fa20(0x3f) into uStack_1c and validates (uStack_1c & 0xfffffff0) == DAT_08031ad4 with length check *DAT_08031ad0 * ((uStack_1c & 0xf) + 1) against DAT_08031ad8.",
+      "name": "save_marker_first",
       "offset": 504,
       "size": 4,
       "type": "ascii"
     },
     {
-      "name": "slot_counter",
+      "confidence": "confirmed",
+      "constraint": {
+        "allowed": "SAV0",
+        "kind": "ascii-charset",
+        "max_len": 4
+      },
+      "description": "Second validation magic word (EEPROM block 63, high word): ASCII 'SAV0' written at save offsets 508-511.",
+      "evidence": "FUN_080318f4 writes EEPROM block 63 (save offsets 504-511) with duplicated u32 iStack_1c/iStack_18; FUN_080319b8 reads block 63 via FUN_0803fa20(0x3f) into uStack_18 and validates (uStack_18 & 0xfffffff0) == DAT_08031b08 with length check *DAT_08031ad0 * ((uStack_18 & 0xf) + 1) against DAT_08031b0c.",
+      "name": "save_marker_second",
       "offset": 508,
-      "size": 2,
-      "type": "u16_le"
+      "size": 4,
+      "type": "ascii"
+    }
+  ],
+  "game_code": "BCZE",
+  "id": "bcze",
+  "magic_signatures": [
+    {
+      "bytes": [
+        83,
+        65,
+        86,
+        48
+      ],
+      "description": "ASCII 'SAV0': low validation word of EEPROM block 63, written by FUN_080318f4, checked by FUN_080319b8.",
+      "offset": 504
     },
     {
-      "name": "game_progress_flags",
-      "offset": 510,
-      "size": 2,
-      "type": "u16_le"
+      "bytes": [
+        83,
+        65,
+        86,
+        48
+      ],
+      "description": "ASCII 'SAV0': high validation word of EEPROM block 63, written by FUN_080318f4, checked by FUN_080319b8.",
+      "offset": 508
     }
-  ]
+  ],
+  "media": "eeprom512",
+  "size_bytes": 512,
+  "title": "Street Racing Syndicate (USA)"
 }

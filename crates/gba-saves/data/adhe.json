@@ -1,29 +1,84 @@
 {
-  "id": "adhe",
-  "game_code": "ADHE",
-  "title": "Defender of the Crown (USA)",
-  "media": "eeprom512",
-  "size_bytes": 512,
-  "magic_signatures": [],
   "checksums": [],
+  "eeprom_rev8": true,
   "fields": [
     {
-      "name": "slot_counter",
+      "confidence": "likely",
+      "description": "Player initials slot 0, low byte of u16-LE glyph unit; baseline 68 = ASCII 'D', matching the 0x44 value passed to FUN_080008bc.",
+      "evidence": "FUN_080008bc (line 45) takes a u16 char/record id and forwards it to FUN_08014408; call site at line 892 passes 0x44 (68 = 'D'), equal to this field's baseline value. FUN_08000aa8 (line 111) scans the 76-entry (0x4C) charset table DAT_08000ad4. Save offset 0 == logical offset 0 after 8-byte rev8 un-reversal (raw 0x00, logical 0x44).",
+      "name": "initial_slot0_code",
       "offset": 0,
-      "size": 2,
-      "type": "u16_le"
+      "size": 1,
+      "type": "u8"
     },
     {
-      "name": "game_progress_flags",
+      "confidence": "likely",
+      "description": "Player initials slot 0, upper byte of u16-LE glyph unit; 0x00 in baseline (Latin glyph page).",
+      "evidence": "FUN_08014408 (line 1440) indexes records as (param_1 & 0xffff) * 8 + DAT_08014430, i.e. u16-addressed 8-byte records, matching this 8-byte save record of four u16 units. Upper byte is 0x00 in samples/baseline.sav.",
+      "name": "initial_slot0_upper",
+      "offset": 1,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Player initials slot 1, low byte of u16-LE glyph unit; baseline 79 = ASCII 'O'.",
+      "evidence": "Same u16 glyph-unit record as initial_slot0_code: FUN_08000aa8 (line 111) charset scan over DAT_08000ad4; glyph output path FUN_080008bc/FUN_08014408 (lines 45, 1440); centered text renderer FUN_08000b58/FUN_08000c84 (lines 130, 155). Save logical offset 2.",
+      "name": "initial_slot1_code",
       "offset": 2,
-      "size": 2,
-      "type": "u16_le"
+      "size": 1,
+      "type": "u8"
     },
     {
-      "name": "player_status_payload",
+      "confidence": "likely",
+      "description": "Player initials slot 1, upper byte of u16-LE glyph unit; 0x00 in baseline (Latin glyph page).",
+      "evidence": "Structural upper byte of the u16 unit at save logical offset 2 (see FUN_08014408 u16-indexed record access, line 1440). 0x00 in samples/baseline.sav.",
+      "name": "initial_slot1_upper",
+      "offset": 3,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Player initials slot 2, low byte of u16-LE glyph unit; baseline 84 = ASCII 'T'.",
+      "evidence": "Same u16 glyph-unit record: FUN_08000aa8 (line 111) charset scan over DAT_08000ad4; glyph output path FUN_080008bc/FUN_08014408 (lines 45, 1440); centered text renderer FUN_08000b58/FUN_08000c84 (lines 130, 155). Save logical offset 4.",
+      "name": "initial_slot2_code",
       "offset": 4,
-      "size": 16,
-      "type": "bytes"
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Player initials slot 2, upper byte of u16-LE glyph unit; 0x00 in baseline (Latin glyph page).",
+      "evidence": "Structural upper byte of the u16 unit at save logical offset 4 (see FUN_08014408 u16-indexed record access, line 1440). 0x00 in samples/baseline.sav.",
+      "name": "initial_slot2_upper",
+      "offset": 5,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Player initials slot 3, low byte of u16-LE glyph unit; baseline 88 = ASCII 'X'.",
+      "evidence": "Same u16 glyph-unit record: FUN_08000aa8 (line 111) charset scan over DAT_08000ad4; glyph output path FUN_080008bc/FUN_08014408 (lines 45, 1440); centered text renderer FUN_08000b58/FUN_08000c84 (lines 130, 155). Save logical offset 6.",
+      "name": "initial_slot3_code",
+      "offset": 6,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Player initials slot 3, upper byte of u16-LE glyph unit; 0x00 in baseline (Latin glyph page).",
+      "evidence": "Structural upper byte of the u16 unit at save logical offset 6 (see FUN_08014408 u16-indexed record access, line 1440). 0x00 in samples/baseline.sav.",
+      "name": "initial_slot3_upper",
+      "offset": 7,
+      "size": 1,
+      "type": "u8"
     }
-  ]
+  ],
+  "game_code": "ADHE",
+  "id": "adhe",
+  "magic_signatures": [],
+  "media": "eeprom512",
+  "size_bytes": 512,
+  "title": "Defender of the Crown (USA)"
 }

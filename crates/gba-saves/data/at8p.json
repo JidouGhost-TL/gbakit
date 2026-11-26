@@ -1,45 +1,154 @@
 {
-  "id": "at8p",
-  "game_code": "AT8P",
-  "title": "Tennis Masters Series 2003 (Europe) (En,Fr,De,Es,It,Pt)",
-  "media": "eeprom512",
-  "size_bytes": 512,
-  "magic_signatures": [
-    {
-      "offset": 0,
-      "bytes": [
-        48,
-        75,
-        78,
-        73
-      ]
-    }
-  ],
   "checksums": [],
+  "copy_groups": [],
+  "eeprom_rev8": true,
   "fields": [
     {
-      "name": "magic_header",
-      "offset": 0,
-      "size": 4,
-      "type": "ascii"
-    },
-    {
-      "name": "slot_counter",
-      "offset": 4,
-      "size": 2,
-      "type": "u16_le"
-    },
-    {
-      "name": "game_progress_flags",
-      "offset": 6,
-      "size": 2,
-      "type": "u16_le"
-    },
-    {
-      "name": "player_status_payload",
+      "confidence": "likely",
+      "description": "Setup/option byte 0 of the 16-byte header block (value 6 in baseline; role unidentified, kept as a mutable scalar for live testing).",
+      "evidence": "Header block at logical save offsets 0x08..0x17 is the only non-blank config region; it is read/written through the EEPROM transport pair FUN_08078fe2 / FUN_08079546 (4-word param block to &DAT_0e0efd04, called from FUN_08178630, FUN_08178638, FUN_081786be). Runtime options live as small ints/bitflags in IWRAM per FUN_08006bc6 (_DAT_03000c2c, _DAT_03000c6c bit tests).",
+      "name": "setting_0",
       "offset": 8,
-      "size": 16,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Setup/option byte 1 of the 16-byte header block (value 3 in baseline).",
+      "evidence": "Same header block and EEPROM transport as setting_0: FUN_08078fe2 / FUN_08079546 via &DAT_0e0efd04; IWRAM small-int options in FUN_08006bc6.",
+      "name": "setting_1",
+      "offset": 9,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Setup/option byte 2 of the 16-byte header block (value 1 in baseline).",
+      "evidence": "Same header block and EEPROM transport as setting_0: FUN_08078fe2 / FUN_08079546 via &DAT_0e0efd04; IWRAM small-int options in FUN_08006bc6.",
+      "name": "setting_2",
+      "offset": 10,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Setup/option byte 3 of the 16-byte header block (value 1 in baseline).",
+      "evidence": "Same header block and EEPROM transport as setting_0: FUN_08078fe2 / FUN_08079546 via &DAT_0e0efd04; IWRAM small-int options in FUN_08006bc6.",
+      "name": "setting_3",
+      "offset": 11,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Setup/option byte 4 of the 16-byte header block (value 3 in baseline).",
+      "evidence": "Same header block and EEPROM transport as setting_0: FUN_08078fe2 / FUN_08079546 via &DAT_0e0efd04; IWRAM small-int options in FUN_08006bc6.",
+      "name": "setting_4",
+      "offset": 12,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Setup/option byte 5 of the 16-byte header block (value 0 in baseline).",
+      "evidence": "Same header block and EEPROM transport as setting_0: FUN_08078fe2 / FUN_08079546 via &DAT_0e0efd04; IWRAM small-int options in FUN_08006bc6.",
+      "name": "setting_5",
+      "offset": 13,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Stored 16-bit word at header offset 0x0E (0x0FDE / 4062 in baseline). Checksum-like but no Schema v2 algorithm over any save region reproduces it, so it is kept as data, not a checksum spec.",
+      "evidence": "Verified by Python against samples/baseline.sav in the rev8-logical domain; transported with the header block by FUN_08078fe2 / FUN_08079546 via &DAT_0e0efd04 (callers FUN_08178630, FUN_08178638, FUN_081786be). CRC16 (arc/kermit/x25/buypass/xmodem), sum8/sum16/xor variants over all regions tested with no match.",
+      "name": "stored_word_a",
+      "offset": 14,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "32-bit header word at offset 0x10 (value 2 in baseline; role unidentified).",
+      "evidence": "Header-block word verified in rev8-logical domain; transported by FUN_08078fe2 / FUN_08079546 via &DAT_0e0efd04.",
+      "name": "counter_32",
+      "offset": 16,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Stored 16-bit word at header offset 0x14 (0x7ECC / 32460 in baseline). Checksum-like but unverified against any region/algorithm, so kept as data.",
+      "evidence": "Verified by Python against samples/baseline.sav in the rev8-logical domain; transported with the header block by FUN_08078fe2 / FUN_08079546 via &DAT_0e0efd04. Full sum/CRC brute force over record and header regions found no match.",
+      "name": "stored_word_b",
+      "offset": 20,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Stored 16-bit word at header offset 0x16 (0x0300 / 768 in baseline; role unidentified).",
+      "evidence": "Header-block word verified in rev8-logical domain; transported by FUN_08078fe2 / FUN_08079546 via &DAT_0e0efd04.",
+      "name": "stored_word_c",
+      "offset": 22,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "3-byte prefix tag of record A at 0xA0 (all zero in baseline; twin of record B tag at 0x140 with stride 0xA0). Independent slot, not a backup mirror.",
+      "evidence": "Twin-record structure (stride 0xA0) verified by Python against samples/baseline.sav; records are exchanged with EEPROM through FUN_08078fe2 / FUN_08079546 via &DAT_0e0efd04. IWRAM twin-state pattern (((uVar16 ^ 1) * 0x2290] vs [uVar16 * 0x2290]) in FUN_08013744 around DAT_03002bbd shows the engine keeps paired record state.",
+      "name": "record_a_tag",
+      "offset": 160,
+      "size": 3,
       "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "32-bit flag/counter word inside record A data block at +0x42 (value 0 in baseline; record B twin holds 1).",
+      "evidence": "Words at logical 0x110 (0) and 0x1B0 (1) are the only differing words between the otherwise identical 90-byte record data blocks; verified by Python. Transported by FUN_08078fe2 / FUN_08079546 via &DAT_0e0efd04.",
+      "name": "record_a_flag",
+      "offset": 272,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "3-byte prefix tag of record B at 0x140 (all zero in baseline; twin of record A tag at 0xA0 with stride 0xA0). Independent slot, not a backup mirror.",
+      "evidence": "Twin-record structure (stride 0xA0) verified by Python against samples/baseline.sav; exchanged with EEPROM through FUN_08078fe2 / FUN_08079546 via &DAT_0e0efd04. See also paired-state accesses in FUN_08013744 around DAT_03002bbd.",
+      "name": "record_b_tag",
+      "offset": 320,
+      "size": 3,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "32-bit flag/counter word inside record B data block at +0x42 (value 1 in baseline; record A twin holds 0).",
+      "evidence": "Words at logical 0x1B0 (1) vs 0x110 (0) verified by Python against samples/baseline.sav; transported by FUN_08078fe2 / FUN_08079546 via &DAT_0e0efd04.",
+      "name": "record_b_flag",
+      "offset": 432,
+      "size": 4,
+      "type": "u32_le"
     }
-  ]
+  ],
+  "game_code": "AT8P",
+  "id": "at8p",
+  "magic_signatures": [
+    {
+      "bytes": [
+        75,
+        65,
+        79,
+        76,
+        73,
+        78,
+        75,
+        48
+      ],
+      "description": "ASCII 'KAOLINK0' engine tag at start of save (rev8-logical domain)",
+      "offset": 0
+    }
+  ],
+  "media": "eeprom512",
+  "size_bytes": 512,
+  "title": "Tennis Masters Series 2003 (Europe) (En,Fr,De,Es,It,Pt)"
 }

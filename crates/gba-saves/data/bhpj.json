@@ -1,29 +1,181 @@
 {
-  "id": "bhpj",
-  "game_code": "BHPJ",
-  "title": "Harry Potter - Quidditch World Cup (Japan)",
-  "media": "eeprom512",
-  "size_bytes": 512,
-  "magic_signatures": [],
-  "checksums": [],
+  "checksums": [
+    {
+      "algorithm": "sum16_le",
+      "covered_end": 56,
+      "covered_start": 0,
+      "name": "slot0_checksum",
+      "seed": 0,
+      "stored_offset": 40,
+      "xor_out": 46503
+    },
+    {
+      "algorithm": "sum16_le",
+      "covered_end": 112,
+      "covered_start": 56,
+      "name": "slot1_checksum",
+      "seed": 0,
+      "stored_offset": 96,
+      "xor_out": 46503
+    },
+    {
+      "algorithm": "sum16_le",
+      "covered_end": 168,
+      "covered_start": 112,
+      "name": "slot2_checksum",
+      "seed": 0,
+      "stored_offset": 152,
+      "xor_out": 46503
+    },
+    {
+      "algorithm": "sum16_le",
+      "covered_end": 224,
+      "covered_start": 168,
+      "name": "slot3_checksum",
+      "seed": 0,
+      "stored_offset": 208,
+      "xor_out": 46503
+    }
+  ],
+  "eeprom_rev8": true,
   "fields": [
     {
-      "name": "slot_counter",
-      "offset": 0,
-      "size": 2,
-      "type": "u16_le"
+      "confidence": "likely",
+      "constraint": {
+        "flag_labels": {
+          "0": "team_sel_bit0",
+          "1": "team_sel_bit1"
+        },
+        "valid_mask": 3,
+        "kind": "bitmask"
+      },
+      "description": "Slot 0 team/kit selector: low 2 bits index the kit/uniform table for match setup",
+      "evidence": "FUN_085fc244 copies record 0 via FUN_086049f0 (stride 0x38 from _DAT_08604a14) and reads byte +0x33 masked with 3 as kit-table index; record layout validated by FUN_0860415c (checksum at +0x28).",
+      "name": "slot0_team_select",
+      "offset": 51,
+      "size": 1,
+      "type": "bitflags"
     },
     {
-      "name": "game_progress_flags",
-      "offset": 2,
-      "size": 2,
-      "type": "u16_le"
+      "confidence": "likely",
+      "constraint": {
+        "flag_labels": {
+          "1": "use_computed_rating"
+        },
+        "valid_mask": 2,
+        "kind": "bitmask"
+      },
+      "description": "Slot 0 setup flag: bit 1 selects computed rating path versus default (-1) in match setup",
+      "evidence": "FUN_085fc244 tests bit 1 of record byte +0x36 ((uint)*pb*0x4000000<0); when set it derives a rating via FUN_0860c898 division, else stores default -1. Record layout validated by FUN_0860415c.",
+      "name": "slot0_setup_flags",
+      "offset": 54,
+      "size": 1,
+      "type": "bitflags"
     },
     {
-      "name": "player_status_payload",
-      "offset": 4,
-      "size": 16,
-      "type": "bytes"
+      "confidence": "likely",
+      "constraint": {
+        "flag_labels": {
+          "0": "team_sel_bit0",
+          "1": "team_sel_bit1"
+        },
+        "valid_mask": 3,
+        "kind": "bitmask"
+      },
+      "description": "Slot 1 team/kit selector: low 2 bits index the kit/uniform table for match setup",
+      "evidence": "FUN_085fc244 copies record 1 via FUN_086049f0 (stride 0x38 from _DAT_08604a14) and reads byte +0x33 masked with 3 as kit-table index; record layout validated by FUN_0860415c (checksum at +0x28).",
+      "name": "slot1_team_select",
+      "offset": 107,
+      "size": 1,
+      "type": "bitflags"
+    },
+    {
+      "confidence": "likely",
+      "constraint": {
+        "flag_labels": {
+          "1": "use_computed_rating"
+        },
+        "valid_mask": 2,
+        "kind": "bitmask"
+      },
+      "description": "Slot 1 setup flag: bit 1 selects computed rating path versus default (-1) in match setup",
+      "evidence": "FUN_085fc244 tests bit 1 of record byte +0x36 ((uint)*pb*0x4000000<0); when set it derives a rating via FUN_0860c898 division, else stores default -1. Record layout validated by FUN_0860415c.",
+      "name": "slot1_setup_flags",
+      "offset": 110,
+      "size": 1,
+      "type": "bitflags"
+    },
+    {
+      "confidence": "likely",
+      "constraint": {
+        "flag_labels": {
+          "0": "team_sel_bit0",
+          "1": "team_sel_bit1"
+        },
+        "valid_mask": 3,
+        "kind": "bitmask"
+      },
+      "description": "Slot 2 team/kit selector: low 2 bits index the kit/uniform table for match setup",
+      "evidence": "FUN_085fc244 copies record 2 via FUN_086049f0 (stride 0x38 from _DAT_08604a14) and reads byte +0x33 masked with 3 as kit-table index; record layout validated by FUN_0860415c (checksum at +0x28).",
+      "name": "slot2_team_select",
+      "offset": 163,
+      "size": 1,
+      "type": "bitflags"
+    },
+    {
+      "confidence": "likely",
+      "constraint": {
+        "flag_labels": {
+          "1": "use_computed_rating"
+        },
+        "valid_mask": 2,
+        "kind": "bitmask"
+      },
+      "description": "Slot 2 setup flag: bit 1 selects computed rating path versus default (-1) in match setup",
+      "evidence": "FUN_085fc244 tests bit 1 of record byte +0x36 ((uint)*pb*0x4000000<0); when set it derives a rating via FUN_0860c898 division, else stores default -1. Record layout validated by FUN_0860415c.",
+      "name": "slot2_setup_flags",
+      "offset": 166,
+      "size": 1,
+      "type": "bitflags"
+    },
+    {
+      "confidence": "likely",
+      "constraint": {
+        "flag_labels": {
+          "0": "team_sel_bit0",
+          "1": "team_sel_bit1"
+        },
+        "valid_mask": 3,
+        "kind": "bitmask"
+      },
+      "description": "Slot 3 team/kit selector: low 2 bits index the kit/uniform table for match setup",
+      "evidence": "FUN_085fc244 copies record 3 via FUN_086049f0 (stride 0x38 from _DAT_08604a14) and reads byte +0x33 masked with 3 as kit-table index; record layout validated by FUN_0860415c (checksum at +0x28).",
+      "name": "slot3_team_select",
+      "offset": 219,
+      "size": 1,
+      "type": "bitflags"
+    },
+    {
+      "confidence": "likely",
+      "constraint": {
+        "flag_labels": {
+          "1": "use_computed_rating"
+        },
+        "valid_mask": 2,
+        "kind": "bitmask"
+      },
+      "description": "Slot 3 setup flag: bit 1 selects computed rating path versus default (-1) in match setup",
+      "evidence": "FUN_085fc244 tests bit 1 of record byte +0x36 ((uint)*pb*0x4000000<0); when set it derives a rating via FUN_0860c898 division, else stores default -1. Record layout validated by FUN_0860415c.",
+      "name": "slot3_setup_flags",
+      "offset": 222,
+      "size": 1,
+      "type": "bitflags"
     }
-  ]
+  ],
+  "game_code": "BHPJ",
+  "id": "bhpj",
+  "magic_signatures": [],
+  "media": "eeprom512",
+  "size_bytes": 512,
+  "title": "Harry Potter - Quidditch World Cup (Japan)"
 }

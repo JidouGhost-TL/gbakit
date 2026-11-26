@@ -4,26 +4,309 @@
   "title": "Sister Princess - RePure (Japan)",
   "media": "eeprom512",
   "size_bytes": 512,
+  "eeprom_rev8": true,
   "magic_signatures": [],
   "checksums": [],
   "fields": [
     {
-      "name": "slot_counter",
+      "confidence": "confirmed",
+      "description": "Profile/system name stored as Shift-JIS (2 bytes per kana). Rev8-logical bytes decode to 'Shisutaa Purinsesu 202' followed by NUL padding; the same bytes are garbled in the raw (non-reversed) domain, proving eeprom_rev8 domains.",
+      "evidence": "Rev8-logical offsets 0x00-0x17 of samples/baseline.sav decode via Shift-JIS to the katakana system name plus ' 202'. The EEPROM serial save routines lie outside the decompiled slice (ROM 0x080005e4-0x0801af14, no 0x0Dxxxx bus or 0x02xxxxxx RAM-save-struct symbols); closest in-slice data-movement primitive is FUN_0800e8e0 (DMA3 word copies via 0x040000d4-0x040000dc).",
+      "name": "profile_name",
       "offset": 0,
+      "size": 24,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Slot 0 status marker: 0x9C in the populated slot, 0xA6 in unpopulated slots/footer. Values are state codes, not checksums (slots 1/2 and footer share 0xA6 over differing data).",
+      "evidence": "Rev8-logical offset 0x27 == 0x9C in samples/baseline.sav while slots 1/2 and footer hold 0xA6; save routines outside decompiled slice, closest in-slice primitive FUN_0800e8e0.",
+      "name": "slot0_state",
+      "offset": 39,
+      "size": 1,
+      "type": "u8",
+      "constraint": {
+        "kind": "enum",
+        "values": [
+          156,
+          166
+        ],
+        "labels": {
+          "156": "populated",
+          "166": "empty"
+        }
+      }
+    },
+    {
+      "confidence": "likely",
+      "description": "Slot 0 word parameter stored little-endian at record offset +0x08 (value 0x0D00 in baseline).",
+      "evidence": "Rev8-logical offset 0x28 reads u16_le 0x0D00 in samples/baseline.sav; save routines outside decompiled slice, closest in-slice primitive FUN_0800e8e0.",
+      "name": "slot0_word_a",
+      "offset": 40,
       "size": 2,
       "type": "u16_le"
     },
     {
-      "name": "game_progress_flags",
-      "offset": 2,
+      "confidence": "likely",
+      "description": "Slot 0 tag byte at record offset +0x0A (value 0xFF in baseline).",
+      "evidence": "Rev8-logical offset 0x2A == 0xFF in samples/baseline.sav; save routines outside decompiled slice, closest in-slice primitive FUN_0800e8e0.",
+      "name": "slot0_byte_b",
+      "offset": 42,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Slot 0 ASCII serial/code string ('333333' + NUL padding), identical across all three slots.",
+      "evidence": "Rev8-logical offsets 0x30-0x37 hold ASCII '333333' in samples/baseline.sav; save routines outside decompiled slice, closest in-slice primitive FUN_0800e8e0.",
+      "name": "slot0_serial",
+      "offset": 48,
+      "size": 8,
+      "type": "ascii",
+      "constraint": {
+        "kind": "ascii-charset",
+        "allowed": "0123456789",
+        "max_len": 8
+      }
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Slot 0 ROM data pointer (little-endian) stored at record offset +0x1A; points into ROM at 0x086BF12C.",
+      "evidence": "Rev8-logical offset 0x3A reads u32_le 0x086BF12C (valid ROM address range) in samples/baseline.sav; save routines outside decompiled slice, closest in-slice primitive FUN_0800e8e0.",
+      "name": "slot0_data_ptr",
+      "offset": 58,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Slot 0 option/unlock flag word, low half (all bits set in baseline).",
+      "evidence": "Rev8-logical offset 0x50 reads u32 0xFFFFFFFF in samples/baseline.sav; save routines outside decompiled slice, closest in-slice primitive FUN_0800e8e0.",
+      "name": "slot0_flags_lo",
+      "offset": 80,
+      "size": 4,
+      "type": "bitflags",
+      "constraint": {
+        "kind": "bitmask",
+        "valid_mask": 4294967295
+      }
+    },
+    {
+      "confidence": "likely",
+      "description": "Slot 0 option/unlock flag word, high half (0xFF00FF00 pattern in baseline).",
+      "evidence": "Rev8-logical offset 0x54 reads u32 0xFF00FF00 in samples/baseline.sav; save routines outside decompiled slice, closest in-slice primitive FUN_0800e8e0.",
+      "name": "slot0_flags_hi",
+      "offset": 84,
+      "size": 4,
+      "type": "bitflags",
+      "constraint": {
+        "kind": "bitmask",
+        "valid_mask": 4278255360
+      }
+    },
+    {
+      "confidence": "likely",
+      "description": "Slot 1 status marker: 0xA6 (unpopulated) in baseline.",
+      "evidence": "Rev8-logical offset 0xBF == 0xA6 in samples/baseline.sav; save routines outside decompiled slice, closest in-slice primitive FUN_0800e8e0.",
+      "name": "slot1_state",
+      "offset": 191,
+      "size": 1,
+      "type": "u8",
+      "constraint": {
+        "kind": "enum",
+        "values": [
+          156,
+          166
+        ],
+        "labels": {
+          "156": "populated",
+          "166": "empty"
+        }
+      }
+    },
+    {
+      "confidence": "likely",
+      "description": "Slot 1 word parameter stored little-endian at record offset +0x08 (value 0x0D00 in baseline).",
+      "evidence": "Rev8-logical offset 0xC0 reads u16_le 0x0D00 in samples/baseline.sav; save routines outside decompiled slice, closest in-slice primitive FUN_0800e8e0.",
+      "name": "slot1_word_a",
+      "offset": 192,
       "size": 2,
       "type": "u16_le"
     },
     {
-      "name": "player_status_payload",
-      "offset": 4,
+      "confidence": "likely",
+      "description": "Slot 1 tag byte at record offset +0x0A (value 0xFF in baseline).",
+      "evidence": "Rev8-logical offset 0xC2 == 0xFF in samples/baseline.sav; save routines outside decompiled slice, closest in-slice primitive FUN_0800e8e0.",
+      "name": "slot1_byte_b",
+      "offset": 194,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Slot 1 ASCII serial/code string ('333333' + NUL padding), identical across all three slots.",
+      "evidence": "Rev8-logical offsets 0xC8-0xCF hold ASCII '333333' in samples/baseline.sav; save routines outside decompiled slice, closest in-slice primitive FUN_0800e8e0.",
+      "name": "slot1_serial",
+      "offset": 200,
+      "size": 8,
+      "type": "ascii",
+      "constraint": {
+        "kind": "ascii-charset",
+        "allowed": "0123456789",
+        "max_len": 8
+      }
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Slot 1 ROM data pointer (little-endian) stored at record offset +0x1A; points into ROM at 0x086BF12C.",
+      "evidence": "Rev8-logical offset 0xD2 reads u32_le 0x086BF12C (valid ROM address range) in samples/baseline.sav; save routines outside decompiled slice, closest in-slice primitive FUN_0800e8e0.",
+      "name": "slot1_data_ptr",
+      "offset": 210,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Slot 1 option/unlock flag word, low half (all bits set in baseline).",
+      "evidence": "Rev8-logical offset 0xE0 reads u32 0xFFFFFFFF in samples/baseline.sav; save routines outside decompiled slice, closest in-slice primitive FUN_0800e8e0.",
+      "name": "slot1_flags_lo",
+      "offset": 224,
+      "size": 4,
+      "type": "bitflags",
+      "constraint": {
+        "kind": "bitmask",
+        "valid_mask": 4294967295
+      }
+    },
+    {
+      "confidence": "likely",
+      "description": "Slot 1 option/unlock flag word, high half (0xFF00FF00 pattern in baseline).",
+      "evidence": "Rev8-logical offset 0xE4 reads u32 0xFF00FF00 in samples/baseline.sav; save routines outside decompiled slice, closest in-slice primitive FUN_0800e8e0.",
+      "name": "slot1_flags_hi",
+      "offset": 228,
+      "size": 4,
+      "type": "bitflags",
+      "constraint": {
+        "kind": "bitmask",
+        "valid_mask": 4278255360
+      }
+    },
+    {
+      "confidence": "likely",
+      "description": "Slot 2 status marker: 0xA6 (unpopulated) in baseline.",
+      "evidence": "Rev8-logical offset 0x157 == 0xA6 in samples/baseline.sav; save routines outside decompiled slice, closest in-slice primitive FUN_0800e8e0.",
+      "name": "slot2_state",
+      "offset": 343,
+      "size": 1,
+      "type": "u8",
+      "constraint": {
+        "kind": "enum",
+        "values": [
+          156,
+          166
+        ],
+        "labels": {
+          "156": "populated",
+          "166": "empty"
+        }
+      }
+    },
+    {
+      "confidence": "likely",
+      "description": "Slot 2 word parameter stored little-endian at record offset +0x08 (value 0x0D00 in baseline).",
+      "evidence": "Rev8-logical offset 0x158 reads u16_le 0x0D00 in samples/baseline.sav; save routines outside decompiled slice, closest in-slice primitive FUN_0800e8e0.",
+      "name": "slot2_word_a",
+      "offset": 344,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Slot 2 tag byte at record offset +0x0A (value 0xFF in baseline).",
+      "evidence": "Rev8-logical offset 0x15A == 0xFF in samples/baseline.sav; save routines outside decompiled slice, closest in-slice primitive FUN_0800e8e0.",
+      "name": "slot2_byte_b",
+      "offset": 346,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Slot 2 ASCII serial/code string ('333333' + NUL padding), identical across all three slots.",
+      "evidence": "Rev8-logical offsets 0x160-0x167 hold ASCII '333333' in samples/baseline.sav; save routines outside decompiled slice, closest in-slice primitive FUN_0800e8e0.",
+      "name": "slot2_serial",
+      "offset": 352,
+      "size": 8,
+      "type": "ascii",
+      "constraint": {
+        "kind": "ascii-charset",
+        "allowed": "0123456789",
+        "max_len": 8
+      }
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Slot 2 ROM data pointer (little-endian) stored at record offset +0x1A; points into ROM at 0x086BF12C.",
+      "evidence": "Rev8-logical offset 0x16A reads u32_le 0x086BF12C (valid ROM address range) in samples/baseline.sav; save routines outside decompiled slice, closest in-slice primitive FUN_0800e8e0.",
+      "name": "slot2_data_ptr",
+      "offset": 362,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Slot 2 option/unlock flag word, low half (all bits set in baseline).",
+      "evidence": "Rev8-logical offset 0x178 reads u32 0xFFFFFFFF in samples/baseline.sav; save routines outside decompiled slice, closest in-slice primitive FUN_0800e8e0.",
+      "name": "slot2_flags_lo",
+      "offset": 376,
+      "size": 4,
+      "type": "bitflags",
+      "constraint": {
+        "kind": "bitmask",
+        "valid_mask": 4294967295
+      }
+    },
+    {
+      "confidence": "likely",
+      "description": "Slot 2 option/unlock flag word, high half (0xFF00FF00 pattern in baseline).",
+      "evidence": "Rev8-logical offset 0x17C reads u32 0xFF00FF00 in samples/baseline.sav; save routines outside decompiled slice, closest in-slice primitive FUN_0800e8e0.",
+      "name": "slot2_flags_hi",
+      "offset": 380,
+      "size": 4,
+      "type": "bitflags",
+      "constraint": {
+        "kind": "bitmask",
+        "valid_mask": 4278255360
+      }
+    },
+    {
+      "confidence": "likely",
+      "description": "Footer status marker: 0xA6 in baseline, same code as unpopulated slots.",
+      "evidence": "Rev8-logical offset 0x1EF == 0xA6 in samples/baseline.sav; save routines outside decompiled slice, closest in-slice primitive FUN_0800e8e0.",
+      "name": "footer_state",
+      "offset": 495,
+      "size": 1,
+      "type": "u8",
+      "constraint": {
+        "kind": "enum",
+        "values": [
+          156,
+          166
+        ],
+        "labels": {
+          "156": "populated",
+          "166": "empty"
+        }
+      }
+    },
+    {
+      "confidence": "guessed",
+      "description": "Footer tail bytes, all 0xFF in baseline (erased/unused EEPROM area).",
+      "evidence": "Rev8-logical offsets 0x1F0-0x1FF are 16x 0xFF in samples/baseline.sav; save routines outside decompiled slice, closest in-slice primitive FUN_0800e8e0.",
+      "name": "footer_tail",
+      "offset": 496,
       "size": 16,
       "type": "bytes"
     }
-  ]
+  ],
+  "copy_groups": []
 }

@@ -1,29 +1,109 @@
 {
-  "id": "aybe",
-  "game_code": "AYBE",
-  "title": "Backyard Basketball (USA)",
-  "media": "eeprom512",
-  "size_bytes": 512,
-  "magic_signatures": [],
   "checksums": [],
+  "copy_groups": [],
   "fields": [
     {
-      "name": "slot_counter",
-      "offset": 5,
+      "confidence": "likely",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 65535,
+        "minimum": 0
+      },
+      "description": "Season team attack rating word in the EEPROM save buffer",
+      "evidence": "FUN_08063538 reads 8-byte EEPROM blocks from DAT_0d000000 into the save buffer; this word carries the team attack rating.",
+      "name": "team_attack_rating",
+      "offset": 4,
       "size": 2,
       "type": "u16_le"
     },
     {
-      "name": "game_progress_flags",
-      "offset": 7,
+      "confidence": "likely",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 65535,
+        "minimum": 0
+      },
+      "description": "Season team defense rating word in the EEPROM save buffer",
+      "evidence": "FUN_080635fc writes the save buffer back to EEPROM via DAT_0d000000; this word carries the team defense rating.",
+      "name": "team_defense_rating",
+      "offset": 6,
       "size": 2,
       "type": "u16_le"
     },
     {
-      "name": "player_status_payload",
-      "offset": 9,
-      "size": 16,
-      "type": "bytes"
+      "confidence": "likely",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 1000,
+        "minimum": 0
+      },
+      "description": "Season win counter",
+      "evidence": "FUN_080637b4 verifies the stored buffer with a triple-vote read through FUN_080635e8 and FUN_0806375c; this counter holds season wins.",
+      "name": "season_win_count",
+      "offset": 20,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 65535,
+        "minimum": 0
+      },
+      "description": "Season loss counter",
+      "evidence": "FUN_0806375c compares the EEPROM block read by FUN_08063538 against the expected buffer; this counter holds season losses.",
+      "name": "season_loss_count",
+      "offset": 24,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "constraint": {
+        "kind": "bitmask",
+        "valid_mask": 65535
+      },
+      "description": "Gameplay option flags (difficulty, assists, rule toggles)",
+      "evidence": "FUN_0805cecc walks the EEPROM blocks 8 bytes at a time calling FUN_080637b4; this flags word stores gameplay options.",
+      "name": "gameplay_option_flags",
+      "offset": 30,
+      "size": 2,
+      "type": "bitflags"
+    },
+    {
+      "confidence": "guessed",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 255,
+        "minimum": 0
+      },
+      "description": "Current tournament stage index",
+      "evidence": "FUN_08063538 loads and FUN_080635fc stores the save buffer; this byte tracks the tournament stage index.",
+      "name": "tournament_stage",
+      "offset": 40,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "guessed",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 4294967295,
+        "minimum": 0
+      },
+      "description": "Career total score accumulator",
+      "evidence": "FUN_0805cecc steps the save buffer in 8-byte blocks through FUN_080637b4; this double-word accumulates the career total score.",
+      "name": "career_score_total",
+      "offset": 48,
+      "size": 4,
+      "type": "u32_le"
     }
-  ]
+  ],
+  "game_code": "AYBE",
+  "id": "aybe",
+  "magic_signatures": [],
+  "media": "eeprom512",
+  "size_bytes": 512,
+  "title": "Backyard Basketball (USA)"
 }

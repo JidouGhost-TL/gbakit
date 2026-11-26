@@ -4,26 +4,111 @@
   "title": "Fantastic 4 - Flame On (USA)",
   "media": "eeprom512",
   "size_bytes": 512,
-  "magic_signatures": [],
-  "checksums": [],
+  "eeprom_rev8": true,
+  "magic_signatures": [
+    {
+      "offset": 172,
+      "bytes": [
+        208,
+        208,
+        173,
+        222
+      ],
+      "description": "Save-valid magic u32 0xDEADD0D0 at payload base (RAM save+0xB8); compared against DAT_080012dc and re-seeded on invalid save in FUN_08001170"
+    }
+  ],
+  "checksums": [
+    {
+      "name": "save_payload_crc16",
+      "algorithm": "crc16_arc",
+      "covered_start": 172,
+      "covered_end": 344,
+      "stored_offset": 340,
+      "seed": 65535
+    }
+  ],
   "fields": [
     {
-      "name": "slot_counter",
-      "offset": 168,
-      "size": 2,
-      "type": "u16_le"
-    },
-    {
-      "name": "game_progress_flags",
-      "offset": 170,
-      "size": 2,
-      "type": "u16_le"
-    },
-    {
-      "name": "player_status_payload",
+      "name": "save_magic",
       "offset": 172,
-      "size": 16,
-      "type": "bytes"
+      "size": 4,
+      "type": "u32_le",
+      "description": "Save-valid magic 0xDEADD0D0 at payload base (RAM save+0xB8, file logical 0xAC); baseline holds 3735933136",
+      "confidence": "confirmed",
+      "evidence": "FUN_08001170 loads 0xAC bytes via FUN_0808032c into save+0xB8, compares *(save+0xB8) to DAT_080012dc, and re-seeds it after FUN_0806ff30 memset on mismatch; file logical 0xAC bytes D0 D0 AD DE = u32 0xDEADD0D0 in baseline.",
+      "constraint": {
+        "kind": "enum",
+        "values": [
+          3735933136
+        ],
+        "labels": {
+          "3735933136": "Valid save magic 0xDEADD0D0"
+        }
+      }
+    },
+    {
+      "name": "gameplay_record_w0",
+      "offset": 176,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Word 0 of the persisted 0x68-byte gameplay record block (RAM save+0xBC, file logical 0xB0); baseline value 1",
+      "confidence": "likely",
+      "evidence": "FUN_08001414, FUN_080200fc and FUN_080206f8 memcpy the 0x68-byte record between RAM save+0x10 and save+0xBC via FUN_0807166c, then persist save+0xB8 len 0xAC via FUN_080801dc; file logical 0xB0 holds u32 1 in baseline."
+    },
+    {
+      "name": "record_best",
+      "offset": 180,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Retained best/record value of the gameplay record (RAM save+0x14 mirrored to save+0xC0, file logical 0xB4); baseline value 100000",
+      "confidence": "likely",
+      "evidence": "FUN_080206f8 keeps the max of live *(save+0x04) into *(save+0x14) and persists it through the FUN_0807166c 0x68-byte save+0x10/save+0xBC mirror plus FUN_080801dc write of save+0xB8 len 0xAC; file logical 0xB4 holds u32 100000 in baseline."
+    },
+    {
+      "name": "gameplay_record_w3",
+      "offset": 188,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Word 3 of the persisted 0x68-byte gameplay record block (RAM save+0xC4, file logical 0xBC); baseline value 10000",
+      "confidence": "likely",
+      "evidence": "Covered by the FUN_0807166c 0x68-byte save+0x10/save+0xBC mirror in FUN_08001414, FUN_080200fc and FUN_080206f8 and persisted by FUN_080801dc over save+0xB8 len 0xAC; file logical 0xBC holds u32 10000 in baseline."
+    },
+    {
+      "name": "gameplay_record_w4",
+      "offset": 192,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Word 4 of the persisted 0x68-byte gameplay record block (RAM save+0xC8, file logical 0xC0); baseline value 5000",
+      "confidence": "likely",
+      "evidence": "Covered by the FUN_0807166c 0x68-byte save+0x10/save+0xBC mirror in FUN_08001414, FUN_080200fc and FUN_080206f8 and persisted by FUN_080801dc over save+0xB8 len 0xAC; file logical 0xC0 holds u32 5000 in baseline."
+    },
+    {
+      "name": "gameplay_record_w5",
+      "offset": 196,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Word 5 of the persisted 0x68-byte gameplay record block (RAM save+0xCC, file logical 0xC4); baseline value 10000",
+      "confidence": "likely",
+      "evidence": "Covered by the FUN_0807166c 0x68-byte save+0x10/save+0xBC mirror in FUN_08001414, FUN_080200fc and FUN_080206f8 and persisted by FUN_080801dc over save+0xB8 len 0xAC; file logical 0xC4 holds u32 10000 in baseline."
+    },
+    {
+      "name": "gameplay_record_w6",
+      "offset": 200,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Word 6 of the persisted 0x68-byte gameplay record block (RAM save+0xD0, file logical 0xC8); baseline value 8000",
+      "confidence": "likely",
+      "evidence": "Covered by the FUN_0807166c 0x68-byte save+0x10/save+0xBC mirror in FUN_08001414, FUN_080200fc and FUN_080206f8 and persisted by FUN_080801dc over save+0xB8 len 0xAC; file logical 0xC8 holds u32 8000 in baseline."
+    },
+    {
+      "name": "gameplay_record_w7",
+      "offset": 204,
+      "size": 4,
+      "type": "u32_le",
+      "description": "Word 7 of the persisted 0x68-byte gameplay record block (RAM save+0xD4, file logical 0xCC); baseline value 30000",
+      "confidence": "likely",
+      "evidence": "Covered by the FUN_0807166c 0x68-byte save+0x10/save+0xBC mirror in FUN_08001414, FUN_080200fc and FUN_080206f8 and persisted by FUN_080801dc over save+0xB8 len 0xAC; file logical 0xCC holds u32 30000 in baseline."
     }
-  ]
+  ],
+  "copy_groups": []
 }

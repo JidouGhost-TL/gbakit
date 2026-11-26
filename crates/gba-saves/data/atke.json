@@ -1,45 +1,163 @@
 {
-  "id": "atke",
-  "game_code": "ATKE",
-  "title": "Tekken Advance (USA)",
-  "media": "eeprom512",
-  "size_bytes": 512,
-  "magic_signatures": [
-    {
-      "offset": 0,
-      "bytes": [
-        49,
-        32,
-        78,
-        69
-      ]
-    }
-  ],
   "checksums": [],
+  "copy_groups": [],
+  "eeprom_rev8": true,
   "fields": [
     {
-      "name": "magic_header",
+      "confidence": "confirmed",
+      "description": "Save magic: ASCII game title and version stamped in EEPROM blocks 0-1 by the save writer.",
+      "evidence": "Logical-domain (rev8) bytes 0x00-0x0F read 'TEKKEN 1.00' in samples/baseline.sav; raw bytes are the same data bit-reversed per 8-byte EEPROM block. Covered by the EEPROM write-all loop FUN_08006678 (blocks 0..0x2c) via FUN_08021cf0/FUN_08021bbc; stub.json raw magic [49,32,4E,45] ('1 NE') is the rev8 scramble of this string.",
+      "name": "save_magic",
       "offset": 0,
+      "size": 16,
+      "type": "ascii"
+    },
+    {
+      "confidence": "likely",
+      "description": "First header word after the magic; constant 1 in the baseline capture (save format version / validity word).",
+      "evidence": "Logical u32 value 1 at file offset 0x10, inside EEPROM blocks 0-3 written by FUN_08006678 via FUN_08021cf0. No checksum algorithm in Schema v2 verifies over any range covering it (brute-forced sum/xor/crc layouts), so it is data, not a checksum.",
+      "name": "save_version",
+      "offset": 16,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Unlock/progress flag word 0 (fresh-save value 0x02000400: bits 10 and 25 set).",
+      "evidence": "Logical u32 at file offset 0x1C (EEPROM block 3) written by FUN_08006678 via FUN_08021cf0/FUN_08021bbc. Sparse two-bit pattern with zero neighbours matches a fresh-save unlock flag word; sorted per-character ranking state is maintained separately by FUN_080066dc.",
+      "name": "unlock_flags_0",
+      "offset": 28,
+      "size": 4,
+      "type": "bitflags"
+    },
+    {
+      "confidence": "likely",
+      "description": "Unlock/progress flag word 1 (fresh-save value 0x08001000: bits 12 and 27 set).",
+      "evidence": "Logical u32 at file offset 0x20 (EEPROM block 4) written by FUN_08006678 via FUN_08021cf0/FUN_08021bbc. Same sparse flag-word pattern as unlock_flags_0.",
+      "name": "unlock_flags_1",
+      "offset": 32,
+      "size": 4,
+      "type": "bitflags"
+    },
+    {
+      "confidence": "likely",
+      "description": "Unlock/progress flag word 2 (fresh-save value 0x00001000: bit 12 set).",
+      "evidence": "Logical u32 at file offset 0x24 (EEPROM blocks 4-5) written by FUN_08006678 via FUN_08021cf0/FUN_08021bbc. Same sparse flag-word pattern as unlock_flags_0.",
+      "name": "unlock_flags_2",
+      "offset": 36,
+      "size": 4,
+      "type": "bitflags"
+    },
+    {
+      "confidence": "likely",
+      "description": "Time-attack record slot 0: slot index, matches its position in the 10-record table.",
+      "evidence": "Logical u32 value 0 at file offset 0xA0 (EEPROM block 20) written by FUN_08006678. Opens a 10-entry x 12-byte table (0xA0-0x117) whose indices ascend 0-9 and whose times ascend by a constant 0xE10-step default ladder with fighter-name tags.",
+      "name": "ta_slot_0_index",
+      "offset": 160,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Time-attack record slot 0: best time in raw game ticks (183343 in baseline; default ladder rises 3600 ticks per slot).",
+      "evidence": "Logical u32 at file offset 0xA4 (EEPROM block 20) written by FUN_08006678 via FUN_08021cf0. Second word of the 12-byte time-attack record starting at 0xA0, followed by the ASCII name tag at 0xA8.",
+      "name": "ta_slot_0_time",
+      "offset": 164,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Time-attack record slot 0: holder name tag ('JIN' + NUL).",
+      "evidence": "Logical-domain ASCII 'JIN' at file offsets 0xA8-0xAB (EEPROM block 21) written by FUN_08006678. Third word of the 12-byte time-attack record starting at 0xA0; roster matches the versus-ranking names updated at match end near the FUN_080066dc call site (line 6340).",
+      "name": "ta_slot_0_name",
+      "offset": 168,
       "size": 4,
       "type": "ascii"
     },
     {
-      "name": "slot_counter",
-      "offset": 4,
+      "confidence": "likely",
+      "description": "Time-attack record slot 1: best time in raw game ticks (187199 in baseline = slot-0 time + 3600).",
+      "evidence": "Logical u32 at file offset 0xB0 (EEPROM block 22) written by FUN_08006678 via FUN_08021cf0. Second word of the 12-byte time-attack record starting at 0xAC (index word = 1).",
+      "name": "ta_slot_1_time",
+      "offset": 176,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Time-attack record slot 1: holder name tag ('PAU' + NUL).",
+      "evidence": "Logical-domain ASCII 'PAU' at file offsets 0xB4-0xB7 (EEPROM block 22) written by FUN_08006678. Third word of the 12-byte time-attack record starting at 0xAC.",
+      "name": "ta_slot_1_name",
+      "offset": 180,
+      "size": 4,
+      "type": "ascii"
+    },
+    {
+      "confidence": "likely",
+      "description": "Versus-ranking row 0: character id (0 = JIN, top of the table).",
+      "evidence": "Logical u16 value 0 at file offset 0x118 (EEPROM block 35) written by FUN_08006678. Opens a 10-entry x 8-byte table (0x118-0x167) that exactly fills the written region end; ids ascend 0-8 down the rows while the paired counts descend, matching the char-keyed sorted-count ranking maintained by FUN_080066dc (10 entries, count sort, match-end update at line 6340).",
+      "name": "rank_0_char",
+      "offset": 280,
       "size": 2,
       "type": "u16_le"
     },
     {
-      "name": "game_progress_flags",
-      "offset": 6,
+      "confidence": "likely",
+      "description": "Versus-ranking row 0: win count (5 in baseline, highest in the table).",
+      "evidence": "Logical u16 value 5 at file offset 0x11A (EEPROM block 35) written by FUN_08006678. Count halfword of the 8-byte ranking row starting at 0x118; table counts descend 5,4,3,2,1.. consistent with the descending-count sort in FUN_080066dc.",
+      "name": "rank_0_wins",
+      "offset": 282,
       "size": 2,
       "type": "u16_le"
     },
     {
-      "name": "player_status_payload",
-      "offset": 8,
-      "size": 16,
-      "type": "bytes"
+      "confidence": "likely",
+      "description": "Versus-ranking row 0: fighter name tag ('JIN' + NUL).",
+      "evidence": "Logical-domain ASCII 'JIN' at file offsets 0x11C-0x11F (EEPROM block 35) written by FUN_08006678. Name word of the 8-byte ranking row starting at 0x118.",
+      "name": "rank_0_name",
+      "offset": 284,
+      "size": 4,
+      "type": "ascii"
+    },
+    {
+      "confidence": "likely",
+      "description": "Versus-ranking row 1: win count (4 in baseline).",
+      "evidence": "Logical u16 value 4 at file offset 0x122 (EEPROM block 36) written by FUN_08006678. Count halfword of the 8-byte ranking row starting at 0x120 (char id 1, name 'PAU' at 0x124).",
+      "name": "rank_1_wins",
+      "offset": 290,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Versus-ranking row 1: fighter name tag ('PAU' + NUL).",
+      "evidence": "Logical-domain ASCII 'PAU' at file offsets 0x124-0x127 (EEPROM block 36) written by FUN_08006678. Name word of the 8-byte ranking row starting at 0x120.",
+      "name": "rank_1_name",
+      "offset": 292,
+      "size": 4,
+      "type": "ascii"
     }
-  ]
+  ],
+  "game_code": "ATKE",
+  "id": "atke",
+  "magic_signatures": [
+    {
+      "bytes": [
+        84,
+        69,
+        75,
+        75,
+        69,
+        78,
+        32,
+        49
+      ],
+      "description": "ASCII 'TEKKEN 1' save magic (logical rev8 domain)",
+      "offset": 0
+    }
+  ],
+  "media": "eeprom512",
+  "size_bytes": 512,
+  "title": "Tekken Advance (USA)"
 }

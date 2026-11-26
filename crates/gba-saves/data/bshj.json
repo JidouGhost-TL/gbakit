@@ -1,29 +1,278 @@
 {
-  "id": "bshj",
-  "game_code": "BSHJ",
-  "title": "Minna no Soft Series - Shanghai (Japan)",
-  "media": "eeprom512",
-  "size_bytes": 512,
-  "magic_signatures": [],
   "checksums": [],
+  "copy_groups": [],
+  "eeprom_rev8": true,
   "fields": [
     {
-      "name": "slot_counter",
+      "confidence": "likely",
+      "description": "Header word of the 8-byte-slot score table; zero in a fresh save.",
+      "evidence": "Slot 0 of the 37-slot table at save offset 0x00 (logical rev8 domain). Engine zero-initializes persistent state (FUN_08007690 clears DAT_03000094[0..12] and sets DAT_0300006d).",
+      "name": "save_header_counter",
       "offset": 0,
-      "size": 2,
-      "type": "u16_le"
+      "size": 4,
+      "type": "u32_le"
     },
     {
-      "name": "game_progress_flags",
-      "offset": 2,
-      "size": 2,
-      "type": "u16_le"
-    },
-    {
-      "name": "player_status_payload",
+      "confidence": "likely",
+      "description": "Header validity sentinel; the only slot whose tag word differs from the per-entry tag 0x00202216.",
+      "evidence": "Save offset 0x04 holds 0xFFFFFFFE while slots 1-35 carry tag 0x00202216 at +4 (e.g. FUN_08013d28-adjacent table layout; structural).",
+      "name": "save_header_marker",
       "offset": 4,
-      "size": 16,
-      "type": "bytes"
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 9999999,
+        "minimum": 0
+      },
+      "description": "Best score for stage 1 (37920 in baseline).",
+      "evidence": "Score value word of slot 1 at save offset 0x08. Scores are rendered by FUN_08013d28, which extracts 7 decimal digits via FUN_08014cb4 div/mod loop with glyph LUT DAT_08013ddc; tile clears come from the FUN_08007690 match engine (IWRAM DAT_03000020/DAT_03000094).",
+      "name": "stage_01_best_score",
+      "offset": 8,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 9999999,
+        "minimum": 0
+      },
+      "description": "Best score for stage 2 (44080 in baseline).",
+      "evidence": "Score value word of slot 4 at save offset 0x20; same FUN_08013d28 7-digit renderer + FUN_08007690 tile engine grounding as stage_01_best_score.",
+      "name": "stage_02_best_score",
+      "offset": 32,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 9999999,
+        "minimum": 0
+      },
+      "description": "Best score for stage 3 (53296 in baseline).",
+      "evidence": "Score value word of slot 7 at save offset 0x38; same FUN_08013d28 7-digit renderer + FUN_08007690 tile engine grounding as stage_01_best_score.",
+      "name": "stage_03_best_score",
+      "offset": 56,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 9999999,
+        "minimum": 0
+      },
+      "description": "Best score for stage 4 (4160 in baseline).",
+      "evidence": "Score value word of slot 10 at save offset 0x50; same FUN_08013d28 7-digit renderer + FUN_08007690 tile engine grounding as stage_01_best_score.",
+      "name": "stage_04_best_score",
+      "offset": 80,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 9999999,
+        "minimum": 0
+      },
+      "description": "Best score for stage 5 (54320 in baseline).",
+      "evidence": "Score value word of slot 13 at save offset 0x68; same FUN_08013d28 7-digit renderer + FUN_08007690 tile engine grounding as stage_01_best_score.",
+      "name": "stage_05_best_score",
+      "offset": 104,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 9999999,
+        "minimum": 0
+      },
+      "description": "Best score for stage 6 (44080 in baseline).",
+      "evidence": "Score value word of slot 16 at save offset 0x80; same FUN_08013d28 7-digit renderer + FUN_08007690 tile engine grounding as stage_01_best_score.",
+      "name": "stage_06_best_score",
+      "offset": 128,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 9999999,
+        "minimum": 0
+      },
+      "description": "Best score for stage 7 (48176 in baseline).",
+      "evidence": "Score value word of slot 19 at save offset 0x98; same FUN_08013d28 7-digit renderer + FUN_08007690 tile engine grounding as stage_01_best_score.",
+      "name": "stage_07_best_score",
+      "offset": 152,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 9999999,
+        "minimum": 0
+      },
+      "description": "Best score for stage 8 (60464 in baseline).",
+      "evidence": "Score value word of slot 22 at save offset 0xB0; same FUN_08013d28 7-digit renderer + FUN_08007690 tile engine grounding as stage_01_best_score.",
+      "name": "stage_08_best_score",
+      "offset": 176,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 9999999,
+        "minimum": 0
+      },
+      "description": "Best score for stage 9 (33840 in baseline).",
+      "evidence": "Score value word of slot 25 at save offset 0xC8; same FUN_08013d28 7-digit renderer + FUN_08007690 tile engine grounding as stage_01_best_score.",
+      "name": "stage_09_best_score",
+      "offset": 200,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 9999999,
+        "minimum": 0
+      },
+      "description": "Best score for stage 10 (50224 in baseline).",
+      "evidence": "Score value word of slot 28 at save offset 0xE0; same FUN_08013d28 7-digit renderer + FUN_08007690 tile engine grounding as stage_01_best_score.",
+      "name": "stage_10_best_score",
+      "offset": 224,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 9999999,
+        "minimum": 0
+      },
+      "description": "Rank 1 default high score (1000000).",
+      "evidence": "Score value word of slot 31 at save offset 0xF8; descending round-number defaults 1000000/500000/100000/50000/10000 rendered by the FUN_08013d28 7-digit decimal renderer (FUN_08014cb4 loop, DAT_08013ddc glyph LUT).",
+      "name": "rank_score_1",
+      "offset": 248,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 9999999,
+        "minimum": 0
+      },
+      "description": "Rank 2 default high score (500000).",
+      "evidence": "Score value word of slot 32 at save offset 0x100; same FUN_08013d28 renderer grounding as rank_score_1.",
+      "name": "rank_score_2",
+      "offset": 256,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 9999999,
+        "minimum": 0
+      },
+      "description": "Rank 3 default high score (100000).",
+      "evidence": "Score value word of slot 33 at save offset 0x108; same FUN_08013d28 renderer grounding as rank_score_1.",
+      "name": "rank_score_3",
+      "offset": 264,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 9999999,
+        "minimum": 0
+      },
+      "description": "Rank 4 default high score (50000).",
+      "evidence": "Score value word of slot 34 at save offset 0x110; same FUN_08013d28 renderer grounding as rank_score_1.",
+      "name": "rank_score_4",
+      "offset": 272,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 9999999,
+        "minimum": 0
+      },
+      "description": "Rank 5 default high score (10000).",
+      "evidence": "Score value word of slot 35 at save offset 0x118; same FUN_08013d28 renderer grounding as rank_score_1.",
+      "name": "rank_score_5",
+      "offset": 280,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 63,
+        "minimum": 0
+      },
+      "description": "Packed gameplay options byte (56 in baseline); only the low 6 bits are consumed.",
+      "evidence": "FUN_08005d64 copies *(byte *)(DAT_08005f68 + 0x1c8) & 0x3f into scene state; FUN_08006d24 repeats the same masked read at DAT_08006fb8 + 0x1c8. Save offset 0x1C8 (logical rev8) holds 0x38 = 56, inside 0..63.",
+      "name": "options_flags",
+      "offset": 456,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 1023,
+        "minimum": 0
+      },
+      "description": "Stage/mode selector consumed with a 10-bit mask and a 2-bit table index.",
+      "evidence": "FUN_08005d64 reads (*(ushort *)(DAT_08005f68 + 0x1cc) & 0x3ff) >> 4 and indexes a table with (*(byte *)(DAT_08005f68 + 0x1cc) & 0xc); FUN_08006d24 applies bit ops to *(byte *)(DAT_08006fb8 + 0x1cc). Save offset 0x1CC holds 0x0000.",
+      "name": "stage_selector",
+      "offset": 460,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Packed 32-bit config bitfield: low nibble, bits 4-9 and bits 10-16 are consumed as separate sub-fields.",
+      "evidence": "FUN_080061d4 loads puVar9 = (uint *)(DAT_080065d0 + 0x1d0) and merges *(byte *)puVar9 & 0xf (with an 8 < value branch), *(ushort *)puVar9 & 0x3f0 and *puVar9 & 0x1fc00 into scene state. Save offset 0x1D0 holds 0xFFFE0000.",
+      "name": "config_bitfield",
+      "offset": 464,
+      "size": 4,
+      "type": "u32_le"
     }
-  ]
+  ],
+  "game_code": "BSHJ",
+  "id": "bshj",
+  "magic_signatures": [],
+  "media": "eeprom512",
+  "size_bytes": 512,
+  "title": "Minna no Soft Series - Shanghai (Japan)"
 }

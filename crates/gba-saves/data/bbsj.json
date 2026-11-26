@@ -1,45 +1,136 @@
 {
-  "id": "bbsj",
-  "game_code": "BBSJ",
-  "title": "Boukyaku no Senritsu (Japan)",
-  "media": "eeprom512",
-  "size_bytes": 512,
-  "magic_signatures": [
-    {
-      "offset": 0,
-      "bytes": [
-        117,
-        107,
-        97,
-        121
-      ]
-    }
-  ],
   "checksums": [],
+  "eeprom_rev8": true,
   "fields": [
     {
-      "name": "magic_header",
-      "offset": 0,
-      "size": 4,
-      "type": "ascii"
-    },
-    {
-      "name": "slot_counter",
-      "offset": 4,
-      "size": 2,
-      "type": "u16_le"
-    },
-    {
-      "name": "game_progress_flags",
-      "offset": 6,
-      "size": 2,
-      "type": "u16_le"
-    },
-    {
-      "name": "player_status_payload",
+      "confidence": "likely",
+      "description": "Zeroed 176-byte data area of file block 0 (logical 0x08..0xB8); all 0x00 in baseline, reserved for gameplay data",
+      "evidence": "Offset from rev8-verified EEPROM geometry: block 0 spans logical 0x00..0xC0 with 8-byte ASCII header at +0x00 and sequence words at +0xB8/+0xBC. Decomp slice (11750 lines, 82 FUN defs) exposes no EEPROM/SRAM driver: save-IO sweep for 0x0D00xxxx/0x0E00xxxx/DMA3 found only 0xe0000000 bitmask false-positives in FUN_0802cd94/FUN_0802cedc; closest RAM-staging idiom is FUN_08000ef4(DAT_080046b0,0x02000000).",
+      "name": "file0_data_reserved",
       "offset": 8,
-      "size": 16,
+      "size": 176,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Sequence/store counter of file block 0; 0 in baseline, pairs with check word 0xFFFFFFF5",
+      "evidence": "Offset 0xB8 from rev8-verified EEPROM geometry (block 0 tail word pair at +0xB8/+0xBC). No EEPROM driver in decomp slice: save-IO sweep over decomp/decompiled.c.gz found no 0x0D00xxxx/0x0E00xxxx/DMA3 routine (only FUN_0802cd94/FUN_0802cedc bitmask ops); RAM-staging idiom FUN_08000ef4(DAT_080046b0,0x02000000). Baseline relation check=0xFFFFFFF5-seq verified in Python.",
+      "name": "file0_seq",
+      "offset": 184,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Integrity/complement word paired with file0_seq; 0xFFFFFFF5 in baseline, satisfies check=0xFFFFFFF5-seq",
+      "evidence": "Offset 0xBC from rev8-verified EEPROM geometry (block 0 tail word pair at +0xB8/+0xBC). No EEPROM driver in decomp slice: save-IO sweep over decomp/decompiled.c.gz found no 0x0D00xxxx/0x0E00xxxx/DMA3 routine (only FUN_0802cd94/FUN_0802cedc bitmask ops); RAM-staging idiom FUN_08000ef4(DAT_080046b0,0x02000000). Relation check=0xFFFFFFF5-seq verified against baseline in Python.",
+      "name": "file0_seq_check",
+      "offset": 188,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Zeroed 176-byte data area of file block 1 (logical 0xC8..0x178); all 0x00 in baseline, reserved for gameplay data",
+      "evidence": "Offset from rev8-verified EEPROM geometry: block 1 spans logical 0xC0..0x180 with 8-byte ASCII header at +0x00 and sequence words at +0xB8/+0xBC. Decomp slice exposes no EEPROM/SRAM driver: save-IO sweep for 0x0D00xxxx/0x0E00xxxx/DMA3 found only 0xe0000000 bitmask false-positives in FUN_0802cd94/FUN_0802cedc; closest RAM-staging idiom is FUN_08000ef4(DAT_080046b0,0x02000000).",
+      "name": "file1_data_reserved",
+      "offset": 200,
+      "size": 176,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Sequence/store counter of file block 1; 0 in baseline, pairs with check word 0xFFFFFFF5",
+      "evidence": "Offset 0x178 from rev8-verified EEPROM geometry (block 1 tail word pair at +0xB8/+0xBC). No EEPROM driver in decomp slice: save-IO sweep over decomp/decompiled.c.gz found no 0x0D00xxxx/0x0E00xxxx/DMA3 routine (only FUN_0802cd94/FUN_0802cedc bitmask ops); RAM-staging idiom FUN_08000ef4(DAT_080046b0,0x02000000). Baseline relation check=0xFFFFFFF5-seq verified in Python.",
+      "name": "file1_seq",
+      "offset": 376,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Integrity/complement word paired with file1_seq; 0xFFFFFFF5 in baseline, satisfies check=0xFFFFFFF5-seq",
+      "evidence": "Offset 0x17C from rev8-verified EEPROM geometry (block 1 tail word pair at +0xB8/+0xBC). No EEPROM driver in decomp slice: save-IO sweep over decomp/decompiled.c.gz found no 0x0D00xxxx/0x0E00xxxx/DMA3 routine (only FUN_0802cd94/FUN_0802cedc bitmask ops); RAM-staging idiom FUN_08000ef4(DAT_080046b0,0x02000000). Relation check=0xFFFFFFF5-seq verified against baseline in Python.",
+      "name": "file1_seq_check",
+      "offset": 380,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Sequence/store counter of file block 2; 1 in baseline (newest block), pairs with check word 0xFFFFFFF4",
+      "evidence": "Offset 0x188 from rev8-verified EEPROM geometry (block 2 header at 0x180, words at +0x08/+0x0C). No EEPROM driver in decomp slice: save-IO sweep over decomp/decompiled.c.gz found no 0x0D00xxxx/0x0E00xxxx/DMA3 routine (only FUN_0802cd94/FUN_0802cedc bitmask ops); RAM-staging idiom FUN_08000ef4(DAT_080046b0,0x02000000). Baseline relation check=0xFFFFFFF5-seq verified in Python.",
+      "name": "file2_seq",
+      "offset": 392,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Integrity/complement word paired with file2_seq; 0xFFFFFFF4 in baseline, satisfies check=0xFFFFFFF5-seq",
+      "evidence": "Offset 0x18C from rev8-verified EEPROM geometry (block 2 words at +0x08/+0x0C). No EEPROM driver in decomp slice: save-IO sweep over decomp/decompiled.c.gz found no 0x0D00xxxx/0x0E00xxxx/DMA3 routine (only FUN_0802cd94/FUN_0802cedc bitmask ops); RAM-staging idiom FUN_08000ef4(DAT_080046b0,0x02000000). Relation check=0xFFFFFFF5-seq verified against baseline in Python.",
+      "name": "file2_seq_check",
+      "offset": 396,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Never-programmed EEPROM region (logical 0x190..0x200); all 0xFF erased state in baseline",
+      "evidence": "Offset/size from rev8-verified EEPROM geometry: 112 trailing bytes all 0xFF in baseline. No EEPROM driver in decomp slice: save-IO sweep for 0x0D00xxxx/0x0E00xxxx/DMA3 over decomp/decompiled.c.gz found only 0xe0000000 bitmask false-positives in FUN_0802cd94/FUN_0802cedc; closest RAM-staging idiom is FUN_08000ef4(DAT_080046b0,0x02000000).",
+      "name": "unprogrammed_area",
+      "offset": 400,
+      "size": 112,
       "type": "bytes"
     }
-  ]
+  ],
+  "game_code": "BBSJ",
+  "id": "bbsj",
+  "magic_signatures": [
+    {
+      "bytes": [
+        98,
+        111,
+        117,
+        107,
+        121,
+        97,
+        107,
+        117
+      ],
+      "description": "ASCII 'boukyaku' header of file block 0",
+      "offset": 0
+    },
+    {
+      "bytes": [
+        98,
+        111,
+        117,
+        107,
+        121,
+        97,
+        107,
+        117
+      ],
+      "description": "ASCII 'boukyaku' header of file block 1",
+      "offset": 192
+    },
+    {
+      "bytes": [
+        98,
+        111,
+        117,
+        107,
+        121,
+        97,
+        107,
+        117
+      ],
+      "description": "ASCII 'boukyaku' header of file block 2",
+      "offset": 384
+    }
+  ],
+  "media": "eeprom512",
+  "size_bytes": 512,
+  "title": "Boukyaku no Senritsu (Japan)"
 }

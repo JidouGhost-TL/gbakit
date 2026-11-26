@@ -1,29 +1,219 @@
 {
-  "id": "be3e",
-  "game_code": "BE3E",
-  "title": "Star Wars - Episode III - Revenge of the Sith (USA) (En,Fr,Es)",
-  "media": "eeprom512",
-  "size_bytes": 512,
-  "magic_signatures": [],
-  "checksums": [],
+  "checksums": [
+    {
+      "algorithm": "sum16_le_inv",
+      "covered_end": 168,
+      "covered_start": 8,
+      "name": "slot0_checksum",
+      "seed": 17493,
+      "stored_offset": 4
+    },
+    {
+      "algorithm": "sum16_le_inv",
+      "covered_end": 336,
+      "covered_start": 176,
+      "name": "slot1_checksum",
+      "seed": 17493,
+      "stored_offset": 172
+    },
+    {
+      "algorithm": "sum16_le_inv",
+      "covered_end": 504,
+      "covered_start": 344,
+      "name": "slot2_checksum",
+      "seed": 17493,
+      "stored_offset": 340
+    }
+  ],
+  "eeprom_rev8": true,
   "fields": [
     {
-      "name": "slot_counter",
-      "offset": 2,
-      "size": 2,
-      "type": "u16_le"
+      "confidence": "likely",
+      "description": "Cumulative XP/score total (u32 at save-RAM +0x98); threshold-compared against u16 stage tables in FUN_0806e5dc.",
+      "evidence": "FUN_0806e5dc compares *(uint*)(save_struct+0x98) against u16 threshold tables (DAT_0806e768/DAT_0806e7a4) in an XP-gated unlock loop; save payload byte+0x98 maps to file offset 0x10.",
+      "name": "slot0_xp_total",
+      "offset": 16,
+      "size": 4,
+      "type": "u32_le"
     },
     {
-      "name": "game_progress_flags",
-      "offset": 4,
+      "confidence": "likely",
+      "constraint": {
+        "kind": "bitmask",
+        "valid_mask": 1023
+      },
+      "description": "10-bit collectible flags (u16 at save-RAM +0x9c); FUN_0806f258 popcounts exactly 10 bits of this halfword.",
+      "evidence": "FUN_0806f258 popcounts *(ushort*)(save_struct+0x9c) over 10 iterations (uVar2<10); save payload byte +0x9c maps to file offset 0x14.",
+      "name": "slot0_collectible_flags",
+      "offset": 20,
       "size": 2,
-      "type": "u16_le"
+      "type": "bitflags"
     },
     {
-      "name": "player_status_payload",
-      "offset": 6,
-      "size": 16,
+      "confidence": "likely",
+      "description": "10 per-stat upgrade levels (bytes at save-RAM +0x9e..+0xa7); FUN_0806e5dc loop (uVar14<10) compares each byte against stage tables and FUN_0806e584 adjusts entries +0x9f/+0xa0.",
+      "evidence": "FUN_0806e5dc indexes *(byte*)(save_struct+0x9e+uVar14) for uVar14<10 vs ROM tables; FUN_0806e584 reads/writes save_struct+0x9f/+0xa0; range maps to file offsets 0x16..0x1f.",
+      "name": "slot0_stat_levels",
+      "offset": 22,
+      "size": 10,
       "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Campaign/episode selector (byte at save-RAM +0xa9); indexes episode tables via FUN_0806f10c mapping (<5:+0xd else +4).",
+      "evidence": "FUN_0806f10c maps *(byte*)(save_struct+0xa9) through DAT_0806f144; read in FUN_0806e584/FUN_0806e5dc/FUN_0806e3b8/FUN_0806df70; save payload byte +0xa9 maps to file offset 0x21.",
+      "name": "slot0_episode_select",
+      "offset": 33,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Level/stage selector (byte at save-RAM +0xaa); written by the level-select routine and indexes 0x10-stride level tables.",
+      "evidence": "FUN_0806df70 writes param_1 to *(byte*)(save_struct+0xaa); FUN_0806e3b8 indexes level tables by *(byte*)(save_struct+0xaa)*0x10; save payload byte +0xaa maps to file offset 0x22.",
+      "name": "slot0_level_select",
+      "offset": 34,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "constraint": {
+        "flag_labels": {
+          "1": "completed"
+        },
+        "kind": "bitmask",
+        "valid_mask": 255
+      },
+      "description": "Level-entry-0 status byte (save-RAM +0xac, stride 5 per level); low nibble holds completion flags, bit 1 set on clear.",
+      "evidence": "FUN_0806e138 tests (*(byte*)(save_struct+idx*5+0xac) & 0xf)==0 for incompletion; FUN_0806e5dc sets *pb = b&0xf0|b&0xf|2; entry 0 maps to file offset 0x24.",
+      "name": "slot0_level_status_0",
+      "offset": 36,
+      "size": 1,
+      "type": "bitflags"
+    },
+    {
+      "confidence": "likely",
+      "constraint": {
+        "flag_labels": {
+          "1": "completed"
+        },
+        "kind": "bitmask",
+        "valid_mask": 255
+      },
+      "description": "Level-entry-1 status byte (save-RAM +0xac+5, stride 5 per level); same completion-bit protocol as entry 0.",
+      "evidence": "Same stride-5 status array as slot0_level_status_0: FUN_0806e138 reads idx*5+0xac and FUN_0806e5dc writes idx*5+0xac with |2; entry 1 maps to file offset 0x29.",
+      "name": "slot0_level_status_1",
+      "offset": 41,
+      "size": 1,
+      "type": "bitflags"
+    },
+    {
+      "confidence": "likely",
+      "constraint": {
+        "flag_labels": {
+          "1": "completed"
+        },
+        "kind": "bitmask",
+        "valid_mask": 255
+      },
+      "description": "Level-entry-2 status byte (save-RAM +0xac+10, stride 5 per level); same completion-bit protocol as entry 0.",
+      "evidence": "Same stride-5 status array as slot0_level_status_0: FUN_0806e138 reads idx*5+0xac and FUN_0806e5dc writes idx*5+0xac with |2; entry 2 maps to file offset 0x2e.",
+      "name": "slot0_level_status_2",
+      "offset": 46,
+      "size": 1,
+      "type": "bitflags"
+    },
+    {
+      "confidence": "likely",
+      "description": "Slot-occupied flag (byte at save-RAM +0x106); zero routes the loader to default '___' name entry in FUN_0806dcf8.",
+      "evidence": "FUN_0806dcf8 checks (*(char*)(save_struct+0x106)==0) then installs default 0x5f '___' UI entry; save payload byte +0x106 maps to file offset 0x7e.",
+      "name": "slot0_active_flag",
+      "offset": 126,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Two tag bytes (save-RAM +0x120..+0x121) copied into the per-slot UI name entry by the loader.",
+      "evidence": "FUN_0806dcf8 copies *(save_struct+0x120+iVar4+uVar8) (uVar8<2) into the slot UI name table at DAT_0806de1c; bytes map to file offsets 0x98..0x99.",
+      "name": "slot0_tag_bytes",
+      "offset": 152,
+      "size": 2,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Slot-1 campaign/episode selector; same +0xa9 selector sampled for EEPROM slot 1 by the slot-indexed routines.",
+      "evidence": "FUN_0806f10c/FUN_0806e584/FUN_0806e5dc read save_struct+0xa9; FUN_080b005c/FUN_080afcfc/FUN_080afd94 address EEPROM slot 1 by index; maps to file offset 0xc9 (slot base 0xa8 + 0x21).",
+      "name": "slot1_episode_select",
+      "offset": 201,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Slot-1 level/stage selector; same +0xaa field sampled for EEPROM slot 1.",
+      "evidence": "FUN_0806df70 writes save_struct+0xaa and FUN_0806e3b8 indexes by it; slot-indexed EEPROM routines address slot 1; maps to file offset 0xca (slot base 0xa8 + 0x22).",
+      "name": "slot1_level_select",
+      "offset": 202,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Slot-2 campaign/episode selector; same +0xa9 selector sampled for EEPROM slot 2.",
+      "evidence": "FUN_0806f10c/FUN_0806e584/FUN_0806e5dc read save_struct+0xa9; FUN_080b005c/FUN_080afcfc/FUN_080afd94 address EEPROM slot 2 by index; maps to file offset 0x171 (slot base 0x150 + 0x21).",
+      "name": "slot2_episode_select",
+      "offset": 369,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Slot-2 level/stage selector; same +0xaa field sampled for EEPROM slot 2.",
+      "evidence": "FUN_0806df70 writes save_struct+0xaa and FUN_0806e3b8 indexes by it; slot-indexed EEPROM routines address slot 2; maps to file offset 0x172 (slot base 0x150 + 0x22).",
+      "name": "slot2_level_select",
+      "offset": 370,
+      "size": 1,
+      "type": "u8"
     }
-  ]
+  ],
+  "game_code": "BE3E",
+  "id": "be3e",
+  "magic_signatures": [
+    {
+      "bytes": [
+        85,
+        68,
+        34,
+        0
+      ],
+      "description": "Slot-0 header magic u32 0x00224455 written by FUN_080afeb4 (local_44=DAT_080b0030).",
+      "offset": 0
+    },
+    {
+      "bytes": [
+        85,
+        68,
+        34,
+        0
+      ],
+      "description": "Slot-1 header magic u32 0x00224455 at slot base 0xa8.",
+      "offset": 168
+    },
+    {
+      "bytes": [
+        85,
+        68,
+        34,
+        0
+      ],
+      "description": "Slot-2 header magic u32 0x00224455 at slot base 0x150.",
+      "offset": 336
+    }
+  ],
+  "media": "eeprom512",
+  "size_bytes": 512,
+  "title": "Star Wars - Episode III - Revenge of the Sith (USA) (En,Fr,Es)"
 }

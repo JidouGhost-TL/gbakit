@@ -1,45 +1,87 @@
 {
-  "id": "bwkj",
-  "game_code": "BWKJ",
-  "title": "Wanko de Kururin! Wancle (Japan)",
-  "media": "eeprom512",
-  "size_bytes": 512,
-  "magic_signatures": [
-    {
-      "offset": 0,
-      "bytes": [
-        52,
-        48,
-        85,
-        78
-      ]
-    }
-  ],
   "checksums": [],
+  "copy_groups": [],
+  "eeprom_rev8": true,
   "fields": [
     {
-      "name": "magic_header",
+      "confidence": "confirmed",
+      "constraint": {
+        "kind": "enum",
+        "values": [
+          0,
+          1
+        ]
+      },
+      "description": "Record encoding flag in the EEPROM temp-buffer header: 0 = plain payload at offset 3, 1 = compressed payload at offset 5 with u16 length at offset 3.",
+      "evidence": "FUN_080036b0 branches on *pcVar4==0 (plain, decomp lines ~2017/2063) vs else (compressed path reading *(ushort*)(pcVar4+3), line ~2034); temp-buffer byte 0 maps to save-file logical offset 0.",
+      "name": "save_format_flag",
       "offset": 0,
-      "size": 4,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Stored 16-bit header checksum written by FUN_080036b0 from FUN_080034a4(payload, len, len) = (sum(payload bytes) + 2*len + 1) & 0xFFFF. Baseline: sum=604, len=11 -> 627 = 0x0273, matches. Custom algorithm (not in Schema v2 list), so stored as a plain field and documented in SPEC.md.",
+      "evidence": "FUN_080034a4 (decomp line ~1779) sums bytes then returns (sum + param_2 + param_3 + 1) & 0xFFFF; FUN_080036b0 stores/compares it at *(short*)(pcVar4+1) (lines ~1950/2019/2035/2072); verified 0x0273 against baseline logical bytes.",
+      "name": "payload_checksum",
+      "offset": 1,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "allowed": "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789",
+        "kind": "ascii-charset",
+        "max_len": 10
+      },
+      "description": "10-character ASCII save identifier stamped by the game, NUL-terminated at offset 13. Baseline reads 'INU040407A'. Gathered into the temp buffer from the per-block ROM table via DAT_08003750 in the FUN_080036b0 write path.",
+      "evidence": "FUN_080036b0 write path gathers payload bytes via table *(param_1*4 + DAT_08003750) with FUN_08034624 (lines ~1935-1944); baseline logical bytes [3,13) decode to ASCII 'INU040407A' inside the checksum-covered span [3,14).",
+      "name": "save_identifier",
+      "offset": 3,
+      "size": 10,
       "type": "ascii"
     },
     {
-      "name": "slot_counter",
-      "offset": 4,
-      "size": 2,
-      "type": "u16_le"
+      "confidence": "likely",
+      "description": "NUL terminator of the save identifier: end byte of the 11-byte checksum-covered payload [3,14) sized by FUN_08003688/FUN_08003470 for block 0. Baseline 0x00.",
+      "evidence": "FUN_080036b0 sizes the block-0 payload (iVar5 via FUN_08003688/FUN_08003470, lines ~1881/1757) and checksums span [3,14); byte 13 is the 11th payload byte, 0x00 in baseline.",
+      "name": "identifier_terminator",
+      "offset": 13,
+      "size": 1,
+      "type": "u8"
     },
     {
-      "name": "game_progress_flags",
-      "offset": 6,
+      "confidence": "likely",
+      "description": "Zero alignment padding rounding the 14-byte record (flag + checksum + 11-byte payload) up to the 16-byte / 2-block EEPROM granularity. FUN_080036b0 pads uVar9 up to a multiple of 8 before writing 8-byte blocks via FUN_080340d8.",
+      "evidence": "FUN_080036b0 block-rounding at lines ~1976-1984 ((uVar9+8)-remainder) and 8-byte stepped writes via FUN_080340d8/FUN_08033e5c/FUN_08033f20 (lines ~1989/2010); baseline logical [14,16) is 0x0000.",
+      "name": "record_pad",
+      "offset": 14,
       "size": 2,
       "type": "u16_le"
-    },
-    {
-      "name": "player_status_payload",
-      "offset": 8,
-      "size": 16,
-      "type": "bytes"
     }
-  ]
+  ],
+  "game_code": "BWKJ",
+  "id": "bwkj",
+  "magic_signatures": [
+    {
+      "bytes": [
+        73,
+        78,
+        85,
+        48,
+        52,
+        48,
+        52,
+        48,
+        55,
+        65
+      ],
+      "description": "ASCII 'INU040407A' save identifier at logical offset 3 (raw bytes 34 30 55 4e at raw offset 0 are the same data before 8-byte block reversal)",
+      "offset": 3
+    }
+  ],
+  "media": "eeprom512",
+  "size_bytes": 512,
+  "title": "Wanko de Kururin! Wancle (Japan)"
 }

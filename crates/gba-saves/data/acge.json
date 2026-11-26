@@ -1,45 +1,241 @@
 {
-  "id": "acge",
-  "game_code": "ACGE",
-  "title": "Columns Crown (USA)",
-  "media": "eeprom512",
-  "size_bytes": 512,
-  "magic_signatures": [
+  "checksums": [],
+  "copy_groups": [
     {
-      "offset": 4,
-      "bytes": [
-        85,
-        76,
-        79,
-        67
-      ]
+      "fields": [
+        "rival_table_primary",
+        "rival_table_backup"
+      ],
+      "name": "rival_table_mirror"
     }
   ],
-  "checksums": [],
+  "eeprom_rev8": true,
   "fields": [
     {
-      "name": "magic_header",
-      "offset": 4,
+      "confidence": "confirmed",
+      "constraint": {
+        "allowed": "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+        "kind": "ascii-charset",
+        "max_len": 4
+      },
+      "description": "ASCII sentinel 'COLU' (Columns) opening the save record; raw EEPROM bytes at 0x04 read 'ULOC', which is this word with each 8-byte EEPROM block byte-reversed.",
+      "evidence": "FUN_080004a0 record-table selector indexes the active save record; the 4-byte word at save-logical 0x00 decodes as ASCII COLU and matches the stub magic (raw ULOC at 0x04) after the 8-byte EEPROM block reversal. Verified 100% against samples/baseline.sav in the rev8-logical domain.",
+      "name": "header_magic",
+      "offset": 0,
       "size": 4,
       "type": "ascii"
     },
     {
-      "name": "slot_counter",
-      "offset": 8,
-      "size": 2,
-      "type": "u16_le"
-    },
-    {
-      "name": "game_progress_flags",
-      "offset": 10,
-      "size": 2,
-      "type": "u16_le"
-    },
-    {
-      "name": "player_status_payload",
+      "confidence": "likely",
+      "description": "First player/file name entry, Shift-JIS 'JADE' (8 bytes: 82 69 82 60 82 63 82 64), null-padded name slot in the header.",
+      "evidence": "FUN_080004a0 scans a record table (0x19 entries of 8 bytes) to select the active name/file slot; save-logical 0x0C holds Shift-JIS bytes decoding to 'JADE'. Matches baseline.sav exactly.",
+      "name": "player_name_1",
       "offset": 12,
-      "size": 16,
+      "size": 8,
       "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Second player/file name entry, Shift-JIS 'RUBY' (8 bytes: 82 71 82 74 82 61 82 78), null-padded name slot in the header.",
+      "evidence": "FUN_080004a0 record-table selector (alternate base table path via DAT_080004f0) covers the second name slot; save-logical 0x18 holds Shift-JIS bytes decoding to 'RUBY'. Matches baseline.sav exactly.",
+      "name": "player_name_2",
+      "offset": 24,
+      "size": 8,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Primary table of 7 unlock/rival name strings (Shift-JIS: JADE, RUBY, DAZZLEPINCH, B.ZEVOJINX, ROB-55SPARKLD.W., LORTO, MILCHEDEENE), each null-padded; 142 bytes ending at 0xEE.",
+      "evidence": "FUN_080201d0 bulk-copies 0xC0 halfwords between the RAM record buffer and the save staging area, covering the 142-byte name table at save-logical 0x60; FUN_080209f4 performs the word-granular record copy of the same region. Byte content verified against baseline.sav (Shift-JIS decodes cleanly).",
+      "name": "rival_table_primary",
+      "offset": 96,
+      "size": 142,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Redundant backup copy of the 142-byte rival name table; byte-identical to rival_table_primary in baseline.sav (offsets shifted by +0xCE).",
+      "evidence": "Same FUN_080201d0 0xC0-halfword bulk-copy path writes the mirror at save-logical 0x12E; FUN_080209f4 record copy covers the duplicate. Verified byte-identical to save-logical [0x60,0xEE) in baseline.sav, hence grouped in copy_groups.",
+      "name": "rival_table_backup",
+      "offset": 302,
+      "size": 142,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Per-entry stage/level byte for each of the 12 score records: 06 05 05 04 04 03 03 02 02 01 01 00, trailing zero marks the empty slot.",
+      "evidence": "FUN_080209f4 copies per-record bytes gated by a count field into the save staging area; the 12 level bytes at save-logical 0xF0 pair 1:1 with the 12 score ranks at 0x100. Values verified against baseline.sav.",
+      "name": "stage_level_table",
+      "offset": 240,
+      "size": 12,
+      "type": "bytes"
+    },
+    {
+      "confidence": "guessed",
+      "description": "Stored 32-bit trailer word of the primary record (0x028A0AAA); no Schema-V2 checksum algorithm over any save region reproduces it, so it is exposed as a plain word (see SPEC.md).",
+      "evidence": "FUN_0801f5a4 state machine guards record commit on marker byte param_1[0x0D] vs DAT_0801f5a0 and counter param_1+0x34; the stored word at save-logical 0xFC is the record trailer it protects. Value verified against baseline.sav; formula unidentified.",
+      "name": "record_seal_primary",
+      "offset": 252,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Rank-1 score, 600. Twelve u16_le scores descend monotonically 600..0 with the trailing zero marking the empty slot.",
+      "evidence": "FUN_080209f4 word-granular record copy moves the score table from the RAM record struct to the save staging area; save-logical 0x100 reads 600 (u16_le). Verified against baseline.sav.",
+      "name": "score_rank_01",
+      "offset": 256,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Rank-2 score, 550.",
+      "evidence": "FUN_080209f4 word-granular record copy; save-logical 0x102 reads 550 (u16_le). Verified against baseline.sav.",
+      "name": "score_rank_02",
+      "offset": 258,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Rank-3 score, 500.",
+      "evidence": "FUN_080209f4 word-granular record copy; save-logical 0x104 reads 500 (u16_le). Verified against baseline.sav.",
+      "name": "score_rank_03",
+      "offset": 260,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Rank-4 score, 450.",
+      "evidence": "FUN_080209f4 word-granular record copy; save-logical 0x106 reads 450 (u16_le). Verified against baseline.sav.",
+      "name": "score_rank_04",
+      "offset": 262,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Rank-5 score, 400.",
+      "evidence": "FUN_080209f4 word-granular record copy; save-logical 0x108 reads 400 (u16_le). Verified against baseline.sav.",
+      "name": "score_rank_05",
+      "offset": 264,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Rank-6 score, 350.",
+      "evidence": "FUN_080209f4 word-granular record copy; save-logical 0x10A reads 350 (u16_le). Verified against baseline.sav.",
+      "name": "score_rank_06",
+      "offset": 266,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Rank-7 score, 300.",
+      "evidence": "FUN_080209f4 word-granular record copy; save-logical 0x10C reads 300 (u16_le). Verified against baseline.sav.",
+      "name": "score_rank_07",
+      "offset": 268,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Rank-8 score, 250.",
+      "evidence": "FUN_080209f4 word-granular record copy; save-logical 0x10E reads 250 (u16_le). Verified against baseline.sav.",
+      "name": "score_rank_08",
+      "offset": 270,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Rank-9 score, 200.",
+      "evidence": "FUN_080209f4 word-granular record copy; save-logical 0x110 reads 200 (u16_le). Verified against baseline.sav.",
+      "name": "score_rank_09",
+      "offset": 272,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Rank-10 score, 150.",
+      "evidence": "FUN_080209f4 word-granular record copy; save-logical 0x112 reads 150 (u16_le). Verified against baseline.sav.",
+      "name": "score_rank_10",
+      "offset": 274,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Rank-11 score, 100.",
+      "evidence": "FUN_080209f4 word-granular record copy; save-logical 0x114 reads 100 (u16_le). Verified against baseline.sav.",
+      "name": "score_rank_11",
+      "offset": 276,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Rank-12 score slot, 0 (empty/unused entry).",
+      "evidence": "FUN_080209f4 word-granular record copy; save-logical 0x116 reads 0 (u16_le), the empty tail of the descending table. Verified against baseline.sav.",
+      "name": "score_rank_12",
+      "offset": 278,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "guessed",
+      "description": "Stored 16-bit trailer word of the backup record region (0x0AAA); mirrors the low half of record_seal_primary but the regions differ elsewhere, so it is exposed as a plain word (see SPEC.md).",
+      "evidence": "FUN_0801f5a4 state machine (param_1[0x0D] marker / param_1+0x34 counter) guards the backup record whose trailer sits at save-logical 0x1BE. Value verified against baseline.sav; formula unidentified.",
+      "name": "record_seal_backup",
+      "offset": 446,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "allowed": "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+        "kind": "ascii-charset",
+        "max_len": 4
+      },
+      "description": "ASCII sentinel 'COLU' closing the save record at the end of the EEPROM image; footer mirror of header_magic.",
+      "evidence": "FUN_0801ea30 flagged-record teardown (0x80 flag) bounds the record whose tail sentinel sits at save-logical 0x1F6; bytes decode as ASCII COLU. Verified 100% against samples/baseline.sav in the rev8-logical domain.",
+      "name": "footer_magic",
+      "offset": 502,
+      "size": 4,
+      "type": "ascii"
     }
-  ]
+  ],
+  "game_code": "ACGE",
+  "id": "acge",
+  "magic_signatures": [
+    {
+      "bytes": [
+        67,
+        79,
+        76,
+        85
+      ],
+      "description": "ASCII 'COLU' header sentinel (logical domain)",
+      "offset": 0
+    },
+    {
+      "bytes": [
+        67,
+        79,
+        76,
+        85
+      ],
+      "description": "ASCII 'COLU' footer sentinel (logical domain)",
+      "offset": 502
+    }
+  ],
+  "media": "eeprom512",
+  "size_bytes": 512,
+  "title": "Columns Crown (USA)"
 }
