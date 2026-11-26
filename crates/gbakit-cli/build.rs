@@ -40,7 +40,7 @@ fn parse_formatkit_version() -> String {
             }
         }
     }
-    "0.1.14".to_string()
+    "0.1.17".to_string()
 }
 
 fn main() {

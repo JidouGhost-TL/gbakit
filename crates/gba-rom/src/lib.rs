@@ -184,6 +184,11 @@ pub use callgraph::{
 };
 pub mod peripherals;
 pub use peripherals::{detect_peripherals, DetectedPeripheral, PeripheralKind};
+pub mod formats;
+pub use formats::{
+    scan_all_wave1_formats, validate_wave1_format_slice, DetectedFormatExtent,
+    FORMAT_ID_IS_ASC03, FORMAT_ID_PIFF_RBHF, FORMAT_ID_PLT_ENGINE, FORMAT_ID_RIFF_SCR,
+};
 pub use formatkit_layout::tables::{FixedStrideOffsetTable, TableSizeMode};
 
 /// Summary of trailing hardware padding at the end of a GBA cartridge ROM.

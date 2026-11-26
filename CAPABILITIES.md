@@ -1,6 +1,6 @@
 # gbakit Capabilities
 
-Generated directly from `gbakit capabilities --json` (`formatkit.capabilities.v1`) for **gbakit 0.2.0** (FormatKit `0.1.14`).
+Generated directly from `gbakit capabilities --json` (`formatkit.capabilities.v1`) for **gbakit 0.2.0** (FormatKit `0.1.17`).
 
 ## Supported Formats
 
@@ -23,6 +23,10 @@ Generated directly from `gbakit capabilities --json` (`formatkit.capabilities.v1
 | `archive.pack` | `archive` | parse, decode, reproduce, edit | 2 | PACK studio container scanning, extraction, repacking, and in-ROM replacement |
 | `archive.wayforward` | `archive` | parse, decode, reproduce, edit | 2 | WAYFORWARD container scanning, extraction, repacking, and in-ROM replacement |
 | `archive.sfcd` | `archive` | parse, decode, reproduce, edit | 2 | SFCD container scanning, extraction, repacking, and in-ROM replacement |
+| `studio.plt-engine` | `studio` | parse, decode | 3 | Unified PLT0/IMG0/PAT0(+TIM0)/SCR0/TON0 multi-asset GBA studio engine container and table scanner |
+| `studio.is-asc03` | `studio` | parse, decode | 3 | IS-ASC03/IS-ACG03/IS-MAP01 chunked map and graphics container (CLRF, CMNT, VER, PNL, MAP, LINK, MODE, END) |
+| `studio.piff-rbhf` | `studio` | parse, decode | 3 | PIFF/RBHF/RBHH relocatable module container (BODY, PACK, PKDW, PKDL, RELC, GLOB) and GLOBAL_SET manifests |
+| `studio.riff-scr` | `studio` | parse, decode | 2 | RIFF (standard and header-inclusive SCR framing), SCR CODE bytecode + STR string tables, and SCR aligned name tables |
 | `text.charmap-scripts` | `text` | parse, decode, reproduce, edit | 2 | Charmap table scanning, string extraction, and pointer-aware in-ROM replacement |
 | `text.huffman-scripts` | `text` | parse, decode, reproduce, edit | 2 | IS-style and Camelot-style Huffman compressed text extraction and replacement |
 | `text.vwf-fonts` | `text` | parse, decode, reproduce, edit | 2 | 1bpp/2bpp variable-width bitmap font dumping, replacement, and glyph width tables |

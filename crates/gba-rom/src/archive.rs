@@ -335,19 +335,16 @@ fn parse_offset_toc_archive(
         slice.len()
     };
 
-    let spec = CountedOffsetArraySpec {
-        array_offset: toc_start,
+    let spec = CountedOffsetArraySpec::new(
+        toc_start,
         count,
-        count_adjust: i32::from(has_end_sentinel),
-        entry_width: IntWidth::U32,
-        endian: Endian::Little,
-        offset_base: OffsetBase::Absolute,
-        offset_unit: 1,
-        trailing_zero_trim: false,
-        has_eof_sentinel: has_end_sentinel,
-        require_monotonic: true,
-        max_entries: MAX_ARCHIVE_ENTRIES + 1,
-    };
+        IntWidth::U32,
+        Endian::Little,
+        MAX_ARCHIVE_ENTRIES + 1,
+    )
+    .with_count_adjust(i32::from(has_end_sentinel))
+    .with_offset_base(OffsetBase::Absolute)
+    .with_has_eof_sentinel(has_end_sentinel);
     let spans = parse_counted_offset_array_metadata(slice, &spec, carrier_len as u64)
         .map_err(|err| map_toc_layout_error(err, rom_offset))?;
     if spans[0].offset < toc_end_no_sentinel as u64 {
@@ -655,19 +652,16 @@ fn pack_offset_toc(magic: &[u8], entries: &[(&str, &[u8])]) -> Result<Vec<u8>> {
     header.extend_from_slice(magic);
     header.extend_from_slice(&(count as u32).to_le_bytes());
 
-    let spec = CountedOffsetArraySpec {
-        array_offset: header.len(),
+    let spec = CountedOffsetArraySpec::new(
+        header.len(),
         count,
-        count_adjust: 1,
-        entry_width: IntWidth::U32,
-        endian: Endian::Little,
-        offset_base: OffsetBase::Absolute,
-        offset_unit: 1,
-        trailing_zero_trim: false,
-        has_eof_sentinel: true,
-        require_monotonic: true,
-        max_entries: MAX_ARCHIVE_ENTRIES + 1,
-    };
+        IntWidth::U32,
+        Endian::Little,
+        MAX_ARCHIVE_ENTRIES + 1,
+    )
+    .with_count_adjust(1)
+    .with_offset_base(OffsetBase::Absolute)
+    .with_has_eof_sentinel(true);
     let policy = PackPolicy {
         data_alignment: DEFAULT_ARCHIVE_ALIGN,
         pad_final_entry: true,
