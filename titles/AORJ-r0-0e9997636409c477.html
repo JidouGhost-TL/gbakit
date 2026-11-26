@@ -30,7 +30,7 @@
   <main>
 <p class="meta"><a href="../index.html">&larr; Games</a> &middot; Family <code>AOR</code></p>
 <h1>Oriental Blue - Ao no Tengai (Japan)</h1>
-<p><span class='badge badge-zinc'>Stateless / Passcode</span> <a href='../link-multiplayer.html#joybus'><span class='badge badge-purple'>📺 Joybus</span></a> <a href='../link-multiplayer.html#multiboot'><span class='badge badge-amber'>💾 MultiBoot</span></a> <a href='../link-multiplayer.html#sio-multi'><span class='badge badge-blue'>🎮 4P Link</span></a></p>
+<p><span class='badge badge-zinc'>Stateless / Passcode</span> <span class='badge badge-amber'>Debug Menu Patch</span> <a href='../link-multiplayer.html#joybus'><span class='badge badge-purple'>📺 Joybus</span></a> <a href='../link-multiplayer.html#multiboot'><span class='badge badge-amber'>💾 MultiBoot</span></a> <a href='../link-multiplayer.html#sio-multi'><span class='badge badge-blue'>🎮 4P Link</span></a></p>
 
 <h2>Cartridge Identity</h2>
 <dl class="kv">
@@ -43,6 +43,15 @@
   <dt>Engine / SDK Group</dt><dd><a href='../engines/index.html#comm-001'><code>comm-001</code></a> (196 families)</dd>
 </dl>
 <h2>Screenshots</h2><div class='gallery'><figure><img src='../assets/thumbs/AORJ-r0-0e9997636409c477-boot.png' alt='Boot Screen' loading='lazy'><figcaption>Boot Screen</figcaption></figure><figure><img src='../assets/thumbs/AORJ-r0-0e9997636409c477-after.png' alt='In-Game' loading='lazy'><figcaption>In-Game</figcaption></figure></div>
+
+<h2>Debug Menu Re-Enablement Patch (<code>.ips</code>)</h2>
+<p><a class="btn" href="../assets/patches/AORJ-r0-0e9997636409c477/AORJ-debug.ips" download>Download AORJ-debug.ips (42 B IPS / 14 B delta)</a></p>
+<dl class="kv">
+  <dt>Hook Mechanism</dt><dd><code>thumb_bl_redirect</code> &middot; Redirect boot thread BL at 0x08000b92 to FUN_08074fec (5-entry AGB Sample DEBUG MENU), NOP debug-text guard at 0x0807517e, and NOP AgbMain DISPCNT/PRAM overrides at 0x0807361a/0x08073626</dd>
+  <dt>IPS SHA-256</dt><dd><code>909133ac5471e8728a5a2e1d2440df59dcb28e6c2d4b3e3ac3b31a1df0246424</code></dd>
+</dl>
+<pre><code>gbakit patch apply AORJ-debug.ips original.gba patched-debug.gba</code></pre>
+<div class='gallery'><figure><img src='../assets/patches/AORJ-r0-0e9997636409c477/boot-patched.png' alt='Re-enabled debug menu' loading='lazy'><figcaption>Re-Enabled Debug Menu</figcaption></figure><figure><img src='../assets/patches/AORJ-r0-0e9997636409c477/after-input.png' alt='Interactive debug menu navigation' loading='lazy'><figcaption>After D-Pad / A Input</figcaption></figure></div>
 
 
 

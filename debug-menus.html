@@ -30,12 +30,12 @@
   <main>
 <h1>Verified GBA Debug Menu Interactive Gallery</h1>
 <p class="meta">
-  Visual side-by-side interactive gallery of 85 dormant developer debug menus and test modes verified live in headless mGBA
+  Visual side-by-side interactive gallery of 88 dormant developer debug menus and test modes verified live in headless mGBA
   across 12 waves of clean-room reverse engineering &middot; Companion gallery for <a href="gbakit/index.html"><code>gbakit</code></a>.
 </p>
 
 <div class="grid">
-  <div class="card"><div class="val">85</div><div class="lbl">Verified Debug Menus</div></div>
+  <div class="card"><div class="val">88</div><div class="lbl">Verified Debug Menus</div></div>
   <div class="card"><div class="val">100%</div><div class="lbl">Clean-Room Micro-Patches (14–45 B IPS)</div></div>
   <div class="card"><div class="val">12</div><div class="lbl">Discovery Waves</div></div>
   <div class="card"><div class="val">200+</div><div class="lbl">mGBA Visual Captures</div></div>
@@ -43,26 +43,26 @@
 
 <div class="callout">
   <strong>GBA In-Engine Patch Verification via <a href="gbakit/index.html"><code>gbakit</code></a>:</strong>
-  All 85 patches can be validated, applied, and verified directly from the CLI:
+  All 88 patches can be validated, applied, and verified directly from the CLI:
   <pre><code># Test and verify patch application against original ROM:
 gbakit patch test &lt;rom.gba&gt; [--json]
 
 # Automatically patch ROM into re-enabled debug menu:
 gbakit patch debug-menu &lt;rom.gba&gt; [-o &lt;debug.gba&gt;]
 
-# List all 85 embedded micro-patches:
+# List all 88 embedded micro-patches:
 gbakit patch list-debug-menus [--json]</code></pre>
 </div>
 
-<h2>Interactive Debug Menu Gallery (85 Titles)</h2>
+<h2>Interactive Debug Menu Gallery (88 Titles)</h2>
 <p class="meta">Instant client-side search, genre/engine filtering, Ghidra disassembly traces, and 3-state boot comparisons.</p>
 
 <div class="controls" style="margin-bottom:0.5rem">
-  <input id="gallery-search" type="search" placeholder="Search 85 debug menus by game title, code (AZLE), hook type, handler address, or offset...">
+  <input id="gallery-search" type="search" placeholder="Search 88 debug menus by game title, code (AZLE), hook type, handler address, or offset...">
 </div>
 
 <div class="controls" id="filter-buttons" style="margin-top:0; margin-bottom:1rem; gap:0.4rem">
-  <button class="tab-btn active" data-filter="all">All (85)</button>
+  <button class="tab-btn active" data-filter="all">All (88)</button>
   <button class="tab-btn" data-filter="nintendo">Nintendo</button>
   <button class="tab-btn" data-filter="capcom">Capcom</button>
   <button class="tab-btn" data-filter="konami">Konami</button>
@@ -73,7 +73,7 @@ gbakit patch list-debug-menus [--json]</code></pre>
   <button class="tab-btn" data-filter="branch-bypass">Branch Bypasses</button>
 </div>
 
-<div id="gallery-counter" class="meta" style="margin-bottom:1.25rem">Showing 85 of 85 debug menus</div>
+<div id="gallery-counter" class="meta" style="margin-bottom:1.25rem">Showing 88 of 88 debug menus</div>
 
 <div id="gallery-container">
 
@@ -2578,6 +2578,47 @@ gbakit patch test BN2E.gba
 gbakit patch debug-menu BN2E.gba -o BN2E-debug.gba</code></pre>
 </div>
 
+<div class="card gallery-card" data-tags="all" data-search="oriental blue - ao no tengai (japan) aorj aorj-r0-0e9997636409c477 thumb_bl_redirect 0x08074fec 0x00000b92 redirect boot thread bl at 0x08000b92 to fun_08074fec (5-entry agb sample debug menu), nop debug-text guard at 0x0807517e, and nop agbmain dispcnt/pram overrides at 0x0807361a/0x08073626" style="margin-bottom:1.5rem">
+  <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:0.5rem">
+    <div>
+      <h2 style="margin:0; border:none; padding:0"><a href="titles/AORJ-r0-0e9997636409c477.html">Oriental Blue - Ao no Tengai (Japan)</a> <span class="badge badge-emerald">Interactive Verified</span> <span class='badge badge-slate'>🛠️ Developer Suite</span></h2>
+      <p class="meta" style="margin-top:0.25rem">
+        Code: <code>AORJ</code> &middot;
+        Release: <code>AORJ-r0-0e9997636409c477</code> &middot;
+        Delta: <strong>14 B</strong> (42 B <code>.ips</code>) &middot;
+        Hook: <code>thumb_bl_redirect</code> &middot;
+        Target Handler: <code>0x08074FEC</code>
+      </p>
+    </div>
+    <div style="white-space:nowrap">
+      <a class="btn" href="assets/patches/AORJ-r0-0e9997636409c477/AORJ-debug.ips" download>Download AORJ-debug.ips</a>
+      <a class="btn btn-secondary" href="titles/AORJ-r0-0e9997636409c477.html">Title Specs</a>
+    </div>
+  </div>
+
+  <p style="margin:0.5rem 0">Redirect boot thread BL at 0x08000b92 to FUN_08074fec (5-entry AGB Sample DEBUG MENU), NOP debug-text guard at 0x0807517e, and NOP AgbMain DISPCNT/PRAM overrides at 0x0807361a/0x08073626</p>
+
+  <div style="background:var(--surface2); border:1px solid var(--border); border-radius:6px; padding:0.6rem 0.8rem; margin:0.6rem 0; font-size:0.85rem">
+    <strong style="color:var(--accent)">Ghidra Clean-Room Static Trace:</strong>
+    ROM Offset: <code>0X00000B92</code> &middot;
+    Instruction: <code>fff7e5fe</code> &rarr; <code>74f02bfa</code> &middot;
+    Vector: <code>0x08074FEC</code><br>
+    <span class="meta">Redirect boot thread BL at 0x08000b92 to FUN_08074fec (5-entry AGB Sample DEBUG MENU), NOP debug-text guard at 0x0807517e, and NOP AgbMain DISPCNT/PRAM overrides at 0x0807361a/0x08073626</span>
+  </div>
+
+  <p class="meta"><strong>Activation Controller Sequence:</strong> <span class='badge badge-slate'>DOWN</span> <span class='badge badge-slate'>DOWN</span> <span class='badge badge-slate'>A</span></p>
+
+  <div class="gallery" style="margin-top:0.75rem">
+    <figure><img src='assets/patches/AORJ-r0-0e9997636409c477/boot-orig.png' alt='Oriental Blue - Ao no Tengai (Japan) retail boot' loading='lazy'><figcaption>1. Unpatched Retail Boot</figcaption></figure><figure><img src='assets/patches/AORJ-r0-0e9997636409c477/boot-patched.png' alt='Oriental Blue - Ao no Tengai (Japan) debug menu boot' loading='lazy'><figcaption>2. Clean-Room Debug Boot</figcaption></figure><figure><img src='assets/patches/AORJ-r0-0e9997636409c477/after-input.png' alt='Oriental Blue - Ao no Tengai (Japan) interactive navigation' loading='lazy'><figcaption>3. Interactive Menu Navigation</figcaption></figure>
+  </div>
+
+  <pre style="margin-top:0.75rem; margin-bottom:0"><code># Test &amp; verify patch in-engine:
+gbakit patch test AORJ.gba
+
+# Apply patch directly:
+gbakit patch debug-menu AORJ.gba -o AORJ-debug.gba</code></pre>
+</div>
+
 <div class="card gallery-card" data-tags="all branch-bypass" data-search="pinky monkey town (japan) apnj apnj-r0-d8b60a1934e34dcc thumb_flag_check_bypass 0x08000158 0x0000012a bypass intro wait at 0x00012a (beq -&gt; b) and 0xa5 developer flag guard at 0x000156 (bne -&gt; nop) to boot directly into debug mode" style="margin-bottom:1.5rem">
   <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:0.5rem">
     <div>
@@ -3398,6 +3439,47 @@ gbakit patch test AO3E.gba
 gbakit patch debug-menu AO3E.gba -o AO3E-debug.gba</code></pre>
 </div>
 
+<div class="card gallery-card" data-tags="all" data-search="treasure planet (usa) azqe azqe-r0-c5e7ac2ffdaa46ab state_table_redirect 0x0801c3e4 0x000ea2e8 redirect 16-byte game-state table[0] at 0x080ea2e8 to unreachable state[3] (0x080ea318) to boot into hidden 3-tier theme select -&gt; level select -&gt; room select debug menu (fun_0801c3e4)" style="margin-bottom:1.5rem">
+  <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:0.5rem">
+    <div>
+      <h2 style="margin:0; border:none; padding:0"><a href="titles/AZQE-r0-c5e7ac2ffdaa46ab.html">Treasure Planet (USA)</a> <span class="badge badge-emerald">Interactive Verified</span> <span class='badge badge-blue'>🗺️ Stage Select</span></h2>
+      <p class="meta" style="margin-top:0.25rem">
+        Code: <code>AZQE</code> &middot;
+        Release: <code>AZQE-r0-c5e7ac2ffdaa46ab</code> &middot;
+        Delta: <strong>16 B</strong> (29 B <code>.ips</code>) &middot;
+        Hook: <code>state_table_redirect</code> &middot;
+        Target Handler: <code>0x0801C3E4</code>
+      </p>
+    </div>
+    <div style="white-space:nowrap">
+      <a class="btn" href="assets/patches/AZQE-r0-c5e7ac2ffdaa46ab/AZQE-debug.ips" download>Download AZQE-debug.ips</a>
+      <a class="btn btn-secondary" href="titles/AZQE-r0-c5e7ac2ffdaa46ab.html">Title Specs</a>
+    </div>
+  </div>
+
+  <p style="margin:0.5rem 0">Redirect 16-byte game-state table[0] at 0x080ea2e8 to unreachable state[3] (0x080ea318) to boot into hidden 3-tier Theme Select -&gt; Level Select -&gt; Room Select debug menu (FUN_0801c3e4)</p>
+
+  <div style="background:var(--surface2); border:1px solid var(--border); border-radius:6px; padding:0.6rem 0.8rem; margin:0.6rem 0; font-size:0.85rem">
+    <strong style="color:var(--accent)">Ghidra Clean-Room Static Trace:</strong>
+    ROM Offset: <code>0X000EA2E8</code> &middot;
+    Instruction: <code>49d900086dda0008fdea0008e9e60008</code> &rarr; <code>edc70108d5c8010885c8010845c90108</code> &middot;
+    Vector: <code>0x0801C3E4</code><br>
+    <span class="meta">Redirect 16-byte game-state table[0] at 0x080ea2e8 to unreachable state[3] (0x080ea318) to boot into hidden 3-tier Theme Select -&gt; Level Select -&gt; Room Select debug menu (FUN_0801c3e4)</span>
+  </div>
+
+  <p class="meta"><strong>Activation Controller Sequence:</strong> <span class='badge badge-slate'>START</span> <span class='badge badge-slate'>DOWN</span> <span class='badge badge-slate'>A</span></p>
+
+  <div class="gallery" style="margin-top:0.75rem">
+    <figure><img src='assets/patches/AZQE-r0-c5e7ac2ffdaa46ab/boot-orig.png' alt='Treasure Planet (USA) retail boot' loading='lazy'><figcaption>1. Unpatched Retail Boot</figcaption></figure><figure><img src='assets/patches/AZQE-r0-c5e7ac2ffdaa46ab/boot-patched.png' alt='Treasure Planet (USA) debug menu boot' loading='lazy'><figcaption>2. Clean-Room Debug Boot</figcaption></figure><figure><img src='assets/patches/AZQE-r0-c5e7ac2ffdaa46ab/after-input.png' alt='Treasure Planet (USA) interactive navigation' loading='lazy'><figcaption>3. Interactive Menu Navigation</figcaption></figure>
+  </div>
+
+  <pre style="margin-top:0.75rem; margin-bottom:0"><code># Test &amp; verify patch in-engine:
+gbakit patch test AZQE.gba
+
+# Apply patch directly:
+gbakit patch debug-menu AZQE.gba -o AZQE-debug.gba</code></pre>
+</div>
+
 <div class="card gallery-card" data-tags="all scene-override" data-search="ultra keibitai - monster attack (japan) butj butj-r0-0e291011ac3b60d2 thumb_imm_scene_override 0x08006bf0 0x00006bce patch scene dispatcher at 0x08006bce (ldr r0,[r4] -&gt; movs r0,#48) to select agb system debug menu" style="margin-bottom:1.5rem">
   <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:0.5rem">
     <div>
@@ -3560,6 +3642,47 @@ gbakit patch test AZWE.gba
 
 # Apply patch directly:
 gbakit patch debug-menu AZWE.gba -o AZWE-debug.gba</code></pre>
+</div>
+
+<div class="card gallery-card" data-tags="all scene-override" data-search="yggdra union - we&#x27;ll never fight alone (usa) byue byue-r0-27cf19eaced550f3 mode_table_redirect 0x08005c04 0x000ad76c redirect 12-byte main mode-table triplet at 0x080ad76c to unreachable debug test mode triplet at 0x080ad8c8 (fun_08005c04/fun_08005e68/fun_08006d28) for live character/bgm/effect/event debug tester" style="margin-bottom:1.5rem">
+  <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:0.5rem">
+    <div>
+      <h2 style="margin:0; border:none; padding:0"><a href="titles/BYUE-r0-27cf19eaced550f3.html">Yggdra Union - We&#x27;ll Never Fight Alone (USA)</a> <span class="badge badge-emerald">Interactive Verified</span> <span class='badge badge-slate'>🛠️ Developer Suite</span></h2>
+      <p class="meta" style="margin-top:0.25rem">
+        Code: <code>BYUE</code> &middot;
+        Release: <code>BYUE-r0-27cf19eaced550f3</code> &middot;
+        Delta: <strong>12 B</strong> (25 B <code>.ips</code>) &middot;
+        Hook: <code>mode_table_redirect</code> &middot;
+        Target Handler: <code>0x08005C04</code>
+      </p>
+    </div>
+    <div style="white-space:nowrap">
+      <a class="btn" href="assets/patches/BYUE-r0-27cf19eaced550f3/BYUE-debug.ips" download>Download BYUE-debug.ips</a>
+      <a class="btn btn-secondary" href="titles/BYUE-r0-27cf19eaced550f3.html">Title Specs</a>
+    </div>
+  </div>
+
+  <p style="margin:0.5rem 0">Redirect 12-byte main mode-table triplet at 0x080ad76c to unreachable Debug Test Mode triplet at 0x080ad8c8 (FUN_08005c04/FUN_08005e68/FUN_08006d28) for live Character/BGM/Effect/Event debug tester</p>
+
+  <div style="background:var(--surface2); border:1px solid var(--border); border-radius:6px; padding:0.6rem 0.8rem; margin:0.6rem 0; font-size:0.85rem">
+    <strong style="color:var(--accent)">Ghidra Clean-Room Static Trace:</strong>
+    ROM Offset: <code>0X000AD76C</code> &middot;
+    Instruction: <code>89ec060885ee06085df00608</code> &rarr; <code>055c0008695e0008296d0008</code> &middot;
+    Vector: <code>0x08005C04</code><br>
+    <span class="meta">Redirect 12-byte main mode-table triplet at 0x080ad76c to unreachable Debug Test Mode triplet at 0x080ad8c8 (FUN_08005c04/FUN_08005e68/FUN_08006d28) for live Character/BGM/Effect/Event debug tester</span>
+  </div>
+
+  <p class="meta"><strong>Activation Controller Sequence:</strong> <span class='badge badge-slate'>START</span> <span class='badge badge-slate'>DOWN</span> <span class='badge badge-slate'>RIGHT</span></p>
+
+  <div class="gallery" style="margin-top:0.75rem">
+    <figure><img src='assets/patches/BYUE-r0-27cf19eaced550f3/boot-orig.png' alt='Yggdra Union - We&#x27;ll Never Fight Alone (USA) retail boot' loading='lazy'><figcaption>1. Unpatched Retail Boot</figcaption></figure><figure><img src='assets/patches/BYUE-r0-27cf19eaced550f3/boot-patched.png' alt='Yggdra Union - We&#x27;ll Never Fight Alone (USA) debug menu boot' loading='lazy'><figcaption>2. Clean-Room Debug Boot</figcaption></figure><figure><img src='assets/patches/BYUE-r0-27cf19eaced550f3/after-input.png' alt='Yggdra Union - We&#x27;ll Never Fight Alone (USA) interactive navigation' loading='lazy'><figcaption>3. Interactive Menu Navigation</figcaption></figure>
+  </div>
+
+  <pre style="margin-top:0.75rem; margin-bottom:0"><code># Test &amp; verify patch in-engine:
+gbakit patch test BYUE.gba
+
+# Apply patch directly:
+gbakit patch debug-menu BYUE.gba -o BYUE-debug.gba</code></pre>
 </div>
 
 </div>
