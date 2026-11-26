@@ -58,7 +58,75 @@ pub struct AssetMap {
     pub schema_version: u32,
     pub kit: String,
     pub media: MediaDescriptor,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub free_space: Vec<FreeSpaceRegion>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub shared: Option<serde_json::Map<String, serde_json::Value>>,
     pub entries: Vec<AssetEntry>,
+}
+
+/// Declared safe relocation region when a re-encoded asset grows beyond its original allocation.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct FreeSpaceRegion {
+    pub offset: u64,
+    pub size: u64,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub bank: Option<u64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub note: Option<String>,
+}
+
+/// Single companion entry ID or list of companion entry IDs.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum StringOrVec {
+    One(String),
+    Many(Vec<String>),
+}
+
+impl StringOrVec {
+    /// Return the first entry ID, if any.
+    pub fn first(&self) -> Option<&str> {
+        match self {
+            Self::One(s) => Some(s.as_str()),
+            Self::Many(v) => v.first().map(String::as_str),
+        }
+    }
+
+    /// Iterate over all referenced entry IDs.
+    pub fn as_slice_iter(&self) -> std::slice::Iter<'_, String> {
+        match self {
+            Self::One(s) => std::slice::from_ref(s).iter(),
+            Self::Many(v) => v.iter(),
+        }
+    }
+}
+
+/// Byte order for structured pointer/offset references.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase")]
+pub enum Endian {
+    Le,
+    Be,
+}
+
+/// Structured pointer/offset reference descriptor for automated relocation patching.
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct PointerReference {
+    pub at: u64,
+    pub width: u32,
+    pub endian: Endian,
+    pub form: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub shift: Option<i64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub add: Option<i64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub bank: Option<u64>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub note: Option<String>,
 }
 
 /// Media classification for `formatkit.asset-map.v1`.
@@ -116,6 +184,8 @@ pub struct AssetEntry {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub lba: Option<u64>,
     pub size: u64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub reserved_capacity: Option<u64>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub sha256: Option<String>,
     pub status: AssetStatus,
@@ -125,6 +195,8 @@ pub struct AssetEntry {
     pub entropy: Option<f64>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub code_refs: Vec<String>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub references: Vec<PointerReference>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub mapping: Option<AssetMapping>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -162,7 +234,9 @@ pub struct AssetMapping {
     #[serde(skip_serializing_if = "Option::is_none")]
     pub params: Option<serde_json::Map<String, serde_json::Value>>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub paired_with: Option<String>,
+    pub paired_with: Option<StringOrVec>,
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    pub relations: BTreeMap<String, StringOrVec>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub inner_format: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -272,21 +346,28 @@ struct CandidateExtent {
     id: String,
     status: AssetStatus,
     format_id: Option<String>,
+    reserved_capacity: Option<u64>,
+    references: Vec<PointerReference>,
     mapping: Option<AssetMapping>,
     verified: Option<bool>,
 }
 
 /// Generate a complete, 100% byte-accounted `formatkit.asset-map.v1` map for `rom`.
 ///
-/// When `merge_from` is supplied, curated `mapped` and `opaque` entries from the
-/// existing map take highest precedence over auto-detected extents. Uncovered gaps
-/// are emitted as `unknown` entries so `sum(entry.size) == rom.len()`.
+/// When `merge_from` is supplied, curated `mapped` and `opaque` entries,
+/// `free_space`, `shared`, `reserved_capacity`, and `references` from the
+/// existing map are preserved. Uncovered gaps are emitted as `unknown` entries
+/// so `sum(entry.size) == rom.len()`.
 pub fn generate_asset_map(
     rom: &[u8],
     opts: &GenerateOptions,
     merge_from: Option<&AssetMap>,
 ) -> AssetMap {
     let mut candidates: Vec<CandidateExtent> = Vec::new();
+    let mut free_space: Vec<FreeSpaceRegion> = merge_from
+        .map(|prev| prev.free_space.clone())
+        .unwrap_or_default();
+    let shared = merge_from.and_then(|prev| prev.shared.clone());
 
     // 0. Curated entries from --merge (highest priority: 250)
     if let Some(prev) = merge_from {
@@ -303,6 +384,8 @@ pub fn generate_asset_map(
                             id: e.id.clone(),
                             status: e.status,
                             format_id: e.format_id.clone(),
+                            reserved_capacity: e.reserved_capacity,
+                            references: e.references.clone(),
                             mapping: e.mapping.clone(),
                             verified: e.verified,
                         });
@@ -321,14 +404,31 @@ pub fn generate_asset_map(
             id: "rom_header".to_string(),
             status: AssetStatus::Identified,
             format_id: Some("gba.rom-header".to_string()),
+            reserved_capacity: None,
+            references: Vec::new(),
             mapping: None,
             verified: Some(true),
         });
     }
 
-    // 2. Trailing ROM padding
+    // 2. Trailing ROM padding (and auto-populated free_space region when >= 64 bytes)
     if let Some(pad) = detect_rom_padding(rom, 64) {
         if pad.padding_bytes > 0 && pad.payload_size < rom.len() {
+            if pad.padding_bytes >= 64 {
+                let pad_off = pad.payload_size as u64;
+                let pad_sz = pad.padding_bytes as u64;
+                if !free_space
+                    .iter()
+                    .any(|r| r.offset == pad_off && r.size == pad_sz)
+                {
+                    free_space.push(FreeSpaceRegion {
+                        offset: pad_off,
+                        size: pad_sz,
+                        bank: None,
+                        note: Some("trailing ROM padding".to_string()),
+                    });
+                }
+            }
             candidates.push(CandidateExtent {
                 priority: 95,
                 offset: pad.payload_size,
@@ -336,10 +436,13 @@ pub fn generate_asset_map(
                 id: format!("trailing_padding_{:08x}", pad.payload_size),
                 status: AssetStatus::Opaque,
                 format_id: None,
+                reserved_capacity: None,
+                references: Vec::new(),
                 mapping: Some(AssetMapping {
                     kind: MappingKind::Opaque,
                     params: None,
                     paired_with: None,
+                    relations: BTreeMap::new(),
                     inner_format: None,
                     opaque_class: Some(OpaqueClass::Padding),
                     evidence: Some(format!("uniform trailing ROM padding ({:?})", pad.kind)),
@@ -364,6 +467,8 @@ pub fn generate_asset_map(
                 id: format!("{prefix}_{:08x}", arch.rom_offset),
                 status: AssetStatus::Identified,
                 format_id: Some(fmt_id.to_string()),
+                reserved_capacity: None,
+                references: Vec::new(),
                 mapping: None,
                 verified: Some(true),
             });
@@ -380,6 +485,8 @@ pub fn generate_asset_map(
                 id: format!("multiboot_{:08x}", mb.offset),
                 status: AssetStatus::Identified,
                 format_id: Some("rom.multiboot".to_string()),
+                reserved_capacity: None,
+                references: Vec::new(),
                 mapping: None,
                 verified: Some(true),
             });
@@ -396,6 +503,8 @@ pub fn generate_asset_map(
                 id: format!("mobiclip_v1_{:08x}", v1.offset),
                 status: AssetStatus::Identified,
                 format_id: Some("video.mobiclip-v1".to_string()),
+                reserved_capacity: None,
+                references: Vec::new(),
                 mapping: None,
                 verified: Some(true),
             });
@@ -412,6 +521,8 @@ pub fn generate_asset_map(
                     id: format!("mobiclip_v2_{:08x}", v2.offset),
                     status: AssetStatus::Identified,
                     format_id: Some("video.mobiclip-v2".to_string()),
+                    reserved_capacity: None,
+                    references: Vec::new(),
                     mapping: None,
                     verified: Some(true),
                 });
@@ -468,11 +579,13 @@ pub fn generate_asset_map(
                 offset: Some(cursor as u64),
                 lba: None,
                 size: (start - cursor) as u64,
+                reserved_capacity: None,
                 sha256: Some(sha256_hex(gap_slice)),
                 status: AssetStatus::Unknown,
                 format_id: None,
                 entropy: Some(shannon_entropy(gap_slice)),
                 code_refs: Vec::new(),
+                references: Vec::new(),
                 mapping: None,
                 verified: None,
             });
@@ -486,11 +599,13 @@ pub fn generate_asset_map(
             offset: Some(start as u64),
             lba: None,
             size: (end - start) as u64,
+            reserved_capacity: cand.reserved_capacity,
             sha256: Some(sha256_hex(slice)),
             status: cand.status,
             format_id: cand.format_id,
             entropy: Some(shannon_entropy(slice)),
             code_refs: Vec::new(),
+            references: cand.references,
             mapping: cand.mapping,
             verified: cand.verified,
         });
@@ -506,17 +621,40 @@ pub fn generate_asset_map(
             offset: Some(cursor as u64),
             lba: None,
             size: (rom.len() - cursor) as u64,
+            reserved_capacity: None,
             sha256: Some(sha256_hex(gap_slice)),
             status: AssetStatus::Unknown,
             format_id: None,
             entropy: Some(shannon_entropy(gap_slice)),
             code_refs: Vec::new(),
+            references: Vec::new(),
             mapping: None,
             verified: None,
         });
     }
 
-    // Attach code_refs when requested
+    // Preserve curated reserved_capacity and references on re-detected entries across --merge
+    if let Some(prev) = merge_from {
+        let prev_by_span: HashMap<(u64, u64), &AssetEntry> = prev
+            .entries
+            .iter()
+            .filter_map(|e| e.offset.map(|off| ((off, e.size), e)))
+            .collect();
+        for entry in &mut entries {
+            if let Some(off) = entry.offset {
+                if let Some(prev_entry) = prev_by_span.get(&(off, entry.size)) {
+                    if entry.reserved_capacity.is_none() {
+                        entry.reserved_capacity = prev_entry.reserved_capacity;
+                    }
+                    if entry.references.is_empty() && !prev_entry.references.is_empty() {
+                        entry.references = prev_entry.references.clone();
+                    }
+                }
+            }
+        }
+    }
+
+    // Attach code_refs and structured GBA ROM pointer references when requested
     if opts.with_code_refs && !ptr_refs.is_empty() {
         for entry in &mut entries {
             if let Some(off) = entry.offset {
@@ -526,6 +664,21 @@ pub fn generate_asset_map(
                         .take(MAX_CODE_REFS_PER_ENTRY)
                         .map(|addr| format!("0x{addr:08x}"))
                         .collect();
+                    for &addr in refs.iter().take(MAX_CODE_REFS_PER_ENTRY) {
+                        let at = u64::from(addr.saturating_sub(ROM_BUS_BASE));
+                        if !entry.references.iter().any(|r| r.at == at) {
+                            entry.references.push(PointerReference {
+                                at,
+                                width: 4,
+                                endian: Endian::Le,
+                                form: "gba_rom_ptr".to_string(),
+                                shift: None,
+                                add: Some(i64::from(ROM_BUS_BASE)),
+                                bank: None,
+                                note: None,
+                            });
+                        }
+                    }
                 }
             }
         }
@@ -545,6 +698,8 @@ pub fn generate_asset_map(
             total_bytes: Some(rom.len() as u64),
             file_count: Some(entries.len() as u64),
         },
+        free_space,
+        shared,
         entries,
     }
 }
@@ -597,6 +752,8 @@ fn collect_audio_candidates(rom: &[u8], out: &mut Vec<CandidateExtent>) {
                     id: format!("m4a_song_table_{:08x}", scan.song_table_offset),
                     status: AssetStatus::Identified,
                     format_id: Some("audio.m4a-song-table".to_string()),
+                    reserved_capacity: None,
+                    references: Vec::new(),
                     mapping: None,
                     verified: Some(true),
                 });
@@ -613,6 +770,8 @@ fn collect_audio_candidates(rom: &[u8], out: &mut Vec<CandidateExtent>) {
                                 id: format!("m4a_sample_{off:08x}"),
                                 status: AssetStatus::Identified,
                                 format_id: Some("audio.m4a-wavedata".to_string()),
+                                reserved_capacity: None,
+                                references: Vec::new(),
                                 mapping: None,
                                 verified: Some(true),
                             });
@@ -771,6 +930,8 @@ fn push_audio_sample(
             id: format!("{prefix}_sample_{offset:08x}"),
             status: AssetStatus::Identified,
             format_id: Some(format_id.to_string()),
+            reserved_capacity: None,
+            references: Vec::new(),
             mapping: None,
             verified: Some(true),
         });
@@ -877,6 +1038,8 @@ fn probe_bios_stream_at(rom: &[u8], off: usize) -> Option<CandidateExtent> {
                     id: format!("lz77_{off:08x}"),
                     status: AssetStatus::Identified,
                     format_id: Some("compress.bios-lz77".to_string()),
+                    reserved_capacity: None,
+                    references: Vec::new(),
                     mapping: None,
                     verified: Some(true),
                 });
@@ -895,6 +1058,8 @@ fn probe_bios_stream_at(rom: &[u8], off: usize) -> Option<CandidateExtent> {
                     id: format!("rle_{off:08x}"),
                     status: AssetStatus::Identified,
                     format_id: Some("compress.bios-rle".to_string()),
+                    reserved_capacity: None,
+                    references: Vec::new(),
                     mapping: None,
                     verified: Some(true),
                 });
@@ -913,6 +1078,8 @@ fn probe_bios_stream_at(rom: &[u8], off: usize) -> Option<CandidateExtent> {
                     id: format!("huffman_{off:08x}"),
                     status: AssetStatus::Identified,
                     format_id: Some("compress.bios-huffman".to_string()),
+                    reserved_capacity: None,
+                    references: Vec::new(),
                     mapping: None,
                     verified: Some(true),
                 });
@@ -933,6 +1100,8 @@ fn probe_palette_at(rom: &[u8], off: usize) -> Option<CandidateExtent> {
             id: format!("pal256_{off:08x}"),
             status: AssetStatus::Identified,
             format_id: Some("gfx.gba-palette".to_string()),
+            reserved_capacity: None,
+            references: Vec::new(),
             mapping: None,
             verified: Some(true),
         });
@@ -945,6 +1114,8 @@ fn probe_palette_at(rom: &[u8], off: usize) -> Option<CandidateExtent> {
             id: format!("pal16_{off:08x}"),
             status: AssetStatus::Identified,
             format_id: Some("gfx.gba-palette".to_string()),
+            reserved_capacity: None,
+            references: Vec::new(),
             mapping: None,
             verified: Some(true),
         });
@@ -1004,6 +1175,19 @@ pub fn verify_asset_map(rom: &[u8], map: &AssetMap) -> VerifyReport {
         if expected_total != total_bytes {
             errors.push(format!(
                 "media.total_bytes mismatch: map has {expected_total}, ROM has {total_bytes}"
+            ));
+        }
+    }
+
+    for (idx, region) in map.free_space.iter().enumerate() {
+        if region
+            .offset
+            .checked_add(region.size)
+            .is_none_or(|end| end > total_bytes)
+        {
+            errors.push(format!(
+                "free_space[{idx}] range 0x{:X}..+{} exceeds ROM length {total_bytes}",
+                region.offset, region.size
             ));
         }
     }
@@ -1071,6 +1255,24 @@ pub fn verify_asset_map(rom: &[u8], map: &AssetMap) -> VerifyReport {
                     entry.id
                 ));
                 continue;
+            }
+        }
+
+        for (idx, pref) in entry.references.iter().enumerate() {
+            if pref.width == 0 {
+                errors.push(format!(
+                    "entry {:?} references[{idx}] has invalid width 0",
+                    entry.id
+                ));
+            } else if pref
+                .at
+                .checked_add(u64::from(pref.width))
+                .is_none_or(|end| end > total_bytes)
+            {
+                errors.push(format!(
+                    "entry {:?} references[{idx}] range 0x{:X}..+{} exceeds ROM length {total_bytes}",
+                    entry.id, pref.at, pref.width
+                ));
             }
         }
 
@@ -1160,10 +1362,10 @@ fn test_decode_entry(
                 } else {
                     decode_tile_8bpp(&slice[..64]).map_err(|e| e.to_string())?;
                 }
-                if let Some(pal_id) = &mapping.paired_with {
+                if let Some(pal_id) = resolve_palette_id(mapping) {
                     let pal_entry = entry_by_id
-                        .get(pal_id.as_str())
-                        .ok_or_else(|| format!("paired_with palette {pal_id:?} not found in map"))?;
+                        .get(pal_id)
+                        .ok_or_else(|| format!("paired palette {pal_id:?} not found in map"))?;
                     let pal_slice = entry_slice(rom, pal_entry)?;
                     decode_palette(pal_slice).map_err(|e| format!("paired palette {pal_id:?}: {e}"))?;
                 }
@@ -1236,6 +1438,14 @@ fn entry_slice<'a>(rom: &'a [u8], entry: &AssetEntry) -> Result<&'a [u8], String
         .filter(|&e| e <= rom.len())
         .ok_or_else(|| format!("entry {:?} out of bounds", entry.id))?;
     Ok(&rom[off..end])
+}
+
+fn resolve_palette_id(mapping: &AssetMapping) -> Option<&str> {
+    mapping
+        .relations
+        .get("palette")
+        .and_then(StringOrVec::first)
+        .or_else(|| mapping.paired_with.as_ref().and_then(StringOrVec::first))
 }
 
 fn param_u64(mapping: &AssetMapping, key: &str) -> Option<u64> {
@@ -1505,7 +1715,7 @@ pub fn export_assets_with_map(
                 files_written += 1;
             }
         }
-        // 2. Mapped raw-image (4bpp/8bpp tiles with optional paired_with palette)
+        // 2. Mapped raw-image (4bpp/8bpp tiles with optional relations["palette"] or paired_with palette)
         else if let Some(mapping) = entry
             .mapping
             .as_ref()
@@ -1513,10 +1723,10 @@ pub fn export_assets_with_map(
         {
             let bpp = param_u64(mapping, "bpp").unwrap_or(4);
             let cols = param_u64(mapping, "tiles_per_row").unwrap_or(16).max(1) as usize;
-            if let Some(pal_id) = &mapping.paired_with {
+            if let Some(pal_id) = resolve_palette_id(mapping) {
                 let pal_entry = entry_by_id
-                    .get(pal_id.as_str())
-                    .ok_or_else(|| format!("paired_with palette {pal_id:?} not found"))?;
+                    .get(pal_id)
+                    .ok_or_else(|| format!("paired palette {pal_id:?} not found"))?;
                 let pal_slice = entry_slice(rom, pal_entry)?;
                 let palette =
                     decode_palette(pal_slice).map_err(|e| format!("decode palette {pal_id:?}: {e}"))?;
@@ -1778,13 +1988,39 @@ mod tests {
             .any(|e| e.status == AssetStatus::Opaque
                 && e.mapping.as_ref().and_then(|m| m.opaque_class) == Some(OpaqueClass::Padding)));
 
-        // Code refs attached to palette at 0x200
+        // Code refs and structured pointer references attached to palette at 0x200
         let pal = map
             .entries
             .iter()
             .find(|e| e.offset == Some(0x200))
             .expect("palette at 0x200");
         assert!(pal.code_refs.contains(&"0x08000100".to_string()));
+        assert_eq!(pal.references.len(), 1);
+        assert_eq!(
+            pal.references[0],
+            PointerReference {
+                at: 0x100,
+                width: 4,
+                endian: Endian::Le,
+                form: "gba_rom_ptr".to_string(),
+                shift: None,
+                add: Some(i64::from(ROM_BUS_BASE)),
+                bank: None,
+                note: None,
+            }
+        );
+
+        // Trailing ROM padding auto-populated in free_space
+        assert_eq!(map.free_space.len(), 1);
+        assert_eq!(
+            map.free_space[0],
+            FreeSpaceRegion {
+                offset: 0xC00,
+                size: 0x400,
+                bank: None,
+                note: Some("trailing ROM padding".to_string()),
+            }
+        );
 
         // Verify passes
         let vr = verify_asset_map(&rom, &map);
@@ -1803,15 +2039,18 @@ mod tests {
             offset: Some(0x700),
             lba: None,
             size: 32,
+            reserved_capacity: Some(64),
             sha256: Some(sha256_hex(&rom[0x700..0x720])),
             status: AssetStatus::Mapped,
             format_id: None,
             entropy: None,
             code_refs: Vec::new(),
+            references: Vec::new(),
             mapping: Some(AssetMapping {
                 kind: MappingKind::RawImage,
                 params: Some(params),
-                paired_with: Some(pal.id.clone()),
+                paired_with: Some(StringOrVec::One(pal.id.clone())),
+                relations: BTreeMap::new(),
                 inner_format: None,
                 opaque_class: None,
                 evidence: Some("manual unit test tile".to_string()),
@@ -1824,7 +2063,12 @@ mod tests {
             &GenerateOptions { with_code_refs: false },
             Some(&curated),
         );
-        assert!(merged.entries.iter().any(|e| e.id == "hero_tile" && e.status == AssetStatus::Mapped));
+        let merged_hero = merged
+            .entries
+            .iter()
+            .find(|e| e.id == "hero_tile" && e.status == AssetStatus::Mapped)
+            .expect("hero_tile preserved across merge");
+        assert_eq!(merged_hero.reserved_capacity, Some(64));
         let merged_vr = verify_asset_map(&rom, &merged);
         assert!(merged_vr.valid, "merged verify errors: {:?}", merged_vr.errors);
         assert_eq!(merged_vr.mapped_bytes, 32);
@@ -1853,5 +2097,255 @@ mod tests {
         // With --force succeeds
         export_assets_with_map(&rom, &merged, &out_dir, true).expect("export with force");
         let _ = fs::remove_dir_all(&out_dir);
+    }
+
+    #[test]
+    fn free_space_shared_and_relocation_preserved_across_merge() {
+        let rom = make_synthetic_rom();
+        let mut map = generate_asset_map(&rom, &GenerateOptions { with_code_refs: true }, None);
+
+        // Curate free_space, shared resources, and entry relocation metadata
+        map.free_space.push(FreeSpaceRegion {
+            offset: 0x800,
+            size: 0x100,
+            bank: Some(0),
+            note: Some("curated scratch slack".to_string()),
+        });
+        let mut shared = serde_json::Map::new();
+        shared.insert(
+            "charmaps".to_string(),
+            serde_json::json!({ "default": { "0x00": " " } }),
+        );
+        shared.insert(
+            "palettes".to_string(),
+            serde_json::json!({ "ui": "pal16_00000200" }),
+        );
+        map.shared = Some(shared.clone());
+
+        // Curate reserved_capacity and a custom PointerReference on the identified LZ77 entry
+        let lz_entry = map
+            .entries
+            .iter_mut()
+            .find(|e| e.offset == Some(0x300))
+            .expect("lz77 at 0x300");
+        lz_entry.reserved_capacity = Some(512);
+        lz_entry.references.push(PointerReference {
+            at: 0x110,
+            width: 4,
+            endian: Endian::Le,
+            form: "gba_rom_ptr".to_string(),
+            shift: Some(0),
+            add: Some(i64::from(ROM_BUS_BASE)),
+            bank: Some(0),
+            note: Some("curated table pointer".to_string()),
+        });
+
+        let merged = generate_asset_map(
+            &rom,
+            &GenerateOptions { with_code_refs: true },
+            Some(&map),
+        );
+
+        // Curated free_space preserved without duplicating trailing padding
+        assert_eq!(merged.free_space.len(), 2);
+        assert!(merged
+            .free_space
+            .iter()
+            .any(|r| r.offset == 0x800 && r.size == 0x100 && r.bank == Some(0)));
+        assert_eq!(
+            merged
+                .free_space
+                .iter()
+                .filter(|r| r.offset == 0xC00 && r.size == 0x400)
+                .count(),
+            1
+        );
+        assert_eq!(merged.shared, Some(shared));
+
+        // Curated reserved_capacity and references preserved on re-detected LZ77 entry
+        let merged_lz = merged
+            .entries
+            .iter()
+            .find(|e| e.offset == Some(0x300))
+            .expect("merged lz77");
+        assert_eq!(merged_lz.reserved_capacity, Some(512));
+        assert!(merged_lz.references.iter().any(|r| r.at == 0x104));
+        assert!(merged_lz
+            .references
+            .iter()
+            .any(|r| r.at == 0x110 && r.note.as_deref() == Some("curated table pointer")));
+
+        // JSON roundtrip preserves all v1.1 fields
+        let json = serde_json::to_string_pretty(&merged).expect("serialize");
+        let parsed: AssetMap = serde_json::from_str(&json).expect("deserialize");
+        assert_eq!(parsed, merged);
+        let vr = verify_asset_map(&rom, &parsed);
+        assert!(vr.valid, "verify errors: {:?}", vr.errors);
+    }
+
+    #[test]
+    fn multi_companion_relations_and_paired_with_resolution() {
+        let one = StringOrVec::One("pal_a".to_string());
+        assert_eq!(one.first(), Some("pal_a"));
+        assert_eq!(one.as_slice_iter().collect::<Vec<_>>(), vec!["pal_a"]);
+
+        let many = StringOrVec::Many(vec!["pal_a".to_string(), "pal_b".to_string()]);
+        assert_eq!(many.first(), Some("pal_a"));
+        assert_eq!(
+            many.as_slice_iter().collect::<Vec<_>>(),
+            vec!["pal_a", "pal_b"]
+        );
+
+        // JSON untagged roundtrip
+        assert_eq!(serde_json::to_string(&one).unwrap(), "\"pal_a\"");
+        assert_eq!(
+            serde_json::to_string(&many).unwrap(),
+            "[\"pal_a\",\"pal_b\"]"
+        );
+        assert_eq!(
+            serde_json::from_str::<StringOrVec>("\"pal_a\"").unwrap(),
+            one
+        );
+        assert_eq!(
+            serde_json::from_str::<StringOrVec>("[\"pal_a\",\"pal_b\"]").unwrap(),
+            many
+        );
+
+        // Test relations["palette"] precedence over paired_with during verify + export
+        let rom = make_synthetic_rom();
+        let mut map = generate_asset_map(&rom, &GenerateOptions::default(), None);
+        let pal_id = map
+            .entries
+            .iter()
+            .find(|e| e.offset == Some(0x200))
+            .expect("palette")
+            .id
+            .clone();
+
+        let mut relations = BTreeMap::new();
+        relations.insert("palette".to_string(), StringOrVec::One(pal_id.clone()));
+        relations.insert(
+            "tilemap".to_string(),
+            StringOrVec::Many(vec!["tm_a".to_string(), "tm_b".to_string()]),
+        );
+
+        let mut params = serde_json::Map::new();
+        params.insert("bpp".to_string(), serde_json::json!(4));
+        params.insert("tiles_per_row".to_string(), serde_json::json!(1));
+
+        map.entries.push(AssetEntry {
+            id: "rel_tile".to_string(),
+            path: None,
+            offset: Some(0x700),
+            lba: None,
+            size: 32,
+            reserved_capacity: None,
+            sha256: Some(sha256_hex(&rom[0x700..0x720])),
+            status: AssetStatus::Mapped,
+            format_id: None,
+            entropy: None,
+            code_refs: Vec::new(),
+            references: Vec::new(),
+            mapping: Some(AssetMapping {
+                kind: MappingKind::RawImage,
+                params: Some(params.clone()),
+                // Intentionally bogus paired_with to prove relations["palette"] takes priority
+                paired_with: Some(StringOrVec::Many(vec![
+                    "nonexistent_pal".to_string(),
+                    "other_pal".to_string(),
+                ])),
+                relations,
+                inner_format: None,
+                opaque_class: None,
+                evidence: Some("relations precedence test".to_string()),
+            }),
+            verified: None,
+        });
+
+        // Also add a second tile using paired_with: Many([pal_id, ...]) fallback
+        map.entries.push(AssetEntry {
+            id: "paired_many_tile".to_string(),
+            path: None,
+            offset: Some(0x720),
+            lba: None,
+            size: 32,
+            reserved_capacity: None,
+            sha256: Some(sha256_hex(&rom[0x720..0x740])),
+            status: AssetStatus::Mapped,
+            format_id: None,
+            entropy: None,
+            code_refs: Vec::new(),
+            references: Vec::new(),
+            mapping: Some(AssetMapping {
+                kind: MappingKind::RawImage,
+                params: Some(params),
+                paired_with: Some(StringOrVec::Many(vec![
+                    pal_id,
+                    "unused_secondary".to_string(),
+                ])),
+                relations: BTreeMap::new(),
+                inner_format: None,
+                opaque_class: None,
+                evidence: Some("paired_with Many fallback test".to_string()),
+            }),
+            verified: None,
+        });
+
+        let merged = generate_asset_map(&rom, &GenerateOptions::default(), Some(&map));
+        let vr = verify_asset_map(&rom, &merged);
+        assert!(vr.valid, "verify errors: {:?}", vr.errors);
+
+        let out_dir = std::env::temp_dir().join(format!(
+            "gbakit_asset_map_relations_{}",
+            std::process::id()
+        ));
+        let _ = fs::remove_dir_all(&out_dir);
+        let exp = export_assets_with_map(&rom, &merged, &out_dir, false).expect("export");
+        assert!(exp.files_written >= 5);
+        assert!(out_dir.join("rel_tile.png").is_file());
+        assert!(out_dir.join("paired_many_tile.png").is_file());
+        let _ = fs::remove_dir_all(&out_dir);
+    }
+
+    #[test]
+    fn verify_rejects_out_of_bounds_free_space_and_references() {
+        let rom = make_synthetic_rom();
+        let mut map = generate_asset_map(&rom, &GenerateOptions::default(), None);
+
+        // Add out-of-bounds free_space region
+        map.free_space.push(FreeSpaceRegion {
+            offset: rom.len() as u64 - 16,
+            size: 32,
+            bank: None,
+            note: Some("oob".to_string()),
+        });
+
+        // Add out-of-bounds and zero-width references on the first entry
+        map.entries[0].references.push(PointerReference {
+            at: rom.len() as u64 - 2,
+            width: 4,
+            endian: Endian::Le,
+            form: "gba_rom_ptr".to_string(),
+            shift: None,
+            add: Some(i64::from(ROM_BUS_BASE)),
+            bank: None,
+            note: None,
+        });
+        map.entries[0].references.push(PointerReference {
+            at: 0x100,
+            width: 0,
+            endian: Endian::Be,
+            form: "invalid_width".to_string(),
+            shift: None,
+            add: None,
+            bank: None,
+            note: None,
+        });
+
+        let vr = verify_asset_map(&rom, &map);
+        assert!(!vr.valid);
+        assert!(vr.errors.iter().any(|e| e.contains("free_space")));
+        assert!(vr.errors.iter().any(|e| e.contains("references[0]") && e.contains("exceeds ROM length")));
+        assert!(vr.errors.iter().any(|e| e.contains("references[1]") && e.contains("invalid width 0")));
     }
 }
