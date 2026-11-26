@@ -583,14 +583,14 @@ fn test_multi_engine_detection() {
     rom_gax[100..120].copy_from_slice(b"GAX 3.05 SoundEngine");
     assert_eq!(
         detect_sound_engine(&rom_gax),
-        DetectedSoundEngine::Gax(gax::version::GaxVersion::V3)
+        DetectedSoundEngine::Gax(Some(gax::version::GaxVersion::V3))
     );
 
     let mut rom_musyx = vec![0u8; 1024];
     rom_musyx[48..60].copy_from_slice(b"MUSX project");
     assert_eq!(
         detect_sound_engine(&rom_musyx),
-        DetectedSoundEngine::Musyx(musyx::version::MusyXVersion::V2_0)
+        DetectedSoundEngine::Musyx(Some(musyx::version::MusyXVersion::V2_0))
     );
 
     let mut rom_false_musx = vec![0u8; 1024];
@@ -599,6 +599,7 @@ fn test_multi_engine_detection() {
 
     let rom_custom = vec![0u8; 1024];
     assert_eq!(detect_sound_engine(&rom_custom), DetectedSoundEngine::Custom);
+    assert!(detect_sound_engines(&rom_custom).is_empty());
 
     let mut rom_krawall = vec![0u8; 1024];
     rom_krawall[64..76].copy_from_slice(&[
@@ -608,6 +609,19 @@ fn test_multi_engine_detection() {
     assert_eq!(
         detect_sound_engine(&rom_krawall),
         DetectedSoundEngine::Krawall(Some(krawall::KrawallVersion::Standard))
+    );
+
+    // Dual-engine ROM (GAX + MusyX) must report both via detect_sound_engines()
+    let mut rom_dual = vec![0u8; 1024];
+    rom_dual[100..120].copy_from_slice(b"GAX 3.05 SoundEngine");
+    rom_dual[240..252].copy_from_slice(b"MUSX project");
+    let engines = detect_sound_engines(&rom_dual);
+    assert_eq!(
+        engines,
+        vec![
+            DetectedSoundEngine::Gax(Some(gax::version::GaxVersion::V3)),
+            DetectedSoundEngine::Musyx(Some(musyx::version::MusyXVersion::V2_0)),
+        ]
     );
 }
 

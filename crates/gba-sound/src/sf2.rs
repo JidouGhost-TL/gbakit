@@ -609,6 +609,18 @@ pub fn compile_rom_soundfont(rom: &[u8], title_override: Option<&str>) -> Result
         DetectedSoundEngine::CosmigoSonix(_) => {
             crate::sonix_pool::compile_cosmigo_sonix_soundfont(rom, title_override)
         }
+        DetectedSoundEngine::Natsume(_) => {
+            crate::natsume_pool::compile_natsume_soundfont(rom, title_override)
+        }
+        DetectedSoundEngine::Delaney => {
+            crate::delaney_pool::compile_delaney_soundfont(rom, title_override)
+        }
+        DetectedSoundEngine::FullFat(_) => {
+            crate::fullfat_pool::compile_fullfat_soundfont(rom, title_override)
+        }
+        DetectedSoundEngine::HudsonJp => {
+            crate::hudson_jp_pool::compile_hudson_jp_soundfont(rom, title_override)
+        }
         DetectedSoundEngine::Custom => {
             // Check if GAX or MusyX sample tables exist in ROM as fallback
             let gax = crate::gax_pool::scan_gax_soundpool(rom);

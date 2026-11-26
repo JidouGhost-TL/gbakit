@@ -30,19 +30,23 @@ use gbakit::sound::m4a::{
     rom_ptr_to_offset,
 };
 use gbakit::sound::{
-    compile_cosmigo_sonix_soundfont, compile_ead_sma_soundfont, compile_engine_sw_soundfont,
-    compile_gax_soundfont, compile_konami_soundfont, compile_krawall_soundfont,
-    compile_logik_soundfont, compile_musyx_soundfont, compile_paragon5_soundfont,
-    compile_rare_soundfont, compile_rd1_soundfont, compile_southpaw_soundfont,
-    detect_sound_engine, export_ead_sma_samples_wav16, export_engine_sw_samples_wav16,
-    export_gax_samples_wav16, export_konami_samples_wav16, export_krawall_samples_wav16,
-    export_logik_samples_wav16, export_musyx_samples_wav16, export_paragon5_samples_wav16,
+    compile_cosmigo_sonix_soundfont, compile_delaney_soundfont, compile_ead_sma_soundfont,
+    compile_engine_sw_soundfont, compile_fullfat_soundfont, compile_gax_soundfont,
+    compile_hudson_jp_soundfont, compile_konami_soundfont, compile_krawall_soundfont,
+    compile_logik_soundfont, compile_musyx_soundfont, compile_natsume_soundfont,
+    compile_paragon5_soundfont, compile_rare_soundfont, compile_rd1_soundfont,
+    compile_southpaw_soundfont, detect_sound_engine, detect_sound_engines,
+    export_delaney_samples_wav16, export_ead_sma_samples_wav16, export_engine_sw_samples_wav16,
+    export_fullfat_samples_wav16, export_gax_samples_wav16, export_hudson_jp_samples_wav16,
+    export_konami_samples_wav16, export_krawall_samples_wav16, export_logik_samples_wav16,
+    export_musyx_samples_wav16, export_natsume_samples_wav16, export_paragon5_samples_wav16,
     export_rare_samples_wav16, export_rd1_samples_wav16, export_sonix_samples_wav16,
-    export_southpaw_samples_wav16, extract_pcm_i8, scan_ead_sma_soundpool,
-    scan_engine_sw_soundpool, scan_gax_soundpool, scan_konami_soundpool, scan_krawall_soundpool,
-    scan_logik_soundpool, scan_musyx_soundpool, scan_paragon5_soundpool, scan_rare_soundpool,
-    scan_rd1_midis, scan_rd1_soundpool, scan_sonix_soundpool, scan_southpaw_soundpool,
-    DetectedSoundEngine, KonamiEngineVariant, LogikEngineVariant,
+    export_southpaw_samples_wav16, extract_pcm_i8, scan_delaney_engine, scan_ead_sma_soundpool,
+    scan_engine_sw_soundpool, scan_fullfat_engine, scan_gax_soundpool, scan_hudson_jp_engine,
+    scan_konami_soundpool, scan_krawall_soundpool, scan_logik_soundpool, scan_musyx_soundpool,
+    scan_natsume_engine, scan_paragon5_soundpool, scan_rare_soundpool, scan_rd1_midis,
+    scan_rd1_soundpool, scan_sonix_soundpool, scan_southpaw_soundpool, DetectedSoundEngine,
+    FullFatRevision, HudsonJpLayout, KonamiEngineVariant, LogikEngineVariant, NatsumeRevision,
 };
 use gbakit::sound::sf2::{compile_rom_soundfont, validate_soundfont};
 
@@ -711,9 +715,62 @@ fn sonix_version_labels(ver: gbakit::sound::cosmigo_sonix::SonixVersion) -> (&'s
     }
 }
 
+fn sound_engine_id(engine: &DetectedSoundEngine) -> &'static str {
+    match engine {
+        DetectedSoundEngine::M4a(_) => "m4a",
+        DetectedSoundEngine::Gax(_) => "shinen_gax",
+        DetectedSoundEngine::Musyx(_) => "factor5_musyx",
+        DetectedSoundEngine::Krawall(_) => "krawall",
+        DetectedSoundEngine::Rare(_) => "rareware",
+        DetectedSoundEngine::Konami(_, _) => "konami_kce",
+        DetectedSoundEngine::LogikState(_) => "logik_state",
+        DetectedSoundEngine::Paragon5(_) => "paragon5",
+        DetectedSoundEngine::Rd1(_) => "nintendo_rd1",
+        DetectedSoundEngine::Southpaw(_) => "southpaw",
+        DetectedSoundEngine::EadSma(_) => "ead_sma",
+        DetectedSoundEngine::EngineSw(_) => "engine_sw",
+        DetectedSoundEngine::CosmigoSonix(_) => "cosmigo_sonix",
+        DetectedSoundEngine::Natsume(_) => "natsume",
+        DetectedSoundEngine::Delaney => "delaney",
+        DetectedSoundEngine::FullFat(_) => "fullfat",
+        DetectedSoundEngine::HudsonJp => "hudson_jp",
+        DetectedSoundEngine::Custom => "custom",
+    }
+}
+
+#[cfg(test)]
 fn cmd_audio_scan(rom_path: &Path, as_json: bool) -> Result<(), String> {
+    cmd_audio_scan_with_options(rom_path, as_json, false)
+}
+
+fn cmd_audio_scan_with_options(
+    rom_path: &Path,
+    as_json: bool,
+    show_all: bool,
+) -> Result<(), String> {
     let bytes = fs::read(rom_path).map_err(|e| format!("read {}: {e}", rom_path.display()))?;
-    let detected = detect_sound_engine(&bytes);
+    let all_engines = detect_sound_engines(&bytes);
+    let all_engine_ids: Vec<&'static str> = all_engines.iter().map(sound_engine_id).collect();
+    let detected = all_engines
+        .into_iter()
+        .next()
+        .unwrap_or(DetectedSoundEngine::Custom);
+
+    let emit_json = |mut payload: serde_json::Value| -> Result<(), String> {
+        if let Some(obj) = payload.as_object_mut() {
+            obj.insert("engines".to_string(), serde_json::json!(all_engine_ids));
+        }
+        println!(
+            "{}",
+            serde_json::to_string_pretty(&payload).map_err(|e| e.to_string())?
+        );
+        Ok(())
+    };
+    let print_extra_engines = || {
+        if (show_all || all_engine_ids.len() > 1) && !all_engine_ids.is_empty() {
+            println!("  All Detected Engines:    {}", all_engine_ids.join(", "));
+        }
+    };
 
     match detected {
         DetectedSoundEngine::M4a(scan) => {
@@ -737,7 +794,7 @@ fn cmd_audio_scan(rom_path: &Path, as_json: bool) -> Result<(), String> {
                     "voicegroups": scan.voicegroups.iter().map(|p| format!("0x{:08X}", p)).collect::<Vec<_>>(),
                     "samples": scan.sample_pointers.iter().map(|p| format!("0x{:08X}", p)).collect::<Vec<_>>(),
                 });
-                println!("{}", serde_json::to_string_pretty(&payload).map_err(|e| e.to_string())?);
+                emit_json(payload)?;
             } else {
                 println!("Sound Engine Scan: {}", rom_path.display());
                 println!("  Status:                  Detected (Nintendo MusicPlayer2000)");
@@ -752,14 +809,16 @@ fn cmd_audio_scan(rom_path: &Path, as_json: bool) -> Result<(), String> {
                 println!("  Max Tracks per Song:     {}", scan.max_tracks);
                 println!("  Referenced Voicegroups:  {}", scan.voicegroup_count);
                 println!("  DirectSound Samples:     {}", scan.directsound_sample_count);
+                print_extra_engines();
             }
             Ok(())
         }
-        DetectedSoundEngine::Gax(ver) => {
-            let ver_str = match ver {
-                gbakit::sound::gax::version::GaxVersion::V1 => "GAX 1.x (v1.99d)",
-                gbakit::sound::gax::version::GaxVersion::V2 => "GAX 2.x",
-                gbakit::sound::gax::version::GaxVersion::V3 => "GAX 3.x",
+        DetectedSoundEngine::Gax(ver_opt) => {
+            let ver_str = match ver_opt {
+                Some(gbakit::sound::gax::version::GaxVersion::V1) => "GAX 1.x (v1.99d)",
+                Some(gbakit::sound::gax::version::GaxVersion::V2) => "GAX 2.x",
+                Some(gbakit::sound::gax::version::GaxVersion::V3) => "GAX 3.x",
+                None => "GAX (ARM Mixer Fallback)",
             };
             let samples = scan_gax_soundpool(&bytes);
             if as_json {
@@ -773,7 +832,7 @@ fn cmd_audio_scan(rom_path: &Path, as_json: bool) -> Result<(), String> {
                     "sample_format": "Signed 8-bit PCM (DirectSound DMA)",
                     "supported_rates_hz": [10513, 13380, 18158, 26760, 31538, 42000],
                 });
-                println!("{}", serde_json::to_string_pretty(&payload).map_err(|e| e.to_string())?);
+                emit_json(payload)?;
             } else {
                 println!("Sound Engine Scan: {}", rom_path.display());
                 println!("  Status:                  Detected (Shin'en GAX Sound Engine)");
@@ -782,13 +841,15 @@ fn cmd_audio_scan(rom_path: &Path, as_json: bool) -> Result<(), String> {
                 println!("  Sample Count:            {}", samples.len());
                 println!("  Sample Format:           Signed 8-bit PCM (DirectSound DMA)");
                 println!("  Timer Table Rates:       10.5 kHz - 42.0 kHz (15 hardware presets)");
+                print_extra_engines();
             }
             Ok(())
         }
-        DetectedSoundEngine::Musyx(ver) => {
-            let ver_str = match ver {
-                gbakit::sound::musyx::version::MusyXVersion::V1_0 => "MusyX 1.0",
-                gbakit::sound::musyx::version::MusyXVersion::V2_0 => "MusyX 2.0 (MUSX)",
+        DetectedSoundEngine::Musyx(ver_opt) => {
+            let ver_str = match ver_opt {
+                Some(gbakit::sound::musyx::version::MusyXVersion::V1_0) => "MusyX 1.0",
+                Some(gbakit::sound::musyx::version::MusyXVersion::V2_0) => "MusyX 2.0 (MUSX)",
+                None => "MusyX (ARM Mixer Fallback)",
             };
             let samples = scan_musyx_soundpool(&bytes);
             if as_json {
@@ -801,7 +862,7 @@ fn cmd_audio_scan(rom_path: &Path, as_json: bool) -> Result<(), String> {
                     "rom_path": rom_path.file_name().map(|n| n.to_string_lossy().to_string()).unwrap_or_default(),
                     "sample_formats": ["4-bit ADPCM", "8-bit Signed PCM", "16-bit Signed PCM"],
                 });
-                println!("{}", serde_json::to_string_pretty(&payload).map_err(|e| e.to_string())?);
+                emit_json(payload)?;
             } else {
                 println!("Sound Engine Scan: {}", rom_path.display());
                 println!("  Status:                  Detected (Factor 5 MusyX Sound System)");
@@ -810,6 +871,7 @@ fn cmd_audio_scan(rom_path: &Path, as_json: bool) -> Result<(), String> {
                 println!("  Sample Count:            {}", samples.len());
                 println!("  Sample Formats:          4-bit ADPCM, 8-bit PCM, 16-bit PCM");
                 println!("  Interpolation:           12-bit fixed point linear fractional");
+                print_extra_engines();
             }
             Ok(())
         }
@@ -838,7 +900,7 @@ fn cmd_audio_scan(rom_path: &Path, as_json: bool) -> Result<(), String> {
                     "sample_count": samples.len(),
                     "rom_path": rom_path.file_name().map(|n| n.to_string_lossy().to_string()).unwrap_or_default(),
                 });
-                println!("{}", serde_json::to_string_pretty(&payload).map_err(|e| e.to_string())?);
+                emit_json(payload)?;
             } else {
                 println!("Sound Engine Scan: {}", rom_path.display());
                 println!("  Status:                  Detected (Krawall / ProTracker MOD / S3M)");
@@ -880,7 +942,7 @@ fn cmd_audio_scan(rom_path: &Path, as_json: bool) -> Result<(), String> {
                     "sample_count": samples.len(),
                     "rom_path": rom_path.file_name().map(|n| n.to_string_lossy().to_string()).unwrap_or_default(),
                 });
-                println!("{}", serde_json::to_string_pretty(&payload).map_err(|e| e.to_string())?);
+                emit_json(payload)?;
             } else {
                 println!("Sound Engine Scan: {}", rom_path.display());
                 println!("  Status:                  Detected (Rareware GBA Sound Engine)");
@@ -933,7 +995,7 @@ fn cmd_audio_scan(rom_path: &Path, as_json: bool) -> Result<(), String> {
                     "sample_count": samples.len(),
                     "rom_path": rom_path.file_name().map(|n| n.to_string_lossy().to_string()).unwrap_or_default(),
                 });
-                println!("{}", serde_json::to_string_pretty(&payload).map_err(|e| e.to_string())?);
+                emit_json(payload)?;
             } else {
                 println!("Sound Engine Scan: {}", rom_path.display());
                 println!("  Status:                  Detected ({} Sound Engine)", family_label);
@@ -984,7 +1046,7 @@ fn cmd_audio_scan(rom_path: &Path, as_json: bool) -> Result<(), String> {
                     "sample_count": samples.len(),
                     "rom_path": rom_path.file_name().map(|n| n.to_string_lossy().to_string()).unwrap_or_default(),
                 });
-                println!("{}", serde_json::to_string_pretty(&payload).map_err(|e| e.to_string())?);
+                emit_json(payload)?;
             } else {
                 println!("Sound Engine Scan: {}", rom_path.display());
                 println!("  Status:                  Detected (Logik State GBAModPlay)");
@@ -1017,7 +1079,7 @@ fn cmd_audio_scan(rom_path: &Path, as_json: bool) -> Result<(), String> {
                     "sample_count": samples.len(),
                     "rom_path": rom_path.file_name().map(|n| n.to_string_lossy().to_string()).unwrap_or_default(),
                 });
-                println!("{}", serde_json::to_string_pretty(&payload).map_err(|e| e.to_string())?);
+                emit_json(payload)?;
             } else {
                 println!("Sound Engine Scan: {}", rom_path.display());
                 println!("  Status:                  Detected (Paragon 5 Tracker Engine)");
@@ -1052,7 +1114,7 @@ fn cmd_audio_scan(rom_path: &Path, as_json: bool) -> Result<(), String> {
                     "sample_count": samples.len(),
                     "rom_path": rom_path.file_name().map(|n| n.to_string_lossy().to_string()).unwrap_or_default(),
                 });
-                println!("{}", serde_json::to_string_pretty(&payload).map_err(|e| e.to_string())?);
+                emit_json(payload)?;
             } else {
                 println!("Sound Engine Scan: {}", rom_path.display());
                 println!("  Status:                  Detected (Nintendo R&D1 Kaede MIDI Engine)");
@@ -1098,7 +1160,7 @@ fn cmd_audio_scan(rom_path: &Path, as_json: bool) -> Result<(), String> {
                     "sample_count": samples.len(),
                     "rom_path": rom_path.file_name().map(|n| n.to_string_lossy().to_string()).unwrap_or_default(),
                 });
-                println!("{}", serde_json::to_string_pretty(&payload).map_err(|e| e.to_string())?);
+                emit_json(payload)?;
             } else {
                 println!("Sound Engine Scan: {}", rom_path.display());
                 println!("  Status:                  Detected (Southpaw GBA SFX Engine)");
@@ -1130,7 +1192,7 @@ fn cmd_audio_scan(rom_path: &Path, as_json: bool) -> Result<(), String> {
                     "sample_count": samples.len(),
                     "rom_path": rom_path.file_name().map(|n| n.to_string_lossy().to_string()).unwrap_or_default(),
                 });
-                println!("{}", serde_json::to_string_pretty(&payload).map_err(|e| e.to_string())?);
+                emit_json(payload)?;
             } else {
                 println!("Sound Engine Scan: {}", rom_path.display());
                 println!("  Status:                  Detected (Nintendo EAD/SRD DirectSound Engine)");
@@ -1163,7 +1225,7 @@ fn cmd_audio_scan(rom_path: &Path, as_json: bool) -> Result<(), String> {
                     "sample_count": samples.len(),
                     "rom_path": rom_path.file_name().map(|n| n.to_string_lossy().to_string()).unwrap_or_default(),
                 });
-                println!("{}", serde_json::to_string_pretty(&payload).map_err(|e| e.to_string())?);
+                emit_json(payload)?;
             } else {
                 println!("Sound Engine Scan: {}", rom_path.display());
                 println!("  Status:                  Detected (Engine Software / Bob Koon EIRE v2.0)");
@@ -1190,7 +1252,7 @@ fn cmd_audio_scan(rom_path: &Path, as_json: bool) -> Result<(), String> {
                     "midi_count": midis.len(),
                     "rom_path": rom_path.file_name().map(|n| n.to_string_lossy().to_string()).unwrap_or_default(),
                 });
-                println!("{}", serde_json::to_string_pretty(&payload).map_err(|e| e.to_string())?);
+                emit_json(payload)?;
             } else {
                 println!("Sound Engine Scan: {}", rom_path.display());
                 println!("  Status:                  Detected (Cosmigo Sonix Sound System)");
@@ -1200,6 +1262,136 @@ fn cmd_audio_scan(rom_path: &Path, as_json: bool) -> Result<(), String> {
                 println!("  Sample Format:           Unsigned 8-bit PCM (DirectSound DMA)");
                 println!("  Sample Count:            {}", samples.len());
                 println!("  MIDI Count:              {}", midis.len());
+            }
+            Ok(())
+        }
+        DetectedSoundEngine::Natsume(rev_opt) => {
+            let ver_str = match rev_opt {
+                Some(NatsumeRevision::Rev0) => "Natsume Hybrid PSG+PCM (Rev0)",
+                Some(NatsumeRevision::Rev1) => "Natsume Hybrid PSG+PCM (Rev1)",
+                Some(NatsumeRevision::Rev2) => "Natsume Hybrid PSG+PCM (Rev2)",
+                None => "Natsume Hybrid PSG+PCM",
+            };
+            let summary = scan_natsume_engine(&bytes);
+            let sample_count = summary.as_ref().map_or(0, |s| s.samples.len());
+            let song_count = summary.as_ref().map_or(0, |s| s.songs.len());
+            if as_json {
+                let payload = serde_json::json!({
+                    "detected": true,
+                    "engine": "natsume",
+                    "family": "natsume_hybrid_psg_pcm",
+                    "version": ver_str,
+                    "sample_count": sample_count,
+                    "song_count": song_count,
+                    "rom_path": rom_path.file_name().map(|n| n.to_string_lossy().to_string()).unwrap_or_default(),
+                    "sample_format": "Signed 8-bit PCM (DirectSound A/B + 4x DMG PSG)",
+                });
+                emit_json(payload)?;
+            } else {
+                println!("Sound Engine Scan: {}", rom_path.display());
+                println!("  Status:                  Detected (Natsume Hybrid PSG+PCM)");
+                println!("  Family:                  natsume_hybrid_psg_pcm");
+                println!("  Version:                 {}", ver_str);
+                println!("  Sample Count:            {}", sample_count);
+                println!("  Sequence Count:          {}", song_count);
+                print_extra_engines();
+            }
+            Ok(())
+        }
+        DetectedSoundEngine::Delaney => {
+            let summary = scan_delaney_engine(&bytes);
+            let sample_count = summary.as_ref().map_or(0, |s| s.samples.len());
+            let song_count = summary.as_ref().map_or(0, |s| s.songs.len());
+            let rate_hz = summary.as_ref().map_or(10_512, |s| s.driver.sample_rate_hz);
+            if as_json {
+                let payload = serde_json::json!({
+                    "detected": true,
+                    "engine": "delaney",
+                    "family": "delaney_stereo_directsound",
+                    "version": "Michael Delaney / Allister Brimble Stereo DirectSound + PSG",
+                    "mix_rate_hz": rate_hz,
+                    "sample_count": sample_count,
+                    "song_count": song_count,
+                    "rom_path": rom_path.file_name().map(|n| n.to_string_lossy().to_string()).unwrap_or_default(),
+                    "sample_format": "Signed 8-bit PCM (8ch DirectSound + 4ch DMG PSG)",
+                });
+                emit_json(payload)?;
+            } else {
+                println!("Sound Engine Scan: {}", rom_path.display());
+                println!("  Status:                  Detected (Michael Delaney / Allister Brimble Stereo)");
+                println!("  Family:                  delaney_stereo_directsound");
+                println!("  Mix Rate:                {} Hz", rate_hz);
+                println!("  Sample Count:            {}", sample_count);
+                println!("  Song Count:              {}", song_count);
+                print_extra_engines();
+            }
+            Ok(())
+        }
+        DetectedSoundEngine::FullFat(rev) => {
+            let ver_str = match rev {
+                FullFatRevision::RevA => "Full Fat Mono DirectSound (RevA)",
+                FullFatRevision::RevB => "Full Fat Mono DirectSound (RevB)",
+                FullFatRevision::Unknown => "Full Fat Mono DirectSound",
+            };
+            let summary = scan_fullfat_engine(&bytes);
+            let sample_count = summary.as_ref().map_or(0, |s| s.samples.len());
+            let song_count = summary.as_ref().map_or(0, |s| s.songs.len());
+            let bank_count = summary.as_ref().map_or(0, |s| s.bank_count);
+            if as_json {
+                let payload = serde_json::json!({
+                    "detected": true,
+                    "engine": "fullfat",
+                    "family": "fullfat_mono_directsound",
+                    "version": ver_str,
+                    "bank_count": bank_count,
+                    "sample_count": sample_count,
+                    "song_count": song_count,
+                    "rom_path": rom_path.file_name().map(|n| n.to_string_lossy().to_string()).unwrap_or_default(),
+                    "sample_format": "Signed 8-bit PCM (Mono DirectSound A, 11025 Hz base)",
+                });
+                emit_json(payload)?;
+            } else {
+                println!("Sound Engine Scan: {}", rom_path.display());
+                println!("  Status:                  Detected (Full Fat Mono DirectSound)");
+                println!("  Family:                  fullfat_mono_directsound");
+                println!("  Version:                 {}", ver_str);
+                println!("  Sound Banks:             {}", bank_count);
+                println!("  Sample Count:            {}", sample_count);
+                println!("  Song Count:              {}", song_count);
+                print_extra_engines();
+            }
+            Ok(())
+        }
+        DetectedSoundEngine::HudsonJp => {
+            let summary = scan_hudson_jp_engine(&bytes);
+            let sample_count = summary.as_ref().map_or(0, |s| s.samples.len());
+            let song_count = summary.as_ref().map_or(0, |s| s.songs.len());
+            let layout_str = match summary.as_ref().map(|s| s.layout) {
+                Some(HudsonJpLayout::Chunked7Section) => "7-Section Chunked Archive",
+                Some(HudsonJpLayout::StandaloneBanks) => "Standalone Linked-Chain Banks",
+                None => "Unknown",
+            };
+            if as_json {
+                let payload = serde_json::json!({
+                    "detected": true,
+                    "engine": "hudson_jp",
+                    "family": "hudson_jp_directsound",
+                    "version": format!("Hudson / Red / Rocket JP DirectSound ({layout_str})"),
+                    "layout": layout_str,
+                    "sample_count": sample_count,
+                    "song_count": song_count,
+                    "rom_path": rom_path.file_name().map(|n| n.to_string_lossy().to_string()).unwrap_or_default(),
+                    "sample_format": "Signed 8-bit PCM (DirectSound A/B + 4ch DMG PSG)",
+                });
+                emit_json(payload)?;
+            } else {
+                println!("Sound Engine Scan: {}", rom_path.display());
+                println!("  Status:                  Detected (Hudson / Red / Rocket Games JP DirectSound)");
+                println!("  Family:                  hudson_jp_directsound");
+                println!("  Storage Layout:          {}", layout_str);
+                println!("  Sample Count:            {}", sample_count);
+                println!("  Sequence Count:          {}", song_count);
+                print_extra_engines();
             }
             Ok(())
         }
@@ -1326,11 +1518,12 @@ fn cmd_audio_export(
             println!("  WAV Samples Exported: {}", exported_samples);
             Ok(())
         }
-        DetectedSoundEngine::Gax(ver) => {
-            let ver_str = match ver {
-                gbakit::sound::gax::version::GaxVersion::V1 => "GAX 1.x (v1.99d)",
-                gbakit::sound::gax::version::GaxVersion::V2 => "GAX 2.x",
-                gbakit::sound::gax::version::GaxVersion::V3 => "GAX 3.x",
+        DetectedSoundEngine::Gax(ver_opt) => {
+            let ver_str = match ver_opt {
+                Some(gbakit::sound::gax::version::GaxVersion::V1) => "GAX 1.x (v1.99d)",
+                Some(gbakit::sound::gax::version::GaxVersion::V2) => "GAX 2.x",
+                Some(gbakit::sound::gax::version::GaxVersion::V3) => "GAX 3.x",
+                None => "GAX (ARM Mixer Fallback)",
             };
             let wavs = export_gax_samples_wav16(&bytes)
                 .map_err(|e| format!("export GAX samples: {e}"))?;
@@ -1354,10 +1547,11 @@ fn cmd_audio_export(
             println!("  SoundFont Generated:  soundfont.sf2");
             Ok(())
         }
-        DetectedSoundEngine::Musyx(ver) => {
-            let ver_str = match ver {
-                gbakit::sound::musyx::version::MusyXVersion::V1_0 => "MusyX 1.0",
-                gbakit::sound::musyx::version::MusyXVersion::V2_0 => "MusyX 2.0 (MUSX)",
+        DetectedSoundEngine::Musyx(ver_opt) => {
+            let ver_str = match ver_opt {
+                Some(gbakit::sound::musyx::version::MusyXVersion::V1_0) => "MusyX 1.0",
+                Some(gbakit::sound::musyx::version::MusyXVersion::V2_0) => "MusyX 2.0 (MUSX)",
+                None => "MusyX (ARM Mixer Fallback)",
             };
             let wavs = export_musyx_samples_wav16(&bytes)
                 .map_err(|e| format!("export MusyX samples: {e}"))?;
@@ -1697,6 +1891,102 @@ fn cmd_audio_export(
             println!("  Output Directory:     {}", target_dir.display());
             println!("  Engine Version:       {}", ver_str);
             println!("  MIDI Files Exported:  {}", exported_midis);
+            println!("  WAV Samples Exported: {}", wavs.len());
+            if sf2_generated {
+                println!("  SoundFont Generated:  soundfont.sf2");
+            }
+            Ok(())
+        }
+        DetectedSoundEngine::Natsume(_) => {
+            let wavs = export_natsume_samples_wav16(&bytes)
+                .map_err(|e| format!("export Natsume samples: {e}"))?;
+            for (_idx, filename, wav_bytes) in &wavs {
+                let p_sub = samples_dir.join(filename);
+                let p_root = target_dir.join(filename);
+                fs::write(&p_sub, wav_bytes).map_err(|e| format!("write {}: {e}", p_sub.display()))?;
+                let _ = fs::write(&p_root, wav_bytes);
+            }
+            let mut sf2_generated = false;
+            if let Ok(sf2) = compile_natsume_soundfont(&bytes, None) {
+                let sf2_path = target_dir.join("soundfont.sf2");
+                if fs::write(&sf2_path, &sf2.sf2_bytes).is_ok() {
+                    sf2_generated = true;
+                }
+            }
+            println!("Audio Export Summary (Natsume Hybrid PSG+PCM):");
+            println!("  Output Directory:     {}", target_dir.display());
+            println!("  WAV Samples Exported: {}", wavs.len());
+            if sf2_generated {
+                println!("  SoundFont Generated:  soundfont.sf2");
+            }
+            Ok(())
+        }
+        DetectedSoundEngine::Delaney => {
+            let wavs = export_delaney_samples_wav16(&bytes)
+                .map_err(|e| format!("export Delaney Stereo samples: {e}"))?;
+            for (_idx, filename, wav_bytes) in &wavs {
+                let p_sub = samples_dir.join(filename);
+                let p_root = target_dir.join(filename);
+                fs::write(&p_sub, wav_bytes).map_err(|e| format!("write {}: {e}", p_sub.display()))?;
+                let _ = fs::write(&p_root, wav_bytes);
+            }
+            let mut sf2_generated = false;
+            if let Ok(sf2) = compile_delaney_soundfont(&bytes, None) {
+                let sf2_path = target_dir.join("soundfont.sf2");
+                if fs::write(&sf2_path, &sf2.sf2_bytes).is_ok() {
+                    sf2_generated = true;
+                }
+            }
+            println!("Audio Export Summary (Michael Delaney / Allister Brimble Stereo):");
+            println!("  Output Directory:     {}", target_dir.display());
+            println!("  WAV Samples Exported: {}", wavs.len());
+            if sf2_generated {
+                println!("  SoundFont Generated:  soundfont.sf2");
+            }
+            Ok(())
+        }
+        DetectedSoundEngine::FullFat(_) => {
+            let wavs = export_fullfat_samples_wav16(&bytes)
+                .map_err(|e| format!("export Full Fat DirectSound samples: {e}"))?;
+            for (_idx, filename, wav_bytes) in &wavs {
+                let p_sub = samples_dir.join(filename);
+                let p_root = target_dir.join(filename);
+                fs::write(&p_sub, wav_bytes).map_err(|e| format!("write {}: {e}", p_sub.display()))?;
+                let _ = fs::write(&p_root, wav_bytes);
+            }
+            let mut sf2_generated = false;
+            if let Ok(sf2) = compile_fullfat_soundfont(&bytes, None) {
+                let sf2_path = target_dir.join("soundfont.sf2");
+                if fs::write(&sf2_path, &sf2.sf2_bytes).is_ok() {
+                    sf2_generated = true;
+                }
+            }
+            println!("Audio Export Summary (Full Fat Mono DirectSound):");
+            println!("  Output Directory:     {}", target_dir.display());
+            println!("  WAV Samples Exported: {}", wavs.len());
+            if sf2_generated {
+                println!("  SoundFont Generated:  soundfont.sf2");
+            }
+            Ok(())
+        }
+        DetectedSoundEngine::HudsonJp => {
+            let wavs = export_hudson_jp_samples_wav16(&bytes)
+                .map_err(|e| format!("export Hudson JP DirectSound samples: {e}"))?;
+            for (_idx, filename, wav_bytes) in &wavs {
+                let p_sub = samples_dir.join(filename);
+                let p_root = target_dir.join(filename);
+                fs::write(&p_sub, wav_bytes).map_err(|e| format!("write {}: {e}", p_sub.display()))?;
+                let _ = fs::write(&p_root, wav_bytes);
+            }
+            let mut sf2_generated = false;
+            if let Ok(sf2) = compile_hudson_jp_soundfont(&bytes, None) {
+                let sf2_path = target_dir.join("soundfont.sf2");
+                if fs::write(&sf2_path, &sf2.sf2_bytes).is_ok() {
+                    sf2_generated = true;
+                }
+            }
+            println!("Audio Export Summary (Hudson / Red / Rocket Games JP DirectSound):");
+            println!("  Output Directory:     {}", target_dir.display());
             println!("  WAV Samples Exported: {}", wavs.len());
             if sf2_generated {
                 println!("  SoundFont Generated:  soundfont.sf2");
@@ -3608,9 +3898,10 @@ fn dispatch_legacy(args: &[String]) -> Result<(), String> {
         "sound" => Err("usage: `gbakit sound wav <rom> --offset <hex> -o <out.wav>` or `gbakit sound m4a <rom> --song-header <hex>`".into()),
         "audio" if args.len() >= 3 && args[1] == "scan" => {
             let as_json = args[2..].iter().any(|a| a == "--json");
+            let show_all = args[2..].iter().any(|a| a == "--all");
             let file_arg = parse_positional_arg(&args[2..], &[]);
             match file_arg {
-                Some(path) => cmd_audio_scan(Path::new(path), as_json),
+                Some(path) => cmd_audio_scan_with_options(Path::new(path), as_json, show_all),
                 None => Err("missing required <rom.gba> for `audio scan`".into()),
             }
         }

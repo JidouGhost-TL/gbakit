@@ -106,9 +106,22 @@ pub fn has_engine_sw_v1_mixer(rom: &[u8]) -> bool {
     false
 }
 
+/// Detect early EIRE v1.x ROMs that carry an explicit Engine Software driver credit
+/// (`"Sound Driver by Engine Software"` or `"ENGINE SOFTWARE BV"`) corroborated by a
+/// valid chained 124-byte EIRE instrument bank.
+pub fn has_engine_sw_v1_tag_with_bank(rom: &[u8]) -> bool {
+    const TAG_DRV: &[u8] = b"Sound Driver by Engine Software";
+    const TAG_BV: &[u8] = b"ENGINE SOFTWARE BV";
+    let has_tag = (rom.len() >= TAG_DRV.len() && rom.windows(TAG_DRV.len()).any(|w| w == TAG_DRV))
+        || (rom.len() >= TAG_BV.len() && rom.windows(TAG_BV.len()).any(|w| w == TAG_BV));
+    has_tag && !scan_engine_sw_soundpool(rom).is_empty()
+}
+
 /// Detect whether a GBA ROM uses the Engine Software / Bob Koon EIRE engine (v1.x or v2.0).
 pub fn detect_engine_sw_engine(rom: &[u8]) -> bool {
-    EngineSwVersion::detect_from_bytes(rom).is_some() || has_engine_sw_v1_mixer(rom)
+    EngineSwVersion::detect_from_bytes(rom).is_some()
+        || has_engine_sw_v1_mixer(rom)
+        || has_engine_sw_v1_tag_with_bank(rom)
 }
 
 /// Validate a candidate 124-byte (`0x7C`) EIRE instrument header at `off` within `rom`.
@@ -418,5 +431,14 @@ mod tests {
         rom[0x80] ^= 0x01;
         assert!(!has_engine_sw_v1_mixer(&rom));
         assert!(!detect_engine_sw_engine(&rom));
+    }
+
+    #[test]
+    fn detects_eire_v1_tag_with_valid_bank() {
+        let mut rom = build_synthetic_engine_sw_rom();
+        assert!(!has_engine_sw_v1_tag_with_bank(&rom));
+        rom[0x100..0x112].copy_from_slice(b"ENGINE SOFTWARE BV");
+        assert!(has_engine_sw_v1_tag_with_bank(&rom));
+        assert!(detect_engine_sw_engine(&rom));
     }
 }

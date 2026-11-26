@@ -26,9 +26,10 @@ use gba_rom::{
 };
 use gba_sound::m4a::{rom_ptr_to_offset, M4aSampleView};
 use gba_sound::{
-    detect_sound_engine, encode_wav_i16_mono, extract_pcm_i8, scan_ead_sma_soundpool,
-    scan_engine_sw_soundpool, scan_gax_soundpool, scan_konami_soundpool, scan_krawall_soundpool,
-    scan_logik_soundpool, scan_musyx_soundpool, scan_paragon5_soundpool, scan_rare_soundpool,
+    detect_sound_engines, encode_wav_i16_mono, extract_pcm_i8, scan_delaney_soundpool,
+    scan_ead_sma_soundpool, scan_engine_sw_soundpool, scan_fullfat_soundpool, scan_gax_soundpool,
+    scan_hudson_jp_soundpool, scan_konami_soundpool, scan_krawall_soundpool, scan_logik_soundpool,
+    scan_musyx_soundpool, scan_natsume_soundpool, scan_paragon5_soundpool, scan_rare_soundpool,
     scan_rd1_soundpool, scan_sonix_soundpool, scan_southpaw_soundpool, DetectedSoundEngine,
 };
 use mobiclip::{scan_mobiclip_streams, scan_vxgb_streams, MobiclipStreamView, VxgbStreamView};
@@ -765,8 +766,9 @@ fn unique_id(used: &mut HashMap<String, usize>, base: String, offset: usize) -> 
 }
 
 fn collect_audio_candidates(rom: &[u8], out: &mut Vec<CandidateExtent>) {
-    match detect_sound_engine(rom) {
-        DetectedSoundEngine::M4a(scan) => {
+    for engine in detect_sound_engines(rom) {
+        match engine {
+            DetectedSoundEngine::M4a(scan) => {
             let tbl_size = scan
                 .song_count
                 .saturating_mul(8)
@@ -937,7 +939,56 @@ fn collect_audio_candidates(rom: &[u8], out: &mut Vec<CandidateExtent>) {
                 );
             }
         }
+        DetectedSoundEngine::Natsume(_) => {
+            for s in scan_natsume_soundpool(rom) {
+                push_audio_sample(
+                    out,
+                    rom.len(),
+                    s.rom_offset,
+                    16usize.saturating_add(s.size),
+                    "natsume",
+                    "audio.natsume-sample",
+                );
+            }
+        }
+        DetectedSoundEngine::Delaney => {
+            for s in scan_delaney_soundpool(rom) {
+                push_audio_sample(
+                    out,
+                    rom.len(),
+                    s.rom_offset,
+                    s.size,
+                    "delaney",
+                    "audio.delaney-sample",
+                );
+            }
+        }
+        DetectedSoundEngine::FullFat(_) => {
+            for s in scan_fullfat_soundpool(rom) {
+                push_audio_sample(
+                    out,
+                    rom.len(),
+                    s.rom_offset,
+                    16usize.saturating_add(s.size),
+                    "fullfat",
+                    "audio.fullfat-sample",
+                );
+            }
+        }
+        DetectedSoundEngine::HudsonJp => {
+            for s in scan_hudson_jp_soundpool(rom) {
+                push_audio_sample(
+                    out,
+                    rom.len(),
+                    s.rom_offset,
+                    6usize.saturating_add(s.size),
+                    "hudson_jp",
+                    "audio.hudson-jp-sample",
+                );
+            }
+        }
         DetectedSoundEngine::Custom => {}
+        }
     }
 }
 

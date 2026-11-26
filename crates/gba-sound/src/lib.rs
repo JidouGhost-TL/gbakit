@@ -3,14 +3,18 @@
 
 #![deny(unsafe_code)]
 
+pub mod delaney_pool;
 pub mod ead_sma_pool;
 pub mod engine_sw_pool;
+pub mod fullfat_pool;
 pub mod gax_pool;
+pub mod hudson_jp_pool;
 pub mod konami_pool;
 pub mod krawall_pool;
 pub mod logik_pool;
 pub mod m4a;
 pub mod musyx_pool;
+pub mod natsume_pool;
 pub mod paragon5_pool;
 pub mod rare_pool;
 pub mod rd1_pool;
@@ -33,13 +37,17 @@ pub use rd1_kaede;
 pub use southpaw_audio;
 pub use ::m4a as m4a_core;
 
+pub use delaney_pool::*;
 pub use ead_sma_pool::*;
 pub use engine_sw_pool::*;
+pub use fullfat_pool::*;
 pub use gax_pool::*;
+pub use hudson_jp_pool::*;
 pub use konami_pool::*;
 pub use krawall_pool::*;
 pub use logik_pool::*;
 pub use musyx_pool::*;
+pub use natsume_pool::*;
 pub use paragon5_pool::*;
 pub use rare_pool::*;
 pub use rd1_pool::*;
@@ -62,10 +70,10 @@ pub use sf2::*;
 pub enum DetectedSoundEngine {
     /// Nintendo MusicPlayer2000 (M4A / Sappy)
     M4a(M4aEngineScan),
-    /// Shin'en GAX Sound Engine
-    Gax(gax::version::GaxVersion),
-    /// Factor 5 MusyX Sound System
-    Musyx(musyx::version::MusyXVersion),
+    /// Shin'en GAX Sound Engine (banner-tagged or ARM7TDMI mixer fallback)
+    Gax(Option<gax::version::GaxVersion>),
+    /// Factor 5 MusyX Sound System (banner-tagged or ARM7TDMI mixer fallback)
+    Musyx(Option<musyx::version::MusyXVersion>),
     /// Krawall / ProTracker MOD / Scream Tracker 3 Engine
     Krawall(Option<krawall::KrawallVersion>),
     /// Rareware GBA DirectSound Engine
@@ -86,18 +94,136 @@ pub enum DetectedSoundEngine {
     EngineSw(Option<engine_sw_audio::EngineSwVersion>),
     /// Cosmigo Sonix Sound System (v1.09c / v1.096 + GSM / v1.16 + GSM)
     CosmigoSonix(cosmigo_sonix::SonixVersion),
+    /// Natsume Hybrid PSG + DirectSound PCM Engine
+    Natsume(Option<natsume_pool::NatsumeRevision>),
+    /// Michael Delaney / Allister Brimble Stereo DirectSound + PSG Engine
+    Delaney,
+    /// Full Fat Mono DirectSound Engine
+    FullFat(fullfat_pool::FullFatRevision),
+    /// Hudson / Red / Rocket Games JP DirectSound Engine
+    HudsonJp,
     /// Unrecognized or custom direct sound driver
     Custom,
 }
 
-/// Detect the sound engine utilized by a GBA ROM.
+/// Detect all sound engines present in a GBA ROM image (in priority order).
+///
+/// Useful for multi-engine titles (e.g., MusyX + Full Fat SFX) and multi-game
+/// cartridges (e.g., 2-in-1 / 4-in-1 packs combining M4A, GAX, MusyX, Krawall,
+/// or Wave-2 drivers). Returns an empty `Vec` if no known engine is detected.
+pub fn detect_sound_engines(bytes: &[u8]) -> Vec<DetectedSoundEngine> {
+    let mut engines = Vec::new();
+
+    if let Some(m4a) = scan_m4a_engine(bytes) {
+        engines.push(DetectedSoundEngine::M4a(m4a));
+    }
+
+    if let Some(gax_ver) = gax::version::GaxVersion::detect_from_bytes(bytes)
+        .or_else(|| gax_pool::detect_gax_arm_mixer_version(bytes))
+    {
+        engines.push(DetectedSoundEngine::Gax(Some(gax_ver)));
+    }
+
+    let has_musyx_arm = musyx_pool::has_musyx_arm_mixer(bytes);
+    if let Some(musyx_ver) = musyx::version::MusyXVersion::detect_from_bytes(bytes) {
+        engines.push(DetectedSoundEngine::Musyx(Some(musyx_ver)));
+    } else if has_musyx_arm {
+        engines.push(DetectedSoundEngine::Musyx(None));
+    }
+
+    if let Some(ead_ver) = ead_sma::EadSmaVersion::detect_from_bytes(bytes) {
+        engines.push(DetectedSoundEngine::EadSma(ead_ver));
+    }
+
+    if let Some(esw_ver) = engine_sw_audio::EngineSwVersion::detect_from_bytes(bytes) {
+        engines.push(DetectedSoundEngine::EngineSw(Some(esw_ver)));
+    } else if engine_sw_pool::has_engine_sw_v1_mixer(bytes)
+        || engine_sw_pool::has_engine_sw_v1_tag_with_bank(bytes)
+    {
+        engines.push(DetectedSoundEngine::EngineSw(None));
+    }
+
+    if let Some(sonix_ver) = cosmigo_sonix::SonixVersion::detect_from_bytes(bytes) {
+        engines.push(DetectedSoundEngine::CosmigoSonix(sonix_ver));
+    }
+
+    if let Some(krawall_ver) = krawall::KrawallVersion::detect_from_bytes(bytes) {
+        engines.push(DetectedSoundEngine::Krawall(Some(krawall_ver)));
+    } else if !has_musyx_arm && krawall_pool::detect_krawall_fallback(bytes) {
+        engines.push(DetectedSoundEngine::Krawall(None));
+    }
+
+    if let Some(rare_ver) = rare_audio::RareAudioVersion::detect_from_bytes(bytes) {
+        engines.push(DetectedSoundEngine::Rare(Some(rare_ver)));
+    } else if rare_audio::RareAudioVersion::has_rare_signature(bytes) {
+        engines.push(DetectedSoundEngine::Rare(None));
+    }
+
+    if let Some((variant, konami_ver)) = konami_pool::detect_konami_engine_with_version(bytes) {
+        // String-stripped Factor 5 MusyX titles share the 32-byte RelocBank32 container
+        // matched by Konami KCEH; avoid double-reporting them as Konami when MusyX ARM is present.
+        if !(has_musyx_arm && variant == KonamiEngineVariant::Kceh) {
+            engines.push(DetectedSoundEngine::Konami(variant, konami_ver));
+        }
+    }
+
+    if let Some(logik_ver) = logik_state::LogikVersion::detect_from_bytes(bytes) {
+        engines.push(DetectedSoundEngine::LogikState(Some(logik_ver)));
+    } else if logik_pool::has_logik_signature(bytes) {
+        engines.push(DetectedSoundEngine::LogikState(None));
+    }
+
+    if let Some(p5_ver) = paragon5::Paragon5Version::detect_from_bytes(bytes) {
+        engines.push(DetectedSoundEngine::Paragon5(Some(p5_ver)));
+    } else if paragon5_pool::has_paragon5_descriptors(bytes) {
+        engines.push(DetectedSoundEngine::Paragon5(None));
+    }
+
+    if detect_rd1_engine(bytes) {
+        engines.push(DetectedSoundEngine::Rd1(
+            rd1_kaede::KaedeVersion::detect_from_bytes(bytes),
+        ));
+    }
+
+    if let Some(sp_ver) = southpaw_audio::SouthpawVersion::detect_from_bytes(bytes) {
+        engines.push(DetectedSoundEngine::Southpaw(Some(sp_ver)));
+    } else if southpaw_pool::has_southpaw_sample_table(bytes) {
+        engines.push(DetectedSoundEngine::Southpaw(None));
+    }
+
+    if natsume_pool::detect_natsume_engine(bytes) {
+        engines.push(DetectedSoundEngine::Natsume(
+            natsume_pool::detect_natsume_revision(bytes),
+        ));
+    }
+
+    if delaney_pool::detect_delaney_engine(bytes) {
+        engines.push(DetectedSoundEngine::Delaney);
+    }
+
+    if let Some(ff_rev) = fullfat_pool::detect_fullfat_engine(bytes) {
+        engines.push(DetectedSoundEngine::FullFat(ff_rev));
+    }
+
+    if hudson_jp_pool::detect_hudson_jp_engine(bytes) {
+        engines.push(DetectedSoundEngine::HudsonJp);
+    }
+
+    engines
+}
+
+/// Detect the primary sound engine utilized by a GBA ROM.
 pub fn detect_sound_engine(bytes: &[u8]) -> DetectedSoundEngine {
     if let Some(m4a) = scan_m4a_engine(bytes) {
         DetectedSoundEngine::M4a(m4a)
-    } else if let Some(gax_ver) = gax::version::GaxVersion::detect_from_bytes(bytes) {
-        DetectedSoundEngine::Gax(gax_ver)
+    } else if let Some(gax_ver) = gax::version::GaxVersion::detect_from_bytes(bytes)
+        .or_else(|| gax_pool::detect_gax_arm_mixer_version(bytes))
+    {
+        DetectedSoundEngine::Gax(Some(gax_ver))
     } else if let Some(musyx_ver) = musyx::version::MusyXVersion::detect_from_bytes(bytes) {
-        DetectedSoundEngine::Musyx(musyx_ver)
+        DetectedSoundEngine::Musyx(Some(musyx_ver))
+    } else if musyx_pool::has_musyx_arm_mixer(bytes) {
+        DetectedSoundEngine::Musyx(None)
     } else if let Some(ead_ver) = ead_sma::EadSmaVersion::detect_from_bytes(bytes) {
         DetectedSoundEngine::EadSma(ead_ver)
     } else if let Some(esw_ver) = engine_sw_audio::EngineSwVersion::detect_from_bytes(bytes) {
@@ -129,8 +255,18 @@ pub fn detect_sound_engine(bytes: &[u8]) -> DetectedSoundEngine {
         DetectedSoundEngine::Southpaw(Some(sp_ver))
     } else if southpaw_pool::has_southpaw_sample_table(bytes) {
         DetectedSoundEngine::Southpaw(None)
-    } else if engine_sw_pool::has_engine_sw_v1_mixer(bytes) {
+    } else if engine_sw_pool::has_engine_sw_v1_mixer(bytes)
+        || engine_sw_pool::has_engine_sw_v1_tag_with_bank(bytes)
+    {
         DetectedSoundEngine::EngineSw(None)
+    } else if natsume_pool::detect_natsume_engine(bytes) {
+        DetectedSoundEngine::Natsume(natsume_pool::detect_natsume_revision(bytes))
+    } else if delaney_pool::detect_delaney_engine(bytes) {
+        DetectedSoundEngine::Delaney
+    } else if let Some(ff_rev) = fullfat_pool::detect_fullfat_engine(bytes) {
+        DetectedSoundEngine::FullFat(ff_rev)
+    } else if hudson_jp_pool::detect_hudson_jp_engine(bytes) {
+        DetectedSoundEngine::HudsonJp
     } else {
         DetectedSoundEngine::Custom
     }

@@ -150,7 +150,7 @@ impl CapabilitiesManifest {
                     category: "audio",
                     capabilities: vec!["parse", "decode"],
                     tier: 2,
-                    notes: "13 GBA ARM audio engines (M4A, GAX, MusyX, Krawall, Konami KCE, Rare, Logik State, Southpaw, RD1 Kaede, Paragon5, EAD SMA, Engine SW, Cosmigo Sonix) with WAV/SF2 extraction",
+                    notes: "17 GBA ARM audio engines (M4A, GAX, MusyX, Krawall, Konami KCE, Rare, Logik State, Southpaw, RD1 Kaede, Paragon5, EAD SMA, Engine SW EIRE, Cosmigo Sonix, Natsume PSG+PCM, Michael Delaney Stereo, Full Fat DirectSound, Hudson JP) with multi-engine detection, ARM7TDMI mixer fallbacks, and WAV/SF2 extraction",
                 },
                 FormatCapability {
                     id: "video.mobiclip",
