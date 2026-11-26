@@ -1,45 +1,164 @@
 {
-  "id": "bfpj",
-  "game_code": "BFPJ",
-  "title": "Futari wa Pretty Cure - Arienaai! Yume no Sono wa Daimeikyuu (Japan)",
-  "media": "eeprom512",
-  "size_bytes": 512,
-  "magic_signatures": [
+  "checksums": [],
+  "copy_groups": [
     {
-      "offset": 0,
-      "bytes": [
-        82,
-        67,
-        82,
-        80
-      ]
+      "fields": [
+        "checksum_value",
+        "checksum_value_backup"
+      ],
+      "name": "checksum_mirrors"
+    },
+    {
+      "fields": [
+        "save_magic",
+        "save_magic_backup"
+      ],
+      "name": "magic_mirrors"
+    },
+    {
+      "fields": [
+        "save_status_flags",
+        "save_status_flags_backup"
+      ],
+      "name": "status_flags_mirrors"
     }
   ],
-  "checksums": [],
+  "eeprom_rev8": true,
   "fields": [
     {
-      "name": "magic_header",
+      "confidence": "confirmed",
+      "description": "32-bit little-endian sum of the 64 payload halfwords that follow (custom algorithm, see SPEC.md).",
+      "evidence": "FUN_08019ee4 accumulates local_38[0] as the sum of 64 LE halfwords over the 128-byte payload (data words) and stores it with FUN_080224e4/FUN_080224f8 at EEPROM word param_1. Verified: LE u32 at logical offset 0 is 0x359d60, exactly the halfword sum of logical bytes [8,136).",
+      "name": "checksum_value",
       "offset": 0,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Upper 32 bits of the 8-byte checksum word; always zero.",
+      "evidence": "FUN_08019ee4 zeroes local_38[1] alongside the checksum (initialization before the sum loop) and writes both words via FUN_080224e4; 0x00000000 in baseline primary and backup copies.",
+      "name": "checksum_pad",
+      "offset": 4,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "4-byte header tag at the start of the save payload.",
+      "evidence": "First payload word written by FUN_08019ee4's data loop (EEPROM words param_1+1 onward). Bytes 0x50 0x52 0x43 0x52 ('PRCR') verified at logical offsets 8 and 0x90 in samples/baseline.sav.",
+      "name": "save_magic",
+      "offset": 8,
       "size": 4,
       "type": "ascii"
     },
     {
-      "name": "slot_counter",
-      "offset": 4,
+      "confidence": "likely",
+      "description": "Structural zero byte ahead of the status byte; writer not in recovered decomp.",
+      "evidence": "Inside FUN_08019ee4's 16-word data region (payload byte 4); observed 0x00 in baseline primary and backup copies.",
+      "name": "status_byte_a",
+      "offset": 12,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Mutable payload status byte; bit 1 is cleared by the save task immediately before the EEPROM write.",
+      "evidence": "FUN_08008fc0 executes *(byte *)(save_buffer + 5) &= 0xfd (file offset 13) and then calls FUN_08019ee4(0,0x80,...) / FUN_08019ee4(0x11,0x80,...). Live value 0xfa in baseline (both copies).",
+      "name": "save_status_flags",
+      "offset": 13,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Structural zero halfword after the status byte; writer not in recovered decomp.",
+      "evidence": "Inside FUN_08019ee4's 16-word data region (payload bytes 6-7); observed 0x0000 in baseline primary and backup copies.",
+      "name": "status_byte_b",
+      "offset": 14,
       "size": 2,
       "type": "u16_le"
     },
     {
-      "name": "game_progress_flags",
-      "offset": 6,
-      "size": 2,
-      "type": "u16_le"
-    },
-    {
-      "name": "player_status_payload",
-      "offset": 8,
+      "confidence": "likely",
+      "description": "Unused zero block (payload data words 2-3); writer not in recovered decomp.",
+      "evidence": "Inside FUN_08019ee4's 16-word data region (payload bytes 8-23); all 0x00 in baseline primary and backup copies.",
+      "name": "reserved_zero_block",
+      "offset": 16,
       "size": 16,
       "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Boundary byte between the written header area and the erased fill; exact role unknown.",
+      "evidence": "Payload byte 24 at the edge of FUN_08019ee4's data region; observed 0x00 followed by 0xff fill in baseline primary and backup copies. Writer not in recovered decomp.",
+      "name": "data_end_marker",
+      "offset": 32,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Unwritten region; reads back erased EEPROM state.",
+      "evidence": "FUN_08019ee4 with param_2=0x80 writes only 17 EEPROM words (8-byte checksum word + 16 data words) per copy, so payload bytes 25-127 are never written; 0xff throughout logical offsets 33-135 and 0xAB-0x10F in baseline.",
+      "name": "erased_fill",
+      "offset": 33,
+      "size": 103,
+      "type": "bytes"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Backup copy of the checksum; same logical data as checksum_value.",
+      "evidence": "FUN_08008fc0 writes the identical RAM buffer a second time via FUN_08019ee4(0x11,0x80,...), i.e. EEPROM word 0x11 (byte 0x88); LE u32 at logical offset 0x88 is 0x359d60, matching the primary and the halfword sum of logical bytes [0x90,0x110).",
+      "name": "checksum_value_backup",
+      "offset": 136,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Backup copy of the header tag; same logical data as save_magic.",
+      "evidence": "Written by the second FUN_08019ee4(0x11,0x80,...) call in FUN_08008fc0; bytes 0x50 0x52 0x43 0x52 ('PRCR') verified at logical offset 0x90 in baseline.",
+      "name": "save_magic_backup",
+      "offset": 144,
+      "size": 4,
+      "type": "ascii"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Backup copy of the payload status byte; same logical data as save_status_flags.",
+      "evidence": "Written by the second FUN_08019ee4(0x11,0x80,...) call in FUN_08008fc0; observed 0xfa at logical offset 0x95 in baseline, identical to the primary.",
+      "name": "save_status_flags_backup",
+      "offset": 149,
+      "size": 1,
+      "type": "u8"
     }
-  ]
+  ],
+  "game_code": "BFPJ",
+  "id": "bfpj",
+  "magic_signatures": [
+    {
+      "bytes": [
+        80,
+        82,
+        67,
+        82
+      ],
+      "description": "ASCII 'PRCR' header tag at start of primary payload",
+      "offset": 8
+    },
+    {
+      "bytes": [
+        80,
+        82,
+        67,
+        82
+      ],
+      "description": "ASCII 'PRCR' header tag at start of backup payload",
+      "offset": 144
+    }
+  ],
+  "media": "eeprom512",
+  "size_bytes": 512,
+  "title": "Futari wa Pretty Cure - Arienaai! Yume no Sono wa Daimeikyuu (Japan)"
 }

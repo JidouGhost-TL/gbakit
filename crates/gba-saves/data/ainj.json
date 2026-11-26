@@ -1,45 +1,101 @@
 {
-  "id": "ainj",
-  "game_code": "AINJ",
-  "title": "Initial D - Another Stage (Japan)",
-  "media": "sram",
-  "size_bytes": 32768,
-  "magic_signatures": [
-    {
-      "offset": 0,
-      "bytes": [
-        82,
-        85,
-        85,
-        85
-      ]
-    }
-  ],
   "checksums": [],
   "fields": [
     {
-      "name": "magic_header",
-      "offset": 0,
+      "confidence": "likely",
+      "description": "First word of the global save header at EWRAM 0x02030020, stored by FUN_0801b528 (slot-select 3 path) from live game state; anchors the 0x20-byte global header.",
+      "evidence": "FUN_0801b528 stores *DAT_0801b8c8 to DAT_02030020 (EWRAM 0x02030020 = file offset 0x20); whole 0x2004-byte buffer 0x02030000 persisted to SRAM 0x0E000000 by thunk_FUN_0863d630.",
+      "name": "global_header_tag",
+      "offset": 32,
       "size": 4,
-      "type": "ascii"
+      "type": "u32_le"
     },
     {
-      "name": "slot_counter",
-      "offset": 4,
-      "size": 2,
-      "type": "u16_le"
-    },
-    {
-      "name": "game_progress_flags",
-      "offset": 6,
-      "size": 2,
-      "type": "u16_le"
-    },
-    {
-      "name": "player_status_payload",
-      "offset": 8,
+      "confidence": "likely",
+      "description": "Remaining 16 bytes of the global save header (EWRAM 0x02030024-0x02030033) stored by FUN_0801b528 from game state words.",
+      "evidence": "FUN_0801b528 stores game-state words to _DAT_02030024/28/2c/30 (file offsets 0x24-0x33); buffer flushed by thunk_FUN_0863d630(&DAT_02030000, 0x0E000000, 0x2004).",
+      "name": "global_header_data",
+      "offset": 36,
       "size": 16,
       "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Slot 1 record-header word 0 at slot base 0x02030800 + 0x220; first gameplay word transferred by both save and load routines.",
+      "evidence": "FUN_0801b528 writes *(slot_base + 0x2030220) from game state (DAT_0801b8e8); FUN_0801b940 reads it back to game state (DAT_0801bb8c); file offset 0x0A20.",
+      "name": "slot1_record_a",
+      "offset": 2592,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Slot 1 record-header word 1 at slot base + 0x224; second gameplay word transferred by both save and load routines.",
+      "evidence": "FUN_0801b528 writes *(slot_base + 0x2030224) from game state (DAT_0801b8ec); FUN_0801b940 reads it back; file offset 0x0A24.",
+      "name": "slot1_record_b",
+      "offset": 2596,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Slot 1 record-header words 2-3 at slot base + 0x228-0x22F; game-encoded per-slot summary bytes.",
+      "evidence": "FUN_0801b528 writes *(slot_base + 0x2030228/22c) from game state; FUN_0801b940 reads them back; file offsets 0x0A28-0x0A2F.",
+      "name": "slot1_record_c",
+      "offset": 2600,
+      "size": 8,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Slot 1 10x16-byte record table at slot base + 0x250 (course/time-attack style per-entry records).",
+      "evidence": "FUN_0801b528 copies 10x16 bytes from game state (DAT_0801b8fc) to slot_base + 0x2030250; FUN_0801b940 copies them back; file offsets 0x0A50-0x0AEF.",
+      "name": "slot1_course_table",
+      "offset": 2640,
+      "size": 160,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Slot 1 48-word progression table at slot base + 0x320 (unlock/progress style per-entry words).",
+      "evidence": "FUN_0801b528 copies 0x30 words from game state (DAT_0801b924) to slot_base + 0x2030320; FUN_0801b940 copies them back; file offsets 0x0B20-0x0BDF.",
+      "name": "slot1_progress_table",
+      "offset": 2848,
+      "size": 192,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Slot 2 (independent file slot, NOT a mirror) 16-byte record header at slot base 0x02031000 + 0x220.",
+      "evidence": "FUN_0801b528 writes 4 header words to (slot2_base + 0x220-0x22F) when slot index is 1; FUN_0801b940 reads them back; file offsets 0x1220-0x122F.",
+      "name": "slot2_record_header",
+      "offset": 4640,
+      "size": 16,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Slot 3 (independent file slot, NOT a mirror) 16-byte record header at slot base 0x02031800 + 0x220.",
+      "evidence": "FUN_0801b528 writes 4 header words to (slot3_base + 0x220-0x22F) when slot index is 2; FUN_0801b940 reads them back; file offsets 0x1A20-0x1A2F.",
+      "name": "slot3_record_header",
+      "offset": 6688,
+      "size": 16,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Active-slot marker word at end of the persisted buffer, written by the slot copy/select routine.",
+      "evidence": "FUN_08025700 writes the selected-slot code word to SRAM 0x0E0032000 (mirrors to file offset 0x2000) via thunk_FUN_0863d630; baseline holds the default pattern 0x99999999.",
+      "name": "active_slot_marker",
+      "offset": 8192,
+      "size": 4,
+      "type": "u32_le"
     }
-  ]
+  ],
+  "game_code": "AINJ",
+  "id": "ainj",
+  "magic_signatures": [],
+  "media": "sram",
+  "size_bytes": 32768,
+  "title": "Initial D - Another Stage (Japan)"
 }

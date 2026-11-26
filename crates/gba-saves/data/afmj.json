@@ -1,45 +1,153 @@
 {
-  "id": "afmj",
-  "game_code": "AFMJ",
-  "title": "Formation Soccer 2002 (Japan)",
-  "media": "sram",
-  "size_bytes": 32768,
-  "magic_signatures": [
-    {
-      "offset": 0,
-      "bytes": [
-        70,
-        85,
-        74,
-        73
-      ]
-    }
-  ],
   "checksums": [],
+  "copy_groups": [],
   "fields": [
     {
-      "name": "magic_header",
+      "confidence": "confirmed",
+      "constraint": {
+        "kind": "enum",
+        "labels": {
+          "1": "write-started (FUN_0800ad04)",
+          "2": "write-finalized (FUN_0800adc8)"
+        },
+        "values": [
+          1,
+          2
+        ]
+      },
+      "description": "Save-state flag: 1 while FUN_0800ad04 writes SRAM, 2 after FUN_0800adc8 finalizes the buffer",
+      "evidence": "FUN_0800ad04 stores 1 at save_base[0] then calls FUN_08036964/FUN_080369d4(buf,0x0E000000,0x8000); FUN_0800adc8 stores 2 at save_base[0]; baseline byte0=0x02.",
+      "name": "save_state",
       "offset": 0,
-      "size": 4,
-      "type": "ascii"
+      "size": 1,
+      "type": "u8"
     },
     {
-      "name": "slot_counter",
+      "confidence": "confirmed",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 20636,
+        "minimum": 20636
+      },
+      "description": "Used save-struct size in bytes (0x509C); trailing marker lives at save_base+size-8",
+      "evidence": "FUN_0800adc8 writes (short)DAT_0800ae04 at save_base+4 and (short)DAT_0800ae08 at save_base+DAT_0800ae04-8; baseline u16@4=0x509C and u16@0x5094=0x1008 agree.",
+      "name": "data_size",
       "offset": 4,
       "size": 2,
       "type": "u16_le"
     },
     {
-      "name": "game_progress_flags",
-      "offset": 6,
+      "confidence": "confirmed",
+      "description": "Team 0 player 0 name, Shift-JIS, 8 bytes (default roster copied from ROM)",
+      "evidence": "FUN_0800b354 copies 8-byte default names via FUN_080058ac to save_base+team*0xC0+8+player*0xC; FUN_0800b3cc returns record pointer save_base+team*0xC0+8+player*0xC; baseline bytes 8..15 are Shift-JIS with 0x20 padding.",
+      "name": "team0_player00_name",
+      "offset": 8,
+      "size": 8,
+      "type": "ascii"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Team 0 player 0 uniform number byte (record+9)",
+      "evidence": "FUN_0800b354 stores ROM default byte at save_base+team*0xC0+0x11+player*0xC (=record+9); FUN_0800b3f8 reads that same byte; baseline value 0x01.",
+      "name": "team0_player00_number",
+      "offset": 17,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Team 0 player 1 name, Shift-JIS, 8 bytes",
+      "evidence": "FUN_0800b354 8-byte name stride 0xC at save_base+team*0xC0+8+player*0xC; FUN_0800b3cc record pointer; baseline bytes 20..27 are Shift-JIS with 0x20 padding.",
+      "name": "team0_player01_name",
+      "offset": 20,
+      "size": 8,
+      "type": "ascii"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Team 0 player 1 uniform number byte (record+9)",
+      "evidence": "FUN_0800b354 / FUN_0800b3f8 number byte at record+9; baseline value 0x10.",
+      "name": "team0_player01_number",
+      "offset": 29,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Team 0 player 15 (last) name, Shift-JIS, 8 bytes",
+      "evidence": "FUN_0800b354 loop covers 16 players per team (stride 0xC); record = save_base+0*0xC0+8+15*0xC = 0xBC; baseline bytes 0xBC..0xC3 are Shift-JIS with 0x20 padding.",
+      "name": "team0_player15_name",
+      "offset": 188,
+      "size": 8,
+      "type": "ascii"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Team 0 player 15 uniform number byte (record+9)",
+      "evidence": "FUN_0800b354 / FUN_0800b3f8 number byte at record+9; file offset 0xBC+9=0xC5; baseline value 0x0B.",
+      "name": "team0_player15_number",
+      "offset": 197,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Team 1 player 0 name, Shift-JIS, 8 bytes",
+      "evidence": "FUN_0800b354 outer loop covers 0x30 teams with stride 0xC0; record = save_base+1*0xC0+8+0*0xC = 0xC8; baseline bytes 0xC8..0xCF are Shift-JIS.",
+      "name": "team1_player00_name",
+      "offset": 200,
+      "size": 8,
+      "type": "ascii"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Team 1 player 0 uniform number byte (record+9)",
+      "evidence": "FUN_0800b354 / FUN_0800b3f8 number byte at record+9; file offset 0xC8+9=0xD1; baseline value 0x0C.",
+      "name": "team1_player00_number",
+      "offset": 209,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 4104,
+        "minimum": 4104
+      },
+      "description": "Constant trailer marker at save_base+data_size-8 (0x1008), not a computed checksum",
+      "evidence": "FUN_0800adc8 writes (short)DAT_0800ae08 at save_base+DAT_0800ae04-8 = 0x509C-8 = 0x5094; baseline u16@0x5094=0x1008.",
+      "name": "trailer_marker",
+      "offset": 20628,
       "size": 2,
       "type": "u16_le"
     },
     {
-      "name": "player_status_payload",
-      "offset": 8,
-      "size": 16,
-      "type": "bytes"
+      "confidence": "confirmed",
+      "description": "Tail magic 'FUJII' marking an initialized save",
+      "evidence": "FUN_0800ad44 writes 0x46,0x55,0x4A,0x49 at save_base+DAT_0800adb8/adbc/adc0/adc4 plus 0x49 at +3; baseline bytes at 0x5096..0x509A are 46 55 4A 49 49.",
+      "name": "tail_magic",
+      "offset": 20630,
+      "size": 5,
+      "type": "ascii"
     }
-  ]
+  ],
+  "game_code": "AFMJ",
+  "id": "afmj",
+  "magic_signatures": [
+    {
+      "bytes": [
+        70,
+        85,
+        74,
+        73,
+        73
+      ],
+      "description": "ASCII 'FUJII' tail magic written by FUN_0800ad44",
+      "offset": 20630
+    }
+  ],
+  "media": "sram",
+  "size_bytes": 32768,
+  "title": "Formation Soccer 2002 (Japan)"
 }

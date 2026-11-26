@@ -1,29 +1,69 @@
 {
-  "id": "bf4p",
-  "game_code": "BF4P",
-  "title": "Fantastic 4 (Europe)",
-  "media": "eeprom512",
-  "size_bytes": 512,
-  "magic_signatures": [],
   "checksums": [],
+  "copy_groups": [],
+  "eeprom_rev8": true,
   "fields": [
     {
-      "name": "slot_counter",
+      "confidence": "confirmed",
+      "description": "EEPROM validity word at save offset 0x00. Baseline holds LE u32 0xDEADD0D0 (3735933136) in the rev8-logical domain.",
+      "evidence": "FUN_08001738 loads 0x48 bytes via FUN_08075134 into buffer param_1+0x24, then compares *(int*)(iVar1+8) (== save+0x00) against ROM literal-pool constant DAT_080018ac, and stores DAT_080018ac there on the first-boot init path before rewriting the block via FUN_08074fe4.",
+      "name": "save_magic",
       "offset": 0,
-      "size": 2,
-      "type": "u16_le"
+      "size": 4,
+      "type": "u32_le"
     },
     {
-      "name": "game_progress_flags",
-      "offset": 2,
-      "size": 2,
-      "type": "u16_le"
-    },
-    {
-      "name": "player_status_payload",
+      "confidence": "likely",
+      "description": "First word of the 64-byte defaults/gameplay block at save+0x04. FUN_08001738 populates this region from save+0x04 via FUN_0807cc64 ROM-table defaults on init; exact gameplay role is unresolved (zero in fresh baseline) so it is exposed as a mutable scalar for live probing.",
+      "evidence": "FUN_08001738 passes param_1+0x28 (== save+0x04) as the destination of FUN_0807cc64 on the init path; the 0x48-byte buffer is zero-filled by FUN_08064f9c, transported by FUN_08074fe4/FUN_08075134, and covered by the FUN_080664a4 checksum.",
+      "name": "block_head_word",
       "offset": 4,
-      "size": 16,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Remainder of the 64-byte defaults/gameplay block (save+0x08..save+0x44). Zero in the fresh baseline; transported and checksummed as part of the 0x48-byte block.",
+      "evidence": "FUN_08001738 moves the whole 0x48-byte buffer (param_1+0x24) with FUN_08075134 (load) / FUN_08074fe4 (store), zero-fills it with FUN_08064f9c, and checksums it with FUN_080664a4.",
+      "name": "progress_data",
+      "offset": 8,
+      "size": 60,
       "type": "bytes"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Stored CRC-16 of the 0x48-byte block at save+0x44. Baseline holds LE u16 0x20FF (8447). The algorithm is custom (not in Schema v2's list), so it is a data field, not a checksums[] entry.",
+      "evidence": "FUN_08001738 reads *(short*)(param_1+0x68) (== save+0x44), zeroes it, recomputes FUN_080664a4 over the 0x48 bytes, and compares; FUN_080664a4 is a table-driven reflected CRC-16 using table DAT_08006580 with init DAT_0800657c.",
+      "name": "save_checksum_crc16",
+      "offset": 68,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Checksummed zero trailer at save+0x46. Exposed as a mutable scalar for completeness of the 0x48-byte coverage.",
+      "evidence": "FUN_08001738 covers save bytes [0x00,0x48) with FUN_080664a4, so save+0x46..0x48 participates in the checksum; the region is zero-filled by FUN_08064f9c and transported by FUN_08074fe4/FUN_08075134.",
+      "name": "block_trailer",
+      "offset": 70,
+      "size": 2,
+      "type": "u16_le"
     }
-  ]
+  ],
+  "game_code": "BF4P",
+  "id": "bf4p",
+  "magic_signatures": [
+    {
+      "bytes": [
+        208,
+        208,
+        173,
+        222
+      ],
+      "description": "EEPROM validity word: LE u32 0xDEADD0D0 at save offset 0x00 (rev8-logical domain), compared against DAT_080018ac in FUN_08001738.",
+      "offset": 0
+    }
+  ],
+  "media": "eeprom512",
+  "size_bytes": 512,
+  "title": "Fantastic 4 (Europe)"
 }

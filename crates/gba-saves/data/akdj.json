@@ -1,45 +1,96 @@
 {
-  "id": "akdj",
-  "game_code": "AKDJ",
-  "title": "Kaeru B Back (Japan)",
-  "media": "sram",
-  "size_bytes": 32768,
-  "magic_signatures": [
-    {
-      "offset": 0,
-      "bytes": [
-        47,
-        32,
-        70,
-        79
-      ]
-    }
-  ],
   "checksums": [],
+  "copy_groups": [],
   "fields": [
     {
-      "name": "magic_header",
+      "confidence": "confirmed",
+      "constraint": {
+        "allowed": " (),./45CDEFILORTVXY",
+        "kind": "ascii-charset",
+        "max_len": 31
+      },
+      "description": "ROM build/company stamp: '45 (XLV) / FORTY FIVE CO.,LTD.' plus NUL terminator, written at the start of SRAM.",
+      "evidence": "Save offsets 0x00..0x1E hold '45 (XLV) / FORTY FIVE CO.,LTD.' + NUL, verified byte-for-byte against samples/baseline.sav. Staged into SRAM through the ROM block-copy path (memcpy helper FUN_0802ec30, cf. ROM-string staging in FUN_08024d78/FUN_08024f34). No MMIO-labeled SRAM writer exists in decomp/decompiled.c.gz.",
+      "name": "build_id_stamp",
       "offset": 0,
-      "size": 4,
+      "size": 31,
       "type": "ascii"
     },
     {
-      "name": "slot_counter",
-      "offset": 4,
-      "size": 2,
-      "type": "u16_le"
+      "confidence": "likely",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 4294967295,
+        "minimum": 0
+      },
+      "description": "32-bit zero status word in the SRAM header area (reads 0 in the live-captured save).",
+      "evidence": "Save offsets 0x30..0x33 read as u32 0 in samples/baseline.sav; consistent with zero-fill initialization via memset helper FUN_0802ec90 (cf. buffer clears in FUN_08023124 and FUN_080234ac).",
+      "name": "init_status_word",
+      "offset": 48,
+      "size": 4,
+      "type": "u32_le"
     },
     {
-      "name": "game_progress_flags",
-      "offset": 6,
-      "size": 2,
-      "type": "u16_le"
+      "confidence": "likely",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 255,
+        "minimum": 0
+      },
+      "description": "First of three cleared single-byte record status flags spaced at a regular 0x584 stride.",
+      "evidence": "Save offset 0x290 is 0x00 in samples/baseline.sav; forms a 0x584-stride triple with offsets 0x814 and 0xD98. Cleared-flag pattern consistent with zero-fill helper FUN_0802ec90; surrounding bytes are erased 0xFF so no wider struct is observable.",
+      "name": "record_status_a",
+      "offset": 656,
+      "size": 1,
+      "type": "u8"
     },
     {
-      "name": "player_status_payload",
-      "offset": 8,
-      "size": 16,
-      "type": "bytes"
+      "confidence": "likely",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 255,
+        "minimum": 0
+      },
+      "description": "Second of three cleared single-byte record status flags (stride 0x584 from record_status_a).",
+      "evidence": "Save offset 0x814 is 0x00 in samples/baseline.sav (0x814 - 0x290 = 0x584). Same cleared-flag evidence as record_status_a via memset helper FUN_0802ec90.",
+      "name": "record_status_b",
+      "offset": 2068,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 255,
+        "minimum": 0
+      },
+      "description": "Third of three cleared single-byte record status flags (stride 0x584 from record_status_b).",
+      "evidence": "Save offset 0xD98 is 0x00 in samples/baseline.sav (0xD98 - 0x814 = 0x584). Same cleared-flag evidence as record_status_a via memset helper FUN_0802ec90.",
+      "name": "record_status_c",
+      "offset": 3480,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "allowed": " ./012368:EINORSV",
+        "kind": "ascii-charset",
+        "max_len": 32
+      },
+      "description": "ROM build version stamp: 'VERSION 2001/12/26 18:30 VR1.000' stored in SRAM.",
+      "evidence": "Save offsets 0x10CC..0x10EB hold 'VERSION 2001/12/26 18:30 VR1.000', verified byte-for-byte against samples/baseline.sav. Staged into SRAM through the ROM block-copy path (memcpy helper FUN_0802ec30, cf. ROM-string staging in FUN_08024d78/FUN_08024f34). No MMIO-labeled SRAM writer exists in decomp/decompiled.c.gz.",
+      "name": "build_version_stamp",
+      "offset": 4300,
+      "size": 32,
+      "type": "ascii"
     }
-  ]
+  ],
+  "game_code": "AKDJ",
+  "id": "akdj",
+  "magic_signatures": [],
+  "media": "sram",
+  "size_bytes": 32768,
+  "title": "Kaeru B Back (Japan)"
 }

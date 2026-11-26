@@ -1,36 +1,132 @@
 {
-  "id": "aosj",
-  "game_code": "AOSJ",
-  "title": "Samurai Deeper Kyo (Japan)",
-  "media": "eeprom512",
-  "size_bytes": 512,
+  "checksums": [
+    {
+      "algorithm": "sum16_le_words",
+      "covered_end": 108,
+      "covered_start": 0,
+      "name": "image_checksum",
+      "stored_offset": 108
+    }
+  ],
   "eeprom_rev8": true,
-  "magic_signatures": [],
-  "checksums": [],
   "fields": [
     {
-      "name": "slot_counter",
-      "offset": 0,
+      "confidence": "likely",
+      "description": "u16 gameplay counter near start of save payload (baseline 120).",
+      "evidence": "FUN_08006fa0 loads the 112-byte save image via FUN_08086f74 into the RAM buffer at DAT_08007004 and memcpys the payload from buffer+0x10; offset 0x16 lies inside that verified payload.",
+      "name": "play_counter",
+      "offset": 22,
       "size": 2,
       "type": "u16_le"
     },
     {
-      "name": "game_progress_flags",
-      "offset": 2,
+      "confidence": "likely",
+      "description": "u16 score/funds-style counter in save payload (baseline 456).",
+      "evidence": "FUN_08006fa0 loads the 112-byte save image via FUN_08086f74 into the RAM buffer at DAT_08007004 and memcpys the payload from buffer+0x10; offset 0x1A lies inside that verified payload.",
+      "name": "score_or_funds",
+      "offset": 26,
       "size": 2,
       "type": "u16_le"
     },
     {
-      "name": "player_status_payload",
-      "offset": 4,
-      "size": 16,
-      "type": "bytes"
+      "confidence": "likely",
+      "description": "u8 stage/level-style progress byte (baseline 6).",
+      "evidence": "FUN_08006fa0 loads the 112-byte save image via FUN_08086f74 into the RAM buffer at DAT_08007004 and memcpys the payload from buffer+0x10; offset 0x21 lies inside that verified payload.",
+      "name": "stage_or_level",
+      "offset": 33,
+      "size": 1,
+      "type": "u8"
     },
     {
-      "name": "save_block_payload",
-      "offset": 32,
-      "size": 256,
-      "type": "bytes"
+      "confidence": "likely",
+      "description": "u8 mode/difficulty-style selector byte (baseline 3).",
+      "evidence": "FUN_08006fa0 loads the 112-byte save image via FUN_08086f74 into the RAM buffer at DAT_08007004 and memcpys the payload from buffer+0x10; offset 0x30 lies inside that verified payload.",
+      "name": "mode_or_difficulty",
+      "offset": 48,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "32-bit boolean-style flag word, first of a run of four (baseline 1).",
+      "evidence": "FUN_08006fa0 loads the 112-byte save image via FUN_08086f74 into the RAM buffer at DAT_08007004 and memcpys the payload from buffer+0x10; offset 0x54 lies inside that verified payload.",
+      "name": "flag_word_a",
+      "offset": 84,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "32-bit boolean-style flag word, second of a run of four (baseline 1).",
+      "evidence": "FUN_08006fa0 loads the 112-byte save image via FUN_08086f74 into the RAM buffer at DAT_08007004 and memcpys the payload from buffer+0x10; offset 0x58 lies inside that verified payload.",
+      "name": "flag_word_b",
+      "offset": 88,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "32-bit boolean-style flag word, third of a run of four (baseline 1).",
+      "evidence": "FUN_08006fa0 loads the 112-byte save image via FUN_08086f74 into the RAM buffer at DAT_08007004 and memcpys the payload from buffer+0x10; offset 0x5C lies inside that verified payload.",
+      "name": "flag_word_c",
+      "offset": 92,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "32-bit boolean-style flag word, fourth of a run of four (baseline 1).",
+      "evidence": "FUN_08006fa0 loads the 112-byte save image via FUN_08086f74 into the RAM buffer at DAT_08007004 and memcpys the payload from buffer+0x10; offset 0x60 lies inside that verified payload.",
+      "name": "flag_word_d",
+      "offset": 96,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Single-bit option/config flags byte (baseline 0x40).",
+      "evidence": "FUN_08006fa0 loads the 112-byte save image via FUN_08086f74 into the RAM buffer at DAT_08007004 and memcpys the payload from buffer+0x10; offset 0x67 lies inside that verified payload.",
+      "name": "config_bits",
+      "offset": 103,
+      "size": 1,
+      "type": "bitflags"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Stored checksum word; must equal FUN_08007110 over bytes [0, 0x6C). Baseline sum16_le is 0xF862.",
+      "evidence": "FUN_08006fa0 compares *(short *)(DAT_08007004 buffer + 0x6C) against sVar5 = FUN_08007110(buffer); Python recomputation of sum16_le over save offsets [0,108) equals the stored word 0xF862.",
+      "name": "stored_checksum",
+      "offset": 108,
+      "size": 2,
+      "type": "u16_le"
     }
-  ]
+  ],
+  "game_code": "AOSJ",
+  "id": "aosj",
+  "magic_signatures": [
+    {
+      "bytes": [
+        75,
+        89,
+        79,
+        45,
+        83,
+        65,
+        86,
+        69,
+        68,
+        65,
+        84,
+        65,
+        32,
+        32,
+        32
+      ],
+      "description": "ASCII 'KYO-SAVEDATA   ' header (15 bytes compared by loader)",
+      "offset": 0
+    }
+  ],
+  "media": "eeprom512",
+  "size_bytes": 512,
+  "title": "Samurai Deeper Kyo (Japan)"
 }

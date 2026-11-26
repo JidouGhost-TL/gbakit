@@ -1,45 +1,191 @@
 {
-  "id": "buye",
-  "game_code": "BUYE",
-  "title": "Ant Bully, The (USA) (En,Fr)",
-  "media": "eeprom512",
-  "size_bytes": 512,
-  "magic_signatures": [
+  "checksums": [
     {
-      "offset": 0,
-      "bytes": [
-        73,
-        77,
-        50,
-        65
-      ]
+      "algorithm": "sum16_le",
+      "covered_end": 152,
+      "covered_start": 24,
+      "name": "slot0_checksum",
+      "seed": 0,
+      "stored_offset": 2,
+      "xor_out": 0
+    },
+    {
+      "algorithm": "sum16_le",
+      "covered_end": 280,
+      "covered_start": 152,
+      "name": "slot1_checksum",
+      "seed": 0,
+      "stored_offset": 4,
+      "xor_out": 0
+    },
+    {
+      "algorithm": "sum16_le",
+      "covered_end": 408,
+      "covered_start": 280,
+      "name": "slot2_checksum",
+      "seed": 0,
+      "stored_offset": 6,
+      "xor_out": 0
+    },
+    {
+      "algorithm": "sum16_le",
+      "covered_end": 24,
+      "covered_start": 0,
+      "name": "header_checksum",
+      "seed": 0,
+      "stored_offset": 0,
+      "xor_out": 0
     }
   ],
-  "checksums": [],
+  "eeprom_rev8": true,
   "fields": [
     {
-      "name": "magic_header",
-      "offset": 0,
-      "size": 4,
-      "type": "ascii"
+      "confidence": "likely",
+      "description": "Config byte defaulting to 6 in new-file init",
+      "evidence": "FUN_0803941c writes *(param_1+4)=6 during new-file init; saved to file offset 0x1c by FUN_08039574 via FUN_080411e4; baseline value 6.",
+      "name": "cfg_byte_04",
+      "offset": 28,
+      "size": 1,
+      "type": "u8"
     },
     {
-      "name": "slot_counter",
-      "offset": 4,
+      "confidence": "likely",
+      "description": "Status byte cleared on the load path",
+      "evidence": "FUN_08034a90 clears *(save+5)=0 on the load path; baseline value 0 at file offset 0x1d.",
+      "name": "status_byte_05",
+      "offset": 29,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Config byte defaulting to 6 in new-file init",
+      "evidence": "FUN_0803941c writes *(param_1+6)=6 during new-file init; saved to file offset 0x1e by FUN_08039574 via FUN_080411e4; baseline value 6.",
+      "name": "cfg_byte_06",
+      "offset": 30,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Option byte defaulting to 3 in new-file init",
+      "evidence": "FUN_0803941c writes *(param_1+7)=3 during new-file init; saved to file offset 0x1f by FUN_08039574 via FUN_080411e4; baseline value 3.",
+      "name": "option_byte_07",
+      "offset": 31,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 2,
+        "minimum": 0
+      },
+      "description": "Zero-based save file index (0, 1, 2 for the three 0x80-byte files)",
+      "evidence": "FUN_080394b4 writes *(param_1+8)=slot_id; FUN_08039574 stores slot &0xff at file base+slot*0x80. Baseline slots hold 0/1/2 at this offset, the only byte differing between slots.",
+      "name": "file_index",
+      "offset": 32,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Two marker bytes (0xff default and ROM-table default)",
+      "evidence": "FUN_0803941c writes *(param_1+9)=0xff and *(param_1+10) from ROM table; saved to file offsets 0x21-0x22; baseline bytes ff ff.",
+      "name": "marker_ff",
+      "offset": 33,
       "size": 2,
-      "type": "u16_le"
-    },
-    {
-      "name": "game_progress_flags",
-      "offset": 6,
-      "size": 2,
-      "type": "u16_le"
-    },
-    {
-      "name": "player_status_payload",
-      "offset": 8,
-      "size": 16,
       "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Flag byte defaulting from ROM table (0xe0 in baseline)",
+      "evidence": "FUN_0803941c writes *(param_1+0xb) from ROM table; saved to file offset 0x23 by FUN_08039574 via FUN_080411e4; baseline value 0xe0.",
+      "name": "flag_byte_0b",
+      "offset": 35,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Per-file value copied to the file-select display table",
+      "evidence": "FUN_08034a90 copies (u8)*(save+0x1d) into the per-file display table; baseline value 0 at file offset 0x35.",
+      "name": "select_value_b",
+      "offset": 53,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Stage parameter ORed with 0x8000 into stage setup on load",
+      "evidence": "FUN_08034a90 passes *(u16*)(save+0x2e)|0x8000 to stage setup FUN_08033c50; baseline value 0 at file offset 0x46.",
+      "name": "stage_param",
+      "offset": 70,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Meter defaulting to 100 in new-file init",
+      "evidence": "FUN_0803941c writes *(u16*)(param_1+0x32)=100 during new-file init; saved to file offset 0x4a; baseline value 100 (0x64).",
+      "name": "meter_100",
+      "offset": 74,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Flag byte defaulting to 1 in new-file init",
+      "evidence": "FUN_0803941c writes *(param_1+0x3c)=1 during new-file init; saved to file offset 0x54; baseline value 1.",
+      "name": "flag_byte_3c",
+      "offset": 84,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Per-file value copied to the file-select display table",
+      "evidence": "FUN_08034a90 copies *(u16*)(save+0x48) into the per-file display table; baseline value 0 at file offset 0x60.",
+      "name": "select_value_c",
+      "offset": 96,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Counter split base-60 for on-screen display",
+      "evidence": "FUN_08034a90 passes *(u32*)(save+0x50) to FUN_08033768, which splits it with base-60 divmod helpers for display; baseline value 0 at file offset 0x68.",
+      "name": "time_counter",
+      "offset": 104,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Per-file value copied to the file-select display table",
+      "evidence": "FUN_08034a90 copies (u8)*(save+0x54) into the per-file display table; baseline value 3 at file offset 0x6c (ROM default 12-byte record via FUN_0803941c).",
+      "name": "select_value_a",
+      "offset": 108,
+      "size": 1,
+      "type": "u8"
     }
-  ]
+  ],
+  "game_code": "BUYE",
+  "id": "buye",
+  "magic_signatures": [
+    {
+      "bytes": [
+        65,
+        50,
+        77,
+        73
+      ],
+      "description": "Header identifier in the 0x18-byte header block",
+      "offset": 8
+    }
+  ],
+  "media": "eeprom512",
+  "size_bytes": 512,
+  "title": "Ant Bully, The (USA) (En,Fr)"
 }

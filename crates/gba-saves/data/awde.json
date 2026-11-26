@@ -1,37 +1,271 @@
 {
-  "id": "awde",
-  "game_code": "AWDE",
-  "title": "Wakeboarding Unleashed Featuring Shaun Murray (USA)",
-  "media": "eeprom512",
-  "size_bytes": 512,
-  "magic_signatures": [],
-  "checksums": [
-    {
-      "name": "slot_sum16_le",
-      "algorithm": "sum16_le",
-      "covered_start": 1,
-      "covered_end": 24,
-      "stored_offset": 24
-    }
-  ],
+  "checksums": [],
+  "copy_groups": [],
+  "eeprom_rev8": true,
   "fields": [
     {
-      "name": "slot_counter",
-      "offset": 1,
+      "confidence": "confirmed",
+      "description": "Save header magic word 0. Compared against ROM constants in FUN_08028eac; mismatch triggers full save re-init.",
+      "evidence": "FUN_08028eac reads EEPROM block 0 via FUN_0802fde4(0) and compares word 0 to header constant derived from DAT_08028fa8 (expected 0x0020, matches logical byte 0..1).",
+      "name": "header_magic_w0",
+      "offset": 0,
       "size": 2,
       "type": "u16_le"
     },
     {
-      "name": "game_progress_flags",
-      "offset": 3,
+      "confidence": "confirmed",
+      "description": "Save header magic word 1 (expected 0x0038).",
+      "evidence": "FUN_08028eac compares EEPROM block 0 word 1 to header constant (expected 0x0038, matches logical bytes 2..3).",
+      "name": "header_magic_w1",
+      "offset": 2,
       "size": 2,
       "type": "u16_le"
     },
     {
-      "name": "player_status_payload",
-      "offset": 5,
-      "size": 16,
+      "confidence": "confirmed",
+      "description": "Save header magic word 2 (expected 0x0030).",
+      "evidence": "FUN_08028eac compares EEPROM block 0 word 2 to header constant (expected 0x0030, matches logical bytes 4..5).",
+      "name": "header_magic_w2",
+      "offset": 4,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Save header magic word 3 (expected 0x0033).",
+      "evidence": "FUN_08028eac compares EEPROM block 0 word 3 to header constant (expected 0x0033, matches logical bytes 6..7).",
+      "name": "header_magic_w3",
+      "offset": 6,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Audio option A (baseline 7). Loaded from EEPROM block 1 word 0 by FUN_08029050; saved by FUN_08028fd8; fed into audio hardware init via FUN_0802fa00/FUN_0802f4cc/FUN_080011f8 path.",
+      "evidence": "FUN_08029050 loads EEPROM block 1 word 0 into option RAM; FUN_08028fd8 persists option RAM to block 1 word 0; value flows to FUN_0802fa00/FUN_0802f4cc/FUN_080011f8 audio-apply sequence (boot and options-menu apply paths).",
+      "name": "audio_option_a",
+      "offset": 8,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Audio option B (baseline 10). Loaded from EEPROM block 1 word 1 by FUN_08029050; saved by FUN_08028fd8; fed into audio hardware init via FUN_0802fa00/FUN_0802f4cc/FUN_080010c4 path.",
+      "evidence": "FUN_08029050 loads EEPROM block 1 word 1 into option RAM; FUN_08028fd8 persists option RAM to block 1 word 1; value flows to FUN_0802fa00/FUN_0802f4cc/FUN_080010c4 audio-apply sequence (boot and options-menu apply paths).",
+      "name": "audio_option_b",
+      "offset": 10,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Reserved option words (zero in baseline and after factory init).",
+      "evidence": "FUN_08028eac factory-init path writes EEPROM block 1 as [7,10,0,0]; FUN_08029050/FUN_08028fd8 move 4 words but only words 0..1 feed the audio-apply path.",
+      "name": "options_reserved",
+      "offset": 12,
+      "size": 4,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Career file 1 rider initials, char 0 (baseline 'A'). Nonzero byte 0 marks the file present in FUN_08028dd0.",
+      "evidence": "FUN_0802897c loads EEPROM block 2 and stores block byte 0 (logical offset 16) as name char 0; FUN_08028494 stores name char 0 back to block 2 byte 0; FUN_08028dd0 treats block byte 0 != 0 as file-present.",
+      "name": "file1_name_c0",
+      "offset": 16,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Career file 1 rider initials, char 1 (baseline 'A').",
+      "evidence": "FUN_0802897c loads EEPROM block 2 byte 2 (logical offset 18) as name char 1; FUN_08028494 stores it back to the same byte.",
+      "name": "file1_name_c1",
+      "offset": 18,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Career file 1 rider initials, char 2 (baseline 'A').",
+      "evidence": "FUN_0802897c loads EEPROM block 2 byte 4 (logical offset 20) as name char 2; FUN_08028494 stores it back to the same byte.",
+      "name": "file1_name_c2",
+      "offset": 20,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Career file 1 bit-packed progress data, 8 EEPROM blocks (3..10). Unpacked bit-by-bit via FUN_0802845c in FUN_0802897c and repacked via FUN_08028408 in FUN_08028494.",
+      "evidence": "FUN_0802897c loops FUN_0802fde4 over blocks base+1..base+8 and unpacks every bit with FUN_0802845c; FUN_08028494 mirrors this with FUN_08028408/FUN_0802fe9c over the same blocks.",
+      "name": "file1_progress_bits",
+      "offset": 24,
+      "size": 64,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Career file 1 per-rider rating block (EEPROM block 11). Eight 3-bit values repacked with +3 bias.",
+      "evidence": "FUN_0802897c reads block base+9 and extracts 3-bit groups via FUN_0802845c; FUN_08028494 repacks them with FUN_08028408 over the same block.",
+      "name": "file1_ratings",
+      "offset": 88,
+      "size": 8,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Career file 1 per-rider stat block (EEPROM blocks 12..14). Three 6-bit values per entry.",
+      "evidence": "FUN_0802897c reads blocks base+10..base+12 and extracts 6-bit groups via FUN_0802845c into 0x84-stride career RAM; FUN_08028494 repacks them with FUN_08028408.",
+      "name": "file1_stats",
+      "offset": 96,
+      "size": 24,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Career file 1 tail block (EEPROM block 15, 7 data bytes).",
+      "evidence": "FUN_0802897c reads block base+13 (7 bytes) into career RAM; FUN_08028494 writes the same 7 bytes back via FUN_0802fe9c.",
+      "name": "file1_tail",
+      "offset": 120,
+      "size": 8,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Career file 1 score table A (EEPROM blocks 16..22, 7 word pairs).",
+      "evidence": "FUN_0802897c reads blocks base+14..base+20 as word pairs into score RAM; FUN_08028494 writes the same blocks back.",
+      "name": "file1_scores_a",
+      "offset": 128,
+      "size": 56,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Career file 1 score table B (EEPROM blocks 23..29, 7 words).",
+      "evidence": "FUN_0802897c reads blocks base+21..base+27 as single words into score RAM; FUN_08028494 writes the same blocks back.",
+      "name": "file1_scores_b",
+      "offset": 184,
+      "size": 56,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Career file 2 rider initials, char 0 (empty in baseline).",
+      "evidence": "FUN_0802897c/FUN_08028494 use base block 0x21 for file 2, with name char 0 at block byte 0 (logical offset 264); FUN_08028dd0 checks this byte for file presence.",
+      "name": "file2_name_c0",
+      "offset": 264,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Career file 2 rider initials, char 1 (empty in baseline).",
+      "evidence": "FUN_0802897c/FUN_08028494 use base block 0x21 for file 2, with name char 1 at block byte 2 (logical offset 266).",
+      "name": "file2_name_c1",
+      "offset": 266,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Career file 2 rider initials, char 2 (empty in baseline).",
+      "evidence": "FUN_0802897c/FUN_08028494 use base block 0x21 for file 2, with name char 2 at block byte 4 (logical offset 268).",
+      "name": "file2_name_c2",
+      "offset": 268,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Career file 2 bit-packed progress data (EEPROM blocks 34..41). Same layout as file 1, selected with base block 0x21.",
+      "evidence": "FUN_0802897c param_1==2 selects base block 0x21 and unpacks blocks base+1..base+8 via FUN_0802845c; FUN_08028494 mirrors with FUN_08028408.",
+      "name": "file2_progress_bits",
+      "offset": 272,
+      "size": 64,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Career file 2 per-rider rating block (EEPROM block 42).",
+      "evidence": "FUN_0802897c reads file-2 block base+9 and extracts 3-bit groups via FUN_0802845c; FUN_08028494 repacks them.",
+      "name": "file2_ratings",
+      "offset": 336,
+      "size": 8,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Career file 2 per-rider stat block (EEPROM blocks 43..45).",
+      "evidence": "FUN_0802897c reads file-2 blocks base+10..base+12 via FUN_0802845c; FUN_08028494 repacks them via FUN_08028408.",
+      "name": "file2_stats",
+      "offset": 344,
+      "size": 24,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Career file 2 tail block (EEPROM block 46).",
+      "evidence": "FUN_0802897c reads file-2 block base+13; FUN_08028494 writes it back via FUN_0802fe9c.",
+      "name": "file2_tail",
+      "offset": 368,
+      "size": 8,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Career file 2 score table A (EEPROM blocks 47..53).",
+      "evidence": "FUN_0802897c reads file-2 blocks base+14..base+20 as word pairs; FUN_08028494 writes them back.",
+      "name": "file2_scores_a",
+      "offset": 376,
+      "size": 56,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Career file 2 score table B (EEPROM blocks 54..60).",
+      "evidence": "FUN_0802897c reads file-2 blocks base+21..base+27 as single words; FUN_08028494 writes them back.",
+      "name": "file2_scores_b",
+      "offset": 432,
+      "size": 56,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Misc persisted word from EEPROM block 63 (zero in baseline).",
+      "evidence": "FUN_08029108 loads EEPROM block 63 word 0 into RAM; FUN_08029098 persists RAM back to block 63.",
+      "name": "misc_block63_w0",
+      "offset": 504,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Reserved tail of EEPROM block 63 (zero in baseline).",
+      "evidence": "FUN_08029108/FUN_08029098 transfer EEPROM block 63 as a 4-word unit; only word 0 is consumed by game RAM.",
+      "name": "misc_block63_reserved",
+      "offset": 506,
+      "size": 6,
       "type": "bytes"
     }
-  ]
+  ],
+  "game_code": "AWDE",
+  "id": "awde",
+  "magic_signatures": [
+    {
+      "bytes": [
+        32,
+        0,
+        56,
+        0,
+        48,
+        0,
+        51,
+        0
+      ],
+      "description": "EEPROM block 0 header magic written by FUN_08028eac factory init and verified on boot",
+      "offset": 0
+    }
+  ],
+  "media": "eeprom512",
+  "size_bytes": 512,
+  "title": "Wakeboarding Unleashed Featuring Shaun Murray (USA)"
 }

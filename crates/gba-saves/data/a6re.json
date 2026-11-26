@@ -1,45 +1,466 @@
 {
-  "id": "a6re",
-  "game_code": "A6RE",
-  "title": "Shifting Gears - Road Trip (USA)",
-  "media": "sram",
-  "size_bytes": 32768,
-  "magic_signatures": [
+  "checksums": [
     {
-      "offset": 0,
-      "bytes": [
-        46,
-        55,
-        58,
-        56
-      ]
+      "algorithm": "sum32_le_words",
+      "covered_end": 2608,
+      "covered_start": 0,
+      "name": "slot_0_checksum",
+      "seed": 0,
+      "stored_offset": 2608,
+      "xor_out": 0
+    },
+    {
+      "algorithm": "sum32_le_words",
+      "covered_end": 5220,
+      "covered_start": 2612,
+      "name": "slot_1_checksum",
+      "seed": 0,
+      "stored_offset": 5220,
+      "xor_out": 0
     }
   ],
-  "checksums": [],
+  "copy_groups": [
+    {
+      "fields": [
+        "save_tag",
+        "save_tag_slot1"
+      ],
+      "name": "save_tag_mirror"
+    },
+    {
+      "fields": [
+        "active_record_index",
+        "active_record_index_slot1"
+      ],
+      "name": "active_record_index_mirror"
+    },
+    {
+      "fields": [
+        "status_flags",
+        "status_flags_slot1"
+      ],
+      "name": "status_flags_mirror"
+    },
+    {
+      "fields": [
+        "progress_flag_a",
+        "progress_flag_a_slot1"
+      ],
+      "name": "progress_flag_a_mirror"
+    },
+    {
+      "fields": [
+        "progress_bits_a1",
+        "progress_bits_a1_slot1"
+      ],
+      "name": "progress_bits_a1_mirror"
+    },
+    {
+      "fields": [
+        "progress_flag_b",
+        "progress_flag_b_slot1"
+      ],
+      "name": "progress_flag_b_mirror"
+    },
+    {
+      "fields": [
+        "progress_bits_a2",
+        "progress_bits_a2_slot1"
+      ],
+      "name": "progress_bits_a2_mirror"
+    },
+    {
+      "fields": [
+        "progress_flag_c",
+        "progress_flag_c_slot1"
+      ],
+      "name": "progress_flag_c_mirror"
+    },
+    {
+      "fields": [
+        "progress_bits_a3",
+        "progress_bits_a3_slot1"
+      ],
+      "name": "progress_bits_a3_mirror"
+    },
+    {
+      "fields": [
+        "unlock_history",
+        "unlock_history_slot1"
+      ],
+      "name": "unlock_history_mirror"
+    },
+    {
+      "fields": [
+        "unlock_count",
+        "unlock_count_slot1"
+      ],
+      "name": "unlock_count_mirror"
+    },
+    {
+      "fields": [
+        "name_table",
+        "name_table_slot1"
+      ],
+      "name": "name_table_mirror"
+    },
+    {
+      "fields": [
+        "record_block",
+        "record_block_slot1"
+      ],
+      "name": "record_block_mirror"
+    }
+  ],
   "fields": [
     {
-      "name": "magic_header",
+      "confidence": "confirmed",
+      "description": "Save header tag: seven 0x0A bytes plus 0x5F terminator.",
+      "evidence": "FUN_08035dc8 writes save+0x00..0x06=0x0A and save+0x07=0x5F; matches samples/baseline.sav.",
+      "name": "save_tag",
       "offset": 0,
-      "size": 4,
-      "type": "ascii"
+      "size": 8,
+      "type": "bytes"
     },
     {
-      "name": "slot_counter",
-      "offset": 4,
+      "confidence": "confirmed",
+      "description": "Save header tag: seven 0x0A bytes plus 0x5F terminator.",
+      "evidence": "FUN_08035dc8 writes save+0x00..0x06=0x0A and save+0x07=0x5F; matches samples/baseline.sav.",
+      "name": "save_tag_slot1",
+      "offset": 2612,
+      "size": 8,
+      "type": "bytes"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Index of the active name-table entry (x8 into name_table at 0x2F8); 0xFF means none.",
+      "evidence": "FUN_08035dc8 presets save+0x0C..0x15=0xFF; FUN_0802e688 reads save+0x0C as u8 index (x8) into the 0x2F8 string table.",
+      "name": "active_record_index",
+      "offset": 12,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Index of the active name-table entry (x8 into name_table at 0x2F8); 0xFF means none.",
+      "evidence": "FUN_08035dc8 presets save+0x0C..0x15=0xFF; FUN_0802e688 reads save+0x0C as u8 index (x8) into the 0x2F8 string table.",
+      "name": "active_record_index_slot1",
+      "offset": 2624,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "flag_labels": {
+          "0": "initialized",
+          "1": "state_0x11_seen"
+        },
+        "kind": "bitmask",
+        "valid_mask": 3
+      },
+      "description": "Save status flags: bit0 set at init, bit1 ORed when an 0x11 state is observed.",
+      "evidence": "FUN_08035dc8 sets save+0x1A=1; FUN_0801e354 ORs bit1 (save+0x1A|=2) when its state byte equals 0x11.",
+      "name": "status_flags",
+      "offset": 26,
+      "size": 1,
+      "type": "bitflags"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "flag_labels": {
+          "0": "initialized",
+          "1": "state_0x11_seen"
+        },
+        "kind": "bitmask",
+        "valid_mask": 3
+      },
+      "description": "Save status flags: bit0 set at init, bit1 ORed when an 0x11 state is observed.",
+      "evidence": "FUN_08035dc8 sets save+0x1A=1; FUN_0801e354 ORs bit1 (save+0x1A|=2) when its state byte equals 0x11.",
+      "name": "status_flags_slot1",
+      "offset": 2638,
+      "size": 1,
+      "type": "bitflags"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 17,
+        "minimum": 0
+      },
+      "description": "Progress/unlock flag byte 0 (bit0 set by init unlock 0, bit4 is the lock preset).",
+      "evidence": "FUN_08035dc8 inits the save+0xF9 array (OR 0x10, table-driven clear); FUN_0801e354 ORs bit0 at save+0xF9+0; baseline 0x11.",
+      "name": "progress_flag_a",
+      "offset": 249,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 17,
+        "minimum": 0
+      },
+      "description": "Progress/unlock flag byte 0 (bit0 set by init unlock 0, bit4 is the lock preset).",
+      "evidence": "FUN_08035dc8 inits the save+0xF9 array (OR 0x10, table-driven clear); FUN_0801e354 ORs bit0 at save+0xF9+0; baseline 0x11.",
+      "name": "progress_flag_a_slot1",
+      "offset": 2861,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Progress/unlock bitfield segment between flag bytes a and b.",
+      "evidence": "FUN_08035dc8 OR-loop covers save+0xF9..0x1A1 (0xA9 bytes); FUN_0801e354 ORs individual flag bits in this array.",
+      "name": "progress_bits_a1",
+      "offset": 250,
+      "size": 24,
+      "type": "bytes"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Progress/unlock bitfield segment between flag bytes a and b.",
+      "evidence": "FUN_08035dc8 OR-loop covers save+0xF9..0x1A1 (0xA9 bytes); FUN_0801e354 ORs individual flag bits in this array.",
+      "name": "progress_bits_a1_slot1",
+      "offset": 2862,
+      "size": 24,
+      "type": "bytes"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 17,
+        "minimum": 0
+      },
+      "description": "Progress/unlock flag byte 0x19 (bit0 set by init unlock 0x19, bit4 is the lock preset).",
+      "evidence": "FUN_08035dc8 inits the save+0xF9 array; FUN_0801e354 ORs bit0 at save+0xF9+0x19; baseline 0x11.",
+      "name": "progress_flag_b",
+      "offset": 274,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 17,
+        "minimum": 0
+      },
+      "description": "Progress/unlock flag byte 0x19 (bit0 set by init unlock 0x19, bit4 is the lock preset).",
+      "evidence": "FUN_08035dc8 inits the save+0xF9 array; FUN_0801e354 ORs bit0 at save+0xF9+0x19; baseline 0x11.",
+      "name": "progress_flag_b_slot1",
+      "offset": 2886,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Progress/unlock bitfield segment between flag bytes b and c.",
+      "evidence": "FUN_08035dc8 OR-loop covers save+0xF9..0x1A1 (0xA9 bytes); FUN_0801e354 ORs individual flag bits in this array.",
+      "name": "progress_bits_a2",
+      "offset": 275,
+      "size": 9,
+      "type": "bytes"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Progress/unlock bitfield segment between flag bytes b and c.",
+      "evidence": "FUN_08035dc8 OR-loop covers save+0xF9..0x1A1 (0xA9 bytes); FUN_0801e354 ORs individual flag bits in this array.",
+      "name": "progress_bits_a2_slot1",
+      "offset": 2887,
+      "size": 9,
+      "type": "bytes"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 17,
+        "minimum": 0
+      },
+      "description": "Progress/unlock flag byte 0x23 (bit0 set by init unlock 0x23, bit4 is the lock preset).",
+      "evidence": "FUN_08035dc8 inits the save+0xF9 array; FUN_0801e354 ORs bit0 at save+0xF9+0x23; baseline 0x11.",
+      "name": "progress_flag_c",
+      "offset": 284,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 17,
+        "minimum": 0
+      },
+      "description": "Progress/unlock flag byte 0x23 (bit0 set by init unlock 0x23, bit4 is the lock preset).",
+      "evidence": "FUN_08035dc8 inits the save+0xF9 array; FUN_0801e354 ORs bit0 at save+0xF9+0x23; baseline 0x11.",
+      "name": "progress_flag_c_slot1",
+      "offset": 2896,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Progress/unlock bitfield tail through the end of the 0xA9-byte array at 0x1A1.",
+      "evidence": "FUN_08035dc8 OR-loop covers save+0xF9..0x1A1 (0xA9 bytes); FUN_0801e354 ORs individual flag bits in this array.",
+      "name": "progress_bits_a3",
+      "offset": 285,
+      "size": 133,
+      "type": "bytes"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Progress/unlock bitfield tail through the end of the 0xA9-byte array at 0x1A1.",
+      "evidence": "FUN_08035dc8 OR-loop covers save+0xF9..0x1A1 (0xA9 bytes); FUN_0801e354 ORs individual flag bits in this array.",
+      "name": "progress_bits_a3_slot1",
+      "offset": 2897,
+      "size": 133,
+      "type": "bytes"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Unlock event log: each entry records an unlocked index; length tracked by unlock_count.",
+      "evidence": "FUN_0801e354 appends the unlocked index at save+0x24B+count (count is the u16 at save+0x2F4); baseline holds 00 19 23, matching its three init calls.",
+      "name": "unlock_history",
+      "offset": 587,
+      "size": 169,
+      "type": "bytes"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Unlock event log: each entry records an unlocked index; length tracked by unlock_count.",
+      "evidence": "FUN_0801e354 appends the unlocked index at save+0x24B+count (count is the u16 at save+0x2F4); baseline holds 00 19 23, matching its three init calls.",
+      "name": "unlock_history_slot1",
+      "offset": 3199,
+      "size": 169,
+      "type": "bytes"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 169,
+        "minimum": 0
+      },
+      "description": "Number of entries in unlock_history; incremented once per unlock event.",
+      "evidence": "FUN_0801e354 increments the u16 at save+0x2F4 per unlock; baseline value 3 equals its three init calls.",
+      "name": "unlock_count",
+      "offset": 756,
       "size": 2,
       "type": "u16_le"
     },
     {
-      "name": "game_progress_flags",
-      "offset": 6,
+      "confidence": "confirmed",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 169,
+        "minimum": 0
+      },
+      "description": "Number of entries in unlock_history; incremented once per unlock event.",
+      "evidence": "FUN_0801e354 increments the u16 at save+0x2F4 per unlock; baseline value 3 equals its three init calls.",
+      "name": "unlock_count_slot1",
+      "offset": 3368,
       "size": 2,
       "type": "u16_le"
     },
     {
-      "name": "player_status_payload",
-      "offset": 8,
-      "size": 16,
+      "confidence": "likely",
+      "description": "Text table: 32 entries of 8 bytes (7 tile-index chars plus 0x5F terminator).",
+      "evidence": "FUN_08035dc8 copies 32x7 ROM bytes to save+0x2F8+i*8 with a 0x5F terminator; FUN_0802e688 reads save+0x2F8+idx*8 and renders it as text.",
+      "name": "name_table",
+      "offset": 760,
+      "size": 256,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Text table: 32 entries of 8 bytes (7 tile-index chars plus 0x5F terminator).",
+      "evidence": "FUN_08035dc8 copies 32x7 ROM bytes to save+0x2F8+i*8 with a 0x5F terminator; FUN_0802e688 reads save+0x2F8+idx*8 and renders it as text.",
+      "name": "name_table_slot1",
+      "offset": 3372,
+      "size": 256,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Game data block of 0x5F-terminated variable-length records, ending where the product magic begins.",
+      "evidence": "FUN_08035dc8 bulk-copies ROM tables to save+0x3F8 via two memcpy calls; baseline holds 102 0x5F-terminated records in save+0x3F8..0xA1C.",
+      "name": "record_block",
+      "offset": 1016,
+      "size": 1572,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Game data block of 0x5F-terminated variable-length records, ending where the product magic begins.",
+      "evidence": "FUN_08035dc8 bulk-copies ROM tables to save+0x3F8 via two memcpy calls; baseline holds 102 0x5F-terminated records in save+0x3F8..0xA1C.",
+      "name": "record_block_slot1",
+      "offset": 3628,
+      "size": 1572,
       "type": "bytes"
     }
-  ]
+  ],
+  "game_code": "A6RE",
+  "id": "a6re",
+  "magic_signatures": [
+    {
+      "bytes": [
+        84,
+        65,
+        75,
+        65,
+        82,
+        65,
+        50,
+        48,
+        48,
+        50,
+        67,
+        72,
+        79,
+        82,
+        79,
+        45,
+        81,
+        50,
+        48,
+        49
+      ],
+      "description": "Product string 'TAKARA2002CHORO-Q201' (slot 0)",
+      "offset": 2588
+    },
+    {
+      "bytes": [
+        84,
+        65,
+        75,
+        65,
+        82,
+        65,
+        50,
+        48,
+        48,
+        50,
+        67,
+        72,
+        79,
+        82,
+        79,
+        45,
+        81,
+        50,
+        48,
+        49
+      ],
+      "description": "Product string 'TAKARA2002CHORO-Q201' (slot 1 mirror)",
+      "offset": 5200
+    }
+  ],
+  "media": "sram",
+  "size_bytes": 32768,
+  "title": "Shifting Gears - Road Trip (USA)"
 }

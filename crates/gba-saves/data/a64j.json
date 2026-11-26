@@ -1,45 +1,122 @@
 {
-  "id": "a64j",
-  "game_code": "A64J",
-  "title": "Shimura Ken no Baka Tonosama - Bakushou Tenka Touitsu Game (Japan)",
-  "media": "eeprom512",
-  "size_bytes": 512,
-  "magic_signatures": [
+  "checksums": [
     {
-      "offset": 0,
-      "bytes": [
-        86,
-        32,
-        84,
-        67
-      ]
+      "algorithm": "sum16_le_words",
+      "covered_end": 204,
+      "covered_start": 0,
+      "name": "footer_checksum",
+      "stored_offset": 204
     }
   ],
-  "checksums": [],
+  "eeprom_rev8": true,
   "fields": [
     {
-      "name": "magic_header",
+      "confidence": "likely",
+      "constraint": {
+        "kind": "enum",
+        "labels": {
+          "0": "Empty",
+          "1": "Present"
+        },
+        "values": [
+          0,
+          1
+        ]
+      },
+      "description": "Nonzero save-exists flag at start of EEPROM image; the only nonzero byte in 0x00..0xAF.",
+      "evidence": "Logical-domain byte 0x00 = 0x01 in samples/baseline.sav (rev8 logical domain, verified by readable footer ASCII at 0xB8). No EEPROM 0x0D00xxxx save routine exists in this 109-function decomp slice (save-io scan: single false positive FUN_08030bdc, an arithmetic helper); ROM-side buffer primitives in-slice are FUN_08030cfc (fill, used by init paths FUN_08009f5c/FUN_0801209c/FUN_08013490/FUN_08015bc8) and FUN_08030c9c (copy).",
+      "name": "save_present_flag",
       "offset": 0,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "First word of the 32-byte system footer block at end of written region; small nonzero id word.",
+      "evidence": "Logical-domain u16_le at 0xB0 = 0x0002 in samples/baseline.sav (rev8 logical domain). No EEPROM save routine in this decomp slice; nearest in-slice transfer primitives are FUN_08030cfc / FUN_08030c9c (see save_present_flag evidence).",
+      "name": "sys_block_id",
+      "offset": 176,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Second word of the system footer block; reads zero in the live capture.",
+      "evidence": "Logical-domain u16_le at 0xB2 = 0x0000 in samples/baseline.sav (rev8 logical domain). No EEPROM save routine in this decomp slice; nearest in-slice transfer primitives are FUN_08030cfc / FUN_08030c9c.",
+      "name": "sys_block_param",
+      "offset": 178,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "32-bit config word of the system footer block; large nonzero constant in the live capture.",
+      "evidence": "Logical-domain u32_le at 0xB4 = 0x00462002 in samples/baseline.sav (rev8 logical domain). No EEPROM save routine in this decomp slice; nearest in-slice transfer primitives are FUN_08030cfc / FUN_08030c9c.",
+      "name": "sys_config_word",
+      "offset": 180,
       "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "constraint": {
+        "allowed": "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789. ",
+        "kind": "ascii-charset",
+        "max_len": 16
+      },
+      "description": "Fixed engine/library version stamp; only ASCII-readable in the rev8 logical domain, proving eeprom_rev8=true.",
+      "evidence": "Logical-domain bytes 0xB8..0xC8 read 'AFFECT Ver0.92  ' in samples/baseline.sav (raw domain shows the same bytes reversed per 8-byte block). No EEPROM save routine in this decomp slice; nearest in-slice transfer primitives are FUN_08030cfc / FUN_08030c9c.",
+      "name": "engine_version_stamp",
+      "offset": 184,
+      "size": 16,
       "type": "ascii"
     },
     {
-      "name": "slot_counter",
-      "offset": 4,
-      "size": 2,
-      "type": "u16_le"
+      "confidence": "likely",
+      "description": "Always-zero spacer word between the version stamp and the checksum trailer.",
+      "evidence": "Logical-domain u32_le at 0xC8 = 0x00000000 in samples/baseline.sav (rev8 logical domain). No EEPROM save routine in this decomp slice; nearest in-slice transfer primitives are FUN_08030cfc / FUN_08030c9c.",
+      "name": "footer_zero_word",
+      "offset": 200,
+      "size": 4,
+      "type": "u32_le"
     },
     {
-      "name": "game_progress_flags",
-      "offset": 6,
+      "confidence": "likely",
+      "description": "High trailer word after the sum16 checksum; nonzero tag constant in the live capture.",
+      "evidence": "Logical-domain u16_le at 0xCE = 0x331F in samples/baseline.sav (rev8 logical domain). Adjacent low word at 0xCC is footer_checksum (sum16_le over [0, 0xCC)). No EEPROM save routine in this decomp slice; nearest in-slice transfer primitives are FUN_08030cfc / FUN_08030c9c.",
+      "name": "footer_tag",
+      "offset": 206,
       "size": 2,
       "type": "u16_le"
-    },
-    {
-      "name": "player_status_payload",
-      "offset": 8,
-      "size": 16,
-      "type": "bytes"
     }
-  ]
+  ],
+  "game_code": "A64J",
+  "id": "a64j",
+  "magic_signatures": [
+    {
+      "bytes": [
+        65,
+        70,
+        70,
+        69,
+        67,
+        84,
+        32,
+        86,
+        101,
+        114,
+        48,
+        46,
+        57,
+        50,
+        32,
+        32
+      ],
+      "description": "ASCII 'AFFECT Ver0.92  ' engine version stamp; legible only in the rev8 logical domain",
+      "offset": 184
+    }
+  ],
+  "media": "eeprom512",
+  "size_bytes": 512,
+  "title": "Shimura Ken no Baka Tonosama - Bakushou Tenka Touitsu Game (Japan)"
 }

@@ -1,45 +1,208 @@
 {
-  "id": "btdj",
-  "game_code": "BTDJ",
-  "title": "Poke Inu (Japan)",
-  "media": "eeprom512",
-  "size_bytes": 512,
-  "magic_signatures": [
-    {
-      "offset": 0,
-      "bytes": [
-        56,
-        48,
-        49,
-        49
-      ]
-    }
-  ],
   "checksums": [],
+  "copy_groups": [],
+  "eeprom_rev8": true,
   "fields": [
     {
-      "name": "magic_header",
+      "confidence": "confirmed",
+      "constraint": {
+        "allowed": "0123456789POK",
+        "kind": "ascii-charset",
+        "max_len": 12
+      },
+      "description": "Fixed 12-char save header string '20041108POK0'. Serialized at cursor 0x00 by FUN_080003a4 via FUN_08000510 (NUL-terminated write of *_DAT_080004c8); load path FUN_08000718 rewinds cursor to 0 and memcmps it via FUN_08000890 against *_DAT_08000850 (returns 1 on mismatch).",
+      "evidence": "FUN_080003a4 calls FUN_08000510(param_1,*_DAT_080004c8) at cursor 0; FUN_08000718 calls FUN_08000890(param_1,*_DAT_08000850) with cursor 0. Bytes 0x00-0x0B of samples/baseline.sav (rev8 logical) read '20041108POK0'.",
+      "name": "save_magic",
       "offset": 0,
-      "size": 4,
+      "size": 12,
       "type": "ascii"
     },
     {
-      "name": "slot_counter",
-      "offset": 4,
+      "confidence": "confirmed",
+      "description": "Stored header checksum: (sum of save bytes 0x10..0x14F + 1) mod 0x10000, LE u16. Written by FUN_080003a4 (FUN_0800053c over cursor 0x10, then +1, stored at cursor 0x0E); verified by FUN_08000718 (returns 2 on mismatch). Custom algorithm (byte-sum plus one stored as u16) is not in Schema v2's algorithm list, so it is a plain field — see SPEC.md. Python-verified: sum8[0x10:0x150]+1 = 0x1613 matches baseline.",
+      "evidence": "FUN_080003a4 sets cursor 0x10, calls FUN_0800053c (byte-sum loop) then stores sum+1 at cursor 0x0E via FUN_08000578(w=2,n=1); FUN_08000718 recomputes via FUN_0800053c and compares (iVar4*0x10000+0x10000>>0x10 == stored). Python: sum(logical[0x10:0x150])+1 == 0x1613 == u16 at 0x0E.",
+      "name": "header_checksum",
+      "offset": 14,
       "size": 2,
       "type": "u16_le"
     },
     {
-      "name": "game_progress_flags",
-      "offset": 6,
+      "confidence": "likely",
+      "description": "Gameplay state word serialized first after the checksum cursor reset. Baseline value 0. Round-trips through the RAM save struct.",
+      "evidence": "FUN_080003a4 serializes *_DAT_080004cc as LE u16 at cursor 0x10 via FUN_08000578(w=2,n=1); FUN_08000718 restores it via FUN_080008cc(w=2,n=1) into *_DAT_0800080c. Baseline rev8-logical u16 at 0x10 is 0.",
+      "name": "state_word_0",
+      "offset": 16,
       "size": 2,
       "type": "u16_le"
     },
     {
-      "name": "player_status_payload",
-      "offset": 8,
-      "size": 16,
+      "confidence": "likely",
+      "description": "Gameplay state byte. Baseline value 0.",
+      "evidence": "FUN_080003a4 serializes *_DAT_080004d0 as u8 at cursor 0x12 via FUN_08000578(w=1,n=1); FUN_08000718 restores it via FUN_080008cc(w=1,n=1) into *_DAT_08000810.",
+      "name": "state_byte_0",
+      "offset": 18,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Gameplay state byte. Baseline value 0.",
+      "evidence": "FUN_080003a4 serializes *_DAT_080004d4 as u8 at cursor 0x13 via FUN_08000578(w=1,n=1); FUN_08000718 restores it via FUN_080008cc(w=1,n=1) into *_DAT_08000814.",
+      "name": "state_byte_1",
+      "offset": 19,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Gameplay state byte. Baseline value 0.",
+      "evidence": "FUN_080003a4 serializes *_DAT_080004d8 as u8 at cursor 0x14 via FUN_08000578(w=1,n=1); FUN_08000718 restores it via FUN_080008cc(w=1,n=1) into *_DAT_08000818.",
+      "name": "state_byte_2",
+      "offset": 20,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Gameplay state byte. Baseline value 0.",
+      "evidence": "FUN_080003a4 serializes *_DAT_080004dc as u8 at cursor 0x15 via FUN_08000578(w=1,n=1); FUN_08000718 restores it via FUN_080008cc(w=1,n=1) into *_DAT_0800081c.",
+      "name": "state_byte_3",
+      "offset": 21,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Live gameplay counter/gauge word; nonzero (100) in the captured baseline save, so it holds active play state.",
+      "evidence": "FUN_080003a4 serializes *_DAT_080004e0 as LE u16 at cursor 0x16 via FUN_08000578(w=2,n=1); FUN_08000718 restores it via FUN_080008cc(w=2,n=1) into *_DAT_08000820. Baseline rev8-logical u16 at 0x16 is 100 (0x64).",
+      "name": "state_word_1",
+      "offset": 22,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Live gameplay small-count word; value 2 in the captured baseline save.",
+      "evidence": "FUN_080003a4 serializes *_DAT_080004e4 as LE u16 at cursor 0x18 via FUN_08000578(w=2,n=1); FUN_08000718 restores it via FUN_080008cc(w=2,n=1) into *_DAT_08000824. Baseline rev8-logical u16 at 0x18 is 2.",
+      "name": "state_word_2",
+      "offset": 24,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Live gameplay word with most bits set; value 0xFF7F in the captured baseline save (all bits except bit 7).",
+      "evidence": "FUN_080003a4 serializes *_DAT_080004e8 as LE u16 at cursor 0x1A via FUN_08000578(w=2,n=1); FUN_08000718 restores it via FUN_080008cc(w=2,n=1) into *_DAT_08000828. Baseline rev8-logical u16 at 0x1A is 0xFF7F.",
+      "name": "state_word_3",
+      "offset": 26,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Gameplay state byte. Baseline value 0.",
+      "evidence": "FUN_080003a4 serializes *_DAT_080004ec as u8 at cursor 0x1C via FUN_08000578(w=1,n=1); FUN_08000718 restores it via FUN_080008cc(w=1,n=1) into *_DAT_0800082c.",
+      "name": "state_byte_4",
+      "offset": 28,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Gameplay state byte. Baseline value 0.",
+      "evidence": "FUN_080003a4 serializes *_DAT_080004f0 as u8 at cursor 0x1D via FUN_08000578(w=1,n=1); FUN_08000718 restores it via FUN_080008cc(w=1,n=1) into *_DAT_08000830.",
+      "name": "state_byte_5",
+      "offset": 29,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "6-byte gameplay state record (bytes 76 8B 3F 83 3F 00 in baseline). Serialized as six width-1 units.",
+      "evidence": "FUN_080003a4 serializes *_DAT_080004f4 as 6 bytes at cursor 0x1E via FUN_08000578(w=1,n=6); FUN_08000718 restores them via FUN_080008cc(w=1,n=6) into *_DAT_08000834.",
+      "name": "state_bytes_6",
+      "offset": 30,
+      "size": 6,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "8-byte gameplay state record (starts 43 6B, rest zero in baseline). Serialized as eight width-1 units.",
+      "evidence": "FUN_080003a4 serializes *_DAT_080004f8 as 8 bytes at cursor 0x24 via FUN_08000578(w=1,n=8); FUN_08000718 restores them via FUN_080008cc(w=1,n=8) into *_DAT_08000838.",
+      "name": "state_bytes_8",
+      "offset": 36,
+      "size": 8,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "24-entry LE u16 gameplay table (48 bytes, 0x2C-0x5B). All zero in the baseline save. Serialized as 24 width-2 units.",
+      "evidence": "FUN_080003a4 serializes *_DAT_080004fc as 24 LE u16 at cursor 0x2C via FUN_08000578(w=2,n=0x18); FUN_08000718 restores them via FUN_080008cc(w=2,n=0x18) into *_DAT_0800083c. Baseline bytes 0x2C-0x5B are all 0x00.",
+      "name": "state_array_24w",
+      "offset": 44,
+      "size": 48,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "16-entry LE u16 gameplay table (32 bytes, 0x5C-0x7B). Densely populated in the baseline save (starts 21 11 40 40 01 00 00 42 ...), so it holds live play state.",
+      "evidence": "FUN_080003a4 serializes *_DAT_08000500 as 16 LE u16 at cursor 0x5C via FUN_08000578(w=2,n=0x10); FUN_08000718 restores them via FUN_080008cc(w=2,n=0x10) into *_DAT_08000840. Baseline bytes 0x5C-0x6F are nonzero.",
+      "name": "state_array_16w",
+      "offset": 92,
+      "size": 32,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "32-entry LE u16 gameplay table (64 bytes, 0x7C-0xBB). All zero in the baseline save. Serialized as 32 width-2 units.",
+      "evidence": "FUN_080003a4 serializes *_DAT_08000504 as 32 LE u16 at cursor 0x7C via FUN_08000578(w=2,n=0x20); FUN_08000718 restores them via FUN_080008cc(w=2,n=0x20) into *_DAT_08000844. Baseline bytes 0x7C-0xBB are all 0x00.",
+      "name": "state_array_32w",
+      "offset": 124,
+      "size": 64,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "32-byte gameplay state block (0xBC-0xDB). All zero in the baseline save. Serialized as 32 width-1 units.",
+      "evidence": "FUN_080003a4 serializes *_DAT_08000508 as 32 bytes at cursor 0xBC via FUN_08000578(w=1,n=0x20); FUN_08000718 restores them via FUN_080008cc(w=1,n=0x20) into *_DAT_08000848. Baseline bytes 0xBC-0xDB are all 0x00.",
+      "name": "state_block_32b",
+      "offset": 188,
+      "size": 32,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "116-byte gameplay state block (0xDC-0x14F): a mostly-0x98 table with distinct live entries (05, 8C, 58, 16, 01 59, 5E at u32 slots). Serialized as 116 width-1 units; last serialized region before end of record.",
+      "evidence": "FUN_080003a4 serializes *_DAT_0800050c as 116 bytes at cursor 0xDC via FUN_08000578(w=1,n=0x74); FUN_08000718 restores them via FUN_080008cc(w=1,n=0x74) into *_DAT_0800084c. Baseline bytes 0xDC-0x14F match this pattern.",
+      "name": "state_block_116b",
+      "offset": 220,
+      "size": 116,
       "type": "bytes"
     }
-  ]
+  ],
+  "game_code": "BTDJ",
+  "id": "btdj",
+  "magic_signatures": [
+    {
+      "bytes": [
+        50,
+        48,
+        48,
+        52,
+        49,
+        49,
+        48,
+        56,
+        80,
+        79,
+        75,
+        48
+      ],
+      "description": "ASCII save magic '20041108POK0' written linearly by FUN_080003a4 via FUN_08000510 from ROM string *_DAT_080004c8; verified in rev8-logical domain of samples/baseline.sav",
+      "offset": 0
+    }
+  ],
+  "media": "eeprom512",
+  "size_bytes": 512,
+  "title": "Poke Inu (Japan)"
 }

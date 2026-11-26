@@ -1,45 +1,125 @@
 {
-  "id": "buse",
-  "game_code": "BUSE",
-  "title": "Green Eggs and Ham by Dr. Seuss (USA)",
-  "media": "eeprom512",
-  "size_bytes": 512,
-  "magic_signatures": [
-    {
-      "offset": 0,
-      "bytes": [
-        108,
-        101,
-        72,
-        100
-      ]
-    }
-  ],
   "checksums": [],
+  "copy_groups": [],
+  "eeprom_rev8": true,
   "fields": [
     {
-      "name": "magic_header",
+      "confidence": "confirmed",
+      "constraint": {
+        "kind": "enum",
+        "labels": {
+          "24904": "directory id 'Ha'"
+        },
+        "values": [
+          24904
+        ]
+      },
+      "description": "Directory header word 0: first magic halfword of EEPROM block 0 ('Ha', 0x6148), compared against ROM constant on boot and rewritten from ROM on mismatch.",
+      "evidence": "FUN_0806ecd0 reads EEPROM block 0 via FUN_0806eff8 into local_28 and requires local_28 == DAT_0806edf4; baseline rev8-logical bytes 0-1 are 0x6148.",
+      "name": "directory_id_word0",
       "offset": 0,
-      "size": 4,
-      "type": "ascii"
+      "size": 2,
+      "type": "u16_le"
     },
     {
-      "name": "slot_counter",
+      "confidence": "confirmed",
+      "constraint": {
+        "kind": "enum",
+        "labels": {
+          "25710": "directory id 'nd'"
+        },
+        "values": [
+          25710
+        ]
+      },
+      "description": "Directory header word 1: second magic halfword of EEPROM block 0 ('nd', 0x646e), compared against ROM constant on boot.",
+      "evidence": "FUN_0806ecd0 requires block-0 word1 (local_26) == DAT_0806edf8; baseline rev8-logical bytes 2-3 are 0x646e.",
+      "name": "directory_id_word1",
+      "offset": 2,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "kind": "enum",
+        "labels": {
+          "25928": "derived directory id 'He'"
+        },
+        "values": [
+          25928
+        ]
+      },
+      "description": "Directory header word 2: derived magic halfword ('He', 0x6548); boot init sets it to word1 + 0xDA, verified 0x646E + 0xDA = 0x6548 against baseline.",
+      "evidence": "FUN_0806ecd0 requires block-0 word2 (local_24) == DAT_0806edfc and its init path sets local_24 = local_26 + 0xDA; baseline bytes 4-5 are 0x6548.",
+      "name": "directory_id_word2",
       "offset": 4,
       "size": 2,
       "type": "u16_le"
     },
     {
-      "name": "game_progress_flags",
+      "confidence": "confirmed",
+      "description": "Directory header word 3: record-count info, equal to record_count * 0x100 + 0x6C. Baseline 0x036C decodes to 3 records.",
+      "evidence": "FUN_0806ecd0 requires block-0 word3 (local_22) == (uint)*DAT_0806ee00 * 0x100 + 0x6C and its init path writes that formula; baseline 0x036C gives count 3, matching the 3-record read/write loops in FUN_0806ecd0.",
+      "name": "directory_record_count_info",
       "offset": 6,
       "size": 2,
       "type": "u16_le"
     },
     {
-      "name": "player_status_payload",
+      "confidence": "likely",
+      "description": "First data record 8-byte header word 0: write-sequence counter. Baseline 1 indicates the record was written once (fresh live-captured save).",
+      "evidence": "FUN_0806f164 builds the record header word0 (local_28) from the incremented sequence counter at DAT_0806f1c4 and writes the 8-byte header via FUN_0806f2d4; FUN_0806eec0 reads the 8-byte record header via FUN_0806eff8. Baseline rev8-logical bytes 8-9 are 0x0001.",
+      "name": "record_b_write_seq",
       "offset": 8,
-      "size": 16,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "First data record header word 1: stored 16-bit checksum over the record bytes (custom byte-table/shift CRC in FUN_0806eec0 / FUN_0806f164, not a Schema v2 algorithm, so kept as a plain field; see SPEC.md). Baseline 0 over all-zero payload.",
+      "evidence": "FUN_0806eec0 recomputes a 16-bit checksum over the record bytes and requires header word1 (local_1e) to equal it, else sets error flag DAT_0806eff4 bit 1; FUN_0806f164 stores the computed value in header word1 (local_26). Baseline bytes 10-11 are 0x0000.",
+      "name": "record_b_header_crc16",
+      "offset": 10,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "First 4 payload bytes of the first data record (carried inside the 8-byte EEPROM header as its tail words). All zero in the fresh baseline capture.",
+      "evidence": "FUN_0806eec0 copies record-header tail words local_1c/local_1a to record bytes 0-3 (file offsets 12-15) and FUN_0806f164 writes them back from record bytes 0-3 via FUN_0806f2d4; record size 0x98 passed by FUN_080002d4.",
+      "name": "record_b_data_first_words",
+      "offset": 12,
+      "size": 4,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Remaining 144 payload bytes of the first data record (record offsets 4-151, file offsets 16-159). All zero in the fresh baseline capture; gameplay/config content would appear here once the game is played.",
+      "evidence": "FUN_0806eec0 loads record bytes 4+ via FUN_0806eff8(param_2 + 4, param_3 - 4, block + 1) and FUN_0806f164 stores them via FUN_0806f2d4(param_2 + 4, param_3 - 4, block + 1); main record size 0x98 passed by boot caller FUN_080002d4.",
+      "name": "record_b_data_bulk",
+      "offset": 16,
+      "size": 144,
       "type": "bytes"
     }
-  ]
+  ],
+  "game_code": "BUSE",
+  "id": "buse",
+  "magic_signatures": [
+    {
+      "bytes": [
+        72,
+        97,
+        110,
+        100,
+        72,
+        101
+      ],
+      "description": "ASCII 'HandHe' directory magic (ROM constants DAT_0806edf4/edf8/edfc, verified in rev8-logical domain)",
+      "offset": 0
+    }
+  ],
+  "media": "eeprom512",
+  "size_bytes": 512,
+  "title": "Green Eggs and Ham by Dr. Seuss (USA)"
 }

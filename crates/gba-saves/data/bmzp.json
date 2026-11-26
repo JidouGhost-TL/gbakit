@@ -1,45 +1,228 @@
 {
-  "id": "bmzp",
-  "game_code": "BMZP",
-  "title": "Zooo - Action Puzzle Game (Europe) (En,Fr,De,Es,It)",
-  "media": "eeprom8k",
-  "size_bytes": 8192,
-  "magic_signatures": [
-    {
-      "offset": 0,
-      "bytes": [
-        69,
-        77,
-        73,
-        84
-      ]
-    }
-  ],
   "checksums": [],
+  "eeprom_rev8": true,
   "fields": [
     {
-      "name": "magic_header",
-      "offset": 0,
+      "confidence": "likely",
+      "description": "Accumulated play-time counter from Z_TIME block payload word 1 (baseline 552).",
+      "evidence": "Save offset 0x0c = EEPROM block 1, payload word 1 of Z_TIME entry. EEPROM 64-bit block I/O via FUN_080276a0 (read, assembles 4x u16 from bit stream) / FUN_08027764 + FUN_08027750 (write) / FUN_0802791c (write+verify, 3 retries) / FUN_08027620 (bit-bang transfer through DAT_0d000000); logical offset = block_index*8 + word (eeprom_rev8).",
+      "name": "total_playtime",
+      "offset": 12,
       "size": 4,
-      "type": "ascii"
+      "type": "u32_le"
     },
     {
-      "name": "slot_counter",
-      "offset": 4,
-      "size": 2,
-      "type": "u16_le"
+      "confidence": "likely",
+      "description": "Z_RANK0 table parameter word 0 (baseline 7680); per-mode/stage constant shared by most entries.",
+      "evidence": "Save offset 0x18 = EEPROM block 3, Z_RANK0 header payload word 0. EEPROM 64-bit block I/O via FUN_080276a0 (read, assembles 4x u16 from bit stream) / FUN_08027764 + FUN_08027750 (write) / FUN_0802791c (write+verify, 3 retries) / FUN_08027620 (bit-bang transfer through DAT_0d000000); logical offset = block_index*8 + word (eeprom_rev8).",
+      "name": "rank0_table_param",
+      "offset": 24,
+      "size": 4,
+      "type": "u32_le"
     },
     {
-      "name": "game_progress_flags",
-      "offset": 6,
-      "size": 2,
-      "type": "u16_le"
+      "confidence": "likely",
+      "description": "Top ranked score/time of rank table 0 (baseline 570000; table descends in 30000 steps).",
+      "evidence": "Save offset 0x2c = EEPROM block 5, word 3 (last u32 of first 16-byte rank entry at 0x20). EEPROM 64-bit block I/O via FUN_080276a0 (read, assembles 4x u16 from bit stream) / FUN_08027764 + FUN_08027750 (write) / FUN_0802791c (write+verify, 3 retries) / FUN_08027620 (bit-bang transfer through DAT_0d000000); logical offset = block_index*8 + word (eeprom_rev8).",
+      "name": "rank0_top_score",
+      "offset": 44,
+      "size": 4,
+      "type": "u32_le"
     },
     {
-      "name": "player_status_payload",
-      "offset": 8,
-      "size": 16,
-      "type": "bytes"
+      "confidence": "likely",
+      "description": "Z_RANK1 table parameter word 0 (baseline 7680).",
+      "evidence": "Save offset 0x168 = EEPROM block 45, Z_RANK1 header payload word 0. EEPROM 64-bit block I/O via FUN_080276a0 (read, assembles 4x u16 from bit stream) / FUN_08027764 + FUN_08027750 (write) / FUN_0802791c (write+verify, 3 retries) / FUN_08027620 (bit-bang transfer through DAT_0d000000); logical offset = block_index*8 + word (eeprom_rev8).",
+      "name": "rank1_table_param",
+      "offset": 360,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Top ranked score/time of rank table 1 (baseline 480000).",
+      "evidence": "Save offset 0x17c = EEPROM block 47, word 3 (last u32 of first 16-byte rank entry at 0x170). EEPROM 64-bit block I/O via FUN_080276a0 (read, assembles 4x u16 from bit stream) / FUN_08027764 + FUN_08027750 (write) / FUN_0802791c (write+verify, 3 retries) / FUN_08027620 (bit-bang transfer through DAT_0d000000); logical offset = block_index*8 + word (eeprom_rev8).",
+      "name": "rank1_top_score",
+      "offset": 380,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Z_RANK2 table parameter word 0 (baseline 1024; distinct per table).",
+      "evidence": "Save offset 0x2b8 = EEPROM block 87, Z_RANK2 header payload word 0. EEPROM 64-bit block I/O via FUN_080276a0 (read, assembles 4x u16 from bit stream) / FUN_08027764 + FUN_08027750 (write) / FUN_0802791c (write+verify, 3 retries) / FUN_08027620 (bit-bang transfer through DAT_0d000000); logical offset = block_index*8 + word (eeprom_rev8).",
+      "name": "rank2_table_param",
+      "offset": 696,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Top ranked score/time of rank table 2 (baseline 200000).",
+      "evidence": "Save offset 0x2cc = EEPROM block 89, word 3 (last u32 of first 16-byte rank entry at 0x2c0). EEPROM 64-bit block I/O via FUN_080276a0 (read, assembles 4x u16 from bit stream) / FUN_08027764 + FUN_08027750 (write) / FUN_0802791c (write+verify, 3 retries) / FUN_08027620 (bit-bang transfer through DAT_0d000000); logical offset = block_index*8 + word (eeprom_rev8).",
+      "name": "rank2_top_score",
+      "offset": 716,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Z_RANK3 table parameter word 0 (baseline 1536; distinct per table).",
+      "evidence": "Save offset 0x408 = EEPROM block 129, Z_RANK3 header payload word 0. EEPROM 64-bit block I/O via FUN_080276a0 (read, assembles 4x u16 from bit stream) / FUN_08027764 + FUN_08027750 (write) / FUN_0802791c (write+verify, 3 retries) / FUN_08027620 (bit-bang transfer through DAT_0d000000); logical offset = block_index*8 + word (eeprom_rev8).",
+      "name": "rank3_table_param",
+      "offset": 1032,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Top ranked score/time of rank table 3 (baseline 480000).",
+      "evidence": "Save offset 0x41c = EEPROM block 131, word 3 (last u32 of first 16-byte rank entry at 0x410). EEPROM 64-bit block I/O via FUN_080276a0 (read, assembles 4x u16 from bit stream) / FUN_08027764 + FUN_08027750 (write) / FUN_0802791c (write+verify, 3 retries) / FUN_08027620 (bit-bang transfer through DAT_0d000000); logical offset = block_index*8 + word (eeprom_rev8).",
+      "name": "rank3_top_score",
+      "offset": 1052,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Z_RANK4 table parameter word 0 (baseline 7680).",
+      "evidence": "Save offset 0x558 = EEPROM block 171, Z_RANK4 header payload word 0. EEPROM 64-bit block I/O via FUN_080276a0 (read, assembles 4x u16 from bit stream) / FUN_08027764 + FUN_08027750 (write) / FUN_0802791c (write+verify, 3 retries) / FUN_08027620 (bit-bang transfer through DAT_0d000000); logical offset = block_index*8 + word (eeprom_rev8).",
+      "name": "rank4_table_param",
+      "offset": 1368,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Top ranked score/time of rank table 4 (baseline 380000).",
+      "evidence": "Save offset 0x56c = EEPROM block 173, word 3 (last u32 of first 16-byte rank entry at 0x560). EEPROM 64-bit block I/O via FUN_080276a0 (read, assembles 4x u16 from bit stream) / FUN_08027764 + FUN_08027750 (write) / FUN_0802791c (write+verify, 3 retries) / FUN_08027620 (bit-bang transfer through DAT_0d000000); logical offset = block_index*8 + word (eeprom_rev8).",
+      "name": "rank4_top_score",
+      "offset": 1388,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Z_OPT config/options word 0 (baseline 2059).",
+      "evidence": "Save offset 0x6a8 = EEPROM block 213, Z_OPT payload word 0. EEPROM 64-bit block I/O via FUN_080276a0 (read, assembles 4x u16 from bit stream) / FUN_08027764 + FUN_08027750 (write) / FUN_0802791c (write+verify, 3 retries) / FUN_08027620 (bit-bang transfer through DAT_0d000000); logical offset = block_index*8 + word (eeprom_rev8).",
+      "name": "options_flags_a",
+      "offset": 1704,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Z_OPT config/options word 1 (baseline 543).",
+      "evidence": "Save offset 0x6ac = EEPROM block 213, Z_OPT payload word 1. EEPROM 64-bit block I/O via FUN_080276a0 (read, assembles 4x u16 from bit stream) / FUN_08027764 + FUN_08027750 (write) / FUN_0802791c (write+verify, 3 retries) / FUN_08027620 (bit-bang transfer through DAT_0d000000); logical offset = block_index*8 + word (eeprom_rev8).",
+      "name": "options_flags_b",
+      "offset": 1708,
+      "size": 4,
+      "type": "u32_le"
     }
-  ]
+  ],
+  "game_code": "BMZP",
+  "id": "bmzp",
+  "magic_signatures": [
+    {
+      "bytes": [
+        90,
+        95,
+        84,
+        73,
+        77,
+        69,
+        32,
+        32
+      ],
+      "description": "ASCII 'Z_TIME' block tag",
+      "offset": 0
+    },
+    {
+      "bytes": [
+        90,
+        95,
+        82,
+        65,
+        78,
+        75,
+        48,
+        32
+      ],
+      "description": "ASCII 'Z_RANK0' block tag",
+      "offset": 16
+    },
+    {
+      "bytes": [
+        90,
+        95,
+        82,
+        65,
+        78,
+        75,
+        49,
+        32
+      ],
+      "description": "ASCII 'Z_RANK1' block tag",
+      "offset": 352
+    },
+    {
+      "bytes": [
+        90,
+        95,
+        82,
+        65,
+        78,
+        75,
+        50,
+        32
+      ],
+      "description": "ASCII 'Z_RANK2' block tag",
+      "offset": 688
+    },
+    {
+      "bytes": [
+        90,
+        95,
+        82,
+        65,
+        78,
+        75,
+        51,
+        32
+      ],
+      "description": "ASCII 'Z_RANK3' block tag",
+      "offset": 1024
+    },
+    {
+      "bytes": [
+        90,
+        95,
+        82,
+        65,
+        78,
+        75,
+        52,
+        32
+      ],
+      "description": "ASCII 'Z_RANK4' block tag",
+      "offset": 1360
+    },
+    {
+      "bytes": [
+        90,
+        95,
+        79,
+        80,
+        84,
+        32,
+        32,
+        32
+      ],
+      "description": "ASCII 'Z_OPT' block tag",
+      "offset": 1696
+    }
+  ],
+  "media": "eeprom8k",
+  "size_bytes": 8192,
+  "title": "Zooo - Action Puzzle Game (Europe) (En,Fr,De,Es,It)"
 }

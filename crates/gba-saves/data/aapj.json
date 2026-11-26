@@ -1,45 +1,105 @@
 {
-  "id": "aapj",
-  "game_code": "AAPJ",
-  "title": "Metalgun Slinger (Japan)",
-  "media": "eeprom512",
-  "size_bytes": 512,
-  "magic_signatures": [
+  "checksums": [
     {
-      "offset": 0,
-      "bytes": [
-        58,
-        110,
-        117,
-        71
-      ]
+      "algorithm": "sum16_le_words",
+      "covered_end": 72,
+      "covered_start": 8,
+      "name": "header_checksum",
+      "seed": 0,
+      "stored_offset": 0,
+      "xor_out": 0
     }
   ],
-  "checksums": [],
+  "eeprom_rev8": true,
   "fields": [
     {
-      "name": "magic_header",
-      "offset": 0,
-      "size": 4,
+      "confidence": "confirmed",
+      "constraint": {
+        "allowed": "MetalGun",
+        "kind": "ascii-charset",
+        "max_len": 8
+      },
+      "description": "8-byte game identity signature at the start of the header block; load path compares all 8 bytes against the mirror copy and re-initializes the save if they differ.",
+      "evidence": "FUN_080101c4 compares DAT_0801024c[0..8] against DAT_08010250 (8-byte loop) after FUN_0801031c loads the header via FUN_08002868(0,0x40,...); baseline holds 'MetalGun'.",
+      "name": "game_identifier",
+      "offset": 8,
+      "size": 8,
       "type": "ascii"
     },
     {
-      "name": "slot_counter",
-      "offset": 4,
+      "confidence": "confirmed",
+      "constraint": {
+        "kind": "enum",
+        "labels": {
+          "107": "valid tag 'k'"
+        },
+        "values": [
+          107
+        ]
+      },
+      "description": "Fixed validation tag immediately after the identifier; the save is accepted only when this word equals 0x6b ('k'), and init writes 'k' plus three zero bytes.",
+      "evidence": "FUN_080101c4 requires *(int *)(DAT_0801024c + 8) == 0x6b; same function init writes pcVar1[8] = 'k' with pcVar1[9..0xb] = 0. Baseline file offset 0x10 = 0x6b.",
+      "name": "save_revision_tag",
+      "offset": 16,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "First word of a paired 16-bit meter defaulting to 150; written by header init, covered by the header checksum.",
+      "evidence": "FUN_080101c4 header init writes pcVar1[0x32] = -0x6a (150); RAM buffer byte X maps to file offset 8+X, so buffer+0x32 is file offset 0x3a. Baseline holds 150.",
+      "name": "meter_current",
+      "offset": 58,
       "size": 2,
       "type": "u16_le"
     },
     {
-      "name": "game_progress_flags",
-      "offset": 6,
+      "confidence": "likely",
+      "description": "Second word of a paired 16-bit meter defaulting to 150; written by header init, covered by the header checksum.",
+      "evidence": "FUN_080101c4 header init writes pcVar1[0x34] = -0x6a (150); RAM buffer byte X maps to file offset 8+X, so buffer+0x34 is file offset 0x3c. Baseline holds 150.",
+      "name": "meter_maximum",
+      "offset": 60,
       "size": 2,
       "type": "u16_le"
     },
     {
-      "name": "player_status_payload",
-      "offset": 8,
-      "size": 16,
+      "confidence": "guessed",
+      "description": "Single counter byte defaulting to 1; written by header init, covered by the header checksum. Exact gameplay role unconfirmed.",
+      "evidence": "FUN_080101c4 header init writes pcVar1[0x36] = 1; RAM buffer byte X maps to file offset 8+X, so buffer+0x36 is file offset 0x3e. Baseline holds 1.",
+      "name": "play_counter",
+      "offset": 62,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "guessed",
+      "description": "Zero-filled reserved span between the revision tag and the meter pair; covered by the header checksum, all zeros in the live baseline.",
+      "evidence": "Span lies inside the FUN_08002868 / FUN_0800299c header range (file offsets 8..72) and is left zero by the FUN_080101c4 init path; baseline bytes 0x14..0x39 are all 0x00.",
+      "name": "reserved_padding",
+      "offset": 20,
+      "size": 38,
       "type": "bytes"
     }
-  ]
+  ],
+  "game_code": "AAPJ",
+  "id": "aapj",
+  "magic_signatures": [
+    {
+      "bytes": [
+        77,
+        101,
+        116,
+        97,
+        108,
+        71,
+        117,
+        110
+      ],
+      "description": "ASCII 'MetalGun' identity signature verified by FUN_080101c4",
+      "offset": 8
+    }
+  ],
+  "media": "eeprom512",
+  "size_bytes": 512,
+  "title": "Metalgun Slinger (Japan)"
 }

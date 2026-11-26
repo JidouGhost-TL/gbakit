@@ -1,45 +1,126 @@
 {
-  "id": "abje",
-  "game_code": "ABJE",
-  "title": "Broken Sword - The Shadow of the Templars (USA) (En,Fr,De,Es,It)",
-  "media": "eeprom8k",
-  "size_bytes": 8192,
-  "magic_signatures": [
-    {
-      "offset": 0,
-      "bytes": [
-        83,
-        78,
-        69,
-        75
-      ]
-    }
-  ],
   "checksums": [],
+  "eeprom_rev8": true,
   "fields": [
     {
-      "name": "magic_header",
-      "offset": 0,
-      "size": 4,
+      "confidence": "likely",
+      "description": "Persisted boot setting A (format default 1). FUN_0800bf5c loads EEPROM word 0x300 shorts[0] into *DAT_0800bfb8 at boot; FUN_0800bf0c persists runtime *DAT_0800bf44 back to this word; FUN_0800be94 formats it as 1.",
+      "evidence": "FUN_0800bf5c (line 5873) stores EEPROM word 0x300 short[0] to *DAT_0800bfb8; FUN_0800bf0c persists *DAT_0800bf44 to word 0x300; FUN_0800be94 formats word 0x300 shorts as {1,0,1}.",
+      "name": "sys_opt_a",
+      "offset": 6144,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Persisted boot setting B (format default 0). FUN_0800bf5c loads word 0x300 shorts[1] into *DAT_0800bfbc and applies it via the FUN_08013eb8 setter (same setter the sound UI FUN_08008f30 uses), followed by FUN_08013fa0 refresh.",
+      "evidence": "FUN_0800bf5c (line 5875,5880) stores word 0x300 short[1] to *DAT_0800bfbc and calls FUN_08013eb8(DAT_0800bfc8, short1); FUN_08008f30 (line 3615) uses the same FUN_08013eb8 setter for sound selection.",
+      "name": "sys_opt_b",
+      "offset": 6146,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Persisted boot setting C (format default 1). FUN_0800bf5c loads word 0x300 shorts[2] into *DAT_0800bfc0; when it is 0, FUN_0800bf5c invokes FUN_0800804c (the helper that also brackets every EEPROM transfer in FUN_0800bd88/FUN_0800bda8).",
+      "evidence": "FUN_0800bf5c (lines 5876-5878) stores word 0x300 short[2] to *DAT_0800bfc0 and calls FUN_0800804c when it is 0; FUN_0800bf0c persists *DAT_0800bf4c to this word.",
+      "name": "sys_opt_c",
+      "offset": 6148,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "System-area signature 'BROKENS\\0' (EEPROM word 0x302). Written once by the formatter FUN_0800be94 and verified on boot by FUN_0800be08 before the 253-word pattern check.",
+      "evidence": "File bytes verify 100%; FUN_0800be94 writes word DAT_0800bed0 (=0x302); FUN_0800be08 reads word DAT_0800be20 (=0x302) and compares 8 bytes against DAT_0800be8c.",
+      "name": "sys_magic",
+      "offset": 6160,
+      "size": 8,
       "type": "ascii"
     },
     {
-      "name": "slot_counter",
-      "offset": 4,
-      "size": 2,
-      "type": "u16_le"
+      "confidence": "confirmed",
+      "description": "First word of the 253-word system filler (EEPROM words 0x303..0x3FF, all byte-identical 18 03 d3 fd 4f 32 a2 69). FUN_0800be94 writes the same 8-byte ROM source (DAT_0800bf08) 0xfd times from word DAT_0800bf04 (=0x303); FUN_0800be08 re-reads all 0xfd words and compares each against DAT_0800be90.",
+      "evidence": "All 253 words verify byte-identical in baseline; FUN_0800be94 loop (lines 5817-5822, 0xfd iterations) writes them; FUN_0800be08 loop (lines 5774-5784, 0xfd iterations) verifies them.",
+      "name": "sys_pattern_word",
+      "offset": 6168,
+      "size": 8,
+      "type": "bytes"
     },
     {
-      "name": "game_progress_flags",
-      "offset": 6,
-      "size": 2,
-      "type": "u16_le"
+      "confidence": "likely",
+      "description": "Save slot 0 signature (EEPROM word 0x000). Empty (all zero) in baseline: slot unformatted. FUN_0800c254 compares it against the ROM signature (DAT_0800c310) on load; FUN_0800c060/FUN_0800c0e8 write the ROM signature (DAT_0800c0d8/DAT_0800c164) on create/save; FUN_0800c1ec copies it slot-to-slot.",
+      "evidence": "FUN_0800c254 (line 6098) reads word slot*0x100 and compares 8 bytes with DAT_0800c310; FUN_0800c060 (line 5946) and FUN_0800c0e8 (line 5982) write it; FUN_0800c1ec copies it.",
+      "name": "slot0_magic",
+      "offset": 0,
+      "size": 8,
+      "type": "ascii"
     },
     {
-      "name": "player_status_payload",
-      "offset": 8,
-      "size": 16,
+      "confidence": "likely",
+      "description": "Save slot 0 new/active flag word (EEPROM word 0x003). Erased (0xFF) in baseline. FUN_0800c254 treats first byte 0x00 as new-game (zeroes the 1024-byte RAM struct); FUN_0800c060 writes zeros, FUN_0800c0e8 writes the active marker from DAT_0800c15c.",
+      "evidence": "FUN_0800c254 (lines 6107-6110) branches on local_18[0]==0 after reading word slot*0x100+3; FUN_0800c060 (line 5949, memset 0) and FUN_0800c0e8 (line 5985, memcpy DAT_0800c15c) write it.",
+      "name": "slot0_status_flag",
+      "offset": 24,
+      "size": 8,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Save slot 1 signature (EEPROM word 0x100). Empty (all zero) in baseline: slot unformatted. Same load/create/save/copy handling as slot 0.",
+      "evidence": "FUN_0800c254 (line 6098, slot base (param_1&0xff)<<8); FUN_0800c060 (line 5946); FUN_0800c0e8 (line 5982); FUN_0800c1ec slot-to-slot copy.",
+      "name": "slot1_magic",
+      "offset": 2048,
+      "size": 8,
+      "type": "ascii"
+    },
+    {
+      "confidence": "likely",
+      "description": "Save slot 1 new/active flag word (EEPROM word 0x103). Erased (0xFF) in baseline. Same new-game check and create/save writes as slot 0.",
+      "evidence": "FUN_0800c254 (lines 6107-6110) new-game branch on word slot*0x100+3 first byte; FUN_0800c060/FUN_0800c0e8 write it.",
+      "name": "slot1_status_flag",
+      "offset": 2072,
+      "size": 8,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Save slot 2 signature (EEPROM word 0x200). Empty (all zero) in baseline: slot unformatted. Same load/create/save/copy handling as slot 0.",
+      "evidence": "FUN_0800c254 (line 6098, slot base (param_1&0xff)<<8); FUN_0800c060 (line 5946); FUN_0800c0e8 (line 5982); FUN_0800c1ec slot-to-slot copy.",
+      "name": "slot2_magic",
+      "offset": 4096,
+      "size": 8,
+      "type": "ascii"
+    },
+    {
+      "confidence": "likely",
+      "description": "Save slot 2 new/active flag word (EEPROM word 0x203). Erased (0xFF) in baseline. Same new-game check and create/save writes as slot 0.",
+      "evidence": "FUN_0800c254 (lines 6107-6110) new-game branch on word slot*0x100+3 first byte; FUN_0800c060/FUN_0800c0e8 write it.",
+      "name": "slot2_status_flag",
+      "offset": 4120,
+      "size": 8,
       "type": "bytes"
     }
-  ]
+  ],
+  "game_code": "ABJE",
+  "id": "abje",
+  "magic_signatures": [
+    {
+      "bytes": [
+        66,
+        82,
+        79,
+        75,
+        69,
+        78,
+        83,
+        0
+      ],
+      "description": "System-area signature 'BROKENS\\0' at EEPROM word 0x302, verified on boot by FUN_0800be08",
+      "offset": 6160
+    }
+  ],
+  "media": "eeprom8k",
+  "size_bytes": 8192,
+  "title": "Broken Sword - The Shadow of the Templars (USA) (En,Fr,De,Es,It)"
 }

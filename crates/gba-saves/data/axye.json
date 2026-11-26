@@ -1,45 +1,170 @@
 {
-  "id": "axye",
-  "game_code": "AXYE",
-  "title": "SSX Tricky (USA, Europe) (En,Fr,De)",
-  "media": "eeprom512",
-  "size_bytes": 512,
-  "magic_signatures": [
-    {
-      "offset": 4,
-      "bytes": [
-        72,
-        86,
-        80,
-        73
-      ]
-    }
-  ],
   "checksums": [],
+  "copy_groups": [],
+  "eeprom_rev8": true,
   "fields": [
     {
-      "name": "magic_header",
-      "offset": 4,
+      "confidence": "likely",
+      "constraint": {
+        "kind": "enum",
+        "labels": {
+          "0": "Default",
+          "1": "Alternate"
+        },
+        "values": [
+          0,
+          1
+        ]
+      },
+      "description": "Persistent option flag: FUN_08012754 loads asset set DAT_080127c0 when 0 else DAT_080127a0; FUN_080097e4 branches on it too.",
+      "evidence": "FUN_08011adc zeroes DAT_02000000; FUN_08012754 branches DAT_080127c0 vs DAT_080127a0 on DAT_02000000==0; FUN_080097e4 tests DAT_02000000.",
+      "name": "option_flag_a",
+      "offset": 0,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "constraint": {
+        "kind": "enum",
+        "labels": {
+          "0": "Default",
+          "1": "Alternate"
+        },
+        "values": [
+          0,
+          1
+        ]
+      },
+      "description": "Persistent option flag: FUN_0800ae50 scales audio volume when nonzero; FUN_08012754 and FUN_0800b194 pick alternate tiles/assets when nonzero.",
+      "evidence": "FUN_08011adc zeroes DAT_02000001; FUN_0800ae50 applies volume factor when DAT_02000001!=0; FUN_08012754 branches on DAT_02000001==0; FUN_0800b194 picks tile 0x29 vs 0x2a.",
+      "name": "option_flag_b",
+      "offset": 1,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Rider 0, course 0 race-time word; records screen shows its 3 bytes as minutes/seconds/sub-seconds.",
+      "evidence": "FUN_08011adc seeds 0x02000064 from ROM table PTR_DAT_08011be4; FUN_08015fd4 displays (word>>8)&0xff and word&0xff plus byte at 0x02000066.",
+      "name": "rider0_time_rec0",
+      "offset": 100,
       "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Rider 0, course 1 race-time word; shown as byte triple like rec0.",
+      "evidence": "FUN_08011adc seeds 0x02000068 from ROM table PTR_DAT_08011be4; FUN_08015fd4 displays each rider time word as three byte values.",
+      "name": "rider0_time_rec1",
+      "offset": 104,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Rider 0, course 2 race-time word; shown as byte triple like rec0.",
+      "evidence": "FUN_08011adc seeds 0x0200006c from ROM table PTR_DAT_08011be4; FUN_08015fd4 displays each rider time word as three byte values.",
+      "name": "rider0_time_rec2",
+      "offset": 108,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Rider 0, course 0 showoff score; records screen formats the whole u32 as an integer.",
+      "evidence": "FUN_08011adc seeds 0x02000070 from ROM table at PTR_DAT_08011be0; records flow (FUN_08015fd4/FUN_080167c2) formats *(u32*)(rider*0x2c+0x2000070) via FUN_0801c3e8 and shows it with FUN_08011a48.",
+      "name": "rider0_score_rec0",
+      "offset": 112,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Rider 0, course 1 showoff score; integer display like rec0.",
+      "evidence": "FUN_08011adc seeds 0x02000074 from ROM table at PTR_DAT_08011be0; records flow formats rider score u32s via FUN_0801c3e8/FUN_08011a48.",
+      "name": "rider0_score_rec1",
+      "offset": 116,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Rider 0, course 2 showoff score; integer display like rec0.",
+      "evidence": "FUN_08011adc seeds 0x02000078 from ROM table at PTR_DAT_08011be0; records flow formats rider score u32s via FUN_0801c3e8/FUN_08011a48.",
+      "name": "rider0_score_rec2",
+      "offset": 120,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "allowed": "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+        "kind": "ascii-charset",
+        "max_len": 9
+      },
+      "description": "Rider 0 race-time holder initials: 3 courses x 3 uppercase letters; name entry stores via FUN_0801a164 set 0.",
+      "evidence": "FUN_08011adc seeds via FUN_0801a164(rider,0,rec,PTR_DAT_08011be8); FUN_08015fd4 reads bytes at 0x0200007c/7d/7e and shows each via FUN_0801c3e8/FUN_08011a48; name entry builds letters as 'A'+index and stores via FUN_0801a164 in FUN_08015fd4/FUN_080167c2/FUN_08016c68.",
+      "name": "rider0_race_initials",
+      "offset": 124,
+      "size": 9,
       "type": "ascii"
     },
     {
-      "name": "slot_counter",
-      "offset": 8,
-      "size": 2,
-      "type": "u16_le"
+      "confidence": "confirmed",
+      "constraint": {
+        "allowed": "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+        "kind": "ascii-charset",
+        "max_len": 9
+      },
+      "description": "Rider 0 showoff-score holder initials: 3 courses x 3 uppercase letters; name entry stores via FUN_0801a164 set 1.",
+      "evidence": "FUN_0801a164(param_2==1) writes rider*0x2c+rec*3+0x2000085; FUN_08015fd4/FUN_080167c2 records flow reads bytes at 0x02000085.. and shows each via FUN_0801c3e8/FUN_08011a48; name entry stores via FUN_0801a164 in FUN_08015fd4/FUN_080167c2.",
+      "name": "rider0_showoff_initials",
+      "offset": 133,
+      "size": 9,
+      "type": "ascii"
     },
     {
-      "name": "game_progress_flags",
-      "offset": 10,
+      "confidence": "confirmed",
+      "constraint": {
+        "kind": "bitmask",
+        "valid_mask": 4092
+      },
+      "description": "Stage-unlock progression bitflags; bit n set once its FUN_0801a0ac count gate passes.",
+      "evidence": "FUN_08011adc zeroes _DAT_020001c8; FUN_0801721c OR-accumulates values 4,8,0x10,0x20,0x40,0x80,0x100,0x200,0x400,0x800 gated by FUN_0801a0ac counts.",
+      "name": "unlock_flags_stages",
+      "offset": 456,
       "size": 2,
-      "type": "u16_le"
+      "type": "bitflags"
     },
     {
-      "name": "player_status_payload",
-      "offset": 12,
-      "size": 16,
-      "type": "bytes"
+      "confidence": "confirmed",
+      "constraint": {
+        "kind": "bitmask",
+        "valid_mask": 252
+      },
+      "description": "Rider/track-unlock progression bitflags; bits set once FUN_0801a090 medal gates pass.",
+      "evidence": "FUN_08011adc zeroes _DAT_020001ca; FUN_0801721c OR-accumulates values 4,8,0x10,0x20,0x40,0x80 gated by FUN_0801a090(rider,stage)==3 checks.",
+      "name": "unlock_flags_riders",
+      "offset": 458,
+      "size": 2,
+      "type": "bitflags"
+    },
+    {
+      "confidence": "guessed",
+      "description": "Trailer marker byte written once by save-init; no gameplay readers found.",
+      "evidence": "FUN_08011adc writes _DAT_020001f8 = 0x0e; no other FUN_08xxxxxx references 0x020001f8 in decomp/decompiled.c.gz.",
+      "name": "save_trailer_marker",
+      "offset": 504,
+      "size": 1,
+      "type": "u8"
     }
-  ]
+  ],
+  "game_code": "AXYE",
+  "id": "axye",
+  "magic_signatures": [],
+  "media": "eeprom512",
+  "size_bytes": 512,
+  "title": "SSX Tricky (USA, Europe) (En,Fr,De)"
 }

@@ -1,45 +1,203 @@
 {
-  "id": "bl8e",
-  "game_code": "BL8E",
-  "title": "Lara Croft Tomb Raider - Legend (USA) (En,Fr,De,Es,It)",
-  "media": "eeprom512",
-  "size_bytes": 512,
-  "magic_signatures": [
-    {
-      "offset": 0,
-      "bytes": [
-        46,
-        111,
-        56,
-        116
-      ]
-    }
-  ],
   "checksums": [],
+  "copy_groups": [],
+  "eeprom_rev8": true,
   "fields": [
     {
-      "name": "magic_header",
-      "offset": 0,
-      "size": 4,
-      "type": "ascii"
-    },
-    {
-      "name": "slot_counter",
+      "confidence": "confirmed",
+      "description": "CRC32-IEEE (poly 0xEDB88320, init 0xFFFFFFFF, xorout 0xFFFFFFFF) over logical block bytes [0,64) with the stored word treated as zero. Schema v2 has no crc32 algorithm, so the stored word is exposed as a plain field; see SPEC.md.",
+      "evidence": "FUN_08020e64 builds the 256-entry CRC table (shift-xor with polynomial param), FUN_08020ed8 runs the table update crc=table[(crc^byte)&0xff]^(crc>>8), FUN_08020f80 wraps it with init 0xFFFFFFFF and final inversion, and FUN_080210a8 verifies this word per 64-byte block (zeroes word at block+4, compares recomputed value). Value 0x5e2e6f38 verified against samples/baseline.sav in the rev8-logical domain with two independent implementations.",
+      "name": "settings_crc32",
       "offset": 4,
-      "size": 2,
-      "type": "u16_le"
+      "size": 4,
+      "type": "u32_le"
     },
     {
-      "name": "game_progress_flags",
-      "offset": 6,
-      "size": 2,
-      "type": "u16_le"
-    },
-    {
-      "name": "player_status_payload",
+      "confidence": "likely",
+      "description": "Palette/config color word 0: RGB555 value consumed by the options-screen applier.",
+      "evidence": "FUN_08021408 reads save+8 (u16) in its 9-entry loop and splits it into runtime display struct DAT_080214b4+0x58 colors (low 5 bits, mid 3 bits); save buffer is main struct (*DAT_08019d3c / *DAT_0802b328) +300, loaded from EEPROM by FUN_080215cc/FUN_08040610 via DMA3 FUN_08040590.",
+      "name": "palette_color_0",
       "offset": 8,
-      "size": 16,
-      "type": "bytes"
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Palette/config color word 1: RGB555 value consumed by the options-screen applier.",
+      "evidence": "FUN_08021408 reads save+10 (u16) in its 9-entry loop into runtime display struct DAT_080214b4+0x5c colors; save buffer at main struct +300, EEPROM read path FUN_080215cc/FUN_08040610.",
+      "name": "palette_color_1",
+      "offset": 10,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Palette/config color word 2: RGB555 value consumed by the options-screen applier.",
+      "evidence": "FUN_08021408 reads save+12 (u16) in its 9-entry loop into runtime display struct DAT_080214b4+0x60 colors; save buffer at main struct +300, EEPROM read path FUN_080215cc/FUN_08040610.",
+      "name": "palette_color_2",
+      "offset": 12,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Palette/config color word 3: RGB555 value consumed by the options-screen applier.",
+      "evidence": "FUN_08021408 reads save+14 (u16) in its 9-entry loop into runtime display struct DAT_080214b4+0x64 colors; save buffer at main struct +300, EEPROM read path FUN_080215cc/FUN_08040610.",
+      "name": "palette_color_3",
+      "offset": 14,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Palette/config color word 4: RGB555 value consumed by the options-screen applier.",
+      "evidence": "FUN_08021408 reads save+16 (u16) in its 9-entry loop into runtime display struct DAT_080214b4+0x68 colors; save buffer at main struct +300, EEPROM read path FUN_080215cc/FUN_08040610.",
+      "name": "palette_color_4",
+      "offset": 16,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Palette/config color word 5: RGB555 value consumed by the options-screen applier.",
+      "evidence": "FUN_08021408 reads save+18 (u16) in its 9-entry loop into runtime display struct DAT_080214b4+0x6c colors; save buffer at main struct +300, EEPROM read path FUN_080215cc/FUN_08040610.",
+      "name": "palette_color_5",
+      "offset": 18,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Palette/config color word 6: RGB555 value consumed by the options-screen applier.",
+      "evidence": "FUN_08021408 reads save+20 (u16) in its 9-entry loop into runtime display struct DAT_080214b4+0x70 colors; save buffer at main struct +300, EEPROM read path FUN_080215cc/FUN_08040610.",
+      "name": "palette_color_6",
+      "offset": 20,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Palette/config color word 7: RGB555 value consumed by the options-screen applier.",
+      "evidence": "FUN_08021408 reads save+22 (u16) in its 9-entry loop into runtime display struct DAT_080214b4+0x74 colors; save buffer at main struct +300, EEPROM read path FUN_080215cc/FUN_08040610.",
+      "name": "palette_color_7",
+      "offset": 22,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Palette/config color word 8: RGB555 value consumed by the options-screen applier.",
+      "evidence": "FUN_08021408 reads save+24 (u16) in its 9-entry loop into runtime display struct DAT_080214b4+0x78 colors; save buffer at main struct +300, EEPROM read path FUN_080215cc/FUN_08040610.",
+      "name": "palette_color_8",
+      "offset": 24,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Option value 0: low byte consumed as a runtime setting char by the options-screen applier.",
+      "evidence": "FUN_08021408 copies (char)*(u16*)(save+0x2c) to runtime struct DAT_080214b4+0x54; called as FUN_08021408(*DAT_0802b328+300) from the settings applier FUN_0802b1c4; save buffer loaded by FUN_080215cc/FUN_08040610.",
+      "name": "option_value_0",
+      "offset": 44,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Option value 1: low byte consumed as a runtime setting char by the options-screen applier.",
+      "evidence": "FUN_08021408 copies (char)*(u16*)(save+0x2e) to runtime struct DAT_080214b4+0x55; called as FUN_08021408(*DAT_0802b328+300) from the settings applier FUN_0802b1c4; save buffer loaded by FUN_080215cc/FUN_08040610.",
+      "name": "option_value_1",
+      "offset": 46,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Option value 2: low byte consumed as a runtime setting char by the options-screen applier.",
+      "evidence": "FUN_08021408 copies (char)*(u16*)(save+0x30) to runtime struct DAT_080214b4+0x56; called as FUN_08021408(*DAT_0802b328+300) from the settings applier FUN_0802b1c4; save buffer loaded by FUN_080215cc/FUN_08040610.",
+      "name": "option_value_2",
+      "offset": 48,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Option byte copied to runtime setting slot +0x43 by the options-screen applier.",
+      "evidence": "FUN_08021408 copies *(save+0x32) to runtime struct DAT_080214b4+0x43; called as FUN_08021408(*DAT_0802b328+300) from the settings applier FUN_0802b1c4.",
+      "name": "option_byte_32",
+      "offset": 50,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Option byte copied to runtime setting slot +0xd4 by the options-screen applier.",
+      "evidence": "FUN_08021408 copies *(save+0x3b) to runtime struct DAT_080214b4+0xd4; called as FUN_08021408(*DAT_0802b328+300) from the settings applier FUN_0802b1c4.",
+      "name": "option_byte_3b",
+      "offset": 59,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "constraint": {
+        "flag_labels": {
+          "0": "flag_bit0",
+          "1": "flag_bit1"
+        },
+        "kind": "bitmask",
+        "valid_mask": 3
+      },
+      "description": "Two option flags: bit0 feeds runtime slot +0x3f, bit1 feeds runtime slot +0x3e.",
+      "evidence": "FUN_08021408 splits save+0x3c as (byte&1)->DAT_080214b4+0x3f and ((byte&2)>>1)->DAT_080214b4+0x3e; the sole save-buffer reader consumes only bits 0-1; called from the settings applier FUN_0802b1c4.",
+      "name": "option_flags",
+      "offset": 60,
+      "size": 1,
+      "type": "bitflags"
+    },
+    {
+      "confidence": "likely",
+      "description": "Option byte widened to runtime config u16 slot +0x84 by the options-screen applier.",
+      "evidence": "FUN_08021408 copies (u16)*(save+0x3d) to runtime struct DAT_080214b4+0x84; called as FUN_08021408(*DAT_0802b328+300) from the settings applier FUN_0802b1c4.",
+      "name": "option_byte_3d",
+      "offset": 61,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Option byte widened to runtime config u16 slot +0x88 by the options-screen applier.",
+      "evidence": "FUN_08021408 copies (u16)*(save+0x3e) to runtime struct DAT_080214b4+0x88; called as FUN_08021408(*DAT_0802b328+300) from the settings applier FUN_0802b1c4.",
+      "name": "option_byte_3e",
+      "offset": 62,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Option byte widened to runtime config u16 slot +0x86 by the options-screen applier.",
+      "evidence": "FUN_08021408 copies (u16)*(save+0x3f) to runtime struct DAT_080214b4+0x86; called as FUN_08021408(*DAT_0802b328+300) from the settings applier FUN_0802b1c4.",
+      "name": "option_byte_3f",
+      "offset": 63,
+      "size": 1,
+      "type": "u8"
     }
-  ]
+  ],
+  "game_code": "BL8E",
+  "id": "bl8e",
+  "magic_signatures": [
+    {
+      "bytes": [
+        101,
+        109,
+        112,
+        116
+      ],
+      "description": "ASCII 'empt' block tag at the start of every 64-byte settings block (rev8-logical domain)",
+      "offset": 0
+    }
+  ],
+  "media": "eeprom512",
+  "size_bytes": 512,
+  "title": "Lara Croft Tomb Raider - Legend (USA) (En,Fr,De,Es,It)"
 }

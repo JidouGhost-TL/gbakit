@@ -1,45 +1,367 @@
 {
-  "id": "ahij",
-  "game_code": "AHIJ",
-  "title": "Hitsuji no Kimochi. (Japan)",
-  "media": "eeprom8k",
-  "size_bytes": 8192,
-  "magic_signatures": [
+  "checksums": [
     {
-      "offset": 0,
-      "bytes": [
-        86,
-        83,
-        72,
-        83
-      ]
+      "algorithm": "crc16_x25",
+      "covered_end": 344,
+      "covered_start": 8,
+      "name": "slot_0_crc",
+      "stored_offset": 340
+    },
+    {
+      "algorithm": "crc16_x25",
+      "covered_end": 680,
+      "covered_start": 344,
+      "name": "slot_1_crc",
+      "stored_offset": 676
+    },
+    {
+      "algorithm": "crc16_x25",
+      "covered_end": 1016,
+      "covered_start": 680,
+      "name": "slot_2_crc",
+      "stored_offset": 1012
+    },
+    {
+      "algorithm": "crc16_x25",
+      "covered_end": 1596,
+      "covered_start": 1352,
+      "name": "rank_block_a_crc",
+      "stored_offset": 1840
+    },
+    {
+      "algorithm": "crc16_x25",
+      "covered_end": 1840,
+      "covered_start": 1596,
+      "name": "rank_block_b_crc",
+      "stored_offset": 1848
     }
   ],
-  "checksums": [],
+  "copy_groups": [
+    {
+      "fields": [
+        "rank1_score_1",
+        "rank1_score_1_bak"
+      ],
+      "name": "rank1_place1_mirrors"
+    },
+    {
+      "fields": [
+        "rank1_score_2",
+        "rank1_score_2_bak"
+      ],
+      "name": "rank1_place2_mirrors"
+    },
+    {
+      "fields": [
+        "rank1_score_3",
+        "rank1_score_3_bak"
+      ],
+      "name": "rank1_place3_mirrors"
+    },
+    {
+      "fields": [
+        "rank1_score_4",
+        "rank1_score_4_bak"
+      ],
+      "name": "rank1_place4_mirrors"
+    },
+    {
+      "fields": [
+        "rank1_score_5",
+        "rank1_score_5_bak"
+      ],
+      "name": "rank1_place5_mirrors"
+    }
+  ],
+  "eeprom_rev8": true,
   "fields": [
     {
-      "name": "magic_header",
-      "offset": 0,
-      "size": 4,
-      "type": "ascii"
-    },
-    {
-      "name": "slot_counter",
+      "confidence": "confirmed",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 5273,
+        "minimum": 5273
+      },
+      "description": "Save format version constant; FUN_08007b7c compares it against the ROM constant and re-initializes the save when it differs.",
+      "evidence": "FUN_08007b7c compares *(int*)(save+4) with ROM constant (baseline u32 0x1499 = 5273); FUN_08041970 re-inits save when mismatch.",
+      "name": "save_version",
       "offset": 4,
-      "size": 2,
-      "type": "u16_le"
+      "size": 4,
+      "type": "u32_le"
     },
     {
-      "name": "game_progress_flags",
-      "offset": 6,
-      "size": 2,
-      "type": "u16_le"
+      "confidence": "confirmed",
+      "description": "Rank table 1, place 1 score; default 1000 written by FUN_08041970 / FUN_0804365c.",
+      "evidence": "FUN_08041970 writes u32 1000 (bytes E8 03 00 00) at save+0x548; FUN_0804365c default-init *(u32*)(save+0x548)=1000; covered by rank_block_a_crc in FUN_080018f8.",
+      "name": "rank1_score_1",
+      "offset": 1352,
+      "size": 4,
+      "type": "u32_le"
     },
     {
-      "name": "player_status_payload",
-      "offset": 8,
-      "size": 16,
+      "confidence": "likely",
+      "description": "Rank table 1, place 1 holder name in Shift-JIS (20 bytes).",
+      "evidence": "FUN_08041970 stores five u32 words (20 bytes) of ROM default-name string data right after the score at save+0x548; baseline bytes are non-blank Shift-JIS.",
+      "name": "rank1_name_1",
+      "offset": 1356,
+      "size": 20,
       "type": "bytes"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Rank table 1, place 2 score; default 500.",
+      "evidence": "FUN_08041970 writes u32 500 (F4 01 00 00) at save+0x560; covered by rank_block_a_crc in FUN_080018f8.",
+      "name": "rank1_score_2",
+      "offset": 1376,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Rank table 1, place 2 holder name in Shift-JIS (20 bytes).",
+      "evidence": "FUN_08041970 stores 20 bytes of ROM default-name string data after the score at save+0x560; baseline bytes are non-blank Shift-JIS.",
+      "name": "rank1_name_2",
+      "offset": 1380,
+      "size": 20,
+      "type": "bytes"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Rank table 1, place 3 score; default 300.",
+      "evidence": "FUN_08041970 writes bytes 2C 01 00 00 (u32 300) at save+0x578; FUN_0804365c default-init *(u32*)(save+0x578)=300; covered by rank_block_a_crc.",
+      "name": "rank1_score_3",
+      "offset": 1400,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Rank table 1, place 3 holder name in Shift-JIS (20 bytes).",
+      "evidence": "FUN_08041970 stores 20 bytes of ROM default-name string data after the score at save+0x578; baseline bytes are non-blank Shift-JIS.",
+      "name": "rank1_name_3",
+      "offset": 1404,
+      "size": 20,
+      "type": "bytes"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Rank table 1, place 4 score; default 200.",
+      "evidence": "FUN_0804365c default-init *(u32*)(save+0x590)=200; covered by rank_block_a_crc in FUN_080018f8.",
+      "name": "rank1_score_4",
+      "offset": 1424,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Rank table 1, place 4 holder name in Shift-JIS (20 bytes).",
+      "evidence": "FUN_08041970 stores 20 bytes of ROM default-name string data after the score at save+0x590; baseline bytes are non-blank Shift-JIS.",
+      "name": "rank1_name_4",
+      "offset": 1428,
+      "size": 20,
+      "type": "bytes"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Rank table 1, place 5 score; default 100.",
+      "evidence": "FUN_0804365c default-init *(u32*)(save+0x5A8)=100; covered by rank_block_a_crc in FUN_080018f8.",
+      "name": "rank1_score_5",
+      "offset": 1448,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Rank table 1, place 5 holder name in Shift-JIS (20 bytes).",
+      "evidence": "FUN_08041970 stores 20 bytes of ROM default-name string data after the score at save+0x5AC; baseline bytes are non-blank Shift-JIS.",
+      "name": "rank1_name_5",
+      "offset": 1452,
+      "size": 20,
+      "type": "bytes"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Rank table 2, place 1 score; default 1000 with a different default name set than table 1.",
+      "evidence": "FUN_0804365c default-init *(u32*)(save+0x5C0)=1000 via the puStack_5c table pointer; covered by rank_block_a_crc in FUN_080018f8.",
+      "name": "rank2_score_1",
+      "offset": 1472,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Rank table 2, place 1 holder name in Shift-JIS (20 bytes).",
+      "evidence": "FUN_08041970 stores 20 bytes of ROM default-name string data after the score at save+0x5C0 (pcStack_58 table pointer); baseline bytes are non-blank Shift-JIS.",
+      "name": "rank2_name_1",
+      "offset": 1476,
+      "size": 20,
+      "type": "bytes"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Rank table 2, place 2 score; default 500.",
+      "evidence": "FUN_0804365c default-init *(u32*)(save+0x5D8)=500 via the puStack_58 table pointer; covered by rank_block_a_crc.",
+      "name": "rank2_score_2",
+      "offset": 1496,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Rank table 2, place 2 holder name in Shift-JIS (20 bytes).",
+      "evidence": "FUN_08041970 stores 20 bytes of ROM default-name string data after the score at save+0x5D8; baseline bytes are non-blank Shift-JIS.",
+      "name": "rank2_name_2",
+      "offset": 1500,
+      "size": 20,
+      "type": "bytes"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Rank table 2, place 3 score; default 300.",
+      "evidence": "FUN_0804365c default-init *(u32*)(save+0x5F0)=300 via the puStack_54 table pointer; covered by rank_block_a_crc.",
+      "name": "rank2_score_3",
+      "offset": 1520,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Rank table 2, place 3 holder name in Shift-JIS (20 bytes).",
+      "evidence": "FUN_08041970 stores 20 bytes of ROM default-name string data after the score at save+0x5F0; baseline bytes are non-blank Shift-JIS.",
+      "name": "rank2_name_3",
+      "offset": 1524,
+      "size": 20,
+      "type": "bytes"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Rank table 2, place 4 score; default 200.",
+      "evidence": "FUN_0804365c default-init *(u32*)(save+0x608)=200 via the puStack_50 table pointer; covered by rank_block_a_crc.",
+      "name": "rank2_score_4",
+      "offset": 1544,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Rank table 2, place 4 holder name in Shift-JIS (20 bytes).",
+      "evidence": "FUN_08041970 stores 20 bytes of ROM default-name string data after the score at save+0x608; baseline bytes are non-blank Shift-JIS.",
+      "name": "rank2_name_4",
+      "offset": 1548,
+      "size": 20,
+      "type": "bytes"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Rank table 2, place 5 score; default 100.",
+      "evidence": "FUN_0804365c default-init *(u32*)(save+0x620)=100 via the puStack_4c table pointer; covered by rank_block_a_crc.",
+      "name": "rank2_score_5",
+      "offset": 1568,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Rank table 2, place 5 holder name in Shift-JIS (20 bytes).",
+      "evidence": "FUN_08041970 stores 20 bytes of ROM default-name string data after the score at save+0x620; baseline bytes are non-blank Shift-JIS.",
+      "name": "rank2_name_5",
+      "offset": 1572,
+      "size": 20,
+      "type": "bytes"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Backup mirror of rank table 1, place 1 score (block B at save+0x63C mirrors block A at save+0x548).",
+      "evidence": "FUN_080018f8 thunk memcpy of 0xF4 bytes between save+0x548 blocks with selector toggle; FUN_0804365c verifies rank_block_b_crc; baseline bytes identical to rank1_score_1.",
+      "name": "rank1_score_1_bak",
+      "offset": 1596,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Backup mirror of rank table 1, place 2 score.",
+      "evidence": "FUN_080018f8 thunk memcpy of 0xF4 bytes between save+0x548 blocks; baseline bytes identical to rank1_score_2.",
+      "name": "rank1_score_2_bak",
+      "offset": 1620,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Backup mirror of rank table 1, place 3 score.",
+      "evidence": "FUN_080018f8 thunk memcpy of 0xF4 bytes between save+0x548 blocks; baseline bytes identical to rank1_score_3.",
+      "name": "rank1_score_3_bak",
+      "offset": 1644,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Backup mirror of rank table 1, place 4 score.",
+      "evidence": "FUN_080018f8 thunk memcpy of 0xF4 bytes between save+0x548 blocks; baseline bytes identical to rank1_score_4.",
+      "name": "rank1_score_4_bak",
+      "offset": 1668,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Backup mirror of rank table 1, place 5 score.",
+      "evidence": "FUN_080018f8 thunk memcpy of 0xF4 bytes between save+0x548 blocks; baseline bytes identical to rank1_score_5.",
+      "name": "rank1_score_5_bak",
+      "offset": 1692,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 3,
+        "minimum": 1
+      },
+      "description": "Ranking mode flag in the block-A footer; code writes 1, 2, or 3 depending on region/mode branch.",
+      "evidence": "FUN_08041970 writes save[0x638]=1/2 by branch; FUN_0804365c writes save[0x638]=1 (region 0x48 branch) and 2/3 in the other region branches; baseline value is 1.",
+      "name": "rank_mode",
+      "offset": 1592,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Ranking sub-flag in the block-A footer, always written as 1 alongside rank_mode.",
+      "evidence": "FUN_08041970 writes save[DAT_08041dd8]=1 (resolves to save+0x639: 0x560-entry pointer arithmetic 0x560+0xD9) right after save[0x638]=1; baseline value is 1.",
+      "name": "rank_submode",
+      "offset": 1593,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Stored checksum word for the ranking-meta region (custom CRC-16 parameters not in the Schema v2 algorithm list, so kept as a plain field; see SPEC).",
+      "evidence": "FUN_080018f8 and FUN_08041970 compute a reflected CRC-16 over save+0x748 and store ~crc at save+0x740 (baseline 0xF881); covered range/params not uniquely identifiable, so no checksum entry.",
+      "name": "ranking_meta_crc",
+      "offset": 1856,
+      "size": 2,
+      "type": "u16_le"
     }
-  ]
+  ],
+  "game_code": "AHIJ",
+  "id": "ahij",
+  "magic_signatures": [
+    {
+      "bytes": [
+        83,
+        72,
+        83,
+        86
+      ],
+      "description": "ASCII 'SHSV' header (logical domain); verified by FUN_08007b7c memcmp",
+      "offset": 0
+    }
+  ],
+  "media": "eeprom8k",
+  "size_bytes": 8192,
+  "title": "Hitsuji no Kimochi. (Japan)"
 }

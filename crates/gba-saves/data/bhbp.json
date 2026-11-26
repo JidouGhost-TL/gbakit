@@ -1,29 +1,67 @@
 {
-  "id": "bhbp",
-  "game_code": "BHBP",
-  "title": "Best Friends - Hunde & Katzen (Germany) (En,De)",
-  "media": "eeprom512",
-  "size_bytes": 512,
-  "magic_signatures": [],
   "checksums": [],
+  "copy_groups": [],
+  "eeprom_rev8": true,
   "fields": [
     {
-      "name": "slot_counter",
+      "confidence": "likely",
+      "description": "Leading byte of EEPROM address-0 block; sole nonzero byte (0x01) in the fresh live-captured save, consistent with a save-init/exists marker.",
+      "evidence": "FUN_080427b8 reads EEPROM address 0 as one 8-byte block (4x u16) from bus 0x0D000000; FUN_080429dc verifies that block word-wise against a 4-word RAM buffer; FUN_0804287c/FUN_08042868 is the matching 8-byte write path. Rev8-logical baseline byte 0 = 0x01, the only nonzero byte in samples/baseline.sav.",
+      "name": "save_active_flag",
       "offset": 0,
-      "size": 2,
-      "type": "u16_le"
+      "size": 1,
+      "type": "u8"
     },
     {
-      "name": "game_progress_flags",
+      "confidence": "guessed",
+      "description": "Second u16 word of EEPROM address-0 block (rev8-logical bytes 2..3); zero in the fresh save.",
+      "evidence": "FUN_080427b8 transfers each EEPROM address as 4x u16 words and FUN_080429dc compares them word-wise (asStack_14[4]); word position 1 of address-0 block. Value 0x0000 verified against rev8-logical samples/baseline.sav; gameplay meaning unknown (no game-level caller in partial decomp).",
+      "name": "blk0_word1",
       "offset": 2,
       "size": 2,
       "type": "u16_le"
     },
     {
-      "name": "player_status_payload",
+      "confidence": "guessed",
+      "description": "Third u16 word of EEPROM address-0 block (rev8-logical bytes 4..5); zero in the fresh save.",
+      "evidence": "FUN_080427b8 transfers each EEPROM address as 4x u16 words and FUN_080429dc compares them word-wise (asStack_14[4]); word position 2 of address-0 block. Value 0x0000 verified against rev8-logical samples/baseline.sav; gameplay meaning unknown (no game-level caller in partial decomp).",
+      "name": "blk0_word2",
       "offset": 4,
-      "size": 16,
-      "type": "bytes"
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "guessed",
+      "description": "Fourth u16 word of EEPROM address-0 block (rev8-logical bytes 6..7); zero in the fresh save.",
+      "evidence": "FUN_080427b8 transfers each EEPROM address as 4x u16 words and FUN_080429dc compares them word-wise (asStack_14[4]); word position 3 of address-0 block. Value 0x0000 verified against rev8-logical samples/baseline.sav; gameplay meaning unknown (no game-level caller in partial decomp).",
+      "name": "blk0_word3",
+      "offset": 6,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "guessed",
+      "description": "Low half of EEPROM address-1 block (rev8-logical bytes 8..11); zero in the fresh save.",
+      "evidence": "FUN_080427b8 / FUN_0804287c move exactly 8 bytes per EEPROM address over bus 0x0D000000 via FUN_08042738; address-1 block is the second programmed 8-byte unit. Value 0x00000000 verified against rev8-logical samples/baseline.sav; gameplay meaning unknown (no game-level caller in partial decomp).",
+      "name": "blk1_lo",
+      "offset": 8,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "guessed",
+      "description": "High half of EEPROM address-1 block (rev8-logical bytes 12..15); zero in the fresh save.",
+      "evidence": "FUN_080427b8 / FUN_0804287c move exactly 8 bytes per EEPROM address over bus 0x0D000000 via FUN_08042738; address-1 block is the second programmed 8-byte unit. Value 0x00000000 verified against rev8-logical samples/baseline.sav; gameplay meaning unknown (no game-level caller in partial decomp).",
+      "name": "blk1_hi",
+      "offset": 12,
+      "size": 4,
+      "type": "u32_le"
     }
-  ]
+  ],
+  "game_code": "BHBP",
+  "id": "bhbp",
+  "magic_signatures": [],
+  "media": "eeprom512",
+  "size_bytes": 512,
+  "title": "Best Friends - Hunde & Katzen (Germany) (En,De)"
 }

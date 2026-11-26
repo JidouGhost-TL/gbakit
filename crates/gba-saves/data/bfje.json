@@ -1,45 +1,221 @@
 {
-  "id": "bfje",
-  "game_code": "BFJE",
-  "title": "Frogger's Journey - The Forgotten Relic (USA)",
-  "media": "eeprom8k",
-  "size_bytes": 8192,
-  "magic_signatures": [
+  "checksums": [
     {
-      "offset": 0,
-      "bytes": [
-        73,
-        77,
-        65,
-        78
-      ]
+      "algorithm": "sum16_le_words",
+      "covered_end": 272,
+      "covered_start": 0,
+      "name": "slot0_record_checksum",
+      "stored_offset": 268
+    },
+    {
+      "algorithm": "sum16_le_words",
+      "covered_end": 544,
+      "covered_start": 272,
+      "name": "slot1_record_checksum",
+      "stored_offset": 540
+    },
+    {
+      "algorithm": "sum16_le_words",
+      "covered_end": 816,
+      "covered_start": 544,
+      "name": "slot2_record_checksum",
+      "stored_offset": 812
     }
   ],
-  "checksums": [],
+  "eeprom_rev8": true,
   "fields": [
     {
-      "name": "magic_header",
+      "confidence": "guessed",
+      "description": "Leading payload word 0 of slot 0 (gameplay meaning unidentified; zero in fresh baseline; covered by slot checksum; typed mutable for live testing).",
+      "evidence": "Span lies inside the 0x110-byte save record written by FUN_08000400 and covered by the FUN_08000468 checksum stored at record+0x10C (FUN_08000738, DAT_08000820).",
+      "name": "slot0_save_word0",
       "offset": 0,
       "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "guessed",
+      "description": "Leading payload word 1 of slot 0 (gameplay meaning unidentified; zero in fresh baseline; covered by slot checksum; typed mutable for live testing).",
+      "evidence": "Span lies inside the 0x110-byte save record written by FUN_08000400 and covered by the FUN_08000468 checksum stored at record+0x10C (FUN_08000738, DAT_08000820).",
+      "name": "slot0_save_word1",
+      "offset": 4,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "guessed",
+      "description": "Remaining 0xF8 payload bytes of slot 0 (all zero in fresh baseline; covered by slot checksum).",
+      "evidence": "Span lies inside the 0x110-byte save record written by FUN_08000400 and covered by the FUN_08000468 checksum stored at record+0x10C (FUN_08000738, DAT_08000820).",
+      "name": "slot0_payload_rest",
+      "offset": 8,
+      "size": 248,
+      "type": "bytes"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "allowed": "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+        "kind": "ascii-charset",
+        "max_len": 6
+      },
+      "description": "Slot 0 record magic, ASCII 'KONAMI' (raw EEPROM bytes are bit-reversed 'IMANOK', confirming eeprom_rev8).",
+      "evidence": "Record geometry from FUN_080129c4/FUN_08000738/FUN_08000400 (0x110-byte records, 3x0x110=0x330 via FUN_08000f8c); magic verifies at logical slot+0x100 in baseline.sav.",
+      "name": "slot0_magic",
+      "offset": 256,
+      "size": 6,
       "type": "ascii"
     },
     {
-      "name": "slot_counter",
-      "offset": 4,
-      "size": 2,
-      "type": "u16_le"
+      "confidence": "confirmed",
+      "description": "Slot 0 record checksum: u16-word sum over the 0x110 record with stored bytes zeroed (equals 0xD9E6 in baseline).",
+      "evidence": "FUN_08000738 zeroes u32 at record+0x10C then stores FUN_08000468(buffer,0x110); verified as sum16_le_words against baseline.sav.",
+      "name": "slot0_stored_checksum",
+      "offset": 268,
+      "size": 4,
+      "type": "u32_le"
     },
     {
-      "name": "game_progress_flags",
-      "offset": 6,
-      "size": 2,
-      "type": "u16_le"
+      "confidence": "guessed",
+      "description": "Leading payload word 0 of slot 1 (gameplay meaning unidentified; zero in fresh baseline; covered by slot checksum; typed mutable for live testing).",
+      "evidence": "Span lies inside the 0x110-byte save record written by FUN_08000400 and covered by the FUN_08000468 checksum stored at record+0x10C (FUN_08000738, DAT_08000820).",
+      "name": "slot1_save_word0",
+      "offset": 272,
+      "size": 4,
+      "type": "u32_le"
     },
     {
-      "name": "player_status_payload",
-      "offset": 8,
-      "size": 16,
+      "confidence": "guessed",
+      "description": "Leading payload word 1 of slot 1 (gameplay meaning unidentified; zero in fresh baseline; covered by slot checksum; typed mutable for live testing).",
+      "evidence": "Span lies inside the 0x110-byte save record written by FUN_08000400 and covered by the FUN_08000468 checksum stored at record+0x10C (FUN_08000738, DAT_08000820).",
+      "name": "slot1_save_word1",
+      "offset": 276,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "guessed",
+      "description": "Remaining 0xF8 payload bytes of slot 1 (all zero in fresh baseline; covered by slot checksum).",
+      "evidence": "Span lies inside the 0x110-byte save record written by FUN_08000400 and covered by the FUN_08000468 checksum stored at record+0x10C (FUN_08000738, DAT_08000820).",
+      "name": "slot1_payload_rest",
+      "offset": 280,
+      "size": 248,
       "type": "bytes"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "allowed": "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+        "kind": "ascii-charset",
+        "max_len": 6
+      },
+      "description": "Slot 1 record magic, ASCII 'KONAMI' (raw EEPROM bytes are bit-reversed 'IMANOK', confirming eeprom_rev8).",
+      "evidence": "Record geometry from FUN_080129c4/FUN_08000738/FUN_08000400 (0x110-byte records, 3x0x110=0x330 via FUN_08000f8c); magic verifies at logical slot+0x100 in baseline.sav.",
+      "name": "slot1_magic",
+      "offset": 528,
+      "size": 6,
+      "type": "ascii"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Slot 1 record checksum: u16-word sum over the 0x110 record with stored bytes zeroed (equals 0xD9E6 in baseline).",
+      "evidence": "FUN_08000738 zeroes u32 at record+0x10C then stores FUN_08000468(buffer,0x110); verified as sum16_le_words against baseline.sav.",
+      "name": "slot1_stored_checksum",
+      "offset": 540,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "guessed",
+      "description": "Leading payload word 0 of slot 2 (gameplay meaning unidentified; zero in fresh baseline; covered by slot checksum; typed mutable for live testing).",
+      "evidence": "Span lies inside the 0x110-byte save record written by FUN_08000400 and covered by the FUN_08000468 checksum stored at record+0x10C (FUN_08000738, DAT_08000820).",
+      "name": "slot2_save_word0",
+      "offset": 544,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "guessed",
+      "description": "Leading payload word 1 of slot 2 (gameplay meaning unidentified; zero in fresh baseline; covered by slot checksum; typed mutable for live testing).",
+      "evidence": "Span lies inside the 0x110-byte save record written by FUN_08000400 and covered by the FUN_08000468 checksum stored at record+0x10C (FUN_08000738, DAT_08000820).",
+      "name": "slot2_save_word1",
+      "offset": 548,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "guessed",
+      "description": "Remaining 0xF8 payload bytes of slot 2 (all zero in fresh baseline; covered by slot checksum).",
+      "evidence": "Span lies inside the 0x110-byte save record written by FUN_08000400 and covered by the FUN_08000468 checksum stored at record+0x10C (FUN_08000738, DAT_08000820).",
+      "name": "slot2_payload_rest",
+      "offset": 552,
+      "size": 248,
+      "type": "bytes"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "allowed": "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+        "kind": "ascii-charset",
+        "max_len": 6
+      },
+      "description": "Slot 2 record magic, ASCII 'KONAMI' (raw EEPROM bytes are bit-reversed 'IMANOK', confirming eeprom_rev8).",
+      "evidence": "Record geometry from FUN_080129c4/FUN_08000738/FUN_08000400 (0x110-byte records, 3x0x110=0x330 via FUN_08000f8c); magic verifies at logical slot+0x100 in baseline.sav.",
+      "name": "slot2_magic",
+      "offset": 800,
+      "size": 6,
+      "type": "ascii"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Slot 2 record checksum: u16-word sum over the 0x110 record with stored bytes zeroed (equals 0xD9E6 in baseline).",
+      "evidence": "FUN_08000738 zeroes u32 at record+0x10C then stores FUN_08000468(buffer,0x110); verified as sum16_le_words against baseline.sav.",
+      "name": "slot2_stored_checksum",
+      "offset": 812,
+      "size": 4,
+      "type": "u32_le"
     }
-  ]
+  ],
+  "game_code": "BFJE",
+  "id": "bfje",
+  "magic_signatures": [
+    {
+      "bytes": [
+        75,
+        79,
+        78,
+        65,
+        77,
+        73
+      ],
+      "description": "ASCII 'KONAMI' record magic, slot 0",
+      "offset": 256
+    },
+    {
+      "bytes": [
+        75,
+        79,
+        78,
+        65,
+        77,
+        73
+      ],
+      "description": "ASCII 'KONAMI' record magic, slot 1",
+      "offset": 528
+    },
+    {
+      "bytes": [
+        75,
+        79,
+        78,
+        65,
+        77,
+        73
+      ],
+      "description": "ASCII 'KONAMI' record magic, slot 2",
+      "offset": 800
+    }
+  ],
+  "media": "eeprom8k",
+  "size_bytes": 8192,
+  "title": "Frogger's Journey - The Forgotten Relic (USA)"
 }

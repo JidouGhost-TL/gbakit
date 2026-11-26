@@ -1,53 +1,156 @@
 {
-  "id": "bt9x",
-  "game_code": "BT9X",
-  "title": "Tak 2 - The Staff of Dreams (Europe) (En,Fr,De,Es,It)",
-  "media": "eeprom512",
-  "size_bytes": 512,
-  "magic_signatures": [
-    {
-      "offset": 0,
-      "bytes": [
-        84,
-        65,
-        75,
-        50
-      ]
-    }
-  ],
-  "checksums": [
-    {
-      "name": "slot_sum16_le",
-      "algorithm": "sum16_le",
-      "covered_start": 0,
-      "covered_end": 18,
-      "stored_offset": 18
-    }
-  ],
+  "checksums": [],
+  "copy_groups": [],
+  "eeprom_rev8": true,
   "fields": [
     {
-      "name": "magic_header",
-      "offset": 0,
-      "size": 4,
-      "type": "ascii"
-    },
-    {
-      "name": "slot_counter",
+      "confidence": "likely",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 23,
+        "minimum": 0
+      },
+      "description": "Stage/level selector validated to be below 0x18 on load; default 0, round-tripped through the store path.",
+      "evidence": "FUN_08015948 validates save byte +4 < 0x18 ('*(byte *)(piVar4 + 1) < 0x18') and resets to defaults otherwise; fail-default path writes 0 (same default block as FUN_08015a54); FUN_08015ae0 persists the live word covering save bytes +4..+7 to EEPROM.",
+      "name": "current_level_index",
       "offset": 4,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "constraint": {
+        "kind": "enum",
+        "labels": {
+          "0": "Off",
+          "1": "On"
+        },
+        "values": [
+          0,
+          1
+        ]
+      },
+      "description": "Two-state option toggle (e.g. sound); must be 0 or 1 on load, defaults to 1 (on).",
+      "evidence": "FUN_08015948 validates save byte +5 < 2 and resets to defaults otherwise; fail-default path writes 1 (mirrored by FUN_08015a54); FUN_08015ae0 persists the live word covering save bytes +4..+7 to EEPROM.",
+      "name": "sound_enabled",
+      "offset": 5,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 11,
+        "minimum": 0
+      },
+      "description": "Per-world progress entry 0 of 5; each entry must be <= 0x0b on load. Cleared by FUN_08017c08/FUN_08017be8, read back by FUN_08017d44 on store, applied via FUN_08017c78 at load.",
+      "evidence": "FUN_08015948 range-checks save bytes +0x0c..+0x10 ('0xb < *(byte *)((int)piVar4 + uVar6 + 0xc)' fails validation) and FUN_08015ae0 stores 'puVar3[uVar4 + 8] = func_0x08017d44(uVar4)' for uVar4 in 0..4.",
+      "name": "world_progress_0",
+      "offset": 12,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 11,
+        "minimum": 0
+      },
+      "description": "Per-world progress entry 1 of 5 (see world_progress_0).",
+      "evidence": "FUN_08015948 range-checks save bytes +0x0c..+0x10 (each <= 0x0b) and FUN_08015ae0 stores 'puVar3[uVar4 + 8] = func_0x08017d44(uVar4)' for uVar4 in 0..4.",
+      "name": "world_progress_1",
+      "offset": 13,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 11,
+        "minimum": 0
+      },
+      "description": "Per-world progress entry 2 of 5 (see world_progress_0).",
+      "evidence": "FUN_08015948 range-checks save bytes +0x0c..+0x10 (each <= 0x0b) and FUN_08015ae0 stores 'puVar3[uVar4 + 8] = func_0x08017d44(uVar4)' for uVar4 in 0..4.",
+      "name": "world_progress_2",
+      "offset": 14,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 11,
+        "minimum": 0
+      },
+      "description": "Per-world progress entry 3 of 5 (see world_progress_0).",
+      "evidence": "FUN_08015948 range-checks save bytes +0x0c..+0x10 (each <= 0x0b) and FUN_08015ae0 stores 'puVar3[uVar4 + 8] = func_0x08017d44(uVar4)' for uVar4 in 0..4.",
+      "name": "world_progress_3",
+      "offset": 15,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 11,
+        "minimum": 0
+      },
+      "description": "Per-world progress entry 4 of 5 (see world_progress_0).",
+      "evidence": "FUN_08015948 range-checks save bytes +0x0c..+0x10 (each <= 0x0b) and FUN_08015ae0 stores 'puVar3[uVar4 + 8] = func_0x08017d44(uVar4)' for uVar4 in 0..4.",
+      "name": "world_progress_4",
+      "offset": 16,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 174,
+        "minimum": 0
+      },
+      "description": "Progress counter validated below 0xaf on load; factory default 0xab (171), preserved across the store path.",
+      "evidence": "FUN_08015948 validates u16 at save offset +0x14 < 0xaf ('*(ushort *)(piVar4 + 5) < 0xaf'); fail-default paths in FUN_08015948 and FUN_08015a54 write 0xab; FUN_08015ae0 preserves the byte without recomputing it.",
+      "name": "progress_counter",
+      "offset": 20,
       "size": 2,
       "type": "u16_le"
     },
     {
-      "name": "game_progress_flags",
-      "offset": 6,
-      "size": 2,
-      "type": "u16_le"
-    },
-    {
-      "name": "player_status_payload",
-      "offset": 8,
-      "size": 16,
-      "type": "bytes"
+      "confidence": "likely",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 4,
+        "minimum": 0
+      },
+      "description": "Current world index (0..4, matching the 5 progress entries); cached to RAM at load and written back on store.",
+      "evidence": "FUN_08015948 validates u32 at save offset +0x18 < 5 ('(uint)piVar4[6] < 5'), defaults it to 0, then caches it via 'func_0x08015bd0(_DAT_08015a4c[6])'; FUN_08015ae0 writes it back via '*(_DAT_08015b3c + 0x18) = *_DAT_08015b38' before 'func_0x080396fc(0, iVar1, 0x1c, 0x1c)'.",
+      "name": "current_world_index",
+      "offset": 24,
+      "size": 4,
+      "type": "u32_le"
     }
-  ]
+  ],
+  "game_code": "BT9X",
+  "id": "bt9x",
+  "magic_signatures": [
+    {
+      "bytes": [
+        50,
+        75,
+        65,
+        84
+      ],
+      "description": "TAK2 FourCC: logical-domain bytes are the byte-reverse of the raw file; as LE u32 this is 0x54414B32. Validated by FUN_08015948 ('*piVar4 == _DAT_08015978').",
+      "offset": 0
+    }
+  ],
+  "media": "eeprom512",
+  "size_bytes": 512,
+  "title": "Tak 2 - The Staff of Dreams (Europe) (En,Fr,De,Es,It)"
 }

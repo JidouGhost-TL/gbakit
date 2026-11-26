@@ -1,45 +1,86 @@
 {
-  "id": "ahqj",
+  "checksums": [],
+  "fields": [
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 5,
+        "minimum": 5
+      },
+      "description": "Save format version marker. Boot init (FUN_08001434) default-writes 5; validators require exactly 5.",
+      "evidence": "FUN_08001434 requires u16 at SRAM 0x0E000000+0 == 5 (-(*buf ^ 5) >> 31) and default-writes 5; FUN_08001540 re-checks *param == 5. Baseline holds 5.",
+      "name": "save_format_version",
+      "offset": 0,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 0,
+        "minimum": 0
+      },
+      "description": "Reserved padding byte; validators require it to be zero.",
+      "evidence": "FUN_08001434 rejects the header if (char)buf_u16[1] (save+2) != 0; FUN_08001540 re-checks (char)param[1] == 0; init writes 0. Baseline is 0x00.",
+      "name": "header_pad_zero",
+      "offset": 2,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Header status flag. Validators require nonzero (0x00 = freshly initialized / inactive). No upper bound is checked in decomp, so no constraint is set.",
+      "evidence": "FUN_08001434 marks header invalid if *(char*)(buf+3) == 0; FUN_08001540 requires *(char*)(buf+3) != 0 for validity; init default-writes 0. Baseline 0x00 explains why the captured boot rewrote defaults.",
+      "name": "save_active_flag",
+      "offset": 3,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Reserved 32-bit header word, default-written as 0 by boot init and ignored by the header validators. Layout position matches the stack slot compared against the FUN_080014ec table byte-sum in FUN_0800159c, so it may hold an extended-data checksum once gameplay saves; semantics unconfirmed, hence no constraint.",
+      "evidence": "FUN_08001434 writes u32 0 at save+4 via *(u32*)(wbuf+2) = 0; header validators in FUN_08001434/FUN_08001540 never read save+4..7; FUN_0800159c compares its stack word over save+4..7 (iStack_1c over the 0x10-byte header) to FUN_080014ec(). Baseline is 0.",
+      "name": "header_check_or_reserved",
+      "offset": 4,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "allowed": "ABCDEFGHIJKLMNOPQRSTUVWXYZ-",
+        "kind": "ascii-charset",
+        "max_len": 8
+      },
+      "description": "Fixed game magic ASCII 'AGB-HARO' identifying this title's SRAM header.",
+      "evidence": "FUN_08001434/FUN_08001540 memcmp save+8..15 against the 8-byte ROM magic referenced via DAT_08001498/DAT_08001574; FUN_08001434 restores it from ROM (DAT_080014e4) on init. Baseline bytes 8..15 decode to AGB-HARO.",
+      "name": "game_magic_agb_haro",
+      "offset": 8,
+      "size": 8,
+      "type": "ascii"
+    }
+  ],
   "game_code": "AHQJ",
-  "title": "Harobots - Robo Hero Battling!! (Japan)",
-  "media": "sram",
-  "size_bytes": 32768,
+  "id": "ahqj",
   "magic_signatures": [
     {
-      "offset": 0,
       "bytes": [
         65,
         71,
         66,
-        45
-      ]
+        45,
+        72,
+        65,
+        82,
+        79
+      ],
+      "description": "ASCII 'AGB-HARO' game magic at header offset 8",
+      "offset": 8
     }
   ],
-  "checksums": [],
-  "fields": [
-    {
-      "name": "magic_header",
-      "offset": 0,
-      "size": 4,
-      "type": "ascii"
-    },
-    {
-      "name": "slot_counter",
-      "offset": 4,
-      "size": 2,
-      "type": "u16_le"
-    },
-    {
-      "name": "game_progress_flags",
-      "offset": 6,
-      "size": 2,
-      "type": "u16_le"
-    },
-    {
-      "name": "player_status_payload",
-      "offset": 8,
-      "size": 16,
-      "type": "bytes"
-    }
-  ]
+  "media": "sram",
+  "size_bytes": 32768,
+  "title": "Harobots - Robo Hero Battling!! (Japan)"
 }

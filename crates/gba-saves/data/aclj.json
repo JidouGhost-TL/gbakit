@@ -1,45 +1,128 @@
 {
-  "id": "aclj",
-  "game_code": "ACLJ",
-  "title": "Sakura Momoko no UkiUki Carnival (Japan)",
-  "media": "sram",
-  "size_bytes": 32768,
-  "magic_signatures": [
+  "checksums": [
     {
-      "offset": 0,
-      "bytes": [
-        90,
-        85,
-        75,
-        73
-      ]
+      "algorithm": "sum16_le",
+      "covered_end": 8192,
+      "covered_start": 0,
+      "name": "slot0_checksum",
+      "stored_offset": 0
+    },
+    {
+      "algorithm": "sum16_le",
+      "covered_end": 16384,
+      "covered_start": 8192,
+      "name": "slot1_checksum",
+      "stored_offset": 8192
     }
   ],
-  "checksums": [],
+  "copy_groups": [],
   "fields": [
     {
-      "name": "magic_header",
+      "confidence": "confirmed",
+      "description": "u16 LE byte-sum checksum of save block 0 (stored with block bytes zeroed during summation).",
+      "evidence": "FUN_08021af8 zeroes SRAM 0x0E000000+0..2 via FUN_08021bfc, sums SRAM 0x0E000000+0..0x2000 via FUN_08021d20 (byte loop FUN_08001d60, result masked to 16 bits), and stores the u16 LE total at save offset 0x00 via FUN_0802e814; FUN_08021b58 re-sums the block and compares it against this stored halfword.",
+      "name": "header_checksum",
       "offset": 0,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "allowed": "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+        "kind": "ascii-charset",
+        "max_len": 7
+      },
+      "description": "First 7 bytes of the 16-byte save ID block ('UKICANI'); the leading 'Z' of 'ZUKICANI' coincides with the checksum high byte and is not part of the compared region.",
+      "evidence": "Bytes save+0x02..0x09 sit inside the 16-byte ID block at save+0x02 that FUN_08021b58 compares against ROM constants via FUN_08001da8(DAT_08021ba8, buf, 0x10); the block travels with the 0x20-byte header copied by FUN_080219b0 and FUN_08021a24.",
+      "name": "save_title_tag",
+      "offset": 2,
+      "size": 7,
+      "type": "ascii"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "allowed": "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+        "kind": "ascii-charset",
+        "max_len": 4
+      },
+      "description": "Game code tail of the save ID block ('ACLJ'), last 4 bytes of the compared 16-byte region.",
+      "evidence": "Bytes save+0x0E..0x12 hold 'ACLJ' at the tail of the 16-byte ID block verified by FUN_08021b58 via FUN_08001da8(DAT_08021ba8, buf, 0x10); header block copied by FUN_080219b0 and FUN_08021a24.",
+      "name": "game_code_tag",
+      "offset": 14,
       "size": 4,
       "type": "ascii"
     },
     {
-      "name": "slot_counter",
-      "offset": 4,
-      "size": 2,
-      "type": "u16_le"
+      "confidence": "guessed",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 4294967295,
+        "minimum": 0
+      },
+      "description": "First u32 word of the 0x1FE0-byte save payload at save+0x20. Zero in the baseline (fresh save); exact gameplay meaning unidentified.",
+      "evidence": "Word lies at the head of the 0x1FE0-byte payload block-copied between SRAM and work RAM by FUN_080219b0 and FUN_08021a24 via FUN_08021cac(..., 0x1fe0), and is covered by the FUN_08021d20 byte-sum checksum over save+0x00..0x2000.",
+      "name": "payload_word_0",
+      "offset": 32,
+      "size": 4,
+      "type": "u32_le"
     },
     {
-      "name": "game_progress_flags",
-      "offset": 6,
-      "size": 2,
-      "type": "u16_le"
+      "confidence": "guessed",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 4294967295,
+        "minimum": 0
+      },
+      "description": "Second u32 word of the 0x1FE0-byte save payload at save+0x20. Zero in the baseline (fresh save); exact gameplay meaning unidentified.",
+      "evidence": "Word lies in the 0x1FE0-byte payload block-copied between SRAM and work RAM by FUN_080219b0 and FUN_08021a24 via FUN_08021cac(..., 0x1fe0), and is covered by the FUN_08021d20 byte-sum checksum over save+0x00..0x2000.",
+      "name": "payload_word_1",
+      "offset": 36,
+      "size": 4,
+      "type": "u32_le"
     },
     {
-      "name": "player_status_payload",
-      "offset": 8,
-      "size": 16,
-      "type": "bytes"
+      "confidence": "guessed",
+      "constraint": {
+        "kind": "bitmask",
+        "valid_mask": 65535
+      },
+      "description": "16-bit flag halfword in the save payload. Zero in the baseline (fresh save); exact per-bit meaning unidentified.",
+      "evidence": "Halfword lies in the 0x1FE0-byte payload block-copied between SRAM and work RAM by FUN_080219b0 and FUN_08021a24 via FUN_08021cac(..., 0x1fe0), and is covered by the FUN_08021d20 byte-sum checksum over save+0x00..0x2000.",
+      "name": "payload_flags_0",
+      "offset": 40,
+      "size": 2,
+      "type": "bitflags"
     }
-  ]
+  ],
+  "game_code": "ACLJ",
+  "id": "aclj",
+  "magic_signatures": [
+    {
+      "bytes": [
+        85,
+        75,
+        73,
+        67,
+        65,
+        78,
+        73,
+        0,
+        0,
+        0,
+        0,
+        0,
+        65,
+        67,
+        76,
+        74
+      ],
+      "description": "16-byte save ID block at save+0x02 ('UKICANI' + padding + 'ACLJ') verified against ROM by FUN_08021b58.",
+      "offset": 2
+    }
+  ],
+  "media": "sram",
+  "size_bytes": 32768,
+  "title": "Sakura Momoko no UkiUki Carnival (Japan)"
 }

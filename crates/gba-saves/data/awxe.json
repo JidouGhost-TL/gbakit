@@ -1,45 +1,173 @@
 {
-  "id": "awxe",
-  "game_code": "AWXE",
-  "title": "ESPN Winter X-Games Snowboarding 2002 (USA)",
-  "media": "eeprom512",
-  "size_bytes": 512,
-  "magic_signatures": [
+  "checksums": [
     {
-      "offset": 0,
-      "bytes": [
-        50,
-        48,
-        83,
-        69
-      ]
+      "algorithm": "sum32_le",
+      "covered_end": 240,
+      "covered_start": 0,
+      "name": "byte_sum_checksum",
+      "seed": 0,
+      "stored_offset": 248,
+      "xor_out": 0
     }
   ],
-  "checksums": [],
+  "eeprom_rev8": true,
   "fields": [
     {
-      "name": "magic_header",
+      "confidence": "likely",
+      "description": "Race board event 0, rank 1: rider/entrant id (low nibble selects rider name sprite).",
+      "evidence": "FUN_08008ef4 inserts 8-byte result records (DAT_08005220) into the RAM board (base DAT_08008f4c, group iVar3*0x18); FUN_080085b4 renders byte0 via PTR_DAT_08008984 + (*byte0 & 0xf) * 8. Save offset 0x00 = board+0.",
+      "name": "race_event0_top1_rider",
       "offset": 0,
-      "size": 4,
-      "type": "ascii"
+      "size": 1,
+      "type": "u8"
     },
     {
-      "name": "slot_counter",
+      "confidence": "likely",
+      "description": "Race board event 0, rank 1: best-time minutes component.",
+      "evidence": "FUN_08008ef4 ranks time records by byte1*0xE10 + byte2*0x3C + byte3 (min*3600 + sec*60 + frame). Save offset 0x01 = board+1.",
+      "name": "race_event0_top1_min",
+      "offset": 1,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 59,
+        "minimum": 0
+      },
+      "description": "Race board event 0, rank 1: best-time seconds component (0-59).",
+      "evidence": "FUN_08008ef4 ranks time records by byte1*0xE10 + byte2*0x3C + byte3 (min*3600 + sec*60 + frame); baseline values across boards peak at 0x3A (58). Save offset 0x02 = board+2.",
+      "name": "race_event0_top1_sec",
+      "offset": 2,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Race board event 0, rank 1: best-time frames component.",
+      "evidence": "FUN_08008ef4 ranks time records by byte1*0xE10 + byte2*0x3C + byte3 (min*3600 + sec*60 + frame). Save offset 0x03 = board+3.",
+      "name": "race_event0_top1_frame",
+      "offset": 3,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Race board event 0, rank 1: carried points/score word (0 for time boards in baseline).",
+      "evidence": "FUN_08008ef4 carries u32 at record+4 (param_1[1]) through board insert/shift; FUN_08008e74/FUN_08008e18 persist 8-byte records to EEPROM. Save offset 0x04 = board+4.",
+      "name": "race_event0_top1_points",
       "offset": 4,
-      "size": 2,
-      "type": "u16_le"
+      "size": 4,
+      "type": "u32_le"
     },
     {
-      "name": "game_progress_flags",
-      "offset": 6,
-      "size": 2,
-      "type": "u16_le"
-    },
-    {
-      "name": "player_status_payload",
+      "confidence": "likely",
+      "description": "Race board event 0, rank 2: rider/entrant id.",
+      "evidence": "FUN_08008ef4 board insert; FUN_080085b4 renders byte0 low nibble as rider index. Save offset 0x08 = board+8.",
+      "name": "race_event0_top2_rider",
       "offset": 8,
-      "size": 16,
-      "type": "bytes"
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Race board event 0, rank 2: best-time minutes component.",
+      "evidence": "FUN_08008ef4 ranks time records by byte1*0xE10 + byte2*0x3C + byte3. Save offset 0x09 = board+9.",
+      "name": "race_event0_top2_min",
+      "offset": 9,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 59,
+        "minimum": 0
+      },
+      "description": "Race board event 0, rank 2: best-time seconds component (0-59).",
+      "evidence": "FUN_08008ef4 ranks time records by byte1*0xE10 + byte2*0x3C + byte3; baseline values peak at 0x3A (58). Save offset 0x0A = board+10.",
+      "name": "race_event0_top2_sec",
+      "offset": 10,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Trick-score board group 5, rank 1: rider/entrant id.",
+      "evidence": "FUN_08008dd4 maps score mode 1 to board group 5 (offset 0x78); FUN_08008ef4 inserts 8-byte records there and FUN_08009124 persists them. Save offset 0x78 = board+0.",
+      "name": "trick_event0_top1_rider",
+      "offset": 120,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Trick-score board group 5, rank 1: best trick points (6000 in baseline).",
+      "evidence": "FUN_08008ef4 score path compares/stores u32 at record+4 (param_1[1]); baseline holds 6000 (0x1770) at save offset 0x7C; persisted by FUN_08009124 via FUN_08008e18/FUN_0800fa98.",
+      "name": "trick_event0_top1_points",
+      "offset": 124,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Trick-score board group 5, rank 2: rider/entrant id.",
+      "evidence": "FUN_08008dd4 maps score mode 1 to board group 5 (offset 0x78); FUN_08008ef4 record insert. Save offset 0x80 = board+8.",
+      "name": "trick_event0_top2_rider",
+      "offset": 128,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Trick-score board group 5, rank 2: best trick points (5000 in baseline).",
+      "evidence": "FUN_08008ef4 score path stores u32 at record+4; baseline holds 5000 (0x1388) at save offset 0x84; persisted by FUN_08009124 via FUN_08008e18/FUN_0800fa98.",
+      "name": "trick_event0_top2_points",
+      "offset": 132,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Trick-score board group 5, rank 3: best trick points (4000 in baseline).",
+      "evidence": "FUN_08008ef4 score path stores u32 at record+4; baseline holds 4000 (0x0FA0) at save offset 0x8C; persisted by FUN_08009124 via FUN_08008e18/FUN_0800fa98.",
+      "name": "trick_event0_top3_points",
+      "offset": 140,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Two's-complement negation of the byte-sum checksum (~sum+1); baseline 0xFFFFF93D.",
+      "evidence": "FUN_080091e0 stores ~uVar5+1 at buffer+0xFC; FUN_08009080 rejects the save unless ~u32(+0xF8)+1 == (int)u32(+0xFC). Baseline holds 4294965565 = -1731 mod 2^32.",
+      "name": "checksum_negation",
+      "offset": 252,
+      "size": 4,
+      "type": "u32_le"
     }
-  ]
+  ],
+  "game_code": "AWXE",
+  "id": "awxe",
+  "magic_signatures": [
+    {
+      "bytes": [
+        88,
+        71,
+        65,
+        77,
+        69,
+        83,
+        48,
+        50
+      ],
+      "description": "ASCII 'XGAMES02' footer magic; verified by FUN_08009080 against ROM DAT_08009224 and written by FUN_080091e0.",
+      "offset": 240
+    }
+  ],
+  "media": "eeprom512",
+  "size_bytes": 512,
+  "title": "ESPN Winter X-Games Snowboarding 2002 (USA)"
 }

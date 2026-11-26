@@ -1,45 +1,97 @@
 {
-  "id": "byup",
-  "game_code": "BYUP",
-  "title": "Yggdra Union - We'll Never Fight Alone (Europe)",
-  "media": "eeprom8k",
-  "size_bytes": 8192,
-  "magic_signatures": [
-    {
-      "offset": 0,
-      "bytes": [
-        71,
-        71,
-        89,
-        32
-      ]
-    }
-  ],
   "checksums": [],
+  "copy_groups": [],
+  "eeprom_rev8": true,
   "fields": [
     {
-      "name": "magic_header",
+      "confidence": "confirmed",
+      "constraint": {
+        "allowed": "ABCDEFGHIJKLMNOPQRSTUVWXYZ ",
+        "kind": "ascii-charset",
+        "max_len": 8
+      },
+      "description": "Save-format tag: rev8-logical bytes at 0x00 read ASCII 'GBA YGG ' in samples/baseline.sav (verified with tools/bin_peek.py --rev8). Raw file bytes are the same 8 bytes in reverse order, proving eeprom_rev8 block reversal.",
+      "evidence": "Logical save offsets 0x00-0x07 decode to 'GBA YGG ' (bytes 71,66,65,32,89,71,71,32) in samples/baseline.sav via 8-byte rev8; boot/init chain FUN_08000278 executes before any save use. Replaces stale raw-domain stub magic.",
+      "name": "save_format_tag",
       "offset": 0,
-      "size": 4,
+      "size": 8,
       "type": "ascii"
     },
     {
-      "name": "slot_counter",
-      "offset": 4,
-      "size": 2,
-      "type": "u16_le"
-    },
-    {
-      "name": "game_progress_flags",
-      "offset": 6,
-      "size": 2,
-      "type": "u16_le"
-    },
-    {
-      "name": "player_status_payload",
+      "confidence": "confirmed",
+      "constraint": {
+        "allowed": "abcdefghijklmnopqrstuvwxyz0123456789. ",
+        "kind": "ascii-charset",
+        "max_len": 8
+      },
+      "description": "Save-format version string: rev8-logical bytes at 0x08 read ASCII 'ver 1.00' in samples/baseline.sav.",
+      "evidence": "Logical save offsets 0x08-0x0F decode to 'ver 1.00' (bytes 118,101,114,32,49,46,48,48) in samples/baseline.sav via 8-byte rev8; observed alongside save_format_tag under the FUN_08000278 boot/init chain.",
+      "name": "save_format_version",
       "offset": 8,
-      "size": 16,
+      "size": 8,
+      "type": "ascii"
+    },
+    {
+      "confidence": "likely",
+      "description": "First word of the zero-default save-data region (fresh battery save reads 0x00 here). Mutable scalar for live emulator testing. Exact gameplay binding is not exposed by this decomp slice, so no gameplay-specific claim is made.",
+      "evidence": "Logical save offsets 0x10-0x13 read 0x00000000 in samples/baseline.sav; game init path FUN_08000278 zero-fills state buffers (*(undefined1 *)(uVar12 + iVar2) = 0 loop), FUN_08000878 zero-initializes its state block, and FUN_08000a50 zero-fills its target buffer - consistent with all-zero fresh-save defaults.",
+      "name": "save_data_flags",
+      "offset": 16,
+      "size": 4,
+      "type": "bitflags"
+    },
+    {
+      "confidence": "likely",
+      "description": "Second word of the zero-default save-data region (fresh battery save reads 0x00 here). Mutable scalar for live emulator testing. Exact gameplay binding is not exposed by this decomp slice, so no gameplay-specific claim is made.",
+      "evidence": "Logical save offsets 0x14-0x17 read 0x00000000 in samples/baseline.sav; same zero-default init evidence as save_data_flags: FUN_08000278 buffer-zeroing loop, FUN_08000878 state zero-init, FUN_08000a50 buffer zero-fill.",
+      "name": "save_data_counter",
+      "offset": 20,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Remainder of the zero-filled save-data region (fresh save defaults, 0x00 throughout). Kept as one opaque span because this decomp slice exposes no per-field writers for these offsets.",
+      "evidence": "Logical save offsets 0x18-0x7F read 0x00 throughout samples/baseline.sav; FUN_08000278 zeroes state buffers at boot and FUN_08000a50 zero-fills a ~0xFF-byte target buffer, consistent with a zero-default save area.",
+      "name": "save_data_reserved",
+      "offset": 24,
+      "size": 104,
       "type": "bytes"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "allowed": "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789/ ",
+        "kind": "ascii-charset",
+        "max_len": 16
+      },
+      "description": "ROM build footer mirrored at the end of EEPROM: rev8-logical bytes at 0x1FF0 read ASCII '2006NINTEN/STING' in samples/baseline.sav.",
+      "evidence": "Logical save offsets 0x1FF0-0x1FFF decode to '2006NINTEN/STING' in samples/baseline.sav via 8-byte rev8 (raw bytes are the same blocks reversed); nonzero ASCII region verified with tools/bin_peek.py --rev8. No writer for it exists in this decomp slice (only FUN_08000278 boot/init references boot state), so it is mapped as a read-only build tag, not a mutable slot.",
+      "name": "rom_build_footer",
+      "offset": 8176,
+      "size": 16,
+      "type": "ascii"
     }
-  ]
+  ],
+  "game_code": "BYUP",
+  "id": "byup",
+  "magic_signatures": [
+    {
+      "bytes": [
+        71,
+        66,
+        65,
+        32,
+        89,
+        71,
+        71,
+        32
+      ],
+      "description": "ASCII 'GBA YGG ' format tag at logical offset 0 (rev8-decoded; stub's raw-domain bytes were stale)",
+      "offset": 0
+    }
+  ],
+  "media": "eeprom8k",
+  "size_bytes": 8192,
+  "title": "Yggdra Union - We'll Never Fight Alone (Europe)"
 }

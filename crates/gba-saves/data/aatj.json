@@ -1,45 +1,102 @@
 {
-  "id": "aatj",
-  "game_code": "AATJ",
-  "title": "Family Tennis Advance (Japan)",
-  "media": "eeprom512",
-  "size_bytes": 512,
-  "magic_signatures": [
+  "checksums": [
     {
-      "offset": 0,
-      "bytes": [
-        71,
-        65,
-        84,
-        70
-      ]
+      "algorithm": "sum8",
+      "covered_end": 60,
+      "covered_start": 0,
+      "description": "Index-weighted integrity byte of FUN_0800142c: stored = sum(save[i] + i for i in [0, 0x3C)) & 0xFF. Since sum(save[i]+i) == sum(save[i]) + sum(i) mod 256 and sum(i for i in [0,0x3C)) = 1770 = 0x6EA, this equals plain sum8 over [0, 0x3C) plus seed 234 (0xEA). Verified against baseline (0x0C) and against a mutated byte (recomputes exactly; gbakit save fix repairs).",
+      "name": "save_weighted_checksum",
+      "seed": 234,
+      "stored_offset": 60,
+      "xor_out": 0
     }
   ],
-  "checksums": [],
+  "eeprom_rev8": true,
   "fields": [
     {
-      "name": "magic_header",
+      "confidence": "confirmed",
+      "description": "Init/occupancy sentinel word at start of the 80-byte save struct. Save/init routine FUN_08001464 writes 0; load routine FUN_0800151c writes 1 on both load-failure paths (RAM only, never stored to EEPROM by the save routine); boot menu flows (FUN_08006e68 family) test this word nonzero to detect an occupied/initialized save before erase handling, and a nonzero value triggers a RAM wipe on boot, so it must never be mutated as gameplay data.",
+      "evidence": "FUN_08001464 writes *param_1 = 0 (save buffer byte offset 0, decomp line 1121). FUN_0800151c writes *param_1 = 1 on both load-failure paths (lines 1199, 1203) and returns nonzero. FUN_08006e68 checks *DAT_0800714c != 0 at lines 6505, 6675 (plus six sibling erase flows) before clearing the 0x50-byte buffer.",
+      "name": "save_init_sentinel",
       "offset": 0,
-      "size": 4,
-      "type": "ascii"
-    },
-    {
-      "name": "slot_counter",
-      "offset": 4,
       "size": 2,
       "type": "u16_le"
     },
     {
-      "name": "game_progress_flags",
+      "confidence": "confirmed",
+      "constraint": {
+        "allowed": "FTAG",
+        "kind": "ascii-charset",
+        "max_len": 4
+      },
+      "description": "Fixed 4-byte ASCII save identifier 'FTAG' at save-struct bytes 2-5. Written by the save routine and verified as two halfwords on every load before the checksum is accepted.",
+      "evidence": "FUN_08001464 writes bytes 2..5 = 0x46 'F', 0x54 'T', 0x41 'A', 0x47 'G' (u16-pointer arithmetic param_1+1 / byte offset +3 / param_1+2 / byte offset +5, decomp lines 1122-1125). FUN_0800151c verifies halfwords param_1[1] == DAT_080015cc and (DAT_080015c8 & param_1[2]) == DAT_080015d0 (lines 1195-1196). Baseline rev8-logical bytes 2-5 decode to 'FTAG'.",
+      "name": "magic_ftag",
+      "offset": 2,
+      "size": 4,
+      "type": "ascii"
+    },
+    {
+      "confidence": "guessed",
+      "description": "First checksummed gameplay/config data word (save-struct bytes 6-7). The 54-byte region [6, 0x3C) is transferred by the 10-block EEPROM routines and covered by the weighted integrity checksum; per-word semantics are unidentified (baseline is all zeros, a fresh/blank save), so this word is exposed as a mutable gameplay/config slot whose exact meaning is unknown. Mutating it requires recomputing the checksum (gbakit save fix).",
+      "evidence": "FUN_0800151c loads 10 EEPROM blocks of 8 bytes via FUN_0801decc into buffer offsets 0..0x50 (lines 1176-1184); FUN_08001464 writes the same 10 blocks via FUN_0801e0b0 (lines 1129-1144). FUN_0800142c checksum loop reads every byte of [0, 0x3c) including these bytes (lines 1074-1079).",
+      "name": "config_flags_a",
       "offset": 6,
       "size": 2,
       "type": "u16_le"
     },
     {
-      "name": "player_status_payload",
+      "confidence": "guessed",
+      "description": "Second checksummed gameplay/config data word (save-struct bytes 8-9). Same coverage as config_flags_a: transferred by the EEPROM block routines and covered by the weighted checksum; per-word semantics unidentified (baseline all zeros). Exposed as a mutable gameplay/config slot; recompute the checksum after editing.",
+      "evidence": "FUN_0800151c loads 10 EEPROM blocks of 8 bytes via FUN_0801decc into buffer offsets 0..0x50 (lines 1176-1184); FUN_08001464 writes the same 10 blocks via FUN_0801e0b0 (lines 1129-1144). FUN_0800142c checksum loop reads every byte of [0, 0x3c) including these bytes (lines 1074-1079).",
+      "name": "config_value_b",
       "offset": 8,
-      "size": 16,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "guessed",
+      "description": "Remaining 50 bytes of the checksummed gameplay data region (save-struct bytes 0x0A..0x3B). Transferred by the 10-block EEPROM routines and covered by the weighted integrity byte, but no per-field readers/writers were identified in the available decompilation; per-byte semantics are unknown. Baseline is all zeros. Kept as one documented region rather than invented gameplay fields.",
+      "evidence": "FUN_0800151c loads 10 EEPROM blocks of 8 bytes via FUN_0801decc into buffer offsets 0..0x50 (lines 1176-1184); FUN_08001464 writes the same 10 blocks via FUN_0801e0b0 (lines 1129-1144). FUN_0800142c checksum loop reads every byte of [0, 0x3c) including this region (lines 1074-1079). Baseline rev8-logical bytes 0x0A..0x3B are all 0x00.",
+      "name": "gameplay_data_region",
+      "offset": 10,
+      "size": 50,
+      "type": "bytes"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Stored integrity byte for the save_weighted_checksum entry (custom index-weighted sum, expressed as sum8 with seed 234). Computed by FUN_0800142c, stored here by the save routine, and compared on every load. Never mutate directly; recompute via gbakit save fix after editing covered bytes. Baseline value 0x0C verifies exactly.",
+      "evidence": "FUN_0800142c accumulates *(byte *)(param_1 + uVar1) + uVar1 for uVar1 in [0, 0x3c) and returns the low byte (lines 1067-1081). FUN_08001464 stores the result at buffer byte 0x3c via u16-pointer param_1 + 0x1e (lines 1126-1128). FUN_0800151c recomputes and compares against buffer byte 0x3c (lines 1185-1186). Python check on baseline rev8-logical bytes: sum(byte[i]+i for i in range(0x3c)) & 0xFF == 0x0C == byte 0x3c.",
+      "name": "save_checksum_byte",
+      "offset": 60,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "guessed",
+      "description": "19-byte tail of the 80-byte save struct (bytes 0x3D..0x4F). Transferred by EEPROM block I/O but NOT covered by the integrity checksum; no readers/writers identified in decomp and baseline is all zeros. Semantics unknown.",
+      "evidence": "FUN_0800151c / FUN_08001464 transfer 10 blocks covering buffer offsets 0..0x50 (lines 1176-1184, 1129-1144), while FUN_0800142c only covers [0, 0x3c) (lines 1074-1079), leaving bytes 0x3D..0x4F unchecked. Baseline rev8-logical bytes 0x3D..0x4F are all 0x00.",
+      "name": "unverified_tail",
+      "offset": 61,
+      "size": 19,
       "type": "bytes"
     }
-  ]
+  ],
+  "game_code": "AATJ",
+  "id": "aatj",
+  "magic_signatures": [
+    {
+      "bytes": [
+        70,
+        84,
+        65,
+        71
+      ],
+      "description": "ASCII 'FTAG' save identifier at logical offset 2 (RAM-struct domain under eeprom_rev8)",
+      "offset": 2
+    }
+  ],
+  "media": "eeprom512",
+  "size_bytes": 512,
+  "title": "Family Tennis Advance (Japan)"
 }

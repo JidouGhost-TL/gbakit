@@ -1,45 +1,651 @@
 {
-  "id": "btoe",
-  "game_code": "BTOE",
-  "title": "Tony Hawk's Underground (USA, Europe)",
-  "media": "eeprom8k",
-  "size_bytes": 8192,
-  "magic_signatures": [
-    {
-      "offset": 0,
-      "bytes": [
-        110,
-        97,
-        101,
-        115
-      ]
-    }
-  ],
   "checksums": [],
+  "eeprom_rev8": true,
   "fields": [
     {
-      "name": "magic_header",
+      "confidence": "guessed",
+      "description": "First 2 bytes of save header (0x00 0x00 in baseline; kept separate from checksum word at offset 2)",
+      "evidence": "RAM save struct committed to EEPROM by FUN_0801d6c8 via FUN_08008644 8-byte block loop (FUN_08042d84 write+verify retry around FUN_08042c50/FUN_08042ba0 bit-banging DAT_0d000000 through FUN_08042b20); struct maps linearly to file (EEPROM block N = file bytes 8N..8N+7), so struct offset == file offset.",
+      "name": "header_prefix",
       "offset": 0,
+      "size": 2,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Stored checksum word written by FUN_0801d6c8 from FUN_0801d728 (0x0000 in baseline; unverified, see SPEC.md)",
+      "evidence": "FUN_0801d6c8 stores the FUN_0801d728 u16 word-sum at RAM struct offset +2 then commits via FUN_08008644; load path FUN_0801d788 re-reads via FUN_080086f4 and compares struct+2 against recomputed FUN_0801d728. struct+2 == file offset 2; baseline value 0x0000 does not match any Schema v2 algorithm over file data, so it is exposed as a field and no checksums[] entry is emitted. RAM save struct committed to EEPROM by FUN_0801d6c8 via FUN_08008644 8-byte block loop (FUN_08042d84 write+verify retry around FUN_08042c50/FUN_08042ba0 bit-banging DAT_0d000000 through FUN_08042b20); struct maps linearly to file (EEPROM block N = file bytes 8N..8N+7), so struct offset == file offset.",
+      "name": "checksum_stored",
+      "offset": 2,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "guessed",
+      "description": "Save header word 1 (baseline 0x00000008)",
+      "evidence": "RAM save struct committed to EEPROM by FUN_0801d6c8 via FUN_08008644 8-byte block loop (FUN_08042d84 write+verify retry around FUN_08042c50/FUN_08042ba0 bit-banging DAT_0d000000 through FUN_08042b20); struct maps linearly to file (EEPROM block N = file bytes 8N..8N+7), so struct offset == file offset.",
+      "name": "header_w1",
+      "offset": 4,
       "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "guessed",
+      "description": "Save header word 2 (baseline 0x00000002)",
+      "evidence": "RAM save struct committed to EEPROM by FUN_0801d6c8 via FUN_08008644 8-byte block loop (FUN_08042d84 write+verify retry around FUN_08042c50/FUN_08042ba0 bit-banging DAT_0d000000 through FUN_08042b20); struct maps linearly to file (EEPROM block N = file bytes 8N..8N+7), so struct offset == file offset.",
+      "name": "header_w2",
+      "offset": 8,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "guessed",
+      "description": "Save header word 3 (baseline 0x00000001)",
+      "evidence": "RAM save struct committed to EEPROM by FUN_0801d6c8 via FUN_08008644 8-byte block loop (FUN_08042d84 write+verify retry around FUN_08042c50/FUN_08042ba0 bit-banging DAT_0d000000 through FUN_08042b20); struct maps linearly to file (EEPROM block N = file bytes 8N..8N+7), so struct offset == file offset.",
+      "name": "header_w3",
+      "offset": 12,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "guessed",
+      "description": "Save header word 4 (baseline 0x00000000)",
+      "evidence": "RAM save struct committed to EEPROM by FUN_0801d6c8 via FUN_08008644 8-byte block loop (FUN_08042d84 write+verify retry around FUN_08042c50/FUN_08042ba0 bit-banging DAT_0d000000 through FUN_08042b20); struct maps linearly to file (EEPROM block N = file bytes 8N..8N+7), so struct offset == file offset.",
+      "name": "header_w4",
+      "offset": 16,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "guessed",
+      "description": "Save header word 5 (baseline 0x00000011)",
+      "evidence": "RAM save struct committed to EEPROM by FUN_0801d6c8 via FUN_08008644 8-byte block loop (FUN_08042d84 write+verify retry around FUN_08042c50/FUN_08042ba0 bit-banging DAT_0d000000 through FUN_08042b20); struct maps linearly to file (EEPROM block N = file bytes 8N..8N+7), so struct offset == file offset.",
+      "name": "header_w5",
+      "offset": 20,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "guessed",
+      "description": "Save header word 6 (baseline 0x00000001)",
+      "evidence": "RAM save struct committed to EEPROM by FUN_0801d6c8 via FUN_08008644 8-byte block loop (FUN_08042d84 write+verify retry around FUN_08042c50/FUN_08042ba0 bit-banging DAT_0d000000 through FUN_08042b20); struct maps linearly to file (EEPROM block N = file bytes 8N..8N+7), so struct offset == file offset.",
+      "name": "header_w6",
+      "offset": 24,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "guessed",
+      "description": "Save header word 7 (baseline 0x00000003)",
+      "evidence": "RAM save struct committed to EEPROM by FUN_0801d6c8 via FUN_08008644 8-byte block loop (FUN_08042d84 write+verify retry around FUN_08042c50/FUN_08042ba0 bit-banging DAT_0d000000 through FUN_08042b20); struct maps linearly to file (EEPROM block N = file bytes 8N..8N+7), so struct offset == file offset.",
+      "name": "header_w7",
+      "offset": 28,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "guessed",
+      "description": "4-byte tag pattern 09 0a 0b 0c inside reserved area (observed baseline bytes)",
+      "evidence": "RAM save struct committed to EEPROM by FUN_0801d6c8 via FUN_08008644 8-byte block loop (FUN_08042d84 write+verify retry around FUN_08042c50/FUN_08042ba0 bit-banging DAT_0d000000 through FUN_08042b20); struct maps linearly to file (EEPROM block N = file bytes 8N..8N+7), so struct offset == file offset.",
+      "name": "tag_0078",
+      "offset": 120,
+      "size": 4,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Score table entry 0 (baseline 150000)",
+      "evidence": "Indexed record access: FUN_0801d55c copies record stride*index+base via FUN_08046804 memcpy for callers FUN_0800bdec and FUN_0800be90 (record index from FUN_0800c088/FUN_0800c094 after FUN_0801d610 slot select and FUN_0801d678 active-slot count); FUN_0801d540 performs the indexed write then FUN_0801d6c8 commits via FUN_08008644/FUN_08042d84/FUN_08042c50. Score u32 at file 0x1EC+4*i pairs with 20-byte NUL-padded ASCII name at file 0x264+20*i; 30 entries (score step 4, name stride 0x14). Slot flag logic: FUN_0801d610 tests bits 0-2, FUN_0801d678 popcounts, FUN_0801d57c sets bit (1<<n) and commits (caller FUN_0801d7e0).",
+      "name": "score_entry_00",
+      "offset": 492,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Score table entry 1 (baseline 100000)",
+      "evidence": "Indexed record access: FUN_0801d55c copies record stride*index+base via FUN_08046804 memcpy for callers FUN_0800bdec and FUN_0800be90 (record index from FUN_0800c088/FUN_0800c094 after FUN_0801d610 slot select and FUN_0801d678 active-slot count); FUN_0801d540 performs the indexed write then FUN_0801d6c8 commits via FUN_08008644/FUN_08042d84/FUN_08042c50. Score u32 at file 0x1EC+4*i pairs with 20-byte NUL-padded ASCII name at file 0x264+20*i; 30 entries (score step 4, name stride 0x14). Slot flag logic: FUN_0801d610 tests bits 0-2, FUN_0801d678 popcounts, FUN_0801d57c sets bit (1<<n) and commits (caller FUN_0801d7e0).",
+      "name": "score_entry_01",
+      "offset": 496,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Score table entry 2 (baseline 50000)",
+      "evidence": "Indexed record access: FUN_0801d55c copies record stride*index+base via FUN_08046804 memcpy for callers FUN_0800bdec and FUN_0800be90 (record index from FUN_0800c088/FUN_0800c094 after FUN_0801d610 slot select and FUN_0801d678 active-slot count); FUN_0801d540 performs the indexed write then FUN_0801d6c8 commits via FUN_08008644/FUN_08042d84/FUN_08042c50. Score u32 at file 0x1EC+4*i pairs with 20-byte NUL-padded ASCII name at file 0x264+20*i; 30 entries (score step 4, name stride 0x14). Slot flag logic: FUN_0801d610 tests bits 0-2, FUN_0801d678 popcounts, FUN_0801d57c sets bit (1<<n) and commits (caller FUN_0801d7e0).",
+      "name": "score_entry_02",
+      "offset": 500,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Score table entry 3 (baseline 180000)",
+      "evidence": "Indexed record access: FUN_0801d55c copies record stride*index+base via FUN_08046804 memcpy for callers FUN_0800bdec and FUN_0800be90 (record index from FUN_0800c088/FUN_0800c094 after FUN_0801d610 slot select and FUN_0801d678 active-slot count); FUN_0801d540 performs the indexed write then FUN_0801d6c8 commits via FUN_08008644/FUN_08042d84/FUN_08042c50. Score u32 at file 0x1EC+4*i pairs with 20-byte NUL-padded ASCII name at file 0x264+20*i; 30 entries (score step 4, name stride 0x14). Slot flag logic: FUN_0801d610 tests bits 0-2, FUN_0801d678 popcounts, FUN_0801d57c sets bit (1<<n) and commits (caller FUN_0801d7e0).",
+      "name": "score_entry_03",
+      "offset": 504,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Score table entry 4 (baseline 120000)",
+      "evidence": "Indexed record access: FUN_0801d55c copies record stride*index+base via FUN_08046804 memcpy for callers FUN_0800bdec and FUN_0800be90 (record index from FUN_0800c088/FUN_0800c094 after FUN_0801d610 slot select and FUN_0801d678 active-slot count); FUN_0801d540 performs the indexed write then FUN_0801d6c8 commits via FUN_08008644/FUN_08042d84/FUN_08042c50. Score u32 at file 0x1EC+4*i pairs with 20-byte NUL-padded ASCII name at file 0x264+20*i; 30 entries (score step 4, name stride 0x14). Slot flag logic: FUN_0801d610 tests bits 0-2, FUN_0801d678 popcounts, FUN_0801d57c sets bit (1<<n) and commits (caller FUN_0801d7e0).",
+      "name": "score_entry_04",
+      "offset": 508,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Score table entry 5 (baseline 60000)",
+      "evidence": "Indexed record access: FUN_0801d55c copies record stride*index+base via FUN_08046804 memcpy for callers FUN_0800bdec and FUN_0800be90 (record index from FUN_0800c088/FUN_0800c094 after FUN_0801d610 slot select and FUN_0801d678 active-slot count); FUN_0801d540 performs the indexed write then FUN_0801d6c8 commits via FUN_08008644/FUN_08042d84/FUN_08042c50. Score u32 at file 0x1EC+4*i pairs with 20-byte NUL-padded ASCII name at file 0x264+20*i; 30 entries (score step 4, name stride 0x14). Slot flag logic: FUN_0801d610 tests bits 0-2, FUN_0801d678 popcounts, FUN_0801d57c sets bit (1<<n) and commits (caller FUN_0801d7e0).",
+      "name": "score_entry_05",
+      "offset": 512,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Score table entry 6 (baseline 120000)",
+      "evidence": "Indexed record access: FUN_0801d55c copies record stride*index+base via FUN_08046804 memcpy for callers FUN_0800bdec and FUN_0800be90 (record index from FUN_0800c088/FUN_0800c094 after FUN_0801d610 slot select and FUN_0801d678 active-slot count); FUN_0801d540 performs the indexed write then FUN_0801d6c8 commits via FUN_08008644/FUN_08042d84/FUN_08042c50. Score u32 at file 0x1EC+4*i pairs with 20-byte NUL-padded ASCII name at file 0x264+20*i; 30 entries (score step 4, name stride 0x14). Slot flag logic: FUN_0801d610 tests bits 0-2, FUN_0801d678 popcounts, FUN_0801d57c sets bit (1<<n) and commits (caller FUN_0801d7e0).",
+      "name": "score_entry_06",
+      "offset": 516,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Score table entry 7 (baseline 80000)",
+      "evidence": "Indexed record access: FUN_0801d55c copies record stride*index+base via FUN_08046804 memcpy for callers FUN_0800bdec and FUN_0800be90 (record index from FUN_0800c088/FUN_0800c094 after FUN_0801d610 slot select and FUN_0801d678 active-slot count); FUN_0801d540 performs the indexed write then FUN_0801d6c8 commits via FUN_08008644/FUN_08042d84/FUN_08042c50. Score u32 at file 0x1EC+4*i pairs with 20-byte NUL-padded ASCII name at file 0x264+20*i; 30 entries (score step 4, name stride 0x14). Slot flag logic: FUN_0801d610 tests bits 0-2, FUN_0801d678 popcounts, FUN_0801d57c sets bit (1<<n) and commits (caller FUN_0801d7e0).",
+      "name": "score_entry_07",
+      "offset": 520,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Score table entry 8 (baseline 40000)",
+      "evidence": "Indexed record access: FUN_0801d55c copies record stride*index+base via FUN_08046804 memcpy for callers FUN_0800bdec and FUN_0800be90 (record index from FUN_0800c088/FUN_0800c094 after FUN_0801d610 slot select and FUN_0801d678 active-slot count); FUN_0801d540 performs the indexed write then FUN_0801d6c8 commits via FUN_08008644/FUN_08042d84/FUN_08042c50. Score u32 at file 0x1EC+4*i pairs with 20-byte NUL-padded ASCII name at file 0x264+20*i; 30 entries (score step 4, name stride 0x14). Slot flag logic: FUN_0801d610 tests bits 0-2, FUN_0801d678 popcounts, FUN_0801d57c sets bit (1<<n) and commits (caller FUN_0801d7e0).",
+      "name": "score_entry_08",
+      "offset": 524,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Score table entry 9 (baseline 330000)",
+      "evidence": "Indexed record access: FUN_0801d55c copies record stride*index+base via FUN_08046804 memcpy for callers FUN_0800bdec and FUN_0800be90 (record index from FUN_0800c088/FUN_0800c094 after FUN_0801d610 slot select and FUN_0801d678 active-slot count); FUN_0801d540 performs the indexed write then FUN_0801d6c8 commits via FUN_08008644/FUN_08042d84/FUN_08042c50. Score u32 at file 0x1EC+4*i pairs with 20-byte NUL-padded ASCII name at file 0x264+20*i; 30 entries (score step 4, name stride 0x14). Slot flag logic: FUN_0801d610 tests bits 0-2, FUN_0801d678 popcounts, FUN_0801d57c sets bit (1<<n) and commits (caller FUN_0801d7e0).",
+      "name": "score_entry_09",
+      "offset": 528,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Score table entry 10 (baseline 230000)",
+      "evidence": "Indexed record access: FUN_0801d55c copies record stride*index+base via FUN_08046804 memcpy for callers FUN_0800bdec and FUN_0800be90 (record index from FUN_0800c088/FUN_0800c094 after FUN_0801d610 slot select and FUN_0801d678 active-slot count); FUN_0801d540 performs the indexed write then FUN_0801d6c8 commits via FUN_08008644/FUN_08042d84/FUN_08042c50. Score u32 at file 0x1EC+4*i pairs with 20-byte NUL-padded ASCII name at file 0x264+20*i; 30 entries (score step 4, name stride 0x14). Slot flag logic: FUN_0801d610 tests bits 0-2, FUN_0801d678 popcounts, FUN_0801d57c sets bit (1<<n) and commits (caller FUN_0801d7e0).",
+      "name": "score_entry_10",
+      "offset": 532,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Score table entry 11 (baseline 130000)",
+      "evidence": "Indexed record access: FUN_0801d55c copies record stride*index+base via FUN_08046804 memcpy for callers FUN_0800bdec and FUN_0800be90 (record index from FUN_0800c088/FUN_0800c094 after FUN_0801d610 slot select and FUN_0801d678 active-slot count); FUN_0801d540 performs the indexed write then FUN_0801d6c8 commits via FUN_08008644/FUN_08042d84/FUN_08042c50. Score u32 at file 0x1EC+4*i pairs with 20-byte NUL-padded ASCII name at file 0x264+20*i; 30 entries (score step 4, name stride 0x14). Slot flag logic: FUN_0801d610 tests bits 0-2, FUN_0801d678 popcounts, FUN_0801d57c sets bit (1<<n) and commits (caller FUN_0801d7e0).",
+      "name": "score_entry_11",
+      "offset": 536,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Score table entry 12 (baseline 375000)",
+      "evidence": "Indexed record access: FUN_0801d55c copies record stride*index+base via FUN_08046804 memcpy for callers FUN_0800bdec and FUN_0800be90 (record index from FUN_0800c088/FUN_0800c094 after FUN_0801d610 slot select and FUN_0801d678 active-slot count); FUN_0801d540 performs the indexed write then FUN_0801d6c8 commits via FUN_08008644/FUN_08042d84/FUN_08042c50. Score u32 at file 0x1EC+4*i pairs with 20-byte NUL-padded ASCII name at file 0x264+20*i; 30 entries (score step 4, name stride 0x14). Slot flag logic: FUN_0801d610 tests bits 0-2, FUN_0801d678 popcounts, FUN_0801d57c sets bit (1<<n) and commits (caller FUN_0801d7e0).",
+      "name": "score_entry_12",
+      "offset": 540,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Score table entry 13 (baseline 250000)",
+      "evidence": "Indexed record access: FUN_0801d55c copies record stride*index+base via FUN_08046804 memcpy for callers FUN_0800bdec and FUN_0800be90 (record index from FUN_0800c088/FUN_0800c094 after FUN_0801d610 slot select and FUN_0801d678 active-slot count); FUN_0801d540 performs the indexed write then FUN_0801d6c8 commits via FUN_08008644/FUN_08042d84/FUN_08042c50. Score u32 at file 0x1EC+4*i pairs with 20-byte NUL-padded ASCII name at file 0x264+20*i; 30 entries (score step 4, name stride 0x14). Slot flag logic: FUN_0801d610 tests bits 0-2, FUN_0801d678 popcounts, FUN_0801d57c sets bit (1<<n) and commits (caller FUN_0801d7e0).",
+      "name": "score_entry_13",
+      "offset": 544,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Score table entry 14 (baseline 125000)",
+      "evidence": "Indexed record access: FUN_0801d55c copies record stride*index+base via FUN_08046804 memcpy for callers FUN_0800bdec and FUN_0800be90 (record index from FUN_0800c088/FUN_0800c094 after FUN_0801d610 slot select and FUN_0801d678 active-slot count); FUN_0801d540 performs the indexed write then FUN_0801d6c8 commits via FUN_08008644/FUN_08042d84/FUN_08042c50. Score u32 at file 0x1EC+4*i pairs with 20-byte NUL-padded ASCII name at file 0x264+20*i; 30 entries (score step 4, name stride 0x14). Slot flag logic: FUN_0801d610 tests bits 0-2, FUN_0801d678 popcounts, FUN_0801d57c sets bit (1<<n) and commits (caller FUN_0801d7e0).",
+      "name": "score_entry_14",
+      "offset": 548,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Score table entry 15 (baseline 225000)",
+      "evidence": "Indexed record access: FUN_0801d55c copies record stride*index+base via FUN_08046804 memcpy for callers FUN_0800bdec and FUN_0800be90 (record index from FUN_0800c088/FUN_0800c094 after FUN_0801d610 slot select and FUN_0801d678 active-slot count); FUN_0801d540 performs the indexed write then FUN_0801d6c8 commits via FUN_08008644/FUN_08042d84/FUN_08042c50. Score u32 at file 0x1EC+4*i pairs with 20-byte NUL-padded ASCII name at file 0x264+20*i; 30 entries (score step 4, name stride 0x14). Slot flag logic: FUN_0801d610 tests bits 0-2, FUN_0801d678 popcounts, FUN_0801d57c sets bit (1<<n) and commits (caller FUN_0801d7e0).",
+      "name": "score_entry_15",
+      "offset": 552,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Score table entry 16 (baseline 150000)",
+      "evidence": "Indexed record access: FUN_0801d55c copies record stride*index+base via FUN_08046804 memcpy for callers FUN_0800bdec and FUN_0800be90 (record index from FUN_0800c088/FUN_0800c094 after FUN_0801d610 slot select and FUN_0801d678 active-slot count); FUN_0801d540 performs the indexed write then FUN_0801d6c8 commits via FUN_08008644/FUN_08042d84/FUN_08042c50. Score u32 at file 0x1EC+4*i pairs with 20-byte NUL-padded ASCII name at file 0x264+20*i; 30 entries (score step 4, name stride 0x14). Slot flag logic: FUN_0801d610 tests bits 0-2, FUN_0801d678 popcounts, FUN_0801d57c sets bit (1<<n) and commits (caller FUN_0801d7e0).",
+      "name": "score_entry_16",
+      "offset": 556,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Score table entry 17 (baseline 75000)",
+      "evidence": "Indexed record access: FUN_0801d55c copies record stride*index+base via FUN_08046804 memcpy for callers FUN_0800bdec and FUN_0800be90 (record index from FUN_0800c088/FUN_0800c094 after FUN_0801d610 slot select and FUN_0801d678 active-slot count); FUN_0801d540 performs the indexed write then FUN_0801d6c8 commits via FUN_08008644/FUN_08042d84/FUN_08042c50. Score u32 at file 0x1EC+4*i pairs with 20-byte NUL-padded ASCII name at file 0x264+20*i; 30 entries (score step 4, name stride 0x14). Slot flag logic: FUN_0801d610 tests bits 0-2, FUN_0801d678 popcounts, FUN_0801d57c sets bit (1<<n) and commits (caller FUN_0801d7e0).",
+      "name": "score_entry_17",
+      "offset": 560,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Score table entry 18 (baseline 505000)",
+      "evidence": "Indexed record access: FUN_0801d55c copies record stride*index+base via FUN_08046804 memcpy for callers FUN_0800bdec and FUN_0800be90 (record index from FUN_0800c088/FUN_0800c094 after FUN_0801d610 slot select and FUN_0801d678 active-slot count); FUN_0801d540 performs the indexed write then FUN_0801d6c8 commits via FUN_08008644/FUN_08042d84/FUN_08042c50. Score u32 at file 0x1EC+4*i pairs with 20-byte NUL-padded ASCII name at file 0x264+20*i; 30 entries (score step 4, name stride 0x14). Slot flag logic: FUN_0801d610 tests bits 0-2, FUN_0801d678 popcounts, FUN_0801d57c sets bit (1<<n) and commits (caller FUN_0801d7e0).",
+      "name": "score_entry_18",
+      "offset": 564,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Score table entry 19 (baseline 360000)",
+      "evidence": "Indexed record access: FUN_0801d55c copies record stride*index+base via FUN_08046804 memcpy for callers FUN_0800bdec and FUN_0800be90 (record index from FUN_0800c088/FUN_0800c094 after FUN_0801d610 slot select and FUN_0801d678 active-slot count); FUN_0801d540 performs the indexed write then FUN_0801d6c8 commits via FUN_08008644/FUN_08042d84/FUN_08042c50. Score u32 at file 0x1EC+4*i pairs with 20-byte NUL-padded ASCII name at file 0x264+20*i; 30 entries (score step 4, name stride 0x14). Slot flag logic: FUN_0801d610 tests bits 0-2, FUN_0801d678 popcounts, FUN_0801d57c sets bit (1<<n) and commits (caller FUN_0801d7e0).",
+      "name": "score_entry_19",
+      "offset": 568,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Score table entry 20 (baseline 215000)",
+      "evidence": "Indexed record access: FUN_0801d55c copies record stride*index+base via FUN_08046804 memcpy for callers FUN_0800bdec and FUN_0800be90 (record index from FUN_0800c088/FUN_0800c094 after FUN_0801d610 slot select and FUN_0801d678 active-slot count); FUN_0801d540 performs the indexed write then FUN_0801d6c8 commits via FUN_08008644/FUN_08042d84/FUN_08042c50. Score u32 at file 0x1EC+4*i pairs with 20-byte NUL-padded ASCII name at file 0x264+20*i; 30 entries (score step 4, name stride 0x14). Slot flag logic: FUN_0801d610 tests bits 0-2, FUN_0801d678 popcounts, FUN_0801d57c sets bit (1<<n) and commits (caller FUN_0801d7e0).",
+      "name": "score_entry_20",
+      "offset": 572,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Score table entry 21 (baseline 525000)",
+      "evidence": "Indexed record access: FUN_0801d55c copies record stride*index+base via FUN_08046804 memcpy for callers FUN_0800bdec and FUN_0800be90 (record index from FUN_0800c088/FUN_0800c094 after FUN_0801d610 slot select and FUN_0801d678 active-slot count); FUN_0801d540 performs the indexed write then FUN_0801d6c8 commits via FUN_08008644/FUN_08042d84/FUN_08042c50. Score u32 at file 0x1EC+4*i pairs with 20-byte NUL-padded ASCII name at file 0x264+20*i; 30 entries (score step 4, name stride 0x14). Slot flag logic: FUN_0801d610 tests bits 0-2, FUN_0801d678 popcounts, FUN_0801d57c sets bit (1<<n) and commits (caller FUN_0801d7e0).",
+      "name": "score_entry_21",
+      "offset": 576,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Score table entry 22 (baseline 350000)",
+      "evidence": "Indexed record access: FUN_0801d55c copies record stride*index+base via FUN_08046804 memcpy for callers FUN_0800bdec and FUN_0800be90 (record index from FUN_0800c088/FUN_0800c094 after FUN_0801d610 slot select and FUN_0801d678 active-slot count); FUN_0801d540 performs the indexed write then FUN_0801d6c8 commits via FUN_08008644/FUN_08042d84/FUN_08042c50. Score u32 at file 0x1EC+4*i pairs with 20-byte NUL-padded ASCII name at file 0x264+20*i; 30 entries (score step 4, name stride 0x14). Slot flag logic: FUN_0801d610 tests bits 0-2, FUN_0801d678 popcounts, FUN_0801d57c sets bit (1<<n) and commits (caller FUN_0801d7e0).",
+      "name": "score_entry_22",
+      "offset": 580,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Score table entry 23 (baseline 175000)",
+      "evidence": "Indexed record access: FUN_0801d55c copies record stride*index+base via FUN_08046804 memcpy for callers FUN_0800bdec and FUN_0800be90 (record index from FUN_0800c088/FUN_0800c094 after FUN_0801d610 slot select and FUN_0801d678 active-slot count); FUN_0801d540 performs the indexed write then FUN_0801d6c8 commits via FUN_08008644/FUN_08042d84/FUN_08042c50. Score u32 at file 0x1EC+4*i pairs with 20-byte NUL-padded ASCII name at file 0x264+20*i; 30 entries (score step 4, name stride 0x14). Slot flag logic: FUN_0801d610 tests bits 0-2, FUN_0801d678 popcounts, FUN_0801d57c sets bit (1<<n) and commits (caller FUN_0801d7e0).",
+      "name": "score_entry_23",
+      "offset": 584,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Score table entry 24 (baseline 700000)",
+      "evidence": "Indexed record access: FUN_0801d55c copies record stride*index+base via FUN_08046804 memcpy for callers FUN_0800bdec and FUN_0800be90 (record index from FUN_0800c088/FUN_0800c094 after FUN_0801d610 slot select and FUN_0801d678 active-slot count); FUN_0801d540 performs the indexed write then FUN_0801d6c8 commits via FUN_08008644/FUN_08042d84/FUN_08042c50. Score u32 at file 0x1EC+4*i pairs with 20-byte NUL-padded ASCII name at file 0x264+20*i; 30 entries (score step 4, name stride 0x14). Slot flag logic: FUN_0801d610 tests bits 0-2, FUN_0801d678 popcounts, FUN_0801d57c sets bit (1<<n) and commits (caller FUN_0801d7e0).",
+      "name": "score_entry_24",
+      "offset": 588,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Score table entry 25 (baseline 500000)",
+      "evidence": "Indexed record access: FUN_0801d55c copies record stride*index+base via FUN_08046804 memcpy for callers FUN_0800bdec and FUN_0800be90 (record index from FUN_0800c088/FUN_0800c094 after FUN_0801d610 slot select and FUN_0801d678 active-slot count); FUN_0801d540 performs the indexed write then FUN_0801d6c8 commits via FUN_08008644/FUN_08042d84/FUN_08042c50. Score u32 at file 0x1EC+4*i pairs with 20-byte NUL-padded ASCII name at file 0x264+20*i; 30 entries (score step 4, name stride 0x14). Slot flag logic: FUN_0801d610 tests bits 0-2, FUN_0801d678 popcounts, FUN_0801d57c sets bit (1<<n) and commits (caller FUN_0801d7e0).",
+      "name": "score_entry_25",
+      "offset": 592,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Score table entry 26 (baseline 300000)",
+      "evidence": "Indexed record access: FUN_0801d55c copies record stride*index+base via FUN_08046804 memcpy for callers FUN_0800bdec and FUN_0800be90 (record index from FUN_0800c088/FUN_0800c094 after FUN_0801d610 slot select and FUN_0801d678 active-slot count); FUN_0801d540 performs the indexed write then FUN_0801d6c8 commits via FUN_08008644/FUN_08042d84/FUN_08042c50. Score u32 at file 0x1EC+4*i pairs with 20-byte NUL-padded ASCII name at file 0x264+20*i; 30 entries (score step 4, name stride 0x14). Slot flag logic: FUN_0801d610 tests bits 0-2, FUN_0801d678 popcounts, FUN_0801d57c sets bit (1<<n) and commits (caller FUN_0801d7e0).",
+      "name": "score_entry_26",
+      "offset": 596,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Score table entry 27 (baseline 450000)",
+      "evidence": "Indexed record access: FUN_0801d55c copies record stride*index+base via FUN_08046804 memcpy for callers FUN_0800bdec and FUN_0800be90 (record index from FUN_0800c088/FUN_0800c094 after FUN_0801d610 slot select and FUN_0801d678 active-slot count); FUN_0801d540 performs the indexed write then FUN_0801d6c8 commits via FUN_08008644/FUN_08042d84/FUN_08042c50. Score u32 at file 0x1EC+4*i pairs with 20-byte NUL-padded ASCII name at file 0x264+20*i; 30 entries (score step 4, name stride 0x14). Slot flag logic: FUN_0801d610 tests bits 0-2, FUN_0801d678 popcounts, FUN_0801d57c sets bit (1<<n) and commits (caller FUN_0801d7e0).",
+      "name": "score_entry_27",
+      "offset": 600,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Score table entry 28 (baseline 325000)",
+      "evidence": "Indexed record access: FUN_0801d55c copies record stride*index+base via FUN_08046804 memcpy for callers FUN_0800bdec and FUN_0800be90 (record index from FUN_0800c088/FUN_0800c094 after FUN_0801d610 slot select and FUN_0801d678 active-slot count); FUN_0801d540 performs the indexed write then FUN_0801d6c8 commits via FUN_08008644/FUN_08042d84/FUN_08042c50. Score u32 at file 0x1EC+4*i pairs with 20-byte NUL-padded ASCII name at file 0x264+20*i; 30 entries (score step 4, name stride 0x14). Slot flag logic: FUN_0801d610 tests bits 0-2, FUN_0801d678 popcounts, FUN_0801d57c sets bit (1<<n) and commits (caller FUN_0801d7e0).",
+      "name": "score_entry_28",
+      "offset": 604,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Score table entry 29 (baseline 200000)",
+      "evidence": "Indexed record access: FUN_0801d55c copies record stride*index+base via FUN_08046804 memcpy for callers FUN_0800bdec and FUN_0800be90 (record index from FUN_0800c088/FUN_0800c094 after FUN_0801d610 slot select and FUN_0801d678 active-slot count); FUN_0801d540 performs the indexed write then FUN_0801d6c8 commits via FUN_08008644/FUN_08042d84/FUN_08042c50. Score u32 at file 0x1EC+4*i pairs with 20-byte NUL-padded ASCII name at file 0x264+20*i; 30 entries (score step 4, name stride 0x14). Slot flag logic: FUN_0801d610 tests bits 0-2, FUN_0801d678 popcounts, FUN_0801d57c sets bit (1<<n) and commits (caller FUN_0801d7e0).",
+      "name": "score_entry_29",
+      "offset": 608,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Name record 0 paired with score entry 0 (baseline 'sean')",
+      "evidence": "Indexed record access: FUN_0801d55c copies record stride*index+base via FUN_08046804 memcpy for callers FUN_0800bdec and FUN_0800be90 (record index from FUN_0800c088/FUN_0800c094 after FUN_0801d610 slot select and FUN_0801d678 active-slot count); FUN_0801d540 performs the indexed write then FUN_0801d6c8 commits via FUN_08008644/FUN_08042d84/FUN_08042c50. Score u32 at file 0x1EC+4*i pairs with 20-byte NUL-padded ASCII name at file 0x264+20*i; 30 entries (score step 4, name stride 0x14). Slot flag logic: FUN_0801d610 tests bits 0-2, FUN_0801d678 popcounts, FUN_0801d57c sets bit (1<<n) and commits (caller FUN_0801d7e0).",
+      "name": "entry_name_00",
+      "offset": 612,
+      "size": 20,
       "type": "ascii"
     },
     {
-      "name": "slot_counter",
-      "offset": 4,
-      "size": 2,
-      "type": "u16_le"
+      "confidence": "likely",
+      "description": "Name record 1 paired with score entry 1 (baseline 'rob')",
+      "evidence": "Indexed record access: FUN_0801d55c copies record stride*index+base via FUN_08046804 memcpy for callers FUN_0800bdec and FUN_0800be90 (record index from FUN_0800c088/FUN_0800c094 after FUN_0801d610 slot select and FUN_0801d678 active-slot count); FUN_0801d540 performs the indexed write then FUN_0801d6c8 commits via FUN_08008644/FUN_08042d84/FUN_08042c50. Score u32 at file 0x1EC+4*i pairs with 20-byte NUL-padded ASCII name at file 0x264+20*i; 30 entries (score step 4, name stride 0x14). Slot flag logic: FUN_0801d610 tests bits 0-2, FUN_0801d678 popcounts, FUN_0801d57c sets bit (1<<n) and commits (caller FUN_0801d7e0).",
+      "name": "entry_name_01",
+      "offset": 632,
+      "size": 20,
+      "type": "ascii"
     },
     {
-      "name": "game_progress_flags",
-      "offset": 6,
-      "size": 2,
-      "type": "u16_le"
+      "confidence": "likely",
+      "description": "Name record 2 paired with score entry 2 (baseline 'brent')",
+      "evidence": "Indexed record access: FUN_0801d55c copies record stride*index+base via FUN_08046804 memcpy for callers FUN_0800bdec and FUN_0800be90 (record index from FUN_0800c088/FUN_0800c094 after FUN_0801d610 slot select and FUN_0801d678 active-slot count); FUN_0801d540 performs the indexed write then FUN_0801d6c8 commits via FUN_08008644/FUN_08042d84/FUN_08042c50. Score u32 at file 0x1EC+4*i pairs with 20-byte NUL-padded ASCII name at file 0x264+20*i; 30 entries (score step 4, name stride 0x14). Slot flag logic: FUN_0801d610 tests bits 0-2, FUN_0801d678 popcounts, FUN_0801d57c sets bit (1<<n) and commits (caller FUN_0801d7e0).",
+      "name": "entry_name_02",
+      "offset": 652,
+      "size": 20,
+      "type": "ascii"
     },
     {
-      "name": "player_status_payload",
-      "offset": 8,
-      "size": 16,
+      "confidence": "likely",
+      "description": "Name record 3 paired with score entry 3 (baseline 'geoff')",
+      "evidence": "Indexed record access: FUN_0801d55c copies record stride*index+base via FUN_08046804 memcpy for callers FUN_0800bdec and FUN_0800be90 (record index from FUN_0800c088/FUN_0800c094 after FUN_0801d610 slot select and FUN_0801d678 active-slot count); FUN_0801d540 performs the indexed write then FUN_0801d6c8 commits via FUN_08008644/FUN_08042d84/FUN_08042c50. Score u32 at file 0x1EC+4*i pairs with 20-byte NUL-padded ASCII name at file 0x264+20*i; 30 entries (score step 4, name stride 0x14). Slot flag logic: FUN_0801d610 tests bits 0-2, FUN_0801d678 popcounts, FUN_0801d57c sets bit (1<<n) and commits (caller FUN_0801d7e0).",
+      "name": "entry_name_03",
+      "offset": 672,
+      "size": 20,
+      "type": "ascii"
+    },
+    {
+      "confidence": "likely",
+      "description": "Name record 4 paired with score entry 4 (baseline 'craig')",
+      "evidence": "Indexed record access: FUN_0801d55c copies record stride*index+base via FUN_08046804 memcpy for callers FUN_0800bdec and FUN_0800be90 (record index from FUN_0800c088/FUN_0800c094 after FUN_0801d610 slot select and FUN_0801d678 active-slot count); FUN_0801d540 performs the indexed write then FUN_0801d6c8 commits via FUN_08008644/FUN_08042d84/FUN_08042c50. Score u32 at file 0x1EC+4*i pairs with 20-byte NUL-padded ASCII name at file 0x264+20*i; 30 entries (score step 4, name stride 0x14). Slot flag logic: FUN_0801d610 tests bits 0-2, FUN_0801d678 popcounts, FUN_0801d57c sets bit (1<<n) and commits (caller FUN_0801d7e0).",
+      "name": "entry_name_04",
+      "offset": 692,
+      "size": 20,
+      "type": "ascii"
+    },
+    {
+      "confidence": "likely",
+      "description": "Name record 5 paired with score entry 5 (baseline 'leo')",
+      "evidence": "Indexed record access: FUN_0801d55c copies record stride*index+base via FUN_08046804 memcpy for callers FUN_0800bdec and FUN_0800be90 (record index from FUN_0800c088/FUN_0800c094 after FUN_0801d610 slot select and FUN_0801d678 active-slot count); FUN_0801d540 performs the indexed write then FUN_0801d6c8 commits via FUN_08008644/FUN_08042d84/FUN_08042c50. Score u32 at file 0x1EC+4*i pairs with 20-byte NUL-padded ASCII name at file 0x264+20*i; 30 entries (score step 4, name stride 0x14). Slot flag logic: FUN_0801d610 tests bits 0-2, FUN_0801d678 popcounts, FUN_0801d57c sets bit (1<<n) and commits (caller FUN_0801d7e0).",
+      "name": "entry_name_05",
+      "offset": 712,
+      "size": 20,
+      "type": "ascii"
+    },
+    {
+      "confidence": "likely",
+      "description": "Name record 6 paired with score entry 6 (baseline 'greg')",
+      "evidence": "Indexed record access: FUN_0801d55c copies record stride*index+base via FUN_08046804 memcpy for callers FUN_0800bdec and FUN_0800be90 (record index from FUN_0800c088/FUN_0800c094 after FUN_0801d610 slot select and FUN_0801d678 active-slot count); FUN_0801d540 performs the indexed write then FUN_0801d6c8 commits via FUN_08008644/FUN_08042d84/FUN_08042c50. Score u32 at file 0x1EC+4*i pairs with 20-byte NUL-padded ASCII name at file 0x264+20*i; 30 entries (score step 4, name stride 0x14). Slot flag logic: FUN_0801d610 tests bits 0-2, FUN_0801d678 popcounts, FUN_0801d57c sets bit (1<<n) and commits (caller FUN_0801d7e0).",
+      "name": "entry_name_06",
+      "offset": 732,
+      "size": 20,
+      "type": "ascii"
+    },
+    {
+      "confidence": "likely",
+      "description": "Name record 7 paired with score entry 7 (baseline 'martin')",
+      "evidence": "Indexed record access: FUN_0801d55c copies record stride*index+base via FUN_08046804 memcpy for callers FUN_0800bdec and FUN_0800be90 (record index from FUN_0800c088/FUN_0800c094 after FUN_0801d610 slot select and FUN_0801d678 active-slot count); FUN_0801d540 performs the indexed write then FUN_0801d6c8 commits via FUN_08008644/FUN_08042d84/FUN_08042c50. Score u32 at file 0x1EC+4*i pairs with 20-byte NUL-padded ASCII name at file 0x264+20*i; 30 entries (score step 4, name stride 0x14). Slot flag logic: FUN_0801d610 tests bits 0-2, FUN_0801d678 popcounts, FUN_0801d57c sets bit (1<<n) and commits (caller FUN_0801d7e0).",
+      "name": "entry_name_07",
+      "offset": 752,
+      "size": 20,
+      "type": "ascii"
+    },
+    {
+      "confidence": "likely",
+      "description": "Name record 8 paired with score entry 8 (baseline 'geoff')",
+      "evidence": "Indexed record access: FUN_0801d55c copies record stride*index+base via FUN_08046804 memcpy for callers FUN_0800bdec and FUN_0800be90 (record index from FUN_0800c088/FUN_0800c094 after FUN_0801d610 slot select and FUN_0801d678 active-slot count); FUN_0801d540 performs the indexed write then FUN_0801d6c8 commits via FUN_08008644/FUN_08042d84/FUN_08042c50. Score u32 at file 0x1EC+4*i pairs with 20-byte NUL-padded ASCII name at file 0x264+20*i; 30 entries (score step 4, name stride 0x14). Slot flag logic: FUN_0801d610 tests bits 0-2, FUN_0801d678 popcounts, FUN_0801d57c sets bit (1<<n) and commits (caller FUN_0801d7e0).",
+      "name": "entry_name_08",
+      "offset": 772,
+      "size": 20,
+      "type": "ascii"
+    },
+    {
+      "confidence": "likely",
+      "description": "Name record 9 paired with score entry 9 (baseline 'brent')",
+      "evidence": "Indexed record access: FUN_0801d55c copies record stride*index+base via FUN_08046804 memcpy for callers FUN_0800bdec and FUN_0800be90 (record index from FUN_0800c088/FUN_0800c094 after FUN_0801d610 slot select and FUN_0801d678 active-slot count); FUN_0801d540 performs the indexed write then FUN_0801d6c8 commits via FUN_08008644/FUN_08042d84/FUN_08042c50. Score u32 at file 0x1EC+4*i pairs with 20-byte NUL-padded ASCII name at file 0x264+20*i; 30 entries (score step 4, name stride 0x14). Slot flag logic: FUN_0801d610 tests bits 0-2, FUN_0801d678 popcounts, FUN_0801d57c sets bit (1<<n) and commits (caller FUN_0801d7e0).",
+      "name": "entry_name_09",
+      "offset": 792,
+      "size": 20,
+      "type": "ascii"
+    },
+    {
+      "confidence": "likely",
+      "description": "Name record 10 paired with score entry 10 (baseline 'ben')",
+      "evidence": "Indexed record access: FUN_0801d55c copies record stride*index+base via FUN_08046804 memcpy for callers FUN_0800bdec and FUN_0800be90 (record index from FUN_0800c088/FUN_0800c094 after FUN_0801d610 slot select and FUN_0801d678 active-slot count); FUN_0801d540 performs the indexed write then FUN_0801d6c8 commits via FUN_08008644/FUN_08042d84/FUN_08042c50. Score u32 at file 0x1EC+4*i pairs with 20-byte NUL-padded ASCII name at file 0x264+20*i; 30 entries (score step 4, name stride 0x14). Slot flag logic: FUN_0801d610 tests bits 0-2, FUN_0801d678 popcounts, FUN_0801d57c sets bit (1<<n) and commits (caller FUN_0801d7e0).",
+      "name": "entry_name_10",
+      "offset": 812,
+      "size": 20,
+      "type": "ascii"
+    },
+    {
+      "confidence": "likely",
+      "description": "Name record 11 paired with score entry 11 (baseline 'geoff')",
+      "evidence": "Indexed record access: FUN_0801d55c copies record stride*index+base via FUN_08046804 memcpy for callers FUN_0800bdec and FUN_0800be90 (record index from FUN_0800c088/FUN_0800c094 after FUN_0801d610 slot select and FUN_0801d678 active-slot count); FUN_0801d540 performs the indexed write then FUN_0801d6c8 commits via FUN_08008644/FUN_08042d84/FUN_08042c50. Score u32 at file 0x1EC+4*i pairs with 20-byte NUL-padded ASCII name at file 0x264+20*i; 30 entries (score step 4, name stride 0x14). Slot flag logic: FUN_0801d610 tests bits 0-2, FUN_0801d678 popcounts, FUN_0801d57c sets bit (1<<n) and commits (caller FUN_0801d7e0).",
+      "name": "entry_name_11",
+      "offset": 832,
+      "size": 20,
+      "type": "ascii"
+    },
+    {
+      "confidence": "likely",
+      "description": "Name record 12 paired with score entry 12 (baseline 'leo')",
+      "evidence": "Indexed record access: FUN_0801d55c copies record stride*index+base via FUN_08046804 memcpy for callers FUN_0800bdec and FUN_0800be90 (record index from FUN_0800c088/FUN_0800c094 after FUN_0801d610 slot select and FUN_0801d678 active-slot count); FUN_0801d540 performs the indexed write then FUN_0801d6c8 commits via FUN_08008644/FUN_08042d84/FUN_08042c50. Score u32 at file 0x1EC+4*i pairs with 20-byte NUL-padded ASCII name at file 0x264+20*i; 30 entries (score step 4, name stride 0x14). Slot flag logic: FUN_0801d610 tests bits 0-2, FUN_0801d678 popcounts, FUN_0801d57c sets bit (1<<n) and commits (caller FUN_0801d7e0).",
+      "name": "entry_name_12",
+      "offset": 852,
+      "size": 20,
+      "type": "ascii"
+    },
+    {
+      "confidence": "likely",
+      "description": "Name record 13 paired with score entry 13 (baseline 'craig')",
+      "evidence": "Indexed record access: FUN_0801d55c copies record stride*index+base via FUN_08046804 memcpy for callers FUN_0800bdec and FUN_0800be90 (record index from FUN_0800c088/FUN_0800c094 after FUN_0801d610 slot select and FUN_0801d678 active-slot count); FUN_0801d540 performs the indexed write then FUN_0801d6c8 commits via FUN_08008644/FUN_08042d84/FUN_08042c50. Score u32 at file 0x1EC+4*i pairs with 20-byte NUL-padded ASCII name at file 0x264+20*i; 30 entries (score step 4, name stride 0x14). Slot flag logic: FUN_0801d610 tests bits 0-2, FUN_0801d678 popcounts, FUN_0801d57c sets bit (1<<n) and commits (caller FUN_0801d7e0).",
+      "name": "entry_name_13",
+      "offset": 872,
+      "size": 20,
+      "type": "ascii"
+    },
+    {
+      "confidence": "likely",
+      "description": "Name record 14 paired with score entry 14 (baseline 'eric')",
+      "evidence": "Indexed record access: FUN_0801d55c copies record stride*index+base via FUN_08046804 memcpy for callers FUN_0800bdec and FUN_0800be90 (record index from FUN_0800c088/FUN_0800c094 after FUN_0801d610 slot select and FUN_0801d678 active-slot count); FUN_0801d540 performs the indexed write then FUN_0801d6c8 commits via FUN_08008644/FUN_08042d84/FUN_08042c50. Score u32 at file 0x1EC+4*i pairs with 20-byte NUL-padded ASCII name at file 0x264+20*i; 30 entries (score step 4, name stride 0x14). Slot flag logic: FUN_0801d610 tests bits 0-2, FUN_0801d678 popcounts, FUN_0801d57c sets bit (1<<n) and commits (caller FUN_0801d7e0).",
+      "name": "entry_name_14",
+      "offset": 892,
+      "size": 20,
+      "type": "ascii"
+    },
+    {
+      "confidence": "likely",
+      "description": "Name record 15 paired with score entry 15 (baseline 'craig')",
+      "evidence": "Indexed record access: FUN_0801d55c copies record stride*index+base via FUN_08046804 memcpy for callers FUN_0800bdec and FUN_0800be90 (record index from FUN_0800c088/FUN_0800c094 after FUN_0801d610 slot select and FUN_0801d678 active-slot count); FUN_0801d540 performs the indexed write then FUN_0801d6c8 commits via FUN_08008644/FUN_08042d84/FUN_08042c50. Score u32 at file 0x1EC+4*i pairs with 20-byte NUL-padded ASCII name at file 0x264+20*i; 30 entries (score step 4, name stride 0x14). Slot flag logic: FUN_0801d610 tests bits 0-2, FUN_0801d678 popcounts, FUN_0801d57c sets bit (1<<n) and commits (caller FUN_0801d7e0).",
+      "name": "entry_name_15",
+      "offset": 912,
+      "size": 20,
+      "type": "ascii"
+    },
+    {
+      "confidence": "likely",
+      "description": "Name record 16 paired with score entry 16 (baseline 'eric')",
+      "evidence": "Indexed record access: FUN_0801d55c copies record stride*index+base via FUN_08046804 memcpy for callers FUN_0800bdec and FUN_0800be90 (record index from FUN_0800c088/FUN_0800c094 after FUN_0801d610 slot select and FUN_0801d678 active-slot count); FUN_0801d540 performs the indexed write then FUN_0801d6c8 commits via FUN_08008644/FUN_08042d84/FUN_08042c50. Score u32 at file 0x1EC+4*i pairs with 20-byte NUL-padded ASCII name at file 0x264+20*i; 30 entries (score step 4, name stride 0x14). Slot flag logic: FUN_0801d610 tests bits 0-2, FUN_0801d678 popcounts, FUN_0801d57c sets bit (1<<n) and commits (caller FUN_0801d7e0).",
+      "name": "entry_name_16",
+      "offset": 932,
+      "size": 20,
+      "type": "ascii"
+    },
+    {
+      "confidence": "likely",
+      "description": "Name record 17 paired with score entry 17 (baseline 'alex')",
+      "evidence": "Indexed record access: FUN_0801d55c copies record stride*index+base via FUN_08046804 memcpy for callers FUN_0800bdec and FUN_0800be90 (record index from FUN_0800c088/FUN_0800c094 after FUN_0801d610 slot select and FUN_0801d678 active-slot count); FUN_0801d540 performs the indexed write then FUN_0801d6c8 commits via FUN_08008644/FUN_08042d84/FUN_08042c50. Score u32 at file 0x1EC+4*i pairs with 20-byte NUL-padded ASCII name at file 0x264+20*i; 30 entries (score step 4, name stride 0x14). Slot flag logic: FUN_0801d610 tests bits 0-2, FUN_0801d678 popcounts, FUN_0801d57c sets bit (1<<n) and commits (caller FUN_0801d7e0).",
+      "name": "entry_name_17",
+      "offset": 952,
+      "size": 20,
+      "type": "ascii"
+    },
+    {
+      "confidence": "likely",
+      "description": "Name record 18 paired with score entry 18 (baseline 'matt')",
+      "evidence": "Indexed record access: FUN_0801d55c copies record stride*index+base via FUN_08046804 memcpy for callers FUN_0800bdec and FUN_0800be90 (record index from FUN_0800c088/FUN_0800c094 after FUN_0801d610 slot select and FUN_0801d678 active-slot count); FUN_0801d540 performs the indexed write then FUN_0801d6c8 commits via FUN_08008644/FUN_08042d84/FUN_08042c50. Score u32 at file 0x1EC+4*i pairs with 20-byte NUL-padded ASCII name at file 0x264+20*i; 30 entries (score step 4, name stride 0x14). Slot flag logic: FUN_0801d610 tests bits 0-2, FUN_0801d678 popcounts, FUN_0801d57c sets bit (1<<n) and commits (caller FUN_0801d7e0).",
+      "name": "entry_name_18",
+      "offset": 972,
+      "size": 20,
+      "type": "ascii"
+    },
+    {
+      "confidence": "likely",
+      "description": "Name record 19 paired with score entry 19 (baseline 'sean')",
+      "evidence": "Indexed record access: FUN_0801d55c copies record stride*index+base via FUN_08046804 memcpy for callers FUN_0800bdec and FUN_0800be90 (record index from FUN_0800c088/FUN_0800c094 after FUN_0801d610 slot select and FUN_0801d678 active-slot count); FUN_0801d540 performs the indexed write then FUN_0801d6c8 commits via FUN_08008644/FUN_08042d84/FUN_08042c50. Score u32 at file 0x1EC+4*i pairs with 20-byte NUL-padded ASCII name at file 0x264+20*i; 30 entries (score step 4, name stride 0x14). Slot flag logic: FUN_0801d610 tests bits 0-2, FUN_0801d678 popcounts, FUN_0801d57c sets bit (1<<n) and commits (caller FUN_0801d7e0).",
+      "name": "entry_name_19",
+      "offset": 992,
+      "size": 20,
+      "type": "ascii"
+    },
+    {
+      "confidence": "likely",
+      "description": "Name record 20 paired with score entry 20 (baseline 'ben')",
+      "evidence": "Indexed record access: FUN_0801d55c copies record stride*index+base via FUN_08046804 memcpy for callers FUN_0800bdec and FUN_0800be90 (record index from FUN_0800c088/FUN_0800c094 after FUN_0801d610 slot select and FUN_0801d678 active-slot count); FUN_0801d540 performs the indexed write then FUN_0801d6c8 commits via FUN_08008644/FUN_08042d84/FUN_08042c50. Score u32 at file 0x1EC+4*i pairs with 20-byte NUL-padded ASCII name at file 0x264+20*i; 30 entries (score step 4, name stride 0x14). Slot flag logic: FUN_0801d610 tests bits 0-2, FUN_0801d678 popcounts, FUN_0801d57c sets bit (1<<n) and commits (caller FUN_0801d7e0).",
+      "name": "entry_name_20",
+      "offset": 1012,
+      "size": 20,
+      "type": "ascii"
+    },
+    {
+      "confidence": "likely",
+      "description": "Name record 21 paired with score entry 21 (baseline 'craig')",
+      "evidence": "Indexed record access: FUN_0801d55c copies record stride*index+base via FUN_08046804 memcpy for callers FUN_0800bdec and FUN_0800be90 (record index from FUN_0800c088/FUN_0800c094 after FUN_0801d610 slot select and FUN_0801d678 active-slot count); FUN_0801d540 performs the indexed write then FUN_0801d6c8 commits via FUN_08008644/FUN_08042d84/FUN_08042c50. Score u32 at file 0x1EC+4*i pairs with 20-byte NUL-padded ASCII name at file 0x264+20*i; 30 entries (score step 4, name stride 0x14). Slot flag logic: FUN_0801d610 tests bits 0-2, FUN_0801d678 popcounts, FUN_0801d57c sets bit (1<<n) and commits (caller FUN_0801d7e0).",
+      "name": "entry_name_21",
+      "offset": 1032,
+      "size": 20,
+      "type": "ascii"
+    },
+    {
+      "confidence": "likely",
+      "description": "Name record 22 paired with score entry 22 (baseline 'craig')",
+      "evidence": "Indexed record access: FUN_0801d55c copies record stride*index+base via FUN_08046804 memcpy for callers FUN_0800bdec and FUN_0800be90 (record index from FUN_0800c088/FUN_0800c094 after FUN_0801d610 slot select and FUN_0801d678 active-slot count); FUN_0801d540 performs the indexed write then FUN_0801d6c8 commits via FUN_08008644/FUN_08042d84/FUN_08042c50. Score u32 at file 0x1EC+4*i pairs with 20-byte NUL-padded ASCII name at file 0x264+20*i; 30 entries (score step 4, name stride 0x14). Slot flag logic: FUN_0801d610 tests bits 0-2, FUN_0801d678 popcounts, FUN_0801d57c sets bit (1<<n) and commits (caller FUN_0801d7e0).",
+      "name": "entry_name_22",
+      "offset": 1052,
+      "size": 20,
+      "type": "ascii"
+    },
+    {
+      "confidence": "likely",
+      "description": "Name record 23 paired with score entry 23 (baseline 'rob')",
+      "evidence": "Indexed record access: FUN_0801d55c copies record stride*index+base via FUN_08046804 memcpy for callers FUN_0800bdec and FUN_0800be90 (record index from FUN_0800c088/FUN_0800c094 after FUN_0801d610 slot select and FUN_0801d678 active-slot count); FUN_0801d540 performs the indexed write then FUN_0801d6c8 commits via FUN_08008644/FUN_08042d84/FUN_08042c50. Score u32 at file 0x1EC+4*i pairs with 20-byte NUL-padded ASCII name at file 0x264+20*i; 30 entries (score step 4, name stride 0x14). Slot flag logic: FUN_0801d610 tests bits 0-2, FUN_0801d678 popcounts, FUN_0801d57c sets bit (1<<n) and commits (caller FUN_0801d7e0).",
+      "name": "entry_name_23",
+      "offset": 1072,
+      "size": 20,
+      "type": "ascii"
+    },
+    {
+      "confidence": "likely",
+      "description": "Name record 24 paired with score entry 24 (baseline 'ben')",
+      "evidence": "Indexed record access: FUN_0801d55c copies record stride*index+base via FUN_08046804 memcpy for callers FUN_0800bdec and FUN_0800be90 (record index from FUN_0800c088/FUN_0800c094 after FUN_0801d610 slot select and FUN_0801d678 active-slot count); FUN_0801d540 performs the indexed write then FUN_0801d6c8 commits via FUN_08008644/FUN_08042d84/FUN_08042c50. Score u32 at file 0x1EC+4*i pairs with 20-byte NUL-padded ASCII name at file 0x264+20*i; 30 entries (score step 4, name stride 0x14). Slot flag logic: FUN_0801d610 tests bits 0-2, FUN_0801d678 popcounts, FUN_0801d57c sets bit (1<<n) and commits (caller FUN_0801d7e0).",
+      "name": "entry_name_24",
+      "offset": 1092,
+      "size": 20,
+      "type": "ascii"
+    },
+    {
+      "confidence": "likely",
+      "description": "Name record 25 paired with score entry 25 (baseline 'greg')",
+      "evidence": "Indexed record access: FUN_0801d55c copies record stride*index+base via FUN_08046804 memcpy for callers FUN_0800bdec and FUN_0800be90 (record index from FUN_0800c088/FUN_0800c094 after FUN_0801d610 slot select and FUN_0801d678 active-slot count); FUN_0801d540 performs the indexed write then FUN_0801d6c8 commits via FUN_08008644/FUN_08042d84/FUN_08042c50. Score u32 at file 0x1EC+4*i pairs with 20-byte NUL-padded ASCII name at file 0x264+20*i; 30 entries (score step 4, name stride 0x14). Slot flag logic: FUN_0801d610 tests bits 0-2, FUN_0801d678 popcounts, FUN_0801d57c sets bit (1<<n) and commits (caller FUN_0801d7e0).",
+      "name": "entry_name_25",
+      "offset": 1112,
+      "size": 20,
+      "type": "ascii"
+    },
+    {
+      "confidence": "likely",
+      "description": "Name record 26 paired with score entry 26 (baseline 'alex')",
+      "evidence": "Indexed record access: FUN_0801d55c copies record stride*index+base via FUN_08046804 memcpy for callers FUN_0800bdec and FUN_0800be90 (record index from FUN_0800c088/FUN_0800c094 after FUN_0801d610 slot select and FUN_0801d678 active-slot count); FUN_0801d540 performs the indexed write then FUN_0801d6c8 commits via FUN_08008644/FUN_08042d84/FUN_08042c50. Score u32 at file 0x1EC+4*i pairs with 20-byte NUL-padded ASCII name at file 0x264+20*i; 30 entries (score step 4, name stride 0x14). Slot flag logic: FUN_0801d610 tests bits 0-2, FUN_0801d678 popcounts, FUN_0801d57c sets bit (1<<n) and commits (caller FUN_0801d7e0).",
+      "name": "entry_name_26",
+      "offset": 1132,
+      "size": 20,
+      "type": "ascii"
+    },
+    {
+      "confidence": "likely",
+      "description": "Name record 27 paired with score entry 27 (baseline 'ben')",
+      "evidence": "Indexed record access: FUN_0801d55c copies record stride*index+base via FUN_08046804 memcpy for callers FUN_0800bdec and FUN_0800be90 (record index from FUN_0800c088/FUN_0800c094 after FUN_0801d610 slot select and FUN_0801d678 active-slot count); FUN_0801d540 performs the indexed write then FUN_0801d6c8 commits via FUN_08008644/FUN_08042d84/FUN_08042c50. Score u32 at file 0x1EC+4*i pairs with 20-byte NUL-padded ASCII name at file 0x264+20*i; 30 entries (score step 4, name stride 0x14). Slot flag logic: FUN_0801d610 tests bits 0-2, FUN_0801d678 popcounts, FUN_0801d57c sets bit (1<<n) and commits (caller FUN_0801d7e0).",
+      "name": "entry_name_27",
+      "offset": 1152,
+      "size": 20,
+      "type": "ascii"
+    },
+    {
+      "confidence": "likely",
+      "description": "Name record 28 paired with score entry 28 (baseline 'geoff')",
+      "evidence": "Indexed record access: FUN_0801d55c copies record stride*index+base via FUN_08046804 memcpy for callers FUN_0800bdec and FUN_0800be90 (record index from FUN_0800c088/FUN_0800c094 after FUN_0801d610 slot select and FUN_0801d678 active-slot count); FUN_0801d540 performs the indexed write then FUN_0801d6c8 commits via FUN_08008644/FUN_08042d84/FUN_08042c50. Score u32 at file 0x1EC+4*i pairs with 20-byte NUL-padded ASCII name at file 0x264+20*i; 30 entries (score step 4, name stride 0x14). Slot flag logic: FUN_0801d610 tests bits 0-2, FUN_0801d678 popcounts, FUN_0801d57c sets bit (1<<n) and commits (caller FUN_0801d7e0).",
+      "name": "entry_name_28",
+      "offset": 1172,
+      "size": 20,
+      "type": "ascii"
+    },
+    {
+      "confidence": "likely",
+      "description": "Name record 29 paired with score entry 29 (baseline 'rob')",
+      "evidence": "Indexed record access: FUN_0801d55c copies record stride*index+base via FUN_08046804 memcpy for callers FUN_0800bdec and FUN_0800be90 (record index from FUN_0800c088/FUN_0800c094 after FUN_0801d610 slot select and FUN_0801d678 active-slot count); FUN_0801d540 performs the indexed write then FUN_0801d6c8 commits via FUN_08008644/FUN_08042d84/FUN_08042c50. Score u32 at file 0x1EC+4*i pairs with 20-byte NUL-padded ASCII name at file 0x264+20*i; 30 entries (score step 4, name stride 0x14). Slot flag logic: FUN_0801d610 tests bits 0-2, FUN_0801d678 popcounts, FUN_0801d57c sets bit (1<<n) and commits (caller FUN_0801d7e0).",
+      "name": "entry_name_29",
+      "offset": 1192,
+      "size": 20,
+      "type": "ascii"
+    },
+    {
+      "confidence": "likely",
+      "description": "Byte table of small values (all bytes 2..8 in baseline; likely per-item stat/config values)",
+      "evidence": "RAM save struct committed to EEPROM by FUN_0801d6c8 via FUN_08008644 8-byte block loop (FUN_08042d84 write+verify retry around FUN_08042c50/FUN_08042ba0 bit-banging DAT_0d000000 through FUN_08042b20); struct maps linearly to file (EEPROM block N = file bytes 8N..8N+7), so struct offset == file offset.",
+      "name": "stat_table",
+      "offset": 1212,
+      "size": 136,
       "type": "bytes"
     }
-  ]
+  ],
+  "game_code": "BTOE",
+  "id": "btoe",
+  "magic_signatures": [],
+  "media": "eeprom8k",
+  "size_bytes": 8192,
+  "title": "Tony Hawk's Underground (USA, Europe)"
 }

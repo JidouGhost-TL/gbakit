@@ -1,45 +1,276 @@
 {
-  "id": "bjge",
-  "game_code": "BJGE",
-  "title": "Glucoboy (Australia)",
-  "media": "eeprom8k",
-  "size_bytes": 8192,
-  "magic_signatures": [
-    {
-      "offset": 0,
-      "bytes": [
-        82,
-        69,
-        89,
-        65
-      ]
-    }
-  ],
   "checksums": [],
+  "copy_groups": [],
+  "eeprom_rev8": true,
   "fields": [
     {
-      "name": "magic_header",
+      "confidence": "guessed",
+      "description": "First word of the 48-byte profile block (rev8-logical offset 0x00). Baseline value 0x82E707C7. No sum/xor/crc16/crc32 variant over any sub-range reproduces it, so it is stored as a plain u32, not a checksum spec.",
+      "evidence": "Word verified in baseline.sav rev8-logical bytes [00 00 00 00 block reversed to c7 07 e7 82 ...]; layout cross-checked against the parallel lead words of the mode blocks (FUN_08062524 numeric record-compare helper shows the game compares multi-word records field-by-field at struct offsets +0/+4/+8).",
+      "name": "profile_lead_word",
       "offset": 0,
       "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "constraint": {
+        "allowed": "ABCDEFGHIJKLMNOPQRSTUVWXYZ ",
+        "kind": "ascii-charset",
+        "max_len": 16
+      },
+      "description": "Player profile name, space-padded and NUL-terminated ('PLAYER' + spaces + 0x00). Baseline decodes to 'PLAYER'.",
+      "evidence": "NUL-terminated ASCII at rev8-logical save offset 0x08 (16 B). Game-side text path: FUN_08015898 is a byte-wise strlen loop to NUL, FUN_0801556c is the text codec/char-map routine, FUN_08015400 fetches indexed string records, and FUN_0804ba94 compares such records via the FUN_08063978 byte comparator.",
+      "name": "player_name",
+      "offset": 8,
+      "size": 16,
       "type": "ascii"
     },
     {
-      "name": "slot_counter",
-      "offset": 4,
-      "size": 2,
-      "type": "u16_le"
+      "confidence": "likely",
+      "description": "4-byte date stamp shared by all six save blocks (baseline bytes 14 03 07 20 in every block).",
+      "evidence": "Identical 4-byte stamp at rev8-logical offsets 0x28, 0x498, 0x848, 0xC40, 0x1040 and 0x1440 in baseline.sav; copied as part of each block tail by the game's record-store path (numeric/text record helpers FUN_08062524 / FUN_08063978).",
+      "name": "profile_date_stamp",
+      "offset": 40,
+      "size": 4,
+      "type": "bytes"
     },
     {
-      "name": "game_progress_flags",
-      "offset": 6,
-      "size": 2,
-      "type": "u16_le"
+      "confidence": "guessed",
+      "description": "Trailing word of the profile block. Baseline value 74 (0x4A). Mutable scalar suitable for live testing.",
+      "evidence": "Rev8-logical save offset 0x2C holds LE u32 74 in baseline.sav; parallel trailing words (112/110/143/131/125) close the other five blocks, so each block ends with a footer word (block-store pattern around the FUN_08062524 / FUN_0804ba94 record helpers).",
+      "name": "profile_footer_value",
+      "offset": 44,
+      "size": 4,
+      "type": "u32_le"
     },
     {
-      "name": "player_status_payload",
-      "offset": 8,
+      "confidence": "guessed",
+      "description": "First word of the 160-byte mode-A block (rev8-logical 0x400). Baseline value 0x02BC0010.",
+      "evidence": "Lead word verified at rev8-logical save offset 0x400 in baseline.sav; same struct position as the mode-B lead word at 0x800 (FUN_08062524 compares multi-word records starting at struct offset +0).",
+      "name": "mode_a_lead_word",
+      "offset": 1024,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "guessed",
+      "description": "Second word of the mode-A block, identical value (0x00020000) at the same struct position in the mode-B block. Mutable scalar suitable for live testing.",
+      "evidence": "Rev8-logical save offsets 0x408 and 0x808 both hold LE u32 0x00020000 in baseline.sav, i.e. a shared format/mode word at struct offset +8 (compared field-by-field by the FUN_08062524 numeric record comparator).",
+      "name": "mode_a_format_word",
+      "offset": 1032,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "guessed",
+      "description": "Enable/active word of the mode-A block. Baseline value 1; same value at the matching mode-B position. Mutable scalar suitable for live testing.",
+      "evidence": "Rev8-logical save offsets 0x40C and 0x80C both hold LE u32 1 in baseline.sav (struct offset +12, inside the word range compared by FUN_08062524).",
+      "name": "mode_a_active_flag",
+      "offset": 1036,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "guessed",
+      "description": "Counter word unique to the mode-A block (mode-B has zero here). Baseline value 250 (0xFA). Mutable scalar suitable for live testing.",
+      "evidence": "Rev8-logical save offset 0x414 holds LE u32 250 while the matching mode-B word at 0x814 is zero, so this is a per-mode counter field (numeric record word handled on the FUN_08062524 / FUN_08062ad0 numeric path).",
+      "name": "mode_a_counter",
+      "offset": 1044,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Four LE u16 gauge/stat values of the mode-A block. Baseline decodes to [100, 100, 75, 80].",
+      "evidence": "Four consecutive LE u16s at rev8-logical save offset 0x468 in baseline.sav (00 06 00 06 00 0c 00 06 row above holds the matching sub-indexes); the parallel mode-B row at 0x830 holds [100, 100, 100, 100]. Numeric record words on the FUN_08062524 / FUN_08062624 compare path.",
+      "name": "mode_a_meter_values",
+      "offset": 1128,
+      "size": 8,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Tail record of the mode-A block: 8-byte ASCII tag 'CVCVCVCV', the shared 4-byte date stamp, and a LE u32 footer (112).",
+      "evidence": "Contiguous 16 B at rev8-logical save offset 0x490 in baseline.sav; every save block ends with tag + date stamp + footer word (same pattern at 0x840, 0xC38, 0x1038, 0x1438). ASCII tag bytes are covered by the FUN_08015898 / FUN_0801556c / FUN_08063978 text path.",
+      "name": "mode_a_tail_record",
+      "offset": 1168,
+      "size": 16,
+      "type": "bytes"
+    },
+    {
+      "confidence": "guessed",
+      "description": "First word of the 80-byte mode-B block (rev8-logical 0x800). Baseline value 0x02566B64.",
+      "evidence": "Lead word verified at rev8-logical save offset 0x800 in baseline.sav; parallel struct position to the mode-A lead word at 0x400 (FUN_08062524 numeric record compare from struct offset +0).",
+      "name": "mode_b_lead_word",
+      "offset": 2048,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "guessed",
+      "description": "Shared format/mode word, same value (0x00020000) as mode-A offset 0x408. Mutable scalar suitable for live testing.",
+      "evidence": "Rev8-logical save offset 0x808 holds LE u32 0x00020000, matching 0x408 exactly (struct offset +8 on the FUN_08062524 numeric record-compare path).",
+      "name": "mode_b_format_word",
+      "offset": 2056,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "guessed",
+      "description": "Enable/active word of the mode-B block. Baseline value 1. Mutable scalar suitable for live testing.",
+      "evidence": "Rev8-logical save offset 0x80C holds LE u32 1, matching 0x40C (struct offset +12 compared by FUN_08062524).",
+      "name": "mode_b_active_flag",
+      "offset": 2060,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Four LE u16 gauge/stat values of the mode-B block. Baseline decodes to [100, 100, 100, 100].",
+      "evidence": "Four consecutive LE u16s (64 00 x4) at rev8-logical save offset 0x830 in baseline.sav, parallel to the mode-A row at 0x468 ([100, 100, 75, 80]). Numeric record words on the FUN_08062524 / FUN_08062624 compare path.",
+      "name": "mode_b_meter_values",
+      "offset": 2096,
+      "size": 8,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Tail record of the mode-B block: 8-byte ASCII tag 'DKDKDKDK', the shared 4-byte date stamp, and a LE u32 footer (110).",
+      "evidence": "Contiguous 16 B at rev8-logical save offset 0x840 in baseline.sav; same tag + date + footer tail pattern as the mode-A block at 0x490 and the three score tables. Tag bytes covered by the FUN_08015898 / FUN_08063978 text path.",
+      "name": "mode_b_tail_record",
+      "offset": 2112,
+      "size": 16,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Top score word of score table 1 (rev8-logical block 0xC00). Baseline value 29559. Mutable scalar suitable for live testing.",
+      "evidence": "Lead LE u32 of the first 72-byte score table at rev8-logical save offset 0xC00; the three tables open with 29559 / 28780 / 29298 while their entries stay below those ceilings. Ordered-record handling via the FUN_0804ba94 comparator (FUN_08015400 record fetch + FUN_08063978 byte compare) and the FUN_08062524 numeric record comparator.",
+      "name": "table1_top_score",
+      "offset": 3072,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Six LE u32 score entries of score table 1, strictly descending. Baseline decodes to [6985, 5760, 4350, 2005, 760, 385].",
+      "evidence": "Six consecutive LE u32s at rev8-logical save offset 0xC08 in baseline.sav; tables 2 and 3 repeat the six-descending-u32 pattern at 0x1008 ([15820, 10155, 6185, 3350, 810, 410]) and 0x1408 ([6217, 5460, 4203, 2965, 1428, 719]). Ordered records served by FUN_0804ba94 / FUN_08063978 and compared numerically by FUN_08062524.",
+      "name": "table1_score_entries",
+      "offset": 3080,
+      "size": 24,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Six 3-letter NUL-terminated entry initials of score table 1, one per score entry. Baseline decodes to HZH / AWR / SEC / ROD / BDB / JAC.",
+      "evidence": "24 B of [3 chars + NUL] x6 at rev8-logical save offset 0xC20 in baseline.sav; tables 2 and 3 repeat the pattern at 0x1020 and 0x1420. NUL-terminated strings on the FUN_08015898 strlen + FUN_0801556c codec + FUN_08015400 indexed-fetch path, compared by FUN_0804ba94 / FUN_08063978.",
+      "name": "table1_entry_initials",
+      "offset": 3104,
+      "size": 24,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Tail record of score table 1: 8-byte ASCII tag 'WSWSWSWS', the shared 4-byte date stamp, and a LE u32 footer (143).",
+      "evidence": "Contiguous 16 B at rev8-logical save offset 0xC38 in baseline.sav; tables 2 and 3 repeat the tag + date + footer pattern at 0x1038 ('LPLPLPLP', footer 131) and 0x1438 ('RRRRRRRR', footer 125). Tag bytes are NUL-free ASCII covered by the FUN_08015898 / FUN_08063978 text path.",
+      "name": "table1_tail_record",
+      "offset": 3128,
+      "size": 16,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Top score word of score table 2 (rev8-logical block 0x1000). Baseline value 28780. Mutable scalar suitable for live testing.",
+      "evidence": "Lead LE u32 of the second 72-byte score table at rev8-logical save offset 0x1000 in baseline.sav; same table shape as table 1 at 0xC00 (ordered-record path FUN_0804ba94 / FUN_08063978, numeric compare FUN_08062524). Independent table (different scores/initials), so mapped separately, not a copy group.",
+      "name": "table2_top_score",
+      "offset": 4096,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Six LE u32 score entries of score table 2, strictly descending. Baseline decodes to [15820, 10155, 6185, 3350, 810, 410].",
+      "evidence": "Six consecutive LE u32s at rev8-logical save offset 0x1008 in baseline.sav, same descending six-u32 layout as table 1 at 0xC08 (ordered-record path FUN_0804ba94 / FUN_08063978, numeric compare FUN_08062524).",
+      "name": "table2_score_entries",
+      "offset": 4104,
+      "size": 24,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Six 3-letter NUL-terminated entry initials of score table 2. Baseline decodes to JQI / SPE / JMT / YGE / MRB / EJR.",
+      "evidence": "24 B of [3 chars + NUL] x6 at rev8-logical save offset 0x1020 in baseline.sav, same initials pattern as table 1 at 0xC20 (text path FUN_08015898 / FUN_0801556c / FUN_08015400, compare FUN_0804ba94 / FUN_08063978).",
+      "name": "table2_entry_initials",
+      "offset": 4128,
+      "size": 24,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Tail record of score table 2: 8-byte ASCII tag 'LPLPLPLP', the shared 4-byte date stamp, and a LE u32 footer (131).",
+      "evidence": "Contiguous 16 B at rev8-logical save offset 0x1038 in baseline.sav; same tag + date + footer tail pattern as tables 1 and 3 (tag bytes on the FUN_08015898 / FUN_08063978 text path).",
+      "name": "table2_tail_record",
+      "offset": 4152,
+      "size": 16,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Top score word of score table 3 (rev8-logical block 0x1400). Baseline value 29298. Mutable scalar suitable for live testing.",
+      "evidence": "Lead LE u32 of the third 72-byte score table at rev8-logical save offset 0x1400 in baseline.sav; same table shape as tables 1 and 2 (ordered-record path FUN_0804ba94 / FUN_08063978, numeric compare FUN_08062524). Independent table, mapped separately, not a copy group.",
+      "name": "table3_top_score",
+      "offset": 5120,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Six LE u32 score entries of score table 3, strictly descending. Baseline decodes to [6217, 5460, 4203, 2965, 1428, 719].",
+      "evidence": "Six consecutive LE u32s at rev8-logical save offset 0x1408 in baseline.sav, same descending six-u32 layout as tables 1 and 2 (ordered-record path FUN_0804ba94 / FUN_08063978, numeric compare FUN_08062524).",
+      "name": "table3_score_entries",
+      "offset": 5128,
+      "size": 24,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Six 3-letter NUL-terminated entry initials of score table 3. Baseline decodes to AJW / PTM / CMC / PDH / ACH / JAD.",
+      "evidence": "24 B of [3 chars + NUL] x6 at rev8-logical save offset 0x1420 in baseline.sav, same initials pattern as tables 1 and 2 (text path FUN_08015898 / FUN_0801556c / FUN_08015400, compare FUN_0804ba94 / FUN_08063978).",
+      "name": "table3_entry_initials",
+      "offset": 5152,
+      "size": 24,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Tail record of score table 3: 8-byte ASCII tag 'RRRRRRRR', the shared 4-byte date stamp, and a LE u32 footer (125).",
+      "evidence": "Contiguous 16 B at rev8-logical save offset 0x1438 in baseline.sav; same tag + date + footer tail pattern as tables 1 and 2 (tag bytes on the FUN_08015898 / FUN_08063978 text path).",
+      "name": "table3_tail_record",
+      "offset": 5176,
       "size": 16,
       "type": "bytes"
     }
-  ]
+  ],
+  "game_code": "BJGE",
+  "id": "bjge",
+  "magic_signatures": [
+    {
+      "bytes": [
+        66,
+        71,
+        66,
+        71,
+        66,
+        71,
+        66,
+        71
+      ],
+      "description": "8-byte ASCII tag 'BGBGBGBG' at the head of the profile block (rev8-logical offset 0x20); verified against baseline.sav. The stub's offset-0 'REYA' magic is stale (raw bytes there are the rev8 image of the profile lead word, not ASCII).",
+      "offset": 32
+    }
+  ],
+  "media": "eeprom8k",
+  "size_bytes": 8192,
+  "title": "Glucoboy (Australia)"
 }

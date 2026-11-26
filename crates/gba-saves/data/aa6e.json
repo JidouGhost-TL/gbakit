@@ -1,53 +1,528 @@
 {
-  "id": "aa6e",
-  "game_code": "AA6E",
-  "title": "Sum of All Fears, The (USA) (En,Fr,De,Es,It)",
-  "media": "eeprom512",
-  "size_bytes": 512,
-  "magic_signatures": [
-    {
-      "offset": 0,
-      "bytes": [
-        50,
-        48,
-        83,
-        69
-      ]
-    }
-  ],
   "checksums": [
     {
-      "name": "slot_sum8",
-      "algorithm": "sum8",
-      "covered_start": 0,
-      "covered_end": 147,
-      "stored_offset": 147
+      "algorithm": "sum16_le",
+      "covered_end": 32,
+      "covered_start": 8,
+      "name": "slot0_checksum",
+      "stored_offset": 32
+    },
+    {
+      "algorithm": "sum16_le",
+      "covered_end": 60,
+      "covered_start": 36,
+      "name": "slot1_checksum",
+      "stored_offset": 60
+    },
+    {
+      "algorithm": "sum16_le",
+      "covered_end": 88,
+      "covered_start": 64,
+      "name": "slot2_checksum",
+      "stored_offset": 88
+    },
+    {
+      "algorithm": "sum16_le",
+      "covered_end": 116,
+      "covered_start": 92,
+      "name": "slot3_checksum",
+      "stored_offset": 116
+    },
+    {
+      "algorithm": "sum16_le",
+      "covered_end": 144,
+      "covered_start": 120,
+      "name": "slot4_checksum",
+      "stored_offset": 144
+    },
+    {
+      "algorithm": "sum16_le",
+      "covered_end": 170,
+      "covered_start": 148,
+      "name": "options_checksum",
+      "stored_offset": 170
     }
   ],
+  "eeprom_rev8": true,
   "fields": [
     {
-      "name": "magic_header",
+      "confidence": "confirmed",
+      "description": "8-byte ASCII header 'ROGUES02' identifying the save format; stored byte-reversed per 8-byte EEPROM block on media, readable in the rev8 logical domain.",
+      "evidence": "Logical-domain bytes at save offset 0 read as part of EEPROM block 0 via FUN_0803ba88 <- FUN_0800c534 <- FUN_0803b488; raw bytes are bit-reversed per 8-byte block so eeprom_rev8 is true.",
+      "name": "save_magic",
       "offset": 0,
-      "size": 4,
+      "size": 8,
       "type": "ascii"
     },
     {
-      "name": "slot_counter",
-      "offset": 4,
-      "size": 2,
-      "type": "u16_le"
-    },
-    {
-      "name": "game_progress_flags",
-      "offset": 6,
-      "size": 2,
-      "type": "u16_le"
-    },
-    {
-      "name": "player_status_payload",
+      "confidence": "likely",
+      "description": "Reserved/unknown slot word; always 1 in FUN_08019e0c defaults and baseline; covered by the slot checksum, no direct gameplay reader found.",
+      "evidence": "Set to 1 by FUN_08019e0c; persisted by FUN_0803b4c8 (slot base 8 via FUN_0800c4ec) and covered by FUN_08019f08/FUN_0803b570 checksum.",
+      "name": "slot0_reserved0",
       "offset": 8,
-      "size": 16,
-      "type": "bytes"
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 1,
+        "minimum": 0
+      },
+      "description": "Slot status flag: 1 = slot present/active; cleared to 0 by FUN_080196e0. Read as a boolean menu gate by FUN_08019a1c.",
+      "evidence": "Read by FUN_08019a1c (slot*0x1c+4); written 0 by FUN_080196e0; initialized 1 by FUN_08019e0c; callers FUN_080340d8 branches on ==0.",
+      "name": "slot0_active",
+      "offset": 12,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 1,
+        "minimum": 0
+      },
+      "description": "Reserved slot word; 1 in FUN_08019e0c defaults and baseline, zeroed for the active slot by FUN_080360c0; no gameplay reader found.",
+      "evidence": "Set to 1 by FUN_08019e0c; set to 0 by FUN_080360c0; persisted by FUN_0803b4c8 and covered by FUN_08019f08/FUN_0803b570 checksum.",
+      "name": "slot0_reserved8",
+      "offset": 16,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "kind": "bitmask",
+        "valid_mask": 4294967295
+      },
+      "description": "Bitmask of completed levels/missions; each bit tested by FUN_080198b8 and cleared by FUN_080198e4; default all-ones.",
+      "evidence": "Bit param_1 tested in *(slot+0xc) by FUN_080198b8; cleared by FUN_080198e4; default 0xffffffff set by FUN_08019e0c.",
+      "name": "slot0_levels_complete",
+      "offset": 20,
+      "size": 4,
+      "type": "bitflags"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "kind": "bitmask",
+        "valid_mask": 4294967295
+      },
+      "description": "Level-progress bitmask; FUN_08019a30 scans it for the first clear bit (current level) and FUN_08019830 derives stage state from it.",
+      "evidence": "Set by FUN_08019c1c (param_1!=2 path, slot+0x10) and cleared by FUN_08019c7c; read by FUN_08019830 and FUN_08019a30; written by FUN_08019e9c.",
+      "name": "slot0_level_progress",
+      "offset": 24,
+      "size": 4,
+      "type": "bitflags"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "kind": "bitmask",
+        "valid_mask": 4294967295
+      },
+      "description": "Collectible/item bitmask; tested per-bit by FUN_08019bb0 (param_1==2 path) and masked by FUN_080196e0.",
+      "evidence": "Bit tested in *(slot+0x14) by FUN_08019bb0; set by FUN_08019c1c (param_1==2 path); masked with DAT_08019730 by FUN_080196e0.",
+      "name": "slot0_collect_flags",
+      "offset": 28,
+      "size": 4,
+      "type": "bitflags"
+    },
+    {
+      "confidence": "likely",
+      "description": "Reserved/unknown slot word; always 1 in FUN_08019e0c defaults and baseline; covered by the slot checksum, no direct gameplay reader found.",
+      "evidence": "Set to 1 by FUN_08019e0c; persisted by FUN_0803b4c8 (slot base 36 via FUN_0800c4ec) and covered by FUN_08019f08/FUN_0803b570 checksum.",
+      "name": "slot1_reserved0",
+      "offset": 36,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 1,
+        "minimum": 0
+      },
+      "description": "Slot status flag: 1 = slot present/active; cleared to 0 by FUN_080196e0. Read as a boolean menu gate by FUN_08019a1c.",
+      "evidence": "Read by FUN_08019a1c (slot*0x1c+4); written 0 by FUN_080196e0; initialized 1 by FUN_08019e0c; callers FUN_080340d8 branches on ==0.",
+      "name": "slot1_active",
+      "offset": 40,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 1,
+        "minimum": 0
+      },
+      "description": "Reserved slot word; 1 in FUN_08019e0c defaults and baseline, zeroed for the active slot by FUN_080360c0; no gameplay reader found.",
+      "evidence": "Set to 1 by FUN_08019e0c; set to 0 by FUN_080360c0; persisted by FUN_0803b4c8 and covered by FUN_08019f08/FUN_0803b570 checksum.",
+      "name": "slot1_reserved8",
+      "offset": 44,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "kind": "bitmask",
+        "valid_mask": 4294967295
+      },
+      "description": "Bitmask of completed levels/missions; each bit tested by FUN_080198b8 and cleared by FUN_080198e4; default all-ones.",
+      "evidence": "Bit param_1 tested in *(slot+0xc) by FUN_080198b8; cleared by FUN_080198e4; default 0xffffffff set by FUN_08019e0c.",
+      "name": "slot1_levels_complete",
+      "offset": 48,
+      "size": 4,
+      "type": "bitflags"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "kind": "bitmask",
+        "valid_mask": 4294967295
+      },
+      "description": "Level-progress bitmask; FUN_08019a30 scans it for the first clear bit (current level) and FUN_08019830 derives stage state from it.",
+      "evidence": "Set by FUN_08019c1c (param_1!=2 path, slot+0x10) and cleared by FUN_08019c7c; read by FUN_08019830 and FUN_08019a30; written by FUN_08019e9c.",
+      "name": "slot1_level_progress",
+      "offset": 52,
+      "size": 4,
+      "type": "bitflags"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "kind": "bitmask",
+        "valid_mask": 4294967295
+      },
+      "description": "Collectible/item bitmask; tested per-bit by FUN_08019bb0 (param_1==2 path) and masked by FUN_080196e0.",
+      "evidence": "Bit tested in *(slot+0x14) by FUN_08019bb0; set by FUN_08019c1c (param_1==2 path); masked with DAT_08019730 by FUN_080196e0.",
+      "name": "slot1_collect_flags",
+      "offset": 56,
+      "size": 4,
+      "type": "bitflags"
+    },
+    {
+      "confidence": "likely",
+      "description": "Reserved/unknown slot word; always 1 in FUN_08019e0c defaults and baseline; covered by the slot checksum, no direct gameplay reader found.",
+      "evidence": "Set to 1 by FUN_08019e0c; persisted by FUN_0803b4c8 (slot base 64 via FUN_0800c4ec) and covered by FUN_08019f08/FUN_0803b570 checksum.",
+      "name": "slot2_reserved0",
+      "offset": 64,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 1,
+        "minimum": 0
+      },
+      "description": "Slot status flag: 1 = slot present/active; cleared to 0 by FUN_080196e0. Read as a boolean menu gate by FUN_08019a1c.",
+      "evidence": "Read by FUN_08019a1c (slot*0x1c+4); written 0 by FUN_080196e0; initialized 1 by FUN_08019e0c; callers FUN_080340d8 branches on ==0.",
+      "name": "slot2_active",
+      "offset": 68,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 1,
+        "minimum": 0
+      },
+      "description": "Reserved slot word; 1 in FUN_08019e0c defaults and baseline, zeroed for the active slot by FUN_080360c0; no gameplay reader found.",
+      "evidence": "Set to 1 by FUN_08019e0c; set to 0 by FUN_080360c0; persisted by FUN_0803b4c8 and covered by FUN_08019f08/FUN_0803b570 checksum.",
+      "name": "slot2_reserved8",
+      "offset": 72,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "kind": "bitmask",
+        "valid_mask": 4294967295
+      },
+      "description": "Bitmask of completed levels/missions; each bit tested by FUN_080198b8 and cleared by FUN_080198e4; default all-ones.",
+      "evidence": "Bit param_1 tested in *(slot+0xc) by FUN_080198b8; cleared by FUN_080198e4; default 0xffffffff set by FUN_08019e0c.",
+      "name": "slot2_levels_complete",
+      "offset": 76,
+      "size": 4,
+      "type": "bitflags"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "kind": "bitmask",
+        "valid_mask": 4294967295
+      },
+      "description": "Level-progress bitmask; FUN_08019a30 scans it for the first clear bit (current level) and FUN_08019830 derives stage state from it.",
+      "evidence": "Set by FUN_08019c1c (param_1!=2 path, slot+0x10) and cleared by FUN_08019c7c; read by FUN_08019830 and FUN_08019a30; written by FUN_08019e9c.",
+      "name": "slot2_level_progress",
+      "offset": 80,
+      "size": 4,
+      "type": "bitflags"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "kind": "bitmask",
+        "valid_mask": 4294967295
+      },
+      "description": "Collectible/item bitmask; tested per-bit by FUN_08019bb0 (param_1==2 path) and masked by FUN_080196e0.",
+      "evidence": "Bit tested in *(slot+0x14) by FUN_08019bb0; set by FUN_08019c1c (param_1==2 path); masked with DAT_08019730 by FUN_080196e0.",
+      "name": "slot2_collect_flags",
+      "offset": 84,
+      "size": 4,
+      "type": "bitflags"
+    },
+    {
+      "confidence": "likely",
+      "description": "Reserved/unknown slot word; always 1 in FUN_08019e0c defaults and baseline; covered by the slot checksum, no direct gameplay reader found.",
+      "evidence": "Set to 1 by FUN_08019e0c; persisted by FUN_0803b4c8 (slot base 92 via FUN_0800c4ec) and covered by FUN_08019f08/FUN_0803b570 checksum.",
+      "name": "slot3_reserved0",
+      "offset": 92,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 1,
+        "minimum": 0
+      },
+      "description": "Slot status flag: 1 = slot present/active; cleared to 0 by FUN_080196e0. Read as a boolean menu gate by FUN_08019a1c.",
+      "evidence": "Read by FUN_08019a1c (slot*0x1c+4); written 0 by FUN_080196e0; initialized 1 by FUN_08019e0c; callers FUN_080340d8 branches on ==0.",
+      "name": "slot3_active",
+      "offset": 96,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 1,
+        "minimum": 0
+      },
+      "description": "Reserved slot word; 1 in FUN_08019e0c defaults and baseline, zeroed for the active slot by FUN_080360c0; no gameplay reader found.",
+      "evidence": "Set to 1 by FUN_08019e0c; set to 0 by FUN_080360c0; persisted by FUN_0803b4c8 and covered by FUN_08019f08/FUN_0803b570 checksum.",
+      "name": "slot3_reserved8",
+      "offset": 100,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "kind": "bitmask",
+        "valid_mask": 4294967295
+      },
+      "description": "Bitmask of completed levels/missions; each bit tested by FUN_080198b8 and cleared by FUN_080198e4; default all-ones.",
+      "evidence": "Bit param_1 tested in *(slot+0xc) by FUN_080198b8; cleared by FUN_080198e4; default 0xffffffff set by FUN_08019e0c.",
+      "name": "slot3_levels_complete",
+      "offset": 104,
+      "size": 4,
+      "type": "bitflags"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "kind": "bitmask",
+        "valid_mask": 4294967295
+      },
+      "description": "Level-progress bitmask; FUN_08019a30 scans it for the first clear bit (current level) and FUN_08019830 derives stage state from it.",
+      "evidence": "Set by FUN_08019c1c (param_1!=2 path, slot+0x10) and cleared by FUN_08019c7c; read by FUN_08019830 and FUN_08019a30; written by FUN_08019e9c.",
+      "name": "slot3_level_progress",
+      "offset": 108,
+      "size": 4,
+      "type": "bitflags"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "kind": "bitmask",
+        "valid_mask": 4294967295
+      },
+      "description": "Collectible/item bitmask; tested per-bit by FUN_08019bb0 (param_1==2 path) and masked by FUN_080196e0.",
+      "evidence": "Bit tested in *(slot+0x14) by FUN_08019bb0; set by FUN_08019c1c (param_1==2 path); masked with DAT_08019730 by FUN_080196e0.",
+      "name": "slot3_collect_flags",
+      "offset": 112,
+      "size": 4,
+      "type": "bitflags"
+    },
+    {
+      "confidence": "likely",
+      "description": "Reserved/unknown slot word; always 1 in FUN_08019e0c defaults and baseline; covered by the slot checksum, no direct gameplay reader found.",
+      "evidence": "Set to 1 by FUN_08019e0c; persisted by FUN_0803b4c8 (slot base 120 via FUN_0800c4ec) and covered by FUN_08019f08/FUN_0803b570 checksum.",
+      "name": "slot4_reserved0",
+      "offset": 120,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 1,
+        "minimum": 0
+      },
+      "description": "Slot status flag: 1 = slot present/active; cleared to 0 by FUN_080196e0. Read as a boolean menu gate by FUN_08019a1c.",
+      "evidence": "Read by FUN_08019a1c (slot*0x1c+4); written 0 by FUN_080196e0; initialized 1 by FUN_08019e0c; callers FUN_080340d8 branches on ==0.",
+      "name": "slot4_active",
+      "offset": 124,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 1,
+        "minimum": 0
+      },
+      "description": "Reserved slot word; 1 in FUN_08019e0c defaults and baseline, zeroed for the active slot by FUN_080360c0; no gameplay reader found.",
+      "evidence": "Set to 1 by FUN_08019e0c; set to 0 by FUN_080360c0; persisted by FUN_0803b4c8 and covered by FUN_08019f08/FUN_0803b570 checksum.",
+      "name": "slot4_reserved8",
+      "offset": 128,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "kind": "bitmask",
+        "valid_mask": 4294967295
+      },
+      "description": "Bitmask of completed levels/missions; each bit tested by FUN_080198b8 and cleared by FUN_080198e4; default all-ones.",
+      "evidence": "Bit param_1 tested in *(slot+0xc) by FUN_080198b8; cleared by FUN_080198e4; default 0xffffffff set by FUN_08019e0c.",
+      "name": "slot4_levels_complete",
+      "offset": 132,
+      "size": 4,
+      "type": "bitflags"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "kind": "bitmask",
+        "valid_mask": 4294967295
+      },
+      "description": "Level-progress bitmask; FUN_08019a30 scans it for the first clear bit (current level) and FUN_08019830 derives stage state from it.",
+      "evidence": "Set by FUN_08019c1c (param_1!=2 path, slot+0x10) and cleared by FUN_08019c7c; read by FUN_08019830 and FUN_08019a30; written by FUN_08019e9c.",
+      "name": "slot4_level_progress",
+      "offset": 136,
+      "size": 4,
+      "type": "bitflags"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "kind": "bitmask",
+        "valid_mask": 4294967295
+      },
+      "description": "Collectible/item bitmask; tested per-bit by FUN_08019bb0 (param_1==2 path) and masked by FUN_080196e0.",
+      "evidence": "Bit tested in *(slot+0x14) by FUN_08019bb0; set by FUN_08019c1c (param_1==2 path); masked with DAT_08019730 by FUN_080196e0.",
+      "name": "slot4_collect_flags",
+      "offset": 140,
+      "size": 4,
+      "type": "bitflags"
+    },
+    {
+      "confidence": "likely",
+      "description": "Reserved options word; value 1 in baseline; persisted and checksummed with the options struct, no direct accessor found.",
+      "evidence": "Persisted by FUN_0803b53c (options base 0x94=148, len 0x18) and covered by FUN_0802ee2c/FUN_0803b570 checksum over 0x16 bytes.",
+      "name": "options_reserved0",
+      "offset": 148,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Options-menu config word (struct+4); displayed as a boolean row by FUN_080318a4 via FUN_0802edd8.",
+      "evidence": "Read by FUN_0802edd8 (*(struct+4)); consumed as boolean (iVar1==0) by FUN_080318a4 for menu display.",
+      "name": "options_flag_b",
+      "offset": 152,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 1,
+        "minimum": 0
+      },
+      "description": "Options-menu toggle (struct+8): written from a boolean menu expression and shown as a menu row; persisted with the options block.",
+      "evidence": "Set by FUN_0802edfc called as FUN_0802edfc(uVar2==0) in FUN_08031930; read by FUN_0802ee08 in FUN_080318d8; saved by FUN_0802ee2c.",
+      "name": "options_toggle_1",
+      "offset": 156,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Reserved options word (struct+0xc); value 0 in baseline; persisted and checksummed with the options struct, no direct accessor found.",
+      "evidence": "Persisted by FUN_0803b53c (options base 0x94=148, len 0x18) and covered by FUN_0802ee2c/FUN_0803b570 checksum over 0x16 bytes.",
+      "name": "options_reserved_c",
+      "offset": 160,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 1,
+        "minimum": 0
+      },
+      "description": "Options-menu toggle (struct+0x10): written from a menu selection byte and shown as a menu row; persisted with the options block.",
+      "evidence": "Set by FUN_0802ede4 from menu bytes in FUN_08031930 and FUN_08034090; read by FUN_0802edf0 in FUN_080318d8 and FUN_08034070; saved by FUN_0802ee2c.",
+      "name": "options_toggle_2",
+      "offset": 164,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 255,
+        "minimum": 0
+      },
+      "description": "Options-menu value (struct+0x14, u16): written from a menu selection byte and shown as a menu row; persisted with the options block.",
+      "evidence": "Set by FUN_0802ee14 from a menu byte in FUN_08031930; read as u16 by FUN_0802ee20 in FUN_080318d8; saved by FUN_0802ee2c.",
+      "name": "options_value_3",
+      "offset": 168,
+      "size": 2,
+      "type": "u16_le"
     }
-  ]
+  ],
+  "game_code": "AA6E",
+  "id": "aa6e",
+  "magic_signatures": [
+    {
+      "bytes": [
+        82,
+        79,
+        71,
+        85,
+        69,
+        83,
+        48,
+        50
+      ],
+      "description": "ASCII 'ROGUES02' save header (logical domain)",
+      "offset": 0
+    }
+  ],
+  "media": "eeprom512",
+  "size_bytes": 512,
+  "title": "Sum of All Fears, The (USA) (En,Fr,De,Es,It)"
 }

@@ -1,45 +1,155 @@
 {
-  "id": "ahje",
-  "game_code": "AHJE",
-  "title": "Hugo - The Evil Mirror (USA) (En,Fr,Es)",
-  "media": "eeprom512",
-  "size_bytes": 512,
-  "magic_signatures": [
-    {
-      "offset": 0,
-      "bytes": [
-        75,
-        79,
-        68,
-        69
-      ]
-    }
-  ],
   "checksums": [],
+  "copy_groups": [],
+  "eeprom_rev8": true,
   "fields": [
     {
-      "name": "magic_header",
+      "confidence": "confirmed",
+      "description": "Save format version. Written as 0x100 by the save initializer and persisted as EEPROM block 0.",
+      "evidence": "FUN_08005e68 writes *DAT_08005f44 = 0x100 (save-offset 0x00); header blocks 0-4 persisted by FUN_08005fb8 and reloaded by FUN_08005f5c.",
+      "name": "format_version",
       "offset": 0,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "3-character header identity tag plus NUL terminator, first header block.",
+      "evidence": "FUN_08005e68 stores it via FUN_08005df0 (copies 3 bytes from DAT_08005f48 then writes NUL) at save-offset 0x04; reloaded by FUN_08005f5c.",
+      "name": "header_tag_pnk",
+      "offset": 4,
       "size": 4,
       "type": "ascii"
     },
     {
-      "name": "slot_counter",
-      "offset": 4,
-      "size": 2,
-      "type": "u16_le"
+      "confidence": "confirmed",
+      "description": "3-character header identity tag plus NUL terminator, second header block.",
+      "evidence": "FUN_08005e68 stores it via FUN_08005df0 (copies 3 bytes from DAT_08005f4c then writes NUL) at save-offset 0x0C; reloaded by FUN_08005f5c.",
+      "name": "header_tag_rlf",
+      "offset": 12,
+      "size": 4,
+      "type": "ascii"
     },
     {
-      "name": "game_progress_flags",
-      "offset": 6,
-      "size": 2,
-      "type": "u16_le"
+      "confidence": "confirmed",
+      "description": "3-character header identity tag plus NUL terminator, third header block.",
+      "evidence": "FUN_08005e68 stores it via FUN_08005df0 (copies 3 bytes from DAT_08005f50 then writes NUL) at save-offset 0x14; reloaded by FUN_08005f5c.",
+      "name": "header_tag_esa",
+      "offset": 20,
+      "size": 4,
+      "type": "ascii"
     },
     {
-      "name": "player_status_payload",
-      "offset": 8,
-      "size": 16,
-      "type": "bytes"
+      "confidence": "confirmed",
+      "description": "3-character header identity tag plus NUL terminator, fourth header block.",
+      "evidence": "FUN_08005e68 stores it via FUN_08005df0 (copies 3 bytes from DAT_08005f54 then writes NUL) at save-offset 0x1C; reloaded by FUN_08005f5c.",
+      "name": "header_tag_lpn",
+      "offset": 28,
+      "size": 4,
+      "type": "ascii"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "3-character header identity tag plus NUL terminator, fifth header block.",
+      "evidence": "FUN_08005e68 stores it via FUN_08005df0 (copies 3 bytes from DAT_08005f58 then writes NUL) at save-offset 0x24; reloaded by FUN_08005f5c.",
+      "name": "header_tag_daf",
+      "offset": 36,
+      "size": 4,
+      "type": "ascii"
+    },
+    {
+      "confidence": "likely",
+      "description": "File 0 stage-name selector: value plus 5 is used as a string-table id for the profile display.",
+      "evidence": "FUN_080067f8 reads record word0 (DAT_08006b58 + file*0x20 + 0x50) and passes value+5 to FUN_08009188 for profile text (line 5169); persisted via FUN_08006bf8 / FUN_08006c38 / FUN_08006014 / FUN_08006030.",
+      "name": "file0_stage_name_idx",
+      "offset": 40,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "File 0 progress counter: shifted right by 4 it bounds the profile-screen progress-icon draw loop.",
+      "evidence": "FUN_080067f8 loops while uVar8+0xd < (record word1 >> 4) drawing icons (lines 5266-5285, DAT_08006b58 + file*0x20 + 0x54); fresh default 0x27; persisted via FUN_08006bf8 / FUN_08006c38 / FUN_08006014 / FUN_08006030.",
+      "name": "file0_progress_count",
+      "offset": 44,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "File 0 current stage index: mapped to display text and shown incremented by one.",
+      "evidence": "FUN_080067f8 passes record word3 (DAT_08006b58 + file*0x20 + 0x5c) to FUN_08009644 and formats word3+1 into profile text (lines 5134, 5162-5170); synced with game state +0x114 by FUN_08006bf8 and saved by FUN_08006c38 / FUN_08006030; fresh default 1.",
+      "name": "file0_stage_index",
+      "offset": 52,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "File 0 completion count: bounds the profile-screen completion-icon draw loop.",
+      "evidence": "FUN_080067f8 loops while uVar10 < record word4 (DAT_08006b58 + file*0x20 + 0x60, lines 5283-5290); fresh default 3; persisted via FUN_08006bf8 / FUN_08006c38 / FUN_08006014 / FUN_08006030.",
+      "name": "file0_completion_count",
+      "offset": 56,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "bitfield_array": {
+        "bit_width": 2,
+        "count": 4,
+        "labels": [
+          "icon_0",
+          "icon_1",
+          "icon_2",
+          "icon_3"
+        ]
+      },
+      "confidence": "likely",
+      "description": "File 0 per-icon status nibbles: four 2-bit groups each rendered as one profile-screen icon.",
+      "evidence": "FUN_080067f8 extracts (word5 >> (2*i)) & 3 for i in 0..3 and draws one icon per group (lines 5248-5261, DAT_08006b58 + file*0x20 + 0x64); persisted via FUN_08006bf8 / FUN_08006c38 / FUN_08006014 / FUN_08006030.",
+      "name": "file0_icon_status",
+      "offset": 60,
+      "size": 4,
+      "type": "bitfield_array"
+    },
+    {
+      "confidence": "likely",
+      "description": "File 0 detail flag: nonzero unlocks the detailed profile display branch.",
+      "evidence": "FUN_080067f8 gates the detail display on record word6 != 0 (DAT_08006b58 + file*0x20 + 0x68, lines 5242 and 5185-5186); persisted via FUN_08006bf8 / FUN_08006c38 / FUN_08006014 / FUN_08006030.",
+      "name": "file0_active_flag",
+      "offset": 64,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "guessed",
+      "description": "File 0 extra word: round-trips between the save record and game state but no display or gameplay reader was identified; gameplay role undetermined.",
+      "evidence": "FUN_08006bf8 copies record word7 to game state and FUN_08006c38 writes it back (rec[7] <-> struct-0x30); block I/O via FUN_08006014 / FUN_08006030; never consumed elsewhere in decomp.",
+      "name": "file0_extra",
+      "offset": 68,
+      "size": 4,
+      "type": "u32_le"
     }
-  ]
+  ],
+  "game_code": "AHJE",
+  "id": "ahje",
+  "magic_signatures": [
+    {
+      "bytes": [
+        73,
+        78,
+        73,
+        84,
+        69,
+        68,
+        79,
+        75
+      ],
+      "description": "ASCII 'INITEDOK' initialized-save marker, EEPROM block 29",
+      "offset": 232
+    }
+  ],
+  "media": "eeprom512",
+  "size_bytes": 512,
+  "title": "Hugo - The Evil Mirror (USA) (En,Fr,Es)"
 }

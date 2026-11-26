@@ -1,45 +1,174 @@
 {
-  "id": "baje",
-  "game_code": "BAJE",
-  "title": "Banjo-Pilot (USA)",
-  "media": "eeprom512",
-  "size_bytes": 512,
-  "magic_signatures": [
+  "checksums": [
     {
-      "offset": 0,
-      "bytes": [
-        52,
-        48,
-        80,
-        71
-      ]
+      "algorithm": "sum16_le_words",
+      "covered_end": 468,
+      "covered_start": 8,
+      "name": "body_checksum",
+      "seed": 0,
+      "stored_offset": 6,
+      "xor_out": 0
     }
   ],
-  "checksums": [],
+  "copy_groups": [],
+  "eeprom_rev8": true,
   "fields": [
     {
-      "name": "magic_header",
+      "confidence": "confirmed",
+      "constraint": {
+        "allowed": "GP04",
+        "kind": "ascii-charset",
+        "max_len": 4
+      },
+      "description": "Header magic, ASCII 'GP04' (logical rev8 bytes 0x00-0x03; raw file bytes are bit-reversed per 8-byte EEPROM block)",
+      "evidence": "Python-verified: logical rev8 bytes at 0x00-0x03 are 47 50 30 34 ('GP04'); boot/validation chain FUN_0800e82c-family reads persisted per-item state via EWRAM 0x020174a8 through table DAT_02001f0c (count DAT_02017640).",
+      "name": "save_magic",
       "offset": 0,
       "size": 4,
       "type": "ascii"
     },
     {
-      "name": "slot_counter",
+      "confidence": "guessed",
+      "description": "Spare header word at 0x04 (baseline 0x0000), adjacent to stored checksum at 0x06",
+      "evidence": "No dedicated writer observed in decomp/decompiled.c.gz; header-gated save access pattern per unlock gate FUN_080277e8 calling FUN_08027758 (item table DAT_08027794, bitfield DAT_08027798+0xe4).",
+      "name": "header_word",
       "offset": 4,
       "size": 2,
       "type": "u16_le"
     },
     {
-      "name": "game_progress_flags",
+      "confidence": "confirmed",
+      "description": "Stored word-sum checksum (baseline 0xEBE0) covering logical bytes [0x08, 0x1D4)",
+      "evidence": "Python-verified: sum16_le_words over logical bytes [0x08,0x1D4) equals stored u16 at 0x06 (0xEBE0); coverage ends where the 0xFF erased tail begins at 0x1D4. Related state validation: FUN_08027758 bitfield query at DAT_08027798+0xe4.",
+      "name": "stored_checksum",
       "offset": 6,
       "size": 2,
       "type": "u16_le"
     },
     {
-      "name": "player_status_payload",
+      "confidence": "guessed",
+      "description": "Reserved zero padding 0x08-0x13 (all 0x00 in baseline)",
+      "evidence": "All-zero span observed in samples/baseline.sav; default-fill init routines of the kind in FUN_080026b2 (bulk fill of DAT_0800280c region) stamp such padding.",
+      "name": "header_reserved",
       "offset": 8,
-      "size": 16,
+      "size": 12,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Game config/option bytes 0x14-0x27: f0 20 22 00 ... 01 ... 0d 00 c0 00 80 00 00 ee (isolated nonzero option bytes amid zero padding)",
+      "evidence": "Nonzero config-pattern bytes consumed by indexed game-state lookups of the kind in FUN_08027758 (66-entry table DAT_08027794 with bit test at DAT_08027798+0xe4) and per-item EWRAM reads in FUN_0800e834 at 0x020174a8.",
+      "name": "option_block",
+      "offset": 20,
+      "size": 20,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Header data 0x28-0x4D: ten 0x16 default-fill bytes (0x28-0x31) then structured words 31 74 98 56 20 47 63 05 12 89, then zeros to 0x4D",
+      "evidence": "Default-stamped values of the kind written by init routines such as FUN_080026b2; per-item structs using the same EWRAM area are read by FUN_0800e82c via DAT_02001f0c (count DAT_02017640).",
+      "name": "header_data",
+      "offset": 40,
+      "size": 38,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Best total race time, entry 0, in frames at 60 fps (baseline 5400 = 90.0 s); table of 32 LE u16 at 0x4E-0x8D, values 5280-8100, all multiples of 60",
+      "evidence": "Race time/position logic in FUN_0800e82c, FUN_0800e834 and FUN_0800e84a reads per-item EWRAM bytes at 0x020174a8 indexed through table DAT_02001f0c (count DAT_02017640); this table persists those per-item times with stride 2.",
+      "name": "best_total_time_t00",
+      "offset": 78,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Best total race times, entries 1-31 (31 LE u16 frames, 0x50-0x8D); entry 0 decoded separately as best_total_time_t00",
+      "evidence": "Same per-item time table as best_total_time_t00 (FUN_0800e82c-family via DAT_02001f0c at 0x020174a8); contiguous entries 1-31 with identical stride and value range.",
+      "name": "best_total_times_rest",
+      "offset": 80,
+      "size": 62,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Per-track record block A (0x8E-0xED): 16 records x 6 bytes of uniform template 01 0e 13 06 13 18 (exact period 6, byte-identical to track_records_b)",
+      "evidence": "Uniform per-item defaults backing the per-item EWRAM structs read by FUN_0800e82c at 0x020174a8; per-item unlock gating per FUN_08027758 (table DAT_08027794, bitfield DAT_08027798+0xe4, 66 items via caller FUN_080277e8).",
+      "name": "track_records_a",
+      "offset": 142,
+      "size": 96,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Best lap time, entry 0, in frames at 60 fps (baseline 1800 = 30.0 s); table of 32 LE u16 at 0xEE-0x12D, values 1620-2700, approx one third of the corresponding total-time entries",
+      "evidence": "Lap/total timing persisted per item by the same race-logic family FUN_0800e82c/FUN_0800e834 (EWRAM 0x020174a8 via DAT_02001f0c, count DAT_02017640); values track best_total_time entries at ~1/3 ratio (3-lap totals vs best lap).",
+      "name": "best_lap_time_t00",
+      "offset": 238,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Best lap times, entries 1-31 (31 LE u16 frames, 0xF0-0x12D); entry 0 decoded separately as best_lap_time_t00",
+      "evidence": "Same per-item lap-time table as best_lap_time_t00 (FUN_0800e82c-family via DAT_02001f0c at 0x020174a8); contiguous entries 1-31 with identical stride and value range.",
+      "name": "best_lap_times_rest",
+      "offset": 240,
+      "size": 62,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Per-track record block B (0x12E-0x18D): 16 records x 6 bytes, byte-identical to track_records_a (Python-verified B==D); paired with the lap-time table, not a redundant mirror, so no copy_groups entry",
+      "evidence": "Byte-identical twin of track_records_a; per-item defaults for the second mode block, read through the same FUN_0800e82c-family EWRAM path (0x020174a8, DAT_02001f0c); unlock semantics per FUN_08027758 bitfield at DAT_08027798+0xe4.",
+      "name": "track_records_b",
+      "offset": 302,
+      "size": 96,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Event/trophy slot 0 (baseline 0xEE000000 LE): stride-4 u32 array of 8 slots at 0x194-0x1B3 carrying the 0xEE unwritten-slot sentinel in the top byte",
+      "evidence": "Stride-4 sentinel pattern ahead of the 0xFF erased tail (checksum coverage ends 0x1D4); slot state of the kind tested by the FUN_08027758 item/bitfield query (DAT_08027794, DAT_08027798+0xe4).",
+      "name": "event_slot_00",
+      "offset": 404,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Event/trophy slots 1-7 (seven 0xEE000000 LE u32s, 0x198-0x1B3); slot 0 decoded separately as event_slot_00",
+      "evidence": "Contiguous tail of the stride-4 sentinel u32 array headed by event_slot_00 (0x194-0x1B3), same 0xEE marker byte verified in samples/baseline.sav; slot-state model per FUN_08027758 item/bitfield query (DAT_08027794, DAT_08027798+0xe4).",
+      "name": "event_slots_rest",
+      "offset": 408,
+      "size": 28,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Sentinel block 0x1CC-0x1D3: eight 0xEE bytes (unwritten-marker fill) immediately before the 0xFF erased tail",
+      "evidence": "Eight 0xEE bytes verified in samples/baseline.sav at the exact end of checksum coverage (covered_end 0x1D4); same 0xEE unwritten-sentinel convention as event_slots_rest per the FUN_08027758-gated unlock/state area.",
+      "name": "sentinel_block",
+      "offset": 460,
+      "size": 8,
       "type": "bytes"
     }
-  ]
+  ],
+  "game_code": "BAJE",
+  "id": "baje",
+  "magic_signatures": [
+    {
+      "bytes": [
+        71,
+        80,
+        48,
+        52
+      ],
+      "description": "ASCII 'GP04' header magic (logical rev8 domain)",
+      "offset": 0
+    }
+  ],
+  "media": "eeprom512",
+  "size_bytes": 512,
+  "title": "Banjo-Pilot (USA)"
 }

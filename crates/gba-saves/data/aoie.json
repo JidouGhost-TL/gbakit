@@ -1,45 +1,155 @@
 {
-  "id": "aoie",
-  "game_code": "AOIE",
-  "title": "Shrek - Reekin' Havoc (USA) (En,Fr,De,Es,It,Nl)",
-  "media": "eeprom512",
-  "size_bytes": 512,
-  "magic_signatures": [
-    {
-      "offset": 0,
-      "bytes": [
-        48,
-        48,
-        50,
-        83
-      ]
-    }
-  ],
   "checksums": [],
+  "copy_groups": [],
+  "eeprom_rev8": true,
   "fields": [
     {
-      "name": "magic_header",
+      "confidence": "confirmed",
+      "constraint": {
+        "allowed": "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789",
+        "kind": "ascii-charset",
+        "max_len": 4
+      },
+      "description": "Four-character save-format tag at the start of record 0; reads 'S200' in the rev8 logical domain.",
+      "evidence": "FUN_08046ba8 (EEPROM read: EEPROM word address param_1 to 4-halfword RAM buffer) and FUN_08046c58 (EEPROM write path) define the 8-byte block protocol; logical bytes at save offset 0x00 are 53 32 30 30 ('S200') in samples/baseline.sav while the raw domain is byte-reversed, proving eeprom_rev8.",
+      "name": "save_format_tag",
       "offset": 0,
       "size": 4,
       "type": "ascii"
     },
     {
-      "name": "slot_counter",
+      "confidence": "likely",
+      "description": "Non-zero 16-bit value in the populated record 0 (500); reads 0 in the three empty records. Mutable per-record scalar.",
+      "evidence": "FUN_08046ba8 read path / FUN_08046c58 write path serve logical save offset 0x04 as part of EEPROM block 0; baseline.sav holds 0x01F4 (500) here in record 0 versus 0x0000 in records 1-3 (offsets 0x5C, 0xB4, 0x10C).",
+      "name": "active_record_value",
       "offset": 4,
       "size": 2,
       "type": "u16_le"
     },
     {
-      "name": "game_progress_flags",
+      "confidence": "guessed",
+      "description": "Trailing two bytes of record 0's first EEPROM block (00 FF); stored as-is.",
+      "evidence": "FUN_08046c58 writes full 8-byte EEPROM blocks, so logical offsets 0x06-0x07 belong to block 0; baseline.sav reads 00 FF at 0x06 in record 0.",
+      "name": "record0_block0_tail",
       "offset": 6,
+      "size": 2,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "16-bit status word present with the identical value (1536) in all four records; mutable scalar shared-default candidate.",
+      "evidence": "FUN_08046ba8 / FUN_08046c58 block protocol covers logical offset 0x10 (second halfword of EEPROM block 2); baseline.sav reads 0x0600 (1536) at 0x10, 0x68, 0xC0, and record 3 mirrors the layout at 0x118.",
+      "name": "record0_status_word",
+      "offset": 16,
       "size": 2,
       "type": "u16_le"
     },
     {
-      "name": "player_status_payload",
-      "offset": 8,
-      "size": 16,
+      "confidence": "guessed",
+      "description": "Closing halfword of record 0's third EEPROM block (bytes 03 FF, u16 0xFF03).",
+      "evidence": "FUN_08046ba8 read path returns 4 halfwords per EEPROM block; the 4th halfword of the block at logical 0x10 holds 0xFF03 in baseline.sav at offset 0x16.",
+      "name": "record0_trailer_word",
+      "offset": 22,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "guessed",
+      "description": "First 8-byte EEPROM block of record 1 (all zero with trailing erased 0xFF byte); empty-slot counterpart of record 0's tag block.",
+      "evidence": "FUN_08046ba8 / FUN_08046c58 address EEPROM in 8-byte blocks; record stride 0x58 observed in baseline.sav puts record 1 block 0 at logical 0x58 (bytes 00x7 FF), mirroring record 0's block at 0x00.",
+      "name": "slot1_tag_block",
+      "offset": 88,
+      "size": 8,
       "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Status word of record 1, identical value (1536) to record 0; mutable scalar.",
+      "evidence": "FUN_08046ba8 / FUN_08046c58 block protocol covers logical offset 0x68; baseline.sav reads 0x0600 (1536) there, matching record 0's status word at 0x10.",
+      "name": "slot1_status_word",
+      "offset": 104,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "guessed",
+      "description": "Closing halfword of record 1's status block (0xFF03), matching record 0.",
+      "evidence": "FUN_08046ba8 4-halfword block layout; baseline.sav reads 0xFF03 at logical offset 0x6E, matching offset 0x16 in record 0.",
+      "name": "slot1_trailer_word",
+      "offset": 110,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "guessed",
+      "description": "First 8-byte EEPROM block of record 2 (empty-slot counterpart of record 0's tag block).",
+      "evidence": "FUN_08046ba8 / FUN_08046c58 8-byte block protocol with observed record stride 0x58 puts record 2 block 0 at logical 0xB0 (bytes 00x7 FF) in baseline.sav.",
+      "name": "slot2_tag_block",
+      "offset": 176,
+      "size": 8,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Status word of record 2 (1536); mutable scalar.",
+      "evidence": "FUN_08046ba8 / FUN_08046c58 block protocol covers logical offset 0xC0; baseline.sav reads 0x0600 (1536) there.",
+      "name": "slot2_status_word",
+      "offset": 192,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "guessed",
+      "description": "Closing halfword of record 2's status block (0xFF03).",
+      "evidence": "FUN_08046ba8 4-halfword block layout; baseline.sav reads 0xFF03 at logical offset 0xC6.",
+      "name": "slot2_trailer_word",
+      "offset": 198,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "guessed",
+      "description": "First 8-byte EEPROM block of record 3 (empty-slot counterpart of record 0's tag block).",
+      "evidence": "FUN_08046ba8 / FUN_08046c58 8-byte block protocol with observed record stride 0x58 puts record 3 block 0 at logical 0x108 (bytes 00x7 FF) in baseline.sav.",
+      "name": "slot3_tag_block",
+      "offset": 264,
+      "size": 8,
+      "type": "bytes"
+    },
+    {
+      "confidence": "guessed",
+      "description": "Status-word position of record 3; reads 0x0000 (slot never programmed: the 0x110-0x117 block is still erased 0xFF). Mutable scalar.",
+      "evidence": "FUN_08046ba8 / FUN_08046c58 block protocol with record stride 0x58 puts record 3 status at logical 0x118; baseline.sav reads 0x0000 there with an erased (0xFF) hole at 0x110.",
+      "name": "slot3_status_word",
+      "offset": 280,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "guessed",
+      "description": "Trailer-word position of record 3; reads 0x0000 (slot never programmed).",
+      "evidence": "FUN_08046ba8 4-halfword block layout with record stride 0x58 puts record 3 trailer at logical 0x11E; baseline.sav reads 0x0000 there.",
+      "name": "slot3_trailer_word",
+      "offset": 286,
+      "size": 2,
+      "type": "u16_le"
     }
-  ]
+  ],
+  "game_code": "AOIE",
+  "id": "aoie",
+  "magic_signatures": [
+    {
+      "bytes": [
+        83,
+        50,
+        48,
+        48
+      ],
+      "description": "ASCII 'S200' save-format tag at logical offset 0 (rev8 domain)",
+      "offset": 0
+    }
+  ],
+  "media": "eeprom512",
+  "size_bytes": 512,
+  "title": "Shrek - Reekin' Havoc (USA) (En,Fr,De,Es,It,Nl)"
 }

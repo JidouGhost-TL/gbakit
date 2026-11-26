@@ -1,45 +1,423 @@
 {
-  "id": "axxp",
-  "game_code": "AXXP",
-  "title": "Santa Claus Jr. Advance (Europe) (Beta)",
-  "media": "eeprom512",
-  "size_bytes": 512,
-  "magic_signatures": [
+  "checksums": [],
+  "copy_groups": [
     {
-      "offset": 0,
-      "bytes": [
-        50,
-        74,
-        67,
-        83
-      ]
+      "fields": [
+        "slot0_w0",
+        "slot0b_w0"
+      ],
+      "name": "slot0_w0_mirror"
+    },
+    {
+      "fields": [
+        "slot0_w1",
+        "slot0b_w1"
+      ],
+      "name": "slot0_w1_mirror"
+    },
+    {
+      "fields": [
+        "slot0_w2",
+        "slot0b_w2"
+      ],
+      "name": "slot0_w2_mirror"
+    },
+    {
+      "fields": [
+        "slot0_w3",
+        "slot0b_w3"
+      ],
+      "name": "slot0_w3_mirror"
+    },
+    {
+      "fields": [
+        "slot0_w4",
+        "slot0b_w4"
+      ],
+      "name": "slot0_w4_mirror"
+    },
+    {
+      "fields": [
+        "slot0_w5",
+        "slot0b_w5"
+      ],
+      "name": "slot0_w5_mirror"
+    },
+    {
+      "fields": [
+        "slot0_w6",
+        "slot0b_w6"
+      ],
+      "name": "slot0_w6_mirror"
+    },
+    {
+      "fields": [
+        "slot0_w7",
+        "slot0b_w7"
+      ],
+      "name": "slot0_w7_mirror"
+    },
+    {
+      "fields": [
+        "slot0_reserved",
+        "slot0b_reserved"
+      ],
+      "name": "slot0_reserved_mirror"
+    },
+    {
+      "fields": [
+        "slot0_checksum",
+        "slot0b_checksum"
+      ],
+      "name": "slot0_checksum_mirror"
+    },
+    {
+      "fields": [
+        "slot0_pad",
+        "slot0b_pad"
+      ],
+      "name": "slot0_pad_mirror"
+    },
+    {
+      "fields": [
+        "slot0_tag",
+        "slot0b_tag"
+      ],
+      "name": "slot0_tag_mirror"
+    },
+    {
+      "fields": [
+        "slot0_addr",
+        "slot0b_addr"
+      ],
+      "name": "slot0_addr_mirror"
+    },
+    {
+      "fields": [
+        "slot1_record",
+        "slot1_backup"
+      ],
+      "name": "slot1_mirror"
+    },
+    {
+      "fields": [
+        "slot2_record",
+        "slot2_backup"
+      ],
+      "name": "slot2_mirror"
     }
   ],
-  "checksums": [],
+  "eeprom_rev8": true,
   "fields": [
     {
-      "name": "magic_header",
+      "confidence": "confirmed",
+      "constraint": {
+        "allowed": "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789",
+        "kind": "ascii-charset",
+        "max_len": 4
+      },
+      "description": "File magic 'SCJ2' (title initials). Visible only in the rev8 logical domain at offset 0x00.",
+      "evidence": "Baseline logical bytes 0x00-0x03 read 53 43 4A 32 ('SCJ2'); raw bytes are bit-reversed per 8-byte word, so eeprom_rev8=true with FUN_0813a204 8-byte word transfers grounds the logical domain.",
+      "name": "save_magic",
       "offset": 0,
       "size": 4,
       "type": "ascii"
     },
     {
-      "name": "slot_counter",
+      "confidence": "likely",
+      "description": "Second header word (0x72A2B9C3). Purpose unknown: it does not match the FUN_0813454c hash over any probed range. Preserved verbatim.",
+      "evidence": "Stable u32_le at logical offset 0x04 following save_magic; probed against FUN_0813454c rotl23-add hash over record, header, and checksum ranges with no match.",
+      "name": "header_tag",
       "offset": 4,
-      "size": 2,
-      "type": "u16_le"
+      "size": 4,
+      "type": "u32_le"
     },
     {
-      "name": "game_progress_flags",
-      "offset": 6,
-      "size": 2,
-      "type": "u16_le"
-    },
-    {
-      "name": "player_status_payload",
+      "confidence": "likely",
+      "description": "Slot 0 primary word 0 (0x08263F00, falls in ROM address space). Exact gameplay role unknown; preserved verbatim as a mutable scalar for live probing.",
+      "evidence": "FUN_08134570 writes 8 EEPROM words per 64-byte record (primary at slot*8+1, backup at (slot+3)*8+1); FUN_081345d0 reads them back; value verified in baseline.sav logical bytes 0x08-0x0B.",
+      "name": "slot0_w0",
       "offset": 8,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Slot 0 primary word 1 (0x08263FCC, ROM address space, 0xCC above word 0). Role unknown; mutable scalar for live probing.",
+      "evidence": "Same 8-word record transfer as slot0_w0 via FUN_08134570/FUN_081345d0; value verified in baseline.sav logical bytes 0x0C-0x0F.",
+      "name": "slot0_w1",
+      "offset": 12,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Slot 0 primary word 2 (0x08135A95, odd ROM address typical of Thumb code). Role unknown; mutable scalar for live probing.",
+      "evidence": "Same 8-word record transfer as slot0_w0 via FUN_08134570/FUN_081345d0; value verified in baseline.sav logical bytes 0x10-0x13.",
+      "name": "slot0_w2",
+      "offset": 16,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Slot 0 primary word 3 (0x03007D9C, IWRAM address space). Role unknown; mutable scalar for live probing.",
+      "evidence": "Same 8-word record transfer as slot0_w0 via FUN_08134570/FUN_081345d0; value verified in baseline.sav logical bytes 0x14-0x17.",
+      "name": "slot0_w3",
+      "offset": 20,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Slot 0 primary word 4 (0x03007DA0, IWRAM, 4 above word 3). Role unknown; mutable scalar for live probing.",
+      "evidence": "Same 8-word record transfer as slot0_w0 via FUN_08134570/FUN_081345d0; value verified in baseline.sav logical bytes 0x18-0x1B.",
+      "name": "slot0_w4",
+      "offset": 24,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Slot 0 primary word 5 (0x00000000). Role unknown; mutable scalar for live probing.",
+      "evidence": "Same 8-word record transfer as slot0_w0 via FUN_08134570/FUN_081345d0; zero value verified in baseline.sav logical bytes 0x1C-0x1F.",
+      "name": "slot0_w5",
+      "offset": 28,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Slot 0 primary word 6 (0x03002760, IWRAM address space). Role unknown; mutable scalar for live probing.",
+      "evidence": "Same 8-word record transfer as slot0_w0 via FUN_08134570/FUN_081345d0; value verified in baseline.sav logical bytes 0x20-0x23.",
+      "name": "slot0_w6",
+      "offset": 32,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Slot 0 primary word 7 (0x000018A0 = 6304). Role unknown; mutable scalar for live probing.",
+      "evidence": "Same 8-word record transfer as slot0_w0 via FUN_08134570/FUN_081345d0; value verified in baseline.sav logical bytes 0x24-0x27.",
+      "name": "slot0_w7",
+      "offset": 36,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Slot 0 primary zero gap (16 bytes). Matches the default-init path that zero-fills the RAM record struct.",
+      "evidence": "All-zero in baseline.sav logical bytes 0x28-0x37; FUN_08134c98 zero-fills the 0x3C-byte default record struct before first write via FUN_08134570.",
+      "name": "slot0_reserved",
+      "offset": 40,
       "size": 16,
       "type": "bytes"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Slot 0 primary record checksum (0xBC026DB9): FUN_0813454c rotl23-add hash over the 48 record bytes, stored at record+0x30. Custom algorithm, so no checksums[] entry.",
+      "evidence": "FUN_0813454c computes u=(rotl(u,23)+byte) over 0x30 bytes and FUN_08134570 stores it at buf+0x30; Python recomputation over baseline.sav logical bytes [0x08,0x38) equals 0xBC026DB9 at 0x38.",
+      "name": "slot0_checksum",
+      "offset": 56,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Slot 0 primary 4-byte zero gap between checksum and tag word.",
+      "evidence": "All-zero in baseline.sav logical bytes 0x3C-0x3F inside the 64-byte record written by FUN_08134570.",
+      "name": "slot0_pad",
+      "offset": 60,
+      "size": 4,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Slot 0 primary tag word (480 = 0x1E0). Meaning unknown; preserved verbatim as a mutable scalar for live probing.",
+      "evidence": "Trailing record word written by the FUN_08134570 8-word transfer; value 480 verified in baseline.sav logical bytes 0x40-0x43.",
+      "name": "slot0_tag",
+      "offset": 64,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Slot 0 primary address word (0x08121B64, ROM address space). Meaning unknown; preserved verbatim as a mutable scalar for live probing.",
+      "evidence": "Trailing record word written by the FUN_08134570 8-word transfer; value verified in baseline.sav logical bytes 0x44-0x47.",
+      "name": "slot0_addr",
+      "offset": 68,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Slot 1 primary 64-byte record (byte-identical to slot 0 primary in this baseline). Paired with slot1_backup.",
+      "evidence": "FUN_08134570 writes slot records at (slot*3)*8+1 words (slot 1 at file 0x48); FUN_081345d0 reads them back; FUN_0813466c initializes slots 0, 1 and 2.",
+      "name": "slot1_record",
+      "offset": 72,
+      "size": 64,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Slot 2 primary 64-byte record (byte-identical to slot 0 primary in this baseline). Paired with slot2_backup.",
+      "evidence": "FUN_08134570 writes slot records at (slot*3)*8+1 words (slot 2 at file 0x88); FUN_081345d0 reads them back; FUN_0813466c initializes slots 0, 1 and 2.",
+      "name": "slot2_record",
+      "offset": 136,
+      "size": 64,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Slot 0 backup word 0: redundant mirror of slot0_w0 written together with the primary by FUN_08134570.",
+      "evidence": "FUN_08134570 second 8-word batch targets backup words (slot+3)*8+1 (slot 0 backup at file 0xC8); FUN_081345f4 falls back to slot+3 when the primary hash mismatches; baseline bytes identical to slot0_w0.",
+      "name": "slot0b_w0",
+      "offset": 200,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Slot 0 backup word 1: redundant mirror of slot0_w1.",
+      "evidence": "Same paired primary/backup write via FUN_08134570 and slot+3 fallback read via FUN_081345f4 as slot0b_w0; baseline bytes identical to slot0_w1.",
+      "name": "slot0b_w1",
+      "offset": 204,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Slot 0 backup word 2: redundant mirror of slot0_w2.",
+      "evidence": "Same paired primary/backup write via FUN_08134570 and slot+3 fallback read via FUN_081345f4 as slot0b_w0; baseline bytes identical to slot0_w2.",
+      "name": "slot0b_w2",
+      "offset": 208,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Slot 0 backup word 3: redundant mirror of slot0_w3.",
+      "evidence": "Same paired primary/backup write via FUN_08134570 and slot+3 fallback read via FUN_081345f4 as slot0b_w0; baseline bytes identical to slot0_w3.",
+      "name": "slot0b_w3",
+      "offset": 212,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Slot 0 backup word 4: redundant mirror of slot0_w4.",
+      "evidence": "Same paired primary/backup write via FUN_08134570 and slot+3 fallback read via FUN_081345f4 as slot0b_w0; baseline bytes identical to slot0_w4.",
+      "name": "slot0b_w4",
+      "offset": 216,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Slot 0 backup word 5: redundant mirror of slot0_w5.",
+      "evidence": "Same paired primary/backup write via FUN_08134570 and slot+3 fallback read via FUN_081345f4 as slot0b_w0; baseline bytes identical to slot0_w5.",
+      "name": "slot0b_w5",
+      "offset": 220,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Slot 0 backup word 6: redundant mirror of slot0_w6.",
+      "evidence": "Same paired primary/backup write via FUN_08134570 and slot+3 fallback read via FUN_081345f4 as slot0b_w0; baseline bytes identical to slot0_w6.",
+      "name": "slot0b_w6",
+      "offset": 224,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Slot 0 backup word 7: redundant mirror of slot0_w7.",
+      "evidence": "Same paired primary/backup write via FUN_08134570 and slot+3 fallback read via FUN_081345f4 as slot0b_w0; baseline bytes identical to slot0_w7.",
+      "name": "slot0b_w7",
+      "offset": 228,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Slot 0 backup zero gap: redundant mirror of slot0_reserved.",
+      "evidence": "Same paired primary/backup write via FUN_08134570 and slot+3 fallback read via FUN_081345f4 as slot0b_w0; all-zero baseline bytes identical to slot0_reserved.",
+      "name": "slot0b_reserved",
+      "offset": 232,
+      "size": 16,
+      "type": "bytes"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Slot 0 backup record checksum: redundant mirror of slot0_checksum (0xBC026DB9).",
+      "evidence": "FUN_0813454c hash recomputed over baseline.sav logical bytes [0xC8,0xF8) equals 0xBC026DB9 stored at 0xF8; paired with the primary by FUN_08134570/FUN_081345f4.",
+      "name": "slot0b_checksum",
+      "offset": 248,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Slot 0 backup zero gap: redundant mirror of slot0_pad.",
+      "evidence": "Same paired primary/backup write via FUN_08134570 and slot+3 fallback read via FUN_081345f4 as slot0b_w0; all-zero baseline bytes identical to slot0_pad.",
+      "name": "slot0b_pad",
+      "offset": 252,
+      "size": 4,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Slot 0 backup tag word: redundant mirror of slot0_tag (480).",
+      "evidence": "Same paired primary/backup write via FUN_08134570 and slot+3 fallback read via FUN_081345f4 as slot0b_w0; baseline bytes identical to slot0_tag.",
+      "name": "slot0b_tag",
+      "offset": 256,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Slot 0 backup address word: redundant mirror of slot0_addr.",
+      "evidence": "Same paired primary/backup write via FUN_08134570 and slot+3 fallback read via FUN_081345f4 as slot0b_w0; baseline bytes identical to slot0_addr.",
+      "name": "slot0b_addr",
+      "offset": 260,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Slot 1 backup 64-byte record at (1+3)*8+1 words. Redundant mirror of slot1_record.",
+      "evidence": "FUN_08134570 second batch targets backup words (slot+3)*8+1 (slot 1 backup at file 0x108); FUN_081345f4 falls back to slot+3 on primary hash mismatch; baseline bytes identical to slot1_record.",
+      "name": "slot1_backup",
+      "offset": 264,
+      "size": 64,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Slot 2 backup 64-byte record at (2+3)*8+1 words. Redundant mirror of slot2_record.",
+      "evidence": "FUN_08134570 second batch targets backup words (slot+3)*8+1 (slot 2 backup at file 0x148); FUN_081345f4 falls back to slot+3 on primary hash mismatch; baseline bytes identical to slot2_record.",
+      "name": "slot2_backup",
+      "offset": 328,
+      "size": 64,
+      "type": "bytes"
     }
-  ]
+  ],
+  "game_code": "AXXP",
+  "id": "axxp",
+  "magic_signatures": [
+    {
+      "bytes": [
+        83,
+        67,
+        74,
+        50
+      ],
+      "description": "ASCII 'SCJ2' file magic at logical offset 0 (title initials; visible only with eeprom_rev8)",
+      "offset": 0
+    }
+  ],
+  "media": "eeprom512",
+  "size_bytes": 512,
+  "title": "Santa Claus Jr. Advance (Europe) (Beta)"
 }

@@ -1,45 +1,167 @@
 {
-  "id": "ad5j",
-  "game_code": "AD5J",
-  "title": "Mr. Driller A - Fushigi na Pacteria (Japan)",
-  "media": "sram",
-  "size_bytes": 32768,
-  "magic_signatures": [
-    {
-      "offset": 8192,
-      "bytes": [
-        77,
-        82,
-        46,
-        68
-      ]
-    }
-  ],
   "checksums": [],
+  "copy_groups": [],
   "fields": [
     {
-      "name": "magic_header",
+      "confidence": "likely",
+      "description": "Saturating play/save counter: save image word 0. FUN_080017f8 writes 0xFFFFFFFF here on fresh init; ranking insert paths in FUN_0800651c and FUN_08006b50 increment per-table counters with saturation to -1 on overflow. Baseline 0xFFFFFFFF = saturated.",
+      "evidence": "FUN_080017f8 stores 0xFFFFFFFF at save base word 0 on init (param_1==0 path, *puVar3=uVar9 with uVar9=0xFFFFFFFF, DAT_08001950 base); FUN_0800651c and FUN_08006b50 use saturating +1 counters clamped to -1; file offset 0x2000 holds 0xFFFFFFFF in baseline.",
+      "name": "save_play_counter",
       "offset": 8192,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "16-bit config word at save base +0x18. FUN_080017f8 writes the constant 3 here (*(u16*)(base+6 words)=3) on init; exact option semantics undocumented in decomp, value preserved as gameplay/config scalar for live-mutation probing.",
+      "evidence": "FUN_080017f8 writes *(undefined2*)(puVar3+6)=3 with puVar3=DAT_08001950 save base, i.e. save file offset 0x2000+0x18=0x2018; baseline bytes at 0x2018 are 03 00.",
+      "name": "options_word",
+      "offset": 8216,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Fixed table constant 599999 (0x0927BF) in the 32-byte header of score ranking tables T0-T3 (header word 3). Verified NOT a content checksum: table T4 mirrors T3 scores yet stores 0 here. Treated as opaque table data, not a checksum spec.",
+      "evidence": "FUN_080017f8 copies 5 ranking tables with 0xE8-byte pitch (232 = 32 header + 10x20 records, matching file tables at 0x2048+k*232); file words at 0x2054/0x213C/0x2224/0x230C all read 0x000927BF=599999 while T4 header word at 0x23F4 reads 0 despite identical scores.",
+      "name": "t0_table_const",
+      "offset": 8276,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Default ranker name '!!!' (3x 0x21 plus NUL) of the top entry of score table T0 (first 20-byte record at 0x2068).",
+      "evidence": "FUN_0800651c ranking insert stores 0x21 three times per new entry (name default) into 20-byte (5-word stride, uVar19*0x14) records, 10 per table; file shows '!!!' every 20 bytes from 0x2068.",
+      "name": "t0_rank1_name",
+      "offset": 8296,
       "size": 4,
       "type": "ascii"
     },
     {
-      "name": "slot_counter",
-      "offset": 8196,
-      "size": 2,
-      "type": "u16_le"
+      "confidence": "confirmed",
+      "description": "Top score of score table T0: 49900 points. Written as (piVar13+10)[k*5] score word in the 20-byte record.",
+      "evidence": "FUN_0800651c writes the score total uVar14 at record word 0 ((piVar13+10)[uVar19*5]) with 20-byte stride; file u32 at 0x206C reads 49900, head of the 49900..5000 default ladder.",
+      "name": "t0_rank1_score",
+      "offset": 8300,
+      "size": 4,
+      "type": "u32_le"
     },
     {
-      "name": "game_progress_flags",
-      "offset": 8198,
-      "size": 2,
-      "type": "u16_le"
+      "confidence": "confirmed",
+      "description": "Top depth of score table T0: 495 m. Second word of the 20-byte record (param_2 slot).",
+      "evidence": "FUN_0800651c writes param_2 at record word 1 (piVar13[uVar19*5+0xB]); file u32 at 0x2070 reads 495, head of the 495..50 default ladder.",
+      "name": "t0_rank1_depth",
+      "offset": 8304,
+      "size": 4,
+      "type": "u32_le"
     },
     {
-      "name": "player_status_payload",
-      "offset": 8200,
-      "size": 16,
-      "type": "bytes"
+      "confidence": "likely",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 9,
+        "minimum": 0
+      },
+      "description": "Display rank of the T0 top entry (1-based; 0 = unranked scratch row). Assigned by the rank-order loop over the 10 records.",
+      "evidence": "FUN_0800651c rank loop writes per-record order bytes with 0x14 stride for all 10 entries (iVar6<10, values 0..9); file byte at record offset +18 reads 1..9 down the table with the 10th row 0.",
+      "name": "t0_rank1_rank",
+      "offset": 8314,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 5,
+        "minimum": 0
+      },
+      "description": "Driller/character id that set the T0 top entry (0..5 roster). Stored alongside rank at record offset +19.",
+      "evidence": "FUN_0800651c stores the character/mode byte at record offset +0x13 alongside rank (+0x12); FUN_08006b50 6-iteration character loop corroborates a 6-entry roster; file bytes at record +19 across all 150 entries read only 0..5.",
+      "name": "t0_rank1_driller",
+      "offset": 8315,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Top score of score table T1 (second mode table at 0x2150): 79900 points.",
+      "evidence": "FUN_0800651c per-table base piVar13=DAT_080066c4+param_1*0xE8 (232-byte pitch matches file tables T0..T4 at 0x2048+k*232); file u32 at T1 record 0 score offset 0x2154 reads 79900.",
+      "name": "t1_rank1_score",
+      "offset": 8532,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Top depth of score table T1: 795 m.",
+      "evidence": "FUN_0800651c writes param_2 at record word 1 for every table (0xE8 pitch); file u32 at 0x2158 reads 795.",
+      "name": "t1_rank1_depth",
+      "offset": 8536,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Top score of score table T2 (third mode table at 0x2238): 149900 points.",
+      "evidence": "FUN_0800651c 0xE8-pitch table array; file u32 at T2 record 0 score offset 0x223C reads 149900.",
+      "name": "t2_rank1_score",
+      "offset": 8764,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Default ranker name '!!!' of the top entry of the first time-trial table at 0x250C (score/depth words zero, time value at record +12).",
+      "evidence": "FUN_08006b50 time-table insert stores 0x21 triplets (name default) with 20-byte stride (uVar19*0x14), 10 per table, and zeroes score/depth words; file shows '!!!' every 20 bytes from 0x250C with zero score words.",
+      "name": "ta_rank1_name",
+      "offset": 9484,
+      "size": 4,
+      "type": "ascii"
+    },
+    {
+      "confidence": "likely",
+      "description": "Best time value of the first time-trial table: 8500 (lower is better; rank 1 holds the minimum). Unit undocumented; kept as opaque scalar.",
+      "evidence": "FUN_08006b50 keeps the time comparator in local_28[k*5] parallel to 20-byte records and zeroes score/depth words (piVar9[k*5+6/7]=0); file u32 at record +12 (0x2518) reads 8500, minimum of its column.",
+      "name": "ta_rank1_time",
+      "offset": 9496,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 9,
+        "minimum": 0
+      },
+      "description": "Display rank of the first time-trial top entry (1-based).",
+      "evidence": "FUN_08006b50 writes rank bytes with 0x14 stride over 10 entries (iVar10<10 loop, *(char*)((int)piVar15+0x12)); file byte at record offset +18 (0x251E) reads 1.",
+      "name": "ta_rank1_rank",
+      "offset": 9502,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 5,
+        "minimum": 0
+      },
+      "description": "Driller/character id of the first time-trial top entry (0..5 roster).",
+      "evidence": "FUN_08006b50 stores the character byte at record offset +0x13 next to rank; file byte at 0x251F reads 1, within the observed 0..5 range.",
+      "name": "ta_rank1_driller",
+      "offset": 9503,
+      "size": 1,
+      "type": "u8"
     }
-  ]
+  ],
+  "game_code": "AD5J",
+  "id": "ad5j",
+  "magic_signatures": [],
+  "media": "sram",
+  "size_bytes": 32768,
+  "title": "Mr. Driller A - Fushigi na Pacteria (Japan)"
 }

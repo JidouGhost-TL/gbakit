@@ -1,45 +1,159 @@
 {
-  "id": "bp6j",
-  "game_code": "BP6J",
-  "title": "Power Pro Kun Pocket 6 (Japan)",
-  "media": "sram",
-  "size_bytes": 32768,
-  "magic_signatures": [
+  "checksums": [
     {
-      "offset": 0,
-      "bytes": [
-        75,
-        67,
-        69,
-        79
-      ]
+      "algorithm": "sum8",
+      "covered_end": 111,
+      "covered_start": 96,
+      "name": "config_block_checksum",
+      "seed": 0,
+      "stored_offset": 111,
+      "xor_out": 0
     }
   ],
-  "checksums": [],
   "fields": [
     {
-      "name": "magic_header",
+      "confidence": "confirmed",
+      "description": "4-byte save-header magic 'KCEO' written at SRAM base",
+      "evidence": "FUN_08005674 calls FUN_08005744(DAT_08005694,0x0E000000,0x10): 16B header buffer to SRAM file offset 0x00; baseline bytes 0x00-0x03 are 4B 43 45 4F ('KCEO').",
+      "name": "header_magic",
       "offset": 0,
       "size": 4,
       "type": "ascii"
     },
     {
-      "name": "slot_counter",
+      "confidence": "likely",
+      "description": "10-byte title tag ' PAWAPOKE6' inside the 16B save header",
+      "evidence": "FUN_08005674 writes the full 16B header (DAT_08005694) to SRAM offset 0x00 via FUN_08005744; baseline bytes 0x04-0x0D decode as ' PAWAPOKE6' title tag.",
+      "name": "header_title_tag",
       "offset": 4,
+      "size": 10,
+      "type": "ascii"
+    },
+    {
+      "confidence": "likely",
+      "description": "2 zero pad bytes completing the 16B header written by FUN_08005674",
+      "evidence": "FUN_08005674 writes 0x10 bytes per header copy via FUN_08005744; baseline bytes 0x0E-0x0F are 0x00 0x00.",
+      "name": "header_pad",
+      "offset": 14,
       "size": 2,
       "type": "u16_le"
     },
     {
-      "name": "game_progress_flags",
-      "offset": 6,
-      "size": 2,
-      "type": "u16_le"
-    },
-    {
-      "name": "player_status_payload",
-      "offset": 8,
+      "confidence": "confirmed",
+      "description": "Backup mirror copy of the 16B save header",
+      "evidence": "FUN_08005674 issues a second FUN_08005744(uVar1,DAT_08005698,0x10) writing the same buffer; baseline shows the identical 16B 'KCEO PAWAPOKE6' block at file offset 0x10 (only other nonzero header region, 0x20-0x5F all zero).",
+      "name": "header_copy_b",
+      "offset": 16,
       "size": 16,
       "type": "bytes"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Entry 0 of the 8-slot selection list; also the block-active flag (0 means empty/uninitialized per FUN_08003334)",
+      "evidence": "Live list byte at *DAT_080280a0+0x24+0, saved to file 0x60 by FUN_080032f0 (0xf via FUN_08005744) and verified by FUN_08003334 (*param_1==0 -> load defaults); counted/rendered by FUN_08027fe4/FUN_080281ac loop over 8 slots (0 renders as tile 0x5b); appended by FUN_08028ab0 at index *(+0x22).",
+      "name": "list_slot_0",
+      "offset": 96,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Entry 1 of the 8-slot selection list",
+      "evidence": "Live list byte at *DAT_080280a0+0x24+1, saved to file 0x61 by FUN_080032f0; counted nonzero by FUN_08027fe4 (i<8) and rendered by FUN_080281ac (u*4+table, 0 -> 0x5b).",
+      "name": "list_slot_1",
+      "offset": 97,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Entry 2 of the 8-slot selection list",
+      "evidence": "Live list byte at *DAT_080280a0+0x24+2, saved to file 0x62 by FUN_080032f0; counted nonzero by FUN_08027fe4 (i<8) and rendered by FUN_080281ac.",
+      "name": "list_slot_2",
+      "offset": 98,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Entry 3 of the 8-slot selection list",
+      "evidence": "Live list byte at *DAT_080280a0+0x24+3, saved to file 0x63 by FUN_080032f0; counted nonzero by FUN_08027fe4 (i<8) and rendered by FUN_080281ac.",
+      "name": "list_slot_3",
+      "offset": 99,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Entry 4 of the 8-slot selection list",
+      "evidence": "Live list byte at *DAT_080280a0+0x24+4, saved to file 0x64 by FUN_080032f0; counted nonzero by FUN_08027fe4 (i<8) and rendered by FUN_080281ac.",
+      "name": "list_slot_4",
+      "offset": 100,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Entry 5 of the 8-slot selection list",
+      "evidence": "Live list byte at *DAT_080280a0+0x24+5, saved to file 0x65 by FUN_080032f0; counted nonzero by FUN_08027fe4 (i<8) and rendered by FUN_080281ac.",
+      "name": "list_slot_5",
+      "offset": 101,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Empty entry 6 of the 8-slot selection list (0x00 in baseline)",
+      "evidence": "Live list byte at *DAT_080280a0+0x24+6, saved to file 0x66 by FUN_080032f0; zeroed at init by FUN_08027fe4, skipped by its nonzero count loop, rendered as blank tile 0x5b by FUN_080281ac.",
+      "name": "list_slot_6",
+      "offset": 102,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Empty entry 7 of the 8-slot selection list (0x00 in baseline)",
+      "evidence": "Live list byte at *DAT_080280a0+0x24+7, saved to file 0x67 by FUN_080032f0; zeroed at init by FUN_08027fe4, rendered as blank tile 0x5b by FUN_080281ac.",
+      "name": "list_slot_7",
+      "offset": 103,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "guessed",
+      "description": "Trailing 7 bytes of the 15-byte config block; zero in baseline, no per-byte readers found",
+      "evidence": "Covered by the FUN_080032f0 0xf-byte write to SRAM DAT_08003328 (=file 0x60) and its sum8 checksum (FUN_08005768/FUN_08005744 to DAT_0800332c=file 0x6F); no dedicated field accessors for file range 0x68-0x6E found in decomp.",
+      "name": "config_block_tail",
+      "offset": 104,
+      "size": 7,
+      "type": "bytes"
     }
-  ]
+  ],
+  "game_code": "BP6J",
+  "id": "bp6j",
+  "magic_signatures": [
+    {
+      "bytes": [
+        75,
+        67,
+        69,
+        79
+      ],
+      "description": "ASCII 'KCEO' header magic written by FUN_08005674",
+      "offset": 0
+    },
+    {
+      "bytes": [
+        75,
+        67,
+        69,
+        79
+      ],
+      "description": "ASCII 'KCEO' backup header magic mirror at +0x10 written by FUN_08005674",
+      "offset": 16
+    }
+  ],
+  "media": "sram",
+  "size_bytes": 32768,
+  "title": "Power Pro Kun Pocket 6 (Japan)"
 }

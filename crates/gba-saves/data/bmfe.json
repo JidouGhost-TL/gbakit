@@ -1,45 +1,209 @@
 {
-  "id": "bmfe",
-  "game_code": "BMFE",
-  "title": "Madden NFL 2005 (USA)",
-  "media": "eeprom8k",
-  "size_bytes": 8192,
-  "magic_signatures": [
-    {
-      "offset": 3432,
-      "bytes": [
-        90,
-        73,
-        82,
-        46
-      ]
-    }
-  ],
   "checksums": [],
+  "copy_groups": [],
+  "eeprom_rev8": true,
   "fields": [
     {
-      "name": "magic_header",
-      "offset": 3432,
+      "confidence": "confirmed",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 100000,
+        "minimum": 0
+      },
+      "description": "Stat-table entry 0: small leaderboard/stat counter at start of the u32 stat table (logical 0x17f0, value 6).",
+      "evidence": "Persisted by the EEPROM block-write chain FUN_080134f0 -> FUN_08013ecc -> FUN_080b06e8 -> FUN_080b051c and read back via FUN_080135d0 -> FUN_08013fa8 -> FUN_080b046c (8-byte blocks via DAT_0d000000); stat records are queued in RAM by FUN_08012f9c (4xu16 records). Logical offset verified against samples/baseline.sav in the rev8 domain.",
+      "name": "leaderboard_stat_0",
+      "offset": 6128,
       "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 100000,
+        "minimum": 0
+      },
+      "description": "Stat-table entry 1 (logical 0x17f4, value 404).",
+      "evidence": "Same EEPROM block-write chain FUN_080134f0 -> FUN_08013ecc -> FUN_080b06e8 -> FUN_080b051c; read path FUN_080135d0 -> FUN_08013fa8 -> FUN_080b046c via DAT_0d000000; RAM records queued by FUN_08012f9c. Logical offset verified in samples/baseline.sav (rev8 domain).",
+      "name": "leaderboard_stat_1",
+      "offset": 6132,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 100000,
+        "minimum": 0
+      },
+      "description": "Stat-table entry 2 (logical 0x17f8, value 99).",
+      "evidence": "Same EEPROM block-write chain FUN_080134f0 -> FUN_08013ecc -> FUN_080b06e8 -> FUN_080b051c; read path FUN_080135d0 -> FUN_08013fa8 -> FUN_080b046c via DAT_0d000000; RAM records queued by FUN_08012f9c. Logical offset verified in samples/baseline.sav (rev8 domain).",
+      "name": "leaderboard_stat_2",
+      "offset": 6136,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 100000,
+        "minimum": 0
+      },
+      "description": "Stat-table entry 3 (logical 0x17fc, value 295).",
+      "evidence": "Same EEPROM block-write chain FUN_080134f0 -> FUN_08013ecc -> FUN_080b06e8 -> FUN_080b051c; read path FUN_080135d0 -> FUN_08013fa8 -> FUN_080b046c via DAT_0d000000; RAM records queued by FUN_08012f9c. Logical offset verified in samples/baseline.sav (rev8 domain).",
+      "name": "leaderboard_stat_3",
+      "offset": 6140,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "allowed": "ABCDEFGHIJKLMNOPQRSTUVWXYZ.",
+        "kind": "ascii-charset",
+        "max_len": 12
+      },
+      "description": "Player-name slot 0 of the 13-byte fixed-slot roster name table (logical 0x1924, 'J.RICE').",
+      "evidence": "Roster block copied by FUN_0801337c (0x780-byte FUN_080af410 copy) then saved via FUN_080134f0 -> FUN_08013ecc -> FUN_080b051c; loaded via FUN_080135d0 -> FUN_08013fa8 -> FUN_080b046c. 13-byte stride verified across consecutive slots in samples/baseline.sav (rev8 domain).",
+      "name": "player_name_0",
+      "offset": 6436,
+      "size": 13,
       "type": "ascii"
     },
     {
-      "name": "slot_counter",
-      "offset": 3436,
+      "confidence": "confirmed",
+      "constraint": {
+        "allowed": "ABCDEFGHIJKLMNOPQRSTUVWXYZ.",
+        "kind": "ascii-charset",
+        "max_len": 12
+      },
+      "description": "Player-name slot 1 of the 13-byte roster name table (logical 0x1931, 'M.FAULK').",
+      "evidence": "Roster block copied by FUN_0801337c (0x780-byte FUN_080af410 copy) then saved via FUN_080134f0 -> FUN_08013ecc -> FUN_080b051c; loaded via FUN_080135d0 -> FUN_08013fa8 -> FUN_080b046c. 13-byte stride verified in samples/baseline.sav (rev8 domain).",
+      "name": "player_name_1",
+      "offset": 6449,
+      "size": 13,
+      "type": "ascii"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "allowed": "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+        "kind": "ascii-charset",
+        "max_len": 12
+      },
+      "description": "Team-name slot in the 13-byte name table (logical 0x1a01, 'REDSKINS').",
+      "evidence": "Roster block copied by FUN_0801337c (0x780-byte FUN_080af410 copy) then saved via FUN_080134f0 -> FUN_08013ecc -> FUN_080b051c; loaded via FUN_080135d0 -> FUN_08013fa8 -> FUN_080b046c. 13-byte stride verified in samples/baseline.sav (rev8 domain).",
+      "name": "team_name_0",
+      "offset": 6657,
+      "size": 13,
+      "type": "ascii"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "allowed": "ABCDEFGHIJKLMNOPQRSTUVWXYZ. ",
+        "kind": "ascii-charset",
+        "max_len": 12
+      },
+      "description": "Coach-name slot in the 13-byte name table (logical 0x1c98, 'J.MADDEN').",
+      "evidence": "Roster block copied by FUN_0801337c (0x780-byte FUN_080af410 copy) then saved via FUN_080134f0 -> FUN_08013ecc -> FUN_080b051c; loaded via FUN_080135d0 -> FUN_08013fa8 -> FUN_080b046c. 13-byte stride verified in samples/baseline.sav (rev8 domain).",
+      "name": "coach_name_0",
+      "offset": 7320,
+      "size": 13,
+      "type": "ascii"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "allowed": "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+        "kind": "ascii-charset",
+        "max_len": 7
+      },
+      "description": "Entrant-name field of the stable/entrant record area (logical 0x1f12, 'BEZOAR', NUL-terminated).",
+      "evidence": "Entrant block saved via the dispatcher FUN_080134f0 -> FUN_08013ecc -> FUN_080b06e8 -> FUN_080b051c chain and loaded via FUN_080135d0 -> FUN_08013fa8 -> FUN_080b046c through DAT_0d000000. Name bytes verified in samples/baseline.sav (rev8 domain).",
+      "name": "entrant_name_bezoar",
+      "offset": 7954,
+      "size": 7,
+      "type": "ascii"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 1000000,
+        "minimum": 0
+      },
+      "description": "Entrant purse (u32) of the 20-byte entrant record holding 'MEW' (logical 0x1f34, value 16000).",
+      "evidence": "20-byte entrant-record rhythm (u32 purse + u16 attr + 8-byte name + pad) verified for 7 consecutive records in samples/baseline.sav (rev8 domain); block saved via FUN_080134f0 -> FUN_08013ecc -> FUN_080b051c and loaded via FUN_080135d0 -> FUN_08013fa8 -> FUN_080b046c.",
+      "name": "entrant_purse_mew",
+      "offset": 7988,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 1000000,
+        "minimum": 0
+      },
+      "description": "Entrant purse (u32) of the 20-byte entrant record holding 'PHOENIX' (logical 0x1f48, value 8000).",
+      "evidence": "20-byte entrant-record rhythm (u32 purse + u16 attr + 8-byte name + pad) verified for 7 consecutive records in samples/baseline.sav (rev8 domain); block saved via FUN_080134f0 -> FUN_08013ecc -> FUN_080b051c and loaded via FUN_080135d0 -> FUN_08013fa8 -> FUN_080b046c.",
+      "name": "entrant_purse_phoenix",
+      "offset": 8008,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 99,
+        "minimum": 0
+      },
+      "description": "Entrant attribute (u16) of the 'PHOENIX' record (logical 0x1f4c, value 12).",
+      "evidence": "20-byte entrant-record rhythm (u32 purse + u16 attr + 8-byte name + pad) verified for 7 consecutive records in samples/baseline.sav (rev8 domain); block saved via FUN_080134f0 -> FUN_08013ecc -> FUN_080b051c and loaded via FUN_080135d0 -> FUN_08013fa8 -> FUN_080b046c.",
+      "name": "entrant_attr_phoenix",
+      "offset": 8012,
       "size": 2,
       "type": "u16_le"
     },
     {
-      "name": "game_progress_flags",
-      "offset": 3438,
-      "size": 2,
-      "type": "u16_le"
+      "confidence": "confirmed",
+      "constraint": {
+        "allowed": "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+        "kind": "ascii-charset",
+        "max_len": 8
+      },
+      "description": "Entrant name of the 'PHOENIX' 20-byte record (logical 0x1f4e, NUL-terminated 8-byte slot).",
+      "evidence": "20-byte entrant-record rhythm (u32 purse + u16 attr + 8-byte name + pad) verified for 7 consecutive records in samples/baseline.sav (rev8 domain); block saved via FUN_080134f0 -> FUN_08013ecc -> FUN_080b051c and loaded via FUN_080135d0 -> FUN_08013fa8 -> FUN_080b046c.",
+      "name": "entrant_name_phoenix",
+      "offset": 8014,
+      "size": 8,
+      "type": "ascii"
     },
     {
-      "name": "player_status_payload",
-      "offset": 3440,
-      "size": 16,
-      "type": "bytes"
+      "confidence": "confirmed",
+      "constraint": {
+        "allowed": "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+        "kind": "ascii-charset",
+        "max_len": 8
+      },
+      "description": "Entrant name of the 'OTTO' 20-byte record (logical 0x1f76, NUL-terminated 8-byte slot).",
+      "evidence": "20-byte entrant-record rhythm (u32 purse + u16 attr + 8-byte name + pad) verified for 7 consecutive records in samples/baseline.sav (rev8 domain); block saved via FUN_080134f0 -> FUN_08013ecc -> FUN_080b051c and loaded via FUN_080135d0 -> FUN_08013fa8 -> FUN_080b046c.",
+      "name": "entrant_name_otto",
+      "offset": 8054,
+      "size": 8,
+      "type": "ascii"
     }
-  ]
+  ],
+  "game_code": "BMFE",
+  "id": "bmfe",
+  "magic_signatures": [],
+  "media": "eeprom8k",
+  "size_bytes": 8192,
+  "title": "Madden NFL 2005 (USA)"
 }

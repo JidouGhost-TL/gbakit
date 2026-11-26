@@ -1,45 +1,94 @@
 {
-  "id": "aloe",
-  "game_code": "ALOE",
-  "title": "Lord of the Rings, The - The Fellowship of the Ring (USA)",
-  "media": "eeprom8k",
-  "size_bytes": 8192,
-  "magic_signatures": [
-    {
-      "offset": 2,
-      "bytes": [
-        76,
-        111,
-        84,
-        82
-      ]
-    }
-  ],
   "checksums": [],
+  "copy_groups": [],
+  "eeprom_rev8": true,
   "fields": [
     {
-      "name": "magic_header",
-      "offset": 2,
-      "size": 4,
-      "type": "ascii"
-    },
-    {
-      "name": "slot_counter",
-      "offset": 6,
+      "confidence": "confirmed",
+      "description": "Stored 16-bit integrity word at save+4. Computed by FUN_08005d14 (custom seed/xor-sum over u16 words from save+6); written by FUN_08005cb8 (init) and FUN_0800e974 (commit); verified by FUN_08005c04/FUN_08005c58. Baseline holds 0x190e. No Schema v2 algorithm matches, so it is mapped as data, not a checksums[] entry.",
+      "evidence": "FUN_08005d14 sums (index ^ DAT_08005d58 ^ word) from buffer+6 with seed DAT_08005d50; FUN_08005cb8 and FUN_0800e974 store the low 16 bits at buffer+4; FUN_08005c04 and FUN_08005c58 compare buffer+4 against a fresh FUN_08005d14 result.",
+      "name": "stored_integrity_word",
+      "offset": 4,
       "size": 2,
       "type": "u16_le"
     },
     {
-      "name": "game_progress_flags",
+      "confidence": "likely",
+      "constraint": {
+        "flag_labels": {
+          "0": "save_data_present"
+        },
+        "kind": "bitmask",
+        "valid_mask": 1
+      },
+      "description": "Save-status flag word at save+8. Bit0 is set by the commit routine and tested on boot to decide whether save data is present (gates title-menu branch). Baseline 0x0000 (fresh save, flag clear).",
+      "evidence": "FUN_0800e974 sets bit0 of the u16 at save-buffer+8 (base DAT_0800eaa8) before recomputing the checksum; FUN_0800eb1c returns (((u16*)(base+8))&1)!=0 (base DAT_0800eb34) and FUN_08006094 branches the title menu on that result.",
+      "name": "save_status_flags",
       "offset": 8,
       "size": 2,
-      "type": "u16_le"
+      "type": "bitflags"
     },
     {
-      "name": "player_status_payload",
-      "offset": 10,
-      "size": 16,
+      "confidence": "likely",
+      "description": "Persisted 32-bit run-state word mirrored between an EWRAM global and save+0x268 (exact gameplay meaning not yet labeled; zero in fresh baseline).",
+      "evidence": "FUN_0800e974 save path (base DAT_0800eaa8) stores the EWRAM word to save-buffer+0x268; FUN_0800eb3c load path (base DAT_0800ec5c) copies save-buffer+0x268 back to EWRAM (DAT_0800eca8).",
+      "name": "run_state_word_0",
+      "offset": 616,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Persisted 32-bit run-state word mirrored between an EWRAM global and save+0x26C (exact gameplay meaning not yet labeled; zero in fresh baseline).",
+      "evidence": "FUN_0800e974 save path (base DAT_0800eaa8) stores the EWRAM word to save-buffer+0x26C; FUN_0800eb3c load path (base DAT_0800ec5c) copies save-buffer+0x26C back to EWRAM (DAT_0800ecac).",
+      "name": "run_state_word_1",
+      "offset": 620,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Persisted 32-bit run-state word mirrored between an EWRAM global and save+0x270 (exact gameplay meaning not yet labeled; zero in fresh baseline).",
+      "evidence": "FUN_0800e974 save path (base DAT_0800eaa8) stores the EWRAM word to save-buffer+0x270; FUN_0800eb3c load path (base DAT_0800ec5c) copies save-buffer+0x270 back to EWRAM (DAT_0800ecb0).",
+      "name": "run_state_word_2",
+      "offset": 624,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Remaining 8 persisted 32-bit run-state words (save+0x274..+0x294) mirrored between EWRAM globals and the save file; kept as one block, exact per-word meanings not yet labeled (all zero in baseline).",
+      "evidence": "FUN_0800e974 writes save-buffer+0x274..+0x294 from EWRAM globals (DAT_0800eafc..DAT_0800eb18); FUN_0800eb3c reads save-buffer+0x274..+0x294 back to EWRAM (DAT_0800ecb8..DAT_0800ecd4).",
+      "name": "run_state_block",
+      "offset": 628,
+      "size": 32,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "9-entry indexed table (stride 64 bytes) of 16 u16-pairs per entry at save+0x13C0..+0x1600, transferred by the save/load index loops; entry semantics not yet labeled (all zero in baseline).",
+      "evidence": "FUN_0800e974 references save-buffer+0x1600 and loops 9 indices through FUN_0800ed8c/FUN_0800eddc; FUN_0800eddc and FUN_0800ee3c move 16 u16-pairs per index at base+index*64+0x13C0 (9*64=0x240 bytes ending exactly at 0x1600).",
+      "name": "slot_table_area",
+      "offset": 5056,
+      "size": 576,
       "type": "bytes"
     }
-  ]
+  ],
+  "game_code": "ALOE",
+  "id": "aloe",
+  "magic_signatures": [
+    {
+      "bytes": [
+        82,
+        84,
+        111,
+        76
+      ],
+      "description": "EEPROM magic u32 0x4C6F5452 at save+0 (logical-domain bytes 52 54 6F 4C; raw EEPROM order reads 'LoTR'). Verified against baseline.sav.",
+      "offset": 0
+    }
+  ],
+  "media": "eeprom8k",
+  "size_bytes": 8192,
+  "title": "Lord of the Rings, The - The Fellowship of the Ring (USA)"
 }

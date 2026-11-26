@@ -1,45 +1,103 @@
 {
-  "id": "ag7j",
+  "checksums": [
+    {
+      "algorithm": "sum32_le",
+      "covered_end": 2752,
+      "covered_start": 4,
+      "name": "save_checksum",
+      "seed": 103,
+      "stored_offset": 0
+    }
+  ],
+  "fields": [
+    {
+      "confidence": "confirmed",
+      "description": "Stored save checksum: seed 0x67 plus byte sum over save offsets [0x04, 0xAC0). Loaded by FUN_08014560, maintained incrementally by FUN_08014578, recomputed by FUN_08014cb8.",
+      "evidence": "FUN_08014560 loads 4B from SRAM 0x0E000000+0x00 into RAM checksum word; FUN_08014578 maintains running int byte-sum (adds new byte, subtracts old byte) and flushes via FUN_08014530; FUN_08014cb8 recomputes from seed 0x67. Verified: sum32_le over [4,2752) with seed 103 gives expected=actual=95763 in baseline.sav.",
+      "name": "save_checksum",
+      "offset": 0,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "kind": "bitmask",
+        "valid_mask": 281474976710655
+      },
+      "description": "Primary mission/progress flag array: bit (flag>>3) byte, (flag&7) mask. Init sets flags 0x00,0x04,0x08,0x0C,0x12,0x15,0x1A,0x1D,0x1E,0x23,0x26,0x2D,0x2E,0x2F; upper two bytes reserved zero.",
+      "evidence": "FUN_08014944 bit-set/clear at ((flag>>3)+RAM+0x0C) via single-byte FUN_08014578 writes; FUN_080148d0 bit-tests ((flag>>3)+RAM+0x0C) incl. flags 0x13/0x17 in FUN_08014a84/FUN_08014a90; init FUN_080146ac sets 14 flags max 0x2F (6 bytes); baseline bytes [0x0C,0x12) = 11 11 24 64 48 E0 match init set bit-exactly.",
+      "name": "progress_flags_a",
+      "offset": 12,
+      "size": 8,
+      "type": "bitflags"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "kind": "bitmask",
+        "valid_mask": 4294967295
+      },
+      "description": "Secondary event flag array: bit (flag>>3) byte, (flag&7) mask, flag index range-checked < 0x21; this covers flags 0-31, flag 32 lives in event_flag_32. Gameplay sets flag 1.",
+      "evidence": "FUN_080149c4 range-guards param_1 < 0x21 and RMW ((flag>>3)+RAM+0x14) via FUN_08014578; literal gameplay call (1,1) matches baseline [0x14] = 0x02 (flag 1 set, rest clear).",
+      "name": "event_flags_b",
+      "offset": 20,
+      "size": 4,
+      "type": "bitflags"
+    },
+    {
+      "confidence": "confirmed",
+      "constraint": {
+        "kind": "bitmask",
+        "valid_mask": 1
+      },
+      "description": "Top byte of the secondary event flag array: holds flag 32 only (flag index range-checked < 0x21, so bits 1-7 are never set).",
+      "evidence": "FUN_080149c4 range-guards param_1 < 0x21 (33 flags); byte index (32>>3)=4 lands at save offset 0x14+4=0x18; written via FUN_08014578; baseline 0x00.",
+      "name": "event_flag_32",
+      "offset": 24,
+      "size": 1,
+      "type": "bitflags"
+    },
+    {
+      "confidence": "likely",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 47,
+        "minimum": 0
+      },
+      "description": "Active leaderboard/standings entry index into the 48-entry x 12-byte runtime table.",
+      "evidence": "FUN_0801487c reads *(u16*)(RAM+0xF0) as table index passed to FUN_0801501c (base+idx*0x0C+0x90) and FUN_08014f44; table loops bound 0x30 (48) in FUN_0801487c/FUN_08014f70; save RAM+0xF0 mirrors save offset 0xF0 (consistent +offset mirror layout); baseline 12 < 48.",
+      "name": "table_cursor_index",
+      "offset": 240,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Career/best-records table: 197 variable-length records of ASCII initials + two u32 values (12-byte {name,u32,u32}, or 16-byte {name,8,u32,u32} when tag word is 8), spanning [0x100,0xABC).",
+      "evidence": "Bulk-loaded by FUN_0801464c (0x1540 bytes via FUN_08014530) after header load FUN_08014618 (0xF4 bytes); region covered by FUN_08014cb8 checksum over [4,0xAC0); 197 records consume [0x100,0xABC) exactly with names matching [A-Z.]{2,3} NUL pattern (e.g. TJO/MTO/TCH at 0x13C/0x14C/0x158).",
+      "name": "record_table",
+      "offset": 256,
+      "size": 2492,
+      "type": "bytes"
+    }
+  ],
   "game_code": "AG7J",
-  "title": "Advance GTA (Japan) (En)",
-  "media": "sram",
-  "size_bytes": 32768,
+  "id": "ag7j",
   "magic_signatures": [
     {
-      "offset": 0,
       "bytes": [
         80,
         71,
         84,
         65
-      ]
+      ],
+      "description": "ASCII 'PGTA' save magic at offset 0x04",
+      "name": "magic_pgta",
+      "offset": 4
     }
   ],
-  "checksums": [],
-  "fields": [
-    {
-      "name": "magic_header",
-      "offset": 0,
-      "size": 4,
-      "type": "ascii"
-    },
-    {
-      "name": "slot_counter",
-      "offset": 4,
-      "size": 2,
-      "type": "u16_le"
-    },
-    {
-      "name": "game_progress_flags",
-      "offset": 6,
-      "size": 2,
-      "type": "u16_le"
-    },
-    {
-      "name": "player_status_payload",
-      "offset": 8,
-      "size": 16,
-      "type": "bytes"
-    }
-  ]
+  "media": "sram",
+  "size_bytes": 32768,
+  "title": "Advance GTA (Japan) (En)"
 }

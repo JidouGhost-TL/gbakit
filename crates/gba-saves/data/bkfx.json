@@ -1,29 +1,130 @@
 {
-  "id": "bkfx",
-  "game_code": "BKFX",
-  "title": "Biene Maja, Die - Klatschmohnwiese in Gefahr (Germany)",
-  "media": "eeprom512",
-  "size_bytes": 512,
-  "magic_signatures": [],
   "checksums": [],
+  "copy_groups": [],
+  "eeprom_rev8": true,
   "fields": [
     {
-      "name": "slot_counter",
+      "confidence": "likely",
+      "description": "Row-0 header tag word (logical bytes 68 FC DB A7 = 0xA7DBFC68); nonzero ID word of the programmed header row",
+      "evidence": "FUN_08031390 reads one EEPROM address as 4 halfwords (8 bytes) into RAM buffer param_2+0..6 and FUN_08031454 writes 4 halfwords per address, so file offsets 0..8 are EEPROM row 0; baseline row 0 is programmed with tag bytes 68 FC DB A7 (logical domain) while rows 10..63 are erased 0xFF.",
+      "name": "eeprom_tag",
       "offset": 0,
-      "size": 2,
-      "type": "u16_le"
+      "size": 4,
+      "type": "u32_le"
     },
     {
-      "name": "game_progress_flags",
-      "offset": 2,
-      "size": 2,
-      "type": "u16_le"
-    },
-    {
-      "name": "player_status_payload",
+      "confidence": "likely",
+      "description": "Save-format marker 0x1337 (logical bytes 37 13); identifies a programmed header row",
+      "evidence": "FUN_08031390/FUN_08031454 move EEPROM row 0 as 4 halfwords covering logical offsets 0..8; baseline holds LE u16 0x1337 at logical offset 4 (raw file bytes 13 37 become LE-aligned only under eeprom_rev8), the only magic-like constant in the 80 programmed bytes.",
+      "name": "format_marker",
       "offset": 4,
-      "size": 16,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "guessed",
+      "description": "Row-0 trailing status word, zero in baseline (cleared/default)",
+      "evidence": "FUN_080315b4 verifies EEPROM rows in 4-halfword units, so logical offsets 6..8 are the 4th halfword of row 0; baseline value 0x0000 (programmed, not erased 0xFFFF).",
+      "name": "row0_status",
+      "offset": 6,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "guessed",
+      "description": "Save payload word 0 (EEPROM row 1 low half), zero in baseline (cleared/default progress data)",
+      "evidence": "FUN_08031390 reads EEPROM row 1 into RAM buffer param_2+0..6 and FUN_08031454 writes row 1 from the same layout, so logical offsets 8..12 are row 1 halfwords 0..1; baseline row 1 is programmed 0x00 (vs 0xFF erased rows 10..63). Game-level field role not recoverable: callers are hidden behind unrecovered jumptables.",
+      "name": "payload_a0",
+      "offset": 8,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "guessed",
+      "description": "Save payload word 1 (EEPROM row 1 high half), zero in baseline (cleared/default progress data)",
+      "evidence": "FUN_08031390/FUN_08031454 transfer EEPROM row 1 as 4 halfwords covering logical offsets 8..16, verified by FUN_080315b4 in 4-halfword units; baseline row 1 is programmed 0x00 (vs 0xFF erased rows 10..63). Game-level field role not recoverable: callers are hidden behind unrecovered jumptables.",
+      "name": "payload_a1",
+      "offset": 12,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "guessed",
+      "description": "Save payload row 2 (EEPROM address 2, 8 bytes), all zero in baseline (cleared/default)",
+      "evidence": "FUN_08031454 writes one EEPROM address as 4 halfwords (8 bytes) and FUN_08031390 reads the same 8-byte unit; baseline logical offsets 16..24 are programmed 0x00 (vs 0xFF erased rows 10..63). Game-level field roles not recoverable: callers are hidden behind unrecovered jumptables.",
+      "name": "payload_row2",
+      "offset": 16,
+      "size": 8,
+      "type": "bytes"
+    },
+    {
+      "confidence": "guessed",
+      "description": "Save payload row 3 (EEPROM address 3, 8 bytes), all zero in baseline (cleared/default)",
+      "evidence": "FUN_08031454 writes one EEPROM address as 4 halfwords (8 bytes) and FUN_08031390 reads the same 8-byte unit; baseline logical offsets 24..32 are programmed 0x00 (vs 0xFF erased rows 10..63). Game-level field roles not recoverable: callers are hidden behind unrecovered jumptables.",
+      "name": "payload_row3",
+      "offset": 24,
+      "size": 8,
+      "type": "bytes"
+    },
+    {
+      "confidence": "guessed",
+      "description": "Save payload row 4 (EEPROM address 4, 8 bytes), all zero in baseline (cleared/default)",
+      "evidence": "FUN_08031454 writes one EEPROM address as 4 halfwords (8 bytes) and FUN_08031390 reads the same 8-byte unit; baseline logical offsets 32..40 are programmed 0x00 (vs 0xFF erased rows 10..63). Game-level field roles not recoverable: callers are hidden behind unrecovered jumptables.",
+      "name": "payload_row4",
+      "offset": 32,
+      "size": 8,
+      "type": "bytes"
+    },
+    {
+      "confidence": "guessed",
+      "description": "Save payload row 5 (EEPROM address 5, 8 bytes), all zero in baseline (cleared/default)",
+      "evidence": "FUN_08031454 writes one EEPROM address as 4 halfwords (8 bytes) and FUN_08031390 reads the same 8-byte unit; baseline logical offsets 40..48 are programmed 0x00 (vs 0xFF erased rows 10..63). Game-level field roles not recoverable: callers are hidden behind unrecovered jumptables.",
+      "name": "payload_row5",
+      "offset": 40,
+      "size": 8,
+      "type": "bytes"
+    },
+    {
+      "confidence": "guessed",
+      "description": "Save payload row 6 (EEPROM address 6, 8 bytes), all zero in baseline (cleared/default)",
+      "evidence": "FUN_08031454 writes one EEPROM address as 4 halfwords (8 bytes) and FUN_08031390 reads the same 8-byte unit; baseline logical offsets 48..56 are programmed 0x00 (vs 0xFF erased rows 10..63). Game-level field roles not recoverable: callers are hidden behind unrecovered jumptables.",
+      "name": "payload_row6",
+      "offset": 48,
+      "size": 8,
+      "type": "bytes"
+    },
+    {
+      "confidence": "guessed",
+      "description": "Save payload row 7 (EEPROM address 7, 8 bytes), all zero in baseline (cleared/default)",
+      "evidence": "FUN_08031454 writes one EEPROM address as 4 halfwords (8 bytes) and FUN_08031390 reads the same 8-byte unit; baseline logical offsets 56..64 are programmed 0x00 (vs 0xFF erased rows 10..63). Game-level field roles not recoverable: callers are hidden behind unrecovered jumptables.",
+      "name": "payload_row7",
+      "offset": 56,
+      "size": 8,
+      "type": "bytes"
+    },
+    {
+      "confidence": "guessed",
+      "description": "Save payload row 8 (EEPROM address 8, 8 bytes), all zero in baseline (cleared/default)",
+      "evidence": "FUN_08031454 writes one EEPROM address as 4 halfwords (8 bytes) and FUN_08031390 reads the same 8-byte unit; baseline logical offsets 64..72 are programmed 0x00 (vs 0xFF erased rows 10..63). Game-level field roles not recoverable: callers are hidden behind unrecovered jumptables.",
+      "name": "payload_row8",
+      "offset": 64,
+      "size": 8,
+      "type": "bytes"
+    },
+    {
+      "confidence": "guessed",
+      "description": "Save payload row 9 (EEPROM address 9, 8 bytes), all zero in baseline (cleared/default)",
+      "evidence": "FUN_08031454 writes one EEPROM address as 4 halfwords (8 bytes) and FUN_08031390 reads the same 8-byte unit; baseline logical offsets 72..80 are programmed 0x00 (vs 0xFF erased rows 10..63). Game-level field roles not recoverable: callers are hidden behind unrecovered jumptables.",
+      "name": "payload_row9",
+      "offset": 72,
+      "size": 8,
       "type": "bytes"
     }
-  ]
+  ],
+  "game_code": "BKFX",
+  "id": "bkfx",
+  "magic_signatures": [],
+  "media": "eeprom512",
+  "size_bytes": 512,
+  "title": "Biene Maja, Die - Klatschmohnwiese in Gefahr (Germany)"
 }

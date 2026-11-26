@@ -1,45 +1,267 @@
 {
-  "id": "alde",
-  "game_code": "ALDE",
-  "title": "Lady Sia (USA) (En,Fr,De,Es,It,Nl)",
-  "media": "eeprom512",
-  "size_bytes": 512,
-  "magic_signatures": [
-    {
-      "offset": 0,
-      "bytes": [
-        85,
-        33,
-        65,
-        73
-      ]
-    }
-  ],
   "checksums": [],
+  "copy_groups": [],
+  "eeprom_rev8": true,
   "fields": [
     {
-      "name": "magic_header",
-      "offset": 0,
-      "size": 4,
-      "type": "ascii"
-    },
-    {
-      "name": "slot_counter",
+      "confidence": "likely",
+      "description": "Low 32 bits of the 8-byte save stamp: settings word sourced from RAM/ROM word *DAT_08022a68. Baseline 0x00009055.",
+      "evidence": "FUN_08022a44 builds an 8-byte stack buffer (ROM word DAT_08022a64 + settings word *DAT_08022a68) and writes it to EEPROM bytes [0,8) via FUN_0802dc5c (which programs the 8-byte page through FUN_0802f498/FUN_0802f368 DMA to DAT_0d000000). No EEPROM read path covers bytes [0,8): write-only stamp.",
+      "name": "global_settings_word",
       "offset": 4,
-      "size": 2,
-      "type": "u16_le"
+      "size": 4,
+      "type": "u32_le"
     },
     {
-      "name": "game_progress_flags",
-      "offset": 6,
-      "size": 2,
-      "type": "u16_le"
-    },
-    {
-      "name": "player_status_payload",
+      "confidence": "likely",
+      "description": "Slot-0 header byte 0: read from save but never consumed before the buffer is reused.",
+      "evidence": "FUN_08022754 reads the 8-byte slot-0 header at save offset (sVar3+8)=8 via FUN_0802dddc into stack bytes uStack_28..bStack_24 (sVar3=0 when slot table DAT_08022878 maps slot 0 to base 0); header byte 0 (uStack_28, offset 8) is never referenced before loop reads overwrite it.",
+      "name": "slot0_header_byte0",
       "offset": 8,
-      "size": 16,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Slot-0 header byte 1: low byte of the map Y coordinate passed to the node table.",
+      "evidence": "FUN_08022754 header byte 1 (bStack_27, save offset 9) forms map Y as (((bStack_26 & 0xf) * 0x100 + bStack_27) * 0x3c) in the FUN_08005850(group,item,x,y,value) call that stores each node into table DAT_080058a8.",
+      "name": "slot0_pos_y_low",
+      "offset": 9,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Slot-0 header byte 2: world-unlock threshold (0=none, >=1/2/3 unlock worlds 1/2/3); high nibble feeds map X.",
+      "evidence": "FUN_08022754 header byte 2 (bStack_26, save offset 10): thresholds 0/1/2 gate FUN_08007e34(1/2/3) watermark raises and DAT_0802287c[0/8/0x10] |= 0x10 unlock flags; high nibble (bStack_26 >> 4) feeds map X ((bStack_25 * 0x10 + (bStack_26 >> 4)) * 0x3c) in the FUN_08005850 node-store call.",
+      "name": "slot0_world_unlock",
+      "offset": 10,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Slot-0 header byte 3: stage/level index stored to RAM and high byte of map X.",
+      "evidence": "FUN_08022754 header byte 3 (bStack_25, save offset 11) is stored as *DAT_08022880 = (ushort)bStack_25 and forms map X high bits ((bStack_25 * 0x10 + (bStack_26 >> 4)) * 0x3c) in the FUN_08005850 node-store call.",
+      "name": "slot0_stage_index",
+      "offset": 11,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Slot-0 header byte 4: packed config nibbles; high nibble to FUN_08007c44, low nibble to FUN_08007e24.",
+      "evidence": "FUN_08022754 header byte 4 (bStack_24, save offset 12) splits into FUN_08007c44(bStack_24 >> 4) config store *DAT_08007c4c and FUN_08007e24(bStack_24 & 0xf) config store *DAT_08007e30 = value + 1.",
+      "name": "slot0_config_packed",
+      "offset": 12,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Slot-0 header bytes 5-7: padding, never referenced after the 8-byte header read.",
+      "evidence": "FUN_08022754 reads 8 header bytes at save offset 8 via FUN_0802dddc but only consumes bytes 1-4 (bStack_27..bStack_24); bytes 5-7 (offsets 13-15) are never referenced.",
+      "name": "slot0_header_padding",
+      "offset": 13,
+      "size": 3,
       "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Slot-0 node value byte: low byte of word 0 of group 0 (item 0); group/item stored via FUN_08005850.",
+      "evidence": "FUN_08022754 loop (uVar6=0,bVar1=0) reads 4-byte word at save offset 16 via FUN_0802dddc and passes its low byte as value to FUN_08005850(0,0,x,y,value), stored at node table DAT_080058a8 + 0x48*0 + 0xc*0 + 8 (read back by FUN_080059ac).",
+      "name": "slot0_node_g0_i0_value",
+      "offset": 16,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Slot-0 node value byte: low byte of word 1 of group 0 (item 1); group/item stored via FUN_08005850.",
+      "evidence": "FUN_08022754 loop (uVar6=0,bVar1=1) reads 4-byte word at save offset 20 via FUN_0802dddc and passes its low byte as value to FUN_08005850(0,1,x,y,value), stored at node table DAT_080058a8 + 0x48*0 + 0xc*1 + 8 (read back by FUN_080059ac).",
+      "name": "slot0_node_g0_i1_value",
+      "offset": 20,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Slot-0 node value byte: low byte of word 2 of group 0 (item 2); group/item stored via FUN_08005850.",
+      "evidence": "FUN_08022754 loop (uVar6=0,bVar1=2) reads 4-byte word at save offset 24 via FUN_0802dddc and passes its low byte as value to FUN_08005850(0,2,x,y,value), stored at node table DAT_080058a8 + 0x48*0 + 0xc*2 + 8 (read back by FUN_080059ac).",
+      "name": "slot0_node_g0_i2_value",
+      "offset": 24,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Slot-0 node value byte: low byte of word 3 of group 0 (item 3); group/item stored via FUN_08005850.",
+      "evidence": "FUN_08022754 loop (uVar6=0,bVar1=3) reads 4-byte word at save offset 28 via FUN_0802dddc and passes its low byte as value to FUN_08005850(0,3,x,y,value), stored at node table DAT_080058a8 + 0x48*0 + 0xc*3 + 8 (read back by FUN_080059ac).",
+      "name": "slot0_node_g0_i3_value",
+      "offset": 28,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Slot-0 node value byte: low byte of word 4 of group 0 (item 5; item index 4 has no stored word); stored via FUN_08005850.",
+      "evidence": "FUN_08022754 loop (uVar6=0,bVar1=5, index 4 skipped) reads 4-byte word at save offset 32 via FUN_0802dddc and passes its low byte as value to FUN_08005850(0,5,x,y,value), stored at node table DAT_080058a8 + 0x48*0 + 0xc*5 + 8 (read back by FUN_080059ac).",
+      "name": "slot0_node_g0_i5_value",
+      "offset": 32,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Slot-0 node value byte: low byte of word 0 of group 1 (item 0); group/item stored via FUN_08005850.",
+      "evidence": "FUN_08022754 loop (uVar6=1,bVar1=0) reads 4-byte word at save offset 36 via FUN_0802dddc and passes its low byte as value to FUN_08005850(1,0,x,y,value), stored at node table DAT_080058a8 + 0x48*1 + 0xc*0 + 8 (read back by FUN_080059ac).",
+      "name": "slot0_node_g1_i0_value",
+      "offset": 36,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Slot-0 node value byte: low byte of word 1 of group 1 (item 1); group/item stored via FUN_08005850.",
+      "evidence": "FUN_08022754 loop (uVar6=1,bVar1=1) reads 4-byte word at save offset 40 via FUN_0802dddc and passes its low byte as value to FUN_08005850(1,1,x,y,value), stored at node table DAT_080058a8 + 0x48*1 + 0xc*1 + 8 (read back by FUN_080059ac).",
+      "name": "slot0_node_g1_i1_value",
+      "offset": 40,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Slot-0 node value byte: low byte of word 2 of group 1 (item 2); group/item stored via FUN_08005850.",
+      "evidence": "FUN_08022754 loop (uVar6=1,bVar1=2) reads 4-byte word at save offset 44 via FUN_0802dddc and passes its low byte as value to FUN_08005850(1,2,x,y,value), stored at node table DAT_080058a8 + 0x48*1 + 0xc*2 + 8 (read back by FUN_080059ac).",
+      "name": "slot0_node_g1_i2_value",
+      "offset": 44,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Slot-0 node value byte: low byte of word 3 of group 1 (item 3); group/item stored via FUN_08005850.",
+      "evidence": "FUN_08022754 loop (uVar6=1,bVar1=3) reads 4-byte word at save offset 48 via FUN_0802dddc and passes its low byte as value to FUN_08005850(1,3,x,y,value), stored at node table DAT_080058a8 + 0x48*1 + 0xc*3 + 8 (read back by FUN_080059ac).",
+      "name": "slot0_node_g1_i3_value",
+      "offset": 48,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Slot-0 node value byte: low byte of word 4 of group 1 (item 5; item index 4 has no stored word); stored via FUN_08005850.",
+      "evidence": "FUN_08022754 loop (uVar6=1,bVar1=5, index 4 skipped) reads 4-byte word at save offset 52 via FUN_0802dddc and passes its low byte as value to FUN_08005850(1,5,x,y,value), stored at node table DAT_080058a8 + 0x48*1 + 0xc*5 + 8 (read back by FUN_080059ac).",
+      "name": "slot0_node_g1_i5_value",
+      "offset": 52,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Slot-0 node value byte: low byte of word 0 of group 2 (item 0); group/item stored via FUN_08005850.",
+      "evidence": "FUN_08022754 loop (uVar6=2,bVar1=0) reads 4-byte word at save offset 56 via FUN_0802dddc and passes its low byte as value to FUN_08005850(2,0,x,y,value), stored at node table DAT_080058a8 + 0x48*2 + 0xc*0 + 8 (read back by FUN_080059ac).",
+      "name": "slot0_node_g2_i0_value",
+      "offset": 56,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Slot-0 node value byte: low byte of word 1 of group 2 (item 1); group/item stored via FUN_08005850.",
+      "evidence": "FUN_08022754 loop (uVar6=2,bVar1=1) reads 4-byte word at save offset 60 via FUN_0802dddc and passes its low byte as value to FUN_08005850(2,1,x,y,value), stored at node table DAT_080058a8 + 0x48*2 + 0xc*1 + 8 (read back by FUN_080059ac).",
+      "name": "slot0_node_g2_i1_value",
+      "offset": 60,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Slot-0 node value byte: low byte of word 2 of group 2 (item 2); group/item stored via FUN_08005850.",
+      "evidence": "FUN_08022754 loop (uVar6=2,bVar1=2) reads 4-byte word at save offset 64 via FUN_0802dddc and passes its low byte as value to FUN_08005850(2,2,x,y,value), stored at node table DAT_080058a8 + 0x48*2 + 0xc*2 + 8 (read back by FUN_080059ac).",
+      "name": "slot0_node_g2_i2_value",
+      "offset": 64,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Slot-0 node value byte: low byte of word 3 of group 2 (item 3); group/item stored via FUN_08005850.",
+      "evidence": "FUN_08022754 loop (uVar6=2,bVar1=3) reads 4-byte word at save offset 68 via FUN_0802dddc and passes its low byte as value to FUN_08005850(2,3,x,y,value), stored at node table DAT_080058a8 + 0x48*2 + 0xc*3 + 8 (read back by FUN_080059ac).",
+      "name": "slot0_node_g2_i3_value",
+      "offset": 68,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Slot-0 node value byte: low byte of word 4 of group 2 (item 5; item index 4 has no stored word); stored via FUN_08005850.",
+      "evidence": "FUN_08022754 loop (uVar6=2,bVar1=5, index 4 skipped) reads 4-byte word at save offset 72 via FUN_0802dddc and passes its low byte as value to FUN_08005850(2,5,x,y,value), stored at node table DAT_080058a8 + 0x48*2 + 0xc*5 + 8 (read back by FUN_080059ac).",
+      "name": "slot0_node_g2_i5_value",
+      "offset": 72,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Slot-0 node value byte: low byte of word 0 of group 3 (item 0); group/item stored via FUN_08005850.",
+      "evidence": "FUN_08022754 loop (uVar6=3,bVar1=0) reads 4-byte word at save offset 76 via FUN_0802dddc and passes its low byte as value to FUN_08005850(3,0,x,y,value), stored at node table DAT_080058a8 + 0x48*3 + 0xc*0 + 8 (read back by FUN_080059ac).",
+      "name": "slot0_node_g3_i0_value",
+      "offset": 76,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Slot-0 node value byte: low byte of word 1 of group 3 (item 1); group/item stored via FUN_08005850.",
+      "evidence": "FUN_08022754 loop (uVar6=3,bVar1=1) reads 4-byte word at save offset 80 via FUN_0802dddc and passes its low byte as value to FUN_08005850(3,1,x,y,value), stored at node table DAT_080058a8 + 0x48*3 + 0xc*1 + 8 (read back by FUN_080059ac).",
+      "name": "slot0_node_g3_i1_value",
+      "offset": 80,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Slot-0 node value byte: low byte of word 2 of group 3 (item 2); group/item stored via FUN_08005850.",
+      "evidence": "FUN_08022754 loop (uVar6=3,bVar1=2) reads 4-byte word at save offset 84 via FUN_0802dddc and passes its low byte as value to FUN_08005850(3,2,x,y,value), stored at node table DAT_080058a8 + 0x48*3 + 0xc*2 + 8 (read back by FUN_080059ac).",
+      "name": "slot0_node_g3_i2_value",
+      "offset": 84,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Slot-0 node value byte: low byte of word 3 of group 3 (item 3); group/item stored via FUN_08005850.",
+      "evidence": "FUN_08022754 loop (uVar6=3,bVar1=3) reads 4-byte word at save offset 88 via FUN_0802dddc and passes its low byte as value to FUN_08005850(3,3,x,y,value), stored at node table DAT_080058a8 + 0x48*3 + 0xc*3 + 8 (read back by FUN_080059ac).",
+      "name": "slot0_node_g3_i3_value",
+      "offset": 88,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Slot-0 node value byte: low byte of word 4 of group 3 (item 5; item index 4 has no stored word); stored via FUN_08005850.",
+      "evidence": "FUN_08022754 loop (uVar6=3,bVar1=5, index 4 skipped) reads 4-byte word at save offset 92 via FUN_0802dddc and passes its low byte as value to FUN_08005850(3,5,x,y,value), stored at node table DAT_080058a8 + 0x48*3 + 0xc*5 + 8 (read back by FUN_080059ac).",
+      "name": "slot0_node_g3_i5_value",
+      "offset": 92,
+      "size": 1,
+      "type": "u8"
     }
-  ]
+  ],
+  "game_code": "ALDE",
+  "id": "alde",
+  "magic_signatures": [
+    {
+      "bytes": [
+        83,
+        73,
+        65,
+        33
+      ],
+      "description": "ASCII 'SIA!' save tag: first word of the 8-byte stamp written by FUN_08022a44 (ROM constant DAT_08022a64); verified against rev8-logical bytes [0,4) of samples/baseline.sav.",
+      "offset": 0
+    }
+  ],
+  "media": "eeprom512",
+  "size_bytes": 512,
+  "title": "Lady Sia (USA) (En,Fr,Es,It,Nl)"
 }

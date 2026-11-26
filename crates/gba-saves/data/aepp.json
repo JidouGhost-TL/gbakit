@@ -1,45 +1,219 @@
 {
-  "id": "aepp",
-  "game_code": "AEPP",
-  "title": "Sheep (Europe) (En,Fr,De,Es,It)",
-  "media": "eeprom8k",
-  "size_bytes": 8192,
-  "magic_signatures": [
+  "checksums": [
     {
-      "offset": 0,
-      "bytes": [
-        86,
-        83,
-        72,
-        83
-      ]
+      "algorithm": "crc16_x25",
+      "covered_end": 344,
+      "covered_start": 8,
+      "name": "slot_0_crc",
+      "stored_offset": 340
+    },
+    {
+      "algorithm": "crc16_x25",
+      "covered_end": 680,
+      "covered_start": 344,
+      "name": "slot_1_crc",
+      "stored_offset": 676
+    },
+    {
+      "algorithm": "crc16_x25",
+      "covered_end": 1016,
+      "covered_start": 680,
+      "name": "slot_2_crc",
+      "stored_offset": 1012
+    },
+    {
+      "algorithm": "crc16_x25",
+      "covered_end": 1596,
+      "covered_start": 1352,
+      "name": "hs_block_a_crc",
+      "stored_offset": 1840
+    },
+    {
+      "algorithm": "crc16_x25",
+      "covered_end": 1840,
+      "covered_start": 1596,
+      "name": "hs_block_b_crc",
+      "stored_offset": 1848
     }
   ],
-  "checksums": [],
+  "eeprom_rev8": true,
   "fields": [
     {
-      "name": "magic_header",
+      "confidence": "confirmed",
+      "constraint": {
+        "allowed": "ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+        "kind": "ascii-charset",
+        "max_len": 4
+      },
+      "description": "4-byte boot signature 'SHSV' at save start; FUN_08007b84 compares these 4 bytes against ROM defaults and calls FUN_080419f4 factory init on mismatch.",
+      "evidence": "FUN_08007b84 copies 5 bytes from DAT_08007d14 and compares save bytes [0..4) then u32 [4..8); full-image EEPROM load FUN_080435f4 via FUN_08041728; logical-domain bytes 53 48 53 56 prove eeprom_rev8.",
+      "name": "boot_signature",
       "offset": 0,
       "size": 4,
       "type": "ascii"
     },
     {
-      "name": "slot_counter",
+      "confidence": "confirmed",
+      "description": "32-bit boot validation word (0x7F in baseline); FUN_08007b84 compares *(save+4) against *DAT_08007d50 and runs FUN_080419f4 factory defaults on mismatch.",
+      "evidence": "FUN_08007b84 line ~2423: if (*(pcVar4+4) != *DAT_08007d50) FUN_080419f4(pcVar4); FUN_080419f4 default path writes *(param_1+4) from ROM.",
+      "name": "header_word",
       "offset": 4,
-      "size": 2,
-      "type": "u16_le"
+      "size": 4,
+      "type": "u32_le"
     },
     {
-      "name": "game_progress_flags",
-      "offset": 6,
-      "size": 2,
-      "type": "u16_le"
+      "confidence": "confirmed",
+      "description": "High-score table A entry 1 score; factory default 1000 written by FUN_080435f4 'E' path and FUN_080419f4; covered by hs_block_a_crc.",
+      "evidence": "FUN_080435f4 writes *(param_1+0x548)=1000; FUN_080018f8/FUN_0800190e recompute CRC over [0x548,0x63C) and write back via FUN_0804190c; FUN_08008b28 copies active 0xF4 block.",
+      "name": "hs_a_score_1",
+      "offset": 1352,
+      "size": 4,
+      "type": "u32_le"
     },
     {
-      "name": "player_status_payload",
-      "offset": 8,
-      "size": 16,
-      "type": "bytes"
+      "confidence": "likely",
+      "constraint": {
+        "allowed": " -ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789",
+        "kind": "ascii-charset",
+        "max_len": 8
+      },
+      "description": "High-score table A entry 1 name (8 chars, NUL-terminated at +8); default '--------' copied by ROM default-name writers.",
+      "evidence": "FUN_080419f4/FUN_080422ba/FUN_0804412c copy NUL-terminated default-name strings into 0x54C+ entry name slots; baseline holds eight 0x2D bytes.",
+      "name": "hs_a_name_1",
+      "offset": 1356,
+      "size": 8,
+      "type": "ascii"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "High-score table A entry 2 score; factory default 500.",
+      "evidence": "FUN_080435f4 writes *(param_1+0x560)=500; CRC/writeback FUN_080018f8/FUN_0800190e over [0x548,0x63C).",
+      "name": "hs_a_score_2",
+      "offset": 1376,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "constraint": {
+        "allowed": " -ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789",
+        "kind": "ascii-charset",
+        "max_len": 8
+      },
+      "description": "High-score table A entry 2 name (8 chars); default '--------'.",
+      "evidence": "FUN_080419f4/FUN_080422ba/FUN_0804412c default-name string copies into 0x564+ entry name slots.",
+      "name": "hs_a_name_2",
+      "offset": 1380,
+      "size": 8,
+      "type": "ascii"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "High-score table A entry 3 score; factory default 300.",
+      "evidence": "FUN_080435f4 writes *(param_1+0x578)=300; CRC/writeback FUN_080018f8/FUN_0800190e over [0x548,0x63C).",
+      "name": "hs_a_score_3",
+      "offset": 1400,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "constraint": {
+        "allowed": " -ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789",
+        "kind": "ascii-charset",
+        "max_len": 8
+      },
+      "description": "High-score table A entry 3 name (8 chars); default '--------'.",
+      "evidence": "FUN_080419f4/FUN_080422ba/FUN_0804412c default-name string copies into 0x57C+ entry name slots.",
+      "name": "hs_a_name_3",
+      "offset": 1404,
+      "size": 8,
+      "type": "ascii"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "High-score table A entry 4 score; factory default 200.",
+      "evidence": "FUN_080435f4 writes *(param_1+0x590)=200; CRC/writeback FUN_080018f8/FUN_0800190e over [0x548,0x63C).",
+      "name": "hs_a_score_4",
+      "offset": 1424,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "constraint": {
+        "allowed": " -ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789",
+        "kind": "ascii-charset",
+        "max_len": 8
+      },
+      "description": "High-score table A entry 4 name (8 chars); default '--------'.",
+      "evidence": "FUN_080419f4/FUN_080422ba/FUN_0804412c default-name string copies into 0x594+ entry name slots.",
+      "name": "hs_a_name_4",
+      "offset": 1428,
+      "size": 8,
+      "type": "ascii"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "High-score table A entry 5 score; factory default 100.",
+      "evidence": "FUN_080435f4 writes *(param_1+0x5A8)=100; CRC/writeback FUN_080018f8/FUN_0800190e over [0x548,0x63C).",
+      "name": "hs_a_score_5",
+      "offset": 1448,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "constraint": {
+        "allowed": " -ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789",
+        "kind": "ascii-charset",
+        "max_len": 8
+      },
+      "description": "High-score table A entry 5 name (8 chars); default '--------'.",
+      "evidence": "FUN_080419f4/FUN_080422ba/FUN_0804412c default-name string copies into 0x5AC+ entry name slots.",
+      "name": "hs_a_name_5",
+      "offset": 1452,
+      "size": 8,
+      "type": "ascii"
+    },
+    {
+      "confidence": "likely",
+      "constraint": {
+        "kind": "enum",
+        "labels": {
+          "1": "Set1",
+          "2": "Set2",
+          "3": "Set3"
+        },
+        "values": [
+          1,
+          2,
+          3
+        ]
+      },
+      "description": "High-score default-name variant selector tailing block A (baseline 3); written as 1, 2 or 3 by language-dependent default paths.",
+      "evidence": "FUN_080419f4 writes param_1[0x638]=1/2 ('E'/'J' branches), FUN_080435f4 'E' path writes 2, FUN_080422ba and FUN_0804412c write 3; value 3 in baseline.",
+      "name": "default_name_set",
+      "offset": 1592,
+      "size": 1,
+      "type": "u8"
     }
-  ]
+  ],
+  "game_code": "AEPP",
+  "id": "aepp",
+  "magic_signatures": [
+    {
+      "bytes": [
+        83,
+        72,
+        83,
+        86
+      ],
+      "description": "ASCII 'SHSV' boot signature (logical rev8 domain)",
+      "offset": 0
+    }
+  ],
+  "media": "eeprom8k",
+  "size_bytes": 8192,
+  "title": "Sheep (Europe) (En,Fr,De,Es,It)"
 }

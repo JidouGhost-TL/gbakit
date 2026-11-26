@@ -1,45 +1,99 @@
 {
-  "id": "alhj",
-  "game_code": "ALHJ",
-  "title": "Love Hina Advance - Shukufuku no Kane wa Naru Kana (Japan)",
-  "media": "eeprom512",
-  "size_bytes": 512,
-  "magic_signatures": [
-    {
-      "offset": 0,
-      "bytes": [
-        49,
-        48,
-        48,
-        48
-      ]
-    }
-  ],
   "checksums": [],
+  "eeprom_rev8": true,
   "fields": [
     {
-      "name": "magic_header",
+      "confidence": "confirmed",
+      "description": "Default header title copy 0: Shift-JIS for 'Rabu Hina' (Love Hina). First 8-byte EEPROM unit of the 24-byte ROM-default header.",
+      "evidence": "FUN_08006958 copies 0x20 bytes from ROM default (DAT_080069ec) into local buffer and writes EEPROM addresses 0-4 via FUN_0800c1fc/FUN_0800c0c0; address 0 covers logical save offsets 0x00-0x07. Baseline rev8-logical bytes 0x00-0x07 decode as Shift-JIS 'Rabu Hina'.",
+      "name": "header_title_copy_0",
       "offset": 0,
-      "size": 4,
+      "size": 8,
+      "type": "bytes"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Default header title copy 1: Shift-JIS for 'Rabu Hina'. Second 8-byte EEPROM unit of the header.",
+      "evidence": "FUN_08006958 writes EEPROM address 1 via FUN_0800c1fc/FUN_0800c0c0 covering logical save offsets 0x08-0x0F. Baseline rev8-logical bytes 0x08-0x0F are byte-identical to copy 0 and decode as Shift-JIS 'Rabu Hina'.",
+      "name": "header_title_copy_1",
+      "offset": 8,
+      "size": 8,
+      "type": "bytes"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Default header title copy 2: Shift-JIS for 'Rabu Hina'. Third 8-byte EEPROM unit of the header.",
+      "evidence": "FUN_08006958 writes EEPROM address 2 via FUN_0800c1fc/FUN_0800c0c0 covering logical save offsets 0x10-0x17. Baseline rev8-logical bytes 0x10-0x17 are byte-identical to copies 0/1 and decode as Shift-JIS 'Rabu Hina'.",
+      "name": "header_title_copy_2",
+      "offset": 16,
+      "size": 8,
+      "type": "bytes"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Save magic trailer 'save0001' terminating the 32-byte ROM-default header.",
+      "evidence": "FUN_08006958 writes EEPROM address 3 via FUN_0800c1fc/FUN_0800c0c0 covering logical save offsets 0x18-0x1F. Baseline rev8-logical bytes 0x18-0x1F read exactly 'save0001'.",
+      "name": "save_magic_save0001",
+      "offset": 24,
+      "size": 8,
       "type": "ascii"
     },
     {
-      "name": "slot_counter",
-      "offset": 4,
+      "confidence": "confirmed",
+      "description": "Live gameplay/config state word: 4 bytes serializeled little-endian from the RAM word behind DAT_08006bd4 into EEPROM block 4. Zero in a fresh (baseline) save.",
+      "evidence": "FUN_08006b48 loads the 4-byte RAM value *DAT_08006bd4 and stores it little-endian into buffer bytes 0x20-0x23, then commits the 8-byte unit to EEPROM address 4 via FUN_0800c1fc/FUN_0800c0c0 (logical save offsets 0x20-0x27). Baseline rev8-logical value is 0.",
+      "name": "save_data_word32",
+      "offset": 32,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Live gameplay/config state half-word: 2 bytes serialized little-endian from the RAM value behind DAT_08006bd8 into EEPROM block 4. Zero in a fresh (baseline) save.",
+      "evidence": "FUN_08006b48 loads the 2-byte RAM value *DAT_08006bd8 and stores it little-endian into buffer bytes 0x24-0x25, then commits the 8-byte unit to EEPROM address 4 via FUN_0800c1fc/FUN_0800c0c0 (logical save offsets 0x20-0x27). Baseline rev8-logical value is 0.",
+      "name": "save_data_half16",
+      "offset": 36,
       "size": 2,
       "type": "u16_le"
     },
     {
-      "name": "game_progress_flags",
-      "offset": 6,
+      "confidence": "likely",
+      "description": "Reserved tail of EEPROM block 4: written as zeros by the format path and left untouched by the live-update path.",
+      "evidence": "FUN_08006958 zero-pads the local buffer through 0x28 and writes EEPROM address 4 (logical offsets 0x20-0x27) via FUN_0800c1fc; FUN_08006b48 only fills buffer bytes 0x20-0x25 before rewriting the same address. Baseline rev8-logical bytes 0x26-0x27 are zero.",
+      "name": "block4_reserved",
+      "offset": 38,
       "size": 2,
-      "type": "u16_le"
+      "type": "bytes"
     },
     {
-      "name": "player_status_payload",
-      "offset": 8,
-      "size": 16,
+      "confidence": "likely",
+      "description": "Zero guard block terminating the 48-byte save record; format path writes zeros here.",
+      "evidence": "FUN_08006958 second loop writes 8 zero bytes via FUN_0800c1fc starting at EEPROM address 5, covering logical save offsets 0x28-0x2F (with further zero guards at 0x58, 0x88, 0xB8, 0xE8, 0x118, 0x148, 0x178, 0x1A8). Baseline rev8-logical bytes 0x28-0x2F are zero.",
+      "name": "record_zero_guard",
+      "offset": 40,
+      "size": 8,
       "type": "bytes"
     }
-  ]
+  ],
+  "game_code": "ALHJ",
+  "id": "alhj",
+  "magic_signatures": [
+    {
+      "bytes": [
+        115,
+        97,
+        118,
+        101,
+        48,
+        48,
+        48,
+        49
+      ],
+      "description": "ASCII 'save0001' header trailer at logical offset 0x18",
+      "offset": 24
+    }
+  ],
+  "media": "eeprom512",
+  "size_bytes": 512,
+  "title": "Love Hina Advance - Shukufuku no Kane wa Naru Kana (Japan)"
 }

@@ -1,45 +1,164 @@
 {
-  "id": "ad2p",
+  "checksums": [
+    {
+      "algorithm": "sum32_le_words",
+      "covered_end": 916,
+      "covered_start": 0,
+      "description": "Header LE-word sum stored by FUN_08000f8c via FUN_080011a0 (sums 229 LE words over bytes 0..915) and verified by FUN_08001154; baseline sum 0x1703c08 matches stored word.",
+      "name": "header_checksum",
+      "seed": 0,
+      "stored_offset": 916,
+      "xor_out": 0
+    }
+  ],
+  "fields": [
+    {
+      "confidence": "likely",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 9999999,
+        "minimum": 0
+      },
+      "description": "Best score of mode slot 0 (word [2] of the stride-0x20 per-mode record array).",
+      "evidence": "FUN_08004440 keeps a param_1-indexed record array with stride 0x20 (param_1 * 0x20 + DAT_0800462c) and stores the best score into word piVar9[2] when a new result exceeds it; the record is persisted by FUN_08000f8c. Baseline shows 599999 at file offsets 0x38/0x58/0x78/0x98 (array word [2] of entries based at 0x30 + k*0x20).",
+      "name": "mode1_best_score",
+      "offset": 56,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 9999999,
+        "minimum": 0
+      },
+      "description": "Best score of mode slot 1 (word [2] of the stride-0x20 per-mode record array).",
+      "evidence": "FUN_08004440 keeps a param_1-indexed record array with stride 0x20 (param_1 * 0x20 + DAT_0800462c) and stores the best score into word piVar9[2]; persisted by FUN_08000f8c. Second entry word [2] at file offset 0x58, baseline 599999.",
+      "name": "mode2_best_score",
+      "offset": 88,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 9999999,
+        "minimum": 0
+      },
+      "description": "Best score of mode slot 2 (word [2] of the stride-0x20 per-mode record array).",
+      "evidence": "FUN_08004440 keeps a param_1-indexed record array with stride 0x20 (param_1 * 0x20 + DAT_0800462c) and stores the best score into word piVar9[2]; persisted by FUN_08000f8c. Third entry word [2] at file offset 0x78, baseline 599999.",
+      "name": "mode3_best_score",
+      "offset": 120,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 9999999,
+        "minimum": 0
+      },
+      "description": "Best score of mode slot 3 (word [2] of the stride-0x20 per-mode record array).",
+      "evidence": "FUN_08004440 keeps a param_1-indexed record array with stride 0x20 (param_1 * 0x20 + DAT_0800462c) and stores the best score into word piVar9[2]; persisted by FUN_08000f8c. Fourth entry word [2] at file offset 0x98, baseline 599999.",
+      "name": "mode4_best_score",
+      "offset": 152,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Gameplay/config value staged at record offset +0x18 before save.",
+      "evidence": "FUN_08004440 stages a live gameplay u16 into its save record at +0x18 (*(undefined2 *)(piVar1 + 6)) and an option byte at +0x1a before calling FUN_08000f8c to persist the 0x398-byte header; baseline file offsets 0x18/0x19 read 0x03 0x03.",
+      "name": "option_value_a",
+      "offset": 24,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Gameplay/config value staged at record offset +0x19 before save.",
+      "evidence": "FUN_08004440 stages a live gameplay u16 into its save record at +0x18 (*(undefined2 *)(piVar1 + 6)) and an option byte at +0x1a before calling FUN_08000f8c to persist the 0x398-byte header; baseline file offsets 0x18/0x19 read 0x03 0x03.",
+      "name": "option_value_b",
+      "offset": 25,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Best result (x256 fixed point, 59999 << 8) of time-attack table entry 0.",
+      "evidence": "FUN_08005e30 keeps a param_1-indexed table with stride 0x10 (param_1 * 0x10 + DAT_08005ebc) and stores the best result as piVar9[2] = param_2 * 0x100, displayed via >> 8 into puVar3[10]; persisted by FUN_08000f8c. With the table based at file offset 0xE0, entry 0 word [2] lands at 0xE8; baseline 0x00EA5F00 at 0xE8/0xF8/0x108 and 17 further 0x10 steps through 0x218 (20 entries).",
+      "name": "timeattack_best_0",
+      "offset": 232,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Best result (x256 fixed point, 59999 << 8) of time-attack table entry 1.",
+      "evidence": "FUN_08005e30 keeps a param_1-indexed table with stride 0x10 (param_1 * 0x10 + DAT_08005ebc) and stores the best result as piVar9[2] = param_2 * 0x100; persisted by FUN_08000f8c. Entry 1 word [2] at file offset 0xF8, baseline 0x00EA5F00.",
+      "name": "timeattack_best_1",
+      "offset": 248,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Best result (x256 fixed point, 59999 << 8) of time-attack table entry 2.",
+      "evidence": "FUN_08005e30 keeps a param_1-indexed table with stride 0x10 (param_1 * 0x10 + DAT_08005ebc) and stores the best result as piVar9[2] = param_2 * 0x100; persisted by FUN_08000f8c. Entry 2 word [2] at file offset 0x108, baseline 0x00EA5F00.",
+      "name": "timeattack_best_2",
+      "offset": 264,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Ranking-table slot 0 key: -1 (0xFFFFFFFF) means empty slot.",
+      "evidence": "FUN_08006ae0 implements a 20-entry ranked insert over a stride-0x10 table at save base +0x22c (loop bound 0x13, key compare *(int *)(iVar8 * 0x10 + DAT_08006b90 + 0x22c) != param_1, entry shift on insert); persisted by FUN_08000f8c. Baseline shows 20 x 0xFFFFFFFF words at 0x22C + k*0x10 through 0x35C.",
+      "name": "rank_slot0_key",
+      "offset": 556,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Ranking-table slot 0 sub-key stored at entry offset +0xC.",
+      "evidence": "FUN_08006ae0 stores param_2 into the ranked entry at +0x238 (*(int *)(iVar4 + 0x238)) alongside the +0x22c key; persisted by FUN_08000f8c. Baseline file offset 0x238 reads 0x00000000 (empty slot).",
+      "name": "rank_slot0_subkey",
+      "offset": 568,
+      "size": 4,
+      "type": "u32_le"
+    }
+  ],
   "game_code": "AD2P",
-  "title": "Mr. Driller 2 (Europe)",
-  "media": "sram",
-  "size_bytes": 32768,
+  "id": "ad2p",
   "magic_signatures": [
     {
-      "offset": 0,
       "bytes": [
         77,
         82,
         46,
-        32
-      ]
+        32,
+        68,
+        82,
+        73,
+        76,
+        76,
+        69,
+        82,
+        50,
+        65,
+        68,
+        50,
+        80
+      ],
+      "description": "ASCII 'MR. DRILLER2AD2P' header trailer verified by FUN_08001154 16-byte compare at save offset 0x384.",
+      "offset": 900
     }
   ],
-  "checksums": [],
-  "fields": [
-    {
-      "name": "magic_header",
-      "offset": 0,
-      "size": 4,
-      "type": "ascii"
-    },
-    {
-      "name": "slot_counter",
-      "offset": 4,
-      "size": 2,
-      "type": "u16_le"
-    },
-    {
-      "name": "game_progress_flags",
-      "offset": 6,
-      "size": 2,
-      "type": "u16_le"
-    },
-    {
-      "name": "player_status_payload",
-      "offset": 8,
-      "size": 16,
-      "type": "bytes"
-    }
-  ]
+  "media": "sram",
+  "size_bytes": 32768,
+  "title": "Mr. Driller 2 (Europe)"
 }

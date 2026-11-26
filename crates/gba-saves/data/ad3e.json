@@ -1,45 +1,94 @@
 {
-  "id": "ad3e",
-  "game_code": "AD3E",
-  "title": "Dinotopia - The Timestone Pirates (USA, Europe) (En,Fr,De,Es,It,Nl)",
-  "media": "eeprom512",
-  "size_bytes": 512,
-  "magic_signatures": [
+  "checksums": [
     {
-      "offset": 0,
-      "bytes": [
-        111,
-        110,
-        105,
-        100
-      ]
+      "algorithm": "xor8",
+      "covered_end": 25,
+      "covered_start": 6,
+      "name": "payload_xor8",
+      "stored_offset": 5
     }
   ],
-  "checksums": [],
+  "eeprom_rev8": true,
   "fields": [
     {
-      "name": "magic_header",
-      "offset": 0,
-      "size": 4,
-      "type": "ascii"
-    },
-    {
-      "name": "slot_counter",
+      "confidence": "confirmed",
+      "description": "Save format marker: FUN_08003410 always writes constant value 5 here after the magic.",
+      "evidence": "FUN_08003410 sets local_c=5 and writes EEPROM byte 4 via FUN_08012ec0(&local_c,4,1); baseline logical byte 4 = 0x05.",
+      "name": "save_format_marker",
       "offset": 4,
-      "size": 2,
-      "type": "u16_le"
+      "size": 1,
+      "type": "u8"
     },
     {
-      "name": "game_progress_flags",
+      "confidence": "likely",
+      "description": "First two bytes of the 19-byte payload window; preserved under the payload XOR checksum. No dedicated writer in decomp.",
+      "evidence": "Bytes lie in EEPROM [6,0x19) window read by FUN_08013040(auStack_20,6,0x13) and covered by the FUN_080034ec XOR checksum stored at byte 5 in FUN_08003410; baseline logical bytes [6,8) = ff 03.",
+      "name": "payload_head",
       "offset": 6,
       "size": 2,
-      "type": "u16_le"
+      "type": "bytes"
     },
     {
-      "name": "player_status_payload",
+      "confidence": "likely",
+      "description": "Three zero bytes inside the checksummed payload window; preserved under the payload XOR checksum.",
+      "evidence": "Bytes lie in EEPROM [6,0x19) window read by FUN_08013040(auStack_20,6,0x13) and covered by the FUN_080034ec XOR checksum stored at byte 5 in FUN_08003410; baseline logical bytes [8,11) = 00 00 00.",
+      "name": "payload_zeroes",
       "offset": 8,
-      "size": 16,
+      "size": 3,
       "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Eleven-byte block inside the checksummed payload window (baseline fill 0x42); preserved under the payload XOR checksum. No dedicated writer in decomp.",
+      "evidence": "Bytes lie in EEPROM [6,0x19) window read by FUN_08013040(auStack_20,6,0x13) and covered by the FUN_080034ec XOR checksum stored at byte 5 in FUN_08003410; baseline logical bytes [11,22) are eleven 0x42 bytes.",
+      "name": "payload_block",
+      "offset": 11,
+      "size": 11,
+      "type": "bytes"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Progress high-water mark: only ever raised to a new maximum (or set to 7 on reset).",
+      "evidence": "FUN_080033c8 writes RAM mirror *DAT_0803415c to EEPROM byte 0x16 via FUN_08012ec0(local_8,0x16,1); called from FUN_0803410c monotonic-max update and FUN_0803418c (writes 7); baseline logical byte 0x16 = 0x07.",
+      "name": "progress_highwater",
+      "offset": 22,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Spare byte inside the checksummed payload window between the two progress bytes; preserved under the payload XOR checksum.",
+      "evidence": "Byte lies in EEPROM [6,0x19) window read by FUN_08013040(auStack_20,6,0x13) and covered by the FUN_080034ec XOR checksum stored at byte 5 in FUN_08003410; baseline logical byte 23 = 0xff.",
+      "name": "payload_spare",
+      "offset": 23,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Companion progress value written together with progress_highwater on every save.",
+      "evidence": "FUN_080033f8 writes *DAT_08034160 to EEPROM byte 0x18 via FUN_08012ec0(local_8,0x18,1); also written as 6 by FUN_0803418c and FUN_080341c4; baseline logical byte 0x18 = 0x06.",
+      "name": "progress_companion",
+      "offset": 24,
+      "size": 1,
+      "type": "u8"
     }
-  ]
+  ],
+  "game_code": "AD3E",
+  "id": "ad3e",
+  "magic_signatures": [
+    {
+      "bytes": [
+        100,
+        105,
+        110,
+        111
+      ],
+      "description": "ASCII 'dino' save magic at start of EEPROM (logical rev8 domain)",
+      "offset": 0
+    }
+  ],
+  "media": "eeprom512",
+  "size_bytes": 512,
+  "title": "Dinotopia - The Timestone Pirates (USA, Europe) (En,Fr,De,Es,It,Nl)"
 }

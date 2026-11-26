@@ -1,45 +1,105 @@
 {
-  "id": "a2hj",
-  "game_code": "A2HJ",
-  "title": "Hajime no Ippo - The Fighting! (Japan)",
-  "media": "eeprom512",
-  "size_bytes": 512,
-  "magic_signatures": [
+  "checksums": [
     {
-      "offset": 0,
-      "bytes": [
-        79,
-        80,
-        80,
-        73
-      ]
+      "algorithm": "sum8_inv",
+      "covered_end": 11,
+      "covered_start": 0,
+      "name": "header_checksum",
+      "stored_offset": 11
     }
   ],
-  "checksums": [],
+  "eeprom_rev8": true,
   "fields": [
     {
-      "name": "magic_header",
+      "confidence": "confirmed",
+      "constraint": {
+        "allowed": "ABCDEFGHIJKLMNOPQRSTUVWXYZ ",
+        "kind": "ascii-charset",
+        "max_len": 8
+      },
+      "description": "Boxer/save name, space-padded (defaults to IPPO). First 8 bytes of the 12-byte tagged header block.",
+      "evidence": "FUN_0800a944 copies 8 bytes from the name pointer (*param_1) to block offset +0x00 via FUN_08000ccc(iVar5,*param_1,8); FUN_0800aa58(iVar5,0xb) covers bytes 0..10 in the header checksum. Baseline logical bytes 0x00-0x07 read 'IPPO    '.",
+      "name": "boxer_name",
       "offset": 0,
-      "size": 4,
+      "size": 8,
       "type": "ascii"
     },
     {
-      "name": "slot_counter",
-      "offset": 4,
-      "size": 2,
-      "type": "u16_le"
-    },
-    {
-      "name": "game_progress_flags",
-      "offset": 6,
-      "size": 2,
-      "type": "u16_le"
-    },
-    {
-      "name": "player_status_payload",
+      "confidence": "likely",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 57,
+        "minimum": 48
+      },
+      "description": "First record character at block offset +0x08; ASCII digit ('0' on fresh save, part of the '000' record trio, likely win/draw/loss digits).",
+      "evidence": "FUN_0800a944 copies 3 bytes from the record pointer (param_1[1]) to block offset +0x08 via FUN_08000ccc(*piVar1+8,param_1[1],3); covered by the FUN_0800aa58 header checksum. Baseline logical byte 0x08 is 0x30 ('0').",
+      "name": "record_digit_0",
       "offset": 8,
-      "size": 16,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 57,
+        "minimum": 48
+      },
+      "description": "Second record character at block offset +0x09; ASCII digit ('0' on fresh save).",
+      "evidence": "FUN_0800a944 3-byte record copy to block offset +0x08 via FUN_08000ccc(*piVar1+8,param_1[1],3); covered by the FUN_0800aa58 header checksum. Baseline logical byte 0x09 is 0x30 ('0').",
+      "name": "record_digit_1",
+      "offset": 9,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "constraint": {
+        "kind": "unsigned-range",
+        "maximum": 57,
+        "minimum": 48
+      },
+      "description": "Third record character at block offset +0x0A; ASCII digit ('0' on fresh save).",
+      "evidence": "FUN_0800a944 3-byte record copy to block offset +0x08 via FUN_08000ccc(*piVar1+8,param_1[1],3); covered by the FUN_0800aa58 header checksum. Baseline logical byte 0x0A is 0x30 ('0').",
+      "name": "record_digit_2",
+      "offset": 10,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Header check byte: bitwise-NOT of the plain byte sum of block bytes 0x00-0x0A, stored at block offset +0x0B.",
+      "evidence": "FUN_0800a944 stores uVar3=FUN_0800aa58(iVar5,0xb) at *(iVar5+0xb) (via *DAT_0800aa34=iVar5+0xb); FUN_0800aa58 sums param_2 bytes and returns (~sum)&0xFF. Baseline: sum(0x00..0x0A)=0x48, stored 0xB7=(~0x48)&0xFF; gbakit sum8_inv over [0,11) verifies.",
+      "name": "header_checksum_value",
+      "offset": 11,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Unwritten tail of the 16-byte header allocation (allocator-cleared, always zero in baseline).",
+      "evidence": "FUN_0800a944 allocates the header block with FUN_08000db4(0x10) but stores only offsets 0x00-0x0B (8 name + 3 record + 1 checksum); offsets 0x0C-0x0F are never written. Baseline logical bytes 0x0C-0x0F are 0x00.",
+      "name": "header_reserved",
+      "offset": 12,
+      "size": 4,
       "type": "bytes"
     }
-  ]
+  ],
+  "game_code": "A2HJ",
+  "id": "a2hj",
+  "magic_signatures": [
+    {
+      "bytes": [
+        73,
+        80,
+        80,
+        79
+      ],
+      "description": "ASCII 'IPPO' boxer-name magic at start of save (logical rev8 domain)",
+      "offset": 0
+    }
+  ],
+  "media": "eeprom512",
+  "size_bytes": 512,
+  "title": "Hajime no Ippo - The Fighting! (Japan)"
 }

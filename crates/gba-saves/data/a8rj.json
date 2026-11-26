@@ -1,45 +1,109 @@
 {
-  "id": "a8rj",
+  "checksums": [],
+  "copy_groups": [],
+  "fields": [
+    {
+      "confidence": "likely",
+      "description": "First header byte of the SRAM image (0x03 in baseline). Verified against samples/baseline.sav.",
+      "evidence": "File offset 0x00 holds 0x03 in samples/baseline.sav. Same-image family as the byte compared against 0x03 in the per-record converter FUN_08069138 (line 9732: *(char *)(iVar3 - 0x12 + uVar7) == '\\x03'). Bulk SRAM persistence for this title goes through the ROM CpuSet/CpuFastSet shims FUN_0809a910 (SWI 0xB, line 24462) / FUN_0809a90c (SWI 0xC, line 24452), e.g. the table-driven copy in FUN_0808ff64 (line 19462), with zero-fill via FUN_0809ae28 (line 24834), e.g. FUN_0808fef8 (line 19402).",
+      "name": "header_tag",
+      "offset": 0,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Second header byte of the SRAM image (0x01 in baseline). Verified against samples/baseline.sav.",
+      "evidence": "File offset 0x01 holds 0x01 in samples/baseline.sav. RAM-side game state is a large EWRAM struct rooted at DAT_08090354 whose span matches this 0x624-byte SRAM image: FUN_0809023c (line 19569) initializes words at +0x5c/+0x60/+0x64/+0x68/+0x6c/+0x70 and clears the valid-flag bit at +0x624 (line 19574). Persisted with FUN_0809a910/FUN_0809a90c bulk copies.",
+      "name": "header_subtag",
+      "offset": 1,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Header numeric value at file offset 0x04 (99 / 0x63 in baseline, little-endian u8 with zero padding at 0x05-0x07). Verified against samples/baseline.sav.",
+      "evidence": "File bytes at 0x04-0x07 are 63 00 00 00 in samples/baseline.sav. Per-player RAM records are indexed (index & 0xff) * 0x124 with per-record byte/word access in FUN_0806af38 (line 10341: *(byte *)((param_1 & 0xff) * 0x124 + DAT_0806afd4 + 2)) and FUN_0806b18c (line 10546); header scalars like this one travel in the same EWRAM state image rooted at DAT_08090354 (FUN_0809023c, line 19569) that is bulk-copied to SRAM via FUN_0809a910/FUN_0809a90c.",
+      "name": "header_value",
+      "offset": 4,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "constraint": {
+        "allowed": "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 ",
+        "kind": "ascii-charset",
+        "max_len": 12
+      },
+      "description": "Default player-name slot: 12 space-filled ASCII bytes (all 0x20 in baseline). Verified against samples/baseline.sav.",
+      "evidence": "File offsets 0x12-0x1D hold twelve 0x20 bytes in samples/baseline.sav. This ROM's text pipeline uses 0x20 (space) as the default/out-of-range glyph: FUN_08002720 returns 0x20 when the char index is >= 0x14 (line 658), and FUN_08002810 stores 0x20 into the glyph slot on the fallback path (line 720). Name-shaped space-filled buffers are written with the same byte-store idiom used across the ROM's EWRAM record code.",
+      "name": "player_name",
+      "offset": 18,
+      "size": 12,
+      "type": "ascii"
+    },
+    {
+      "confidence": "likely",
+      "description": "Trailing marker byte of roster entry 0 (file 0x30 + 0*76 + 71 = 0x77; 0x20 in baseline). All 20 entries carry this marker; verified against samples/baseline.sav.",
+      "evidence": "File offset 0x77 holds 0x20 in samples/baseline.sav; identical markers repeat every 76 bytes through 0x61B (stride verified in Python over 20 entries). Per-character record conversion with per-entry flag bytes is FUN_08069138 (lines 9730-9777: dest offsets +0x44..+0x71 mapped from source +0x04..+0x18, flag bytes at +0x6c/+0x6d/+0x70/+0x71); per-player indexed record access is (index & 0xff) * 0x124 in FUN_0806af38 (line 10341) and FUN_0806b18c (line 10546).",
+      "name": "roster_entry_00_mark",
+      "offset": 119,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Trailing marker byte of roster entry 1 (file 0x30 + 1*76 + 71 = 0xC3; 0x20 in baseline). Verified against samples/baseline.sav.",
+      "evidence": "File offset 0xC3 holds 0x20 in samples/baseline.sav (second of 20 stride-76 markers). Same grounding as roster_entry_00_mark: per-character record mapping in FUN_08069138 (lines 9730-9777, flag bytes +0x6c/+0x6d/+0x70/+0x71) and indexed player records (index & 0xff) * 0x124 in FUN_0806af38 (line 10341) / FUN_0806b18c (line 10546).",
+      "name": "roster_entry_01_mark",
+      "offset": 195,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Trailing marker byte of roster entry 2 (file 0x30 + 2*76 + 71 = 0x10F; 0x20 in baseline). Verified against samples/baseline.sav.",
+      "evidence": "File offset 0x10F holds 0x20 in samples/baseline.sav (third of 20 stride-76 markers). Same grounding as roster_entry_00_mark: FUN_08069138 per-character record mapping (lines 9730-9777) and indexed player records in FUN_0806af38 (line 10341) / FUN_0806b18c (line 10546).",
+      "name": "roster_entry_02_mark",
+      "offset": 271,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Trailing marker byte of roster entry 19, the last entry (file 0x30 + 19*76 + 71 = 0x61B; 0x20 in baseline). Proves the 20-entry array extent. Verified against samples/baseline.sav.",
+      "evidence": "File offset 0x61B holds 0x20 in samples/baseline.sav, immediately before the TPRD magic at 0x61C, closing the 20 x 76-byte array that starts at 0x30 (0x30 + 20*76 = 0x620 span verified in Python). Same record-mapping grounding: FUN_08069138 (lines 9730-9777), FUN_0806af38 (line 10341), FUN_0806b18c (line 10546).",
+      "name": "roster_entry_19_mark",
+      "offset": 1563,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "guessed",
+      "description": "Trailer word directly after the TPRD magic (0xF43C in baseline). No Schema v2 checksum algorithm over any plausible span reproduces it, so it is stored as plain data; see SPEC.md.",
+      "evidence": "File bytes at 0x622-0x623 are 3C F4 in samples/baseline.sav (u16_le 0xF43C). Brute-forced sum8/sum16/xor8/crc16-arc over spans [0x0000:0x061C], [0x0000:0x0620], [0x0030:0x061C], [0x0004:0x061C] and others: none equals 0xF43C, so no checksums[] entry is emitted. Lives in the same SRAM image bulk-copied via FUN_0809a910/FUN_0809a90c (e.g. FUN_0808ff64 line 19462).",
+      "name": "trailer_code",
+      "offset": 1570,
+      "size": 2,
+      "type": "u16_le"
+    }
+  ],
   "game_code": "A8RJ",
-  "title": "Tennis no Ouji-sama 2003 - Passion Red (Japan)",
-  "media": "sram",
-  "size_bytes": 32768,
+  "id": "a8rj",
   "magic_signatures": [
     {
-      "offset": 0,
       "bytes": [
         84,
         80,
         82,
         68
-      ]
+      ],
+      "description": "ASCII 'TPRD' footer magic sealing the 20-entry roster array",
+      "offset": 1564
     }
   ],
-  "checksums": [],
-  "fields": [
-    {
-      "name": "magic_header",
-      "offset": 0,
-      "size": 4,
-      "type": "ascii"
-    },
-    {
-      "name": "slot_counter",
-      "offset": 4,
-      "size": 2,
-      "type": "u16_le"
-    },
-    {
-      "name": "game_progress_flags",
-      "offset": 6,
-      "size": 2,
-      "type": "u16_le"
-    },
-    {
-      "name": "player_status_payload",
-      "offset": 8,
-      "size": 16,
-      "type": "bytes"
-    }
-  ]
+  "media": "sram",
+  "size_bytes": 32768,
+  "title": "Tennis no Ouji-sama 2003 - Passion Red (Japan)"
 }

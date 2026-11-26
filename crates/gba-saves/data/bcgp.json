@@ -1,45 +1,193 @@
 {
-  "id": "bcgp",
-  "game_code": "BCGP",
-  "title": "Cabbage Patch Kids - The Patch Puppy Rescue (Europe)",
-  "media": "eeprom512",
-  "size_bytes": 512,
-  "magic_signatures": [
-    {
-      "offset": 0,
-      "bytes": [
-        80,
-        50,
-        54,
-        75
-      ]
-    }
-  ],
   "checksums": [],
+  "copy_groups": [],
+  "eeprom_rev8": true,
   "fields": [
     {
-      "name": "magic_header",
+      "confidence": "likely",
+      "description": "Global save magic (expected by FUN_08001b08, set to ROM default by FUN_08001b20 during boot init in FUN_08001b2c)",
+      "evidence": "FUN_08001b08 compares savebase u16 at +0 to ROM word; FUN_08001b20 writes ROM default there; FUN_08001b2c runs this init when load/verify fails. Baseline logical u16 = 0xFAEE.",
+      "name": "save_magic",
       "offset": 0,
-      "size": 4,
-      "type": "ascii"
+      "size": 2,
+      "type": "u16_le"
     },
     {
-      "name": "slot_counter",
+      "confidence": "confirmed",
+      "description": "File 0 stored CRC32-IEEE of file bytes [4, 0x70). Schema v2 has no crc32 algorithm, so stored as data (see SPEC.md).",
+      "evidence": "FUN_080072d4 computes CRC32 (init 0xFFFFFFFF, table at DAT_08007308, final invert) over slotbase+4 len 0x68; FUN_080015d4 stores it at slotbase+0; FUN_08001a68 verifies it. Recomputed over baseline: 0xAD62CF3D match.",
+      "name": "slot0_crc32",
       "offset": 4,
-      "size": 2,
-      "type": "u16_le"
+      "size": 4,
+      "type": "u32_le"
     },
     {
-      "name": "game_progress_flags",
-      "offset": 6,
-      "size": 2,
-      "type": "u16_le"
-    },
-    {
-      "name": "player_status_payload",
+      "confidence": "confirmed",
+      "description": "Slot 0 in-use flag: 0 = empty slot (game falls back to ROM defaults), nonzero = saved file present",
+      "evidence": "FUN_08001af0 returns (u32 at savebase+8+slot*0x6c) != 0; FUN_0801bc64 branches on it (empty -> defaults, used -> load graphics pointer); baseline = 0 (fresh save).",
+      "name": "slot0_used_flag",
       "offset": 8,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Slot 0 puppy variant selector: indexes ROM asset table with stride 0x48 and picks graphics path 0 vs 1",
+      "evidence": "FUN_0801c5a4 reads short at savebase+slot*0x6c+0x16, uses it as (index * 0x48) into ROM table and branches 0 vs 1; FUN_0801bc64 uses it the same way; FUN_080015d4 inits it to 0; baseline = 0.",
+      "name": "slot0_variant",
+      "offset": 22,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Slot 0 puppy appearance snapshot (16 bytes copied from ROM defaults at init, loaded into sprite/VRAM buffers on slot load)",
+      "evidence": "FUN_080015d4 copies 16 ROM bytes to savebase+slot*0x6c+0x18 via CpuSet (FUN_0803c72c = SWI 0xB); FUN_0801c5a4 copies those 16 bytes to stack and on to VRAM via FUN_08000d10 on slot load; baseline holds ROM defaults.",
+      "name": "slot0_appearance",
+      "offset": 24,
       "size": 16,
       "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Slot 0 graphics asset selector A (u16 index scaled by 4 into ROM pointer table)",
+      "evidence": "FUN_0801c5a4 and FUN_0801bc64 read ushort at savebase+slot*0x6c+0x38 and scale by 4 as a ROM table index for the slot puppy graphics; FUN_080015d4 inits it to 0; baseline = 0.",
+      "name": "slot0_select_a",
+      "offset": 56,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Slot 0 graphics asset selector B (u16 index scaled by 4 into ROM pointer table)",
+      "evidence": "FUN_0801c5a4 reads ushort at savebase+slot*0x6c+0x3a and scales by 4 as a ROM table index for the slot puppy graphics; FUN_080015d4 inits it to 1; baseline = 1.",
+      "name": "slot0_select_b",
+      "offset": 58,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "File 1 stored CRC32-IEEE of file bytes [0x74, 0xDC). Schema v2 has no crc32 algorithm, so stored as data (see SPEC.md).",
+      "evidence": "Same routine chain as slot0 (FUN_080072d4 / FUN_080015d4 / FUN_08001a68) with slot index 1. Recomputed over baseline: 0xAD62CF3D match.",
+      "name": "slot1_crc32",
+      "offset": 112,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Slot 1 in-use flag: 0 = empty slot, nonzero = saved file present",
+      "evidence": "FUN_08001af0 reads u32 at savebase+8+1*0x6c; FUN_0801bc64 per-slot empty/used branch; baseline = 0.",
+      "name": "slot1_used_flag",
+      "offset": 116,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Slot 1 puppy variant selector (ROM asset table index, stride 0x48; graphics path 0 vs 1)",
+      "evidence": "FUN_0801c5a4 / FUN_0801bc64 read short at savebase+1*0x6c+0x16 as table index and 0-vs-1 branch; FUN_080015d4 inits to 0; baseline = 0.",
+      "name": "slot1_variant",
+      "offset": 130,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Slot 1 puppy appearance snapshot (16 bytes; ROM defaults at init, loaded to sprite/VRAM buffers on slot load)",
+      "evidence": "FUN_080015d4 CpuSet 16 ROM bytes to savebase+1*0x6c+0x18; FUN_0801c5a4 copies them to stack/VRAM (FUN_08000d10) on load; baseline holds ROM defaults.",
+      "name": "slot1_appearance",
+      "offset": 132,
+      "size": 16,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Slot 1 graphics asset selector A (u16 index scaled by 4 into ROM pointer table)",
+      "evidence": "FUN_0801c5a4 and FUN_0801bc64 read ushort at savebase+1*0x6c+0x38 as ROM table index; init 0; baseline = 0.",
+      "name": "slot1_select_a",
+      "offset": 164,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Slot 1 graphics asset selector B (u16 index scaled by 4 into ROM pointer table)",
+      "evidence": "FUN_0801c5a4 reads ushort at savebase+1*0x6c+0x3a as ROM table index; init 1; baseline = 1.",
+      "name": "slot1_select_b",
+      "offset": 166,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "File 2 stored CRC32-IEEE of file bytes [0xE0, 0x148). Schema v2 has no crc32 algorithm, so stored as data (see SPEC.md).",
+      "evidence": "Same routine chain as slot0 (FUN_080072d4 / FUN_080015d4 / FUN_08001a68) with slot index 2. Recomputed over baseline: 0xAD62CF3D match.",
+      "name": "slot2_crc32",
+      "offset": 220,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Slot 2 in-use flag: 0 = empty slot, nonzero = saved file present",
+      "evidence": "FUN_08001af0 reads u32 at savebase+8+2*0x6c; FUN_0801bc64 per-slot empty/used branch; baseline = 0.",
+      "name": "slot2_used_flag",
+      "offset": 224,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Slot 2 puppy variant selector (ROM asset table index, stride 0x48; graphics path 0 vs 1)",
+      "evidence": "FUN_0801c5a4 / FUN_0801bc64 read short at savebase+2*0x6c+0x16 as table index and 0-vs-1 branch; FUN_080015d4 inits to 0; baseline = 0.",
+      "name": "slot2_variant",
+      "offset": 238,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Slot 2 puppy appearance snapshot (16 bytes; ROM defaults at init, loaded to sprite/VRAM buffers on slot load)",
+      "evidence": "FUN_080015d4 CpuSet 16 ROM bytes to savebase+2*0x6c+0x18; FUN_0801c5a4 copies them to stack/VRAM (FUN_08000d10) on load; baseline holds ROM defaults.",
+      "name": "slot2_appearance",
+      "offset": 240,
+      "size": 16,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Slot 2 graphics asset selector A (u16 index scaled by 4 into ROM pointer table)",
+      "evidence": "FUN_0801c5a4 and FUN_0801bc64 read ushort at savebase+2*0x6c+0x38 as ROM table index; init 0; baseline = 0.",
+      "name": "slot2_select_a",
+      "offset": 272,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Slot 2 graphics asset selector B (u16 index scaled by 4 into ROM pointer table)",
+      "evidence": "FUN_0801c5a4 reads ushort at savebase+2*0x6c+0x3a as ROM table index; init 1; baseline = 1.",
+      "name": "slot2_select_b",
+      "offset": 274,
+      "size": 2,
+      "type": "u16_le"
     }
-  ]
+  ],
+  "game_code": "BCGP",
+  "id": "bcgp",
+  "magic_signatures": [
+    {
+      "bytes": [
+        238,
+        250
+      ],
+      "description": "Global save magic u16 0xFAEE expected by FUN_08001b08, written by FUN_08001b20",
+      "offset": 0
+    }
+  ],
+  "media": "eeprom512",
+  "size_bytes": 512,
+  "title": "Cabbage Patch Kids - The Patch Puppy Rescue (Europe)"
 }

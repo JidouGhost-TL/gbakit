@@ -1,45 +1,77 @@
 {
-  "id": "am8p",
-  "game_code": "AM8P",
-  "title": "Monster Force (Europe) (En,Fr,De,Es,It)",
-  "media": "eeprom512",
-  "size_bytes": 512,
-  "magic_signatures": [
-    {
-      "offset": 384,
-      "bytes": [
-        73,
-        83,
-        69,
-        68
-      ]
-    }
-  ],
   "checksums": [],
+  "eeprom_rev8": true,
   "fields": [
     {
-      "name": "magic_header",
+      "confidence": "confirmed",
+      "description": "First tag byte of EEPROM block 48 ('D' = 0x44). Block framing confirmed by FUN_08041fc0 8-byte read; value observed in baseline.sav logical domain.",
+      "evidence": "FUN_08041fc0 reads one 8-byte EEPROM block (4x u16 via FUN_08041f40 serial transfer on uRam0d000000) into RAM; FUN_0804214c verifies the block as 4 shorts and FUN_080421a4 (write via FUN_08042070 + verify) commits it. Baseline block 48 at logical file offset 0x180 holds 0x44 here (bin_peek --rev8).",
+      "name": "blk48_tag_b0",
       "offset": 384,
-      "size": 4,
-      "type": "ascii"
+      "size": 1,
+      "type": "u8"
     },
     {
-      "name": "slot_counter",
+      "confidence": "confirmed",
+      "description": "Second tag byte of EEPROM block 48 ('E' = 0x45). Value observed in baseline.sav logical domain.",
+      "evidence": "Same 8-byte block transfer as blk48_tag_b0: FUN_08041fc0 / FUN_08042070 / FUN_080421a4 / FUN_0804214c. Baseline logical offset 0x181 holds 0x45 (bin_peek --rev8).",
+      "name": "blk48_tag_b1",
+      "offset": 385,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Third tag byte of EEPROM block 48 ('S' = 0x53). Value observed in baseline.sav logical domain.",
+      "evidence": "Same 8-byte block transfer as blk48_tag_b0: FUN_08041fc0 / FUN_08042070 / FUN_080421a4 / FUN_0804214c. Baseline logical offset 0x182 holds 0x53 (bin_peek --rev8).",
+      "name": "blk48_tag_b2",
+      "offset": 386,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Fourth tag byte of EEPROM block 48 ('I' = 0x49). Completes the 'DESI' block tag. Value observed in baseline.sav logical domain.",
+      "evidence": "Same 8-byte block transfer as blk48_tag_b0: FUN_08041fc0 / FUN_08042070 / FUN_080421a4 / FUN_0804214c. Baseline logical offset 0x183 holds 0x49 (bin_peek --rev8).",
+      "name": "blk48_tag_b3",
+      "offset": 387,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Third little-endian halfword of EEPROM block 48; reads 0 in baseline. Structural word of the save block (role unknown; owner absent from partial decomp). Mutable: safe for live-mutation probing.",
+      "evidence": "FUN_0804214c compares the EEPROM block as 4 shorts and FUN_08041fc0 stores it via (ushort *)(param_2 + 6), grounding u16 granularity. Baseline logical offset 0x184 holds u16_le 0 (bin_peek --rev8, bytes 00 00).",
+      "name": "blk48_body_zero",
       "offset": 388,
       "size": 2,
       "type": "u16_le"
     },
     {
-      "name": "game_progress_flags",
+      "confidence": "likely",
+      "description": "Fourth little-endian halfword of EEPROM block 48; reads 1 in baseline. Plausibly a save-sequence counter or first-save marker (role unconfirmed; owner absent from partial decomp). Mutable: safe for live-mutation probing.",
+      "evidence": "FUN_0804214c compares the EEPROM block as 4 shorts and FUN_08041fc0 stores it via (ushort *)(param_2 + 6), grounding u16 granularity. Baseline logical offset 0x186 holds u16_le 1 (bin_peek --rev8, bytes 01 00). Written through FUN_08042070 / FUN_080421a4.",
+      "name": "blk48_seq_counter",
       "offset": 390,
       "size": 2,
       "type": "u16_le"
-    },
-    {
-      "name": "player_status_payload",
-      "offset": 392,
-      "size": 16,
-      "type": "bytes"
     }
-  ]
+  ],
+  "game_code": "AM8P",
+  "id": "am8p",
+  "magic_signatures": [
+    {
+      "bytes": [
+        68,
+        69,
+        83,
+        73
+      ],
+      "description": "ASCII 'DESI' tag at the start of EEPROM block 48 (logical domain, eeprom_rev8)",
+      "offset": 384
+    }
+  ],
+  "media": "eeprom512",
+  "size_bytes": 512,
+  "title": "Monster Force (Europe) (En,Fr,De,Es,It)"
 }

@@ -1,45 +1,174 @@
 {
-  "id": "anle",
-  "game_code": "ANLE",
-  "title": "NHL 2002 (USA)",
-  "media": "eeprom8k",
-  "size_bytes": 8192,
-  "magic_signatures": [
-    {
-      "offset": 2,
-      "bytes": [
-        50,
-        48,
-        99,
-        102
-      ]
-    }
-  ],
   "checksums": [],
+  "copy_groups": [],
+  "eeprom_rev8": true,
   "fields": [
     {
-      "name": "magic_header",
+      "confidence": "confirmed",
+      "description": "EEPROM directory header parameter word 1 (block 0, halfword 1). First 8-byte block read by FUN_08005018 via FUN_08009424; written back only on change by FUN_08002804 via FUN_080094d4. Gameplay binding not visible in decompiled range; value 0x0700 in baseline.",
+      "evidence": "FUN_08005018 reads EEPROM block 0 through FUN_08009424 (bit-banged serial via FUN_080093a4 DMA) into EWRAM mirror; FUN_08002804 rewrites changed 8-byte blocks via FUN_080094d4 with FUN_080095b0 verify. Logical offset 0x02 = block-0 halfword 1 (rev8 domain).",
+      "name": "save_param_a",
       "offset": 2,
-      "size": 4,
-      "type": "ascii"
+      "size": 2,
+      "type": "u16_le"
     },
     {
-      "name": "slot_counter",
+      "confidence": "confirmed",
+      "description": "EEPROM directory header parameter word 2 (block 0, halfword 2). Same block-0 load/store path as save_param_a. Value 0x1100 in baseline.",
+      "evidence": "FUN_08005018 block-0 read path via FUN_08009424; FUN_08002804 diff-compare store path via FUN_080094d4/FUN_080095b0. Logical offset 0x04.",
+      "name": "save_param_b",
+      "offset": 4,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "EEPROM directory header parameter word 3 (block 0, halfword 3). Same block-0 load/store path. Zero in baseline; live-mutable scalar.",
+      "evidence": "FUN_08005018 block-0 read path via FUN_08009424; FUN_08002804 store path via FUN_080094d4. Logical offset 0x06.",
+      "name": "save_param_c",
       "offset": 6,
       "size": 2,
       "type": "u16_le"
     },
     {
-      "name": "game_progress_flags",
-      "offset": 8,
+      "confidence": "likely",
+      "description": "Header flag byte 1 (block 1). One of three consecutive 0x01 bytes; loaded by the FUN_08005018 bulk block loop. Exact meaning not visible in decompiled range.",
+      "evidence": "FUN_08005018 loops FUN_08009424 over all EEPROM blocks into RAM mirror, then FUN_08008e9c copies 0x2000 bytes; byte at logical offset 0x0B is inside always-loaded block 1.",
+      "name": "save_flag_a",
+      "offset": 11,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Header flag byte 2 (block 1). Same load path as save_flag_a. Value 0x01 in baseline.",
+      "evidence": "FUN_08005018 bulk block-read loop via FUN_08009424 covers logical offset 0x0C (block 1); FUN_08002804 covers the store path.",
+      "name": "save_flag_b",
+      "offset": 12,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Header flag byte 3 (block 1). Same load path as save_flag_a. Value 0x01 in baseline.",
+      "evidence": "FUN_08005018 bulk block-read loop via FUN_08009424 covers logical offset 0x0D (block 1); FUN_08002804 covers the store path.",
+      "name": "save_flag_c",
+      "offset": 13,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Fixed-stride (27-byte) record-table entry 0: u16 at record offset +3 (value 0x763A). Part of a 17-entry run; gameplay binding not visible in decompiled range.",
+      "evidence": "FUN_08005018 loads every EEPROM block via FUN_08009424 and FUN_08008e9c mirrors 0x2000 bytes to working RAM; FUN_08002804 persists per-block diffs via FUN_080094d4. Entry at logical offset 0x93B verified nonzero in baseline.",
+      "name": "record_entry_00",
+      "offset": 2363,
       "size": 2,
       "type": "u16_le"
     },
     {
-      "name": "player_status_payload",
-      "offset": 10,
-      "size": 16,
+      "confidence": "likely",
+      "description": "Fixed-stride record-table entry 3 (value 0x6A34). Same table and transport as record_entry_00.",
+      "evidence": "Same FUN_08005018 load / FUN_08002804 store block path via FUN_08009424/FUN_080094d4. Entry at logical offset 0x98C verified in baseline.",
+      "name": "record_entry_03",
+      "offset": 2444,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Fixed-stride record-table entry 6 (value 0x2F17): first entry after the table stride/value discontinuity. Same transport as record_entry_00.",
+      "evidence": "Same FUN_08005018 load / FUN_08002804 store block path via FUN_08009424/FUN_080094d4. Entry at logical offset 0x9DC verified in baseline.",
+      "name": "record_entry_06",
+      "offset": 2524,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Fixed-stride record-table entry 9 (value 0x2914). Same table and transport as record_entry_00.",
+      "evidence": "Same FUN_08005018 load / FUN_08002804 store block path via FUN_08009424/FUN_080094d4. Entry at logical offset 0xA2D verified in baseline.",
+      "name": "record_entry_09",
+      "offset": 2605,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Fixed-stride record-table entry 12 (value 0x2311). Same table and transport as record_entry_00.",
+      "evidence": "Same FUN_08005018 load / FUN_08002804 store block path via FUN_08009424/FUN_080094d4. Entry at logical offset 0xA7E verified in baseline.",
+      "name": "record_entry_12",
+      "offset": 2686,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Fixed-stride record-table entry 15 (value 0x1D0E). Same table and transport as record_entry_00.",
+      "evidence": "Same FUN_08005018 load / FUN_08002804 store block path via FUN_08009424/FUN_080094d4. Entry at logical offset 0xACF verified in baseline.",
+      "name": "record_entry_15",
+      "offset": 2767,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Post-table value 0 (value 0x0C86): start of the region where entries widen to 3-byte clusters. Same block transport; semantics unknown.",
+      "evidence": "FUN_08005018 loads this EEPROM block via FUN_08009424; FUN_08002804 persists diffs via FUN_080094d4 with FUN_080095b0 verify. Logical offset 0xB04 verified in baseline.",
+      "name": "table_value_00",
+      "offset": 2820,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Post-table value 1 (value 0x0221). Same block transport as table_value_00; semantics unknown.",
+      "evidence": "FUN_08005018 load path via FUN_08009424; FUN_08002804 store path via FUN_080094d4. Logical offset 0xB6E verified in baseline.",
+      "name": "table_value_01",
+      "offset": 2926,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Explicitly-written 0xFF region (60 bytes). Differs from the 0x00 erased fill, so the game wrote it via the FUN_08002804 block-store path; likely an erased-slot sentinel or guard band.",
+      "evidence": "FUN_08002804 writes only blocks differing from the shadow image via FUN_080094d4, so these 0xFF bytes at logical offsets 0x192A-0x1965 are game-written; read back by the FUN_08005018 block loop via FUN_08009424.",
+      "name": "ff_written_area",
+      "offset": 6442,
+      "size": 60,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Dense high-entropy record area (1084 bytes) with an internal 'NH' sub-header at +2. Loaded/stored as plain EEPROM blocks; internal substructure (teams/stats/blob) not decoded in the available decompiled range.",
+      "evidence": "FUN_08005018 bulk-reads these EEPROM blocks via FUN_08009424 and FUN_08008e9c copies the full 0x2000-byte image; FUN_08002804 persists per-block diffs via FUN_080094d4. Logical range 0x10F8-0x1533 verified nonzero in baseline.",
+      "name": "dense_record_blob",
+      "offset": 4344,
+      "size": 1084,
       "type": "bytes"
     }
-  ]
+  ],
+  "game_code": "ANLE",
+  "id": "anle",
+  "magic_signatures": [
+    {
+      "bytes": [
+        78,
+        72
+      ],
+      "description": "ASCII 'NH' EEPROM directory header magic at block-0 start (rev8 logical domain)",
+      "offset": 0
+    },
+    {
+      "bytes": [
+        78,
+        72
+      ],
+      "description": "ASCII 'NH' end-of-image trailer at last used bytes (rev8 logical domain)",
+      "offset": 8175
+    }
+  ],
+  "media": "eeprom8k",
+  "size_bytes": 8192,
+  "title": "NHL 2002 (USA)"
 }

@@ -1,45 +1,109 @@
 {
-  "id": "am4j",
-  "game_code": "AM4J",
-  "title": "MotoGP (Japan) (En)",
-  "media": "eeprom512",
-  "size_bytes": 512,
-  "magic_signatures": [
-    {
-      "offset": 64,
-      "bytes": [
-        110,
-        111,
-        105,
-        115
-      ]
-    }
-  ],
   "checksums": [],
+  "copy_groups": [],
+  "eeprom_rev8": true,
   "fields": [
     {
-      "name": "magic_header",
-      "offset": 64,
-      "size": 4,
-      "type": "ascii"
-    },
-    {
-      "name": "slot_counter",
-      "offset": 68,
-      "size": 2,
-      "type": "u16_le"
-    },
-    {
-      "name": "game_progress_flags",
-      "offset": 70,
-      "size": 2,
-      "type": "u16_le"
-    },
-    {
-      "name": "player_status_payload",
-      "offset": 72,
-      "size": 16,
+      "confidence": "likely",
+      "description": "16-entry 4-byte record table (per-record: u16le value, flag byte 0x01/0x02, 0xFF pad). Persisted as EEPROM blocks 40-47 by the FUN_08011920 read / FUN_08011960 write whole-image loops via FUN_08011c4c / FUN_08011cfc 8-byte block transfers; per-record meaning inferred from the regular stride in baseline, not from a named game accessor.",
+      "evidence": "FUN_08011920 loops FUN_08011c4c over all EEPROM blocks into the RAM save mirror _DAT_08000f3c; FUN_08011960 writes the mirror back with FUN_08011cfc; FUN_08011c4c/FUN_08011cfc move 4 words (8 bytes) per EEPROM address. Baseline logical 0x144..0x183 holds 16x [u16le, 01/02, FF].",
+      "name": "track_record_table",
+      "offset": 324,
+      "size": 64,
       "type": "bytes"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Config byte copied from save to runtime on valid load and seeded from defaults on init.",
+      "evidence": "FUN_08000cfc line 102 copies save mirror _DAT_08000f3c+0x194 to runtime _DAT_08001108+0x2A; line 164 seeds it from defaults before FUN_08011960 persists via FUN_08011cfc.",
+      "name": "option_a",
+      "offset": 404,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Config byte copied from save to runtime on valid load and seeded from defaults on init.",
+      "evidence": "FUN_08000cfc line 103 copies save mirror _DAT_08000f3c+0x196 to runtime _DAT_08001108+0x2C; line 165 seeds it from defaults before FUN_08011960 persists via FUN_08011cfc.",
+      "name": "option_b",
+      "offset": 406,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Config byte copied from save to runtime on valid load and seeded from defaults on init.",
+      "evidence": "FUN_08000cfc line 166 seeds save mirror _DAT_08000f3c+0x197 from runtime _DAT_08000f38+0x3B before FUN_08011960 persists via FUN_08011cfc.",
+      "name": "option_c",
+      "offset": 407,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "16-entry u16 table OR-seeded at init; reads back as erased 0xFFFF in the live baseline.",
+      "evidence": "FUN_08000cfc lines 150-156 OR-fill 16 u16 entries at save mirror _DAT_08000f3c+0x198; baseline logical 0x198..0x1B7 is all 0xFFFF.",
+      "name": "record_table_flags",
+      "offset": 408,
+      "size": 32,
+      "type": "bytes"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Config byte with nonzero default (2); copied from save to runtime on valid load.",
+      "evidence": "FUN_08000cfc line 106 copies save mirror _DAT_08000f3c+0x1C0 to runtime _DAT_08001108+0x0D; line 177 seeds default value 2 before FUN_08011960 persists via FUN_08011cfc. Baseline logical 0x1C0 = 0x02.",
+      "name": "option_d",
+      "offset": 448,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Config byte copied from save to runtime on valid load and seeded from defaults on init.",
+      "evidence": "FUN_08000cfc line 101 copies save mirror _DAT_08000f3c+0x1C2 to runtime _DAT_08001108+0x6A; init zeroes the 0x1C0..0x1FF option tail before FUN_08011960 persists via FUN_08011cfc.",
+      "name": "option_e",
+      "offset": 450,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Config byte copied from save to runtime on valid load and seeded from defaults on init.",
+      "evidence": "FUN_08000cfc line 105 copies save mirror _DAT_08000f3c+0x1FC to runtime _DAT_08001108+0x0C; line 167 seeds it from defaults before FUN_08011960 persists via FUN_08011cfc.",
+      "name": "option_f",
+      "offset": 508,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "confirmed",
+      "description": "Write-valid marker set after the EEPROM image is programmed.",
+      "evidence": "FUN_08011960 line 2430 stores 0xAB at the tail of the save mirror (mirror+0x1FF) around the FUN_08011cfc block-write loop; baseline logical 0x1FF = 0xAB.",
+      "name": "save_written_marker",
+      "offset": 511,
+      "size": 1,
+      "type": "u8"
     }
-  ]
+  ],
+  "game_code": "AM4J",
+  "id": "am4j",
+  "magic_signatures": [
+    {
+      "bytes": [
+        86,
+        101,
+        114,
+        115,
+        105,
+        111,
+        110,
+        2
+      ],
+      "description": "ASCII 'Version' plus version byte 0x02; checked as two u32 compares in FUN_08000cfc before save data is trusted.",
+      "offset": 440
+    }
+  ],
+  "media": "eeprom512",
+  "size_bytes": 512,
+  "title": "MotoGP (Japan) (En)"
 }

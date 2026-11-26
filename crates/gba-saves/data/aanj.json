@@ -1,45 +1,270 @@
 {
-  "id": "aanj",
-  "game_code": "AANJ",
-  "title": "Animal Mania - Dokidoki Aishou Check (Japan)",
-  "media": "sram",
-  "size_bytes": 32768,
-  "magic_signatures": [
+  "checksums": [
     {
-      "offset": 0,
-      "bytes": [
-        104,
-        75,
-        69,
-        74
-      ]
+      "algorithm": "sum16_le_words",
+      "covered_end": 2656,
+      "covered_start": 0,
+      "name": "copy0_checksum",
+      "seed": 0,
+      "stored_offset": 2656,
+      "xor_out": 0
+    },
+    {
+      "algorithm": "sum16_le_words",
+      "covered_end": 5314,
+      "covered_start": 2658,
+      "name": "copy1_checksum",
+      "seed": 0,
+      "stored_offset": 5314,
+      "xor_out": 0
     }
   ],
-  "checksums": [],
+  "copy_groups": [
+    {
+      "fields": [
+        "pet1_flags",
+        "pet1_flags_copy"
+      ],
+      "name": "pet1_flags_mirrors"
+    },
+    {
+      "fields": [
+        "pet1_kind",
+        "pet1_kind_copy"
+      ],
+      "name": "pet1_kind_mirrors"
+    },
+    {
+      "fields": [
+        "pet1_stat_c",
+        "pet1_stat_c_copy"
+      ],
+      "name": "pet1_stat_c_mirrors"
+    },
+    {
+      "fields": [
+        "pet1_opt_e",
+        "pet1_opt_e_copy"
+      ],
+      "name": "pet1_opt_e_mirrors"
+    },
+    {
+      "fields": [
+        "mid_b1_header",
+        "mid_b1_header_copy"
+      ],
+      "name": "mid_b1_header_mirrors"
+    },
+    {
+      "fields": [
+        "mid_b3_value",
+        "mid_b3_value_copy"
+      ],
+      "name": "mid_b3_value_mirrors"
+    },
+    {
+      "fields": [
+        "mid_b4_stamp",
+        "mid_b4_stamp_copy"
+      ],
+      "name": "mid_b4_stamp_mirrors"
+    }
+  ],
   "fields": [
     {
-      "name": "magic_header",
-      "offset": 0,
-      "size": 4,
-      "type": "ascii"
+      "confidence": "likely",
+      "constraint": {
+        "flag_labels": {
+          "0": "slot_occupied",
+          "8": "flag_0x100",
+          "9": "flag_0x200"
+        },
+        "kind": "bitmask",
+        "valid_mask": 769
+      },
+      "description": "Pet record 1 status flags; bit0 = slot occupied, bits 0x100/0x200 tested by game loops",
+      "evidence": "FUN_08007c5c clears (DAT_08007d14 + slot*0x14)+0..+5 at init; FUN_08005024 counts (*(ushort*)(DAT_080054cc + (i+1)*0x14) & 1) over 100 slots; loops bound 0x65 test record+0 bits &1, &0x100 (DAT_080081e4 use) and &0x200; save-file slot1 at 0x14 reads 0x0000 (empty).",
+      "name": "pet1_flags",
+      "offset": 20,
+      "size": 2,
+      "type": "bitflags"
     },
     {
-      "name": "slot_counter",
-      "offset": 4,
+      "confidence": "likely",
+      "description": "Pet record 1 kind/species index byte, used as a table index by game code",
+      "evidence": "Record byte at +4 consumed as index (*(byte*)(DAT_080081e4 + slot*0x14 + 4)); slot stride 0x14 and init cleared by FUN_08007c5c; save-file slot1+4 at 0x18 reads 0x00 (empty).",
+      "name": "pet1_kind",
+      "offset": 24,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Pet record 1 stat word at +0x0C, initialized to 1990 (0x07C6) for every slot",
+      "evidence": "FUN_08007c5c stores (short)DAT_08007e10 at (DAT_08007e0c + slot*0x14 + 0x0C); baseline holds 0x07C6 (1990) at save offset 0x20 and at every empty slot +0x0C.",
+      "name": "pet1_stat_c",
+      "offset": 32,
       "size": 2,
       "type": "u16_le"
     },
     {
-      "name": "game_progress_flags",
-      "offset": 6,
-      "size": 2,
-      "type": "u16_le"
+      "confidence": "likely",
+      "description": "Pet record 1 option byte at +0x0E, initialized to 1 for every slot",
+      "evidence": "FUN_08007c5c stores 1 at (DAT_08007e0c + slot*0x14 + 0x0E) (and +0x0F); save-file slot1+0x0E at 0x22 reads 0x01.",
+      "name": "pet1_opt_e",
+      "offset": 34,
+      "size": 1,
+      "type": "u8"
     },
     {
-      "name": "player_status_payload",
-      "offset": 8,
+      "confidence": "likely",
+      "description": "16-byte lead block (B1) of the 638-byte mid region: ff ff ff header plus zeros",
+      "evidence": "Block size 0x10 matches the FUN_08005b94 SRAM dual-write pair sizes (0x10, 600, 0x10, 4 + 2-byte global = 638); block pair written by FUN_0807d2a0 from one RAM source to two SRAM destinations; mirrored at save offset 0x1246.",
+      "name": "mid_b1_header",
+      "offset": 2020,
       "size": 16,
       "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Leading word (1000 in baseline) of the trailing 16-byte save block B3 of the mid region",
+      "evidence": "Block size 0x10 matches a FUN_08005b94 SRAM dual-write pair (same RAM source, two SRAM destinations via FUN_0807d2a0); load path FUN_08005024 verifies the same block via FUN_0807d2ec/FUN_0807d2f0; mirrored at save offset 0x14AE.",
+      "name": "mid_b3_value",
+      "offset": 2636,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "4-byte trailer stamp (d2 07 01 1f) of the mid region, written by the save-init path",
+      "evidence": "FUN_08005a8c init sequence stores (short)DAT_08005b88 then byte +1 = 1 and byte +3 = 0x1F at DAT_08005b84, matching bytes d2 07 01 1f; persisted by the FUN_08005b94 4-byte dual-write pair; mirrored at save offset 0x14BE.",
+      "name": "mid_b4_stamp",
+      "offset": 2652,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "constraint": {
+        "flag_labels": {
+          "0": "slot_occupied",
+          "8": "flag_0x100",
+          "9": "flag_0x200"
+        },
+        "kind": "bitmask",
+        "valid_mask": 769
+      },
+      "description": "Mirror copy of pet record 1 status flags (redundant backup of the same logical field)",
+      "evidence": "Redundant mirror: FUN_08005b94 writes every save block from one RAM source to two SRAM destinations (FUN_0807d2a0 pairs); FUN_08005024 load loop tries copy index 0 then 1; bytes identical to pet1_flags in baseline.",
+      "name": "pet1_flags_copy",
+      "offset": 2678,
+      "size": 2,
+      "type": "bitflags"
+    },
+    {
+      "confidence": "likely",
+      "description": "Mirror copy of pet record 1 kind/species index byte",
+      "evidence": "Redundant mirror of the record table (table bytes 0x0000..0x07E3 identical to 0x0A62..0x1245 in baseline); written by FUN_08005b94 dual-write pairs; load tries both copies in FUN_08005024.",
+      "name": "pet1_kind_copy",
+      "offset": 2682,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Mirror copy of pet record 1 stat word at +0x0C (1990 in baseline)",
+      "evidence": "Redundant mirror of the record table; FUN_08007c5c init value (short)DAT_08007e10 observed as 0x07C6 at this offset; dual-write persistence via FUN_08005b94.",
+      "name": "pet1_stat_c_copy",
+      "offset": 2690,
+      "size": 2,
+      "type": "u16_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Mirror copy of pet record 1 option byte at +0x0E (1 in baseline)",
+      "evidence": "Redundant mirror of the record table; FUN_08007c5c init value 1 observed at this offset; dual-write persistence via FUN_08005b94.",
+      "name": "pet1_opt_e_copy",
+      "offset": 2692,
+      "size": 1,
+      "type": "u8"
+    },
+    {
+      "confidence": "likely",
+      "description": "Mirror copy of the 16-byte lead block B1 of the mid region",
+      "evidence": "Redundant mirror: mid-region bytes 0x07E4..0x0A61 identical to 0x1246..0x14C3 in baseline; written by FUN_08005b94 dual-write pairs via FUN_0807d2a0.",
+      "name": "mid_b1_header_copy",
+      "offset": 4678,
+      "size": 16,
+      "type": "bytes"
+    },
+    {
+      "confidence": "likely",
+      "description": "Mirror copy of the leading word (1000) of save block B3",
+      "evidence": "Redundant mirror via FUN_08005b94 dual-write pair; bytes identical to mid_b3_value in baseline; covered by the copy1 sum16 checksum.",
+      "name": "mid_b3_value_copy",
+      "offset": 5294,
+      "size": 4,
+      "type": "u32_le"
+    },
+    {
+      "confidence": "likely",
+      "description": "Mirror copy of the 4-byte trailer stamp (d2 07 01 1f)",
+      "evidence": "Redundant mirror via FUN_08005b94 dual-write pair; bytes identical to mid_b4_stamp in baseline; covered by the copy1 sum16 checksum.",
+      "name": "mid_b4_stamp_copy",
+      "offset": 5310,
+      "size": 4,
+      "type": "u32_le"
     }
-  ]
+  ],
+  "game_code": "AANJ",
+  "id": "aanj",
+  "magic_signatures": [
+    {
+      "bytes": [
+        65,
+        78,
+        73,
+        77,
+        65,
+        76,
+        32,
+        77,
+        65,
+        78,
+        73,
+        65,
+        32,
+        65,
+        71,
+        66
+      ],
+      "description": "ASCII 'ANIMAL MANIA AGB' title magic, first copy",
+      "offset": 5316
+    },
+    {
+      "bytes": [
+        65,
+        78,
+        73,
+        77,
+        65,
+        76,
+        32,
+        77,
+        65,
+        78,
+        73,
+        65,
+        32,
+        65,
+        71,
+        66
+      ],
+      "description": "ASCII 'ANIMAL MANIA AGB' title magic, redundant second copy",
+      "offset": 5332
+    }
+  ],
+  "media": "sram",
+  "size_bytes": 32768,
+  "title": "Animal Mania - Dokidoki Aishou Check (Japan)"
 }
