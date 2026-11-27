@@ -12,6 +12,8 @@
 //! - Hudson Soft Variant LZ (`0x48` / `HLZ\x01`) — decode & encode
 //! - Konami Dictionary / Huffman (`0x4B`) — decode & encode
 //! - Shin'en Mode 7 Affine Delta RLE (`0x53`) — decode & encode
+//! - `RLE!` Byte/Halfword Flag-Byte RLE — decode & encode
+//! - SGGA LZ + Canonical-Huffman / Elias-Gamma (`SYSTUNPK`) — decode & raw encode
 //!
 //! The BIOS formats are thin GBA-named wrappers over FormatKit's platform-neutral
 //! tagged-header codecs (`formatkit_codec::{tagged_lz77, tagged_huffman, rle, delta,
@@ -19,6 +21,18 @@
 //! as the VRAM-safe (`disp >= 2`) LZ77 encoder.
 
 #![deny(unsafe_code)]
+
+pub mod rle_excl;
+pub mod sgga;
+
+pub use rle_excl::{
+    decode_rle_excl, detect_rle_excl, encode_rle_excl_byte, encode_rle_excl_halfword,
+    parse_rle_excl_header, RleExclHeader, RleExclUnit, MAGIC_RLE_EXCL, RLE_EXCL_HEADER_LEN,
+    RLE_EXCL_MAX_COMP, RLE_EXCL_MAX_OUTPUT,
+};
+pub use sgga::{
+    decode_sgga, detect_sgga, encode_sgga_raw, parse_sgga_header, SggaHeader, SGGA_MAX_OUTPUT,
+};
 
 use std::sync::OnceLock;
 

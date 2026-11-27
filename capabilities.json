@@ -2,7 +2,7 @@
   "schema": "formatkit.capabilities.v1",
   "tool": "gbakit",
   "version": "0.2.0",
-  "formatkit_version": "0.1.17",
+  "formatkit_version": "0.1.19",
   "formats": [
     {
       "id": "rom.agb-header",
@@ -94,10 +94,11 @@
       "category": "compress",
       "capabilities": [
         "parse",
-        "decode"
+        "decode",
+        "reproduce"
       ],
       "tier": 2,
-      "notes": "Third-party GBA studio codecs (Hudson LZ, Konami dictionary, Shin'en Mode 7)"
+      "notes": "Third-party GBA studio codecs (Hudson LZ, Konami dictionary, Shin'en Mode 7, RLE! byte/halfword RLE, SGGA LZ+Huffman/Elias-gamma)"
     },
     {
       "id": "gfx.gba-tiles-palettes",
@@ -312,6 +313,94 @@
       ],
       "tier": 2,
       "notes": "PAC3 tagged control-word stream parser, ROM scanner, and byte-identical packer"
+    },
+    {
+      "id": "studio.nitro-gba",
+      "category": "studio",
+      "capabilities": [
+        "parse",
+        "decode",
+        "reproduce"
+      ],
+      "tier": 3,
+      "notes": "Nitro-GBA BOM-framed RECN/RNAN/RGCN/KNBA/LBAL cell, animation, tile, and label containers with symmetric repacking"
+    },
+    {
+      "id": "studio.jcg-engine",
+      "category": "studio",
+      "capabilities": [
+        "parse",
+        "decode",
+        "reproduce"
+      ],
+      "tier": 3,
+      "notes": "JSC0 tilemaps, JCL0 BGR555 palette banks, JCG0 4bpp/8bpp tilesets, and AOB0 animated-object banks with symmetric repacking"
+    },
+    {
+      "id": "studio.marker-bundles",
+      "category": "studio",
+      "capabilities": [
+        "parse",
+        "decode",
+        "reproduce"
+      ],
+      "tier": 3,
+      "notes": "Marker-delimited multi-member studio bundles (AGBJ, D233, CBA0, MLXP, CNML) with symmetric repacking"
+    },
+    {
+      "id": "studio.anp-engine",
+      "category": "studio",
+      "capabilities": [
+        "parse",
+        "decode",
+        "reproduce"
+      ],
+      "tier": 3,
+      "notes": "ANP animation bundles, HAP (+CG4) sprite banks, PLA palette-animation timelines, and PSI3 parameter scripts with symmetric repacking"
+    },
+    {
+      "id": "studio.scrp",
+      "category": "studio",
+      "capabilities": [
+        "parse",
+        "decode",
+        "reproduce"
+      ],
+      "tier": 2,
+      "notes": "SCRP bytecode and NVAR/SVAR/FUNC symbol-table script containers with per-tag size modes and symmetric repacking"
+    },
+    {
+      "id": "studio.nsq0",
+      "category": "studio",
+      "capabilities": [
+        "parse",
+        "decode",
+        "reproduce"
+      ],
+      "tier": 3,
+      "notes": "NSQ0 16-byte music event sequence tables with 0x2F END terminator and symmetric repacking"
+    },
+    {
+      "id": "studio.lv-dir",
+      "category": "studio",
+      "capabilities": [
+        "parse",
+        "decode",
+        "reproduce"
+      ],
+      "tier": 3,
+      "notes": "LV1..LV6 4-byte-aligned level-name and GBA ROM-pointer directories with symmetric repacking"
+    },
+    {
+      "id": "studio.webfoot",
+      "category": "studio",
+      "capabilities": [
+        "parse",
+        "decode",
+        "reproduce"
+      ],
+      "tier": 3,
+      "notes": "Webfoot GBA 0x2C-byte AreaEntry map tables and ByteCodeInterpreter script blobs with symmetric repacking"
     },
     {
       "id": "text.charmap-scripts",

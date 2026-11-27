@@ -81,7 +81,7 @@ fn version_human_and_build_identity_json() {
     assert_eq!(v["schema"], "formatkit.build-identity.v1");
     assert_eq!(v["tool"], "gbakit");
     assert_eq!(v["version"], env!("CARGO_PKG_VERSION"));
-    assert_eq!(v["formatkit_version"], "0.1.17");
+    assert_eq!(v["formatkit_version"], "0.1.19");
     assert!(v["git_commit"].is_string() || v["git_commit"].is_null());
     assert!(v["git_dirty"].is_boolean());
     assert!(v["target"].as_str().is_some_and(|s| !s.is_empty()));
@@ -104,7 +104,7 @@ fn capabilities_schema_and_zero_drift() {
     assert_eq!(v["schema"], "formatkit.capabilities.v1");
     assert_eq!(v["tool"], "gbakit");
     assert_eq!(v["version"], env!("CARGO_PKG_VERSION"));
-    assert_eq!(v["formatkit_version"], "0.1.17");
+    assert_eq!(v["formatkit_version"], "0.1.19");
 
     let allowed = ["parse", "decode", "reproduce", "edit", "author"];
     let formats = v["formats"].as_array().expect("formats array");

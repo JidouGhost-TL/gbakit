@@ -20,10 +20,12 @@ use gba_gfx::{
 use gba_rom::{
     detect_rom_padding, extract_archive_entries, has_agb_nintendo_logo, parse_archive_at,
     scan_all_studio_formats, scan_archives, scan_embedded_multiboot, scan_multicart_subroms,
-    validate_studio_format_slice, AgbHeader, ArchiveFormat, FORMAT_ID_ANIM_FRAM, FORMAT_ID_BROW,
-    FORMAT_ID_IS_ASC03, FORMAT_ID_MAP0, FORMAT_ID_MBM_MCM, FORMAT_ID_MTO0,
-    FORMAT_ID_MULTICART_SUBROM, FORMAT_ID_PAC3, FORMAT_ID_PIFF_RBHF, FORMAT_ID_PLT_ENGINE,
-    FORMAT_ID_RIFF_SCR, HEADER_SIZE, ROM_BUS_BASE,
+    validate_studio_format_slice, AgbHeader, ArchiveFormat, FORMAT_ID_ANIM_FRAM,
+    FORMAT_ID_ANP_ENGINE, FORMAT_ID_BROW, FORMAT_ID_IS_ASC03, FORMAT_ID_JCG_ENGINE,
+    FORMAT_ID_LV_DIR, FORMAT_ID_MAP0, FORMAT_ID_MARKER_BUNDLES, FORMAT_ID_MBM_MCM,
+    FORMAT_ID_MTO0, FORMAT_ID_MULTICART_SUBROM, FORMAT_ID_NITRO_GBA, FORMAT_ID_NSQ0,
+    FORMAT_ID_PAC3, FORMAT_ID_PIFF_RBHF, FORMAT_ID_PLT_ENGINE, FORMAT_ID_RIFF_SCR,
+    FORMAT_ID_SCRP, FORMAT_ID_WEBFOOT, HEADER_SIZE, ROM_BUS_BASE,
 };
 use gba_sound::m4a::{rom_ptr_to_offset, M4aSampleView};
 use gba_sound::{
@@ -1984,7 +1986,15 @@ fn test_decode_entry(
             | FORMAT_ID_MAP0
             | FORMAT_ID_MTO0
             | FORMAT_ID_BROW
-            | FORMAT_ID_PAC3 => {
+            | FORMAT_ID_PAC3
+            | FORMAT_ID_NITRO_GBA
+            | FORMAT_ID_JCG_ENGINE
+            | FORMAT_ID_MARKER_BUNDLES
+            | FORMAT_ID_ANP_ENGINE
+            | FORMAT_ID_SCRP
+            | FORMAT_ID_NSQ0
+            | FORMAT_ID_LV_DIR
+            | FORMAT_ID_WEBFOOT => {
                 validate_studio_format_slice(fmt, slice)?;
             }
             "video.mobiclip-v1" => {

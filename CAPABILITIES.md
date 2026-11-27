@@ -1,6 +1,6 @@
 # gbakit Capabilities
 
-Generated directly from `gbakit capabilities --json` (`formatkit.capabilities.v1`) for **gbakit 0.2.0** (FormatKit `0.1.17`).
+Generated directly from `gbakit capabilities --json` (`formatkit.capabilities.v1`) for **gbakit 0.2.0** (FormatKit `0.1.19`).
 
 ## Supported Formats
 
@@ -14,7 +14,7 @@ Generated directly from `gbakit capabilities --json` (`formatkit.capabilities.v1
 | `compress.bios-rle` | `compress` | parse, decode, reproduce | 3 | GBA BIOS SWI 0x14/0x15 run-length encoding |
 | `compress.bios-huffman` | `compress` | parse, decode, reproduce | 3 | GBA BIOS SWI 0x13 4-bit and 8-bit Huffman codecs |
 | `compress.bios-diff` | `compress` | parse, decode, reproduce | 3 | GBA BIOS SWI 0x16/0x18 8-bit and 16-bit differential filters |
-| `compress.studio-codecs` | `compress` | parse, decode | 2 | Third-party GBA studio codecs (Hudson LZ, Konami dictionary, Shin'en Mode 7) |
+| `compress.studio-codecs` | `compress` | parse, decode, reproduce | 2 | Third-party GBA studio codecs (Hudson LZ, Konami dictionary, Shin'en Mode 7, RLE! byte/halfword RLE, SGGA LZ+Huffman/Elias-gamma) |
 | `gfx.gba-tiles-palettes` | `gfx` | parse, decode, reproduce, edit | 3 | BGR555 palettes, 4bpp/8bpp 8x8 tiles, OBJ sprites, and BG screenblock tilemaps (SCR/TMX) |
 | `audio.m4a-sappy` | `audio` | parse, decode, reproduce, edit | 3 | MP2000/M4A voicegroups, song tables, PCM/DPCM/IMA-ADPCM sample replacement, and WAV/MIDI/SF2 export |
 | `audio.arm-sound-engines` | `audio` | parse, decode | 2 | 17 GBA ARM audio engines (M4A, GAX, MusyX, Krawall, Konami KCE, Rare, Logik State, Southpaw, RD1 Kaede, Paragon5, EAD SMA, Engine SW EIRE, Cosmigo Sonix, Natsume PSG+PCM, Michael Delaney Stereo, Full Fat DirectSound, Hudson JP) with multi-engine detection, ARM7TDMI mixer fallbacks, and WAV/SF2 extraction |
@@ -34,6 +34,14 @@ Generated directly from `gbakit capabilities --json` (`formatkit.capabilities.v1
 | `studio.mto0` | `studio` | parse, decode, reproduce | 2 | MTO0 tagged key/value and compact record tables (multi-sentinel termination) with symmetric repacking |
 | `studio.brow` | `studio` | parse, decode, reproduce | 2 | BROWN named record directories (64B/30B fixed-stride) and aligned message banks with symmetric repacking |
 | `studio.pac3` | `studio` | parse, decode, reproduce | 2 | PAC3 tagged control-word stream parser, ROM scanner, and byte-identical packer |
+| `studio.nitro-gba` | `studio` | parse, decode, reproduce | 3 | Nitro-GBA BOM-framed RECN/RNAN/RGCN/KNBA/LBAL cell, animation, tile, and label containers with symmetric repacking |
+| `studio.jcg-engine` | `studio` | parse, decode, reproduce | 3 | JSC0 tilemaps, JCL0 BGR555 palette banks, JCG0 4bpp/8bpp tilesets, and AOB0 animated-object banks with symmetric repacking |
+| `studio.marker-bundles` | `studio` | parse, decode, reproduce | 3 | Marker-delimited multi-member studio bundles (AGBJ, D233, CBA0, MLXP, CNML) with symmetric repacking |
+| `studio.anp-engine` | `studio` | parse, decode, reproduce | 3 | ANP animation bundles, HAP (+CG4) sprite banks, PLA palette-animation timelines, and PSI3 parameter scripts with symmetric repacking |
+| `studio.scrp` | `studio` | parse, decode, reproduce | 2 | SCRP bytecode and NVAR/SVAR/FUNC symbol-table script containers with per-tag size modes and symmetric repacking |
+| `studio.nsq0` | `studio` | parse, decode, reproduce | 3 | NSQ0 16-byte music event sequence tables with 0x2F END terminator and symmetric repacking |
+| `studio.lv-dir` | `studio` | parse, decode, reproduce | 3 | LV1..LV6 4-byte-aligned level-name and GBA ROM-pointer directories with symmetric repacking |
+| `studio.webfoot` | `studio` | parse, decode, reproduce | 3 | Webfoot GBA 0x2C-byte AreaEntry map tables and ByteCodeInterpreter script blobs with symmetric repacking |
 | `text.charmap-scripts` | `text` | parse, decode, reproduce, edit | 2 | Charmap table scanning, string extraction, and pointer-aware in-ROM replacement |
 | `text.huffman-scripts` | `text` | parse, decode, reproduce, edit | 2 | IS-style and Camelot-style Huffman compressed text extraction and replacement |
 | `text.vwf-fonts` | `text` | parse, decode, reproduce, edit | 2 | 1bpp/2bpp variable-width bitmap font dumping, replacement, and glyph width tables |
