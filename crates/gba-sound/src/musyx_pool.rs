@@ -11,36 +11,13 @@ use crate::sf2::{
     compile_custom_samples_soundfont, extract_rom_title, RawSoundFontSample, SoundFontExport,
 };
 
-/// 32-byte ARM7TDMI prologue of the Factor 5 MusyX DirectSound 8-bit DMA FIFO
-/// stereo clamp routine (`stmfd sp!, {r0-r2, r4-r9, lr}; mov lr, #0; mov r9, #0x20; ...`).
-const ARM_CLIP_STEREO_SIG: [u8; 32] = [
-    0xf7, 0x43, 0x2d, 0xe9, 0x00, 0xe0, 0xa0, 0xe3, 0x20, 0x90, 0xa0, 0xe3, 0xf4, 0x40, 0xd0,
-    0xe0, 0xf4, 0x50, 0xd0, 0xe0, 0xf4, 0x60, 0xd0, 0xe0, 0xfc, 0x70, 0x50, 0xe0, 0x7f, 0x00,
-    0x54, 0xe3,
-];
-
-/// 32-byte ARM7TDMI prologue of the Factor 5 MusyX 16-bit intermediate voice
-/// mixing kernel (`stmfd sp!, {r1-r12, lr}; ldr r2, [r0, #4]; ldr r10, [r0, #8]; ...`).
-const ARM_MIX_VOICE_SIG: [u8; 32] = [
-    0xfe, 0x5f, 0x2d, 0xe9, 0x04, 0x20, 0x90, 0xe5, 0x08, 0xa0, 0x90, 0xe5, 0xb6, 0xb1, 0xd0,
-    0xe1, 0xb4, 0xe1, 0xd0, 0xe1, 0x18, 0x40, 0xd0, 0xe5, 0x19, 0x50, 0xd0, 0xe5, 0x00, 0x00,
-    0x54, 0xe3,
-];
-
-#[inline]
-fn contains_subslice(haystack: &[u8], needle: &[u8]) -> bool {
-    !needle.is_empty()
-        && needle.len() <= haystack.len()
-        && haystack.windows(needle.len()).any(|w| w == needle)
-}
-
 /// Returns `true` if `rom` contains both verified 32-byte Factor 5 MusyX ARM7TDMI
 /// software mixer and DirectSound FIFO clamp kernels.
 ///
 /// Detects string-stripped MusyX builds (including RelocBank32 titles) with 0% false positives.
 #[must_use]
 pub fn has_musyx_arm_mixer(rom: &[u8]) -> bool {
-    contains_subslice(rom, &ARM_CLIP_STEREO_SIG) && contains_subslice(rom, &ARM_MIX_VOICE_SIG)
+    musyx::version::MusyXVersion::has_arm_mixer_signature(rom)
 }
 
 /// Extracted Factor 5 MusyX sample entry from ROM.

@@ -20,61 +20,16 @@ const ROM_BUS_START: u32 = 0x0800_0000;
 /// Default sample playback rate in Hz for GAX samples when unspecified.
 pub const GAX_DEFAULT_SAMPLE_RATE: u32 = 18_158;
 
-/// 32-byte ARM7TDMI prologue of the Shin'en GAX v1.x voice mixing kernel.
-const GAX_ARM_MIX_V1_SIG: [u8; 32] = [
-    0xf1, 0x03, 0x2d, 0xe9, 0x18, 0x70, 0x90, 0xe5, 0x1c, 0x80, 0x90, 0xe5, 0x04, 0x10, 0x90,
-    0xe5, 0x08, 0x20, 0x90, 0xe5, 0x0c, 0x30, 0x90, 0xe5, 0x83, 0x35, 0xa0, 0xe1, 0x10, 0x40,
-    0x90, 0xe5,
-];
-
-/// 32-byte ARM7TDMI prologue of the Shin'en GAX v2.x voice mixing kernel.
-const GAX_ARM_MIX_V2_SIG: [u8; 32] = [
-    0xf0, 0x01, 0x2d, 0xe9, 0xc8, 0x50, 0x9f, 0xe5, 0x00, 0x40, 0x90, 0xe5, 0x0c, 0x30, 0x90,
-    0xe5, 0x10, 0x20, 0x90, 0xe5, 0x08, 0x10, 0x90, 0xe5, 0x04, 0x00, 0x90, 0xe5, 0x00, 0x40,
-    0x84, 0xe0,
-];
-
-/// 32-byte ARM7TDMI prologue of the Shin'en GAX v3.x unsigned `ldrb` SIMD mixing kernel.
-const GAX_ARM_MIX_V3_SIG: [u8; 32] = [
-    0xf0, 0x0f, 0x2d, 0xe9, 0xfe, 0x00, 0x90, 0xe8, 0xc4, 0x85, 0xd1, 0xe7, 0x07, 0x40, 0x94,
-    0xe0, 0x05, 0x40, 0x44, 0x50, 0xc4, 0x95, 0xd1, 0xe7, 0x07, 0x40, 0x94, 0xe0, 0x05, 0x40,
-    0x44, 0x50,
-];
-
-/// 32-byte ARM7TDMI prologue of the Shin'en GAX v3.x DirectSound FIFO clamp kernel.
-const GAX_ARM_CLAMP_V3_SIG: [u8; 32] = [
-    0xf0, 0x1f, 0x2d, 0xe9, 0x0f, 0x00, 0xb0, 0xe8, 0x03, 0x32, 0xa0, 0xe1, 0x01, 0x20, 0x82,
-    0xe0, 0x01, 0xa8, 0xa0, 0xe3, 0x01, 0xa0, 0x4a, 0xe2, 0xff, 0xb0, 0xa0, 0xe3, 0x8b, 0xc2,
-    0xa0, 0xe1,
-];
-
-#[inline]
-fn contains_subslice(haystack: &[u8], needle: &[u8]) -> bool {
-    !needle.is_empty()
-        && needle.len() <= haystack.len()
-        && haystack.windows(needle.len()).any(|w| w == needle)
-}
-
 /// Detect Shin'en GAX engine version from verified ARM7TDMI mixer binary signatures.
 #[must_use]
 pub fn detect_gax_arm_mixer_version(rom: &[u8]) -> Option<GaxVersion> {
-    if contains_subslice(rom, &GAX_ARM_MIX_V3_SIG) && contains_subslice(rom, &GAX_ARM_CLAMP_V3_SIG)
-    {
-        return Some(GaxVersion::V3);
-    }
-    if contains_subslice(rom, &GAX_ARM_MIX_V2_SIG) {
-        return Some(GaxVersion::V2);
-    }
-    if contains_subslice(rom, &GAX_ARM_MIX_V1_SIG) {
-        return Some(GaxVersion::V1);
-    }
-    None
+    GaxVersion::detect_arm_mixer_version(rom)
 }
 
 /// Returns `true` if `rom` contains a verified Shin'en GAX ARM7TDMI software mixer kernel.
 #[must_use]
 pub fn has_gax_arm_mixer(rom: &[u8]) -> bool {
-    detect_gax_arm_mixer_version(rom).is_some()
+    GaxVersion::has_arm_mixer_signature(rom)
 }
 
 /// Extracted Shin'en GAX PCM sample entry from ROM.

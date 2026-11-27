@@ -24,13 +24,17 @@ pub mod sonix_pool;
 pub mod southpaw_pool;
 
 pub use cosmigo_sonix;
+pub use delaney_gba;
 pub use ead_sma;
 pub use engine_sw_audio;
+pub use fullfat_audio;
 pub use gax;
+pub use hudson_jp_audio;
 pub use konami_kce;
 pub use krawall;
 pub use logik_state;
 pub use musyx;
+pub use natsume_audio;
 pub use paragon5;
 pub use rare_audio;
 pub use rd1_kaede;
@@ -118,9 +122,7 @@ pub fn detect_sound_engines(bytes: &[u8]) -> Vec<DetectedSoundEngine> {
         engines.push(DetectedSoundEngine::M4a(m4a));
     }
 
-    if let Some(gax_ver) = gax::version::GaxVersion::detect_from_bytes(bytes)
-        .or_else(|| gax_pool::detect_gax_arm_mixer_version(bytes))
-    {
+    if let Some(gax_ver) = gax::version::GaxVersion::detect_from_bytes(bytes) {
         engines.push(DetectedSoundEngine::Gax(Some(gax_ver)));
     }
 
@@ -191,10 +193,8 @@ pub fn detect_sound_engines(bytes: &[u8]) -> Vec<DetectedSoundEngine> {
         engines.push(DetectedSoundEngine::Southpaw(None));
     }
 
-    if natsume_pool::detect_natsume_engine(bytes) {
-        engines.push(DetectedSoundEngine::Natsume(
-            natsume_pool::detect_natsume_revision(bytes),
-        ));
+    if let Some(rev) = natsume_pool::detect_natsume_with_revision(bytes) {
+        engines.push(DetectedSoundEngine::Natsume(rev));
     }
 
     if delaney_pool::detect_delaney_engine(bytes) {
@@ -216,9 +216,7 @@ pub fn detect_sound_engines(bytes: &[u8]) -> Vec<DetectedSoundEngine> {
 pub fn detect_sound_engine(bytes: &[u8]) -> DetectedSoundEngine {
     if let Some(m4a) = scan_m4a_engine(bytes) {
         DetectedSoundEngine::M4a(m4a)
-    } else if let Some(gax_ver) = gax::version::GaxVersion::detect_from_bytes(bytes)
-        .or_else(|| gax_pool::detect_gax_arm_mixer_version(bytes))
-    {
+    } else if let Some(gax_ver) = gax::version::GaxVersion::detect_from_bytes(bytes) {
         DetectedSoundEngine::Gax(Some(gax_ver))
     } else if let Some(musyx_ver) = musyx::version::MusyXVersion::detect_from_bytes(bytes) {
         DetectedSoundEngine::Musyx(Some(musyx_ver))
@@ -259,8 +257,8 @@ pub fn detect_sound_engine(bytes: &[u8]) -> DetectedSoundEngine {
         || engine_sw_pool::has_engine_sw_v1_tag_with_bank(bytes)
     {
         DetectedSoundEngine::EngineSw(None)
-    } else if natsume_pool::detect_natsume_engine(bytes) {
-        DetectedSoundEngine::Natsume(natsume_pool::detect_natsume_revision(bytes))
+    } else if let Some(rev) = natsume_pool::detect_natsume_with_revision(bytes) {
+        DetectedSoundEngine::Natsume(rev)
     } else if delaney_pool::detect_delaney_engine(bytes) {
         DetectedSoundEngine::Delaney
     } else if let Some(ff_rev) = fullfat_pool::detect_fullfat_engine(bytes) {
