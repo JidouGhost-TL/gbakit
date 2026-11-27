@@ -4115,6 +4115,11 @@ const REGISTRY: &[EmbeddedEntry] = &[
         json: include_str!("../data/fggj.json"),
     },
     EmbeddedEntry {
+        id: "fgzj",
+        game_code: "FGZJ",
+        json: include_str!("../data/fgzj.json"),
+    },
+    EmbeddedEntry {
         id: "fice",
         game_code: "FICE",
         json: include_str!("../data/fice.json"),
@@ -4123,6 +4128,16 @@ const REGISTRY: &[EmbeddedEntry] = &[
         id: "flbe",
         game_code: "FLBE",
         json: include_str!("../data/flbe.json"),
+    },
+    EmbeddedEntry {
+        id: "fm2j",
+        game_code: "FM2J",
+        json: include_str!("../data/fm2j.json"),
+    },
+    EmbeddedEntry {
+        id: "fmbj",
+        game_code: "FMBJ",
+        json: include_str!("../data/fmbj.json"),
     },
     EmbeddedEntry {
         id: "fmkj",
@@ -4208,6 +4223,11 @@ const REGISTRY: &[EmbeddedEntry] = &[
         id: "fxve",
         game_code: "FXVE",
         json: include_str!("../data/fxve.json"),
+    },
+    EmbeddedEntry {
+        id: "fzle",
+        game_code: "FZLE",
+        json: include_str!("../data/fzle.json"),
     },
     EmbeddedEntry {
         id: "fzlj",
@@ -4313,7 +4333,7 @@ mod tests {
     fn all_embedded_definitions_parse_and_validate() {
         let defs = all().expect("all embedded JSON definitions must parse and validate");
         assert_eq!(defs.len(), count());
-        assert_eq!(defs.len(), 846);
+        assert_eq!(defs.len(), 850);
     }
 
     #[test]

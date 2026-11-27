@@ -2,44 +2,196 @@
   "id": "fwcj",
   "game_code": "FWCJ",
   "title": "Famicom Mini 14 - Wrecking Crew (Japan)",
-  "media": "eeprom8k",
-  "size_bytes": 8192,
+  "media": "eeprom512",
+  "size_bytes": 512,
+  "eeprom_rev8": true,
   "magic_signatures": [
     {
-      "offset": 0,
+      "offset": 248,
       "bytes": [
-        95,
-        71,
+        4,
+        7,
+        24,
+        72,
+        73,
         78,
-        73
-      ]
+        71,
+        95
+      ],
+      "description": "8-byte Nintendo GBA NES-wrapper boot stamp (rom[0xC0..0xC8], tag 'ING_') at EEPROM block 0x1F (rev8-logical 0x0F8..0x0FF)."
     }
   ],
-  "checksums": [],
+  "checksums": [
+    {
+      "name": "slot_0_crc16",
+      "algorithm": "crc16_nes_gba",
+      "covered_start": 0,
+      "covered_end": 248,
+      "stored_offset": 14
+    },
+    {
+      "name": "slot_1_crc16",
+      "algorithm": "crc16_nes_gba",
+      "covered_start": 256,
+      "covered_end": 504,
+      "stored_offset": 270
+    }
+  ],
   "fields": [
     {
-      "name": "magic_header",
+      "name": "slot_0_build_timestamp",
       "offset": 0,
       "size": 4,
-      "type": "ascii"
+      "type": "bytes",
+      "confidence": "confirmed",
+      "description": "Slot 0 4-byte BCD build timestamp (MMDDHHmm) copied from ROM header 0x080000C0..0x080000C3.",
+      "evidence": "VRAM emulator save builder copies 12 bytes from 0x080000C0 into slot 0 (EEPROM block 0x00, rev8-logical 0x000) and verifies them on load."
     },
     {
-      "name": "slot_counter",
+      "name": "slot_0_build_tag",
       "offset": 4,
-      "size": 2,
-      "type": "u16_le"
+      "size": 8,
+      "type": "ascii",
+      "confidence": "confirmed",
+      "constraint": {
+        "kind": "ascii-charset",
+        "max_len": 8
+      },
+      "description": "Slot 0 8-byte ASCII build tag ('ING_1_2P') copied from ROM header 0x080000C4..0x080000CB.",
+      "evidence": "VRAM emulator save builder copies 12 bytes from 0x080000C0 into slot 0 (rev8-logical 0x004..0x00B)."
     },
     {
-      "name": "game_progress_flags",
-      "offset": 6,
-      "size": 2,
-      "type": "u16_le"
+      "name": "slot_0_format_version",
+      "offset": 12,
+      "size": 1,
+      "type": "u8",
+      "confidence": "confirmed",
+      "constraint": {
+        "kind": "unsigned-range",
+        "minimum": 2,
+        "maximum": 2
+      },
+      "description": "Slot 0 EEPROM wrapper record format version (always 0x02).",
+      "evidence": "VRAM emulator writes constant 0x02 to header+0x0C (rev8-logical 0x00C) and rejects records where byte 0x0C != 0x02."
     },
     {
-      "name": "player_status_payload",
-      "offset": 8,
-      "size": 16,
-      "type": "bytes"
+      "name": "slot_0_seq_toggle",
+      "offset": 13,
+      "size": 1,
+      "type": "u8",
+      "confidence": "confirmed",
+      "constraint": {
+        "kind": "unsigned-range",
+        "minimum": 0,
+        "maximum": 1
+      },
+      "description": "Slot 0 A/B ping-pong commit toggle (0 or 1, inverted on each save commit).",
+      "evidence": "VRAM emulator toggles header+0x0D via XOR 1 on each commit (rev8-logical 0x00D) and selects the active slot between block 0x00 and block 0x20."
+    },
+    {
+      "name": "slot_0_crc16",
+      "offset": 14,
+      "size": 2,
+      "type": "u16_le",
+      "confidence": "confirmed",
+      "constraint": {
+        "kind": "unsigned-range",
+        "minimum": 0,
+        "maximum": 65535
+      },
+      "description": "Slot 0 reflected CRC-16 (poly=0xD0A2, init=0, +1 trailing zero u32) over 0xF8 bytes with header+0x0E..0x0F zeroed.",
+      "evidence": "VRAM ARM CRC-16 routine (poly 0xD0A2, subs r1, r1, #4; bpl) computes u16 LE over rev8-logical 0x000..0x0F8 and stores at 0x00E."
+    },
+    {
+      "name": "slot_0_payload",
+      "offset": 16,
+      "size": 232,
+      "type": "bytes",
+      "confidence": "confirmed",
+      "description": "Slot 0 game save payload (232 bytes; total record 0xF8 bytes = 31 EEPROM blocks).",
+      "evidence": "VRAM emulator transfers 31 8-byte EEPROM blocks per slot starting at block 0x00 (rev8-logical 0x010..0x0F8)."
+    },
+    {
+      "name": "boot_stamp",
+      "offset": 248,
+      "size": 8,
+      "type": "bytes",
+      "confidence": "confirmed",
+      "description": "8-byte boot stamp (rom[0xC0..0xC8]) written on first boot at EEPROM block 0x1F.",
+      "evidence": "VRAM emulator reads/writes 8-byte stamp from 0x080000C0 at EEPROM block 0x1F (rev8-logical 0x0F8..0x0FF)."
+    },
+    {
+      "name": "slot_1_build_timestamp",
+      "offset": 256,
+      "size": 4,
+      "type": "bytes",
+      "confidence": "confirmed",
+      "description": "Slot 1 4-byte BCD build timestamp (MMDDHHmm) copied from ROM header 0x080000C0..0x080000C3.",
+      "evidence": "VRAM emulator save builder copies 12 bytes from 0x080000C0 into slot 1 (EEPROM block 0x20, rev8-logical 0x100) and verifies them on load."
+    },
+    {
+      "name": "slot_1_build_tag",
+      "offset": 260,
+      "size": 8,
+      "type": "ascii",
+      "confidence": "confirmed",
+      "constraint": {
+        "kind": "ascii-charset",
+        "max_len": 8
+      },
+      "description": "Slot 1 8-byte ASCII build tag ('ING_1_2P') copied from ROM header 0x080000C4..0x080000CB.",
+      "evidence": "VRAM emulator save builder copies 12 bytes from 0x080000C0 into slot 1 (rev8-logical 0x104..0x10B)."
+    },
+    {
+      "name": "slot_1_format_version",
+      "offset": 268,
+      "size": 1,
+      "type": "u8",
+      "confidence": "confirmed",
+      "constraint": {
+        "kind": "unsigned-range",
+        "minimum": 2,
+        "maximum": 2
+      },
+      "description": "Slot 1 EEPROM wrapper record format version (always 0x02).",
+      "evidence": "VRAM emulator writes constant 0x02 to header+0x0C (rev8-logical 0x10C) and rejects records where byte 0x0C != 0x02."
+    },
+    {
+      "name": "slot_1_seq_toggle",
+      "offset": 269,
+      "size": 1,
+      "type": "u8",
+      "confidence": "confirmed",
+      "constraint": {
+        "kind": "unsigned-range",
+        "minimum": 0,
+        "maximum": 1
+      },
+      "description": "Slot 1 A/B ping-pong commit toggle (0 or 1, inverted on each save commit).",
+      "evidence": "VRAM emulator toggles header+0x0D via XOR 1 on each commit (rev8-logical 0x10D) and selects the active slot between block 0x00 and block 0x20."
+    },
+    {
+      "name": "slot_1_crc16",
+      "offset": 270,
+      "size": 2,
+      "type": "u16_le",
+      "confidence": "confirmed",
+      "constraint": {
+        "kind": "unsigned-range",
+        "minimum": 0,
+        "maximum": 65535
+      },
+      "description": "Slot 1 reflected CRC-16 (poly=0xD0A2, init=0, +1 trailing zero u32) over 0xF8 bytes with header+0x0E..0x0F zeroed.",
+      "evidence": "VRAM ARM CRC-16 routine (poly 0xD0A2, subs r1, r1, #4; bpl) computes u16 LE over rev8-logical 0x100..0x1F8 and stores at 0x10E."
+    },
+    {
+      "name": "slot_1_payload",
+      "offset": 272,
+      "size": 232,
+      "type": "bytes",
+      "confidence": "confirmed",
+      "description": "Slot 1 game save payload (232 bytes; total record 0xF8 bytes = 31 EEPROM blocks).",
+      "evidence": "VRAM emulator transfers 31 8-byte EEPROM blocks per slot starting at block 0x20 (rev8-logical 0x110..0x1F8)."
     }
   ]
 }

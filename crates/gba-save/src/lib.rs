@@ -258,6 +258,10 @@ pub enum ChecksumAlgorithm {
     Crc16Buypass,
     /// CRC-16/XMODEM (`poly=0x1021` MSB-first, init `0x0000`, xorout `0x0000`), stored little-endian.
     Crc16Xmodem,
+    /// Nintendo GBA Classic NES Series / Famicom Mini reflected CRC-16 (`poly=0xD0A2`,
+    /// `init=0x0000`) over little-endian `u32` words with one trailing zero word,
+    /// stored little-endian.
+    Crc16NesGba,
 }
 
 impl ChecksumAlgorithm {
@@ -279,7 +283,8 @@ impl ChecksumAlgorithm {
             | Self::Crc16Kermit
             | Self::Crc16X25
             | Self::Crc16Buypass
-            | Self::Crc16Xmodem => 2,
+            | Self::Crc16Xmodem
+            | Self::Crc16NesGba => 2,
             Self::Sum32Le
             | Self::Sum32Be
             | Self::Sum32LeWords
@@ -422,6 +427,31 @@ impl ChecksumAlgorithm {
                 crc.update(bytes);
                 u32::from(crc.finish())
             }
+            Self::Crc16NesGba => {
+                let mut crc: u32 = seed.unwrap_or(0);
+                let (chunks, rem) = bytes.as_chunks::<4>();
+                for chunk in chunks {
+                    crc ^= u32::from_le_bytes(*chunk);
+                    for _ in 0..32 {
+                        let lsb = crc & 1;
+                        crc >>= 1;
+                        if lsb != 0 {
+                            crc ^= 0xD0A2;
+                        }
+                    }
+                }
+                let mut tail = [0u8; 4];
+                tail[..rem.len()].copy_from_slice(rem);
+                crc ^= u32::from_le_bytes(tail);
+                for _ in 0..32 {
+                    let lsb = crc & 1;
+                    crc >>= 1;
+                    if lsb != 0 {
+                        crc ^= 0xD0A2;
+                    }
+                }
+                u32::from((crc as u16) ^ (xor_out.unwrap_or(0) as u16))
+            }
         }
     }
 
@@ -455,7 +485,8 @@ impl ChecksumAlgorithm {
             | Self::Crc16Kermit
             | Self::Crc16X25
             | Self::Crc16Buypass
-            | Self::Crc16Xmodem => u32::from(u16::from_le_bytes([slice[0], slice[1]])),
+            | Self::Crc16Xmodem
+            | Self::Crc16NesGba => u32::from(u16::from_le_bytes([slice[0], slice[1]])),
             Self::Sum32Be => u32::from_be_bytes([slice[0], slice[1], slice[2], slice[3]]),
             Self::Sum32Le
             | Self::Sum32LeWords
@@ -497,7 +528,8 @@ impl ChecksumAlgorithm {
             | Self::Crc16Kermit
             | Self::Crc16X25
             | Self::Crc16Buypass
-            | Self::Crc16Xmodem => {
+            | Self::Crc16Xmodem
+            | Self::Crc16NesGba => {
                 slice.copy_from_slice(&(value as u16).to_le_bytes());
             }
             Self::Sum32Be => {
@@ -2972,6 +3004,36 @@ mod tests {
         assert_eq!(ChecksumAlgorithm::Crc16X25.compute(data, None, None), 0x906E);
         assert_eq!(ChecksumAlgorithm::Crc16Buypass.compute(data, None, None), 0xFEE8);
         assert_eq!(ChecksumAlgorithm::Crc16Xmodem.compute(data, None, None), 0x31C3);
+
+        // Nintendo GBA Classic NES Series / Famicom Mini CRC-16 (poly=0xD0A2, init=0, +1 zero u32)
+        // Verified against live EEPROM dumps:
+        //   FSME (Super Mario Bros., 0x18B high-score record) -> stored 0xF6CD
+        let fsme_slot: [u8; 24] = [
+            0x03, 0x16, 0x18, 0x31, 0x52, 0x49, 0x4F, 0x5F,
+            0x34, 0x5F, 0x32, 0x50, 0x02, 0x01, 0x00, 0x00,
+            0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        ];
+        assert_eq!(ChecksumAlgorithm::Crc16NesGba.compute(&fsme_slot, None, None), 0xF6CD);
+
+        //   FNMJ (Nazo no Murasame Jou, 0x50B FDS record) -> stored 0x7154
+        let mut fnmj_slot: [u8; 80] = [0x00; 80];
+        fnmj_slot[0..16].copy_from_slice(&[
+            0x06, 0x27, 0x02, 0x52, 0x4D, 0x55, 0x52, 0x41,
+            0x53, 0x41, 0x4D, 0x45, 0x02, 0x01, 0x54, 0x71,
+        ]);
+        fnmj_slot[16..20].copy_from_slice(&[0x01, 0x00, 0x00, 0x0A]);
+        fnmj_slot[20..43].fill(0xFF);
+        fnmj_slot[76..80].copy_from_slice(&[0xA5, 0x5A, 0xFF, 0xFF]);
+        let fnmj_spec = ChecksumSpec {
+            name: "slot_1_crc16".into(),
+            algorithm: ChecksumAlgorithm::Crc16NesGba,
+            covered_start: 0,
+            covered_end: 80,
+            stored_offset: 14,
+            seed: None,
+            xor_out: None,
+        };
+        assert_eq!(fnmj_spec.compute_over(&fnmj_slot).unwrap(), 0x7154);
 
         // Optional seed & xor_out overrides
         assert_eq!(
