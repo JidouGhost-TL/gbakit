@@ -90,6 +90,13 @@ impl CapabilitiesManifest {
                     notes: "Embedded 256 KiB EWRAM MultiBoot payload scanning, extraction, and serial link server",
                 },
                 FormatCapability {
+                    id: "rom.multicart",
+                    category: "rom",
+                    capabilities: vec!["parse", "decode"],
+                    tier: 3,
+                    notes: "Bank-aligned (64 KiB) multi-cart compilation sub-ROM detection and recursive asset-map dispatch",
+                },
+                FormatCapability {
                     id: "code.arm-thumb-analysis",
                     category: "code",
                     capabilities: vec!["parse", "decode"],

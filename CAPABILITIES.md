@@ -8,6 +8,7 @@ Generated directly from `gbakit capabilities --json` (`formatkit.capabilities.v1
 |---|---|---|---:|---|
 | `rom.agb-header` | `rom` | parse, decode | 3 | 192-byte AGB cartridge header, complement checksum, SDK save tags, trailing padding, and peripheral signatures |
 | `rom.multiboot` | `rom` | parse, decode, reproduce | 3 | Embedded 256 KiB EWRAM MultiBoot payload scanning, extraction, and serial link server |
+| `rom.multicart` | `rom` | parse, decode | 3 | Bank-aligned (64 KiB) multi-cart compilation sub-ROM detection and recursive asset-map dispatch |
 | `code.arm-thumb-analysis` | `code` | parse, decode | 2 | ARM/Thumb pointer-table scanning, boot reachability trace, and callgraph extraction |
 | `compress.bios-lz77` | `compress` | parse, decode, reproduce | 3 | GBA BIOS SWI 0x11/0x12 LZ77 (VRAM-safe and WRAM) and LZ11 codecs |
 | `compress.bios-rle` | `compress` | parse, decode, reproduce | 3 | GBA BIOS SWI 0x14/0x15 run-length encoding |

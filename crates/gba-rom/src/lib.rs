@@ -18,6 +18,96 @@ pub const MULTIBOOT_ENTRY_OFFSET: usize = 0xC0;
 pub const MAX_MULTIBOOT_SIZE: usize = 256 * 1024;
 /// Expected fixed value at header offset 0xB2.
 pub const FIXED_VALUE: u8 = 0x96;
+/// Byte offset of the 156-byte GBA boot logo inside the 192-byte cartridge header.
+pub const AGB_LOGO_OFFSET: usize = 0x04;
+/// Byte length of the GBA boot logo (`0x04..0xA0`).
+pub const AGB_LOGO_LEN: usize = 156;
+/// Bank alignment (64 KiB) for multi-cart compilation sub-ROM boundaries.
+pub const MULTICART_BANK_ALIGN: usize = 0x10000;
+/// Canonical format ID for a bank-aligned multi-cart sub-ROM header extent.
+pub const FORMAT_ID_MULTICART_SUBROM: &str = "rom.multicart.subrom";
+
+/// Canonical 156-byte GBA cartridge boot logo stored at header offsets `0x04..0xA0`.
+pub const AGB_NINTENDO_LOGO: [u8; AGB_LOGO_LEN] = [
+    0x24, 0xFF, 0xAE, 0x51, 0x69, 0x9A, 0xA2, 0x21, 0x3D, 0x84, 0x82, 0x0A,
+    0x84, 0xE4, 0x09, 0xAD, 0x11, 0x24, 0x8B, 0x98, 0xC0, 0x81, 0x7F, 0x21,
+    0xA3, 0x52, 0xBE, 0x19, 0x93, 0x09, 0xCE, 0x20, 0x10, 0x46, 0x4A, 0x4A,
+    0xF8, 0x27, 0x31, 0xEC, 0x58, 0xC7, 0xE8, 0x33, 0x82, 0xE3, 0xCE, 0xBF,
+    0x85, 0xF4, 0xDF, 0x94, 0xCE, 0x4B, 0x09, 0xC1, 0x94, 0x56, 0x8A, 0xC0,
+    0x13, 0x72, 0xA7, 0xFC, 0x9F, 0x84, 0x4D, 0x73, 0xA3, 0xCA, 0x9A, 0x61,
+    0x58, 0x97, 0xA3, 0x27, 0xFC, 0x03, 0x98, 0x76, 0x23, 0x1D, 0xC7, 0x61,
+    0x03, 0x04, 0xAE, 0x56, 0xBF, 0x38, 0x84, 0x00, 0x40, 0xA7, 0x0E, 0xFD,
+    0xFF, 0x52, 0xFE, 0x03, 0x6F, 0x95, 0x30, 0xF1, 0x97, 0xFB, 0xC0, 0x85,
+    0x60, 0xD6, 0x80, 0x25, 0xA9, 0x63, 0xBE, 0x03, 0x01, 0x4E, 0x38, 0xE2,
+    0xF9, 0xA2, 0x34, 0xFF, 0xBB, 0x3E, 0x03, 0x44, 0x78, 0x00, 0x90, 0xCB,
+    0x88, 0x11, 0x3A, 0x94, 0x65, 0xC0, 0x7C, 0x63, 0x87, 0xF0, 0x3C, 0xAF,
+    0xD6, 0x25, 0xE4, 0x8B, 0x38, 0x0A, 0xAC, 0x72, 0x21, 0xD4, 0xF8, 0x07,
+];
+
+/// Returns `true` if `rom_slice` starts with the exact 156-byte GBA boot logo at `0x04..0xA0`.
+pub fn has_agb_nintendo_logo(rom_slice: &[u8]) -> bool {
+    rom_slice
+        .get(AGB_LOGO_OFFSET..AGB_LOGO_OFFSET + AGB_LOGO_LEN)
+        .is_some_and(|logo| logo == AGB_NINTENDO_LOGO)
+}
+
+/// A bank-aligned sub-ROM discovered inside a multi-cart compilation cartridge.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct MulticartSubRom {
+    /// Byte offset where the sub-ROM begins (64 KiB aligned, `>= 0x10000`).
+    pub offset: usize,
+    /// Byte length of the sub-ROM slice `[offset .. next_sub_offset_or_end]`.
+    pub length: usize,
+    /// Header title (ASCII, up to 12 chars).
+    pub title: String,
+    /// Header 4-character game code.
+    pub game_code: String,
+    /// Header 2-character maker code.
+    pub maker_code: String,
+}
+
+/// Scan `rom` at `>= 0x10000` on 64 KiB (`0x10000`) bank-aligned boundaries for embedded
+/// full GBA sub-ROMs matching the exact 156-byte boot logo (`+0x04..+0xA0`), fixed `0x96`
+/// byte (`+0xB2`), and valid header complement checksum (`+0xBD`).
+///
+/// Each discovered sub-ROM spans `[sub_base .. next_sub_base_or_end]`.
+pub fn scan_multicart_subroms(rom: &[u8]) -> Vec<MulticartSubRom> {
+    let effective_len = rom.len().min(MAX_ROM_SIZE);
+    if effective_len < MULTICART_BANK_ALIGN + HEADER_SIZE {
+        return Vec::new();
+    }
+
+    let mut found: Vec<(usize, AgbHeader)> = Vec::new();
+    let mut off = MULTICART_BANK_ALIGN;
+    while off.checked_add(HEADER_SIZE).is_some_and(|end| end <= effective_len) {
+        if rom[off + 0xB2] == FIXED_VALUE && has_agb_nintendo_logo(&rom[off..]) {
+            if let Ok(hdr) = AgbHeader::parse(&rom[off..]) {
+                if hdr.is_valid() {
+                    found.push((off, hdr));
+                }
+            }
+        }
+        off = off.saturating_add(MULTICART_BANK_ALIGN);
+    }
+
+    let mut subroms = Vec::with_capacity(found.len());
+    for (idx, (base, hdr)) in found.iter().enumerate() {
+        let next_base = found
+            .get(idx + 1)
+            .map_or(effective_len, |&(next_off, _)| next_off);
+        let length = next_base.saturating_sub(*base);
+        if length >= HEADER_SIZE {
+            subroms.push(MulticartSubRom {
+                offset: *base,
+                length,
+                title: hdr.title.clone(),
+                game_code: hdr.game_code.clone(),
+                maker_code: hdr.maker_code.clone(),
+            });
+        }
+    }
+    subroms
+}
 
 /// Parsed 192-byte GBA cartridge header.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -648,5 +738,51 @@ mod tests {
         let extracted = found[0].extract(&rom).unwrap();
         assert_eq!(extracted.len(), 512);
         assert!(is_multiboot_image(extracted));
+    }
+
+    #[test]
+    fn scans_multicart_subroms_on_64k_boundaries() {
+        let mut rom = vec![0xFFu8; 0x50000];
+        // Outer header at 0x00000
+        let mut outer = synthetic_rom();
+        outer[AGB_LOGO_OFFSET..AGB_LOGO_OFFSET + AGB_LOGO_LEN]
+            .copy_from_slice(&AGB_NINTENDO_LOGO);
+        rom[..outer.len()].copy_from_slice(&outer);
+
+        // Valid Sub-ROM #1 at 0x10000
+        let mut sub1 = outer.clone();
+        sub1[0xA0..0xAC].copy_from_slice(b"SUB GAME 1  ");
+        sub1[0xAC..0xB0].copy_from_slice(b"BS1E");
+        sub1[0xBD] = compute_header_complement(&sub1[0xA0..0xBD]);
+        rom[0x10000..0x10000 + sub1.len()].copy_from_slice(&sub1);
+
+        // Unaligned header at 0x20004 (must be ignored — not 64 KiB aligned)
+        rom[0x20004..0x20004 + sub1.len()].copy_from_slice(&sub1);
+
+        // Corrupted logo at 0x20000 (must be ignored)
+        let mut bad_logo = sub1.clone();
+        bad_logo[AGB_LOGO_OFFSET] ^= 0xFF;
+        rom[0x20000..0x20000 + bad_logo.len()].copy_from_slice(&bad_logo);
+
+        // Valid Sub-ROM #2 at 0x30000
+        let mut sub2 = outer;
+        sub2[0xA0..0xAC].copy_from_slice(b"SUB GAME 2  ");
+        sub2[0xAC..0xB0].copy_from_slice(b"BS2E");
+        sub2[0xBD] = compute_header_complement(&sub2[0xA0..0xBD]);
+        rom[0x30000..0x30000 + sub2.len()].copy_from_slice(&sub2);
+
+        // Corrupted checksum at 0x40000 (must be ignored)
+        let mut bad_chk = sub2;
+        bad_chk[0xBD] ^= 0x01;
+        rom[0x40000..0x40000 + bad_chk.len()].copy_from_slice(&bad_chk);
+
+        let subs = scan_multicart_subroms(&rom);
+        assert_eq!(subs.len(), 2);
+        assert_eq!(subs[0].offset, 0x10000);
+        assert_eq!(subs[0].length, 0x20000);
+        assert_eq!(subs[0].game_code, "BS1E");
+        assert_eq!(subs[1].offset, 0x30000);
+        assert_eq!(subs[1].length, 0x20000);
+        assert_eq!(subs[1].game_code, "BS2E");
     }
 }

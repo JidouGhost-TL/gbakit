@@ -6,7 +6,7 @@
 
 #![deny(unsafe_code)]
 
-use std::collections::{BTreeMap, HashMap};
+use std::collections::{BTreeMap, HashMap, HashSet};
 use std::fs;
 use std::path::Path;
 
@@ -18,11 +18,12 @@ use gba_gfx::{
     decode_palette, decode_tile_4bpp, decode_tile_8bpp, render_palette_swatch_rgba, RawPngEncoder,
 };
 use gba_rom::{
-    detect_rom_padding, extract_archive_entries, parse_archive_at, scan_all_studio_formats,
-    scan_archives, scan_embedded_multiboot, validate_studio_format_slice, AgbHeader, ArchiveFormat,
-    FORMAT_ID_ANIM_FRAM, FORMAT_ID_BROW, FORMAT_ID_IS_ASC03, FORMAT_ID_MAP0, FORMAT_ID_MBM_MCM,
-    FORMAT_ID_MTO0, FORMAT_ID_PAC3, FORMAT_ID_PIFF_RBHF, FORMAT_ID_PLT_ENGINE, FORMAT_ID_RIFF_SCR,
-    HEADER_SIZE, ROM_BUS_BASE,
+    detect_rom_padding, extract_archive_entries, has_agb_nintendo_logo, parse_archive_at,
+    scan_all_studio_formats, scan_archives, scan_embedded_multiboot, scan_multicart_subroms,
+    validate_studio_format_slice, AgbHeader, ArchiveFormat, FORMAT_ID_ANIM_FRAM, FORMAT_ID_BROW,
+    FORMAT_ID_IS_ASC03, FORMAT_ID_MAP0, FORMAT_ID_MBM_MCM, FORMAT_ID_MTO0,
+    FORMAT_ID_MULTICART_SUBROM, FORMAT_ID_PAC3, FORMAT_ID_PIFF_RBHF, FORMAT_ID_PLT_ENGINE,
+    FORMAT_ID_RIFF_SCR, HEADER_SIZE, ROM_BUS_BASE,
 };
 use gba_sound::m4a::{rom_ptr_to_offset, M4aSampleView};
 use gba_sound::{
@@ -48,11 +49,26 @@ pub const ASSET_MAP_KIT: &str = "gbakit";
 /// Maximum number of code references attached to a single entry.
 const MAX_CODE_REFS_PER_ENTRY: usize = 8;
 
-/// Maximum decompressed size accepted when auto-probing BIOS compressed streams.
+/// Maximum decompressed size accepted when auto-probing isolated BIOS compressed streams.
 const AUTO_SCAN_MAX_DECOMPRESSED: usize = 256 * 1024;
 
-/// Maximum number of pointer-probed graphics/compressed entries emitted during auto-generation.
+/// Maximum number of isolated pointer-probed graphics/compressed entries emitted during auto-generation.
 const MAX_AUTO_PROBED_ENTRIES: usize = 4096;
+
+/// Minimum contiguous valid ROM pointers required to form a candidate BIOS compression table.
+const PTR_TABLE_MIN_ENTRIES: usize = 4;
+
+/// Minimum distinct targets in a candidate pointer table to avoid single-target repetition noise.
+const PTR_TABLE_MIN_DISTINCT: usize = 2;
+
+/// Plausible decompressed size range for pointer-table-guided BIOS compression streams (16 B ..= 512 KiB).
+const PTR_TABLE_MIN_DECOMPRESSED: usize = 16;
+const PTR_TABLE_MAX_DECOMPRESSED: usize = 512 * 1024;
+
+/// Hard caps guarding against quadratic/adversarial pointer-table scans.
+const PTR_TABLE_MAX_TARGETS_PER_TABLE: usize = 4096;
+const PTR_TABLE_MAX_TOTAL_PROBES: usize = 24_000;
+const PTR_TABLE_MAX_EMITTED: usize = 32_768;
 
 /// Root document conforming to `formatkit.asset-map.v1`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -367,6 +383,15 @@ pub fn generate_asset_map(
     opts: &GenerateOptions,
     merge_from: Option<&AssetMap>,
 ) -> AssetMap {
+    generate_asset_map_inner(rom, opts, merge_from, 0)
+}
+
+fn generate_asset_map_inner(
+    rom: &[u8],
+    opts: &GenerateOptions,
+    merge_from: Option<&AssetMap>,
+    depth: u8,
+) -> AssetMap {
     let mut candidates: Vec<CandidateExtent> = Vec::new();
     let mut free_space: Vec<FreeSpaceRegion> = merge_from
         .map(|prev| prev.free_space.clone())
@@ -399,6 +424,17 @@ pub fn generate_asset_map(
         }
     }
 
+    // Detect bank-aligned multi-cart sub-ROMs at depth == 0 only (prevents infinite recursion).
+    // Outer-ROM scanners still scan the full `rom` (so absolute `0x08xxxxxx` references and
+    // cross-bank assets are never lost), while each sub-ROM is additionally mapped recursively
+    // with its own `0x08000000`-relative address space and shifted by `+sub_base`.
+    let subroms = if depth == 0 {
+        scan_multicart_subroms(rom)
+    } else {
+        Vec::new()
+    };
+    let subrom_offsets: HashSet<usize> = subroms.iter().map(|s| s.offset).collect();
+
     // 1. GBA ROM header (0x000..0x0C0)
     if rom.len() >= HEADER_SIZE && AgbHeader::parse(rom).is_ok() {
         candidates.push(CandidateExtent {
@@ -413,6 +449,103 @@ pub fn generate_asset_map(
             mapping: None,
             verified: Some(true),
         });
+    }
+
+    // 1b. Recursive multi-cart sub-ROM asset-map dispatch (depth == 0 -> depth == 1)
+    if depth == 0 && !subroms.is_empty() {
+        for (sub_idx, sub) in subroms.iter().enumerate() {
+            let Some(sub_end) = sub.offset.checked_add(sub.length) else {
+                continue;
+            };
+            if sub_end > rom.len() || sub.length < HEADER_SIZE {
+                continue;
+            }
+            let sub_slice = &rom[sub.offset..sub_end];
+            let sub_map = generate_asset_map_inner(sub_slice, opts, None, depth + 1);
+
+            for fs_reg in sub_map.free_space {
+                let shifted_off = fs_reg.offset.saturating_add(sub.offset as u64);
+                if shifted_off.saturating_add(fs_reg.size) <= rom.len() as u64
+                    && !free_space
+                        .iter()
+                        .any(|r| r.offset == shifted_off && r.size == fs_reg.size)
+                {
+                    free_space.push(FreeSpaceRegion {
+                        offset: shifted_off,
+                        size: fs_reg.size,
+                        bank: fs_reg.bank,
+                        note: Some(format!(
+                            "subrom{sub_idx}: {}",
+                            fs_reg.note.as_deref().unwrap_or("free space")
+                        )),
+                    });
+                }
+            }
+
+            for entry in sub_map.entries {
+                if entry.status == AssetStatus::Unknown {
+                    continue;
+                }
+                let Some(rel_off_u64) = entry.offset else {
+                    continue;
+                };
+                let rel_off = rel_off_u64 as usize;
+                let sz = entry.size as usize;
+                let Some(abs_off) = sub.offset.checked_add(rel_off) else {
+                    continue;
+                };
+                if sz == 0 || abs_off.checked_add(sz).is_none_or(|e| e > rom.len()) {
+                    continue;
+                }
+
+                let shifted_refs: Vec<PointerReference> = entry
+                    .references
+                    .into_iter()
+                    .filter_map(|mut r| {
+                        let new_at = r.at.checked_add(sub.offset as u64)?;
+                        if new_at.checked_add(u64::from(r.width))? <= rom.len() as u64 {
+                            r.at = new_at;
+                            Some(r)
+                        } else {
+                            None
+                        }
+                    })
+                    .collect();
+
+                let (id, format_id, priority) =
+                    if rel_off == 0 && entry.format_id.as_deref() == Some("gba.rom-header") {
+                        (
+                            format!("multicart_subrom_{sub_idx}_{:08x}", sub.offset),
+                            Some(FORMAT_ID_MULTICART_SUBROM.to_string()),
+                            100u8,
+                        )
+                    } else {
+                        let prio = if entry.status == AssetStatus::Opaque {
+                            94u8
+                        } else {
+                            84u8
+                        };
+                        (
+                            format!("subrom{sub_idx}_{}", entry.id),
+                            entry.format_id,
+                            prio,
+                        )
+                    };
+
+                candidates.push(CandidateExtent {
+                    priority,
+                    offset: abs_off,
+                    size: sz,
+                    id,
+                    status: entry.status,
+                    format_id,
+                    reserved_capacity: entry.reserved_capacity,
+                    references: shifted_refs,
+                    mapping: entry.mapping,
+                    verified: entry.verified,
+                });
+            }
+        }
     }
 
     // 2. Trailing ROM padding (and auto-populated free_space region when >= 64 bytes)
@@ -456,6 +589,51 @@ pub fn generate_asset_map(
         }
     }
 
+    // 2b. Inter-bank padding at the end of the outer boot-menu slice before the first multi-cart sub-ROM
+    if let Some(first_sub) = subroms.first() {
+        let menu_slice = &rom[..first_sub.offset.min(rom.len())];
+        if let Some(pad) = detect_rom_padding(menu_slice, 64) {
+            if pad.padding_bytes >= 64 && pad.payload_size < menu_slice.len() {
+                let pad_off = pad.payload_size as u64;
+                let pad_sz = pad.padding_bytes as u64;
+                if !free_space
+                    .iter()
+                    .any(|r| r.offset == pad_off && r.size == pad_sz)
+                {
+                    free_space.push(FreeSpaceRegion {
+                        offset: pad_off,
+                        size: pad_sz,
+                        bank: None,
+                        note: Some("multicart pre-subrom bank padding".to_string()),
+                    });
+                }
+                candidates.push(CandidateExtent {
+                    priority: 94,
+                    offset: pad.payload_size,
+                    size: pad.padding_bytes,
+                    id: format!("multicart_padding_{:08x}", pad.payload_size),
+                    status: AssetStatus::Opaque,
+                    format_id: None,
+                    reserved_capacity: None,
+                    references: Vec::new(),
+                    mapping: Some(AssetMapping {
+                        kind: MappingKind::Opaque,
+                        params: None,
+                        paired_with: None,
+                        relations: BTreeMap::new(),
+                        inner_format: None,
+                        opaque_class: Some(OpaqueClass::Padding),
+                        evidence: Some(format!(
+                            "uniform pre-subrom bank padding ({:?})",
+                            pad.kind
+                        )),
+                    }),
+                    verified: Some(true),
+                });
+            }
+        }
+    }
+
     // 3. Embedded archives (PACK, WAYFORWARD, SFCD)
     for arch in scan_archives(rom) {
         if arch.total_size > 0 && arch.rom_offset + arch.total_size <= rom.len() {
@@ -482,7 +660,12 @@ pub fn generate_asset_map(
     // 3b. Wave-1 & Wave-2 unified studio formats (10 families)
     // PIFF/RBHF uses priority 90 (> archive.pack's 88) to explicitly disambiguate PIFF PACK sub-chunks.
     for ext in scan_all_studio_formats(rom) {
-        if ext.size > 0 && ext.offset.checked_add(ext.size).is_some_and(|e| e <= rom.len()) {
+        if ext.size > 0
+            && ext
+                .offset
+                .checked_add(ext.size)
+                .is_some_and(|e| e <= rom.len())
+        {
             let priority = if ext.format_id == FORMAT_ID_PIFF_RBHF {
                 90
             } else {
@@ -503,9 +686,10 @@ pub fn generate_asset_map(
         }
     }
 
-    // 4. Embedded MultiBoot payloads
+    // 4. Embedded MultiBoot payloads (skip any offset already claimed as a multi-cart sub-ROM)
     for mb in scan_embedded_multiboot(rom) {
-        if mb.length > 0 && mb.offset + mb.length <= rom.len() {
+        if !subrom_offsets.contains(&mb.offset) && mb.length > 0 && mb.offset + mb.length <= rom.len()
+        {
             candidates.push(CandidateExtent {
                 priority: 86,
                 offset: mb.offset,
@@ -558,8 +742,12 @@ pub fn generate_asset_map(
         }
     }
 
-    // 6. Audio engine sound tables & sample pools (all 13 engines)
+    // 6. Audio engine sound tables & sample pools (all 17 engines)
     collect_audio_candidates(rom, &mut candidates);
+
+    // 6b. Pointer-table-guided BIOS LZ77/Huffman/RLE scanner over unclaimed ROM regions
+    let mut ptr_table_emitted: HashSet<usize> = HashSet::new();
+    collect_pointer_table_bios_candidates(rom, &mut candidates, &mut ptr_table_emitted);
 
     // 7. Single-pass 4-byte-aligned ROM pointer scan (for fast BIOS compression & palette probes + code_refs)
     let mut ptr_refs: HashMap<usize, Vec<u32>> = HashMap::new();
@@ -567,7 +755,12 @@ pub fn generate_asset_map(
     scan_rom_pointers(rom, opts.with_code_refs, &mut ptr_refs, &mut probe_targets);
 
     // Probe pointer targets (plus bounded linear scan on small ROMs <= 256 KiB) for BIOS streams & palettes
-    collect_probed_gfx_and_compress_candidates(rom, &probe_targets, &mut candidates);
+    collect_probed_gfx_and_compress_candidates(
+        rom,
+        &probe_targets,
+        &ptr_table_emitted,
+        &mut candidates,
+    );
 
     // Deterministic overlap resolution: higher priority wins, then earlier offset, then larger size.
     candidates.sort_by(|a, b| {
@@ -1049,40 +1242,343 @@ fn scan_rom_pointers(
     probe_targets.sort_unstable();
 }
 
+/// Verified BIOS compressed stream metadata cached during pointer-table probing.
+#[derive(Debug, Clone, Copy)]
+struct BiosStreamProbe {
+    consumed: usize,
+    format_id: &'static str,
+    prefix: &'static str,
+}
+
+/// Fast header-only pre-check for a plausible GBA BIOS compressed stream (`0x10`, `0x24`, `0x28`, `0x30`)
+/// with decompressed size in `16..=512 KiB`.
+fn is_plausible_bios_header(rom: &[u8], off: usize) -> bool {
+    let Some(slice) = rom.get(off..) else {
+        return false;
+    };
+    if slice.len() < 8 {
+        return false;
+    }
+    let tag = slice[0];
+    if !matches!(tag, 0x10 | 0x24 | 0x28 | 0x30) {
+        return false;
+    }
+    let dec_len = (slice[1] as usize) | ((slice[2] as usize) << 8) | ((slice[3] as usize) << 16);
+    if !(PTR_TABLE_MIN_DECOMPRESSED..=PTR_TABLE_MAX_DECOMPRESSED).contains(&dec_len) {
+        return false;
+    }
+    if matches!(tag, 0x24 | 0x28) {
+        let tree_bytes = (slice[4] as usize + 1) * 2;
+        if 5 + tree_bytes >= slice.len() {
+            return false;
+        }
+    }
+    true
+}
+
+/// Attempt to decompress a GBA BIOS compressed stream (`0x10` LZ77, `0x24`/`0x28` Huffman, `0x30` RLE)
+/// at `off` and return its exact consumed input byte length on success.
+fn verify_bios_stream_for_table(rom: &[u8], off: usize) -> Option<BiosStreamProbe> {
+    if !is_plausible_bios_header(rom, off) {
+        return None;
+    }
+    let slice = rom.get(off..)?;
+    let tag = slice[0];
+    let dec_len = (slice[1] as usize) | ((slice[2] as usize) << 8) | ((slice[3] as usize) << 16);
+
+    match tag {
+        0x10 => {
+            let outcome = decode_lz77(slice, PTR_TABLE_MAX_DECOMPRESSED).ok()?;
+            if outcome.consumed >= 8 && outcome.bytes.len() == dec_len {
+                Some(BiosStreamProbe {
+                    consumed: outcome.consumed,
+                    format_id: "compress.bios-lz77",
+                    prefix: "lz77",
+                })
+            } else {
+                None
+            }
+        }
+        0x30 => {
+            let outcome = decode_rle(slice, PTR_TABLE_MAX_DECOMPRESSED).ok()?;
+            if outcome.consumed >= 8 && outcome.bytes.len() == dec_len {
+                Some(BiosStreamProbe {
+                    consumed: outcome.consumed,
+                    format_id: "compress.bios-rle",
+                    prefix: "rle",
+                })
+            } else {
+                None
+            }
+        }
+        0x24 | 0x28 => {
+            let outcome = decode_huffman(slice, PTR_TABLE_MAX_DECOMPRESSED).ok()?;
+            if outcome.consumed >= 8 && outcome.bytes.len() == dec_len {
+                Some(BiosStreamProbe {
+                    consumed: outcome.consumed,
+                    format_id: "compress.bios-huffman",
+                    prefix: "huffman",
+                })
+            } else {
+                None
+            }
+        }
+        _ => None,
+    }
+}
+
+/// Build sorted, merged non-overlapping intervals from existing typed candidates.
+fn build_claimed_intervals(candidates: &[CandidateExtent], rom_len: usize) -> Vec<(usize, usize)> {
+    let mut raw: Vec<(usize, usize)> = candidates
+        .iter()
+        .filter_map(|c| {
+            let end = c.offset.checked_add(c.size)?.min(rom_len);
+            if c.offset < end {
+                Some((c.offset, end))
+            } else {
+                None
+            }
+        })
+        .collect();
+    raw.sort_unstable();
+    let mut merged: Vec<(usize, usize)> = Vec::with_capacity(raw.len());
+    for (s, e) in raw {
+        if let Some(last) = merged.last_mut() {
+            if s <= last.1 {
+                if e > last.1 {
+                    last.1 = e;
+                }
+                continue;
+            }
+        }
+        merged.push((s, e));
+    }
+    merged
+}
+
+/// Scan unclaimed 4-byte-aligned ROM regions for contiguous pointer tables (`>= 4` valid
+/// `0x08xxxxxx` 4-byte-aligned ROM pointers) where `>= 75%` of distinct targets start with
+/// a valid GBA BIOS compression header (`0x10`, `0x24`/`0x28`, `0x30`) and decompress cleanly
+/// via `gba-compress`. Emits each verified compressed stream with its exact consumed length.
+fn collect_pointer_table_bios_candidates(
+    rom: &[u8],
+    candidates: &mut Vec<CandidateExtent>,
+    emitted_targets: &mut HashSet<usize>,
+) {
+    let rom_len = rom.len().min(gba_rom::MAX_ROM_SIZE);
+    if rom_len < HEADER_SIZE + PTR_TABLE_MIN_ENTRIES * 4 {
+        return;
+    }
+    let rom_len_u32 = u32::try_from(rom_len).unwrap_or(0);
+    let bus_end = ROM_BUS_BASE.saturating_add(rom_len_u32);
+    let claimed = build_claimed_intervals(candidates, rom_len);
+
+    let mut probe_cache: HashMap<usize, Option<BiosStreamProbe>> = HashMap::new();
+    let mut total_probes = 0usize;
+    let mut total_emitted = 0usize;
+
+    let mut claimed_idx = 0usize;
+    let mut off = HEADER_SIZE & !3;
+    let mut run: Vec<usize> = Vec::new();
+    let mut distinct: Vec<usize> = Vec::new();
+    let mut distinct_set: HashSet<usize> = HashSet::new();
+
+    let flush_run = |run: &mut Vec<usize>,
+                     distinct: &mut Vec<usize>,
+                     distinct_set: &mut HashSet<usize>,
+                     probe_cache: &mut HashMap<usize, Option<BiosStreamProbe>>,
+                     total_probes: &mut usize,
+                     total_emitted: &mut usize,
+                     candidates: &mut Vec<CandidateExtent>,
+                     emitted_targets: &mut HashSet<usize>| {
+        if run.len() < PTR_TABLE_MIN_ENTRIES || *total_emitted >= PTR_TABLE_MAX_EMITTED {
+            run.clear();
+            return;
+        }
+        distinct.clear();
+        distinct_set.clear();
+        for &target in run.iter() {
+            if distinct.len() >= PTR_TABLE_MAX_TARGETS_PER_TABLE {
+                break;
+            }
+            if distinct_set.insert(target) {
+                distinct.push(target);
+            }
+        }
+        run.clear();
+
+        let n = distinct.len();
+        if n < PTR_TABLE_MIN_DISTINCT {
+            return;
+        }
+
+        // Fast header-only pre-filter: require >= 75% plausible BIOS headers before any decoding.
+        let header_hits = distinct
+            .iter()
+            .filter(|&&t| is_plausible_bios_header(rom, t))
+            .count();
+        if header_hits.saturating_mul(4) < n.saturating_mul(3) {
+            return;
+        }
+
+        // Decompress-validate distinct targets with memoization and early exit.
+        let mut decoded_hits = 0usize;
+        for (i, &target) in distinct.iter().enumerate() {
+            let remaining = n - i;
+            if (decoded_hits + remaining).saturating_mul(4) < n.saturating_mul(3) {
+                return;
+            }
+            let result = if let Some(&cached) = probe_cache.get(&target) {
+                cached
+            } else {
+                if *total_probes >= PTR_TABLE_MAX_TOTAL_PROBES {
+                    return;
+                }
+                *total_probes += 1;
+                let res = verify_bios_stream_for_table(rom, target);
+                probe_cache.insert(target, res);
+                res
+            };
+            if result.is_some() {
+                decoded_hits += 1;
+            }
+        }
+
+        if decoded_hits.saturating_mul(4) < n.saturating_mul(3) {
+            return;
+        }
+
+        for &target in distinct.iter() {
+            if *total_emitted >= PTR_TABLE_MAX_EMITTED {
+                break;
+            }
+            if !emitted_targets.insert(target) {
+                continue;
+            }
+            if let Some(Some(probe)) = probe_cache.get(&target) {
+                if target.checked_add(probe.consumed).is_some_and(|e| e <= rom_len) {
+                    candidates.push(CandidateExtent {
+                        priority: 76,
+                        offset: target,
+                        size: probe.consumed,
+                        id: format!("{}_{target:08x}", probe.prefix),
+                        status: AssetStatus::Identified,
+                        format_id: Some(probe.format_id.to_string()),
+                        reserved_capacity: None,
+                        references: Vec::new(),
+                        mapping: None,
+                        verified: Some(true),
+                    });
+                    *total_emitted += 1;
+                }
+            }
+        }
+    };
+
+    while off + 4 <= rom_len {
+        // Advance claimed cursor past intervals ending at or before `off`
+        while claimed_idx < claimed.len() && claimed[claimed_idx].1 <= off {
+            claimed_idx += 1;
+        }
+        // If `off..off+4` intersects a claimed interval, flush current run and jump past it
+        if claimed_idx < claimed.len() && claimed[claimed_idx].0 < off + 4 {
+            flush_run(
+                &mut run,
+                &mut distinct,
+                &mut distinct_set,
+                &mut probe_cache,
+                &mut total_probes,
+                &mut total_emitted,
+                candidates,
+                emitted_targets,
+            );
+            off = (claimed[claimed_idx].1 + 3) & !3;
+            continue;
+        }
+
+        let word = u32::from_le_bytes([rom[off], rom[off + 1], rom[off + 2], rom[off + 3]]);
+        if word >= ROM_BUS_BASE && word < bus_end {
+            let target = (word - ROM_BUS_BASE) as usize;
+            if target >= HEADER_SIZE && target.is_multiple_of(4) && target + 8 <= rom_len {
+                run.push(target);
+                off += 4;
+                continue;
+            }
+        }
+
+        if !run.is_empty() {
+            flush_run(
+                &mut run,
+                &mut distinct,
+                &mut distinct_set,
+                &mut probe_cache,
+                &mut total_probes,
+                &mut total_emitted,
+                candidates,
+                emitted_targets,
+            );
+        }
+        off += 4;
+    }
+
+    if !run.is_empty() {
+        flush_run(
+            &mut run,
+            &mut distinct,
+            &mut distinct_set,
+            &mut probe_cache,
+            &mut total_probes,
+            &mut total_emitted,
+            candidates,
+            emitted_targets,
+        );
+    }
+}
+
 fn collect_probed_gfx_and_compress_candidates(
     rom: &[u8],
     probe_targets: &[usize],
+    already_emitted: &HashSet<usize>,
     out: &mut Vec<CandidateExtent>,
 ) {
-    let mut probed = 0usize;
+    let mut bios_probed = 0usize;
+    let mut pal_probed = 0usize;
 
     for &off in probe_targets {
-        if probed >= MAX_AUTO_PROBED_ENTRIES {
+        if bios_probed >= MAX_AUTO_PROBED_ENTRIES && pal_probed >= MAX_AUTO_PROBED_ENTRIES {
             break;
         }
-        if off < HEADER_SIZE || off + 8 > rom.len() {
+        if off < HEADER_SIZE || off + 8 > rom.len() || already_emitted.contains(&off) {
             continue;
         }
-        if let Some(cand) = probe_bios_stream_at(rom, off) {
-            out.push(cand);
-            probed += 1;
-            continue;
+        if bios_probed < MAX_AUTO_PROBED_ENTRIES && is_plausible_bios_header(rom, off) {
+            if let Some(cand) = probe_bios_stream_at(rom, off) {
+                out.push(cand);
+                bios_probed += 1;
+                continue;
+            }
         }
-        if let Some(cand) = probe_palette_at(rom, off) {
-            out.push(cand);
-            probed += 1;
+        if pal_probed < MAX_AUTO_PROBED_ENTRIES {
+            if let Some(cand) = probe_palette_at(rom, off) {
+                out.push(cand);
+                pal_probed += 1;
+            }
         }
     }
 
     // For small ROMs (<= 256 KiB, e.g., synthetic fixtures or tiny homebrew without pointer tables),
     // also do a quick 4-byte-aligned linear pass for BIOS LZ77/RLE/Huffman streams.
-    if rom.len() <= 256 * 1024 && probed < MAX_AUTO_PROBED_ENTRIES {
+    if rom.len() <= 256 * 1024 && bios_probed < MAX_AUTO_PROBED_ENTRIES {
         let mut off = HEADER_SIZE;
-        while off + 8 <= rom.len() && probed < MAX_AUTO_PROBED_ENTRIES {
+        while off + 8 <= rom.len() && bios_probed < MAX_AUTO_PROBED_ENTRIES {
+            if already_emitted.contains(&off) {
+                off += 4;
+                continue;
+            }
             if let Some(cand) = probe_bios_stream_at(rom, off) {
                 let advance = ((cand.size + 3) & !3).max(4);
                 out.push(cand);
-                probed += 1;
+                bios_probed += 1;
                 off = off.saturating_add(advance);
             } else {
                 off += 4;
@@ -1466,6 +1962,12 @@ fn test_decode_entry(
         match fmt {
             "gba.rom-header" => {
                 AgbHeader::parse(slice).map_err(|e| e.to_string())?;
+            }
+            FORMAT_ID_MULTICART_SUBROM => {
+                let hdr = AgbHeader::parse(slice).map_err(|e| e.to_string())?;
+                if !hdr.is_valid() || !has_agb_nintendo_logo(slice) {
+                    return Err("invalid multicart sub-ROM header or boot logo".to_string());
+                }
             }
             "rom.multiboot" => {
                 AgbHeader::parse(slice).map_err(|e| e.to_string())?;
@@ -2592,5 +3094,151 @@ mod tests {
             e.format_id.as_deref() == Some("archive.pack")
                 && e.offset.is_some_and(|off| (0x1200..0x1300).contains(&off))
         }));
+    }
+
+    #[test]
+    fn multicart_recursive_dispatch_shifts_offsets_and_verifies() {
+        use gba_compress::encode_rle;
+        use gba_rom::{AGB_LOGO_LEN, AGB_LOGO_OFFSET, AGB_NINTENDO_LOGO};
+
+        let make_hdr = |title: &[u8; 12], code: &[u8; 4]| -> Vec<u8> {
+            let mut h = vec![0u8; HEADER_SIZE];
+            h[0..4].copy_from_slice(&0xEA00_002Eu32.to_le_bytes());
+            h[AGB_LOGO_OFFSET..AGB_LOGO_OFFSET + AGB_LOGO_LEN]
+                .copy_from_slice(&AGB_NINTENDO_LOGO);
+            h[0xA0..0xAC].copy_from_slice(title);
+            h[0xAC..0xB0].copy_from_slice(code);
+            h[0xB0..0xB2].copy_from_slice(b"01");
+            h[0xB2] = 0x96;
+            h[0xBD] = compute_header_complement(&h[0xA0..0xBD]);
+            h
+        };
+
+        let mut rom = vec![0u8; 0x30000];
+        // Outer boot menu at 0x00000
+        rom[0..HEADER_SIZE].copy_from_slice(&make_hdr(b"MULTICART   ", b"BMCE"));
+        rom[0xF000..0x10000].fill(0xFF);
+
+        // Sub-ROM #0 at 0x10000 with its own 0x08000000-relative pointer table -> LZ77 + trailing padding
+        let sub0_base = 0x10000usize;
+        rom[sub0_base..sub0_base + HEADER_SIZE]
+            .copy_from_slice(&make_hdr(b"SUB GAME 0  ", b"BS0E"));
+        let lz = encode_lz77(&vec![0x5Au8; 512]).expect("encode lz77");
+        for i in 0..4usize {
+            let off = sub0_base + 0x200 + i * 4;
+            let rel_target = 0x400 + i * 0x100;
+            rom[off..off + 4].copy_from_slice(&(ROM_BUS_BASE + rel_target as u32).to_le_bytes());
+            rom[sub0_base + rel_target..sub0_base + rel_target + lz.len()].copy_from_slice(&lz);
+        }
+        rom[sub0_base + 0xE000..sub0_base + 0x10000].fill(0xFF);
+
+        // Sub-ROM #1 at 0x20000 with a PACK archive + RLE pointer table
+        let sub1_base = 0x20000usize;
+        rom[sub1_base..sub1_base + HEADER_SIZE]
+            .copy_from_slice(&make_hdr(b"SUB GAME 1  ", b"BS1E"));
+        let pack = pack_archive(
+            ArchiveFormat::Pack,
+            &[("x", b"sub1-pack-x".as_slice()), ("y", b"sub1-pack-y".as_slice())],
+        )
+        .expect("pack");
+        rom[sub1_base + 0x300..sub1_base + 0x300 + pack.len()].copy_from_slice(&pack);
+        let rle = encode_rle(&vec![0x33u8; 256]).expect("encode rle");
+        for i in 0..4usize {
+            let off = sub1_base + 0x200 + i * 4;
+            let rel_target = 0x600 + i * 0x80;
+            rom[off..off + 4].copy_from_slice(&(ROM_BUS_BASE + rel_target as u32).to_le_bytes());
+            rom[sub1_base + rel_target..sub1_base + rel_target + rle.len()].copy_from_slice(&rle);
+        }
+
+        let map = generate_asset_map(&rom, &GenerateOptions { with_code_refs: true }, None);
+        let vr = verify_asset_map(&rom, &map);
+        assert!(vr.valid, "multicart verify errors: {:?}", vr.errors);
+        assert_eq!(vr.accounted_bytes, rom.len() as u64);
+
+        // Both sub-ROM headers tagged as rom.multicart.subrom at exact shifted offsets
+        assert!(map.entries.iter().any(|e| {
+            e.format_id.as_deref() == Some(FORMAT_ID_MULTICART_SUBROM)
+                && e.offset == Some(sub0_base as u64)
+        }));
+        assert!(map.entries.iter().any(|e| {
+            e.format_id.as_deref() == Some(FORMAT_ID_MULTICART_SUBROM)
+                && e.offset == Some(sub1_base as u64)
+        }));
+
+        // Inner sub-ROM assets shifted cleanly by +sub0_base / +sub1_base
+        assert!(map.entries.iter().any(|e| {
+            e.format_id.as_deref() == Some("compress.bios-lz77")
+                && e.offset == Some((sub0_base + 0x400) as u64)
+        }));
+        assert!(map.entries.iter().any(|e| {
+            e.format_id.as_deref() == Some("archive.pack")
+                && e.offset == Some((sub1_base + 0x300) as u64)
+        }));
+        assert!(map.entries.iter().any(|e| {
+            e.format_id.as_deref() == Some("compress.bios-rle")
+                && e.offset == Some((sub1_base + 0x600) as u64)
+        }));
+
+        // Shifted free_space from sub-ROM #0 trailing padding
+        assert!(map
+            .free_space
+            .iter()
+            .any(|r| r.offset == (sub0_base + 0xE000) as u64 && r.size == 0x2000));
+    }
+
+    #[test]
+    fn pointer_table_bios_scanner_detects_lz77_rle_huffman_and_verifies() {
+        use gba_compress::{encode_huffman_4bit, encode_huffman_8bit, encode_rle};
+
+        // Use a >256 KiB ROM so the small-ROM linear pass is NOT active
+        let mut rom = vec![0u8; 300 * 1024];
+        rom[0..4].copy_from_slice(&0xEA00_002Eu32.to_le_bytes());
+        rom[0xA0..0xAC].copy_from_slice(b"PTRTBLBIOS  ");
+        rom[0xAC..0xB0].copy_from_slice(b"BPTE");
+        rom[0xB0..0xB2].copy_from_slice(b"01");
+        rom[0xB2] = 0x96;
+        rom[0xBD] = compute_header_complement(&rom[0xA0..0xBD]);
+
+        let raw_a = vec![0x41u8; 256];
+        let raw_b = vec![0x77u8; 256];
+        let raw_c: Vec<u8> = (0..256).map(|i| (i % 4) as u8).collect();
+        let raw_d: Vec<u8> = (0..256).map(|i| ((i / 8) % 16) as u8).collect();
+
+        let s_lz = encode_lz77(&raw_a).expect("lz77");
+        let s_rle = encode_rle(&raw_b).expect("rle");
+        let s_h4 = encode_huffman_4bit(&raw_c).expect("huff4");
+        let s_h8 = encode_huffman_8bit(&raw_d).expect("huff8");
+
+        let targets = [0x1000usize, 0x1400, 0x1800, 0x1C00];
+        rom[targets[0]..targets[0] + s_lz.len()].copy_from_slice(&s_lz);
+        rom[targets[1]..targets[1] + s_rle.len()].copy_from_slice(&s_rle);
+        rom[targets[2]..targets[2] + s_h4.len()].copy_from_slice(&s_h4);
+        rom[targets[3]..targets[3] + s_h8.len()].copy_from_slice(&s_h8);
+
+        // Contiguous 4-pointer table at 0x400 (100% valid BIOS streams)
+        for (i, &t) in targets.iter().enumerate() {
+            let off = 0x400 + i * 4;
+            rom[off..off + 4].copy_from_slice(&(ROM_BUS_BASE + t as u32).to_le_bytes());
+        }
+
+        let map = generate_asset_map(&rom, &GenerateOptions::default(), None);
+        let vr = verify_asset_map(&rom, &map);
+        assert!(vr.valid, "ptr table verify errors: {:?}", vr.errors);
+
+        let expect = [
+            (targets[0], s_lz.len(), "compress.bios-lz77"),
+            (targets[1], s_rle.len(), "compress.bios-rle"),
+            (targets[2], s_h4.len(), "compress.bios-huffman"),
+            (targets[3], s_h8.len(), "compress.bios-huffman"),
+        ];
+        for (off, sz, fmt) in expect {
+            let found = map
+                .entries
+                .iter()
+                .find(|e| e.offset == Some(off as u64))
+                .expect("expected pointer-table BIOS entry");
+            assert_eq!(found.format_id.as_deref(), Some(fmt));
+            assert_eq!(found.size, sz as u64);
+        }
     }
 }
