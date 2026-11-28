@@ -438,15 +438,33 @@ fn parse_global_set(data: &[u8]) -> Result<PiffRbhfAsset> {
         value: 0,
     })?;
 
-    if bank.entries.len() < 8 {
+    // Stop cleanly before any empty string or non-zero alignment padding slot (trailing binary data).
+    let mut manifest_entries = Vec::with_capacity(bank.entries.len());
+    let mut consumed_end = 0usize;
+    for entry in &bank.entries {
+        if entry.bytes.is_empty() {
+            break;
+        }
+        let Some(nul_end) = entry.offset.checked_add(entry.len).and_then(|v| v.checked_add(1)) else {
+            break;
+        };
+        let slot_end = align_up_4(nul_end);
+        if slot_end > data.len() || data[entry.offset + entry.len..slot_end].iter().any(|&b| b != 0) {
+            break;
+        }
+        manifest_entries.push(entry.bytes.clone());
+        consumed_end = slot_end;
+    }
+
+    if manifest_entries.len() < 8 {
         return Err(Error::InvalidField {
             what: "GLOBAL_SET leading record count",
-            value: bank.entries.len() as u64,
+            value: manifest_entries.len() as u64,
         });
     }
 
     // Anti-FP check: require `_SET_END` or `.rbh` marker within the parsed bank (or first 2048 bytes).
-    let probe = &data[..data.len().min(2048)];
+    let probe = &data[..consumed_end.min(2048)];
     let has_marker = contains_subslice(probe, b"_SET_END") || contains_subslice(probe, b".rbh");
     if !has_marker {
         return Err(Error::InvalidField {
@@ -455,19 +473,13 @@ fn parse_global_set(data: &[u8]) -> Result<PiffRbhfAsset> {
         });
     }
 
-    let manifest_entries = bank
-        .entries
-        .iter()
-        .map(|e| e.bytes.clone())
-        .collect::<Vec<_>>();
-
     Ok(PiffRbhfAsset {
         kind: PiffRbhfKind::GlobalSet,
         sections: Vec::new(),
         chunks: Vec::new(),
         manifest_entry_count: manifest_entries.len(),
         manifest_entries,
-        consumed_end: bank.consumed_end,
+        consumed_end,
     })
 }
 
@@ -624,6 +636,20 @@ pub(crate) mod tests {
         let gset = make_valid_global_set();
         let g = parse(&gset).unwrap();
         assert_eq!(g.to_bytes().unwrap(), gset[..g.consumed_end]);
+
+        // Trailing non-zero alignment slots (binary data after the string bank) must not be
+        // swallowed as string entries, preserving byte-identical round-trip.
+        let mut with_tail = gset.clone();
+        with_tail.extend_from_slice(&[0x00, 0x00, 0x40, 0x50]);
+        let g2 = parse(&with_tail).unwrap();
+        assert_eq!(g2.consumed_end, gset.len());
+        assert_eq!(g2.to_bytes().unwrap(), gset);
+
+        let mut with_nonzero_pad = gset.clone();
+        with_nonzero_pad.extend_from_slice(&[b'a', 0x00, 0x62, 0x96]);
+        let g3 = parse(&with_nonzero_pad).unwrap();
+        assert_eq!(g3.consumed_end, gset.len());
+        assert_eq!(g3.to_bytes().unwrap(), gset);
     }
 
     #[test]

@@ -60,6 +60,17 @@ const STANDARD_CHUNK_SPEC: ChunkStreamSpec = ChunkStreamSpec::new(
 .with_stop_on_unknown_tag(true)
 .with_require_eof_closure(false);
 
+/// Packing spec for standard 8-byte `(tag, u32 LE payload_len)` chunks without injecting an
+/// automatic terminator chunk (parsed chunk lists already include `END ` when present).
+const PACK_STANDARD_CHUNK_SPEC: ChunkStreamSpec = ChunkStreamSpec::new(
+    0,
+    8,
+    IntFieldSpec::u32_le(4),
+    ChunkSizeMode::PayloadOnly,
+    MAX_CHUNKS,
+)
+.with_tag(0, 4);
+
 /// Entry-point variant of an `IS-ASC03` family container.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum IsAsc03Kind {
@@ -124,12 +135,11 @@ pub fn pack(asset: &IsAsc03Asset) -> Result<Vec<u8>> {
                     trailer: None,
                 })
                 .collect();
-            pack_chunk_stream(&STANDARD_CHUNK_SPEC, &PackPolicy::TIGHT, &[], &inputs).map_err(
-                |_| Error::InvalidField {
+            pack_chunk_stream(&PACK_STANDARD_CHUNK_SPEC, &PackPolicy::TIGHT, &[], &inputs)
+                .map_err(|_| Error::InvalidField {
                     what: "IS-ASC03 pack_chunk_stream",
                     value: asset.chunks.len() as u64,
-                },
-            )
+                })
         }
         IsAsc03Kind::Ver => {
             if asset.chunks.len() < 5 {
@@ -147,26 +157,17 @@ pub fn pack(asset: &IsAsc03Asset) -> Result<Vec<u8>> {
                     trailer: None,
                 })
                 .collect();
-            let mut out =
-                pack_chunk_stream(&STANDARD_CHUNK_SPEC, &PackPolicy::TIGHT, &[], &head_inputs)
-                    .map_err(|_| Error::InvalidField {
-                        what: "IS-ASC03 VER head pack",
-                        value: 2,
-                    })?;
-            out.extend_from_slice(&asset.inter_body);
-            const FOOTER_SPEC: ChunkStreamSpec = ChunkStreamSpec::new(
-                0,
-                8,
-                IntFieldSpec::u32_le(4),
-                ChunkSizeMode::PayloadOnly,
-                16,
+            let mut out = pack_chunk_stream(
+                &PACK_STANDARD_CHUNK_SPEC,
+                &PackPolicy::TIGHT,
+                &[],
+                &head_inputs,
             )
-            .with_tag(0, 4)
-            .with_allowed_tags(&[b"CLRF", b"LINK", b"CMNT", b"CLRC"])
-            .with_terminator_tag(TAG_MODE)
-            .with_emit_terminator(true)
-            .with_stop_on_unknown_tag(true)
-            .with_require_eof_closure(false);
+            .map_err(|_| Error::InvalidField {
+                what: "IS-ASC03 VER head pack",
+                value: 2,
+            })?;
+            out.extend_from_slice(&asset.inter_body);
             let foot_inputs: Vec<ChunkInput<'_>> = asset.chunks[2..]
                 .iter()
                 .map(|c| ChunkInput {
@@ -176,11 +177,16 @@ pub fn pack(asset: &IsAsc03Asset) -> Result<Vec<u8>> {
                     trailer: None,
                 })
                 .collect();
-            let footer = pack_chunk_stream(&FOOTER_SPEC, &PackPolicy::TIGHT, &[], &foot_inputs)
-                .map_err(|_| Error::InvalidField {
-                    what: "IS-ASC03 VER footer pack",
-                    value: foot_inputs.len() as u64,
-                })?;
+            let footer = pack_chunk_stream(
+                &PACK_STANDARD_CHUNK_SPEC,
+                &PackPolicy::TIGHT,
+                &[],
+                &foot_inputs,
+            )
+            .map_err(|_| Error::InvalidField {
+                what: "IS-ASC03 VER footer pack",
+                value: foot_inputs.len() as u64,
+            })?;
             out.extend_from_slice(&footer);
             Ok(out)
         }
@@ -216,7 +222,7 @@ pub fn pack(asset: &IsAsc03Asset) -> Result<Vec<u8>> {
                         })
                         .collect();
                     let packed =
-                        pack_chunk_stream(&STANDARD_CHUNK_SPEC, &PackPolicy::TIGHT, &[], &run)
+                        pack_chunk_stream(&PACK_STANDARD_CHUNK_SPEC, &PackPolicy::TIGHT, &[], &run)
                             .map_err(|_| Error::InvalidField {
                                 what: "IS-ASC03 PNL standard run pack",
                                 value: run.len() as u64,
@@ -949,6 +955,32 @@ pub(crate) mod tests {
             let repacked = parsed.to_bytes().unwrap();
             assert_eq!(repacked, raw[..parsed.consumed_end]);
         }
+
+        // PNL container without a terminal END chunk and multi-PNL container with intermediate
+        // standard runs must round-trip without injecting spurious END terminators.
+        let mut pnl_no_end = Vec::new();
+        pnl_no_end.extend_from_slice(TAG_PNL);
+        pnl_no_end.extend_from_slice(&28u32.to_le_bytes());
+        pnl_no_end.extend_from_slice(&2u16.to_le_bytes());
+        pnl_no_end.extend_from_slice(&2u16.to_le_bytes());
+        pnl_no_end.extend_from_slice(&3u16.to_le_bytes());
+        pnl_no_end.extend_from_slice(&[0x11u8; 24]);
+        let mut map_payload = Vec::new();
+        map_payload.extend_from_slice(&4u16.to_le_bytes());
+        map_payload.extend_from_slice(&4u16.to_le_bytes());
+        map_payload.extend_from_slice(&[0u8; 32]);
+        push_chunk(&mut pnl_no_end, TAG_MAP, &map_payload);
+        push_chunk(&mut pnl_no_end, TAG_CMNT, &[0x01, 0x02, b'X', b'Y']);
+        let parsed = parse(&pnl_no_end).unwrap();
+        assert_eq!(parsed.consumed_end, pnl_no_end.len());
+        assert_eq!(parsed.to_bytes().unwrap(), pnl_no_end);
+
+        // Multi-PNL: PNL + MAP + PNL + MAP + END
+        let mut multi_pnl = pnl_no_end.clone();
+        multi_pnl.extend_from_slice(&make_valid_pnl());
+        let parsed_multi = parse(&multi_pnl).unwrap();
+        assert_eq!(parsed_multi.consumed_end, multi_pnl.len());
+        assert_eq!(parsed_multi.to_bytes().unwrap(), multi_pnl);
     }
 
     #[test]

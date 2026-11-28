@@ -545,18 +545,30 @@ fn parse_scr_table(data: &[u8]) -> Result<RiffScrAsset> {
         value: 0,
     })?;
 
-    if bank.entries.len() < 4 {
-        return Err(Error::InvalidField {
-            what: "SCR name table count",
-            value: bank.entries.len() as u64,
-        });
+    // Stop cleanly before any empty string or non-zero alignment padding slot (trailing binary data).
+    let mut table_entries = Vec::with_capacity(bank.entries.len());
+    let mut consumed_end = 4usize;
+    for entry in &bank.entries {
+        if entry.bytes.is_empty() {
+            break;
+        }
+        let Some(nul_end) = entry.offset.checked_add(entry.len).and_then(|v| v.checked_add(1)) else {
+            break;
+        };
+        let slot_end = align_up_4(nul_end);
+        if slot_end > data.len() || data[entry.offset + entry.len..slot_end].iter().any(|&b| b != 0) {
+            break;
+        }
+        table_entries.push(entry.bytes.clone());
+        consumed_end = slot_end;
     }
 
-    let table_entries = bank
-        .entries
-        .iter()
-        .map(|e| e.bytes.clone())
-        .collect::<Vec<_>>();
+    if table_entries.len() < 4 {
+        return Err(Error::InvalidField {
+            what: "SCR name table count",
+            value: table_entries.len() as u64,
+        });
+    }
 
     Ok(RiffScrAsset {
         kind: RiffScrKind::ScrTable,
@@ -570,7 +582,7 @@ fn parse_scr_table(data: &[u8]) -> Result<RiffScrAsset> {
         str_table: None,
         table_entry_count: table_entries.len(),
         table_entries,
-        consumed_end: bank.consumed_end,
+        consumed_end,
     })
 }
 
@@ -754,6 +766,19 @@ pub(crate) mod tests {
         let tbl = make_valid_scr_table();
         let t = parse(&tbl).unwrap();
         assert_eq!(t.to_bytes().unwrap(), tbl[..t.consumed_end]);
+
+        // Trailing non-zero alignment slots or empty-string zero words must not be swallowed.
+        let mut tbl_tail = tbl.clone();
+        tbl_tail.extend_from_slice(&[b'_', 0x00, 0x0E, 0x00]);
+        let t2 = parse(&tbl_tail).unwrap();
+        assert_eq!(t2.consumed_end, tbl.len());
+        assert_eq!(t2.to_bytes().unwrap(), tbl);
+
+        let mut tbl_zeros = tbl.clone();
+        tbl_zeros.extend_from_slice(&[0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x08, 0x00]);
+        let t3 = parse(&tbl_zeros).unwrap();
+        assert_eq!(t3.consumed_end, tbl.len());
+        assert_eq!(t3.to_bytes().unwrap(), tbl);
     }
 
     #[test]
