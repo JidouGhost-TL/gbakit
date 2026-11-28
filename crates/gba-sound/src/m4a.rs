@@ -1143,6 +1143,66 @@ fn has_clock_table(rom: &[u8]) -> bool {
     rom.windows(CLOCK_TABLE.len()).any(|w| w == CLOCK_TABLE)
 }
 
+/// Returns true if `rom` contains the canonical Thumb `m4aSongNumStart` prologue:
+/// `00 b5 00 04 ?? 4? ?? 4? 40 0b 40 18`
+/// (`push {lr}; lsl r0, r0, #16; ldr r?, [pc, #imm]; ldr r?, [pc, #imm]; lsr r0, r0, #13; add r0, r0, r1`).
+fn has_m4a_song_num_start_prologue(rom: &[u8]) -> bool {
+    if rom.len() < 12 {
+        return false;
+    }
+    let limit = rom.len() - 12;
+    let mut i = 0usize;
+    while i <= limit {
+        if rom[i] == 0x00
+            && rom[i + 1] == 0xB5
+            && rom[i + 2] == 0x00
+            && rom[i + 3] == 0x04
+            && (rom[i + 5] & 0xF0) == 0x40
+            && (rom[i + 7] & 0xF0) == 0x40
+            && rom[i + 8] == 0x40
+            && rom[i + 9] == 0x0B
+            && rom[i + 10] == 0x40
+            && rom[i + 11] == 0x18
+        {
+            return true;
+        }
+        i += 2;
+    }
+    false
+}
+
+/// Returns true if `rom` links the standard Nintendo M4A SDK via dynamic `MPlayStart`
+/// dispatch (empty static `gSongTable`), verified by requiring all three canonical markers:
+/// 1. Exact 49-byte `m4a::CLOCK_TABLE`
+/// 2. 4-byte-aligned `b"Smsh"` (`SoundMainRAM` magic)
+/// 3. Exact Thumb `m4aSongNumStart` prologue
+#[must_use]
+pub fn has_m4a_dynamic_driver(rom: &[u8]) -> bool {
+    has_aligned_smsh(rom) && has_clock_table(rom) && has_m4a_song_num_start_prologue(rom)
+}
+
+/// Fallback M4A engine scan for titles that link the Nintendo M4A SDK with an empty static
+/// `gSongTable` and dispatch songs/SFX dynamically via `MPlayStart()`.
+#[must_use]
+pub fn scan_m4a_dynamic_engine(rom: &[u8]) -> Option<M4aEngineScan> {
+    if !has_m4a_dynamic_driver(rom) {
+        return None;
+    }
+    let mixer_variant = detect_mixer_variant(rom).map(|v| m4a_mixer_variant_name(v).to_string());
+    Some(M4aEngineScan {
+        song_table_offset: 0,
+        song_table_address: 0,
+        song_count: 0,
+        playable_song_count: 0,
+        max_tracks: 0,
+        voicegroup_count: 0,
+        directsound_sample_count: 0,
+        voicegroups: Vec::new(),
+        sample_pointers: Vec::new(),
+        mixer_variant,
+    })
+}
+
 /// Validate if an offset points to a valid `SongHeader`.
 fn validate_song_header_fast(rom: &[u8], offset: usize, allow_ram_vg: bool) -> Option<(u8, u32)> {
     if offset + 8 > rom.len() {

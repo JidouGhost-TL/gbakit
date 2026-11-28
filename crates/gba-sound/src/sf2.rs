@@ -621,6 +621,15 @@ pub fn compile_rom_soundfont(rom: &[u8], title_override: Option<&str>) -> Result
         DetectedSoundEngine::HudsonJp => {
             crate::hudson_jp_pool::compile_hudson_jp_soundfont(rom, title_override)
         }
+        DetectedSoundEngine::SkyworksHybrid(_) => {
+            crate::skyworks_hybrid_pool::compile_skyworks_hybrid_soundfont(rom, title_override)
+        }
+        DetectedSoundEngine::Webfoot(_) => {
+            crate::webfoot_pool::compile_webfoot_soundfont(rom, title_override)
+        }
+        DetectedSoundEngine::SkyworksPcm(_) => {
+            crate::skyworks_pcm_pool::compile_skyworks_pcm_soundfont(rom, title_override)
+        }
         DetectedSoundEngine::Custom => {
             // Check if GAX or MusyX sample tables exist in ROM as fallback
             let gax = crate::gax_pool::scan_gax_soundpool(rom);

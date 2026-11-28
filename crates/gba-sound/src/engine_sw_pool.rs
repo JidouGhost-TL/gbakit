@@ -93,7 +93,7 @@ pub fn has_engine_sw_v1_mixer(rom: &[u8]) -> bool {
                 u32::from_le_bytes([rom[mid + 16], rom[mid + 17], rom[mid + 18], rom[mid + 19]]);
             let w7 =
                 u32::from_le_bytes([rom[mid + 20], rom[mid + 21], rom[mid + 22], rom[mid + 23]]);
-            if w0 == 0xe92d_0ff7
+            if matches!(w0, 0xe92d_0ff6 | 0xe92d_0ff7)
                 && (w1 & 0xFFFF_F000) == 0xe59f_1000
                 && (w6 & 0xFFFF_F000) == 0xe59f_c000
                 && w7 == 0xe1a0_400c
@@ -162,9 +162,82 @@ fn parse_valid_engine_sw_header(rom: &[u8], off: usize) -> Option<EngineSwSample
     Some(hdr)
 }
 
-/// Scan a GBA ROM for chained 124-byte (`0x7C`) EIRE v2.0 instrument banks
-/// and extract their inline signed 8-bit PCM payloads.
+/// Scan a GBA ROM for Engine Software EIRE instrument banks (both Mono DirectSound A
+/// `0x21 0x01` music/SFX banks and Stereo v2.0 chained 124-byte banks) and extract their
+/// signed 8-bit PCM payloads.
 pub fn scan_engine_sw_soundpool(rom: &[u8]) -> Vec<EngineSwSampleEntry> {
+    if let Ok(eire_rom) = engine_sw_audio::parse_mono_rom(rom) {
+        let mut mono_samples = Vec::new();
+        let mut seen = HashSet::new();
+
+        for bank_idx in 0..eire_rom.music_bank_count() {
+            let Some(iter) = eire_rom.music_samples(bank_idx) else {
+                continue;
+            };
+            for s in iter {
+                let pcm_start = s.pcm_offset;
+                if s.pcm.is_empty() || !seen.insert(pcm_start) {
+                    continue;
+                }
+                let loop_range = if s.header.loop_len > 0 {
+                    Some((
+                        s.header.loop_start,
+                        s.header.loop_start.saturating_add(s.header.loop_len),
+                    ))
+                } else {
+                    None
+                };
+                let index = mono_samples.len();
+                mono_samples.push(EngineSwSampleEntry {
+                    index,
+                    rom_offset: s.header_offset,
+                    sample_start_offset: pcm_start,
+                    size: s.pcm.len(),
+                    sample_rate: engine_sw_audio::BASE_SAMPLE_RATE_HZ,
+                    root_key: engine_sw_audio::ROOT_KEY,
+                    vol_default: s.header.default_volume,
+                    pan_default: s.header.decoded_pan(),
+                    pitch_offset: s.header.finetune,
+                    loop_range,
+                    pcm_data: s.pcm.iter().map(|&b| b as i8).collect(),
+                });
+            }
+        }
+
+        for bank_idx in 0..eire_rom.sfx_bank_count() {
+            let Some(bank) = eire_rom.sfx_bank(bank_idx) else {
+                continue;
+            };
+            for sfx_idx in 0..bank.sample_count {
+                let Some(s) = eire_rom.sfx_sample(bank_idx, sfx_idx) else {
+                    continue;
+                };
+                let pcm_start = s.pcm_offset;
+                if s.pcm.is_empty() || !seen.insert(pcm_start) {
+                    continue;
+                }
+                let index = mono_samples.len();
+                mono_samples.push(EngineSwSampleEntry {
+                    index,
+                    rom_offset: pcm_start,
+                    sample_start_offset: pcm_start,
+                    size: s.pcm.len(),
+                    sample_rate: s.entry.sample_rate,
+                    root_key: engine_sw_audio::ROOT_KEY,
+                    vol_default: 64,
+                    pan_default: 0,
+                    pitch_offset: 0,
+                    loop_range: None,
+                    pcm_data: s.pcm.iter().map(|&b| b as i8).collect(),
+                });
+            }
+        }
+
+        if !mono_samples.is_empty() {
+            return mono_samples;
+        }
+    }
+
     let rlen = rom.len();
     if rlen < ENGINE_SW_HEADER_SIZE + MIN_SAMPLE_BYTES {
         return Vec::new();
@@ -427,8 +500,13 @@ mod tests {
             crate::DetectedSoundEngine::EngineSw(None)
         );
 
-        // Corrupting w0 must reject
-        rom[0x80] ^= 0x01;
+        // Earlier v1.x builds omitting r0 (`0xe92d_0ff6`) must also match
+        rom[0x80..0x84].copy_from_slice(&0xe92d_0ff6u32.to_le_bytes());
+        assert!(has_engine_sw_v1_mixer(&rom));
+        assert!(detect_engine_sw_engine(&rom));
+
+        // Corrupting w0 to another opcode must reject
+        rom[0x80] ^= 0x04;
         assert!(!has_engine_sw_v1_mixer(&rom));
         assert!(!detect_engine_sw_engine(&rom));
     }

@@ -35,18 +35,22 @@ use gbakit::sound::{
     compile_hudson_jp_soundfont, compile_konami_soundfont, compile_krawall_soundfont,
     compile_logik_soundfont, compile_musyx_soundfont, compile_natsume_soundfont,
     compile_paragon5_soundfont, compile_rare_soundfont, compile_rd1_soundfont,
-    compile_southpaw_soundfont, detect_sound_engine, detect_sound_engines,
+    compile_skyworks_hybrid_soundfont, compile_skyworks_pcm_soundfont, compile_southpaw_soundfont,
+    compile_webfoot_soundfont, detect_sound_engine, detect_sound_engines,
     export_delaney_samples_wav16, export_ead_sma_samples_wav16, export_engine_sw_samples_wav16,
     export_fullfat_samples_wav16, export_gax_samples_wav16, export_hudson_jp_samples_wav16,
     export_konami_samples_wav16, export_krawall_samples_wav16, export_logik_samples_wav16,
     export_musyx_samples_wav16, export_natsume_samples_wav16, export_paragon5_samples_wav16,
-    export_rare_samples_wav16, export_rd1_samples_wav16, export_sonix_samples_wav16,
-    export_southpaw_samples_wav16, extract_pcm_i8, scan_delaney_engine, scan_ead_sma_soundpool,
+    export_rare_samples_wav16, export_rd1_samples_wav16, export_skyworks_hybrid_samples_wav16,
+    export_skyworks_pcm_samples_wav16, export_sonix_samples_wav16, export_southpaw_samples_wav16,
+    export_webfoot_samples_wav16, extract_pcm_i8, scan_delaney_engine, scan_ead_sma_soundpool,
     scan_engine_sw_soundpool, scan_fullfat_engine, scan_gax_soundpool, scan_hudson_jp_engine,
     scan_konami_soundpool, scan_krawall_soundpool, scan_logik_soundpool, scan_musyx_soundpool,
     scan_natsume_engine, scan_paragon5_soundpool, scan_rare_soundpool, scan_rd1_midis,
-    scan_rd1_soundpool, scan_sonix_soundpool, scan_southpaw_soundpool, DetectedSoundEngine,
+    scan_rd1_soundpool, scan_skyworks_hybrid_engine, scan_skyworks_pcm_engine,
+    scan_sonix_soundpool, scan_southpaw_soundpool, scan_webfoot_engine, DetectedSoundEngine,
     FullFatRevision, HudsonJpLayout, KonamiEngineVariant, LogikEngineVariant, NatsumeRevision,
+    SkyworksHybridRevision, SkyworksPcmRevision, WebfootRevision,
 };
 use gbakit::sound::sf2::{compile_rom_soundfont, validate_soundfont};
 
@@ -734,6 +738,9 @@ fn sound_engine_id(engine: &DetectedSoundEngine) -> &'static str {
         DetectedSoundEngine::Delaney => "delaney",
         DetectedSoundEngine::FullFat(_) => "fullfat",
         DetectedSoundEngine::HudsonJp => "hudson_jp",
+        DetectedSoundEngine::SkyworksHybrid(_) => "skyworks_hybrid",
+        DetectedSoundEngine::Webfoot(_) => "webfoot",
+        DetectedSoundEngine::SkyworksPcm(_) => "skyworks_pcm",
         DetectedSoundEngine::Custom => "custom",
     }
 }
@@ -1212,6 +1219,15 @@ fn cmd_audio_scan_with_options(
                     "Engine Software EIRE v2.0 (V20AltRegisters)",
                     "V20AltRegisters",
                 ),
+                Some(gbakit::sound::engine_sw_audio::EngineSwVersion::Mono16Ch) => (
+                    "Engine Software EIRE Mono DirectSound A (Mono16Ch)",
+                    "Mono16Ch",
+                ),
+                Some(gbakit::sound::engine_sw_audio::EngineSwVersion::Mono8Ch) => (
+                    "Engine Software EIRE Mono DirectSound A (Mono8Ch)",
+                    "Mono8Ch",
+                ),
+                Some(_) => ("Engine Software EIRE", "Unknown"),
                 None => ("Engine Software EIRE v1.x (ARM Mixer)", "V1xArmMixer"),
             };
             let samples = scan_engine_sw_soundpool(&bytes);
@@ -1391,6 +1407,101 @@ fn cmd_audio_scan_with_options(
                 println!("  Storage Layout:          {}", layout_str);
                 println!("  Sample Count:            {}", sample_count);
                 println!("  Sequence Count:          {}", song_count);
+                print_extra_engines();
+            }
+            Ok(())
+        }
+        DetectedSoundEngine::SkyworksHybrid(rev) => {
+            let ver_str = match rev {
+                SkyworksHybridRevision::Rev1 => "Destination / Skyworks Hybrid PSG+PCM (Rev1 6-ch)",
+                SkyworksHybridRevision::Rev2 => "Destination / Skyworks Hybrid PSG+PCM (Rev2 8-ch)",
+            };
+            let summary = scan_skyworks_hybrid_engine(&bytes);
+            let sample_count = summary.as_ref().map_or(0, |s| s.samples.len());
+            let song_count = summary.as_ref().map_or(0, |s| s.song_count);
+            if as_json {
+                let payload = serde_json::json!({
+                    "detected": true,
+                    "engine": "skyworks_hybrid",
+                    "family": "skyworks_hybrid_psg_pcm",
+                    "version": ver_str,
+                    "sample_count": sample_count,
+                    "song_count": song_count,
+                    "rom_path": rom_path.file_name().map(|n| n.to_string_lossy().to_string()).unwrap_or_default(),
+                    "sample_format": "Signed 8-bit PCM (FIFO_A 10512 Hz + FIFO_B 10261 Hz + 4ch DMG PSG)",
+                });
+                emit_json(payload)?;
+            } else {
+                println!("Sound Engine Scan: {}", rom_path.display());
+                println!("  Status:                  Detected (Destination / Skyworks Hybrid PSG+PCM)");
+                println!("  Family:                  skyworks_hybrid_psg_pcm");
+                println!("  Version:                 {}", ver_str);
+                println!("  Sample Count:            {}", sample_count);
+                println!("  Song Count:              {}", song_count);
+                print_extra_engines();
+            }
+            Ok(())
+        }
+        DetectedSoundEngine::Webfoot(rev) => {
+            let ver_str = match rev {
+                WebfootRevision::RevA => "Webfoot Technologies Stereo DirectSound (RevA)",
+                WebfootRevision::RevB => "Webfoot Technologies Stereo DirectSound (RevB)",
+                WebfootRevision::DualRev => "Webfoot Technologies Stereo DirectSound (DualRev)",
+                WebfootRevision::Unknown => "Webfoot Technologies Stereo DirectSound",
+            };
+            let summary = scan_webfoot_engine(&bytes);
+            let sample_count = summary.as_ref().map_or(0, |s| s.samples.len());
+            let song_count = summary.as_ref().map_or(0, |s| s.song_count);
+            if as_json {
+                let payload = serde_json::json!({
+                    "detected": true,
+                    "engine": "webfoot",
+                    "family": "webfoot_stereo_directsound",
+                    "version": ver_str,
+                    "sample_count": sample_count,
+                    "song_count": song_count,
+                    "rom_path": rom_path.file_name().map(|n| n.to_string_lossy().to_string()).unwrap_or_default(),
+                    "sample_format": "Signed 8-bit PCM (15978 Hz Stereo DirectSound)",
+                });
+                emit_json(payload)?;
+            } else {
+                println!("Sound Engine Scan: {}", rom_path.display());
+                println!("  Status:                  Detected (Webfoot Technologies Stereo DirectSound)");
+                println!("  Family:                  webfoot_stereo_directsound");
+                println!("  Version:                 {}", ver_str);
+                println!("  Sample Count:            {}", sample_count);
+                println!("  Song Count:              {}", song_count);
+                print_extra_engines();
+            }
+            Ok(())
+        }
+        DetectedSoundEngine::SkyworksPcm(rev) => {
+            let ver_str = match rev {
+                SkyworksPcmRevision::RevA => "Skyworks 4-Ch Streaming PCM (RevA 8001 Hz)",
+                SkyworksPcmRevision::RevB => "Skyworks 4-Ch Streaming PCM (RevB 11030 Hz)",
+            };
+            let summary = scan_skyworks_pcm_engine(&bytes);
+            let sample_count = summary.as_ref().map_or(0, |s| s.samples.len());
+            let instance_count = summary.as_ref().map_or(1, |s| s.instance_count);
+            if as_json {
+                let payload = serde_json::json!({
+                    "detected": true,
+                    "engine": "skyworks_pcm",
+                    "family": "skyworks_pcm_stream",
+                    "version": ver_str,
+                    "instance_count": instance_count,
+                    "sample_count": sample_count,
+                    "rom_path": rom_path.file_name().map(|n| n.to_string_lossy().to_string()).unwrap_or_default(),
+                    "sample_format": "Signed 8-bit Mono PCM (4ch DirectSound A Streaming)",
+                });
+                emit_json(payload)?;
+            } else {
+                println!("Sound Engine Scan: {}", rom_path.display());
+                println!("  Status:                  Detected (Skyworks 4-Ch Streaming PCM)");
+                println!("  Family:                  skyworks_pcm_stream");
+                println!("  Version:                 {}", ver_str);
+                println!("  Engine Instances:        {}", instance_count);
+                println!("  Clip Count:              {}", sample_count);
                 print_extra_engines();
             }
             Ok(())
@@ -1809,6 +1920,13 @@ fn cmd_audio_export(
                 Some(gbakit::sound::engine_sw_audio::EngineSwVersion::V20AltRegisters) => {
                     "Engine Software EIRE v2.0 (V20AltRegisters)"
                 }
+                Some(gbakit::sound::engine_sw_audio::EngineSwVersion::Mono16Ch) => {
+                    "Engine Software EIRE Mono DirectSound A (Mono16Ch)"
+                }
+                Some(gbakit::sound::engine_sw_audio::EngineSwVersion::Mono8Ch) => {
+                    "Engine Software EIRE Mono DirectSound A (Mono8Ch)"
+                }
+                Some(_) => "Engine Software EIRE",
                 None => "Engine Software EIRE v1.x (ARM Mixer)",
             };
             let wavs = export_engine_sw_samples_wav16(&bytes)
@@ -1986,6 +2104,78 @@ fn cmd_audio_export(
                 }
             }
             println!("Audio Export Summary (Hudson / Red / Rocket Games JP DirectSound):");
+            println!("  Output Directory:     {}", target_dir.display());
+            println!("  WAV Samples Exported: {}", wavs.len());
+            if sf2_generated {
+                println!("  SoundFont Generated:  soundfont.sf2");
+            }
+            Ok(())
+        }
+        DetectedSoundEngine::SkyworksHybrid(_) => {
+            let wavs = export_skyworks_hybrid_samples_wav16(&bytes)
+                .map_err(|e| format!("export Skyworks Hybrid samples: {e}"))?;
+            for (_idx, filename, wav_bytes) in &wavs {
+                let p_sub = samples_dir.join(filename);
+                let p_root = target_dir.join(filename);
+                fs::write(&p_sub, wav_bytes).map_err(|e| format!("write {}: {e}", p_sub.display()))?;
+                let _ = fs::write(&p_root, wav_bytes);
+            }
+            let mut sf2_generated = false;
+            if let Ok(sf2) = compile_skyworks_hybrid_soundfont(&bytes, None) {
+                let sf2_path = target_dir.join("soundfont.sf2");
+                if fs::write(&sf2_path, &sf2.sf2_bytes).is_ok() {
+                    sf2_generated = true;
+                }
+            }
+            println!("Audio Export Summary (Destination / Skyworks Hybrid PSG+PCM):");
+            println!("  Output Directory:     {}", target_dir.display());
+            println!("  WAV Samples Exported: {}", wavs.len());
+            if sf2_generated {
+                println!("  SoundFont Generated:  soundfont.sf2");
+            }
+            Ok(())
+        }
+        DetectedSoundEngine::Webfoot(_) => {
+            let wavs = export_webfoot_samples_wav16(&bytes)
+                .map_err(|e| format!("export Webfoot Stereo samples: {e}"))?;
+            for (_idx, filename, wav_bytes) in &wavs {
+                let p_sub = samples_dir.join(filename);
+                let p_root = target_dir.join(filename);
+                fs::write(&p_sub, wav_bytes).map_err(|e| format!("write {}: {e}", p_sub.display()))?;
+                let _ = fs::write(&p_root, wav_bytes);
+            }
+            let mut sf2_generated = false;
+            if let Ok(sf2) = compile_webfoot_soundfont(&bytes, None) {
+                let sf2_path = target_dir.join("soundfont.sf2");
+                if fs::write(&sf2_path, &sf2.sf2_bytes).is_ok() {
+                    sf2_generated = true;
+                }
+            }
+            println!("Audio Export Summary (Webfoot Technologies Stereo DirectSound):");
+            println!("  Output Directory:     {}", target_dir.display());
+            println!("  WAV Samples Exported: {}", wavs.len());
+            if sf2_generated {
+                println!("  SoundFont Generated:  soundfont.sf2");
+            }
+            Ok(())
+        }
+        DetectedSoundEngine::SkyworksPcm(_) => {
+            let wavs = export_skyworks_pcm_samples_wav16(&bytes)
+                .map_err(|e| format!("export Skyworks PCM Stream clips: {e}"))?;
+            for (_idx, filename, wav_bytes) in &wavs {
+                let p_sub = samples_dir.join(filename);
+                let p_root = target_dir.join(filename);
+                fs::write(&p_sub, wav_bytes).map_err(|e| format!("write {}: {e}", p_sub.display()))?;
+                let _ = fs::write(&p_root, wav_bytes);
+            }
+            let mut sf2_generated = false;
+            if let Ok(sf2) = compile_skyworks_pcm_soundfont(&bytes, None) {
+                let sf2_path = target_dir.join("soundfont.sf2");
+                if fs::write(&sf2_path, &sf2.sf2_bytes).is_ok() {
+                    sf2_generated = true;
+                }
+            }
+            println!("Audio Export Summary (Skyworks 4-Channel Streaming PCM):");
             println!("  Output Directory:     {}", target_dir.display());
             println!("  WAV Samples Exported: {}", wavs.len());
             if sf2_generated {

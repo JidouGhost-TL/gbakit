@@ -33,7 +33,8 @@ use gba_sound::{
     scan_ead_sma_soundpool, scan_engine_sw_soundpool, scan_fullfat_soundpool, scan_gax_soundpool,
     scan_hudson_jp_soundpool, scan_konami_soundpool, scan_krawall_soundpool, scan_logik_soundpool,
     scan_musyx_soundpool, scan_natsume_soundpool, scan_paragon5_soundpool, scan_rare_soundpool,
-    scan_rd1_soundpool, scan_sonix_soundpool, scan_southpaw_soundpool, DetectedSoundEngine,
+    scan_rd1_soundpool, scan_skyworks_hybrid_soundpool, scan_skyworks_pcm_soundpool,
+    scan_sonix_soundpool, scan_southpaw_soundpool, scan_webfoot_soundpool, DetectedSoundEngine,
 };
 use mobiclip::{scan_mobiclip_streams, scan_vxgb_streams, MobiclipStreamView, VxgbStreamView};
 use serde::{Deserialize, Serialize};
@@ -1179,6 +1180,42 @@ fn collect_audio_candidates(rom: &[u8], out: &mut Vec<CandidateExtent>) {
                     6usize.saturating_add(s.size),
                     "hudson_jp",
                     "audio.hudson-jp-sample",
+                );
+            }
+        }
+        DetectedSoundEngine::SkyworksHybrid(_) => {
+            for s in scan_skyworks_hybrid_soundpool(rom) {
+                push_audio_sample(
+                    out,
+                    rom.len(),
+                    s.rom_offset,
+                    s.size,
+                    "skyworks_hybrid",
+                    "audio.skyworks-hybrid-sample",
+                );
+            }
+        }
+        DetectedSoundEngine::Webfoot(_) => {
+            for s in scan_webfoot_soundpool(rom) {
+                push_audio_sample(
+                    out,
+                    rom.len(),
+                    s.rom_offset,
+                    s.size,
+                    "webfoot",
+                    "audio.webfoot-sample",
+                );
+            }
+        }
+        DetectedSoundEngine::SkyworksPcm(_) => {
+            for s in scan_skyworks_pcm_soundpool(rom) {
+                push_audio_sample(
+                    out,
+                    rom.len(),
+                    s.rom_offset,
+                    s.size,
+                    "skyworks_pcm",
+                    "audio.skyworks-pcm-sample",
                 );
             }
         }

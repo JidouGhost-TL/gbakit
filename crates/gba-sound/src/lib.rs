@@ -20,8 +20,11 @@ pub mod rare_pool;
 pub mod rd1_pool;
 pub mod replace;
 pub mod sf2;
+pub mod skyworks_hybrid_pool;
+pub mod skyworks_pcm_pool;
 pub mod sonix_pool;
 pub mod southpaw_pool;
+pub mod webfoot_pool;
 
 pub use cosmigo_sonix;
 pub use delaney_gba;
@@ -38,7 +41,10 @@ pub use natsume_audio;
 pub use paragon5;
 pub use rare_audio;
 pub use rd1_kaede;
+pub use skyworks_hybrid;
+pub use skyworks_pcm_stream;
 pub use southpaw_audio;
+pub use webfoot_audio;
 pub use ::m4a as m4a_core;
 
 pub use delaney_pool::*;
@@ -55,8 +61,11 @@ pub use natsume_pool::*;
 pub use paragon5_pool::*;
 pub use rare_pool::*;
 pub use rd1_pool::*;
+pub use skyworks_hybrid_pool::*;
+pub use skyworks_pcm_pool::*;
 pub use sonix_pool::*;
 pub use southpaw_pool::*;
+pub use webfoot_pool::*;
 
 #[cfg(test)]
 mod tests;
@@ -106,6 +115,12 @@ pub enum DetectedSoundEngine {
     FullFat(fullfat_pool::FullFatRevision),
     /// Hudson / Red / Rocket Games JP DirectSound Engine
     HudsonJp,
+    /// Destination / Skyworks 10.5 kHz Hybrid PSG+PCM Engine
+    SkyworksHybrid(skyworks_hybrid_pool::SkyworksHybridRevision),
+    /// Webfoot Technologies Stereo DirectSound Engine
+    Webfoot(webfoot_pool::WebfootRevision),
+    /// Skyworks 4-Channel DirectSound A Streaming PCM Mixer
+    SkyworksPcm(skyworks_pcm_pool::SkyworksPcmRevision),
     /// Unrecognized or custom direct sound driver
     Custom,
 }
@@ -118,9 +133,12 @@ pub enum DetectedSoundEngine {
 pub fn detect_sound_engines(bytes: &[u8]) -> Vec<DetectedSoundEngine> {
     let mut engines = Vec::new();
 
-    if let Some(m4a) = scan_m4a_engine(bytes) {
+    let has_static_m4a = if let Some(m4a) = scan_m4a_engine(bytes) {
         engines.push(DetectedSoundEngine::M4a(m4a));
-    }
+        true
+    } else {
+        false
+    };
 
     if let Some(gax_ver) = gax::version::GaxVersion::detect_from_bytes(bytes) {
         engines.push(DetectedSoundEngine::Gax(Some(gax_ver)));
@@ -153,6 +171,14 @@ pub fn detect_sound_engines(bytes: &[u8]) -> Vec<DetectedSoundEngine> {
         engines.push(DetectedSoundEngine::Krawall(Some(krawall_ver)));
     } else if !has_musyx_arm && krawall_pool::detect_krawall_fallback(bytes) {
         engines.push(DetectedSoundEngine::Krawall(None));
+    }
+
+    // M4A Dynamic-MPlayStart fallback (empty static gSongTable) placed after GAX/Krawall
+    // so dual-engine Konami GAX+M4A / Krawall+M4A titles retain their music engine as primary.
+    if !has_static_m4a {
+        if let Some(m4a_dyn) = scan_m4a_dynamic_engine(bytes) {
+            engines.push(DetectedSoundEngine::M4a(m4a_dyn));
+        }
     }
 
     if let Some(rare_ver) = rare_audio::RareAudioVersion::detect_from_bytes(bytes) {
@@ -209,6 +235,18 @@ pub fn detect_sound_engines(bytes: &[u8]) -> Vec<DetectedSoundEngine> {
         engines.push(DetectedSoundEngine::HudsonJp);
     }
 
+    if let Some(swh_rev) = skyworks_hybrid_pool::detect_skyworks_hybrid_engine(bytes) {
+        engines.push(DetectedSoundEngine::SkyworksHybrid(swh_rev));
+    }
+
+    if let Some(wf_rev) = webfoot_pool::detect_webfoot_engine(bytes) {
+        engines.push(DetectedSoundEngine::Webfoot(wf_rev));
+    }
+
+    if let Some(swp_rev) = skyworks_pcm_pool::detect_skyworks_pcm_engine(bytes) {
+        engines.push(DetectedSoundEngine::SkyworksPcm(swp_rev));
+    }
+
     engines
 }
 
@@ -232,6 +270,8 @@ pub fn detect_sound_engine(bytes: &[u8]) -> DetectedSoundEngine {
         DetectedSoundEngine::Krawall(Some(krawall_ver))
     } else if krawall_pool::detect_krawall_fallback(bytes) {
         DetectedSoundEngine::Krawall(None)
+    } else if let Some(m4a_dyn) = scan_m4a_dynamic_engine(bytes) {
+        DetectedSoundEngine::M4a(m4a_dyn)
     } else if let Some(rare_ver) = rare_audio::RareAudioVersion::detect_from_bytes(bytes) {
         DetectedSoundEngine::Rare(Some(rare_ver))
     } else if rare_audio::RareAudioVersion::has_rare_signature(bytes) {
@@ -265,6 +305,12 @@ pub fn detect_sound_engine(bytes: &[u8]) -> DetectedSoundEngine {
         DetectedSoundEngine::FullFat(ff_rev)
     } else if hudson_jp_pool::detect_hudson_jp_engine(bytes) {
         DetectedSoundEngine::HudsonJp
+    } else if let Some(swh_rev) = skyworks_hybrid_pool::detect_skyworks_hybrid_engine(bytes) {
+        DetectedSoundEngine::SkyworksHybrid(swh_rev)
+    } else if let Some(wf_rev) = webfoot_pool::detect_webfoot_engine(bytes) {
+        DetectedSoundEngine::Webfoot(wf_rev)
+    } else if let Some(swp_rev) = skyworks_pcm_pool::detect_skyworks_pcm_engine(bytes) {
+        DetectedSoundEngine::SkyworksPcm(swp_rev)
     } else {
         DetectedSoundEngine::Custom
     }
